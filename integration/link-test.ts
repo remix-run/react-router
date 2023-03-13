@@ -32,7 +32,10 @@ test.describe("route module link export", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      future: {
+        v2_routeConvention: true,
+        v2_errorBoundary: true,
+      },
       files: {
         "app/favicon.ico": js``,
 
@@ -88,7 +91,8 @@ test.describe("route module link export", () => {
             Meta,
             Outlet,
             Scripts,
-            useCatch,
+            useRouteError,
+            isRouteErrorResponse
           } from "@remix-run/react";
           import resetHref from "./reset.css";
           import stylesHref from "./app.css";
@@ -123,72 +127,72 @@ test.describe("route module link export", () => {
             );
           }
 
-          export function CatchBoundary() {
-            let caught = useCatch();
+          export function ErrorBoundary() {
+            let error = useRouteError();
 
-            switch (caught.status) {
-              case 404:
+            if (isRouteErrorResponse()) {
+              switch (error.status) {
+                case 404:
+                  return (
+                    <html lang="en">
+                      <head>
+                        <meta charSet="utf-8" />
+                        <title>404 Not Found</title>
+                        <Links />
+                      </head>
+                      <body>
+                        <div>
+                          <h1>404 Not Found</h1>
+                        </div>
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                default:
+                  console.warn("Unexpected catch", error);
+
+                  return (
+                    <html lang="en">
+                      <head>
+                        <meta charSet="utf-8" />
+                        <title>{error.status} Uh-oh!</title>
+                        <Links />
+                      </head>
+                      <body>
+                        <div>
+                          <h1>
+                            {error.status} {error.statusText}
+                          </h1>
+                          {error.data ? (
+                            <pre>
+                              <code>{JSON.stringify(error.data, null, 2)}</code>
+                            </pre>
+                          ) : null}
+                        </div>
+                        <Scripts />
+                      </body>
+                    </html>
+                  );
+                }
+              } else {
+                console.error(error);
                 return (
                   <html lang="en">
                     <head>
                       <meta charSet="utf-8" />
-                      <title>404 Not Found</title>
+                      <title>Oops!</title>
                       <Links />
                     </head>
                     <body>
                       <div>
-                        <h1>404 Not Found</h1>
+                        <h1>App Error Boundary</h1>
+                        <pre>{error.message}</pre>
                       </div>
                       <Scripts />
                     </body>
                   </html>
                 );
-              default:
-                console.warn("Unexpected catch", caught);
-
-                return (
-                  <html lang="en">
-                    <head>
-                      <meta charSet="utf-8" />
-                      <title>{caught.status} Uh-oh!</title>
-                      <Links />
-                    </head>
-                    <body>
-                      <div>
-                        <h1>
-                          {caught.status} {caught.statusText}
-                        </h1>
-                        {caught.data ? (
-                          <pre>
-                            <code>{JSON.stringify(caught.data, null, 2)}</code>
-                          </pre>
-                        ) : null}
-                      </div>
-                      <Scripts />
-                    </body>
-                  </html>
-                );
-            }
-          }
-
-          export function ErrorBoundary({ error }) {
-            console.error(error);
-            return (
-              <html lang="en">
-                <head>
-                  <meta charSet="utf-8" />
-                  <title>Oops!</title>
-                  <Links />
-                </head>
-                <body>
-                  <div>
-                    <h1>App Error Boundary</h1>
-                    <pre>{error.message}</pre>
-                  </div>
-                  <Scripts />
-                </body>
-              </html>
-            );
+              }
           }
         `,
 
