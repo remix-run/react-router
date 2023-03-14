@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 1.14.2-pre.0
+
+### Patch Changes
+
+- remove premature deprecation warnings ([#5790](https://github.com/remix-run/remix/pull/5790))
+- Updated dependencies:
+  - `@remix-run/serve@1.14.2-pre.0`
+  - `@remix-run/server-runtime@1.14.2-pre.0`
+
 ## 1.14.1
 
 ### Patch Changes
