@@ -862,34 +862,14 @@ export function createRouter(init: RouterInit): Router {
       }
     );
 
-    if (state.initialized) {
-      return router;
-    }
-
-    let lazyMatches = state.matches.filter((m) => m.route.lazy);
-
-    if (lazyMatches.length === 0) {
-      // Kick off initial data load if needed.  Use Pop to avoid modifying history
+    // Kick off initial data load if needed.  Use Pop to avoid modifying history
+    // Note we don't do any handling of lazy here.  For SPA's it'll get handled
+    // in the normal navigation flow.  For SSR it's expected that lazy modules are
+    // resolved prior to router creation since we can't go into a fallbackElement
+    // UI for SSR'd apps
+    if (!state.initialized) {
       startNavigation(HistoryAction.Pop, state.location);
-      return router;
     }
-
-    // Load lazy modules, then kick off initial data load if needed
-    let lazyPromises = lazyMatches.map((m) =>
-      loadLazyRouteModule(m.route, detectErrorBoundary, manifest)
-    );
-    Promise.all(lazyPromises).then(() => {
-      let initialized =
-        !state.matches.some((m) => m.route.loader) ||
-        init.hydrationData != null;
-      if (initialized) {
-        // We already have required loaderData so we can just set initialized
-        updateState({ initialized: true });
-      } else {
-        // We still need to kick off initial data loads
-        startNavigation(HistoryAction.Pop, state.location);
-      }
-    });
 
     return router;
   }
