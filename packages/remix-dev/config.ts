@@ -404,7 +404,7 @@ export async function readConfig(
   if (appConfig.serverBuildTarget) {
     warnOnce(serverBuildTargetWarning, "v2_serverBuildTarget");
   }
-  
+
   if (!appConfig.future?.v2_errorBoundary) {
     warnOnce(errorBoundaryWarning, "v2_errorBoundary");
   }
@@ -738,7 +738,6 @@ let listFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "conjunction",
 });
-
 
 export let serverBuildTargetWarning = `⚠️ DEPRECATED: The "serverBuildTarget" config option is deprecated. Use a combination of "publicPath", "serverBuildPath", "serverConditions", "serverDependenciesToBundle", "serverMainFields", "serverMinify", "serverModuleFormat" and/or "serverPlatform" instead.`;
 
