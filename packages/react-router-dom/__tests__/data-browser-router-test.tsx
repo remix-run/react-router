@@ -9,8 +9,8 @@ import {
   prettyDOM,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-
-import type { Router, RouterInit } from "@remix-run/router";
+import type { ErrorResponse } from "@remix-run/router";
+import type { RouteObject } from "react-router-dom";
 import {
   Form,
   Link,
@@ -43,8 +43,6 @@ testDomRouter("<DataHashRouter>", createHashRouter, (url) =>
   getWindowImpl(url, true)
 );
 
-let router: Router | null = null;
-
 function testDomRouter(
   name: string,
   createTestRouter: typeof createBrowserRouter | typeof createHashRouter,
@@ -68,60 +66,26 @@ function testDomRouter(
     }
   }
 
-  // Abstraction to avoid re-writing all tests for the time being
-  function TestDataRouter({
-    basename,
-    children,
-    fallbackElement,
-    hydrationData,
-    window,
-  }: {
-    basename?: RouterInit["basename"];
-    children: React.ReactNode | React.ReactNode[];
-    fallbackElement?: React.ReactNode;
-    hydrationData?: RouterInit["hydrationData"];
-    window?: Window;
-  }) {
-    router = createTestRouter(createRoutesFromElements(children), {
-      basename,
-      hydrationData,
-      window,
-    });
-    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
-  }
-
-  async function waitForRouterInitialize(router) {
-    return await new Promise((resolve) => {
-      let unsubscribe = router.subscribe((updatedState) => {
-        if (updatedState.initialized) {
-          unsubscribe();
-          resolve(router);
-        }
-      });
-    });
-  }
-
   describe(`Router: ${name}`, () => {
     let consoleWarn: jest.SpyInstance;
     let consoleError: jest.SpyInstance;
+
     beforeEach(() => {
       consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
       consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
     });
 
     afterEach(() => {
-      router = null;
       window.__staticRouterHydrationData = undefined;
       consoleWarn.mockRestore();
       consoleError.mockRestore();
     });
 
     it("renders the first route that matches the URL", () => {
-      let { container } = render(
-        <TestDataRouter hydrationData={{}}>
-          <Route path="/" element={<h1>Home</h1>} />
-        </TestDataRouter>
+      let router = createTestRouter(
+        createRoutesFromElements(<Route path="/" element={<h1>Home</h1>} />)
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
          "<div>
@@ -133,18 +97,19 @@ function testDomRouter(
     });
 
     it("renders the first route that matches the URL when wrapped in a root Route", () => {
-      let { container } = render(
-        <TestDataRouter
-          window={getWindow("/my/base/path/thing")}
-          hydrationData={{}}
-        >
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/my/base/path">
             <Route element={<Outlet />}>
               <Route path="thing" element={<h1>Heyooo</h1>} />
             </Route>
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/my/base/path/thing"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
          "<div>
@@ -156,15 +121,16 @@ function testDomRouter(
     });
 
     it("supports a basename prop", () => {
-      let { container } = render(
-        <TestDataRouter
-          basename="/my/base/path"
-          window={getWindow("/my/base/path/thing")}
-          hydrationData={{}}
-        >
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="thing" element={<h1>Heyooo</h1>} />
-        </TestDataRouter>
+        ),
+        {
+          basename: "/my/base/path",
+          window: getWindow("/my/base/path/thing"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -176,10 +142,15 @@ function testDomRouter(
     });
 
     it("renders with hydration data", async () => {
-      let { container } = render(
-        <TestDataRouter
-          window={getWindow("/child")}
-          hydrationData={{
+      let router = createTestRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Comp />}>
+            <Route path="child" element={<Comp />} />
+          </Route>
+        ),
+        {
+          window: getWindow("/child"),
+          hydrationData: {
             loaderData: {
               "0": "parent data",
               "0-0": "child data",
@@ -187,13 +158,10 @@ function testDomRouter(
             actionData: {
               "0-0": "child action",
             },
-          }}
-        >
-          <Route path="/" element={<Comp />}>
-            <Route path="child" element={<Comp />} />
-          </Route>
-        </TestDataRouter>
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
         let data = useLoaderData();
@@ -201,9 +169,9 @@ function testDomRouter(
         let navigation = useNavigation();
         return (
           <div>
-            {data}
-            {actionData}
-            {navigation.state}
+            <>{data}</>
+            <>{actionData}</>
+            <>{navigation.state}</>
             <Outlet />
           </div>
         );
@@ -235,13 +203,17 @@ function testDomRouter(
           "0-0": "child action",
         },
       };
-      let { container } = render(
-        <TestDataRouter window={getWindow("/child")}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Comp />}>
             <Route path="child" element={<Comp />} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/child"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
         let data = useLoaderData();
@@ -249,9 +221,9 @@ function testDomRouter(
         let navigation = useNavigation();
         return (
           <div>
-            {data}
-            {actionData}
-            {navigation.state}
+            <>{data}</>
+            <>{actionData}</>
+            <>{navigation.state}</>
             <Outlet />
           </div>
         );
@@ -287,14 +259,15 @@ function testDomRouter(
           },
         },
       };
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
-        </TestDataRouter>
+        )
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError();
+        let error = useRouteError() as unknown;
         return isRouteErrorResponse(error) ? (
           <pre>{JSON.stringify(error)}</pre>
         ) : (
@@ -322,14 +295,15 @@ function testDomRouter(
           },
         },
       };
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
-        </TestDataRouter>
+        )
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return error instanceof Error ? (
           <>
             <pre>{error.toString()}</pre>
@@ -354,11 +328,8 @@ function testDomRouter(
 
     it("renders fallbackElement while first data fetch happens", async () => {
       let fooDefer = createDeferred();
-      let { container } = render(
-        <TestDataRouter
-          window={getWindow("/foo")}
-          fallbackElement={<FallbackElement />}
-        >
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Outlet />}>
             <Route
               path="foo"
@@ -367,7 +338,13 @@ function testDomRouter(
             />
             <Route path="bar" element={<Bar />} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/foo"),
+        }
+      );
+      let { container } = render(
+        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
       );
 
       function FallbackElement() {
@@ -375,8 +352,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       function Bar() {
@@ -405,11 +382,8 @@ function testDomRouter(
 
     it("renders fallbackElement while first data fetch and lazy route load happens", async () => {
       let fooDefer = createDeferred();
-      let { container } = render(
-        <TestDataRouter
-          window={getWindow("/foo")}
-          fallbackElement={<FallbackElement />}
-        >
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Outlet />}>
             <Route
               path="foo"
@@ -422,7 +396,13 @@ function testDomRouter(
             />
             <Route path="bar" element={<Bar />} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/foo"),
+        }
+      );
+      let { container } = render(
+        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
       );
 
       function FallbackElement() {
@@ -430,8 +410,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       function Bar() {
@@ -460,11 +440,8 @@ function testDomRouter(
 
     it("does not render fallbackElement if no data fetch or lazy loading is required", async () => {
       let fooDefer = createDeferred();
-      let { container } = render(
-        <TestDataRouter
-          window={getWindow("/bar")}
-          fallbackElement={<FallbackElement />}
-        >
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Outlet />}>
             <Route
               path="foo"
@@ -473,7 +450,13 @@ function testDomRouter(
             />
             <Route path="bar" element={<Bar />} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/bar"),
+        }
+      );
+      let { container } = render(
+        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
       );
 
       function FallbackElement() {
@@ -481,8 +464,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       function Bar() {
@@ -500,11 +483,8 @@ function testDomRouter(
 
     it("renders fallbackElement within router contexts", async () => {
       let fooDefer = createDeferred();
-      let { container } = render(
-        <TestDataRouter
-          window={getWindow("/foo")}
-          fallbackElement={<FallbackElement />}
-        >
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Outlet />}>
             <Route
               path="foo"
@@ -512,7 +492,11 @@ function testDomRouter(
               element={<Foo />}
             />
           </Route>
-        </TestDataRouter>
+        ),
+        { window: getWindow("/foo") }
+      );
+      let { container } = render(
+        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
       );
 
       function FallbackElement() {
@@ -521,8 +505,8 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData();
-        return <h1>Foo:{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>Foo:{data.message}</h1>;
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -547,14 +531,16 @@ function testDomRouter(
     });
 
     it("handles link navigations", async () => {
-      render(
-        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        { window: getWindow("/foo") }
       );
+      render(<RouterProvider router={router} />);
 
       function Layout() {
         return (
@@ -576,18 +562,19 @@ function testDomRouter(
 
     it("handles link navigations when using a basename", async () => {
       let testWindow = getWindow("/base/name/foo");
-      render(
-        <TestDataRouter
-          basename="/base/name"
-          window={testWindow}
-          hydrationData={{}}
-        >
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          window: testWindow,
+          basename: "/base/name",
+        }
       );
+      render(<RouterProvider router={router} />);
 
       function Layout() {
         return (
@@ -616,8 +603,8 @@ function testDomRouter(
     it("executes route loaders on navigation", async () => {
       let barDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<Foo />} />
             <Route
@@ -626,8 +613,10 @@ function testDomRouter(
               element={<Bar />}
             />
           </Route>
-        </TestDataRouter>
+        ),
+        { window: getWindow("/foo") }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -646,11 +635,11 @@ function testDomRouter(
         return <h1>Foo</h1>;
       }
       function Bar() {
-        let data = useLoaderData();
-        return <h1>{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>{data.message}</h1>;
       }
 
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -665,7 +654,7 @@ function testDomRouter(
         `);
 
       fireEvent.click(screen.getByText("Link to Bar"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -681,7 +670,7 @@ function testDomRouter(
 
       barDefer.resolve({ message: "Bar Loader" });
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -699,8 +688,8 @@ function testDomRouter(
     it("executes lazy route loaders on navigation", async () => {
       let barDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<Foo />} />
             <Route
@@ -711,8 +700,12 @@ function testDomRouter(
               })}
             />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/foo"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -731,11 +724,11 @@ function testDomRouter(
         return <h1>Foo</h1>;
       }
       function Bar() {
-        let data = useLoaderData();
-        return <h1>{data?.message}</h1>;
+        let data = useLoaderData() as { message: string };
+        return <h1>{data.message}</h1>;
       }
 
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -750,7 +743,7 @@ function testDomRouter(
         `);
 
       fireEvent.click(screen.getByText("Link to Bar"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -766,7 +759,7 @@ function testDomRouter(
 
       barDefer.resolve({ message: "Bar Loader" });
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -782,14 +775,16 @@ function testDomRouter(
     });
 
     it("handles link navigations with preventScrollReset", async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        { window: getWindow("/foo") }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let state = React.useContext(DataRouterStateContext);
@@ -807,7 +802,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -818,7 +813,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -829,14 +824,16 @@ function testDomRouter(
     });
 
     it("handles link navigations with preventScrollReset={true}", async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/foo")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo Heading</h1>} />
             <Route path="bar" element={<h1>Bar Heading</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        { window: getWindow("/foo") }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let state = React.useContext(DataRouterStateContext);
@@ -854,7 +851,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Bar"));
       await waitFor(() => screen.getByText("Bar Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -865,7 +862,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Link to Foo"));
       await waitFor(() => screen.getByText("Foo Heading"));
-      expect(getHtml(container.querySelector("#preventScrollReset")))
+      expect(getHtml(container.querySelector("#preventScrollReset")!))
         .toMatchInlineSnapshot(`
         "<p
           id="preventScrollReset"
@@ -879,29 +876,36 @@ function testDomRouter(
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             action={() => actionDefer.promise}
             loader={() => loaderDefer.promise}
             element={<Home />}
           />
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/"),
+          hydrationData: { loaderData: { "0": null } },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         let submit = useSubmit();
-        let formRef = React.useRef();
+        let formRef = React.useRef<HTMLFormElement>(null);
         return (
           <div>
             <form method="post" action="/" ref={formRef}>
               <input name="test" value="value" />
             </form>
-            <button onClick={() => submit(formRef.current)}>Submit Form</button>
+            <button onClick={() => submit(formRef.current!)}>
+              Submit Form
+            </button>
             <div id="output">
               <p>{navigation.state}</p>
               <p>{data}</p>
@@ -912,7 +916,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -927,7 +931,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("submitting"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -942,7 +946,7 @@ function testDomRouter(
 
       actionDefer.resolve("Action Data");
       await waitFor(() => screen.getByText("loading"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -959,7 +963,7 @@ function testDomRouter(
 
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -981,8 +985,8 @@ function testDomRouter(
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             lazy={async () => ({
@@ -991,15 +995,20 @@ function testDomRouter(
               element: <Home />,
             })}
           />
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/"),
+          hydrationData: { loaderData: { "0": null } },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         let submit = useSubmit();
-        let formRef = React.useRef();
+        let formRef = React.useRef<HTMLFormElement>(null);
         return (
           <div>
             <form method="post" action="/" ref={formRef}>
@@ -1017,7 +1026,7 @@ function testDomRouter(
       }
 
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1032,7 +1041,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("submitting"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1047,7 +1056,7 @@ function testDomRouter(
 
       actionDefer.resolve("Action Data");
       await waitFor(() => screen.getByText("loading"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1064,7 +1073,7 @@ function testDomRouter(
 
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1086,8 +1095,8 @@ function testDomRouter(
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             action={() => actionDefer.promise}
@@ -1100,12 +1109,17 @@ function testDomRouter(
             }}
             element={<Home />}
           />
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/"),
+          hydrationData: { loaderData: { "0": null } },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1123,7 +1137,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1138,7 +1152,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("loading"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1153,7 +1167,7 @@ function testDomRouter(
 
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1173,8 +1187,8 @@ function testDomRouter(
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             lazy={async () => ({
@@ -1189,12 +1203,17 @@ function testDomRouter(
               element: <Home />,
             })}
           />
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/"),
+          hydrationData: { loaderData: { "0": null } },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1213,7 +1232,7 @@ function testDomRouter(
       }
 
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1228,7 +1247,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("loading"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1243,7 +1262,7 @@ function testDomRouter(
 
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1263,8 +1282,8 @@ function testDomRouter(
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             action={async ({ request }) => {
@@ -1275,12 +1294,17 @@ function testDomRouter(
             loader={() => loaderDefer.promise}
             element={<Home />}
           />
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/"),
+          hydrationData: { loaderData: { "0": null } },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1298,7 +1322,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1313,7 +1337,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("submitting"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1328,7 +1352,7 @@ function testDomRouter(
 
       actionDefer.resolve("Action Data");
       await waitFor(() => screen.getByText("loading"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1345,7 +1369,7 @@ function testDomRouter(
 
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1367,8 +1391,8 @@ function testDomRouter(
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             lazy={async () => ({
@@ -1381,12 +1405,17 @@ function testDomRouter(
               element: <Home />,
             })}
           />
-        </TestDataRouter>
+        ),
+        {
+          window: getWindow("/"),
+          hydrationData: { loaderData: { "0": null } },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1405,7 +1434,7 @@ function testDomRouter(
       }
 
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1420,7 +1449,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("submitting"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1435,7 +1464,7 @@ function testDomRouter(
 
       actionDefer.resolve("Action Data");
       await waitFor(() => screen.getByText("loading"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1452,7 +1481,7 @@ function testDomRouter(
 
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -1472,11 +1501,12 @@ function testDomRouter(
 
     it("supports <Form reloadDocument={true}>", async () => {
       let actionSpy = jest.fn();
-      render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="/" action={actionSpy} element={<Home />} />
-        </TestDataRouter>
+        )
       );
+      render(<RouterProvider router={router} />);
 
       let handlerCalled;
       let defaultPrevented;
@@ -1504,15 +1534,19 @@ function testDomRouter(
     });
 
     it('defaults <Form method="get"> to be a PUSH navigation', async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route element={<Layout />}>
             <Route index loader={() => "index"} element={<h1>index</h1>} />
             <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
             <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          hydrationData: {},
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigate = useNavigate();
@@ -1530,7 +1564,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1543,7 +1577,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1556,7 +1590,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("index"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1569,8 +1603,8 @@ function testDomRouter(
     });
 
     it('defaults <Form method="post"> to be a REPLACE navigation', async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route element={<Layout />}>
             <Route index loader={() => "index"} element={<h1>Index Page</h1>} />
             <Route
@@ -1580,8 +1614,12 @@ function testDomRouter(
             />
             <Route path="result" element={<h1>Result Page</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          hydrationData: {},
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigate = useNavigate();
@@ -1597,7 +1635,7 @@ function testDomRouter(
       }
 
       function FormPage() {
-        let data = useActionData();
+        let data = useActionData() as string | undefined;
         return (
           <Form method="post">
             <p>Form Page</p>
@@ -1608,7 +1646,7 @@ function testDomRouter(
         );
       }
 
-      let html = () => getHtml(container.querySelector(".output"));
+      let html = () => getHtml(container.querySelector(".output")!);
 
       // Start on index page
       expect(html()).toMatch("Index Page");
@@ -1630,8 +1668,8 @@ function testDomRouter(
     });
 
     it('Uses a PUSH navigation on <Form method="post"> if it redirects', async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route element={<Layout />}>
             <Route index loader={() => "index"} element={<h1>Index Page</h1>} />
             <Route
@@ -1646,8 +1684,10 @@ function testDomRouter(
             />
             <Route path="result" element={<h1>Result Page</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        { hydrationData: {} }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigate = useNavigate();
@@ -1663,7 +1703,7 @@ function testDomRouter(
       }
 
       function FormPage() {
-        let data = useActionData();
+        let data = useActionData() as string | undefined;
         return (
           <Form method="post">
             <p>Form Page</p>
@@ -1674,7 +1714,7 @@ function testDomRouter(
         );
       }
 
-      let html = () => getHtml(container.querySelector(".output"));
+      let html = () => getHtml(container.querySelector(".output")!);
 
       // Start on index page
       expect(html()).toMatch("Index Page");
@@ -1693,15 +1733,20 @@ function testDomRouter(
     });
 
     it('defaults useSubmit({ method: "get" }) to be a PUSH navigation', async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route element={<Layout />}>
             <Route index loader={() => "index"} element={<h1>index</h1>} />
             <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
             <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          hydrationData: {},
+          window: getWindow("/"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigate = useNavigate();
@@ -1723,7 +1768,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1736,7 +1781,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1749,7 +1794,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("index"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1762,8 +1807,8 @@ function testDomRouter(
     });
 
     it('defaults useSubmit({ method: "post" }) to a new location to be a PUSH navigation', async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route element={<Layout />}>
             <Route index loader={() => "index"} element={<h1>index</h1>} />
             <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
@@ -1774,8 +1819,13 @@ function testDomRouter(
               element={<h1>Page 2</h1>}
             />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          hydrationData: {},
+          window: getWindow("/"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigate = useNavigate();
@@ -1800,7 +1850,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1813,7 +1863,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go to 1"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1826,7 +1876,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit"));
       await waitFor(() => screen.getByText("Page 2"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1839,7 +1889,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1852,8 +1902,8 @@ function testDomRouter(
     });
 
     it('defaults useSubmit({ method: "post" }) to the same location to be a REPLACE navigation', async () => {
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route element={<Layout />}>
             <Route index loader={() => "index"} element={<h1>index</h1>} />
             <Route
@@ -1863,13 +1913,18 @@ function testDomRouter(
               element={<h1>Page 1</h1>}
             />
           </Route>
-        </TestDataRouter>
+        ),
+        {
+          hydrationData: {},
+          window: getWindow("/"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigate = useNavigate();
         let submit = useSubmit();
-        let actionData = useActionData();
+        let actionData = useActionData() as string | undefined;
         let formData = new FormData();
         formData.append("test", "value");
         return (
@@ -1891,7 +1946,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1904,7 +1959,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go to 1"));
       await waitFor(() => screen.getByText("Page 1"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1917,7 +1972,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit"));
       await waitFor(() => screen.getByText("action"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1933,7 +1988,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Go back"));
       await waitFor(() => screen.getByText("index"));
-      expect(getHtml(container.querySelector(".output")))
+      expect(getHtml(container.querySelector(".output")!))
         .toMatchInlineSnapshot(`
         "<div
           class="output"
@@ -1947,11 +2002,11 @@ function testDomRouter(
 
     it('supports a basename on <Form method="get">', async () => {
       let testWindow = getWindow("/base/path");
-      let { container } = render(
-        <TestDataRouter basename="/base" window={testWindow} hydrationData={{}}>
-          <Route path="path" element={<Comp />} />
-        </TestDataRouter>
+      let router = createTestRouter(
+        createRoutesFromElements(<Route path="path" element={<Comp />} />),
+        { basename: "/base", hydrationData: {}, window: testWindow }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
         let location = useLocation();
@@ -2020,11 +2075,17 @@ function testDomRouter(
 
     it('supports a basename on <Form method="post">', async () => {
       let testWindow = getWindow("/base/path");
-      let { container } = render(
-        <TestDataRouter basename="/base" window={testWindow} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route path="path" action={() => "action data"} element={<Comp />} />
-        </TestDataRouter>
+        ),
+        {
+          basename: "/base",
+          hydrationData: {},
+          window: testWindow,
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
         let location = useLocation();
@@ -2100,8 +2161,8 @@ function testDomRouter(
     it("allows a button to override the <form method>", async () => {
       let loaderDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             action={async ({ request }) => {
@@ -2110,11 +2171,16 @@ function testDomRouter(
             loader={() => loaderDefer.promise}
             element={<Home />}
           />
-        </TestDataRouter>
+        ),
+        {
+          hydrationData: {},
+          window: getWindow("/"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
+        let data = useLoaderData() as string;
         let navigation = useNavigation();
         return (
           <div>
@@ -2133,7 +2199,7 @@ function testDomRouter(
         );
       }
 
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -2147,7 +2213,7 @@ function testDomRouter(
 
       fireEvent.click(screen.getByText("Submit Form"));
       await waitFor(() => screen.getByText("loading"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -2161,7 +2227,7 @@ function testDomRouter(
 
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -2180,8 +2246,8 @@ function testDomRouter(
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
 
-      let { container } = render(
-        <TestDataRouter window={getWindow("/")} hydrationData={{}}>
+      let router = createTestRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             action={async ({ request }) => {
@@ -2192,16 +2258,21 @@ function testDomRouter(
             loader={() => loaderDefer.promise}
             element={<Home />}
           />
-        </TestDataRouter>
+        ),
+        {
+          hydrationData: {},
+          window: getWindow("/"),
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData();
-        let actionData = useActionData();
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
-            <Form method="POST">
+            <Form method="post">
               <input name="test" value="value" />
               <button type="submit">Submit Form</button>
             </Form>
@@ -2221,7 +2292,7 @@ function testDomRouter(
       await waitFor(() => screen.getByText("loading"));
       loaderDefer.resolve("Loader Data");
       await waitFor(() => screen.getByText("idle"));
-      expect(getHtml(container.querySelector("#output")))
+      expect(getHtml(container.querySelector("#output")!))
         .toMatchInlineSnapshot(`
         "<div
           id="output"
@@ -2269,18 +2340,19 @@ function testDomRouter(
 
       describe("static routes", () => {
         it("includes search params + hash when no action is specified", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar" element={<NoActionComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?a=1#hash"
@@ -2288,18 +2360,17 @@ function testDomRouter(
         });
 
         it("does not include search params + hash when action='.'", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar" element={<ActionDotComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            { window: getWindow("/foo/bar?a=1#hash") }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar"
@@ -2307,18 +2378,17 @@ function testDomRouter(
         });
 
         it("does not include search params + hash when action=''", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar" element={<ActionEmptyComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            { window: getWindow("/foo/bar?a=1#hash") }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar"
@@ -2328,11 +2398,8 @@ function testDomRouter(
 
       describe("layout routes", () => {
         it("includes search params + hash when no action is specified", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar" element={<NoActionComponent />}>
@@ -2340,8 +2407,12 @@ function testDomRouter(
                   </Route>
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?a=1#hash"
@@ -2349,11 +2420,8 @@ function testDomRouter(
         });
 
         it("does not include search params + hash when action='.'", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar" element={<ActionDotComponent />}>
@@ -2361,8 +2429,12 @@ function testDomRouter(
                   </Route>
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar"
@@ -2370,11 +2442,8 @@ function testDomRouter(
         });
 
         it("does not include search params + hash when action=''", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar" element={<ActionEmptyComponent />}>
@@ -2382,8 +2451,12 @@ function testDomRouter(
                   </Route>
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar"
@@ -2393,11 +2466,8 @@ function testDomRouter(
 
       describe("index routes", () => {
         it("includes search params + hash when no action is specified", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar">
@@ -2405,8 +2475,12 @@ function testDomRouter(
                   </Route>
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?index&a=1#hash"
@@ -2414,11 +2488,8 @@ function testDomRouter(
         });
 
         it("does not include search params + hash action='.'", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar">
@@ -2426,8 +2497,12 @@ function testDomRouter(
                   </Route>
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?index"
@@ -2435,11 +2510,8 @@ function testDomRouter(
         });
 
         it("does not include search params + hash action=''", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="bar">
@@ -2447,8 +2519,12 @@ function testDomRouter(
                   </Route>
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?index"
@@ -2458,8 +2534,8 @@ function testDomRouter(
         // eslint-disable-next-line jest/expect-expect
         it("does not repeatedly add ?index params on submissions", async () => {
           let testWindow = getWindow("/form");
-          render(
-            <TestDataRouter window={testWindow} hydrationData={{}}>
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="form">
                   <Route
@@ -2475,8 +2551,12 @@ function testDomRouter(
                   />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: testWindow,
+            }
           );
+          render(<RouterProvider router={router} />);
 
           assertLocation(testWindow, "/form", "");
 
@@ -2490,11 +2570,8 @@ function testDomRouter(
         });
 
         it("handles index routes with a path", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route
@@ -2504,8 +2581,10 @@ function testDomRouter(
                   />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            { window: getWindow("/foo/bar?a=1#hash") }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?index&a=1#hash"
@@ -2515,18 +2594,19 @@ function testDomRouter(
 
       describe("dynamic routes", () => {
         it("includes search params + hash when no action is specified", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path=":param" element={<NoActionComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?a=1#hash"
@@ -2534,18 +2614,19 @@ function testDomRouter(
         });
 
         it("does not include search params + hash action='.'", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path=":param" element={<ActionDotComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar"
@@ -2553,18 +2634,19 @@ function testDomRouter(
         });
 
         it("does not include search params + hash when action=''", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path=":param" element={<ActionEmptyComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar"
@@ -2574,18 +2656,19 @@ function testDomRouter(
 
       describe("splat routes", () => {
         it("includes search params + hash when no action is specified", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="*" element={<NoActionComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo?a=1#hash"
@@ -2593,18 +2676,19 @@ function testDomRouter(
         });
 
         it("does not include search params + hash when action='.'", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="*" element={<ActionDotComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo"
@@ -2612,18 +2696,19 @@ function testDomRouter(
         });
 
         it("does not include search params + hash when action=''", async () => {
-          let { container } = render(
-            <TestDataRouter
-              window={getWindow("/foo/bar?a=1#hash")}
-              hydrationData={{}}
-            >
+          let router = createTestRouter(
+            createRoutesFromElements(
               <Route path="/">
                 <Route path="foo">
                   <Route path="*" element={<ActionEmptyComponent />} />
                 </Route>
               </Route>
-            </TestDataRouter>
+            ),
+            {
+              window: getWindow("/foo/bar?a=1#hash"),
+            }
           );
+          let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo"
@@ -2634,11 +2719,8 @@ function testDomRouter(
 
     describe('<Form action relative="path">', () => {
       it("navigates relative to the URL for static routes", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/inbox/messages/edit")}
-            hydrationData={{}}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="inbox">
               <Route path="messages" />
               <Route
@@ -2646,8 +2728,12 @@ function testDomRouter(
                 element={<Form action=".." relative="path" />}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/inbox/messages/edit"),
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
           "/inbox/messages"
@@ -2655,11 +2741,8 @@ function testDomRouter(
       });
 
       it("navigates relative to the URL for dynamic routes", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/inbox/messages/1")}
-            hydrationData={{}}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="inbox">
               <Route path="messages" />
               <Route
@@ -2667,8 +2750,12 @@ function testDomRouter(
                 element={<Form action=".." relative="path" />}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/inbox/messages/1"),
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
           "/inbox/messages"
@@ -2676,11 +2763,8 @@ function testDomRouter(
       });
 
       it("navigates relative to the URL for layout routes", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/inbox/messages/1")}
-            hydrationData={{}}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="inbox">
               <Route path="messages" />
               <Route
@@ -2695,8 +2779,12 @@ function testDomRouter(
                 <Route index element={<h1>Form</h1>} />
               </Route>
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/inbox/messages/1"),
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
           "/inbox/messages"
@@ -2704,19 +2792,20 @@ function testDomRouter(
       });
 
       it("navigates relative to the URL for index routes", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/inbox/messages/1")}
-            hydrationData={{}}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="inbox">
               <Route path="messages" />
               <Route path="messages/:id">
                 <Route index element={<Form action=".." relative="path" />} />
               </Route>
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/inbox/messages/1"),
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
           "/inbox/messages"
@@ -2724,11 +2813,8 @@ function testDomRouter(
       });
 
       it("navigates relative to the URL for splat routes", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/inbox/messages/1/2/3")}
-            hydrationData={{}}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="inbox">
               <Route path="messages" />
               <Route
@@ -2736,8 +2822,12 @@ function testDomRouter(
                 element={<Form action=".." relative="path" />}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/inbox/messages/1/2/3"),
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
           "/inbox/messages/1/2"
@@ -2748,11 +2838,13 @@ function testDomRouter(
     describe("useSubmit/Form FormData", () => {
       it("gathers form data on <Form> submissions", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           return (
@@ -2772,11 +2864,13 @@ function testDomRouter(
 
       it("gathers form data on submit(form) submissions", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           let submit = useSubmit();
@@ -2800,11 +2894,13 @@ function testDomRouter(
 
       it("gathers form data on submit(button) submissions", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           let submit = useSubmit();
@@ -2834,11 +2930,13 @@ function testDomRouter(
 
       it("gathers form data on submit(input[type=submit]) submissions", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           let submit = useSubmit();
@@ -2868,11 +2966,13 @@ function testDomRouter(
 
       it("gathers form data on submit(FormData) submissions", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           let submit = useSubmit();
@@ -2894,11 +2994,13 @@ function testDomRouter(
 
       it("gathers form data on submit(object) submissions", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           let submit = useSubmit();
@@ -2919,11 +3021,13 @@ function testDomRouter(
 
       it("includes submit button name/value on form submission", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           return (
@@ -2946,11 +3050,13 @@ function testDomRouter(
 
       it("includes submit button name/value on button submission", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           let submit = useSubmit();
@@ -2981,11 +3087,13 @@ function testDomRouter(
 
       it("appends button name/value and doesn't overwrite inputs with same name (form)", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           return (
@@ -3007,11 +3115,13 @@ function testDomRouter(
 
       it("appends button name/value and doesn't overwrite inputs with same name (button)", async () => {
         let actionSpy = jest.fn();
-        render(
-          <TestDataRouter window={getWindow("/")}>
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" action={actionSpy} element={<FormPage />} />
-          </TestDataRouter>
+          ),
+          { window: getWindow("/") }
         );
+        render(<RouterProvider router={router} />);
 
         function FormPage() {
           let submit = useSubmit();
@@ -3043,11 +3153,8 @@ function testDomRouter(
     describe("useFetcher(s)", () => {
       it("handles fetcher.load and fetcher.submit", async () => {
         let count = 0;
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/"
               element={<Comp />}
@@ -3068,8 +3175,13 @@ function testDomRouter(
                 return { count };
               }}
             />
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3092,7 +3204,7 @@ function testDomRouter(
           );
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3102,7 +3214,7 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("load 1"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3112,7 +3224,7 @@ function testDomRouter(
         `);
 
         await waitFor(() => screen.getByText(/idle/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3123,7 +3235,7 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("load 5"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3134,7 +3246,7 @@ function testDomRouter(
         `);
 
         await waitFor(() => screen.getByText(/idle/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3145,7 +3257,7 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("submit 10"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3156,7 +3268,7 @@ function testDomRouter(
         `);
 
         await waitFor(() => screen.getByText(/idle/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3168,11 +3280,8 @@ function testDomRouter(
       });
 
       it("handles fetcher ?index params", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/parent")}
-            hydrationData={{ loaderData: { parent: null, index: null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/parent"
               element={<Outlet />}
@@ -3186,8 +3295,13 @@ function testDomRouter(
                 loader={() => "INDEX LOADER"}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/parent"),
+            hydrationData: { loaderData: { parent: null, index: null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Index() {
           let fetcher = useFetcher();
@@ -3240,7 +3354,7 @@ function testDomRouter(
         async function clickAndAssert(btnText: string, expectedOutput: string) {
           fireEvent.click(screen.getByText(btnText));
           await waitFor(() => screen.getByText(new RegExp(expectedOutput)));
-          expect(getHtml(container.querySelector("#output"))).toContain(
+          expect(getHtml(container.querySelector("#output")!)).toContain(
             expectedOutput
           );
         }
@@ -3255,11 +3369,8 @@ function testDomRouter(
       });
 
       it("handles fetcher.load errors", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/"
               element={<Comp />}
@@ -3268,8 +3379,13 @@ function testDomRouter(
                 throw new Error("Kaboom!");
               }}
             />
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3285,7 +3401,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -3324,19 +3440,21 @@ function testDomRouter(
 
       it("handles fetcher.load errors (defer)", async () => {
         let dfd = createDeferred();
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/"
               element={<Comp />}
               errorElement={<ErrorElement />}
               loader={() => defer({ value: dfd.promise })}
             />
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3352,7 +3470,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -3391,11 +3509,8 @@ function testDomRouter(
       });
 
       it("handles fetcher.submit errors", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/"
               element={<Comp />}
@@ -3404,8 +3519,13 @@ function testDomRouter(
                 throw new Error("Kaboom!");
               }}
             />
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3427,7 +3547,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -3466,11 +3586,8 @@ function testDomRouter(
 
       it("handles fetcher.Form", async () => {
         let count = 0;
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/"
               element={<Comp />}
@@ -3491,8 +3608,13 @@ function testDomRouter(
                 return { count };
               }}
             />
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3514,7 +3636,7 @@ function testDomRouter(
           );
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3524,7 +3646,7 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("submit get 1"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3534,7 +3656,7 @@ function testDomRouter(
         `);
 
         await waitFor(() => screen.getByText(/idle/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3545,7 +3667,7 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("submit post 10"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3556,7 +3678,7 @@ function testDomRouter(
         `);
 
         await waitFor(() => screen.getByText(/idle/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3568,11 +3690,8 @@ function testDomRouter(
       });
 
       it("handles fetcher.Form get errors", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/"
               element={<Comp />}
@@ -3581,8 +3700,13 @@ function testDomRouter(
                 throw new Error("Kaboom!");
               }}
             />
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3600,11 +3724,11 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3614,7 +3738,7 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("submit"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3634,11 +3758,8 @@ function testDomRouter(
       });
 
       it("handles fetcher.Form post errors", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route
               path="/"
               element={<Comp />}
@@ -3647,8 +3768,13 @@ function testDomRouter(
                 throw new Error("Kaboom!");
               }}
             />
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3666,11 +3792,11 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3680,7 +3806,7 @@ function testDomRouter(
         `);
 
         fireEvent.click(screen.getByText("submit"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3702,11 +3828,8 @@ function testDomRouter(
       it("show all fetchers via useFetchers and cleans up fetchers on unmount", async () => {
         let dfd1 = createDeferred();
         let dfd2 = createDeferred();
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/1")}
-            hydrationData={{ loaderData: { "0": null, "0-0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" element={<Parent />}>
               <Route
                 path="/1"
@@ -3719,8 +3842,13 @@ function testDomRouter(
                 element={<Comp2 />}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/1"),
+            hydrationData: { loaderData: { "0": null, "0-0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Parent() {
           let fetchers = useFetchers();
@@ -3763,7 +3891,7 @@ function testDomRouter(
         }
 
         // Initial state - no useFetchers reflected yet
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -3784,7 +3912,7 @@ function testDomRouter(
 
         // Activate Comp1 fetcher
         fireEvent.click(screen.getByText("load"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -3806,7 +3934,7 @@ function testDomRouter(
         // Resolve Comp1 fetcher - UI updates
         dfd1.resolve("data 1");
         await waitFor(() => screen.getByText(/data 1/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -3827,7 +3955,7 @@ function testDomRouter(
 
         // Link to Comp2 - loaders run
         fireEvent.click(screen.getByText("Link to 2"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -3851,7 +3979,7 @@ function testDomRouter(
         // TODO: Is this expected?
         dfd2.resolve("data 2");
         await waitFor(() => screen.getByText(/2.*idle/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -3873,7 +4001,7 @@ function testDomRouter(
         // Activate Comp2 fetcher, which now officially kicks out Comp1's
         // fetcher from useFetchers and reflects Comp2's fetcher
         fireEvent.click(screen.getByText("load"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -3894,7 +4022,7 @@ function testDomRouter(
 
         // Comp2 loader resolves with the same data, useFetchers reflects idle-done
         await waitFor(() => screen.getByText(/2.*idle/));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -3917,27 +4045,32 @@ function testDomRouter(
       it("handles revalidating fetchers", async () => {
         let count = 0;
         let fetchCount = 0;
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
-            <Route
-              path="/"
-              element={<Comp />}
-              action={async ({ request }) => {
-                let formData = await request.formData();
-                count = count + parseInt(String(formData.get("increment")), 10);
-                return { count };
-              }}
-              loader={async () => ({ count: ++count })}
-            />
-            <Route
-              path="/fetch"
-              loader={async () => ({ fetchCount: ++fetchCount })}
-            />
-          </TestDataRouter>
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <>
+              <Route
+                path="/"
+                element={<Comp />}
+                action={async ({ request }) => {
+                  let formData = await request.formData();
+                  count =
+                    count + parseInt(String(formData.get("increment")), 10);
+                  return { count };
+                }}
+                loader={async () => ({ count: ++count })}
+              />
+              <Route
+                path="/fetch"
+                loader={async () => ({ fetchCount: ++fetchCount })}
+              />
+            </>
+          ),
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -3959,7 +4092,7 @@ function testDomRouter(
           );
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3972,7 +4105,7 @@ function testDomRouter(
           fireEvent.click(screen.getByText("load fetcher"));
           await waitFor(() => screen.getByText(/idle/));
         });
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3986,7 +4119,7 @@ function testDomRouter(
           fireEvent.click(screen.getByText("submit"));
           await waitFor(() => screen.getByText(/idle/));
         });
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<p
             id="output"
@@ -3998,11 +4131,8 @@ function testDomRouter(
       });
 
       it("handles fetcher 404 errors at the correct spot in the route hierarchy", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/child")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
               <Route
                 path="child"
@@ -4010,8 +4140,13 @@ function testDomRouter(
                 errorElement={<ErrorElement />}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -4021,7 +4156,7 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          let { status, statusText } = useRouteError();
+          let { status, statusText } = useRouteError() as ErrorResponse;
           return <p>contextual error:{`${status} ${statusText}`}</p>;
         }
 
@@ -4046,11 +4181,8 @@ function testDomRouter(
       });
 
       it("handles fetcher.load errors at the correct spot in the route hierarchy", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/child")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
               <Route
                 path="child"
@@ -4065,8 +4197,13 @@ function testDomRouter(
                 errorElement={<p>Not I!</p>}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -4074,7 +4211,8 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          return <p>contextual error:{useRouteError().message}</p>;
+          let error = useRouteError() as Error;
+          return <p>contextual error:{error.message}</p>;
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -4098,11 +4236,8 @@ function testDomRouter(
       });
 
       it("handles fetcher.submit errors at the correct spot in the route hierarchy", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/child")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
               <Route
                 path="child"
@@ -4117,8 +4252,13 @@ function testDomRouter(
                 errorElement={<p>Not I!</p>}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -4137,7 +4277,8 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          return <p>contextual error:{useRouteError().message}</p>;
+          let error = useRouteError() as Error;
+          return <p>contextual error:{error.message}</p>;
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -4161,11 +4302,8 @@ function testDomRouter(
       });
 
       it("handles fetcher.Form errors at the correct spot in the route hierarchy", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/child")}
-            hydrationData={{ loaderData: { "0": null } }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
               <Route
                 path="child"
@@ -4180,8 +4318,13 @@ function testDomRouter(
                 errorElement={<p>Not I!</p>}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: { loaderData: { "0": null } },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let fetcher = useFetcher();
@@ -4195,7 +4338,8 @@ function testDomRouter(
         }
 
         function ErrorElement() {
-          return <p>contextual error:{useRouteError().message}</p>;
+          let error = useRouteError() as Error;
+          return <p>contextual error:{error.message}</p>;
         }
 
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -4230,10 +4374,19 @@ function testDomRouter(
 
     describe("errors", () => {
       it("renders hydration errors on leaf elements", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/child")}
-            hydrationData={{
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" element={<Comp />}>
+              <Route
+                path="child"
+                element={<Comp />}
+                errorElement={<ErrorBoundary />}
+              />
+            </Route>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: {
               loaderData: {
                 "0": "parent data",
               },
@@ -4243,17 +4396,10 @@ function testDomRouter(
               errors: {
                 "0-0": new Error("Kaboom 💥"),
               },
-            }}
-          >
-            <Route path="/" element={<Comp />}>
-              <Route
-                path="child"
-                element={<Comp />}
-                errorElement={<ErrorBoundary />}
-              />
-            </Route>
-          </TestDataRouter>
+            },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let data = useLoaderData();
@@ -4261,16 +4407,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4327,16 +4473,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4403,16 +4549,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4431,22 +4577,24 @@ function testDomRouter(
       });
 
       it("renders hydration errors on parent elements", async () => {
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/child")}
-            hydrationData={{
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
+              <Route path="child" element={<Comp />} />
+            </Route>
+          ),
+          {
+            window: getWindow("/child"),
+            hydrationData: {
               loaderData: {},
               actionData: null,
               errors: {
                 "0": new Error("Kaboom 💥"),
               },
-            }}
-          >
-            <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
-              <Route path="child" element={<Comp />} />
-            </Route>
-          </TestDataRouter>
+            },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Comp() {
           let data = useLoaderData();
@@ -4454,16 +4602,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4519,16 +4667,16 @@ function testDomRouter(
           let navigation = useNavigation();
           return (
             <div>
-              {data}
-              {actionData}
-              {navigation.state}
+              <>{data}</>
+              <>{actionData}</>
+              <>{navigation.state}</>
               <Outlet />
             </div>
           );
         }
 
         function ErrorBoundary() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4545,17 +4693,8 @@ function testDomRouter(
         let fooDefer = createDeferred();
         let barDefer = createDeferred();
 
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/foo")}
-            hydrationData={{
-              loaderData: {
-                "0-0": {
-                  message: "hydrated from foo",
-                },
-              },
-            }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" element={<Layout />}>
               <Route
                 path="foo"
@@ -4570,8 +4709,19 @@ function testDomRouter(
                 errorElement={<BarError />}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/foo"),
+            hydrationData: {
+              loaderData: {
+                "0-0": {
+                  message: "hydrated from foo",
+                },
+              },
+            },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Layout() {
           let navigation = useNavigation();
@@ -4588,23 +4738,23 @@ function testDomRouter(
         }
 
         function Foo() {
-          let data = useLoaderData();
-          return <h1>Foo:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Foo:{data.message}</h1>;
         }
         function FooError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Bar Error:{error.message}</p>;
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4622,7 +4772,7 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4640,7 +4790,7 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Link to Foo"));
         fooDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4660,17 +4810,8 @@ function testDomRouter(
         let fooDefer = createDeferred();
         let barDefer = createDeferred();
 
-        let { container } = render(
-          <TestDataRouter
-            window={getWindow("/foo")}
-            hydrationData={{
-              loaderData: {
-                "0-0": {
-                  message: "hydrated from foo",
-                },
-              },
-            }}
-          >
+        let router = createTestRouter(
+          createRoutesFromElements(
             <Route path="/" element={<Layout />} errorElement={<LayoutError />}>
               <Route
                 path="foo"
@@ -4684,8 +4825,19 @@ function testDomRouter(
                 element={<Bar />}
               />
             </Route>
-          </TestDataRouter>
+          ),
+          {
+            window: getWindow("/foo"),
+            hydrationData: {
+              loaderData: {
+                "0-0": {
+                  message: "hydrated from foo",
+                },
+              },
+            },
+          }
         );
+        let { container } = render(<RouterProvider router={router} />);
 
         function Layout() {
           let navigation = useNavigation();
@@ -4701,23 +4853,23 @@ function testDomRouter(
           );
         }
         function LayoutError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Layout Error:{error.message}</p>;
         }
         function Foo() {
-          let data = useLoaderData();
-          return <h1>Foo:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Foo:{data.message}</h1>;
         }
         function FooError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4768,7 +4920,7 @@ function testDomRouter(
           },
         ];
 
-        router = createTestRouter(routes, { window: getWindow("/foo") });
+        let router = createTestRouter(routes, { window: getWindow("/foo") });
         let { container } = render(<RouterProvider router={router} />);
 
         function Layout() {
@@ -4785,15 +4937,15 @@ function testDomRouter(
         }
 
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Bar Error:{error.message}</p>;
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4810,7 +4962,7 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Link to Bar"));
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4831,7 +4983,7 @@ function testDomRouter(
         let lazyDefer = createDeferred();
         let barDefer = createDeferred();
 
-        let routes = [
+        let routes: RouteObject[] = [
           {
             path: "/",
             element: <Layout />,
@@ -4842,13 +4994,13 @@ function testDomRouter(
               },
               {
                 path: "bar",
-                lazy: async () => lazyDefer.promise,
+                lazy: async () => lazyDefer.promise as Promise<RouteObject>,
               },
             ],
           },
         ];
 
-        router = createTestRouter(routes, { window: getWindow("/foo") });
+        let router = createTestRouter(routes, { window: getWindow("/foo") });
         let { container } = render(<RouterProvider router={router} />);
 
         function Layout() {
@@ -4865,15 +5017,15 @@ function testDomRouter(
         }
 
         function Bar() {
-          let data = useLoaderData();
-          return <h1>Bar:{data?.message}</h1>;
+          let data = useLoaderData() as { message: string };
+          return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
-          let error = useRouteError();
+          let error = useRouteError() as Error;
           return <p>Bar Error:{error.message}</p>;
         }
 
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4895,7 +5047,7 @@ function testDomRouter(
         });
         barDefer.reject(new Error("Kaboom!"));
         await waitFor(() => screen.getByText("idle"));
-        expect(getHtml(container.querySelector("#output")))
+        expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
             id="output"
@@ -4948,7 +5100,7 @@ function getWindowImpl(initialUrl: string, isHash = false): Window {
 }
 
 function getHtml(container: HTMLElement) {
-  return prettyDOM(container, null, {
+  return prettyDOM(container, undefined, {
     highlight: false,
     theme: {
       comment: null,
@@ -4957,5 +5109,16 @@ function getHtml(container: HTMLElement) {
       tag: null,
       value: null,
     },
+  });
+}
+
+async function waitForRouterInitialize(router) {
+  return await new Promise((resolve) => {
+    let unsubscribe = router.subscribe((updatedState) => {
+      if (updatedState.initialized) {
+        unsubscribe();
+        resolve(router);
+      }
+    });
   });
 }
