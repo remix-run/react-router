@@ -72,11 +72,12 @@ const writeAssetsManifest = async (
   );
 };
 
-const isCssBundlingEnabled = (config: RemixConfig) =>
-  config.future.unstable_cssModules ||
-  config.future.unstable_cssSideEffectImports ||
-  config.future.unstable_vanillaExtract;
-
+const isCssBundlingEnabled = (config: RemixConfig): boolean =>
+  Boolean(
+    config.future.unstable_cssModules ||
+      config.future.unstable_cssSideEffectImports ||
+      config.future.unstable_vanillaExtract
+  );
 const createEsbuildConfig = (
   build: "app" | "css",
   config: RemixConfig,

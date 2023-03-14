@@ -15,7 +15,7 @@ import { createRequestHandler as createExpressHandler } from "../../build/node_m
 
 const TMP_DIR = path.join(process.cwd(), ".tmp", "integration");
 
-interface FixtureInit {
+export interface FixtureInit {
   buildStdio?: Writable;
   sourcemap?: boolean;
   files?: { [filename: string]: string };
