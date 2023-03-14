@@ -24,7 +24,7 @@ export function isCssSideEffectImportPath(path: string): boolean {
 const extensions = ["js", "jsx", "ts", "tsx", "mjs", "cjs"] as const;
 const allJsFilesFilter = new RegExp(`\\.(${extensions.join("|")})$`);
 
-type Loader = 'js' | 'jsx' | 'ts' | 'tsx';
+type Loader = "js" | "jsx" | "ts" | "tsx";
 type Extension = `.${typeof extensions[number]}`;
 
 const loaderForExtension: Record<Extension, Loader> = {
@@ -33,7 +33,7 @@ const loaderForExtension: Record<Extension, Loader> = {
   ".ts": "ts",
   ".tsx": "tsx",
   ".mjs": "js",
-  ".cjs": "js"
+  ".cjs": "js",
 };
 
 /**

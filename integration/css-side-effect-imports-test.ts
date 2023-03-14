@@ -268,7 +268,7 @@ test.describe("CSS side-effect imports", () => {
       };
     `,
     "node_modules/@test-package/esm/package.json": json({
-      exports: './index.mjs'
+      exports: "./index.mjs",
     }),
     "app/routes/esm-package-test.jsx": js`
       import { Test } from "@test-package/esm";
