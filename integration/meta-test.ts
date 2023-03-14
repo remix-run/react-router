@@ -519,7 +519,7 @@ test.describe("v2_meta", () => {
 
         "app/routes/music.jsx": js`
           export function meta({ data, matches }) {
-            let rootModule = matches.find(match => match.route.id === "root");
+            let rootModule = matches.find(match => match.id === "root");
             let rootCharSet = rootModule.meta.find(meta => meta.charSet);
             return [
               rootCharSet,
