@@ -405,10 +405,6 @@ export async function readConfig(
     warnOnce(errorBoundaryWarning, "v2_errorBoundary");
   }
 
-  if (appConfig.serverBuildTarget) {
-    warnOnce(serverBuildTargetWarning, "v2_serverBuildTarget");
-  }
-
   let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
     appConfig.serverBuildTarget ?? ""
   );
@@ -568,14 +564,9 @@ export async function readConfig(
     root: { path: "", id: "root", file: rootRouteFile },
   };
 
-  let routesConvention: typeof flatRoutes;
-
-  if (appConfig.future?.v2_routeConvention) {
-    routesConvention = flatRoutes;
-  } else {
-    warnOnce(flatRoutesWarning, "v2_routeConvention");
-    routesConvention = defineConventionalRoutes;
-  }
+  let routesConvention = appConfig.future?.v2_routeConvention
+    ? flatRoutes
+    : defineConventionalRoutes;
 
   if (fse.existsSync(path.resolve(appDirectory, "routes"))) {
     let conventionalRoutes = routesConvention(
@@ -738,10 +729,6 @@ let listFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "conjunction",
 });
-
-export let serverBuildTargetWarning = `⚠️ DEPRECATED: The "serverBuildTarget" config option is deprecated. Use a combination of "publicPath", "serverBuildPath", "serverConditions", "serverDependenciesToBundle", "serverMainFields", "serverMinify", "serverModuleFormat" and/or "serverPlatform" instead.`;
-
-export let flatRoutesWarning = `⚠️ DEPRECATED: The old nested folders route convention has been deprecated in favor of "flat routes".  Please enable the new routing convention via the \`future.v2_routeConvention\` flag in your \`remix.config.js\` file.  For more information, please see https://remix.run/docs/en/main/file-conventions/route-files-v2.`;
 
 export const errorBoundaryWarning =
   "⚠️ DEPRECATED: The separation of `CatchBoundary` and `ErrorBoundary` has " +
