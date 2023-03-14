@@ -538,6 +538,10 @@ export async function readConfig(
     ? path.resolve(appDirectory, userEntryServerFile)
     : path.resolve(defaultsDirectory, entryServerFile);
 
+  if (appConfig.browserBuildDirectory) {
+    warnOnce(browserBuildDirectoryWarning, "browserBuildDirectory");
+  }
+
   let assetsBuildDirectory =
     appConfig.assetsBuildDirectory ||
     appConfig.browserBuildDirectory ||
@@ -739,7 +743,8 @@ let listFormat = new Intl.ListFormat("en", {
   type: "conjunction",
 });
 
-export let serverBuildTargetWarning = `⚠️ DEPRECATED: The "serverBuildTarget" config option is deprecated. Use a combination of "publicPath", "serverBuildPath", "serverConditions", "serverDependenciesToBundle", "serverMainFields", "serverMinify", "serverModuleFormat" and/or "serverPlatform" instead.`;
+export let browserBuildDirectoryWarning = `⚠️ DEPRECATED: The \`browserBuildDirectory\` config option is deprecated. Use \`assetsBuildDirectory\` instead.`;
+export let serverBuildTargetWarning = `⚠️ DEPRECATED: The \`serverBuildTarget\` config option is deprecated. Use a combination of \`publicPath\`, \`serverBuildPath\`, \`serverConditions\`, \`serverDependenciesToBundle\`, \`serverMainFields\`, \`serverMinify\`, \`serverModuleFormat\` and/or \`serverPlatform\` instead.`;
 
 export let flatRoutesWarning = `⚠️ DEPRECATED: The old nested folders route convention has been deprecated in favor of "flat routes".  Please enable the new routing convention via the \`future.v2_routeConvention\` flag in your \`remix.config.js\` file.  For more information, please see https://remix.run/docs/en/main/file-conventions/route-files-v2.`;
 
