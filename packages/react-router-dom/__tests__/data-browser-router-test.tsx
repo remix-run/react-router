@@ -32,6 +32,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   defer,
   useLocation,
+  useMatches,
   createRoutesFromElements,
 } from "react-router-dom";
 
@@ -987,31 +988,33 @@ function testDomRouter(
 
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route
-            path="/"
-            lazy={async () => ({
-              action: () => actionDefer.promise,
-              loader: () => loaderDefer.promise,
-              element: <Home />,
-            })}
-          />
+          <Route path="/" element={<Home />}>
+            <Route index element={<h1>Home</h1>} />
+            <Route
+              path="action"
+              lazy={async () => ({
+                action: () => actionDefer.promise,
+                loader: () => loaderDefer.promise,
+                element: <h1>Action</h1>,
+              })}
+            />
+          </Route>
         ),
         {
           window: getWindow("/"),
-          hydrationData: { loaderData: { "0": null } },
         }
       );
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useMatches().pop()?.data as string | undefined;
         let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         let submit = useSubmit();
         let formRef = React.useRef<HTMLFormElement>(null);
         return (
           <div>
-            <form method="post" action="/" ref={formRef}>
+            <form method="post" action="/action" ref={formRef}>
               <input name="test" value="value" />
             </form>
             <button onClick={() => submit(formRef.current)}>Submit Form</button>
@@ -1019,8 +1022,8 @@ function testDomRouter(
               <p>{navigation.state}</p>
               <p>{data}</p>
               <p>{actionData}</p>
+              <Outlet />
             </div>
-            <Outlet />
           </div>
         );
       }
@@ -1036,6 +1039,9 @@ function testDomRouter(
           </p>
           <p />
           <p />
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1051,6 +1057,9 @@ function testDomRouter(
           </p>
           <p />
           <p />
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1068,6 +1077,9 @@ function testDomRouter(
           <p>
             Action Data
           </p>
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1087,6 +1099,9 @@ function testDomRouter(
           <p>
             Action Data
           </p>
+          <h1>
+            Action
+          </h1>
         </div>"
       `);
     });
@@ -1189,35 +1204,37 @@ function testDomRouter(
 
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route
-            path="/"
-            lazy={async () => ({
-              action: () => actionDefer.promise,
-              loader: async ({ request }) => {
-                let resolvedValue = await loaderDefer.promise;
-                let urlParam = new URL(
-                  `https://remix.run${request.url}`
-                ).searchParams.get("test");
-                return `${resolvedValue}:${urlParam}`;
-              },
-              element: <Home />,
-            })}
-          />
+          <Route path="/" element={<Home />}>
+            <Route index element={<h1>Home</h1>} />
+            <Route
+              path="path"
+              lazy={async () => ({
+                action: () => actionDefer.promise,
+                loader: async ({ request }) => {
+                  let resolvedValue = await loaderDefer.promise;
+                  let urlParam = new URL(
+                    `https://remix.run${request.url}`
+                  ).searchParams.get("test");
+                  return `${resolvedValue}:${urlParam}`;
+                },
+                element: <h1>Path</h1>,
+              })}
+            />
+          </Route>
         ),
         {
           window: getWindow("/"),
-          hydrationData: { loaderData: { "0": null } },
         }
       );
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useMatches().pop()?.data as string | undefined;
         let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
-            <Form method="get">
+            <Form method="get" action="path">
               <input name="test" value="value" />
               <button type="submit">Submit Form</button>
             </Form>
@@ -1225,8 +1242,8 @@ function testDomRouter(
               <p>{navigation.state}</p>
               <p>{data}</p>
               <p>{actionData}</p>
+              <Outlet />
             </div>
-            <Outlet />
           </div>
         );
       }
@@ -1242,6 +1259,9 @@ function testDomRouter(
           </p>
           <p />
           <p />
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1257,6 +1277,9 @@ function testDomRouter(
           </p>
           <p />
           <p />
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1274,6 +1297,9 @@ function testDomRouter(
             Loader Data:value
           </p>
           <p />
+          <h1>
+            Path
+          </h1>
         </div>"
       `);
     });
@@ -1393,18 +1419,21 @@ function testDomRouter(
 
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route
-            path="/"
-            lazy={async () => ({
-              action: async ({ request }) => {
-                let resolvedValue = await actionDefer.promise;
-                let formData = await request.formData();
-                return `${resolvedValue}:${formData.get("test")}`;
-              },
-              loader: () => loaderDefer.promise,
-              element: <Home />,
-            })}
-          />
+          <Route path="/" element={<Home />}>
+            <Route index element={<h1>Home</h1>} />
+            <Route
+              path="action"
+              lazy={async () => ({
+                action: async ({ request }) => {
+                  let resolvedValue = await actionDefer.promise;
+                  let formData = await request.formData();
+                  return `${resolvedValue}:${formData.get("test")}`;
+                },
+                loader: () => loaderDefer.promise,
+                element: <h1>Action</h1>,
+              })}
+            />
+          </Route>
         ),
         {
           window: getWindow("/"),
@@ -1414,12 +1443,12 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useMatches().pop()?.data as string | undefined;
         let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
-            <Form method="post">
+            <Form method="post" action="action">
               <input name="test" value="value" />
               <button type="submit">Submit Form</button>
             </Form>
@@ -1427,8 +1456,8 @@ function testDomRouter(
               <p>{navigation.state}</p>
               <p>{data}</p>
               <p>{actionData}</p>
+              <Outlet />
             </div>
-            <Outlet />
           </div>
         );
       }
@@ -1444,6 +1473,9 @@ function testDomRouter(
           </p>
           <p />
           <p />
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1459,6 +1491,9 @@ function testDomRouter(
           </p>
           <p />
           <p />
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1476,6 +1511,9 @@ function testDomRouter(
           <p>
             Action Data:value
           </p>
+          <h1>
+            Home
+          </h1>
         </div>"
       `);
 
@@ -1495,6 +1533,9 @@ function testDomRouter(
           <p>
             Action Data:value
           </p>
+          <h1>
+            Action
+          </h1>
         </div>"
       `);
     });
@@ -4434,72 +4475,6 @@ function testDomRouter(
         `);
       });
 
-      it("renders hydration errors on lazy leaf elements", async () => {
-        let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" element={<Comp />}>
-              <Route
-                path="child"
-                lazy={async () => ({
-                  element: <Comp />,
-                  errorElement: <ErrorBoundary />,
-                })}
-              />
-            </Route>
-          ),
-          {
-            window: getWindow("/child"),
-            hydrationData: {
-              loaderData: {
-                "0": "parent data",
-              },
-              actionData: {
-                "0": "parent action",
-              },
-              errors: {
-                "0-0": new Error("Kaboom 💥"),
-              },
-            },
-          }
-        );
-
-        await waitForRouterInitialize(router);
-
-        let { container } = render(<RouterProvider router={router} />);
-
-        function Comp() {
-          let data = useLoaderData();
-          let actionData = useActionData();
-          let navigation = useNavigation();
-          return (
-            <div>
-              <>{data}</>
-              <>{actionData}</>
-              <>{navigation.state}</>
-              <Outlet />
-            </div>
-          );
-        }
-
-        function ErrorBoundary() {
-          let error = useRouteError() as Error;
-          return <p>{error.message}</p>;
-        }
-
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <div>
-              parent data
-              parent action
-              idle
-              <p>
-                Kaboom 💥
-              </p>
-            </div>
-          </div>"
-        `);
-      });
-
       it("renders hydration errors on lazy leaf elements with preloading", async () => {
         let routes = createRoutesFromElements(
           <Route path="/" element={<Comp />}>
@@ -4624,39 +4599,41 @@ function testDomRouter(
         `);
       });
 
-      it("renders hydration errors on lazy parent elements", async () => {
-        let router = createTestRouter(
-          createRoutesFromElements(
-            <Route
-              path="/"
-              lazy={async () => ({
-                element: <Comp />,
-                errorElement: <ErrorBoundary />,
-              })}
-            >
-              <Route path="child" element={<Comp />} />
-            </Route>
-          ),
-          {
-            window: getWindow("/child"),
-            hydrationData: {
-              loaderData: {},
-              actionData: null,
-              errors: {
-                "0": new Error("Kaboom 💥"),
-              },
-            },
-          }
+      it("renders hydration errors on lazy parent elements with preloading", async () => {
+        let routes = createRoutesFromElements(
+          <Route
+            path="/"
+            lazy={async () => ({
+              element: <Comp />,
+              errorElement: <ErrorBoundary />,
+            })}
+          >
+            <Route path="child" element={<Comp />} />
+          </Route>
         );
 
-        // Wait for lazy() to load
-        await new Promise((resolve) => {
-          let unsubscribe = router.subscribe((updatedState) => {
-            if (updatedState.initialized) {
-              unsubscribe();
-              resolve(router);
-            }
-          });
+        let lazyMatches = matchRoutes(routes, { pathname: "/child" })?.filter(
+          (m) => m.route.lazy
+        );
+
+        if (lazyMatches && lazyMatches?.length > 0) {
+          await Promise.all(
+            lazyMatches.map(async (m) => {
+              let routeModule = await m.route.lazy!();
+              Object.assign(m.route, { ...routeModule, lazy: undefined });
+            })
+          );
+        }
+
+        let router = createTestRouter(routes, {
+          window: getWindow("/child"),
+          hydrationData: {
+            loaderData: {},
+            actionData: null,
+            errors: {
+              "0": new Error("Kaboom 💥"),
+            },
+          },
         });
 
         let { container } = render(<RouterProvider router={router} />);

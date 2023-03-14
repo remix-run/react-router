@@ -12288,6 +12288,35 @@ describe("a router", () => {
     });
 
     describe("errors", () => {
+      it("handles errors when failing to load lazy route modules on initialization", async () => {
+        let dfd = createDeferred();
+        let router = createRouter({
+          history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              hasErrorBoundary: true,
+              children: [
+                {
+                  id: "lazy",
+                  path: "lazy",
+                  lazy: () => dfd.promise as Promise<AgnosticDataRouteObject>,
+                },
+              ],
+            },
+          ],
+        }).initialize();
+
+        expect(router.state.initialized).toBe(false);
+        dfd.reject(new Error("LAZY FUNCTION ERROR"));
+        await tick();
+        expect(router.state.errors).toEqual({
+          root: new Error("LAZY FUNCTION ERROR"),
+        });
+        expect(router.state.initialized).toBe(true);
+      });
+
       it("handles errors when failing to load lazy route modules on loading navigation", async () => {
         let t = setup({ routes: LAZY_ROUTES });
 
