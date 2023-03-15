@@ -34,8 +34,10 @@ import type {
   GetScrollRestorationKeyFunction,
   HashHistory,
   History,
+  HTMLFormMethod,
   HydrationState,
   Router as RemixRouter,
+  V7_FormMethod,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -72,6 +74,7 @@ export type {
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
+  V7_FormMethod,
 };
 export { createSearchParams };
 
@@ -613,7 +616,7 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * The HTTP verb to use when the form is submit. Supports "get", "post",
    * "put", "delete", "patch".
    */
-  method?: FormMethod;
+  method?: HTMLFormMethod;
 
   /**
    * Normal `<form action>` but supports React Router's relative paths.
@@ -698,7 +701,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     forwardedRef
   ) => {
     let submit = useSubmitImpl(fetcherKey, routeId);
-    let formMethod: FormMethod =
+    let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
     let formAction = useFormAction(action, { relative });
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
@@ -710,7 +713,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         .submitter as HTMLFormSubmitter | null;
 
       let submitMethod =
-        (submitter?.getAttribute("formmethod") as FormMethod | undefined) ||
+        (submitter?.getAttribute("formmethod") as HTMLFormMethod | undefined) ||
         method;
 
       submit(submitter || event.currentTarget, {
@@ -967,7 +970,7 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
         replace: options.replace,
         preventScrollReset: options.preventScrollReset,
         formData,
-        formMethod: method as FormMethod,
+        formMethod: method as HTMLFormMethod,
         formEncType: encType as FormEncType,
       };
       if (fetcherKey) {

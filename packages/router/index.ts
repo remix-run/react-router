@@ -13,6 +13,7 @@ export type {
   TrackedPromise,
   FormEncType,
   FormMethod,
+  HTMLFormMethod,
   JsonFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -22,6 +23,7 @@ export type {
   PathPattern,
   RedirectFunction,
   ShouldRevalidateFunction,
+  V7_FormMethod,
 } from "./utils";
 
 export {
