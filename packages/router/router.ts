@@ -22,12 +22,15 @@ import type {
   Submission,
   SuccessResult,
   AgnosticRouteMatch,
-  MutationFormMethod,
   ShouldRevalidateFunction,
   RouteManifest,
   ImmutableRouteKey,
   ActionFunction,
   LoaderFunction,
+  V7_MutationFormMethod,
+  V7_FormMethod,
+  HTMLFormMethod,
+  MutationFormMethod,
 } from "./utils";
 import {
   DeferredData,
@@ -327,14 +330,22 @@ export type HydrationState = Partial<
 >;
 
 /**
+ * Future flags to toggle new feature behavior
+ */
+export interface FutureConfig {
+  v7_normalizeFormMethod: boolean;
+}
+
+/**
  * Initialization options for createRouter
  */
 export interface RouterInit {
-  basename?: string;
   routes: AgnosticRouteObject[];
   history: History;
-  hydrationData?: HydrationState;
+  basename?: string;
   detectErrorBoundary?: DetectErrorBoundaryFunction;
+  future?: FutureConfig;
+  hydrationData?: HydrationState;
 }
 
 /**
@@ -415,7 +426,7 @@ type SubmissionNavigateOptions = {
   replace?: boolean;
   state?: any;
   preventScrollReset?: boolean;
-  formMethod?: FormMethod;
+  formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
   formData: FormData;
 };
@@ -449,7 +460,7 @@ export type NavigationStates = {
   Loading: {
     state: "loading";
     location: Location;
-    formMethod: FormMethod | undefined;
+    formMethod: FormMethod | V7_FormMethod | undefined;
     formAction: string | undefined;
     formEncType: FormEncType | undefined;
     formData: FormData | undefined;
@@ -457,7 +468,7 @@ export type NavigationStates = {
   Submitting: {
     state: "submitting";
     location: Location;
-    formMethod: FormMethod;
+    formMethod: FormMethod | V7_FormMethod;
     formAction: string;
     formEncType: FormEncType;
     formData: FormData;
@@ -483,7 +494,7 @@ type FetcherStates<TData = any> = {
   };
   Loading: {
     state: "loading";
-    formMethod: FormMethod | undefined;
+    formMethod: FormMethod | V7_FormMethod | undefined;
     formAction: string | undefined;
     formEncType: FormEncType | undefined;
     formData: FormData | undefined;
@@ -492,7 +503,7 @@ type FetcherStates<TData = any> = {
   };
   Submitting: {
     state: "submitting";
-    formMethod: FormMethod;
+    formMethod: FormMethod | V7_FormMethod;
     formAction: string;
     formEncType: FormEncType;
     formData: FormData;
@@ -676,6 +687,11 @@ export function createRouter(init: RouterInit): Router {
     manifest
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
+  // Config driven behavior flags
+  let future: FutureConfig = {
+    v7_normalizeFormMethod: false,
+    ...init.future,
+  };
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -1013,7 +1029,11 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path, submission, error } = normalizeNavigateOptions(to, opts);
+    let { path, submission, error } = normalizeNavigateOptions(
+      to,
+      future,
+      opts
+    );
 
     let currentLocation = state.location;
     let nextLocation = createLocation(state.location, path, opts && opts.state);
@@ -1568,7 +1588,12 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path, submission } = normalizeNavigateOptions(href, opts, true);
+    let { path, submission } = normalizeNavigateOptions(
+      href,
+      future,
+      opts,
+      true
+    );
     let match = getTargetMatch(matches, path);
 
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
@@ -2441,12 +2466,12 @@ export function createStaticHandler(
     { requestContext }: { requestContext?: unknown } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
-    let method = request.method.toLowerCase();
+    let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (!isValidMethod(method) && method !== "head") {
+    if (!isValidMethod(method) && method !== "HEAD") {
       let error = getInternalRouterError(405, { method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
@@ -2523,12 +2548,12 @@ export function createStaticHandler(
     }: { requestContext?: unknown; routeId?: string } = {}
   ): Promise<any> {
     let url = new URL(request.url);
-    let method = request.method.toLowerCase();
+    let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (!isValidMethod(method) && method !== "head" && method !== "options") {
+    if (!isValidMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
       throw getInternalRouterError(405, { method });
     } else if (!matches) {
       throw getInternalRouterError(404, { pathname: location.pathname });
@@ -2923,6 +2948,7 @@ function isSubmissionNavigation(
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
   to: To,
+  future: FutureConfig,
   opts?: RouterNavigateOptions,
   isFetcher = false
 ): {
@@ -2947,8 +2973,11 @@ function normalizeNavigateOptions(
   // Create a Submission on non-GET navigations
   let submission: Submission | undefined;
   if (opts.formData) {
+    let formMethod = opts.formMethod || "get";
     submission = {
-      formMethod: opts.formMethod || "get",
+      formMethod: future.v7_normalizeFormMethod
+        ? (formMethod.toUpperCase() as V7_FormMethod)
+        : (formMethod.toLowerCase() as FormMethod),
       formAction: stripHashFromPath(path),
       formEncType:
         (opts && opts.formEncType) || "application/x-www-form-urlencoded",
@@ -3462,7 +3491,7 @@ function createClientSideRequest(
 
   if (submission && isMutationMethod(submission.formMethod)) {
     let { formMethod, formEncType, formData } = submission;
-    init.method = formMethod.toUpperCase();
+    init.method = formMethod;
     init.body =
       formEncType === "application/x-www-form-urlencoded"
         ? convertFormDataToSearchParams(formData)
@@ -3831,12 +3860,14 @@ function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
   );
 }
 
-function isValidMethod(method: string): method is FormMethod {
-  return validRequestMethods.has(method as FormMethod);
+function isValidMethod(method: string): method is FormMethod | V7_FormMethod {
+  return validRequestMethods.has(method.toLowerCase() as FormMethod);
 }
 
-function isMutationMethod(method?: string): method is MutationFormMethod {
-  return validMutationMethods.has(method as MutationFormMethod);
+function isMutationMethod(
+  method: string
+): method is MutationFormMethod | V7_MutationFormMethod {
+  return validMutationMethods.has(method.toLowerCase() as MutationFormMethod);
 }
 
 async function resolveDeferredResults(

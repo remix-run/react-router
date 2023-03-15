@@ -52,9 +52,10 @@ function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
+    future?: FutureConfig;
+    hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
-    window?: Window;
   }
 ): RemixRouter;
 ```
