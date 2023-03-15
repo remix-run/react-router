@@ -22,7 +22,6 @@ export type {
   PathPattern,
   RedirectFunction,
   ShouldRevalidateFunction,
-  Submission,
 } from "./utils";
 
 export {

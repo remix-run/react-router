@@ -10,6 +10,7 @@ import type {
   RouterNavigateOptions,
   StaticHandler,
   StaticHandlerContext,
+  FutureConfig,
 } from "../index";
 import {
   createMemoryHistory,
@@ -289,6 +290,7 @@ type SetupOpts = {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
+  future?: FutureConfig;
 };
 
 function setup({
@@ -297,6 +299,7 @@ function setup({
   initialEntries,
   initialIndex,
   hydrationData,
+  future,
 }: SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
@@ -424,6 +427,7 @@ function setup({
     history,
     routes: enhanceRoutes(routes),
     hydrationData,
+    future,
   }).initialize();
 
   function getRouteHelpers(
@@ -3619,6 +3623,117 @@ describe("a router", () => {
         "child",
         "childIndex",
       ]);
+    });
+
+    describe("formMethod casing", () => {
+      it("normalizes to lowercase in v6", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: true,
+                  action: true,
+                },
+              ],
+            },
+          ],
+        });
+        let A = await t.navigate("/child", {
+          formMethod: "get",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.navigation.formMethod).toBe("get");
+        await A.loaders.child.resolve("LOADER");
+        expect(t.router.state.navigation.formMethod).toBeUndefined();
+        await t.router.navigate("/");
+
+        let B = await t.navigate("/child", {
+          formMethod: "POST",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.navigation.formMethod).toBe("post");
+        await B.actions.child.resolve("ACTION");
+        await B.loaders.child.resolve("LOADER");
+        expect(t.router.state.navigation.formMethod).toBeUndefined();
+        await t.router.navigate("/");
+
+        let C = await t.fetch("/child", "key", {
+          formMethod: "GET",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("get");
+        await C.loaders.child.resolve("LOADER FETCH");
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBeUndefined();
+
+        let D = await t.fetch("/child", "key", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("post");
+        await D.actions.child.resolve("ACTION FETCH");
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBeUndefined();
+      });
+
+      it("normalizes to uppercase in v7 via v7_normalizeFormMethod", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: true,
+                  action: true,
+                },
+              ],
+            },
+          ],
+          future: {
+            v7_normalizeFormMethod: true,
+          },
+        });
+        let A = await t.navigate("/child", {
+          formMethod: "get",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.navigation.formMethod).toBe("GET");
+        await A.loaders.child.resolve("LOADER");
+        expect(t.router.state.navigation.formMethod).toBeUndefined();
+        await t.router.navigate("/");
+
+        let B = await t.navigate("/child", {
+          formMethod: "POST",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.navigation.formMethod).toBe("POST");
+        await B.actions.child.resolve("ACTION");
+        await B.loaders.child.resolve("LOADER");
+        expect(t.router.state.navigation.formMethod).toBeUndefined();
+        await t.router.navigate("/");
+
+        let C = await t.fetch("/child", "key", {
+          formMethod: "GET",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("GET");
+        await C.loaders.child.resolve("LOADER FETCH");
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBeUndefined();
+
+        let D = await t.fetch("/child", "key", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("POST");
+        await D.actions.child.resolve("ACTION FETCH");
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBeUndefined();
+      });
     });
   });
 

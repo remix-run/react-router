@@ -30,6 +30,7 @@ import type {
   Fetcher,
   FormEncType,
   FormMethod,
+  FutureConfig,
   GetScrollRestorationKeyFunction,
   HashHistory,
   History,
@@ -199,16 +200,20 @@ declare global {
 //#region Routers
 ////////////////////////////////////////////////////////////////////////////////
 
+interface DOMRouterOpts {
+  basename?: string;
+  future?: FutureConfig;
+  hydrationData?: HydrationState;
+  window?: Window;
+}
+
 export function createBrowserRouter(
   routes: RouteObject[],
-  opts?: {
-    basename?: string;
-    hydrationData?: HydrationState;
-    window?: Window;
-  }
+  opts?: DOMRouterOpts
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
+    future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
@@ -218,14 +223,11 @@ export function createBrowserRouter(
 
 export function createHashRouter(
   routes: RouteObject[],
-  opts?: {
-    basename?: string;
-    hydrationData?: HydrationState;
-    window?: Window;
-  }
+  opts?: DOMRouterOpts
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
+    future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
