@@ -50,7 +50,7 @@
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "lru-cache": "^7.14.1",
-    "minimatch": "^3.0.4",
+    "minimatch": "^3.0.5",
     "node-fetch": "^2.6.7",
     "ora": "^5.4.1",
     "postcss": "^8.4.19",
