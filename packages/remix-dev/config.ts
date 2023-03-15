@@ -726,6 +726,8 @@ const resolveServerBuildPath = (
 
   // retain deprecated behavior for now
   if (appConfig.serverBuildDirectory) {
+    warnOnce(serverBuildDirectoryWarning, "serverBuildDirectory");
+
     serverBuildPath = path.join(appConfig.serverBuildDirectory, "index.js");
   }
 
@@ -743,10 +745,26 @@ let listFormat = new Intl.ListFormat("en", {
   type: "conjunction",
 });
 
-export let browserBuildDirectoryWarning = `⚠️ DEPRECATED: The \`browserBuildDirectory\` config option is deprecated. Use \`assetsBuildDirectory\` instead.`;
-export let serverBuildTargetWarning = `⚠️ DEPRECATED: The \`serverBuildTarget\` config option is deprecated. Use a combination of \`publicPath\`, \`serverBuildPath\`, \`serverConditions\`, \`serverDependenciesToBundle\`, \`serverMainFields\`, \`serverMinify\`, \`serverModuleFormat\` and/or \`serverPlatform\` instead.`;
+export let browserBuildDirectoryWarning =
+  "⚠️ DEPRECATED: The `browserBuildDirectory` config option is deprecated. " +
+  "Use `assetsBuildDirectory` instead.";
 
-export let flatRoutesWarning = `⚠️ DEPRECATED: The old nested folders route convention has been deprecated in favor of "flat routes".  Please enable the new routing convention via the \`future.v2_routeConvention\` flag in your \`remix.config.js\` file.  For more information, please see https://remix.run/docs/en/main/file-conventions/route-files-v2.`;
+export let serverBuildDirectoryWarning =
+  "⚠️ DEPRECATED: The `serverBuildDirectory` config option is deprecated. " +
+  "Use `serverBuildPath` instead.";
+
+export let serverBuildTargetWarning =
+  "⚠️ DEPRECATED: The `serverBuildTarget` config option is deprecated. Use a " +
+  "combination of `publicPath`, `serverBuildPath`, `serverConditions`, " +
+  "`serverDependenciesToBundle`, `serverMainFields`, `serverMinify`, " +
+  "`serverModuleFormat` and/or `serverPlatform` instead.";
+
+export let flatRoutesWarning =
+  "⚠️ DEPRECATED: The old nested folders route convention has been " +
+  "deprecated in favor of 'flat routes'.  Please enable the new routing " +
+  "convention via the `future.v2_routeConvention` flag in your " +
+  "`remix.config.js` file.  For more information, please see " +
+  "https://remix.run/docs/en/main/file-conventions/route-files-v2.";
 
 export const errorBoundaryWarning =
   "⚠️ DEPRECATED: The separation of `CatchBoundary` and `ErrorBoundary` has " +
