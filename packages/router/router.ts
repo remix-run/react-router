@@ -1685,6 +1685,7 @@ export function createRouter(init: RouterInit): Router {
       updateState({ fetchers: new Map(state.fetchers) });
 
       return startRedirectNavigation(state, actionResult, {
+        submission,
         isFetchActionRedirect: true,
       });
     }

@@ -187,6 +187,7 @@ function findRouteById(
 }
 
 interface CustomMatchers<R = jest.Expect> {
+  URL(url: string);
   trackedPromise(data?: any, error?: any, aborted?: boolean): R;
   deferredData(
     done: boolean,
@@ -204,6 +205,13 @@ declare global {
 }
 
 expect.extend({
+  // Custom matcher for asserting against URLs
+  URL(received, url) {
+    return {
+      message: () => `expected URL ${received.toString()} to equal URL ${url}`,
+      pass: received instanceof URL && received.toString() === url,
+    };
+  },
   // Custom matcher for asserting deferred promise results for static handler
   //  - expect(val).deferredData(false) => Unresolved promise
   //  - expect(val).deferredData(false) => Resolved promise
@@ -1825,12 +1833,12 @@ describe("a router", () => {
       expect(rootLoader.mock.calls.length).toBe(1);
       expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
         currentParams: {},
-        currentUrl: new URL("http://localhost/child"),
+        currentUrl: expect.URL("http://localhost/child"),
         nextParams: {
           a: "aValue",
           b: "bValue",
         },
-        nextUrl: new URL("http://localhost/params/aValue/bValue"),
+        nextUrl: expect.URL("http://localhost/params/aValue/bValue"),
         defaultShouldRevalidate: false,
         actionResult: undefined,
       });
@@ -1889,9 +1897,9 @@ describe("a router", () => {
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchObject({
         currentParams: {},
-        currentUrl: new URL("http://localhost/child"),
+        currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
-        nextUrl: new URL("http://localhost/child"),
+        nextUrl: expect.URL("http://localhost/child"),
         defaultShouldRevalidate: true,
         formMethod: "post",
         formAction: "/child",
@@ -1942,9 +1950,9 @@ describe("a router", () => {
       let arg = shouldRevalidate.mock.calls[0][0];
       expect(arg).toMatchObject({
         currentParams: {},
-        currentUrl: new URL("http://localhost/child"),
+        currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
-        nextUrl: new URL("http://localhost/"),
+        nextUrl: expect.URL("http://localhost/"),
         defaultShouldRevalidate: true,
         formMethod: "post",
         formAction: "/child",
@@ -2108,9 +2116,9 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
         currentParams: {},
-        currentUrl: new URL("http://localhost/"),
+        currentUrl: expect.URL("http://localhost/"),
         nextParams: {},
-        nextUrl: new URL("http://localhost/child"),
+        nextUrl: expect.URL("http://localhost/child"),
         defaultShouldRevalidate: false,
       });
       expect(router.state.fetchers.get(key)).toMatchObject({
@@ -2123,9 +2131,9 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(2);
       expect(shouldRevalidate.mock.calls[1][0]).toMatchObject({
         currentParams: {},
-        currentUrl: new URL("http://localhost/child"),
+        currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
-        nextUrl: new URL("http://localhost/"),
+        nextUrl: expect.URL("http://localhost/"),
         defaultShouldRevalidate: false,
       });
       expect(router.state.fetchers.get(key)).toMatchObject({
@@ -2147,9 +2155,9 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(3);
       expect(shouldRevalidate.mock.calls[2][0]).toMatchObject({
         currentParams: {},
-        currentUrl: new URL("http://localhost/"),
+        currentUrl: expect.URL("http://localhost/"),
         nextParams: {},
-        nextUrl: new URL("http://localhost/child"),
+        nextUrl: expect.URL("http://localhost/child"),
         formAction: "/child",
         formData: createFormData({}),
         formEncType: "application/x-www-form-urlencoded",
@@ -2269,6 +2277,10 @@ describe("a router", () => {
           "currentParams": {},
           "currentUrl": "http://localhost/",
           "defaultShouldRevalidate": true,
+          "formAction": "/fetch",
+          "formData": FormData {},
+          "formEncType": "application/x-www-form-urlencoded",
+          "formMethod": "post",
           "nextParams": {},
           "nextUrl": "http://localhost/",
         }
