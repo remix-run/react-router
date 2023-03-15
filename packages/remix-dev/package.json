@@ -46,7 +46,7 @@
     "gunzip-maybe": "^1.4.2",
     "inquirer": "^8.2.1",
     "jsesc": "3.0.2",
-    "json5": "^2.2.1",
+    "json5": "^2.2.2",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "lru-cache": "^7.14.1",
