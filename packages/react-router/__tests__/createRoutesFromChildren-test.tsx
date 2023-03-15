@@ -240,4 +240,58 @@ describe("creating routes from JSX", () => {
       );
     }).toThrow("An index route cannot have child routes.");
   });
+
+  it("supports react fragments for automatic ID generation", () => {
+    expect(
+      createRoutesFromChildren(
+        <Route path="/">
+          <Route index />
+          <>
+            <Route path="a">
+              <>
+                <Route path="1" />
+                <Route path="2" />
+              </>
+            </Route>
+            <Route path="b" />
+          </>
+        </Route>
+      )
+    ).toEqual([
+      {
+        id: "0",
+        path: "/",
+        hasErrorBoundary: false,
+        children: [
+          {
+            id: "0-0",
+            index: true,
+            hasErrorBoundary: false,
+          },
+          {
+            id: "0-1-0",
+            path: "a",
+            hasErrorBoundary: false,
+            children: [
+              {
+                id: "0-1-0-0-0",
+                path: "1",
+                hasErrorBoundary: false,
+              },
+              {
+                id: "0-1-0-0-1",
+                path: "2",
+                hasErrorBoundary: false,
+              },
+            ],
+          },
+          {
+            id: "0-1-1",
+            path: "b",
+            hasErrorBoundary: false,
+          },
+        ],
+      },
+    ]);
+  });
 });

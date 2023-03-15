@@ -570,11 +570,13 @@ export function createRoutesFromChildren(
       return;
     }
 
+    let treePath = [...parentPath, index];
+
     if (element.type === React.Fragment) {
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children, parentPath)
+        createRoutesFromChildren(element.props.children, treePath)
       );
       return;
     }
@@ -591,7 +593,6 @@ export function createRoutesFromChildren(
       "An index route cannot have child routes."
     );
 
-    let treePath = [...parentPath, index];
     let route: RouteObject = {
       id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,
