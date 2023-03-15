@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 1.14.3-pre.0
+
+### Patch Changes
+
+- dev server is resilient to build failures ([#5795](https://github.com/remix-run/remix/pull/5795))
+- Updated dependencies:
+  - `@remix-run/serve@1.14.3-pre.0`
+  - `@remix-run/server-runtime@1.14.3-pre.0`
+
 ## 1.14.2
 
 ### Patch Changes
