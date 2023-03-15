@@ -2466,12 +2466,12 @@ export function createStaticHandler(
     { requestContext }: { requestContext?: unknown } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
-    let method = request.method.toLowerCase();
+    let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (!isValidMethod(method) && method.toUpperCase() !== "HEAD") {
+    if (!isValidMethod(method) && method !== "HEAD") {
       let error = getInternalRouterError(405, { method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
@@ -2548,15 +2548,12 @@ export function createStaticHandler(
     }: { requestContext?: unknown; routeId?: string } = {}
   ): Promise<any> {
     let url = new URL(request.url);
-    let method = request.method.toLowerCase();
+    let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (
-      !isValidMethod(method) &&
-      !["HEAD", "OPTIONS"].includes(method.toUpperCase())
-    ) {
+    if (!isValidMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
       throw getInternalRouterError(405, { method });
     } else if (!matches) {
       throw getInternalRouterError(404, { pathname: location.pathname });
