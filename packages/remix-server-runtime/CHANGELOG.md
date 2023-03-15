@@ -1,6 +1,6 @@
 # `@remix-run/server-runtime`
 
-## 1.14.3-pre.0
+## 1.14.3
 
 ## 1.14.2
 
