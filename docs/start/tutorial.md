@@ -1177,7 +1177,7 @@ Alright, navigate to a record and click the "Delete" button. It works!
 
 > 😅 I'm still confused why this all works
 
-When the user clicks the submit button:
+When the user clicks the "Delete" button:
 
 1. `<Form>` prevents the default browser behavior of sending a new POST request to the server, but instead emulates the browser by creating a POST request with client side routing
 2. The `<Form action="destroy">` matches the new route at `"contacts/:contactId/destroy"` and sends it the request
