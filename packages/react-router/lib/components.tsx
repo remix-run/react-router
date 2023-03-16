@@ -209,6 +209,7 @@ export function Navigate({
 
   let dataRouterState = React.useContext(DataRouterStateContext);
   let navigate = useNavigate();
+  let navigateCalledRef = React.useRef(false);
 
   React.useEffect(() => {
     // Avoid kicking off multiple navigations if we're in the middle of a
@@ -217,6 +218,10 @@ export function Navigate({
     if (dataRouterState && dataRouterState.navigation.state !== "idle") {
       return;
     }
+    if (navigateCalledRef.current) {
+      return;
+    }
+    navigateCalledRef.current = true;
     navigate(to, { replace, state, relative });
   });
 
