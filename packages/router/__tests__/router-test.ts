@@ -624,7 +624,7 @@ function setup({
     // Otherwise we should only need a loader for the leaf match
     let activeLoaderMatches = [match];
     // @ts-expect-error
-    if (opts?.formMethod === "post") {
+    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
           inFlightRoutes || currentRouter.routes,
@@ -689,7 +689,7 @@ function setup({
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
-    if (opts?.formMethod === "post") {
+    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
       activeActionType = "navigation";
       activeActionNavigationId = navigationId;
       // Assume happy path and mark this navigations loaders as active.  Even if
@@ -779,7 +779,7 @@ function setup({
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
-    if (opts?.formMethod === "post") {
+    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
       activeActionType = "fetch";
       activeActionFetchId = navigationId;
     } else {
@@ -5897,6 +5897,47 @@ describe("a router", () => {
         "application/x-www-form-urlencoded;charset=UTF-8"
       );
       expect((await request.formData()).get("query")).toBe("params");
+    });
+
+    // https://fetch.spec.whatwg.org/#concept-method
+    it("properly handles method=PATCH weirdness", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+          },
+        },
+      });
+
+      let nav = await t.navigate("/tasks", {
+        formMethod: "patch",
+        formData: createFormData({ query: "params" }),
+      });
+      expect(nav.actions.tasks.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      // Assert request internals, cannot do a deep comparison above since some
+      // internals aren't the same on separate creations
+      let request = nav.actions.tasks.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("PATCH");
+      expect(request.url).toBe("http://localhost/tasks");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+      expect((await request.formData()).get("query")).toBe("params");
+
+      await nav.actions.tasks.resolve("TASKS ACTION");
+      let rootLoaderRequest = nav.loaders.root.stub.mock.calls[0][0].request;
+      expect(rootLoaderRequest.method).toBe("GET");
+      expect(rootLoaderRequest.url).toBe("http://localhost/tasks");
+
+      let tasksLoaderRequest = nav.loaders.tasks.stub.mock.calls[0][0].request;
+      expect(tasksLoaderRequest.method).toBe("GET");
+      expect(tasksLoaderRequest.url).toBe("http://localhost/tasks");
     });
 
     it("handles multipart/form-data submissions", async () => {
