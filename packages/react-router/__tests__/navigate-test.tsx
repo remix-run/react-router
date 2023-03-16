@@ -470,6 +470,28 @@ describe("<Navigate>", () => {
       </div>"
     `);
   });
+
+  it("does not navigate twice in a row in StrictMode", () => {
+    let { container } = render(
+      <React.StrictMode>
+        <MemoryRouter initialEntries={["/page1", "/page2", "/navigate"]}>
+          <Routes>
+            <Route path="page1" element={<h1>Page 1</h1>} />
+            <Route path="page2" element={<h1>Page 2</h1>} />
+            <Route path="navigate" element={<Navigate to={-1} />} />
+          </Routes>
+        </MemoryRouter>
+      </React.StrictMode>
+    );
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page 2
+        </h1>
+      </div>"
+    `);
+  });
 });
 
 function getHtml(container: HTMLElement) {
