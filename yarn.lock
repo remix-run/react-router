@@ -1997,22 +1997,23 @@
     "@remix-run/web-stream" "^1.0.0"
     web-encoding "1.1.5"
 
-"@remix-run/web-fetch@4.1.3":
-  version "4.1.3"
-  resolved "https://registry.yarnpkg.com/@remix-run/web-fetch/-/web-fetch-4.1.3.tgz#8ad3077c1b5bd9fe2a8813d0ad3c84970a495c04"
-  integrity sha512-D3KXAEkzhR248mu7wCHReQrMrIo3Y9pDDa7TrlISnsOEvqkfWkJJF+PQWmOIKpOSHAhDg7TCb2tzvW8lc/MfHw==
+"@remix-run/web-fetch@4.3.3":
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/@remix-run/web-fetch/-/web-fetch-4.3.3.tgz#708371a43f20e645090150dfadb983e950bff12d"
+  integrity sha512-DK9vA2tgsadcFPpxW4fvN198tiWpyPhwR0EYOuM4QjpDCz0G619c9RDMdyMy6a7Qb/jwiyx9SOPHWc65QAl+1g==
   dependencies:
     "@remix-run/web-blob" "^3.0.4"
-    "@remix-run/web-form-data" "^3.0.2"
+    "@remix-run/web-form-data" "^3.0.3"
     "@remix-run/web-stream" "^1.0.3"
     "@web3-storage/multipart-parser" "^1.0.0"
+    abort-controller "^3.0.0"
     data-uri-to-buffer "^3.0.1"
     mrmime "^1.0.0"
 
-"@remix-run/web-form-data@^3.0.2":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@remix-run/web-form-data/-/web-form-data-3.0.3.tgz#f89a7f971aaf1084d2da87affbb7f4e01c32b8ce"
-  integrity sha512-wL4veBtVPazSpXfPMzrbmeV3IxuxCfcQYPerQ8BXRO5ahAEVw23tv7xS+yoX0XDO5j+vpRaSbhHJK1H5gF7eYQ==
+"@remix-run/web-form-data@^3.0.3":
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/@remix-run/web-form-data/-/web-form-data-3.0.4.tgz#18c5795edaffbc88c320a311766dc04644125bab"
+  integrity sha512-UMF1jg9Vu9CLOf8iHBdY74Mm3PUvMW8G/XZRJE56SxKaOFWGSWlfxfG+/a3boAgHFLTkP7K4H1PxlRugy1iQtw==
   dependencies:
     web-encoding "1.1.5"
 

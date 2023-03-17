@@ -867,10 +867,7 @@ function initializeTmTest(init?: {
 }
 
 function createRequest(path: string, opts?: RequestInit) {
-  return new Request(`http://localhost${path}`, {
-    signal: new AbortController().signal,
-    ...opts,
-  });
+  return new Request(`http://localhost${path}`, opts);
 }
 
 function createSubmitRequest(path: string, opts?: RequestInit) {
@@ -13478,17 +13475,12 @@ describe("a router", () => {
         expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
       });
 
-      it("should require a signal on the request", async () => {
+      it("should assign signals to requests by default (per the", async () => {
         let { query } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
-        let e;
-        try {
-          await query(request);
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() requests must contain an AbortController signal]`
+        let context = await query(request);
+        expect((context as StaticHandlerContext).loaderData.index).toBe(
+          "INDEX LOADER"
         );
       });
 
@@ -14714,18 +14706,11 @@ describe("a router", () => {
         expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
       });
 
-      it("should require a signal on the request", async () => {
+      it("should assign signals to requests by default (per the spec)", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES);
         let request = createRequest("/", { signal: undefined });
-        let e;
-        try {
-          await queryRoute(request, { routeId: "index" });
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(
-          `[Error: query()/queryRoute() requests must contain an AbortController signal]`
-        );
+        let data = await queryRoute(request, { routeId: "index" });
+        expect(data).toBe("INDEX LOADER");
       });
 
       it("should support a requestContext passed to loaders and actions", async () => {
@@ -14931,7 +14916,7 @@ describe("a router", () => {
 
         it("should handle unsupported methods with a 405 Response", async () => {
           try {
-            await queryRoute(createRequest("/", { method: "TRACE" }), {
+            await queryRoute(createRequest("/", { method: "CHICKEN" }), {
               routeId: "root",
             });
             expect(false).toBe(true);
@@ -14939,7 +14924,7 @@ describe("a router", () => {
             expect(isRouteErrorResponse(data)).toBe(true);
             expect(data.status).toBe(405);
             expect(data.error).toEqual(
-              new Error('Invalid request method "TRACE"')
+              new Error('Invalid request method "CHICKEN"')
             );
             expect(data.internal).toBe(true);
           }
