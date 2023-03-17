@@ -3492,7 +3492,10 @@ function createClientSideRequest(
 
   if (submission && isMutationMethod(submission.formMethod)) {
     let { formMethod, formEncType, formData } = submission;
-    init.method = formMethod;
+    // Didn't think we needed this but it turns out unlike other methods, patch
+    // won't be properly normalized to uppercase and results in a 405 error.
+    // See: https://fetch.spec.whatwg.org/#concept-method
+    init.method = formMethod.toUpperCase();
     init.body =
       formEncType === "application/x-www-form-urlencoded"
         ? convertFormDataToSearchParams(formData)
