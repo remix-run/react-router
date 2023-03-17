@@ -1755,7 +1755,7 @@ export function createRouter(init: RouterInit): Router {
       updateState({ fetchers: new Map(state.fetchers) });
 
       return startRedirectNavigation(state, actionResult, {
-        submission,
+        fetcherSubmission: submission,
       });
     }
 
@@ -2058,9 +2058,11 @@ export function createRouter(init: RouterInit): Router {
     redirect: RedirectResult,
     {
       submission,
+      fetcherSubmission,
       replace,
     }: {
       submission?: Submission;
+      fetcherSubmission?: Submission;
       replace?: boolean;
     } = {}
   ) {
@@ -2104,7 +2106,14 @@ export function createRouter(init: RouterInit): Router {
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
     let { formMethod, formAction, formEncType, formData } = state.navigation;
-    if (!submission && formMethod && formAction && formData && formEncType) {
+    if (
+      !submission &&
+      !fetcherSubmission &&
+      formMethod &&
+      formAction &&
+      formData &&
+      formEncType
+    ) {
       submission = {
         formMethod,
         formAction,
@@ -2116,32 +2125,17 @@ export function createRouter(init: RouterInit): Router {
     // If this was a 307/308 submission we want to preserve the HTTP method and
     // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
+    let activeSubmission = submission || fetcherSubmission;
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
-      submission &&
-      isMutationMethod(submission.formMethod)
+      activeSubmission &&
+      isMutationMethod(activeSubmission.formMethod)
     ) {
       await startNavigation(redirectHistoryAction, redirectLocation, {
         submission: {
-          ...submission,
+          ...activeSubmission,
           formAction: redirect.location,
         },
-        // Preserve this flag across redirects
-        preventScrollReset: pendingPreventScrollReset,
-      });
-    } else if (isFetchActionRedirect) {
-      // For a fetch action redirect, we kick off a new loading navigation
-      // without the fetcher submission, but we send it along for shouldRevalidate
-      await startNavigation(redirectHistoryAction, redirectLocation, {
-        overrideNavigation: {
-          state: "loading",
-          location: redirectLocation,
-          formMethod: undefined,
-          formAction: undefined,
-          formEncType: undefined,
-          formData: undefined,
-        },
-        fetcherSubmission: submission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
@@ -2152,11 +2146,14 @@ export function createRouter(init: RouterInit): Router {
         overrideNavigation: {
           state: "loading",
           location: redirectLocation,
+          // Only include navigational submissions on the navigation
           formMethod: submission ? submission.formMethod : undefined,
           formAction: submission ? submission.formAction : undefined,
           formEncType: submission ? submission.formEncType : undefined,
           formData: submission ? submission.formData : undefined,
         },
+        // Send fetcher submissions through for shouldRevalidate
+        fetcherSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
