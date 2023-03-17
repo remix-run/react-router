@@ -1786,7 +1786,7 @@ export function createRouter(init: RouterInit): Router {
         updateState({ fetchers: new Map(state.fetchers) });
 
         return startRedirectNavigation(state, actionResult, {
-          submission,
+          fetcherSubmission: submission,
         });
       }
     }
@@ -2085,9 +2085,11 @@ export function createRouter(init: RouterInit): Router {
     redirect: RedirectResult,
     {
       submission,
+      fetcherSubmission,
       replace,
     }: {
       submission?: Submission;
+      fetcherSubmission?: Submission;
       replace?: boolean;
     } = {}
   ) {
@@ -2137,12 +2139,21 @@ export function createRouter(init: RouterInit): Router {
 
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
-    let activeSubmission =
-      submission || getSubmissionFromNavigation(state.navigation);
+    let { formMethod, formAction, formEncType } = state.navigation;
+    if (
+      !submission &&
+      !fetcherSubmission &&
+      formMethod &&
+      formAction &&
+      formEncType
+    ) {
+      submission = getSubmissionFromNavigation(state.navigation);
+    }
 
     // If this was a 307/308 submission we want to preserve the HTTP method and
     // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
+    let activeSubmission = submission || fetcherSubmission;
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
       activeSubmission &&
@@ -2156,23 +2167,17 @@ export function createRouter(init: RouterInit): Router {
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
-    } else if (isFetchActionRedirect) {
-      // For a fetch action redirect, we kick off a new loading navigation
-      // without the fetcher submission, but we send it along for shouldRevalidate
-      await startNavigation(redirectHistoryAction, redirectLocation, {
-        overrideNavigation: getLoadingNavigation(redirectLocation),
-        fetcherSubmission: activeSubmission,
-        // Preserve this flag across redirects
-        preventScrollReset: pendingPreventScrollReset,
-      });
     } else {
-      // If we have a submission, we will preserve it through the redirect navigation
+      // If we have a navigation submission, we will preserve it through the
+      // redirect navigation
       let overrideNavigation = getLoadingNavigation(
         redirectLocation,
-        activeSubmission
+        submission
       );
       await startNavigation(redirectHistoryAction, redirectLocation, {
         overrideNavigation,
+        // Send fetcher submissions through for shouldRevalidate
+        fetcherSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
