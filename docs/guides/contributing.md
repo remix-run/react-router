@@ -36,6 +36,10 @@ git checkout dev
 
 Please conform to the issue template and provide a clear path to reproduction with a code example. Best is a pull request with a failing test. Next best is a link to CodeSandbox or repository that illustrates the bug.
 
+## Adding an Example?
+
+Examples can be added directly to the main branch. Create a branch off of your local clone of main. Once you've finished, create a pull request and outline your example. 
+
 ## Proposing New or Changed API?
 
 Please provide thoughtful comments and some sample code that show what you'd like to do with React Router in your app. It helps the conversation if you can show us how you're limited by the current API first before jumping to a conclusion about what needs to be changed and/or added.
