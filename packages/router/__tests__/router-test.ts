@@ -8702,8 +8702,18 @@ describe("a router", () => {
         expect(A.fetcher.state).toBe("submitting");
         let AR = await A.actions.foo.redirect("/bar");
         expect(A.fetcher.state).toBe("loading");
-        expect(t.router.state.navigation.state).toBe("loading");
-        expect(t.router.state.navigation.location?.pathname).toBe("/bar");
+        expect(t.router.state.navigation).toMatchObject({
+          state: "loading",
+          location: {
+            pathname: "/bar",
+          },
+          // Fetcher action redirect should not proxy the fetcher submission
+          // onto the loading navigation
+          formAction: undefined,
+          formData: undefined,
+          formEncType: undefined,
+          formMethod: undefined,
+        });
         await AR.loaders.root.resolve("ROOT*");
         await AR.loaders.bar.resolve("stuff");
         expect(A.fetcher).toEqual({

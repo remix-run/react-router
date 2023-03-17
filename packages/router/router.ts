@@ -1152,6 +1152,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     opts?: {
       submission?: Submission;
+      fetcherSubmission?: Submission;
       overrideNavigation?: Navigation;
       pendingError?: ErrorResponse;
       startUninterruptedRevalidation?: boolean;
@@ -1263,6 +1264,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       loadingNavigation,
       opts && opts.submission,
+      opts && opts.fetcherSubmission,
       opts && opts.replace,
       pendingActionData,
       pendingError
@@ -1385,6 +1387,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     overrideNavigation?: Navigation,
     submission?: Submission,
+    fetcherSubmission?: Submission,
     replace?: boolean,
     pendingActionData?: RouteData,
     pendingError?: RouteData
@@ -1406,19 +1409,20 @@ export function createRouter(init: RouterInit): Router {
 
     // If this was a redirect from an action we don't have a "submission" but
     // we have it on the loading navigation so use that if available
-    let activeSubmission = submission
-      ? submission
-      : loadingNavigation.formMethod &&
-        loadingNavigation.formAction &&
-        loadingNavigation.formData &&
-        loadingNavigation.formEncType
-      ? {
-          formMethod: loadingNavigation.formMethod,
-          formAction: loadingNavigation.formAction,
-          formData: loadingNavigation.formData,
-          formEncType: loadingNavigation.formEncType,
-        }
-      : undefined;
+    let activeSubmission =
+      submission || fetcherSubmission
+        ? submission || fetcherSubmission
+        : loadingNavigation.formMethod &&
+          loadingNavigation.formAction &&
+          loadingNavigation.formData &&
+          loadingNavigation.formEncType
+        ? {
+            formMethod: loadingNavigation.formMethod,
+            formAction: loadingNavigation.formAction,
+            formData: loadingNavigation.formData,
+            formEncType: loadingNavigation.formEncType,
+          }
+        : undefined;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
@@ -2050,6 +2054,22 @@ export function createRouter(init: RouterInit): Router {
           ...submission,
           formAction: redirect.location,
         },
+        // Preserve this flag across redirects
+        preventScrollReset: pendingPreventScrollReset,
+      });
+    } else if (isFetchActionRedirect) {
+      // For a fetch action redirect, we kick off a new loading navigation
+      // without the fetcher submission, but we send it along for shouldRevalidate
+      await startNavigation(redirectHistoryAction, redirectLocation, {
+        overrideNavigation: {
+          state: "loading",
+          location: redirectLocation,
+          formMethod: undefined,
+          formAction: undefined,
+          formEncType: undefined,
+          formData: undefined,
+        },
+        fetcherSubmission: submission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
