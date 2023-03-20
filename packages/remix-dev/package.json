@@ -43,6 +43,7 @@
     "fast-glob": "3.2.11",
     "fs-extra": "^10.0.0",
     "get-port": "^5.1.1",
+    "glob-to-regexp": "0.4.1",
     "gunzip-maybe": "^1.4.2",
     "inquirer": "^8.2.1",
     "jsesc": "3.0.2",
@@ -74,6 +75,7 @@
   "devDependencies": {
     "@remix-run/serve": "1.14.3",
     "@types/cacache": "^15.0.0",
+    "@types/glob-to-regexp": "0.4.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/inquirer": "^8.2.0",
     "@types/jsesc": "^3.0.1",
