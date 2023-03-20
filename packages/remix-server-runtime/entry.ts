@@ -31,6 +31,7 @@ export interface FutureConfig {
   unstable_vanillaExtract: boolean | VanillaExtractOptions;
   v2_errorBoundary: boolean;
   v2_meta: boolean;
+  v2_normalizeFormMethod: boolean;
   v2_routeConvention: boolean;
 }
 
