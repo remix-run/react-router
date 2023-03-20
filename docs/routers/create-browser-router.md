@@ -99,6 +99,19 @@ createBrowserRouter(routes, {
 <Link to="/" />; // results in <a href="/app/" />
 ```
 
+## `future`
+
+An optional set of [Future Flags][api-development-strategy] to enable for this Router. We recommend opting into newly released future flags sooner rather than later to ease your eventual migration to v7.
+
+```js
+const router = createBrowserRouter(routes, {
+  future: {
+    // Normalize `useNavigation()`/`useFetcher()` `formMethod` to uppercase
+    v7_normalizeFormMethod: true,
+  },
+});
+```
+
 ## `window`
 
 Useful for environments like browser devtool plugins or testing to use a different window than the global `window`.
@@ -111,3 +124,4 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [route]: ../components/route
 [routes]: ../components/routes
 [historyapi]: https://developer.mozilla.org/en-US/docs/Web/API/History
+[api-development-strategy]: ../guides/api-development-strategy.md
