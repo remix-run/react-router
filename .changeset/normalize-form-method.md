@@ -9,7 +9,7 @@ Added support for [**Future Flags**][api-development-strategy] in React Router. 
 - When `future.v7_normalizeFormMethod === false`,
   - `useNavigation().formMethod` is lowercase
   - `useFetcher().formMethod` is lowercase
-- When `future.v2_normalizeFormMethod === true`:
+- When `future.v7_normalizeFormMethod === true`:
   - `useNavigation().formMethod` is uppercase
   - `useFetcher().formMethod` is uppercase
 
