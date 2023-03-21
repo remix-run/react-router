@@ -222,9 +222,12 @@ Tells you the method of the form being submitted: get, post, put, patch, or dele
 fetcher.formMethod; // "post"
 ```
 
+<docs-warning>The `fetcher.formMethod` field is lowercase without the `future.v7_normalizeFormMethod` [Future Flag][api-development-strategy]. This is being normalized to uppercase to align with the `fetch()` behavior in v7, so please upgrade your React Router v6 applications to adopt the uppercase HTTP methods.</docs-warning>
+
 [loader]: ../route/loader
 [action]: ../route/action
 [pickingarouter]: ../routers/picking-a-router
 [indexsearchparam]: ../guides/index-search-param
 [link]: ../components/link
 [form]: ../components/form
+[api-development-strategy]: ../guides/api-development-strategy
