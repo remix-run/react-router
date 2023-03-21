@@ -120,8 +120,7 @@ async function loadTailwindPlugin(
 
   try {
     // First ensure they have a Tailwind config
-    // tailwind doesn't support esm config files yet
-    let tailwindConfigExtensions = [".js", ".cjs"];
+    let tailwindConfigExtensions = [".js", ".cjs", ".mjs", ".ts"];
     let tailwindConfig = findConfig(
       rootDirectory,
       "tailwind.config",
