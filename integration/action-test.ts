@@ -20,6 +20,7 @@ test.describe("actions", () => {
       future: {
         v2_routeConvention: true,
         v2_errorBoundary: true,
+        v2_normalizeFormMethod: true,
       },
       files: {
         "app/routes/urlencoded.jsx": js`
