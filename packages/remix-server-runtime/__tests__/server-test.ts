@@ -1235,7 +1235,9 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!.root.message).toBe("index");
+      expect(context.errors!.root).toBeInstanceOf(Error);
+      expect(context.errors!.root.message).toBe("Unexpected Server Error");
+      expect(context.errors!.root.stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
       });
@@ -1278,7 +1280,11 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!["routes/index"].message).toBe("index");
+      expect(context.errors!["routes/index"]).toBeInstanceOf(Error);
+      expect(context.errors!["routes/index"].message).toBe(
+        "Unexpected Server Error"
+      );
+      expect(context.errors!["routes/index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
       });
@@ -1326,7 +1332,9 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!.root.message).toBe("test");
+      expect(context.errors!.root).toBeInstanceOf(Error);
+      expect(context.errors!.root.message).toBe("Unexpected Server Error");
+      expect(context.errors!.root.stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: null,
         "routes/test": null,
@@ -1375,7 +1383,9 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!.root.message).toBe("index");
+      expect(context.errors!.root).toBeInstanceOf(Error);
+      expect(context.errors!.root.message).toBe("Unexpected Server Error");
+      expect(context.errors!.root.stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: null,
         "routes/index": null,
@@ -1424,7 +1434,11 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!["routes/test"].message).toBe("test");
+      expect(context.errors!["routes/test"]).toBeInstanceOf(Error);
+      expect(context.errors!["routes/test"].message).toBe(
+        "Unexpected Server Error"
+      );
+      expect(context.errors!["routes/test"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
         "routes/test": null,
@@ -1473,7 +1487,11 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!["routes/index"].message).toBe("index");
+      expect(context.errors!["routes/index"]).toBeInstanceOf(Error);
+      expect(context.errors!["routes/index"].message).toBe(
+        "Unexpected Server Error"
+      );
+      expect(context.errors!["routes/index"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
         "routes/index": null,
@@ -1530,7 +1548,11 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!["routes/__layout"].message).toBe("action");
+      expect(context.errors!["routes/__layout"]).toBeInstanceOf(Error);
+      expect(context.errors!["routes/__layout"].message).toBe(
+        "Unexpected Server Error"
+      );
+      expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
         "routes/__layout": null,
@@ -1588,7 +1610,11 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(1 * DATA_CALL_MULTIPIER);
       let context = calls[0][3].staticHandlerContext as StaticHandlerContext;
       expect(context.errors).toBeTruthy();
-      expect(context.errors!["routes/__layout"].message).toBe("action");
+      expect(context.errors!["routes/__layout"]).toBeInstanceOf(Error);
+      expect(context.errors!["routes/__layout"].message).toBe(
+        "Unexpected Server Error"
+      );
+      expect(context.errors!["routes/__layout"].stack).toBeUndefined();
       expect(context.loaderData).toEqual({
         root: "root",
         "routes/__layout": null,
@@ -1624,7 +1650,7 @@ describe("shared server runtime", () => {
         calledBefore = true;
         return ogHandleDocumentRequest.call(null, arguments);
       }) as any;
-      let handler = createRequestHandler(build, ServerMode.Test);
+      let handler = createRequestHandler(build, ServerMode.Development);
 
       let request = new Request(`${baseUrl}/`, { method: "get" });
 
@@ -1637,7 +1663,7 @@ describe("shared server runtime", () => {
       expect(calls.length).toBe(2 * DATA_CALL_MULTIPIER);
       let context = calls[1][3].staticHandlerContext;
       expect(context.errors.root).toBeTruthy();
-      expect(context.errors.root.message).toBe("thrown");
+      expect(context.errors!.root.message).toBe("thrown");
       expect(context.loaderData).toEqual({});
     });
 

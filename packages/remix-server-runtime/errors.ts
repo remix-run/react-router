@@ -1,6 +1,8 @@
 import type { StaticHandlerContext } from "@remix-run/router";
 import { isRouteErrorResponse } from "@remix-run/router";
 
+import { ServerMode } from "./mode";
+
 /**
  * This thing probably warrants some explanation.
  *
@@ -53,6 +55,24 @@ export interface ThrownResponse<T = any> {
   data: T;
 }
 
+export function sanitizeError<T = unknown>(error: T, serverMode: ServerMode) {
+  if (error instanceof Error && serverMode !== ServerMode.Development) {
+    let sanitized = new Error("Unexpected Server Error");
+    sanitized.stack = undefined;
+    return sanitized;
+  }
+  return error;
+}
+
+export function sanitizeErrors(
+  errors: NonNullable<StaticHandlerContext["errors"]>,
+  serverMode: ServerMode
+) {
+  return Object.entries(errors).reduce((acc, [routeId, error]) => {
+    return Object.assign(acc, { [routeId]: sanitizeError(error, serverMode) });
+  }, {});
+}
+
 // must be type alias due to inference issues on interfaces
 // https://github.com/microsoft/TypeScript/issues/15300
 export type SerializedError = {
@@ -60,15 +80,20 @@ export type SerializedError = {
   stack?: string;
 };
 
-export async function serializeError(error: Error): Promise<SerializedError> {
+export function serializeError(
+  error: Error,
+  serverMode: ServerMode
+): SerializedError {
+  let sanitized = sanitizeError(error, serverMode);
   return {
-    message: error.message,
-    stack: error.stack,
+    message: sanitized.message,
+    stack: sanitized.stack,
   };
 }
 
 export function serializeErrors(
-  errors: StaticHandlerContext["errors"]
+  errors: StaticHandlerContext["errors"],
+  serverMode: ServerMode
 ): StaticHandlerContext["errors"] {
   if (!errors) return null;
   let entries = Object.entries(errors);
@@ -79,9 +104,10 @@ export function serializeErrors(
     if (isRouteErrorResponse(val)) {
       serialized[key] = { ...val, __type: "RouteErrorResponse" };
     } else if (val instanceof Error) {
+      let sanitized = sanitizeError(val, serverMode);
       serialized[key] = {
-        message: val.message,
-        stack: val.stack,
+        message: sanitized.message,
+        stack: sanitized.stack,
         __type: "Error",
       };
     } else {
