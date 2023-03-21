@@ -1,5 +1,15 @@
 # `@remix-run/testing`
 
+## 1.15.0-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/react@1.15.0-pre.0`
+  - `@remix-run/node@1.15.0-pre.0`
+  - `react-router-dom@6.10.0-pre.0`
+  - `@remix-run/router@1.5.0-pre.0`
+
 ## 1.14.3
 
 ### Patch Changes

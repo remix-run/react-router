@@ -1,5 +1,61 @@
 # `@remix-run/server-runtime`
 
+## 1.15.0-pre.0
+
+### Minor Changes
+
+- We have made a few changes to the API for route module `meta` functions when using the `future.v2_meta` flag. **These changes are _only_ breaking for users who have opted in.** ([#5746](https://github.com/remix-run/remix/pull/5746))
+
+  - `V2_HtmlMetaDescriptor` has been renamed to `V2_MetaDescriptor`
+  - The `meta` function's arguments have been simplified
+    - `parentsData` has been removed, as each route's loader data is available on the `data` property of its respective `match` object
+      ```tsx
+      // before
+      export function meta({ parentsData }) {
+        return [{ title: parentsData["routes/some-route"].title }];
+      }
+      // after
+      export function meta({ matches }) {
+        return [
+          {
+            title: matches.find((match) => match.id === "routes/some-route")
+              .data.title,
+          },
+        ];
+      }
+      ```
+    - The `route` property on route matches has been removed, as relevant match data is attached directly to the match object
+      ```tsx
+      // before
+      export function meta({ matches }) {
+        let rootModule = matches.find((match) => match.route.id === "root");
+      }
+      // after
+      export function meta({ matches }) {
+        let rootModule = matches.find((match) => match.id === "root");
+      }
+      ```
+  - Added support for generating `<script type='application/ld+json' />` and meta-related `<link />` tags to document head via the route `meta` function when using the `v2_meta` future flag
+
+- Added a new `future.v2_normalizeFormMethod` flag to normalize the exposed `useNavigation().formMethod` as an uppercase HTTP method to align with the previous `useTransition` behavior as well as the `fetch()` behavior of normalizing to uppercase HTTP methods. ([#5815](https://github.com/remix-run/remix/pull/5815))
+
+  - When `future.v2_normalizeFormMethod === false`,
+    - `useNavigation().formMethod` is lowercase
+    - `useFetcher().formMethod` is uppercase
+  - When `future.v2_normalizeFormMethod === true`:
+    - `useNavigation().formMethod` is uppercase
+    - `useFetcher().formMethod` is uppercase
+
+- Add experimental support for Vanilla Extract caching which can be enabled by setting `future.unstable_vanillaExtract: { cache: true }` in `remix.config`. This is considered experimental due to the use of a brand new Vanilla Extract compiler under the hood. Note that in order to use this feature, you must be using at least `v1.10.0` of `@vanilla-extract/css`. ([#5735](https://github.com/remix-run/remix/pull/5735))
+- Deprecate `CatchBoundary` in favor of `future.v2_errorBoundary` ([#5718](https://github.com/remix-run/remix/pull/5718))
+- Add type deprecations for types now in React Router ([#5679](https://github.com/remix-run/remix/pull/5679))
+
+### Patch Changes
+
+- Don't log server errors for aborted requests as that is an expected flow ([#5602](https://github.com/remix-run/remix/pull/5602))
+- Ensure stack traces are removed from all server side errors in production ([#5541](https://github.com/remix-run/remix/pull/5541))
+- Update to `react-router-dom@6.10.0-pre.0` and `@remix-run/router@1.5.0-pre.0` ([#5866](https://github.com/remix-run/remix/pull/5866))
+
 ## 1.14.3
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.14.2) for an overview of all changes in v1.14.3.
