@@ -1,5 +1,7 @@
 import {
   defer as routerDefer,
+  json as routerJson,
+  redirect as routerRedirect,
   type UNSAFE_DeferredData as DeferredData,
   type TrackedPromise,
 } from "@remix-run/router";
@@ -39,37 +41,16 @@ export type TypedResponse<T extends unknown = unknown> = Omit<
  * @see https://remix.run/utils/json
  */
 export const json: JsonFunction = (data, init = {}) => {
-  let responseInit = typeof init === "number" ? { status: init } : init;
-
-  let headers = new Headers(responseInit.headers);
-  if (!headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json; charset=utf-8");
-  }
-
-  return new Response(JSON.stringify(data), {
-    ...responseInit,
-    headers,
-  });
+  return routerJson(data, init);
 };
 
 /**
- * This is a shortcut for creating `application/json` responses. Converts `data`
- * to JSON and sets the `Content-Type` header.
+ * This is a shortcut for creating Remix deferred responses
  *
- * @see https://remix.run/api/remix#json
+ * @see https://remix.run/docs/utils/defer
  */
 export const defer: DeferFunction = (data, init = {}) => {
-  let responseInit = typeof init === "number" ? { status: init } : init;
-
-  let headers = new Headers(responseInit.headers);
-  if (!headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json; charset=utf-8");
-  }
-
-  return routerDefer(data, {
-    ...responseInit,
-    headers,
-  }) as TypedDeferredData<typeof data>;
+  return routerDefer(data, init) as TypedDeferredData<typeof data>;
 };
 
 export type RedirectFunction = (
@@ -84,20 +65,7 @@ export type RedirectFunction = (
  * @see https://remix.run/utils/redirect
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
-  let responseInit = init;
-  if (typeof responseInit === "number") {
-    responseInit = { status: responseInit };
-  } else if (typeof responseInit.status === "undefined") {
-    responseInit.status = 302;
-  }
-
-  let headers = new Headers(responseInit.headers);
-  headers.set("Location", url);
-
-  return new Response(null, {
-    ...responseInit,
-    headers,
-  }) as TypedResponse<never>;
+  return routerRedirect(url, init) as TypedResponse<never>;
 };
 
 export function isDeferredData(value: any): value is DeferredData {
