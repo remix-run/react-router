@@ -118,7 +118,7 @@ Another important reason for using the `element` prop in v6 is that `<Route chil
 
 ## How do I add a No Match (404) Route in react-router v6?
 
-In v4 we would have just left the path prop off a route. In v5 we would have wrapped our 404 element in a Route and used `path="*"`. In v6 use the new element prop, pass `path="*"` instead:
+In v4 we would have just left the path prop off a route. In v5 we would have wrapped our 404 element in a Route and used `path="*"`. In v6 use `path="*"` and pass the 404 element into the new `element` prop instead of wrapping it:
 
 ```js
 <Route path="*" element={<NoMatch />} />

@@ -105,8 +105,8 @@
 
 ### Patch Changes
 
-- Fix `generatePath` incorrectly applying parameters in some cases ([`bc6fefa1`](https://github.com/remix-run/react-router/commit/bc6fefa19019ce9f5250c8b5af9b8c5d3390e9d1))
-- Improve memoization for context providers to avoid unnecessary re-renders ([`bc6fefa1`](https://github.com/remix-run/react-router/commit/bc6fefa19019ce9f5250c8b5af9b8c5d3390e9d1))
+- Fix `generatePath` incorrectly applying parameters in some cases ([#10078](https://github.com/remix-run/react-router/pull/10078))
+- Improve memoization for context providers to avoid unnecessary re-renders ([#9983](https://github.com/remix-run/react-router/pull/9983))
 
 ## 6.8.2
 
