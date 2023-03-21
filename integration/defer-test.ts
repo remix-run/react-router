@@ -1288,7 +1288,8 @@ function monitorConsole(page: Page) {
         let arg0 = await args[0].jsonValue();
         if (
           typeof arg0 === "string" &&
-          arg0.includes("Download the React DevTools")
+          (arg0.includes("Download the React DevTools") ||
+            /DEPRECATED.*imagesizes.*imagesrcset/.test(arg0))
         ) {
           continue;
         }

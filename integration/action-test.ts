@@ -110,7 +110,10 @@ test.describe("actions", () => {
 
   test.beforeEach(({ page }) => {
     page.on("console", (msg) => {
-      logs.push(msg.text());
+      let text = msg.text();
+      if (!/DEPRECATED.*imagesizes.*imagesrcset/.test(text)) {
+        logs.push(text);
+      }
     });
   });
 
