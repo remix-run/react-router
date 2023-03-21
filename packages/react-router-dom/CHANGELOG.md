@@ -4,20 +4,18 @@
 
 ### Minor Changes
 
-- Added support for [**Future Flags**][api-development-strategy] in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
 
-  - When `future.v7_normalizeFormMethod === false`,
+  - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
     - `useNavigation().formMethod` is lowercase
     - `useFetcher().formMethod` is lowercase
   - When `future.v7_normalizeFormMethod === true`:
     - `useNavigation().formMethod` is uppercase
     - `useFetcher().formMethod` is uppercase
 
-  [api-development-strategy]: https://reactrouter.com/en/main/guides/api-development-strategy
-
 ### Patch Changes
 
-- Check for `ErrorBoundary` property (not only `errorElement`) in `detectErrorBoundary` ([#10211](https://github.com/remix-run/react-router/pull/10211))
+- Fix `createStaticHandler` to also check for `ErrorBoundary` on routes in addition to `errorElement` ([#10190](https://github.com/remix-run/react-router/pull/10190))
 - Updated dependencies:
   - `@remix-run/router@1.5.0-pre.0`
   - `react-router@6.10.0-pre.0`

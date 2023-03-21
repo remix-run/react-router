@@ -2,4 +2,4 @@
 "react-router-dom": patch
 ---
 
-Check for `ErrorBoundary` property (not only `errorElement`) in `detectErrorBoundary`
+Fix `createStaticHandler` to also check for `ErrorBoundary` on routes in addition to `errorElement`
