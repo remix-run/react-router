@@ -1,5 +1,24 @@
 # `@remix-run/router`
 
+## 1.5.0-pre.0
+
+### Minor Changes
+
+- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+  - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
+    - `useNavigation().formMethod` is lowercase
+    - `useFetcher().formMethod` is lowercase
+  - When `future.v7_normalizeFormMethod === true`:
+    - `useNavigation().formMethod` is uppercase
+    - `useFetcher().formMethod` is uppercase
+
+### Patch Changes
+
+- Provide fetcher submission to `shouldRevalidate` if the fetcher action redirects ([#10208](https://github.com/remix-run/react-router/pull/10208))
+- Properly handle `lazy()` errors during router initialization ([#10201](https://github.com/remix-run/react-router/pull/10201))
+- Update to latest `@remix-run/web-fetch@4.3.3` ([#10216](https://github.com/remix-run/react-router/pull/10216))
+
 ## 1.4.0
 
 ### Minor Changes

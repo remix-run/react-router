@@ -8,5 +8,12 @@
     "react-router-native": "6.9.0",
     "@remix-run/router": "1.4.0"
   },
-  "changesets": []
+  "changesets": [
+    "fetcher-submission-revalidation",
+    "fix-fragments-ids",
+    "initialize-lazy-errors",
+    "normalize-form-method",
+    "ssr-error-boundary",
+    "update-web-fetch"
+  ]
 }
