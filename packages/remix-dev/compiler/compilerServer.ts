@@ -21,6 +21,7 @@ import { serverBareModulesPlugin } from "./plugins/serverBareModulesPlugin";
 import { serverEntryModulePlugin } from "./plugins/serverEntryModulePlugin";
 import { serverRouteModulesPlugin } from "./plugins/serverRouteModulesPlugin";
 import { urlImportsPlugin } from "./plugins/urlImportsPlugin";
+import { NodeProtocolExternalPlugin } from "./plugins/nodeProtocolExternalPlugin";
 
 export type ServerCompiler = {
   // produce ./build/index.js
@@ -70,6 +71,7 @@ const createEsbuildConfig = (
     serverEntryModulePlugin(config, { liveReloadPort: options.liveReloadPort }),
     serverAssetsManifestPlugin(assetsManifestChannel.read()),
     serverBareModulesPlugin(config, options.onWarning),
+    NodeProtocolExternalPlugin(),
   ].filter(isNotNull);
 
   if (config.serverPlatform !== "node") {
