@@ -3486,7 +3486,7 @@ async function callLoaderOrAction(
     return { type: resultType, error: result };
   }
 
-  if (result instanceof DeferredData) {
+  if (isDeferredData(result)) {
     return {
       type: ResultType.deferred,
       deferredData: result,
@@ -3854,6 +3854,18 @@ function isErrorResult(result: DataResult): result is ErrorResult {
 
 function isRedirectResult(result?: DataResult): result is RedirectResult {
   return (result && result.type) === ResultType.redirect;
+}
+
+export function isDeferredData(value: any): value is DeferredData {
+  let deferred: DeferredData = value;
+  return (
+    deferred &&
+    typeof deferred === "object" &&
+    typeof deferred.data === "object" &&
+    typeof deferred.subscribe === "function" &&
+    typeof deferred.cancel === "function" &&
+    typeof deferred.resolveData === "function"
+  );
 }
 
 function isResponse(value: any): value is Response {
