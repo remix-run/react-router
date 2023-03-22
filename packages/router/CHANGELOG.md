@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.5.0-pre.1
+
+### Patch Changes
+
+- Remove `instanceof` check for `DeferredData` to be resiliant to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
+
 ## 1.5.0-pre.0
 
 ### Minor Changes

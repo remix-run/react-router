@@ -13,6 +13,7 @@
     "fix-fragments-ids",
     "initialize-lazy-errors",
     "normalize-form-method",
+    "rotten-waves-fold",
     "ssr-error-boundary",
     "update-web-fetch"
   ]
