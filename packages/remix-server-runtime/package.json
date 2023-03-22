@@ -16,7 +16,7 @@
   "typings": "dist/index.d.ts",
   "module": "dist/esm/index.js",
   "dependencies": {
-    "@remix-run/router": "1.5.0-pre.0",
+    "@remix-run/router": "1.5.0-pre.1",
     "@types/cookie": "^0.4.0",
     "@types/react": "^18.0.15",
     "@web3-storage/multipart-parser": "^1.0.0",
