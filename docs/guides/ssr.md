@@ -20,7 +20,7 @@ The most basic server rendering in React Router is pretty straightforward. Howev
 
 Setting all of this up well can be pretty involved but is worth the performance and UX characteristics you can only get when server rendering.
 
-If you want to server render your React Router app, we highly recommend you use [Remix](https://remix.run). This is another project of ours that's built on top of React Router and handles all of the things mentioned above and more. Give it a shot!
+If you want to server render your React Router app, we highly recommend you use [Remix][remix]. This is another project of ours that's built on top of React Router and handles all of the things mentioned above and more. Give it a shot!
 
 If you want to tackle it on your own, you'll need to use `<StaticRouterProvider>` or `<StaticRouter>` on the server, depending on your choice of [router][picking-a-router].
 
@@ -139,27 +139,6 @@ app.get("*", async (req, res) => {
 });
 ```
 
-This is great! We've run our loaders and rendered the resulting React components out to HTML we can send back to the browser. Hey wait - what if my loader returned a `redirect`? That's not supposed to go back HTML. Let's add some handling for that. If any loaders redirect, `handler.query` will return the `Response` directly so we can look for that and respond with an Express redirect:
-
-```js filename=server.jsx lines=[5-10]
-app.get("*", async (req, res) => {
-  let fetchRequest = createFetchRequest(req);
-  let context = await handler.query(fetchRequest);
-
-  if (
-    context instanceof Response &&
-    (context.status === 301 || context.status === 302)
-  ) {
-    return res.redirect(
-      e.status,
-      e.headers.get("Location")
-    );
-  }
-
-  // Render HTML...
-});
-```
-
 Once we've sent the HTML back to the browser, we'll need to "hydrate" the application on the client using `createBrowserRouter()` and `<RouterProvider>`:
 
 ```jsx filename=entry-client.jsx lines=[10-15]
@@ -181,6 +160,66 @@ ReactDOM.hydrateRoot(
 ```
 
 And with that you've got a server-side-rendered and hydrated application! For a working example, you may also refer to the [example][ssr-data-router-example] in the Github repository.
+
+### Additional Concepts
+
+As mentioned above, server-side rendering is tricky at scale and for production-grade applications, and we strongly recommend chekcing out [Remix][remix] if that's your goal. But if you are going the manual route, hre's a few additional concepts you may need to consider:
+
+#### Redirects
+
+If any loaders redirect, `handler.query` will return the `Response` directly so you should check that and send a redirect response instead of attempting to render an HTML document:
+
+```js filename=server.jsx lines=[5-10]
+app.get("*", async (req, res) => {
+  let fetchRequest = createFetchRequest(req);
+  let context = await handler.query(fetchRequest);
+
+  if (
+    context instanceof Response &&
+    (context.status === 301 || context.status === 302)
+  ) {
+    return res.redirect(
+      e.status,
+      e.headers.get("Location")
+    );
+  }
+
+  // Render HTML...
+});
+```
+
+#### Lazy Routes
+
+If you're using [`route.lazy`][lazy] in your routes, then on the client it's possible you have all the data you need to hydrate, but you don't yet have the route definitions! Ideally, your setup would determine the matched routes on the server and deliver their route bundles on the critical path such that you don't use `lazy` on your initially matched routes. However, if this is not the case you'll need to load these routes and update them in place _roprior_ to hydrating to avoid the router falling back to a loading state:
+
+```jsx filename=entry-client.jsx
+// Determine if any of the initial routes are lazy
+let lazyMatches = matchRoutes(
+  routes,
+  window.location
+)?.filter((m) => m.route.lazy);
+
+// Load the lazy matches and update the routes before creating your router
+// so we can hydrate the SSR-rendered content synchronously
+if (lazyMatches && lazyMatches?.length > 0) {
+  await Promise.all(
+    lazyMatches.map(async (m) => {
+      let routeModule = await m.route.lazy();
+      Object.assign(m.route, {
+        ...routeModule,
+        lazy: undefined,
+      });
+    })
+  );
+}
+
+let router = createBrowserRouter(routes);
+
+ReactDOM.hydrateRoot(
+  document.getElementById("app"),
+  <RouterProvider router={router} fallbackElement={null} />
+);
+```
 
 See also:
 
@@ -262,6 +301,7 @@ Some parts you'll need to do yourself for this to work:
 
 Again, we recommend you give [Remix](https://remix.run) a look. It's the best way to server render a React Router app--and perhaps the best way to build any React app 😉.
 
+[remix]: https://remix.run
 [picking-a-router]: ../routers/picking-a-router
 [ssr-data]: #md-with-a-data-router
 [ssr-non-data]: #md-without-a-data-router
@@ -269,3 +309,4 @@ Again, we recommend you give [Remix](https://remix.run) a look. It's the best wa
 [createstatichandler]: ../routers/create-static-handler
 [createstaticrouter]: ../routers/create-static-router
 [staticrouterprovider]: ../routers/static-router-provider
+[lazy]: ../route/lazy
