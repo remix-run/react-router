@@ -415,6 +415,10 @@ export async function readConfig(
     warnOnce(formMethodWarning, "v2_normalizeFormMethod");
   }
 
+  if (!appConfig.future?.v2_meta) {
+    warnOnce(metaWarning, "v2_meta");
+  }
+
   let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
     appConfig.serverBuildTarget ?? ""
   );
@@ -852,3 +856,8 @@ export const formMethodWarning =
   "prepare for the Remix v2 release. Lowercase `useNavigation().formMethod`" +
   "values are being normalized to uppercase in v2 to align with the `fetch()` " +
   "behavior.  For more information, see https://remix.run/docs/hooks/use-navigation";
+
+export const metaWarning =
+  "⚠️  DEPRECATED: Please enable the `future.v2_meta` flag to " +
+  "prepare for the Remix v2 release. For more information, see " +
+  "https://remix.run/docs/route/meta#md-metav2.";

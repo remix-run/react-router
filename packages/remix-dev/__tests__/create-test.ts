@@ -12,6 +12,7 @@ import {
   errorBoundaryWarning,
   flatRoutesWarning,
   formMethodWarning,
+  metaWarning,
 } from "../config";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -355,6 +356,8 @@ describe("the create command", () => {
       errorBoundaryWarning +
         "\n" +
         formMethodWarning +
+        "\n" +
+        metaWarning +
         "\n" +
         flatRoutesWarning +
         "\n\n" +
