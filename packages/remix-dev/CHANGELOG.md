@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.15.0-pre.2
+
+### Patch Changes
+
+- Add deprecation warning for `future.v2_meta` ([#5878](https://github.com/remix-run/remix/pull/5878))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.15.0-pre.2`
+
 ## 1.15.0-pre.1
 
 ### Patch Changes
