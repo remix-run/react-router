@@ -22,7 +22,7 @@ Setting all of this up well can be pretty involved but is worth the performance 
 
 If you want to server render your React Router app, we highly recommend you use [Remix][remix]. This is another project of ours that's built on top of React Router and handles all of the things mentioned above and more. Give it a shot!
 
-If you want to tackle it on your own, you'll need to use `<StaticRouterProvider>` or `<StaticRouter>` on the server, depending on your choice of [router][picking-a-router].
+If you want to tackle it on your own, you'll need to use `<StaticRouterProvider>` or `<StaticRouter>` on the server, depending on your choice of [router][picking-a-router]. If using `<StaticRouter>`, please jump down to the [Without a Data Router][ssr-non-data] section.
 
 ## With a Data Router
 
@@ -50,7 +50,7 @@ module.exports = routes;
 
 <docs-info>We are using CJS modules in these examples for simplicity on the server but generally you'll use ESM modules and leverage a bundler such as `esbuild`, `vite`, or `webpack`.</docs-info>
 
-With our routes defined, we can create a handler in our express server and load data for the routes using `createStaticHandler()`. Remember that the primary goal ofa data router is decoupling the data fetching from rendering, so you'll see that when server-rendering with a data router we have distinct steps for fetching and rendering.
+With our routes defined, we can create a handler in our express server and load data for the routes using `createStaticHandler()`. Remember that the primary goal of a data router is decoupling the data fetching from rendering, so you'll see that when server-rendering with a data router we have distinct steps for fetching and rendering.
 
 ```js filename=server.jsx lines=[2-4,11,14-15]
 const express = require("express");
@@ -69,7 +69,7 @@ app.get("*", async (req, res) => {
   let fetchRequest = createFetchRequest(req);
   let context = await handler.query(fetchRequest);
 
-  // we'll tackle rendering next...
+  // We'll tackle rendering next...
 });
 
 const listener = app.listen(3000, () => {
@@ -135,7 +135,7 @@ app.get("*", async (req, res) => {
     />
   );
 
-  res.send(html);
+  res.send("<!DOCTYPE html>" + html);
 });
 ```
 
@@ -303,8 +303,7 @@ Again, we recommend you give [Remix](https://remix.run) a look. It's the best wa
 
 [remix]: https://remix.run
 [picking-a-router]: ../routers/picking-a-router
-[ssr-data]: #md-with-a-data-router
-[ssr-non-data]: #md-without-a-data-router
+[ssr-non-data]: #without-a-data-router
 [ssr-data-router-example]: https://github.com/remix-run/react-router/tree/main/examples/ssr-data-router
 [createstatichandler]: ../routers/create-static-handler
 [createstaticrouter]: ../routers/create-static-router

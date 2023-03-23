@@ -63,7 +63,7 @@ declare function StaticRouterProvider(props: {
 
 ## `context`
 
-This is the `context`returned from the `createStaticHandler().query()` calls which contains all of the fetched data for the request.
+This is the `context` returned from the `createStaticHandler().query()` calls which contains all of the fetched data for the request.
 
 ## `router`
 
@@ -83,7 +83,7 @@ When leveraging automatic hydration, you may provide a `nonce` value to be rende
 
 - [`createStaticHandler`][createstatichandler]
 - [`createStaticRouter`][createstaticrouter]
-- [`createBrowserRouter`][createstaticrouter]
+- [`createBrowserRouter`][createbrowserrouter]
 
 [node]: https://nodejs.org/
 [ssr]: ../guides/ssr

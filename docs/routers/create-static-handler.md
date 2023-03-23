@@ -82,11 +82,11 @@ interface StaticHandler {
 
 These are the same `routes`/`basename` you would pass to [`createBrowserRouter`][createbrowserrouter]
 
-## handler.query(request)
+## `handler.query(request)`
 
 The `handler.query()` method takes in a Fetch request, performs route matching, and executes all relevant route action/loader methods depending on the request. The return `context` value contains all of the information required to render the HTML document for the request (route-level `actionData`, `loaderData`, `errors`, etc.). If any of the matched routes return or throw a redirect response, then `query()` will return that redirect in the form of Fetch `Response`.
 
-## handler.queryRoute(request, routeId?)
+## `handler.queryRoute(request, routeId?)`
 
 The `handler.queryRoute` is a more-targeted version that queries a singular route and runs it's loader or action based on the request. You can specify a specific `routeId` or let it match the appropriate route automatically based on the request. The return value is the values returned from the loader or action, which is usually a `Response` object.
 
