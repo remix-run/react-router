@@ -4,9 +4,7 @@ toc: false
 order: 6
 ---
 
-# Server-Side Rendering
-
-<docs-warning>This doc needs updates for 6.4 and only applies to <=6.3</docs-warning>
+# Server Side Rendering
 
 The most basic server rendering in React Router is pretty straightforward. However, there's a lot more to consider than just getting the right routes to render. Here's an incomplete list of things you'll need to handle:
 
@@ -24,7 +22,173 @@ Setting all of this up well can be pretty involved but is worth the performance 
 
 If you want to server render your React Router app, we highly recommend you use [Remix](https://remix.run). This is another project of ours that's built on top of React Router and handles all of the things mentioned above and more. Give it a shot!
 
-If you want to tackle it on your own, you'll need to use `<StaticRouter>` on the server.
+If you want to tackle it on your own, you'll need to use `<StaticRouterProvider>` or `<StaticRouter>` on the server, depending on your choice of [router][picking-a-router].
+
+## With a Data Router
+
+First, you'll need to define your routes for the data router, these routes will be used both on the server and in the client:
+
+```js filename=routes.jsx
+const React = require("react");
+const { json, useLoaderData } = require("react-router-dom");
+
+const routes = [
+  {
+    path: "/",
+    loader() {
+      return json({ message: "Welcome to React Router!" });
+    },
+    Component() {
+      let data = useLoaderData();
+      return <h1>{data.message}</h1>;
+    },
+  },
+];
+
+module.exports = routes;
+```
+
+<docs-info>We are using CJS modules in these examples for simplicity on the server but generally you'll use ESM modules and leverage a bundler such as `esbuild`, `vite`, or `webpack`.</docs-info>
+
+With our routes defined, we can create a handler in our express server and load data for the routes using `createStaticHandler()`. Remember that the primary goal ofa data router is decoupling the data fetching from rendering, so you'll see that when server-rendering with a data router we have distinct steps for fetching and rendering.
+
+```js filename=server.jsx lines=[2-4,11,14-15]
+const express = require("express");
+const {
+  createStaticHandler,
+} = require("react-router-dom/server");
+
+const createFetchRequest = require("./request");
+const routes = require("./routes");
+
+const app = express();
+
+let handler = createStaticHandler(routes);
+
+app.get("*", async (req, res) => {
+  let fetchRequest = createFetchRequest(req);
+  let context = await handler.query(fetchRequest);
+
+  // we'll tackle rendering next...
+});
+
+const listener = app.listen(3000, () => {
+  let { port } = listener.address();
+  console.log(`Listening on port ${port}`);
+});
+```
+
+Note we have to first convert the incoming Express request into a Fetch request, which is what the static handler methods operate on. The `createFetchRequest` method is specific to an Express request and in this example is extracted from the `@remix-run/express` adapter:
+
+```js filename=request.js
+module.exports = function createFetchRequest(req) {
+  let origin = `${req.protocol}://${req.get("host")}`;
+  // Note: This had to take originalUrl into account for presumably vite's proxying
+  let url = new URL(req.originalUrl || req.url, origin);
+
+  let controller = new AbortController();
+  req.on("close", () => controller.abort());
+
+  let headers = new Headers();
+
+  for (let [key, values] of Object.entries(req.headers)) {
+    if (values) {
+      if (Array.isArray(values)) {
+        for (let value of values) {
+          headers.append(key, value);
+        }
+      } else {
+        headers.set(key, values);
+      }
+    }
+  }
+
+  let init = {
+    method: req.method,
+    headers,
+    signal: controller.signal,
+  };
+
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    init.body = req.body;
+  }
+
+  return new Request(url.href, init);
+};
+```
+
+Once we've loaded our data by executing all of the matched route loaders for the incoming request, we use `createStaticRouter()` and `<StaticRouterProvider>` to render the HTML and send a response back to the browser:
+
+```js filename=server.jsx lines=[5-16]
+app.get("*", async (req, res) => {
+  let fetchRequest = createFetchRequest(req);
+  let context = await handler.query(fetchRequest);
+
+  let router = createStaticRouter(
+    handler.dataRoutes,
+    context
+  );
+  let html = ReactDOMServer.renderToString(
+    <StaticRouterProvider
+      router={router}
+      context={context}
+    />
+  );
+
+  res.send(html);
+});
+```
+
+This is great! We've run our loaders and rendered the resulting React components out to HTML we can send back to the browser. Hey wait - what if my loader returned a `redirect`? That's not supposed to go back HTML. Let's add some handling for that. If any loaders redirect, `handler.query` will return the `Response` directly so we can look for that and respond with an Express redirect:
+
+```js filename=server.jsx lines=[5-10]
+app.get("*", async (req, res) => {
+  let fetchRequest = createFetchRequest(req);
+  let context = await handler.query(fetchRequest);
+
+  if (
+    context instanceof Response &&
+    (context.status === 301 || context.status === 302)
+  ) {
+    return res.redirect(
+      e.status,
+      e.headers.get("Location")
+    );
+  }
+
+  // Render HTML...
+});
+```
+
+Once we've sent the HTML back to the browser, we'll need to "hydrate" the application on the client using `createBrowserRouter()` and `<RouterProvider>`:
+
+```jsx filename=entry-client.jsx lines=[10-15]
+import * as React from "react";
+import ReactDOM from "react-dom/client";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
+
+import { routes } from "./routes";
+
+let router = createBrowserRouter(routes);
+
+ReactDOM.hydrateRoot(
+  document.getElementById("app"),
+  <RouterProvider router={router} />
+);
+```
+
+And with that you've got a server-side-rendered and hydrated application! For a working example, you may also refer to the [example][ssr-data-router-example] in the Github repository.
+
+See also:
+
+- [`createStaticHandler`][createstatichandler]
+- [`createStaticRouter`][createstaticrouter]
+- [`<StaticRouterProvider>`][staticrouterprovider]
+
+## Without a Data Router
 
 First you'll need some sort of "app" or "root" component that gets rendered on the server and in the browser:
 
@@ -97,3 +261,11 @@ Some parts you'll need to do yourself for this to work:
 - Figuring out data loading (especially for the `<title>`).
 
 Again, we recommend you give [Remix](https://remix.run) a look. It's the best way to server render a React Router app--and perhaps the best way to build any React app 😉.
+
+[picking-a-router]: ../routers/picking-a-router
+[ssr-data]: #md-with-a-data-router
+[ssr-non-data]: #md-without-a-data-router
+[ssr-data-router-example]: https://github.com/remix-run/react-router/tree/main/examples/ssr-data-router
+[createstatichandler]: ../routers/create-static-handler
+[createstaticrouter]: ../routers/create-static-router
+[staticrouterprovider]: ../routers/static-router-provider

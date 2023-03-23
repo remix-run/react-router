@@ -10,11 +10,12 @@ While your app will only use a single router, several routers are available depe
 
 ## Using v6.4 Data APIs
 
-In v6.4, new routers were introduced that support the new data APIs:
+In v6.4, new routers were introduced that support the new [data APIs][data-apis]:
 
 - [`createBrowserRouter`][createbrowserrouter]
 - [`createMemoryRouter`][creatememoryrouter]
 - [`createHashRouter`][createhashrouter]
+- [`createStaticRouter`][createstaticrouter]
 
 The following routers do not support the data APIs:
 
@@ -83,12 +84,61 @@ You will use [`<NativeRouter>`][nativerouter] from React Native projects.
 
 The data APIs from v6.4 are currently not supported in React Native, but should be eventually.
 
+## Data APIs
+
+The following APIs are introduced in React Router 6.4 and will only work when using a data router:
+
+- [`route.action`]
+- [`route.errorElement`]
+- [`route.lazy`]
+- [`route.loader`]
+- [`route.shouldRevalidate`]
+- [`route.handle`]
+- [`<Await>`]
+- [`<Form>`]
+- [`<ScrollRestoration>`]
+- [`useActionData`]
+- [`useAsyncError`]
+- [`useAsyncValue`]
+- [`useFetcher`]
+- [`useFetchers`]
+- [`useLoaderData`]
+- [`useMatches`]
+- [`useNavigation`]
+- [`useRevalidator`]
+- [`useRouteError`]
+- [`useRouteLoaderData`]
+- [`useSubmit`]
+
 [createbrowserrouter]: ./create-browser-router
 [createhashrouter]: ./create-hash-router
 [creatememoryrouter]: ./create-memory-router
+[createstaticrouter]: ./create-static-router
 [createroutesfromelements]: ../utils/create-routes-from-elements
 [browserrouter]: ../router-components/browser-router
 [memoryrouter]: ../router-components/memory-router
 [hashrouter]: ../router-components/hash-router
 [nativerouter]: ../router-components/native-router
 [staticrouter]: ../router-components/static-router
+[data-apis]: #data-apis
+[route.action]: ../route/action
+[route.errorelement]: ../route/error-element
+[route.lazy]: ../route/lazy
+[route.loader]: ../route/loader
+[route.shouldrevalidate]: ../route/should-revalidate
+[route.handle]: ../route/route#handle
+[<await>]: ../components/await.md
+[<form>]: ../components/form.md
+[<scrollrestoration>]: ../components/scroll-restoration.md
+[useactiondata]: ../hooks/use-action-data
+[useasyncerror]: ../hooks/use-async-error
+[useasyncvalue]: ../hooks/use-async-value
+[usefetcher]: ../hooks/use-fetcher
+[usefetchers]: ../hooks/use-fetchers
+[useloaderdata]: ../hooks/use-loader-data
+[usematches]: ../hooks/use-matches
+[usenavigation]: ../hooks/use-navigation
+[userevalidator]: ../hooks/use-revalidator
+[userouteerror]: ../hooks/use-route-error
+[userouteloaderdata]: ../hooks/use-route-loader-data
+[usesubmit]: ../hooks/use-submit
