@@ -26,7 +26,7 @@ interface LinkProps
 }
 
 type To = string | Partial<Path>;
-  
+
 interface Path {
   pathname: string;
   search: string;
