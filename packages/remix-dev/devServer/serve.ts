@@ -4,7 +4,7 @@ import os from "os";
 
 import type { RemixConfig } from "../config";
 import type { CompileOptions } from "../compiler";
-import { loadEnv } from "../env";
+import { loadEnv } from "../devServer_unstable/env";
 import { liveReload } from "./liveReload";
 
 function purgeAppRequireCache(buildPath: string) {

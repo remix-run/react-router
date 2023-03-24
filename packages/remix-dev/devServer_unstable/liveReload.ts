@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 
-import type * as Manifest from "./compiler/manifest";
+import type * as Manifest from "../compiler/manifest";
 import type * as HMR from "./hmr";
 
 type Message =

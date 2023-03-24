@@ -10,7 +10,7 @@ import { coerce } from "semver";
 import * as colors from "../colors";
 import * as compiler from "../compiler";
 import * as devServer from "../devServer";
-import * as devServer2 from "../devServer2";
+import * as devServer_unstable from "../devServer_unstable";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
@@ -209,7 +209,7 @@ export async function dev(
   let mode = compiler.parseMode(modeArg ?? "", "development");
 
   if (config.future.unstable_dev !== false) {
-    await devServer2.serve(config, flags);
+    await devServer_unstable.serve(config, flags);
     return await new Promise(() => {});
   }
 

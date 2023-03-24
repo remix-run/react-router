@@ -6,9 +6,9 @@ import path from "node:path";
 import prettyMs from "pretty-ms";
 import fetch from "node-fetch";
 
-import { type AssetsManifest } from "./assets-manifest";
-import * as Compiler from "./compiler";
-import { type RemixConfig } from "./config";
+import type * as Manifest from "../compiler/manifest";
+import * as Compiler from "../compiler";
+import { type RemixConfig } from "../config";
 import { loadEnv } from "./env";
 import * as LiveReload from "./liveReload";
 import * as HMR from "./hmr";
@@ -45,11 +45,11 @@ let findPort = async (portPreference?: number) =>
 let fetchAssetsManifest = async (
   origin: string,
   remixRequestHandlerPath: string
-): Promise<AssetsManifest | undefined> => {
+): Promise<Manifest.Type | undefined> => {
   try {
     let url = origin + remixRequestHandlerPath + "/__REMIX_ASSETS_MANIFEST";
     let res = await fetch(url);
-    let assetsManifest = (await res.json()) as AssetsManifest;
+    let assetsManifest = (await res.json()) as Manifest.Type;
     return assetsManifest;
   } catch (error) {
     return undefined;

@@ -1,7 +1,7 @@
 import path from "node:path";
 
-import type { RemixConfig } from "./config";
-import type { CompileResult } from "./compiler";
+import type { RemixConfig } from "../config";
+import type { CompileResult } from "../compiler";
 
 export type Update = {
   id: string;
