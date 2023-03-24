@@ -124,17 +124,24 @@ export interface LoaderFunctionArgs extends DataFunctionArgs {}
 export interface ActionFunctionArgs extends DataFunctionArgs {}
 
 /**
+ * Loaders and actions can return anything except `undefined` (`null` is a
+ * valid return value if there is no data to return).  Responses are preferred
+ * and will ease any future migration to Remix
+ */
+type DataFunctionValue = Response | NonNullable<unknown> | null;
+
+/**
  * Route loader function signature
  */
 export interface LoaderFunction {
-  (args: LoaderFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+  (args: LoaderFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
 }
 
 /**
  * Route action function signature
  */
 export interface ActionFunction {
-  (args: ActionFunctionArgs): Promise<Response> | Response | Promise<any> | any;
+  (args: ActionFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
 }
 
 /**
