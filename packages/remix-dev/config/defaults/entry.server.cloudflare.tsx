@@ -13,7 +13,7 @@ export default async function handleRequest(
     <RemixServer context={remixContext} url={request.url} />,
     {
       signal: request.signal,
-      onError(error) {
+      onError(error: unknown) {
         console.error(error);
         responseStatusCode = 500;
       },
