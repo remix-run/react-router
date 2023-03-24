@@ -2,8 +2,8 @@ import * as path from "path";
 import * as fse from "fs-extra";
 import type esbuild from "esbuild";
 
-import type { RemixConfig } from "../../config";
-import { getLoaderForFile } from "../loaders";
+import type { RemixConfig } from "../../../config";
+import { getLoaderForFile } from "../../loaders";
 
 /**
  * This plugin loads route modules for the server build and prevents errors

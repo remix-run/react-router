@@ -3,13 +3,13 @@ import * as path from "node:path";
 import type esbuild from "esbuild";
 import generate from "@babel/generator";
 
-import type { RemixConfig } from "../../config";
-import invariant from "../../invariant";
-import * as Transform from "../../transform";
-import type { CompileOptions } from "../options";
-import { getLoaderForFile } from "../loaders";
-import { getRouteModuleExports } from "../routeExports";
-import { applyHMR } from "./hmrPlugin";
+import type { RemixConfig } from "../../../config";
+import invariant from "../../../invariant";
+import * as Transform from "../../../transform";
+import type { CompileOptions } from "../../options";
+import { getLoaderForFile } from "../../loaders";
+import { getRouteModuleExports } from "../../routeExports";
+import { applyHMR } from "./hmr";
 
 const serverOnlyExports = new Set(["action", "loader"]);
 

@@ -1,13 +1,11 @@
 import * as fs from "fs";
 import * as path from "path";
 
-import type { RemixConfig } from "../config";
+import type { RemixConfig } from "./config";
 
 type PackageDependencies = { [packageName: string]: string };
 
-export function getPackageDependencies(
-  packageJsonFile: string
-): PackageDependencies {
+function getPackageDependencies(packageJsonFile: string): PackageDependencies {
   let pkg = JSON.parse(fs.readFileSync(packageJsonFile, "utf8"));
   return pkg?.dependencies || {};
 }

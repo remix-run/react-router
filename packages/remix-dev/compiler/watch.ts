@@ -4,11 +4,11 @@ import * as path from "path";
 
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
+import { warnOnce } from "../warnOnce";
 import { logCompileFailure } from "./onCompileFailure";
 import type { CompileOptions } from "./options";
-import type { CompileResult } from "./remixCompiler";
-import { compile, createRemixCompiler, dispose } from "./remixCompiler";
-import { warnOnce } from "./warnings";
+import type { CompileResult } from "./compiler";
+import * as Compiler from "./compiler";
 
 function isEntryPoint(config: RemixConfig, file: string): boolean {
   let appFile = path.relative(config.appDirectory, file);
@@ -58,16 +58,16 @@ export async function watch(
   };
 
   let start = Date.now();
-  let compiler = createRemixCompiler(config, options);
+  let compiler = Compiler.create(config, options);
 
   // initial build
-  let result = await compile(compiler, { onCompileFailure });
+  let result = await compiler.compile();
   onInitialBuild?.(Date.now() - start, result);
 
   let restart = debounce(async () => {
     onRebuildStart?.();
     let start = Date.now();
-    dispose(compiler);
+    compiler.dispose();
 
     try {
       config = await reloadConfig(config.rootDirectory);
@@ -76,17 +76,15 @@ export async function watch(
       return;
     }
 
-    compiler = createRemixCompiler(config, options);
-    let result = await compile(compiler, { onCompileFailure });
+    compiler = Compiler.create(config, options);
+    let result = await compiler.compile();
     onRebuildFinish?.(Date.now() - start, result);
   }, 500);
 
   let rebuild = debounce(async () => {
     onRebuildStart?.();
     let start = Date.now();
-    let result = await compile(compiler, {
-      onCompileFailure,
-    });
+    let result = await compiler.compile();
     onRebuildFinish?.(Date.now() - start, result);
   }, 100);
 
@@ -132,6 +130,6 @@ export async function watch(
 
   return async () => {
     await watcher.close().catch(() => undefined);
-    dispose(compiler);
+    compiler.dispose();
   };
 }

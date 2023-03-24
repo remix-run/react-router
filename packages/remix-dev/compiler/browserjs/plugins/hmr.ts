@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as esbuild from "esbuild";
 
-import type { RemixConfig } from "../../config";
+import type { RemixConfig } from "../../../config";
 
 export let hmrPlugin = ({
   remixConfig,

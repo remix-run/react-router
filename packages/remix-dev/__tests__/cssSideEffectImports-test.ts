@@ -1,6 +1,6 @@
 import dedent from "dedent";
 
-import { addSuffixToCssSideEffectImports } from "../compiler/plugins/cssSideEffectImportsPlugin";
+import { addSuffixToCssSideEffectImports } from "../compiler/plugins/cssSideEffectImports";
 
 describe("addSuffixToCssSideEffectImports", () => {
   describe("adds suffix", () => {

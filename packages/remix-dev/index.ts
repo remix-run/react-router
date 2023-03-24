@@ -6,5 +6,5 @@ export * as cli from "./cli/index";
 export { createApp } from "./cli/create";
 export { CliError } from "./cli/error";
 
-export type { AssetsManifest } from "./compiler/assets";
-export { getDependenciesToBundle } from "./compiler/dependencies";
+export type { Type as AssetsManifest } from "./compiler/manifest";
+export { getDependenciesToBundle } from "./dependencies";

@@ -1,6 +1,6 @@
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../config";
+import type { RemixConfig } from "../../../config";
 import {
   serverBuildVirtualModule,
   assetsManifestVirtualModule,

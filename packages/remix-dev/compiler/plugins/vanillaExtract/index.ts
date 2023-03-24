@@ -1,9 +1,9 @@
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig, VanillaExtractOptions } from "../../config";
-import type { CompileOptions } from "../options";
-import { vanillaExtractPluginCached } from "./vanillaExtractPluginCached";
-import { vanillaExtractPluginUncached } from "./vanillaExtractPluginUncached";
+import type { RemixConfig, VanillaExtractOptions } from "../../../config";
+import type { CompileOptions } from "../../options";
+import { vanillaExtractPluginCached } from "./cached";
+import { vanillaExtractPluginUncached } from "./uncached";
 
 export function vanillaExtractPlugin(options: {
   config: RemixConfig;

@@ -10,11 +10,11 @@ import {
 import * as fse from "fs-extra";
 import * as esbuild from "esbuild";
 
-import type { RemixConfig } from "../../config";
-import type { CompileOptions } from "../options";
-import { loaders } from "../loaders";
-import { getPostcssProcessor } from "../utils/postcss";
-import { vanillaExtractSideEffectsPlugin } from "./vanillaExtractSideEffectsPlugin";
+import type { RemixConfig } from "../../../config";
+import type { CompileOptions } from "../../options";
+import { loaders } from "../../loaders";
+import { getPostcssProcessor } from "../../utils/postcss";
+import { vanillaExtractSideEffectsPlugin } from "./sideEffects";
 
 const pluginName = "vanilla-extract-plugin-uncached";
 const namespace = `${pluginName}-ns`;

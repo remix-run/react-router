@@ -5,11 +5,10 @@ import type { RemixConfig } from "../config";
 import invariant from "../invariant";
 import { getRouteModuleExports } from "./routeExports";
 import { getHash } from "./utils/crypto";
-import { createUrl } from "./utils/url";
 
 type Route = RemixConfig["routes"][string];
 
-export interface AssetsManifest {
+type Manifest = {
   version: string;
   url?: string;
   entry: {
@@ -37,9 +36,10 @@ export interface AssetsManifest {
     runtime: string;
     routes: Record<string, { loaderHash: string }>;
   };
-}
+};
+export type Type = Manifest;
 
-export async function createAssetsManifest({
+export async function create({
   config,
   metafile,
   cssBundleHref,
@@ -48,8 +48,8 @@ export async function createAssetsManifest({
   config: RemixConfig;
   metafile: esbuild.Metafile;
   cssBundleHref?: string;
-  hmr?: AssetsManifest["hmr"];
-}): Promise<AssetsManifest> {
+  hmr?: Manifest["hmr"];
+}): Promise<Manifest> {
   function resolveUrl(outputPath: string): string {
     return createUrl(
       config.publicPath,
@@ -77,8 +77,8 @@ export async function createAssetsManifest({
     new Map()
   );
 
-  let entry: AssetsManifest["entry"] | undefined;
-  let routes: AssetsManifest["routes"] = {};
+  let entry: Manifest["entry"] | undefined;
+  let routes: Manifest["routes"] = {};
 
   for (let key of Object.keys(metafile.outputs).sort()) {
     let output = metafile.outputs[key];
@@ -129,10 +129,14 @@ export async function createAssetsManifest({
   return { version, entry, routes, cssBundleHref, hmr };
 }
 
+function createUrl(publicPath: string, file: string): string {
+  return publicPath + file.split(path.win32.sep).join("/");
+}
+
 type ImportsCache = { [routeId: string]: string[] };
 
 function optimizeRoutes(
-  routes: AssetsManifest["routes"],
+  routes: Manifest["routes"],
   entryImports: string[]
 ): void {
   // This cache is an optimization that allows us to avoid pruning the same
@@ -146,7 +150,7 @@ function optimizeRoutes(
 
 function optimizeRouteImports(
   routeId: string,
-  routes: AssetsManifest["routes"],
+  routes: Manifest["routes"],
   parentImports: string[],
   importsCache: ImportsCache
 ): string[] {

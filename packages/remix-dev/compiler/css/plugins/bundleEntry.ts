@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../config";
+import type { RemixConfig } from "../../../config";
 
 export const cssBundleEntryModuleId = "__remix_cssBundleEntryModule__";
 const filter = new RegExp(`^${cssBundleEntryModuleId}$`);

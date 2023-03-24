@@ -4,14 +4,14 @@ import { builtinModules } from "module";
 import { isAbsolute, relative } from "path";
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../config";
+import type { RemixConfig } from "../../../config";
 import {
   serverBuildVirtualModule,
   assetsManifestVirtualModule,
 } from "../virtualModules";
-import { isCssSideEffectImportPath } from "./cssSideEffectImportsPlugin";
-import { createMatchPath } from "../utils/tsconfig";
-import { getPreferredPackageManager } from "../../cli/getPreferredPackageManager";
+import { isCssSideEffectImportPath } from "../../plugins/cssSideEffectImports";
+import { createMatchPath } from "../../utils/tsconfig";
+import { getPreferredPackageManager } from "../../../cli/getPreferredPackageManager";
 
 /**
  * A plugin responsible for resolving bare module ids based on server target.

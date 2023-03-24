@@ -3,11 +3,11 @@ import type { Compiler } from "@vanilla-extract/integration";
 import { cssFileFilter, createCompiler } from "@vanilla-extract/integration";
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../config";
-import type { CompileOptions } from "../options";
-import { loaders } from "../loaders";
-import { getPostcssProcessor } from "../utils/postcss";
-import { vanillaExtractSideEffectsPlugin } from "./vanillaExtractSideEffectsPlugin";
+import type { RemixConfig } from "../../../config";
+import type { CompileOptions } from "../../options";
+import { loaders } from "../../loaders";
+import { getPostcssProcessor } from "../../utils/postcss";
+import { vanillaExtractSideEffectsPlugin } from "./sideEffects";
 
 const pluginName = "vanilla-extract-plugin-cached";
 const namespace = `${pluginName}-ns`;

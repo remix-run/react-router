@@ -10,11 +10,11 @@ import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
 import { ServerMode, isValidServerMode } from "./config/serverModes";
-import { serverBuildVirtualModule } from "./compiler/virtualModules";
+import { serverBuildVirtualModule } from "./compiler/serverjs/virtualModules";
 import { writeConfigDefaults } from "./compiler/utils/tsconfig/write-config-defaults";
 import { flatRoutes } from "./config/flat-routes";
 import { getPreferredPackageManager } from "./cli/getPreferredPackageManager";
-import { warnOnce } from "./compiler/warnings";
+import { warnOnce } from "./warnOnce";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
