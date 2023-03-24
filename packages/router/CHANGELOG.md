@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.5.0-pre.2
+
+### Patch Changes
+
+- Fix lint issue ([#10256](https://github.com/remix-run/react-router/pull/10256))
+
 ## 1.5.0-pre.1
 
 ### Patch Changes
