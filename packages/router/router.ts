@@ -9,6 +9,7 @@ import {
 } from "./history";
 import type {
   DataResult,
+  DeferredData,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   DeferredResult,
@@ -33,7 +34,6 @@ import type {
   MutationFormMethod,
 } from "./utils";
 import {
-  DeferredData,
   ErrorResponse,
   ResultType,
   convertRoutesToDataRoutes,
