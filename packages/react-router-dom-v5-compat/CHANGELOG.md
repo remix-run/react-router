@@ -11,6 +11,8 @@
 ### Patch Changes
 
 - Add missed data router API re-exports ([#10171](https://github.com/remix-run/react-router/pull/10171))
+- Fix generic type in Location type and useLocation ([#10266](https://github.com/remix-run/react-router/pull/10266))
+
 
 ## 6.8.2
 
