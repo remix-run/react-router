@@ -90,17 +90,4 @@ jobs:
     name: 📝 Comment on related issues and pull requests
     if: github.repository == 'remix-run/react-router' && needs.find_package_version.outputs.package_version != ''
     needs: [release, find_package_version]
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: 📝 Comment on issues
-        uses: mcansh/release-comment-action@v0.1.3
-        env:
-          DIRECTORY_TO_CHECK: "./packages"
-          PACKAGE_VERSION_TO_FOLLOW: "react-router"
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GH_TOKEN: ${{ github.token }}
+    uses: ./.github/workflows/release-comments.yml
