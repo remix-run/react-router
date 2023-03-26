@@ -5,7 +5,7 @@ import prettier from "prettier";
 import { loadTsconfig } from "tsconfig-paths/lib/tsconfig-loader";
 import JSON5 from "json5";
 
-import * as colors from "../../../colors";
+import * as colors from "../colors";
 
 // These are suggested values and will be set when not present in the
 // tsconfig.json

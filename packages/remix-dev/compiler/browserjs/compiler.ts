@@ -4,9 +4,9 @@ import * as esbuild from "esbuild";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
 import type { RemixConfig } from "../../config";
-import type * as Manifest from "../manifest";
+import { type Manifest } from "../../manifest";
 import { getAppDependencies } from "../../dependencies";
-import { loaders } from "../loaders";
+import { loaders } from "../utils/loaders";
 import type { CompileOptions } from "../options";
 import { browserRouteModulesPlugin } from "./plugins/routes";
 import { browserRouteModulesPlugin as browserRouteModulesPlugin_v2 } from "./plugins/routes_unstable";
@@ -32,7 +32,7 @@ type Compiler = {
   // produce ./public/build/
   compile: () => Promise<{
     metafile: esbuild.Metafile;
-    hmr?: Manifest.Type["hmr"];
+    hmr?: Manifest["hmr"];
   }>;
   dispose: () => void;
 };
@@ -298,7 +298,7 @@ export const create = (
 
     let metafile = await appBuildTask();
 
-    let hmr: Manifest.Type["hmr"] | undefined = undefined;
+    let hmr: Manifest["hmr"] | undefined = undefined;
     if (options.mode === "development" && remixConfig.future.unstable_dev) {
       let hmrRuntimeOutput = Object.entries(metafile.outputs).find(
         ([_, output]) => output.inputs["hmr-runtime:remix:hmr"]

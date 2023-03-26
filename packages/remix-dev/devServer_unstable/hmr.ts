@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import type { RemixConfig } from "../config";
-import type { CompileResult } from "../compiler";
+import { type Manifest } from "../manifest";
 
 export type Update = {
   id: string;
@@ -15,18 +15,16 @@ export type Update = {
 // for things we handle: relative to app dir
 export let updates = (
   config: RemixConfig,
-  result: CompileResult,
-  prevResult: CompileResult
+  manifest: Manifest,
+  prevManifest: Manifest
 ): Update[] => {
   // TODO: probably want another map to correlate every input file to the
   // routes that consume it
   // ^check if route chunk hash changes when its dependencies change, even in different chunks
 
   let updates: Update[] = [];
-  for (let [routeId, route] of Object.entries(result.assetsManifest.routes)) {
-    let prevRoute = prevResult.assetsManifest.routes[routeId] as
-      | typeof route
-      | undefined;
+  for (let [routeId, route] of Object.entries(manifest.routes)) {
+    let prevRoute = prevManifest.routes[routeId] as typeof route | undefined;
     let file = config.routes[routeId].file;
     let moduleId = path.relative(
       config.rootDirectory,
@@ -45,9 +43,8 @@ export let updates = (
     }
 
     // when loaders are diff
-    let loaderHash = result.assetsManifest.hmr?.routes[moduleId]?.loaderHash;
-    let prevLoaderHash =
-      prevResult.assetsManifest.hmr?.routes[moduleId]?.loaderHash;
+    let loaderHash = manifest.hmr?.routes[moduleId]?.loaderHash;
+    let prevLoaderHash = prevManifest.hmr?.routes[moduleId]?.loaderHash;
     if (loaderHash !== prevLoaderHash) {
       updates.push({
         id: moduleId,

@@ -1,43 +1,14 @@
 import * as path from "path";
+import { promises as fsp } from "fs";
 import type * as esbuild from "esbuild";
 
-import type { RemixConfig } from "../config";
-import invariant from "../invariant";
+import type { RemixConfig } from "../../config";
+import invariant from "../../invariant";
+import { type Manifest } from "../../manifest";
 import { getRouteModuleExports } from "./routeExports";
-import { getHash } from "./utils/crypto";
+import { getHash } from "./crypto";
 
 type Route = RemixConfig["routes"][string];
-
-type Manifest = {
-  version: string;
-  url?: string;
-  entry: {
-    module: string;
-    imports: string[];
-  };
-  routes: {
-    [routeId: string]: {
-      id: string;
-      parentId?: string;
-      path?: string;
-      index?: boolean;
-      caseSensitive?: boolean;
-      module: string;
-      imports?: string[];
-      hasAction: boolean;
-      hasLoader: boolean;
-      hasCatchBoundary: boolean;
-      hasErrorBoundary: boolean;
-    };
-  };
-  cssBundleHref?: string;
-  hmr?: {
-    timestamp: number;
-    runtime: string;
-    routes: Record<string, { loaderHash: string }>;
-  };
-};
-export type Type = Manifest;
 
 export async function create({
   config,
@@ -127,6 +98,23 @@ export async function create({
   ).slice(0, 8);
 
   return { version, entry, routes, cssBundleHref, hmr };
+}
+
+export const write = async (config: RemixConfig, assetsManifest: Manifest) => {
+  let filename = `manifest-${assetsManifest.version.toUpperCase()}.js`;
+
+  assetsManifest.url = config.publicPath + filename;
+
+  await writeFileSafe(
+    path.join(config.assetsBuildDirectory, filename),
+    `window.__remixManifest=${JSON.stringify(assetsManifest)};`
+  );
+};
+
+async function writeFileSafe(file: string, contents: string): Promise<string> {
+  await fsp.mkdir(path.dirname(file), { recursive: true });
+  await fsp.writeFile(file, contents);
+  return file;
 }
 
 function createUrl(publicPath: string, file: string): string {

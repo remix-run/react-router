@@ -1,6 +1,6 @@
 import WebSocket from "ws";
 
-import type * as Manifest from "../compiler/manifest";
+import { type Manifest } from "../manifest";
 import type * as HMR from "./hmr";
 
 type Message =
@@ -8,7 +8,7 @@ type Message =
   | { type: "LOG"; message: string }
   | {
       type: "HMR";
-      assetsManifest: Manifest.Type;
+      assetsManifest: Manifest;
       updates: HMR.Update[];
     };
 
@@ -33,7 +33,7 @@ export let serve = (options: { port: number }) => {
     broadcast({ type: "LOG", message: _message });
   };
 
-  let hmr = (assetsManifest: Manifest.Type, updates: HMR.Update[]) => {
+  let hmr = (assetsManifest: Manifest, updates: HMR.Update[]) => {
     broadcast({ type: "HMR", assetsManifest, updates });
   };
 

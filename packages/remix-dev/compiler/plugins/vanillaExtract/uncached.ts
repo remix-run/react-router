@@ -12,7 +12,7 @@ import * as esbuild from "esbuild";
 
 import type { RemixConfig } from "../../../config";
 import type { CompileOptions } from "../../options";
-import { loaders } from "../../loaders";
+import { loaders } from "../../utils/loaders";
 import { getPostcssProcessor } from "../../utils/postcss";
 import { vanillaExtractSideEffectsPlugin } from "./sideEffects";
 

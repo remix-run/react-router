@@ -6,7 +6,7 @@ import path from "node:path";
 import prettyMs from "pretty-ms";
 import fetch from "node-fetch";
 
-import type * as Manifest from "../compiler/manifest";
+import { type Manifest } from "../manifest";
 import * as Compiler from "../compiler";
 import { type RemixConfig } from "../config";
 import { loadEnv } from "./env";
@@ -45,11 +45,11 @@ let findPort = async (portPreference?: number) =>
 let fetchAssetsManifest = async (
   origin: string,
   remixRequestHandlerPath: string
-): Promise<Manifest.Type | undefined> => {
+): Promise<Manifest | undefined> => {
   try {
     let url = origin + remixRequestHandlerPath + "/__REMIX_ASSETS_MANIFEST";
     let res = await fetch(url);
-    let assetsManifest = (await res.json()) as Manifest.Type;
+    let assetsManifest = (await res.json()) as Manifest;
     return assetsManifest;
   } catch (error) {
     return undefined;
@@ -114,38 +114,37 @@ export let serve = async (
   // watch and live reload on rebuilds
   let port = await findPort(dev.port);
   let socket = LiveReload.serve({ port });
-  let prevResult: Compiler.CompileResult | undefined = undefined;
+  let prevManifest: Manifest | undefined = undefined;
   let dispose = await Compiler.watch(config, {
     mode: "development",
     liveReloadPort: port,
-    onInitialBuild: (durationMs, result) => {
+    onInitialBuild: (durationMs, manifest) => {
       info(`Built in ${prettyMs(durationMs)}`);
-      prevResult = result;
+      prevManifest = manifest;
     },
     onRebuildStart: () => {
       clean(config);
       socket.log("Rebuilding...");
     },
-    onRebuildFinish: async (durationMs, result) => {
-      if (!result) return;
-      let { assetsManifest } = result;
+    onRebuildFinish: async (durationMs, manifest) => {
+      if (!manifest) return;
       socket.log(`Rebuilt in ${prettyMs(durationMs)}`);
 
       info(`Waiting for ${appServerOrigin}...`);
       let start = Date.now();
-      await waitForAppServer(assetsManifest.version);
+      await waitForAppServer(manifest.version);
       info(`${appServerOrigin} ready in ${prettyMs(Date.now() - start)}`);
       await new Promise((resolve) => {
         setTimeout(resolve, -1);
       });
 
-      if (assetsManifest.hmr && prevResult) {
-        let updates = HMR.updates(config, result, prevResult);
-        socket.hmr(assetsManifest, updates);
+      if (manifest.hmr && prevManifest) {
+        let updates = HMR.updates(config, manifest, prevManifest);
+        socket.hmr(manifest, updates);
       } else {
         socket.reload();
       }
-      prevResult = result;
+      prevManifest = manifest;
     },
     onFileCreated: (file) => socket.log(`File created: ${relativePath(file)}`),
     onFileChanged: (file) => socket.log(`File changed: ${relativePath(file)}`),

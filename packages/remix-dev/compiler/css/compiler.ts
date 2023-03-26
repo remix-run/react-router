@@ -8,7 +8,7 @@ import postcssDiscardDuplicates from "postcss-discard-duplicates";
 
 import type { RemixConfig } from "../../config";
 import { getAppDependencies } from "../../dependencies";
-import { loaders } from "../loaders";
+import { loaders } from "../utils/loaders";
 import type { CompileOptions } from "../options";
 // import { browserRouteModulesPlugin } from "../plugins/browserRouteModulesPlugin";
 // import { browserRouteModulesPlugin as browserRouteModulesPlugin_v2 } from "../plugins/browserRouteModulesPlugin_v2";

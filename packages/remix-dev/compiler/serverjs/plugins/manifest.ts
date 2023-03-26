@@ -1,7 +1,7 @@
 import type { Plugin } from "esbuild";
 import jsesc from "jsesc";
 
-import type * as Manifest from "../../manifest";
+import { type Manifest } from "../../../manifest";
 import { assetsManifestVirtualModule } from "../virtualModules";
 
 /**
@@ -9,7 +9,7 @@ import { assetsManifestVirtualModule } from "../virtualModules";
  * the assets manifest. This is used in the server entry module to access the
  * assets manifest in the server build.
  */
-export function serverAssetsManifestPlugin(manifest: Manifest.Type): Plugin {
+export function serverAssetsManifestPlugin(manifest: Manifest): Plugin {
   let filter = assetsManifestVirtualModule.filter;
 
   return {
