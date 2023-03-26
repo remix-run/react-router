@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: 📝 Comment on issues
+      - name: 📝 Comment on related issues and pull requests
         uses: mcansh/release-comment-action@0.2.0
         with:
           DIRECTORY_TO_CHECK: "./packages"
