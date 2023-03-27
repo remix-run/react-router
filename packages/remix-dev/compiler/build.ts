@@ -14,7 +14,7 @@ export async function build(
     onCompileFailure = logCompileFailure,
   }: Partial<CompileOptions> = {}
 ): Promise<void> {
-  let compiler = Compiler.create(config, {
+  let compiler = await Compiler.create(config, {
     mode,
     target,
     sourcemap,

@@ -79,7 +79,7 @@ const createEsbuildConfig = (
   options: CompileOptions,
   onLoader: (filename: string, code: string) => void,
   readCssBundleHref: () => Promise<string | undefined>
-): esbuild.BuildOptions | esbuild.BuildIncremental => {
+): esbuild.BuildOptions => {
   let entryPoints: Record<string, string> = {
     "entry.client": config.entryClientFilePath,
   };
@@ -241,43 +241,25 @@ const createEsbuildConfig = (
   };
 };
 
-export const create = (
+export const create = async (
   remixConfig: RemixConfig,
   options: CompileOptions,
   readCssBundleHref: () => Promise<string | undefined>
-): Compiler => {
-  let appCompiler: esbuild.BuildIncremental;
-
+): Promise<Compiler> => {
   let hmrRoutes: Record<string, { loaderHash: string }> = {};
   let onLoader = (filename: string, code: string) => {
     let key = path.relative(remixConfig.rootDirectory, filename);
     hmrRoutes[key] = { loaderHash: code };
   };
 
+  let ctx = await esbuild.context({
+    ...createEsbuildConfig(remixConfig, options, onLoader, readCssBundleHref),
+    metafile: true, // TODO is this needed when using context api?
+  });
+
   let compile = async () => {
     hmrRoutes = {};
-    let appBuildTask = async () => {
-      appCompiler = await (!appCompiler
-        ? esbuild.build({
-            ...createEsbuildConfig(
-              remixConfig,
-              options,
-              onLoader,
-              readCssBundleHref
-            ),
-            metafile: true,
-            incremental: true,
-          })
-        : appCompiler.rebuild());
-
-      invariant(
-        appCompiler.metafile,
-        "Expected app compiler metafile to be defined. This is likely a bug in Remix. Please open an issue at https://github.com/remix-run/remix/issues/new"
-      );
-      return appCompiler.metafile;
-    };
-
-    let metafile = await appBuildTask();
+    let { metafile } = await ctx.rebuild();
 
     let hmr: Manifest["hmr"] | undefined = undefined;
     if (options.mode === "development" && remixConfig.future.unstable_dev) {
@@ -303,7 +285,7 @@ export const create = (
 
   return {
     compile,
-    dispose: () => appCompiler?.rebuild.dispose(),
+    dispose: ctx.dispose,
   };
 };
 

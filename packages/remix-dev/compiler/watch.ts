@@ -58,7 +58,7 @@ export async function watch(
   };
 
   let start = Date.now();
-  let compiler = Compiler.create(config, options);
+  let compiler = await Compiler.create(config, options);
 
   // initial build
   let manifest = await compiler.compile();
@@ -76,7 +76,7 @@ export async function watch(
       return;
     }
 
-    compiler = Compiler.create(config, options);
+    compiler = await Compiler.create(config, options);
     let manifest = await compiler.compile();
     onRebuildFinish?.(Date.now() - start, manifest);
   }, 500);

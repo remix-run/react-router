@@ -21,7 +21,6 @@ import {
   cssBundleEntryModulePlugin,
   cssBundleEntryModuleId,
 } from "./plugins/bundleEntry";
-import invariant from "../../invariant";
 
 function isNotNull<Value>(value: Value): value is Exclude<Value, null> {
   return value !== null;
@@ -56,7 +55,7 @@ const getExternals = (remixConfig: RemixConfig): string[] => {
 const createEsbuildConfig = (
   config: RemixConfig,
   options: CompileOptions
-): esbuild.BuildOptions | esbuild.BuildIncremental => {
+): esbuild.BuildOptions => {
   let { mode } = options;
 
   let plugins: esbuild.Plugin[] = [
@@ -126,35 +125,23 @@ const createEsbuildConfig = (
   };
 };
 
-export let create = (
+export let create = async (
   remixConfig: RemixConfig,
   options: CompileOptions,
   writeCssBundleHref: (cssBundleHref?: string) => void
 ) => {
-  let cssCompiler: esbuild.BuildIncremental;
-  let cssBuildTask = async () => {
+  let ctx = await esbuild.context({
+    ...createEsbuildConfig(remixConfig, options),
+    metafile: true,
+    write: false,
+  });
+  let compile = async () => {
     if (!isCssBundlingEnabled(remixConfig)) {
       return;
     }
 
     try {
-      // The types aren't great when combining write: false and incremental: true
-      //  so we need to assert that it's an incremental build
-      cssCompiler = (await (!cssCompiler
-        ? esbuild.build({
-            ...createEsbuildConfig(remixConfig, options),
-            metafile: true,
-            incremental: true,
-            write: false,
-          })
-        : cssCompiler.rebuild())) as esbuild.BuildIncremental;
-
-      invariant(
-        cssCompiler.metafile,
-        "Expected CSS compiler metafile to be defined. This is likely a bug in Remix. Please open an issue at https://github.com/remix-run/remix/issues/new"
-      );
-
-      let outputFiles = cssCompiler.outputFiles || [];
+      let { outputFiles } = await ctx.rebuild();
 
       let isCssBundleFile = (
         outputFile: esbuild.OutputFile,
@@ -226,7 +213,7 @@ export let create = (
     }
   };
   return {
-    compile: cssBuildTask,
-    dispose: () => cssCompiler.rebuild.dispose(),
+    compile,
+    dispose: ctx.dispose,
   };
 };

@@ -41,7 +41,6 @@ export function cssFilePlugin({
           metafile: true,
           write: false,
           sourcemap: Boolean(options.sourcemap && postcssProcessor), // We only need source maps if we're processing the CSS with PostCSS
-          incremental: false,
           splitting: false,
           stdin: undefined,
           outfile: undefined,

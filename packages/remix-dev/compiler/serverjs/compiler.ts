@@ -3,7 +3,6 @@ import * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
-import invariant from "../../invariant";
 import type { RemixConfig } from "../../config";
 import { type Manifest } from "../../manifest";
 import { loaders } from "../utils/loaders";
@@ -172,7 +171,6 @@ export const create = (
       write: false,
       metafile: true,
     });
-    invariant(metafile, "Expected metafile to be defined.");
     await writeServerBuildResult(remixConfig, outputFiles!);
     return metafile;
   };

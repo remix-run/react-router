@@ -16,16 +16,20 @@ type Compiler = {
   dispose: () => void;
 };
 
-export let create = (
+export let create = async (
   config: RemixConfig,
   options: CompileOptions
-): Compiler => {
+): Promise<Compiler> => {
   let cssBundleHrefChannel: Channel<string | undefined>;
   let writeCssBundleHref = (cssBundleHref?: string) =>
     cssBundleHrefChannel.write(cssBundleHref);
   let readCssBundleHref = () => cssBundleHrefChannel.read();
-  let css = CSS.compiler.create(config, options, writeCssBundleHref);
-  let browser = BrowserJS.compiler.create(config, options, readCssBundleHref);
+  let css = await CSS.compiler.create(config, options, writeCssBundleHref);
+  let browser = await BrowserJS.compiler.create(
+    config,
+    options,
+    readCssBundleHref
+  );
   let server = ServerJS.compiler.create(config, options);
   return {
     compile: async () => {
