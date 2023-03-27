@@ -19,10 +19,6 @@ import { cssBundleUpdatePlugin } from "./plugins/cssBundleUpdate";
 import { cssModulesPlugin } from "../plugins/cssModuleImports";
 import { cssSideEffectImportsPlugin } from "../plugins/cssSideEffectImports";
 import { vanillaExtractPlugin } from "../plugins/vanillaExtract";
-// import {
-//   cssBundleEntryModulePlugin,
-//   cssBundleEntryModuleId,
-// } from "../plugins/cssBundleEntryModulePlugin";
 import invariant from "../../invariant";
 import { hmrPlugin } from "./plugins/hmr";
 import { createMatchPath } from "../utils/tsconfig";
@@ -79,34 +75,23 @@ const isCssBundlingEnabled = (config: RemixConfig): boolean =>
   );
 
 const createEsbuildConfig = (
-  build: "app" | "css",
   config: RemixConfig,
   options: CompileOptions,
   onLoader: (filename: string, code: string) => void,
   readCssBundleHref: () => Promise<string | undefined>
 ): esbuild.BuildOptions | esbuild.BuildIncremental => {
-  let isCssBuild = build === "css";
-  let entryPoints: Record<string, string>;
+  let entryPoints: Record<string, string> = {
+    "entry.client": config.entryClientFilePath,
+  };
 
-  if (isCssBuild) {
-    entryPoints = {
-      // "css-bundle": cssBundleEntryModuleId,
-    };
-  } else {
-    entryPoints = {
-      "entry.client": config.entryClientFilePath,
-    };
-
-    for (let id of Object.keys(config.routes)) {
-      // All route entry points are virtual modules that will be loaded by the
-      // browserEntryPointsPlugin. This allows us to tree-shake server-only code
-      // that we don't want to run in the browser (i.e. action & loader).
-      entryPoints[id] = config.routes[id].file + "?browser";
-    }
+  for (let id of Object.keys(config.routes)) {
+    // All route entry points are virtual modules that will be loaded by the
+    // browserEntryPointsPlugin. This allows us to tree-shake server-only code
+    // that we don't want to run in the browser (i.e. action & loader).
+    entryPoints[id] = config.routes[id].file + "?browser";
   }
 
   let { mode } = options;
-  let outputCss = isCssBuild;
 
   let matchPath = config.tsconfigPath
     ? createMatchPath(config.tsconfigPath)
@@ -122,14 +107,11 @@ const createEsbuildConfig = (
 
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
-    // isCssBundlingEnabled(config) && isCssBuild
-    //   ? cssBundleEntryModulePlugin(config)
-    //   : null,
     config.future.unstable_cssModules
-      ? cssModulesPlugin({ config, mode, outputCss })
+      ? cssModulesPlugin({ config, mode, outputCss: false })
       : null,
     config.future.unstable_vanillaExtract
-      ? vanillaExtractPlugin({ config, mode, outputCss })
+      ? vanillaExtractPlugin({ config, mode, outputCss: false })
       : null,
     config.future.unstable_cssSideEffectImports
       ? cssSideEffectImportsPlugin({ config, options })
@@ -186,7 +168,7 @@ const createEsbuildConfig = (
     } as esbuild.Plugin,
   ].filter(isNotNull);
 
-  if (build === "app" && mode === "development" && config.future.unstable_dev) {
+  if (mode === "development" && config.future.unstable_dev) {
     // TODO prebundle deps instead of chunking just these ones
     let isolateChunks = [
       require.resolve("react"),
@@ -231,7 +213,7 @@ const createEsbuildConfig = (
     loader: loaders,
     bundle: true,
     logLevel: "silent",
-    splitting: !isCssBuild,
+    splitting: true,
     sourcemap: options.sourcemap,
     // As pointed out by https://github.com/evanw/esbuild/issues/2440, when tsconfig is set to
     // `undefined`, esbuild will keep looking for a tsconfig.json recursively up. This unwanted
@@ -278,7 +260,6 @@ export const create = (
       appCompiler = await (!appCompiler
         ? esbuild.build({
             ...createEsbuildConfig(
-              "app",
               remixConfig,
               options,
               onLoader,
