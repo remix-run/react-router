@@ -8,6 +8,7 @@ import type {
   Path,
   PathMatch,
   PathPattern,
+  RelativeRoutingType,
   Router as RemixRouter,
   To,
 } from "@remix-run/router";
@@ -30,7 +31,6 @@ import type {
   RouteMatch,
   RouteObject,
   DataRouteMatch,
-  RelativeRoutingType,
 } from "./context";
 import {
   DataRouterContext,
@@ -682,6 +682,7 @@ export function _renderMatches(
 enum DataRouterHook {
   UseBlocker = "useBlocker",
   UseRevalidator = "useRevalidator",
+  UseRouterNavigate = "useRouterNavigate",
 }
 
 enum DataRouterStateHook {
@@ -693,6 +694,7 @@ enum DataRouterStateHook {
   UseRouteLoaderData = "useRouteLoaderData",
   UseMatches = "useMatches",
   UseRevalidator = "useRevalidator",
+  UseRouterNavigate = "useRouterNavigate",
 }
 
 function getDataRouterConsoleError(
@@ -883,6 +885,41 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // Prefer the blocker from state since DataRouterContext is memoized so this
   // ensures we update on blocker state updates
   return state.blockers.get(blockerKey) || blocker;
+}
+
+export function useRouterNavigate(): NavigateFunction {
+  let { router } = useDataRouterContext(DataRouterHook.UseRouterNavigate);
+  let id = useCurrentRouteId(DataRouterStateHook.UseRouterNavigate);
+
+  let activeRef = React.useRef(false);
+  React.useEffect(() => {
+    activeRef.current = true;
+  });
+
+  let navigate: NavigateFunction = React.useCallback(
+    (to: To | number, options: NavigateOptions = {}) => {
+      // TODO: Do we still want this in a stable version?
+      warning(
+        activeRef.current,
+        `You should call navigate() in a React.useEffect(), not when ` +
+          `your component is first rendered.`
+      );
+
+      if (!activeRef.current) return;
+
+      if (typeof to === "number") {
+        router.navigate(to);
+      } else {
+        router.navigate(to, {
+          fromRouteId: id,
+          ...options,
+        });
+      }
+    },
+    [router, id]
+  );
+
+  return navigate;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

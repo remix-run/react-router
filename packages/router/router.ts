@@ -415,22 +415,25 @@ export interface GetScrollPositionFunction {
   (): number;
 }
 
-/**
- * Options for a navigate() call for a Link navigation
- */
-type LinkNavigateOptions = {
+export type RelativeRoutingType = "route" | "path";
+
+type BaseNavigateOptions = {
   replace?: boolean;
   state?: any;
   preventScrollReset?: boolean;
+  relative?: RelativeRoutingType;
+  fromRouteId?: string;
 };
+
+/**
+ * Options for a navigate() call for a Link navigation
+ */
+type LinkNavigateOptions = BaseNavigateOptions;
 
 /**
  * Options for a navigate() call for a Form navigation
  */
-type SubmissionNavigateOptions = {
-  replace?: boolean;
-  state?: any;
-  preventScrollReset?: boolean;
+type SubmissionNavigateOptions = BaseNavigateOptions & {
   formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
   formData: FormData;
@@ -1049,6 +1052,8 @@ export function createRouter(init: RouterInit): Router {
 
     let { path, submission, error } = normalizeNavigateOptions(
       to,
+      state.location,
+      state.matches,
       future,
       opts
     );
@@ -1633,6 +1638,8 @@ export function createRouter(init: RouterInit): Router {
 
     let { path, submission } = normalizeNavigateOptions(
       href,
+      state.location,
+      state.matches,
       future,
       opts,
       true
@@ -3038,6 +3045,8 @@ function isSubmissionNavigation(
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
   to: To,
+  location: Location,
+  matches: AgnosticDataRouteMatch[],
   future: FutureConfig,
   opts?: RouterNavigateOptions,
   isFetcher = false
@@ -3046,7 +3055,14 @@ function normalizeNavigateOptions(
   submission?: Submission;
   error?: ErrorResponse;
 } {
-  let path = typeof to === "string" ? to : createPath(to);
+  let path = createPath(
+    resolveTo(
+      to,
+      getPathContributingMatches(matches).map((match) => match.pathnameBase),
+      location.pathname,
+      opts?.relative === "path"
+    )
+  );
 
   // Return location verbatim on non-submission navigations
   if (!opts || !isSubmissionNavigation(opts)) {

@@ -109,6 +109,7 @@ export {
   useRevalidator,
   useRouteError,
   useRouteLoaderData,
+  useRouterNavigate,
   useRoutes,
 } from "react-router";
 
