@@ -1761,18 +1761,20 @@ describe("createMemoryRouter", () => {
             💿 Hey developer 👋
           </p>
           <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
+            You can provide a way better UX than this when your app throws errors by providing your own 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               ErrorBoundary
             </code>
-             prop on 
+             or
+             
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              &lt;Route&gt;
+              errorElement
             </code>
+             prop on your route.
           </p>
         </div>"
       `);
@@ -1878,18 +1880,20 @@ describe("createMemoryRouter", () => {
             💿 Hey developer 👋
           </p>
           <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
+            You can provide a way better UX than this when your app throws errors by providing your own 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               ErrorBoundary
             </code>
-             prop on 
+             or
+             
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              &lt;Route&gt;
+              errorElement
             </code>
+             prop on your route.
           </p>
         </div>"
       `);
@@ -2110,18 +2114,20 @@ describe("createMemoryRouter", () => {
             💿 Hey developer 👋
           </p>
           <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
+            You can provide a way better UX than this when your app throws errors by providing your own 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               ErrorBoundary
             </code>
-             prop on 
+             or
+             
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
-              &lt;Route&gt;
+              errorElement
             </code>
+             prop on your route.
           </p>
         </div>"
       `);
@@ -2294,18 +2300,20 @@ describe("createMemoryRouter", () => {
               💿 Hey developer 👋
             </p>
             <p>
-              You can provide a way better UX than this when your app throws errors by providing your own 
+              You can provide a way better UX than this when your app throws errors by providing your own 
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
                 ErrorBoundary
               </code>
-               prop on 
+               or
+               
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
-                &lt;Route&gt;
+                errorElement
               </code>
+               prop on your route.
             </p>
           </div>
         </div>"
