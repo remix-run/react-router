@@ -22,8 +22,6 @@ export default function App() {
   return <RouterProvider router={router} fallbackElement={<p>Loading...</p>} />;
 }
 
-// @ts-expect-error
 if (import.meta.hot) {
-  // @ts-expect-error
   import.meta.hot.dispose(() => router.dispose());
 }
