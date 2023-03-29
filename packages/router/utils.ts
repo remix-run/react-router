@@ -1216,6 +1216,16 @@ export interface TrackedPromise extends Promise<any> {
 
 export class AbortedDeferredError extends Error {}
 
+const DeferredDataSymbol = Symbol.for("DeferredData");
+
+export function isDeferredData(data: unknown): data is DeferredData {
+  return (
+    !!data &&
+    typeof data === "object" &&
+    (data as DeferredData)[DeferredDataSymbol] === true
+  );
+}
+
 export class DeferredData {
   private pendingKeysSet: Set<string> = new Set<string>();
   private controller: AbortController;
@@ -1226,12 +1236,15 @@ export class DeferredData {
   data: Record<string, unknown>;
   init?: ResponseInit;
   deferredKeys: string[] = [];
+  [DeferredDataSymbol]: true;
 
   constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
     );
+
+    this[DeferredDataSymbol] = true;
 
     // Set up an AbortController + Promise we can race against to exit early
     // cancellation

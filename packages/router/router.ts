@@ -9,6 +9,7 @@ import {
 } from "./history";
 import type {
   DataResult,
+  DeferredData,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   DeferredResult,
@@ -33,12 +34,12 @@ import type {
   MutationFormMethod,
 } from "./utils";
 import {
-  DeferredData,
   ErrorResponse,
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   immutableRouteKeys,
+  isDeferredData,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -3486,7 +3487,7 @@ async function callLoaderOrAction(
     return { type: resultType, error: result };
   }
 
-  if (result instanceof DeferredData) {
+  if (isDeferredData(result)) {
     return {
       type: ResultType.deferred,
       deferredData: result,
