@@ -1,8 +1,8 @@
-import type { FormEncType, FormMethod } from "@remix-run/router";
+import type { FormEncType, HTMLFormMethod } from "@remix-run/router";
 import type { RelativeRoutingType } from "react-router";
 
-export const defaultMethod = "get";
-const defaultEncType = "application/x-www-form-urlencoded";
+export const defaultMethod: HTMLFormMethod = "get";
+const defaultEncType: FormEncType = "application/x-www-form-urlencoded";
 
 export function isHtmlElement(object: any): object is HTMLElement {
   return object != null && typeof object.tagName === "string";
@@ -110,7 +110,7 @@ export interface SubmitOptions {
    * The HTTP method used to submit the form. Overrides `<form method>`.
    * Defaults to "GET".
    */
-  method?: FormMethod;
+  method?: HTMLFormMethod;
 
   /**
    * The action URL path used to submit the form. Overrides `<form action>`.

@@ -63,8 +63,28 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-export type MutationFormMethod = "post" | "put" | "patch" | "delete";
-export type FormMethod = "get" | MutationFormMethod;
+type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
+type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
+
+/**
+ * Users can specify either lowercase or uppercase form methods on <Form>,
+ * useSubmit(), <fetcher.Form>, etc.
+ */
+export type HTMLFormMethod = LowerCaseFormMethod | UpperCaseFormMethod;
+
+/**
+ * Active navigation/fetcher form methods are exposed in lowercase on the
+ * RouterState
+ */
+export type FormMethod = LowerCaseFormMethod;
+export type MutationFormMethod = Exclude<FormMethod, "get">;
+
+/**
+ * In v7, active navigation/fetcher form methods are exposed in uppercase on the
+ * RouterState.  This is to align with the normalization done via fetch().
+ */
+export type V7_FormMethod = UpperCaseFormMethod;
+export type V7_MutationFormMethod = Exclude<V7_FormMethod, "GET">;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
@@ -76,7 +96,7 @@ export type FormEncType =
  * external consumption
  */
 export interface Submission {
-  formMethod: FormMethod;
+  formMethod: FormMethod | V7_FormMethod;
   formAction: string;
   formEncType: FormEncType;
   formData: FormData;
