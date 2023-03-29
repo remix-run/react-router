@@ -190,7 +190,7 @@ app.get("*", async (req, res) => {
 
 #### Lazy Routes
 
-If you're using [`route.lazy`][lazy] in your routes, then on the client it's possible you have all the data you need to hydrate, but you don't yet have the route definitions! Ideally, your setup would determine the matched routes on the server and deliver their route bundles on the critical path such that you don't use `lazy` on your initially matched routes. However, if this is not the case you'll need to load these routes and update them in place _roprior_ to hydrating to avoid the router falling back to a loading state:
+If you're using [`route.lazy`][lazy] in your routes, then on the client it's possible you have all the data you need to hydrate, but you don't yet have the route definitions! Ideally, your setup would determine the matched routes on the server and deliver their route bundles on the critical path such that you don't use `lazy` on your initially matched routes. However, if this is not the case you'll need to load these routes and update them in place _prior_ to hydrating to avoid the router falling back to a loading state:
 
 ```jsx filename=entry-client.jsx
 // Determine if any of the initial routes are lazy
