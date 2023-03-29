@@ -1,18 +1,6 @@
 # `@remix-run/router`
 
-## 1.5.0-pre.2
-
-### Patch Changes
-
-- Fix lint issue ([#10256](https://github.com/remix-run/react-router/pull/10256))
-
-## 1.5.0-pre.1
-
-### Patch Changes
-
-- Remove `instanceof` check for `DeferredData` to be resiliant to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
-
-## 1.5.0-pre.0
+## 1.5.0
 
 ### Minor Changes
 
@@ -29,6 +17,7 @@
 
 - Provide fetcher submission to `shouldRevalidate` if the fetcher action redirects ([#10208](https://github.com/remix-run/react-router/pull/10208))
 - Properly handle `lazy()` errors during router initialization ([#10201](https://github.com/remix-run/react-router/pull/10201))
+- Remove `instanceof` check for `DeferredData` to be resilient to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
 - Update to latest `@remix-run/web-fetch@4.3.3` ([#10216](https://github.com/remix-run/react-router/pull/10216))
 
 ## 1.4.0

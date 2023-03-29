@@ -1,22 +1,6 @@
 # `react-router-dom`
 
-## 6.10.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.5.0-pre.2`
-  - `react-router@6.10.0-pre.2`
-
-## 6.10.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.5.0-pre.1`
-  - `react-router@6.10.0-pre.1`
-
-## 6.10.0-pre.0
+## 6.10.0
 
 ### Minor Changes
 
@@ -33,8 +17,8 @@
 
 - Fix `createStaticHandler` to also check for `ErrorBoundary` on routes in addition to `errorElement` ([#10190](https://github.com/remix-run/react-router/pull/10190))
 - Updated dependencies:
-  - `@remix-run/router@1.5.0-pre.0`
-  - `react-router@6.10.0-pre.0`
+  - `@remix-run/router@1.5.0`
+  - `react-router@6.10.0`
 
 ## 6.9.0
 

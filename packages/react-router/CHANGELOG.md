@@ -1,20 +1,6 @@
 # `react-router`
 
-## 6.10.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.5.0-pre.2`
-
-## 6.10.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.5.0-pre.1`
-
-## 6.10.0-pre.0
+## 6.10.0
 
 ### Minor Changes
 
@@ -31,7 +17,7 @@
 
 - Fix route ID generation when using Fragments in `createRoutesFromElements` ([#10193](https://github.com/remix-run/react-router/pull/10193))
 - Updated dependencies:
-  - `@remix-run/router@1.5.0-pre.0`
+  - `@remix-run/router@1.5.0`
 
 ## 6.9.0
 
