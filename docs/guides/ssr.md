@@ -163,7 +163,7 @@ And with that you've got a server-side-rendered and hydrated application! For a 
 
 ### Additional Concepts
 
-As mentioned above, server-side rendering is tricky at scale and for production-grade applications, and we strongly recommend chekcing out [Remix][remix] if that's your goal. But if you are going the manual route, hre's a few additional concepts you may need to consider:
+As mentioned above, server-side rendering is tricky at scale and for production-grade applications, and we strongly recommend checking out [Remix][remix] if that's your goal. But if you are going the manual route, here's a few additional concepts you may need to consider:
 
 #### Redirects
 
