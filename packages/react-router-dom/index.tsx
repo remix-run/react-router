@@ -1022,10 +1022,10 @@ export function useFormAction(
   }
 
   if ((!action || action === ".") && match.route.index) {
-    path.search = path.search
-      ? path.search.replace(/^\?/, "?index&")
-      : "?index";
-  }
+      path.search = path.search
+        ? path.search.replace(/^\?/, "?index&")
+        : "?index";
+    }
 
   // If we're operating within a basename, prepend it to the pathname prior
   // to creating the form action.  If this is a root navigation, then just use

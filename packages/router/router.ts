@@ -171,6 +171,16 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * Utility function to resolve a path from a given source route, taking into
+   * account relative routing and any applicable basename.
+   * @param location
+   */
+  resolvePath(to: To | undefined, opts?: ResolvePathOpts): string;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Utility function to URL encode a destination path according to the internal
    * history implementation
    * @param to
@@ -413,6 +423,11 @@ export interface GetScrollRestorationKeyFunction {
  */
 export interface GetScrollPositionFunction {
   (): number;
+}
+
+export interface ResolvePathOpts {
+  fromRouteId?: string;
+  relative?: RelativeRoutingType;
 }
 
 export type RelativeRoutingType = "route" | "path";
@@ -2457,6 +2472,53 @@ export function createRouter(init: RouterInit): Router {
     inFlightDataRoutes = newRoutes;
   }
 
+  function resolvePath(to: To | undefined, opts?: ResolvePathOpts) {
+    let matches = getPathContributingMatches(state.matches);
+    let path = resolveTo(
+      to ? to : ".",
+      matches.map((m) => m.pathnameBase),
+      state.location.pathname,
+      opts?.relative === "path"
+    );
+
+    if (to == null) {
+      // Safe to write to these directly here since when `to` is undefined,
+      // resolveTo(".") will never include a search or hash
+      path.search = state.location.search;
+      path.hash = state.location.hash;
+    }
+
+    // Ensure index routes have the naked ?index param in them
+    let activeRoute =
+      opts && opts.fromRouteId && manifest[opts.fromRouteId]
+        ? manifest[opts.fromRouteId]
+        : null;
+
+    if ((!to || to === ".") && activeRoute && activeRoute.index) {
+      let params = new URLSearchParams(path.search);
+      if (
+        !params.has("index") ||
+        params.getAll("index").every((p) => p !== "")
+      ) {
+        path.search = path.search
+          ? path.search.replace(/^\?/, "?index&")
+          : "?index";
+      }
+    }
+
+    // If we're operating within a basename, prepend it to the pathname.  If
+    // this is a root navigation, then just use the raw basename which allows
+    // the basename to have full control over the presence of a trailing slash
+    // on root actions
+    let basename = router.basename || "/";
+    if (basename !== "/") {
+      path.pathname =
+        path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
+    }
+
+    return createPath(path);
+  }
+
   router = {
     get basename() {
       return init.basename;
@@ -2473,6 +2535,7 @@ export function createRouter(init: RouterInit): Router {
     navigate,
     fetch,
     revalidate,
+    resolvePath,
     // Passthrough to history-aware createHref used by useHref so we get proper
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),

@@ -15542,4 +15542,215 @@ describe("a router", () => {
       });
     });
   });
+
+  describe.only("router.resolveRoute", () => {
+    it("static routes", () => {
+      let router = createRouter({
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                path: "foo",
+                children: [
+                  {
+                    id: "activeRoute",
+                    path: "bar",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({
+          initialEntries: ["/foo/bar?a=1#hash"],
+        }),
+      });
+      expect(
+        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
+      ).toBe("/foo/bar?a=1#hash");
+      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar"
+      );
+      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar"
+      );
+    });
+
+    it("layout routes", () => {
+      let router = createRouter({
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                path: "foo",
+                children: [
+                  {
+                    id: "activeRoute",
+                    path: "bar",
+                    children: [
+                      {
+                        index: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({
+          initialEntries: ["/foo/bar?a=1#hash"],
+        }),
+      });
+      expect(
+        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
+      ).toBe("/foo/bar?a=1#hash");
+      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar"
+      );
+      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar"
+      );
+    });
+
+    it("index routes", () => {
+      let router = createRouter({
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                path: "foo",
+                children: [
+                  {
+                    path: "bar",
+                    children: [
+                      {
+                        id: "activeRoute",
+                        index: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({
+          initialEntries: ["/foo/bar?a=1#hash"],
+        }),
+      });
+      expect(
+        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
+      ).toBe("/foo/bar?index&a=1#hash");
+      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar?index"
+      );
+      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar?index"
+      );
+    });
+
+    it("index routes with a path", () => {
+      let router = createRouter({
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                path: "foo",
+                children: [
+                  {
+                    id: "activeRoute",
+                    path: "bar",
+                    index: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({
+          initialEntries: ["/foo/bar?a=1#hash"],
+        }),
+      });
+      expect(
+        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
+      ).toBe("/foo/bar?index&a=1#hash");
+      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar?index"
+      );
+      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar?index"
+      );
+    });
+
+    it("dynamic routes", () => {
+      let router = createRouter({
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                path: "foo",
+                children: [
+                  {
+                    id: "activeRoute",
+                    path: ":param",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({
+          initialEntries: ["/foo/bar?a=1#hash"],
+        }),
+      });
+      expect(
+        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
+      ).toBe("/foo/bar?a=1#hash");
+      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar"
+      );
+      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
+        "/foo/bar"
+      );
+    });
+
+    it("splat routes", () => {
+      let router = createRouter({
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                path: "foo",
+                children: [
+                  {
+                    id: "activeRoute",
+                    path: "*",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory({
+          initialEntries: ["/foo/bar?a=1#hash"],
+        }),
+      });
+      expect(
+        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
+      ).toBe("/foo?a=1#hash");
+      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
+        "/foo"
+      );
+      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
+        "/foo"
+      );
+    });
+  });
 });

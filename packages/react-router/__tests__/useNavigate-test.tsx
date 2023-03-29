@@ -908,47 +908,93 @@ describe("useNavigate (mimicing <Navigate> tests)", () => {
       React.useEffect(() => {
         count.current++;
       }, [navigate]);
-      return <p>{count.current}</p>;
+      return (
+        <nav>
+          <button onClick={() => router.navigate("/home")}>Home</button>
+          <button onClick={() => router.navigate("/about")}>About</button>
+          <p>{count.current}</p>
+        </nav>
+      );
     }
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       [
-        <p>
-          0
-        </p>,
+        <nav>
+          <button
+            onClick={[Function]}
+          >
+            Home
+          </button>
+          <button
+            onClick={[Function]}
+          >
+            About
+          </button>
+          <p>
+            0
+          </p>
+        </nav>,
         <h1>
           Home
         </h1>,
       ]
     `);
 
+    // @ts-expect-error
+    let buttons = renderer.root.findAllByType("button");
     TestRenderer.act(() => {
-      router.navigate("/about");
+      buttons[1].props.onClick();
     });
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       [
-        <p>
-          1
-        </p>,
+        <nav>
+          <button
+            onClick={[Function]}
+          >
+            Home
+          </button>
+          <button
+            onClick={[Function]}
+          >
+            About
+          </button>
+          <p>
+            1
+          </p>
+        </nav>,
         <h1>
           About
         </h1>,
       ]
     `);
 
+    // @ts-expect-error
+    buttons = renderer.root.findAllByType("button");
     TestRenderer.act(() => {
-      router.navigate("/home");
+      buttons[0].props.onClick();
     });
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       [
-        <p>
-          2
-        </p>,
+        <nav>
+          <button
+            onClick={[Function]}
+          >
+            Home
+          </button>
+          <button
+            onClick={[Function]}
+          >
+            About
+          </button>
+          <p>
+            2
+          </p>
+        </nav>,
         <h1>
           Home
         </h1>,
@@ -1535,7 +1581,7 @@ describe("useRouterNavigate (mimicing <Navigate> tests)", () => {
     });
   });
 
-  it("is stable across location changes", () => {
+  it("is not stable across location changes", () => {
     let router = createMemoryRouter(
       [
         {
@@ -1561,58 +1607,104 @@ describe("useRouterNavigate (mimicing <Navigate> tests)", () => {
       { initialEntries: ["/home"] }
     );
 
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+
     function NavBar() {
       let count = React.useRef(0);
       let navigate = useRouterNavigate();
       React.useEffect(() => {
         count.current++;
       }, [navigate]);
-      return <p>{count.current}</p>;
+      return (
+        <nav>
+          <button onClick={() => router.navigate("/home")}>Home</button>
+          <button onClick={() => router.navigate("/about")}>About</button>
+          <p>{count.current}</p>
+        </nav>
+      );
     }
-
-    let renderer: TestRenderer.ReactTestRenderer;
-    TestRenderer.act(() => {
-      renderer = TestRenderer.create(<RouterProvider router={router} />);
-    });
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       [
-        <p>
-          0
-        </p>,
+        <nav>
+          <button
+            onClick={[Function]}
+          >
+            Home
+          </button>
+          <button
+            onClick={[Function]}
+          >
+            About
+          </button>
+          <p>
+            0
+          </p>
+        </nav>,
         <h1>
           Home
         </h1>,
       ]
     `);
 
+    // @ts-expect-error
+    let buttons = renderer.root.findAllByType("button");
     TestRenderer.act(() => {
-      router.navigate("/about");
+      buttons[1].props.onClick();
     });
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       [
-        <p>
-          1
-        </p>,
+        <nav>
+          <button
+            onClick={[Function]}
+          >
+            Home
+          </button>
+          <button
+            onClick={[Function]}
+          >
+            About
+          </button>
+          <p>
+            1
+          </p>
+        </nav>,
         <h1>
           About
         </h1>,
       ]
     `);
 
+    // @ts-expect-error
+    buttons = renderer.root.findAllByType("button");
     TestRenderer.act(() => {
-      router.navigate("/home");
+      buttons[0].props.onClick();
     });
 
     // @ts-expect-error
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       [
-        <p>
-          1
-        </p>,
+        <nav>
+          <button
+            onClick={[Function]}
+          >
+            Home
+          </button>
+          <button
+            onClick={[Function]}
+          >
+            About
+          </button>
+          <p>
+            1
+          </p>
+        </nav>,
         <h1>
           Home
         </h1>,

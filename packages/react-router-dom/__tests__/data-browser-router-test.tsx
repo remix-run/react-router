@@ -33,6 +33,7 @@ import {
   defer,
   useLocation,
   useMatches,
+  useSearchParams,
   createRoutesFromElements,
 } from "react-router-dom";
 
@@ -4407,6 +4408,80 @@ function testDomRouter(
             <p>
               contextual error:
               Kaboom!
+            </p>
+          </div>"
+        `);
+      });
+
+      it("useFetcher is stable across across location changes", async () => {
+        let router = createBrowserRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                const [, setSearchParams] = useSearchParams();
+                let [count, setCount] = React.useState(0);
+                let fetcherCount = React.useRef(0);
+                let fetcher = useFetcher();
+                React.useEffect(() => {
+                  fetcherCount.current++;
+                }, [fetcher.submit]);
+                return (
+                  <>
+                    <button
+                      onClick={() => {
+                        setCount(count + 1);
+                        setSearchParams({
+                          random: Math.random().toString(),
+                        });
+                      }}
+                    >
+                      Click
+                    </button>
+                    <p>
+                      {count}-{fetcherCount.current}
+                    </p>
+                  </>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <button>
+              Click
+            </button>
+            <p>
+              0
+              -
+              0
+            </p>
+          </div>"
+        `);
+
+        fireEvent.click(screen.getByText("Click"));
+        fireEvent.click(screen.getByText("Click"));
+        fireEvent.click(screen.getByText("Click"));
+        fireEvent.click(screen.getByText("Click"));
+        fireEvent.click(screen.getByText("Click"));
+        await waitFor(() => screen.getByText(/5-1/));
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <button>
+              Click
+            </button>
+            <p>
+              5
+              -
+              1
             </p>
           </div>"
         `);
