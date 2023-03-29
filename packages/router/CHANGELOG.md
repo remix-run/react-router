@@ -16,40 +16,8 @@
 ### Patch Changes
 
 - Provide fetcher submission to `shouldRevalidate` if the fetcher action redirects ([#10208](https://github.com/remix-run/react-router/pull/10208))
-- Properly handle `lazy()` errors during router initialization ([#10211](https://github.com/remix-run/react-router/pull/10211))
-- Remove `instanceof` check for `DeferredData` to be resiliant to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
-- Fix lint issue ([#10256](https://github.com/remix-run/react-router/pull/10256))
-- Update to latest `@remix-run/web-fetch@4.3.3` ([#10216](https://github.com/remix-run/react-router/pull/10216))
-
-## 1.5.0-pre.2
-
-### Patch Changes
-
-- Fix lint issue ([#10256](https://github.com/remix-run/react-router/pull/10256))
-
-## 1.5.0-pre.1
-
-### Patch Changes
-
-- Remove `instanceof` check for `DeferredData` to be resiliant to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
-
-## 1.5.0-pre.0
-
-### Minor Changes
-
-- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
-
-  - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
-    - `useNavigation().formMethod` is lowercase
-    - `useFetcher().formMethod` is lowercase
-  - When `future.v7_normalizeFormMethod === true`:
-    - `useNavigation().formMethod` is uppercase
-    - `useFetcher().formMethod` is uppercase
-
-### Patch Changes
-
-- Provide fetcher submission to `shouldRevalidate` if the fetcher action redirects ([#10208](https://github.com/remix-run/react-router/pull/10208))
 - Properly handle `lazy()` errors during router initialization ([#10201](https://github.com/remix-run/react-router/pull/10201))
+- Remove `instanceof` check for `DeferredData` to be resilient to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
 - Update to latest `@remix-run/web-fetch@4.3.3` ([#10216](https://github.com/remix-run/react-router/pull/10216))
 
 ## 1.4.0
