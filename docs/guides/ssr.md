@@ -176,11 +176,11 @@ app.get("*", async (req, res) => {
 
   if (
     context instanceof Response &&
-    (context.status === 301 || context.status === 302)
+    [301, 302, 303, 307, 308].includes(context.status)
   ) {
     return res.redirect(
-      e.status,
-      e.headers.get("Location")
+      context.status,
+      context.headers.get("Location")
     );
   }
 
