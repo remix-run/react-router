@@ -29,31 +29,31 @@ import "./index.css";
 let router = createBrowserRouter([
   {
     path: "/",
-    Component: Layout,
+    element: <Layout />,
     children: [
       {
         index: true,
         loader: homeLoader,
-        Component: Home,
+        element: <Home />,
       },
       {
         path: "todos",
         action: todosAction,
         loader: todosLoader,
-        Component: TodosList,
-        ErrorBoundary: TodosBoundary,
+        element: <TodosList />,
+        errorElement: <TodosBoundary />,
         children: [
           {
             path: ":id",
             loader: todoLoader,
-            Component: Todo,
+            element: <Todo />,
           },
         ],
       },
       {
         path: "deferred",
         loader: deferredLoader,
-        Component: DeferredPage,
+        element: <DeferredPage />,
       },
     ],
   },
