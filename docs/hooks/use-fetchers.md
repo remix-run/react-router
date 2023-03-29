@@ -38,7 +38,7 @@ For example, imagine a UI where the sidebar lists projects, and the main view di
 +-----------------+----------------------------┘
 ```
 
-When the user clicks a checkbox, the submission goes to the action to change the state of the task. Instead of creating a "loading state" we want to create an "optimistic UI" that will **immediately** update the checkbox to appear checked even though the server hasn't processed it yet. In the checkbox component, we can use `fetcher.submission`:
+When the user clicks a checkbox, the submission goes to the action to change the state of the task. Instead of creating a "loading state" we want to create an "optimistic UI" that will **immediately** update the checkbox to appear checked even though the server hasn't processed it yet. In the checkbox component, we can use `fetcher.formData`:
 
 ```tsx
 function Task({ task }) {
