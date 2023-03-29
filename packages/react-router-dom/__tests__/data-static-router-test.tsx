@@ -992,14 +992,15 @@ describe("A <StaticRouterProvider>", () => {
     expect(router.routes).toMatchInlineSnapshot(`
       [
         {
-          "ErrorBoundary": [Function],
+          "ErrorBoundary": undefined,
           "children": [
             {
-              "ErrorBoundary": [Function],
+              "ErrorBoundary": undefined,
               "children": undefined,
               "element": <h2>
                 Hi again!
               </h2>,
+              "errorElement": <ErrorBoundary />,
               "hasErrorBoundary": true,
               "id": "0-0",
               "path": "path",
@@ -1008,6 +1009,7 @@ describe("A <StaticRouterProvider>", () => {
           "element": <h1>
             Hi!
           </h1>,
+          "errorElement": <ErrorBoundary />,
           "hasErrorBoundary": true,
           "id": "0",
           "path": "the",
@@ -1021,14 +1023,15 @@ describe("A <StaticRouterProvider>", () => {
           "pathname": "/the",
           "pathnameBase": "/the",
           "route": {
-            "ErrorBoundary": [Function],
+            "ErrorBoundary": undefined,
             "children": [
               {
-                "ErrorBoundary": [Function],
+                "ErrorBoundary": undefined,
                 "children": undefined,
                 "element": <h2>
                   Hi again!
                 </h2>,
+                "errorElement": <ErrorBoundary />,
                 "hasErrorBoundary": true,
                 "id": "0-0",
                 "path": "path",
@@ -1037,6 +1040,7 @@ describe("A <StaticRouterProvider>", () => {
             "element": <h1>
               Hi!
             </h1>,
+            "errorElement": <ErrorBoundary />,
             "hasErrorBoundary": true,
             "id": "0",
             "path": "the",
@@ -1047,11 +1051,12 @@ describe("A <StaticRouterProvider>", () => {
           "pathname": "/the/path",
           "pathnameBase": "/the/path",
           "route": {
-            "ErrorBoundary": [Function],
+            "ErrorBoundary": undefined,
             "children": undefined,
             "element": <h2>
               Hi again!
             </h2>,
+            "errorElement": <ErrorBoundary />,
             "hasErrorBoundary": true,
             "id": "0-0",
             "path": "path",

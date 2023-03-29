@@ -491,6 +491,8 @@ function DefaultErrorComponent() {
   );
 }
 
+const defaultErrorElement = <DefaultErrorComponent />;
+
 type RenderErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
   error: any;
@@ -637,10 +639,8 @@ export function _renderMatches(
     if (dataRouterState) {
       if (match.route.ErrorBoundary) {
         errorElement = <match.route.ErrorBoundary />;
-      } else if (match.route.errorElement) {
-        errorElement = match.route.errorElement;
       } else {
-        errorElement = <DefaultErrorComponent />;
+        errorElement = match.route.errorElement || defaultErrorElement;
       }
     }
     let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
