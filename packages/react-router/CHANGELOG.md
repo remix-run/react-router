@@ -1,5 +1,24 @@
 # `react-router`
 
+## 6.10.0
+
+### Minor Changes
+
+- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+  - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
+    - `useNavigation().formMethod` is lowercase
+    - `useFetcher().formMethod` is lowercase
+  - When `future.v7_normalizeFormMethod === true`:
+    - `useNavigation().formMethod` is uppercase
+    - `useFetcher().formMethod` is uppercase
+
+### Patch Changes
+
+- Fix route ID generation when using Fragments in `createRoutesFromElements` ([#10193](https://github.com/remix-run/react-router/pull/10193))
+- Updated dependencies:
+  - `@remix-run/router@1.5.0`
+
 ## 6.9.0
 
 ### Minor Changes
@@ -105,8 +124,8 @@
 
 ### Patch Changes
 
-- Fix `generatePath` incorrectly applying parameters in some cases ([`bc6fefa1`](https://github.com/remix-run/react-router/commit/bc6fefa19019ce9f5250c8b5af9b8c5d3390e9d1))
-- Improve memoization for context providers to avoid unnecessary re-renders ([`bc6fefa1`](https://github.com/remix-run/react-router/commit/bc6fefa19019ce9f5250c8b5af9b8c5d3390e9d1))
+- Fix `generatePath` incorrectly applying parameters in some cases ([#10078](https://github.com/remix-run/react-router/pull/10078))
+- Improve memoization for context providers to avoid unnecessary re-renders ([#9983](https://github.com/remix-run/react-router/pull/9983))
 
 ## 6.8.2
 
