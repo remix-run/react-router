@@ -9836,7 +9836,7 @@ describe("a router", () => {
           state: "submitting",
         });
 
-        // After acton resolves, both fetchers go into a loading state, with
+        // After action resolves, both fetchers go into a loading state, with
         // the load fetcher still reflecting it's stale data
         await C.actions.tasks.resolve("TASKS ACTION");
         expect(t.router.state.fetchers.get(key)).toMatchObject({
@@ -10030,6 +10030,183 @@ describe("a router", () => {
         expect(t.router.state.fetchers.get(keyC)).toMatchObject({
           state: "idle",
           data: "C",
+        });
+      });
+
+      it("does not cancel pending action navigation on deletion of revalidating fetcher", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+        expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+
+        let key1 = "key1";
+        let A = await t.fetch("/tasks/1", key1);
+        await A.loaders.tasksId.resolve("TASKS 1");
+
+        let C = await t.navigate("/tasks", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        // Add a helper for the fetcher that will be revalidating
+        t.shimHelper(C.loaders, "navigation", "loader", "tasksId");
+
+        // Resolve the action
+        await C.actions.tasks.resolve("TASKS ACTION");
+
+        // Fetcher should go back into a loading state
+        expect(t.router.state.fetchers.get(key1)).toMatchObject({
+          state: "loading",
+          data: "TASKS 1",
+        });
+
+        // Delete fetcher in the middle of the revalidation
+        t.router.deleteFetcher(key1);
+        expect(t.router.state.fetchers.get(key1)).toBeUndefined();
+
+        // Resolve navigation loaders
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.tasks.resolve("TASKS LOADER");
+
+        expect(t.router.state).toMatchObject({
+          actionData: {
+            tasks: "TASKS ACTION",
+          },
+          errors: null,
+          loaderData: {
+            tasks: "TASKS LOADER",
+            root: "ROOT*",
+          },
+        });
+        expect(t.router.state.fetchers.size).toBe(0);
+      });
+
+      it("does not cancel pending loader navigation on deletion of revalidating fetcher", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+        expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+
+        let key1 = "key1";
+        let A = await t.fetch("/tasks/1", key1);
+        await A.loaders.tasksId.resolve("TASKS 1");
+
+        // Loading navigation with query param to trigger revalidations
+        let C = await t.navigate("/tasks?key=value");
+
+        // Fetcher should go back into a loading state
+        expect(t.router.state.fetchers.get(key1)).toMatchObject({
+          state: "loading",
+          data: "TASKS 1",
+        });
+
+        // Delete fetcher in the middle of the revalidation
+        t.router.deleteFetcher(key1);
+        expect(t.router.state.fetchers.get(key1)).toBeUndefined();
+
+        // Resolve navigation loaders
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.tasks.resolve("TASKS LOADER");
+
+        expect(t.router.state).toMatchObject({
+          errors: null,
+          loaderData: {
+            tasks: "TASKS LOADER",
+            root: "ROOT*",
+          },
+        });
+        expect(t.router.state.fetchers.size).toBe(0);
+      });
+
+      it("does not cancel pending router.revalidate() on deletion of revalidating fetcher", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+        expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+
+        let key1 = "key1";
+        let A = await t.fetch("/tasks/1", key1);
+        await A.loaders.tasksId.resolve("TASKS 1");
+
+        // Trigger revalidations
+        let C = await t.revalidate();
+
+        // Fetcher should not go back into a loading state since it's a revalidation
+        expect(t.router.state.fetchers.get(key1)).toMatchObject({
+          state: "idle",
+          data: "TASKS 1",
+        });
+
+        // Delete fetcher in the middle of the revalidation
+        t.router.deleteFetcher(key1);
+        expect(t.router.state.fetchers.get(key1)).toBeUndefined();
+
+        // Resolve navigation loaders
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.index.resolve("INDEX*");
+
+        expect(t.router.state).toMatchObject({
+          errors: null,
+          loaderData: {
+            root: "ROOT*",
+            index: "INDEX*",
+          },
+        });
+        expect(t.router.state.fetchers.size).toBe(0);
+      });
+
+      it("does not cancel pending fetcher submission on deletion of revalidating fetcher", async () => {
+        let key = "key";
+        let actionKey = "actionKey";
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+
+        // Load a fetcher
+        let A = await t.fetch("/tasks/1", key);
+        await A.loaders.tasksId.resolve("TASKS ID");
+
+        // Submit a fetcher, leaves loaded fetcher untouched
+        let C = await t.fetch("/tasks", actionKey, {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+
+        // After action resolves, both fetchers go into a loading state, with
+        // the load fetcher still reflecting it's stale data
+        await C.actions.tasks.resolve("TASKS ACTION");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "loading",
+          data: "TASKS ID",
+        });
+        expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
+          state: "loading",
+          data: "TASKS ACTION",
+        });
+
+        // Delete fetcher in the middle of the revalidation
+        t.router.deleteFetcher(key);
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
+
+        // Resolve only active route loaders since fetcher was deleted
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.index.resolve("INDEX*");
+
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT*",
+          index: "INDEX*",
+        });
+        expect(t.router.state.fetchers.get(key)).toBe(undefined);
+        expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
+          state: "idle",
+          data: "TASKS ACTION",
         });
       });
     });

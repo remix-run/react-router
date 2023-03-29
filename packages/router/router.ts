@@ -593,6 +593,7 @@ interface RevalidatingFetcher extends FetchLoadMatch {
   key: string;
   match: AgnosticDataRouteMatch | null;
   matches: AgnosticDataRouteMatch[] | null;
+  controller: AbortController | null;
 }
 
 /**
@@ -1495,9 +1496,24 @@ export function createRouter(init: RouterInit): Router {
     }
 
     pendingNavigationLoadId = ++incrementingLoadId;
-    revalidatingFetchers.forEach((rf) =>
-      fetchControllers.set(rf.key, pendingNavigationController!)
-    );
+    revalidatingFetchers.forEach((rf) => {
+      if (rf.controller) {
+        // Fetchers use an independent AbortController so that aborting a fetcher
+        // (via deleteFetcher) does not abort the triggering navigation that
+        // triggered the revalidation
+        fetchControllers.set(rf.key, rf.controller);
+      }
+    });
+
+    // Proxy navigation abort through to revalidation fetchers
+    let abortPendingFetchRevalidations = () =>
+      revalidatingFetchers.forEach((f) => abortFetcher(f.key));
+    if (pendingNavigationController) {
+      pendingNavigationController.signal.addEventListener(
+        "abort",
+        abortPendingFetchRevalidations
+      );
+    }
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
@@ -1515,6 +1531,12 @@ export function createRouter(init: RouterInit): Router {
     // Clean up _after_ loaders have completed.  Don't clean up if we short
     // circuited because fetchControllers would have been aborted and
     // reassigned to new controllers for the next navigation
+    if (pendingNavigationController) {
+      pendingNavigationController.signal.removeEventListener(
+        "abort",
+        abortPendingFetchRevalidations
+      );
+    }
     revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
@@ -1766,10 +1788,20 @@ export function createRouter(init: RouterInit): Router {
           " _hasFetcherDoneAnything ": true,
         };
         state.fetchers.set(staleKey, revalidatingFetcher);
-        fetchControllers.set(staleKey, abortController);
+        if (rf.controller) {
+          fetchControllers.set(staleKey, rf.controller);
+        }
       });
 
     updateState({ fetchers: new Map(state.fetchers) });
+
+    let abortPendingFetchRevalidations = () =>
+      revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
+
+    abortController.signal.addEventListener(
+      "abort",
+      abortPendingFetchRevalidations
+    );
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
@@ -1783,6 +1815,11 @@ export function createRouter(init: RouterInit): Router {
     if (abortController.signal.aborted) {
       return;
     }
+
+    abortController.signal.removeEventListener(
+      "abort",
+      abortPendingFetchRevalidations
+    );
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
@@ -2114,10 +2151,10 @@ export function createRouter(init: RouterInit): Router {
         )
       ),
       ...fetchersToLoad.map((f) => {
-        if (f.matches && f.match) {
+        if (f.matches && f.match && f.controller) {
           return callLoaderOrAction(
             "loader",
-            createClientSideRequest(init.history, f.path, request.signal),
+            createClientSideRequest(init.history, f.path, f.controller.signal),
             f.match,
             f.matches,
             manifest,
@@ -2141,7 +2178,7 @@ export function createRouter(init: RouterInit): Router {
         currentMatches,
         matchesToLoad,
         loaderResults,
-        request.signal,
+        loaderResults.map(() => request.signal),
         false,
         state.loaderData
       ),
@@ -2149,7 +2186,7 @@ export function createRouter(init: RouterInit): Router {
         currentMatches,
         fetchersToLoad.map((f) => f.match),
         fetcherResults,
-        request.signal,
+        fetchersToLoad.map((f) => (f.controller ? f.controller.signal : null)),
         true
       ),
     ]);
@@ -3126,7 +3163,14 @@ function getMatchesToLoad(
     // If the fetcher path no longer matches, push it in with null matches so
     // we can trigger a 404 in callLoadersAndMaybeResolveData
     if (!fetcherMatches) {
-      revalidatingFetchers.push({ key, ...f, matches: null, match: null });
+      revalidatingFetchers.push({
+        key,
+        routeId: f.routeId,
+        path: f.path,
+        matches: null,
+        match: null,
+        controller: null,
+      });
       return;
     }
 
@@ -3135,9 +3179,11 @@ function getMatchesToLoad(
     if (cancelledFetcherLoads.includes(key)) {
       revalidatingFetchers.push({
         key,
+        routeId: f.routeId,
+        path: f.path,
         matches: fetcherMatches,
         match: fetcherMatch,
-        ...f,
+        controller: new AbortController(),
       });
       return;
     }
@@ -3158,9 +3204,11 @@ function getMatchesToLoad(
     if (shouldRevalidate) {
       revalidatingFetchers.push({
         key,
+        routeId: f.routeId,
+        path: f.path,
         matches: fetcherMatches,
         match: fetcherMatch,
-        ...f,
+        controller: new AbortController(),
       });
     }
   });
@@ -3659,7 +3707,7 @@ function processLoaderData(
 
   // Process results from our revalidating fetchers
   for (let index = 0; index < revalidatingFetchers.length; index++) {
-    let { key, match } = revalidatingFetchers[index];
+    let { key, match, controller } = revalidatingFetchers[index];
     invariant(
       fetcherResults !== undefined && fetcherResults[index] !== undefined,
       "Did not find corresponding fetcher result"
@@ -3667,7 +3715,10 @@ function processLoaderData(
     let result = fetcherResults[index];
 
     // Process fetcher non-redirect errors
-    if (isErrorResult(result)) {
+    if (controller && controller.signal.aborted) {
+      // Nothing to do for aborted fetchers
+      continue;
+    } else if (isErrorResult(result)) {
       let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
       if (!(errors && errors[boundaryMatch.route.id])) {
         errors = {
@@ -3910,7 +3961,7 @@ async function resolveDeferredResults(
   currentMatches: AgnosticDataRouteMatch[],
   matchesToLoad: (AgnosticDataRouteMatch | null)[],
   results: DataResult[],
-  signal: AbortSignal,
+  signals: (AbortSignal | null)[],
   isFetcher: boolean,
   currentLoaderData?: RouteData
 ) {
@@ -3936,6 +3987,11 @@ async function resolveDeferredResults(
       // Note: we do not have to touch activeDeferreds here since we race them
       // against the signal in resolveDeferredData and they'll get aborted
       // there if needed
+      let signal = signals[index];
+      invariant(
+        signal,
+        "Expected an AbortSignal for revalidating fetcher deferred result"
+      );
       await resolveDeferredData(result, signal, isFetcher).then((result) => {
         if (result) {
           results[index] = result || results[index];
