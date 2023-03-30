@@ -1,6 +1,8 @@
 import type { Plugin } from "esbuild";
 import { readFile } from "fs-extra";
 
+import type { ReadChannel } from "../../../channel";
+
 const pluginName = "css-bundle-update-plugin";
 const namespace = `${pluginName}-ns`;
 
@@ -10,10 +12,8 @@ const namespace = `${pluginName}-ns`;
  * Without this plugin, the "css-bundle" package source code never changes on
  * disk so it never triggers an update.
  */
-export function cssBundleUpdatePlugin({
-  getCssBundleHref,
-}: {
-  getCssBundleHref: () => Promise<string | undefined>;
+export function cssBundleUpdatePlugin(channels: {
+  cssBundleHref: ReadChannel<string | undefined>;
 }): Plugin {
   return {
     name: pluginName,
@@ -53,7 +53,7 @@ export function cssBundleUpdatePlugin({
 
       build.onLoad({ filter: /.*/, namespace }, async (args) => {
         let [cssBundleHref, contents] = await Promise.all([
-          getCssBundleHref(),
+          channels.cssBundleHref.read(),
           readFile(args.path, "utf8"),
         ]);
 

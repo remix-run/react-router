@@ -24,6 +24,7 @@ import invariant from "../../invariant";
 import { hmrPlugin } from "./plugins/hmr";
 import { createMatchPath } from "../utils/tsconfig";
 import { getPreferredPackageManager } from "../../cli/getPreferredPackageManager";
+import { type ReadChannel } from "../../channel";
 
 type Compiler = {
   // produce ./public/build/
@@ -79,7 +80,7 @@ const createEsbuildConfig = (
   config: RemixConfig,
   options: CompileOptions,
   onLoader: (filename: string, code: string) => void,
-  readCssBundleHref: () => Promise<string | undefined>
+  channels: { cssBundleHref: ReadChannel<string | undefined> }
 ): esbuild.BuildOptions => {
   let entryPoints: Record<string, string> = {
     "entry.client": config.entryClientFilePath,
@@ -190,9 +191,7 @@ const createEsbuildConfig = (
     plugins.push(hmrPlugin({ remixConfig: config }));
 
     if (isCssBundlingEnabled(config)) {
-      plugins.push(
-        cssBundleUpdatePlugin({ getCssBundleHref: readCssBundleHref })
-      );
+      plugins.push(cssBundleUpdatePlugin(channels));
     }
   }
 
@@ -246,7 +245,7 @@ const createEsbuildConfig = (
 export const create = async (
   remixConfig: RemixConfig,
   options: CompileOptions,
-  readCssBundleHref: () => Promise<string | undefined>
+  channels: { cssBundleHref: ReadChannel<string | undefined> }
 ): Promise<Compiler> => {
   let hmrRoutes: Record<string, { loaderHash: string }> = {};
   let onLoader = (filename: string, code: string) => {
@@ -255,7 +254,7 @@ export const create = async (
   };
 
   let ctx = await esbuild.context({
-    ...createEsbuildConfig(remixConfig, options, onLoader, readCssBundleHref),
+    ...createEsbuildConfig(remixConfig, options, onLoader, channels),
     metafile: true, // TODO is this needed when using context api?
   });
 

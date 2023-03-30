@@ -20,17 +20,18 @@ import { serverBareModulesPlugin } from "./plugins/bareImports";
 import { serverEntryModulePlugin } from "./plugins/entry";
 import { serverRouteModulesPlugin } from "./plugins/routes";
 import { externalPlugin } from "../plugins/external";
+import type { ReadChannel } from "../../channel";
 
 type Compiler = {
   // produce ./build/index.js
-  compile: (manifest: Manifest) => Promise<esbuild.Metafile>;
+  compile: () => Promise<void>;
   dispose: () => void;
 };
 
 const createEsbuildConfig = (
   config: RemixConfig,
-  manifest: Manifest,
-  options: CompileOptions
+  options: CompileOptions,
+  channels: { manifest: ReadChannel<Manifest> }
 ): esbuild.BuildOptions => {
   let stdin: esbuild.StdinOptions | undefined;
   let entryPoints: string[] | undefined;
@@ -66,7 +67,7 @@ const createEsbuildConfig = (
     emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
     serverRouteModulesPlugin(config),
     serverEntryModulePlugin(config, { liveReloadPort: options.liveReloadPort }),
-    serverAssetsManifestPlugin(manifest),
+    serverAssetsManifestPlugin(channels),
     serverBareModulesPlugin(config, options.onWarning),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ].filter(isNotNull);
@@ -162,19 +163,18 @@ async function writeServerBuildResult(
   }
 }
 
-export const create = (
+export const create = async (
   remixConfig: RemixConfig,
-  options: CompileOptions
-): Compiler => {
-  let compile = async (manifest: Manifest) => {
-    let esbuildConfig = createEsbuildConfig(remixConfig, manifest, options);
-    let { metafile, outputFiles } = await esbuild.build({
-      ...esbuildConfig,
-      write: false,
-      metafile: true,
-    });
+  options: CompileOptions,
+  channels: { manifest: ReadChannel<Manifest> }
+): Promise<Compiler> => {
+  let ctx = await esbuild.context({
+    ...createEsbuildConfig(remixConfig, options, channels),
+    write: false,
+  });
+  let compile = async () => {
+    let { outputFiles } = await ctx.rebuild();
     await writeServerBuildResult(remixConfig, outputFiles!);
-    return metafile;
   };
   return {
     compile,
