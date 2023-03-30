@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.15.0-pre.3
+
+### Patch Changes
+
+- Update deprecation warnings with hardcoded links ([#5889](https://github.com/remix-run/remix/pull/5889))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.15.0-pre.3`
+
 ## 1.15.0-pre.2
 
 ### Patch Changes

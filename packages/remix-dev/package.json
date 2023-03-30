@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/dev",
-  "version": "1.15.0-pre.2",
+  "version": "1.15.0-pre.3",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
   "bugs": {
@@ -29,7 +29,7 @@
     "@babel/types": "^7.20.2",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@npmcli/package-json": "^2.0.0",
-    "@remix-run/server-runtime": "1.15.0-pre.2",
+    "@remix-run/server-runtime": "1.15.0-pre.3",
     "@vanilla-extract/integration": "^6.2.0",
     "arg": "^5.0.1",
     "cacache": "^15.0.5",
@@ -73,7 +73,7 @@
     "xdm": "^2.0.0"
   },
   "devDependencies": {
-    "@remix-run/serve": "1.15.0-pre.2",
+    "@remix-run/serve": "1.15.0-pre.3",
     "@types/cacache": "^15.0.0",
     "@types/glob-to-regexp": "0.4.1",
     "@types/gunzip-maybe": "^1.4.0",
@@ -93,7 +93,7 @@
     "type-fest": "^2.16.0"
   },
   "peerDependencies": {
-    "@remix-run/serve": "^1.15.0-pre.2"
+    "@remix-run/serve": "^1.15.0-pre.3"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {
