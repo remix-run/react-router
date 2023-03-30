@@ -7,6 +7,7 @@ import invariant from "../../invariant";
 import type { RemixConfig } from "../../config";
 import type { CompileOptions } from "../options";
 import { getPostcssProcessor } from "../utils/postcss";
+import { absoluteCssUrlsPlugin } from "./absoluteCssUrlsPlugin";
 
 const isExtendedLengthPath = /^\\\\\?\\/;
 
@@ -51,22 +52,8 @@ export function cssFilePlugin({
             ...buildOps.loader,
             ".css": "css",
           },
-          // this plugin treats absolute paths in 'url()' css rules as external to prevent breaking changes
           plugins: [
-            {
-              name: "resolve-absolute",
-              async setup(build) {
-                build.onResolve({ filter: /.*/ }, async (args) => {
-                  let { kind, path: resolvePath } = args;
-                  if (kind === "url-token" && path.isAbsolute(resolvePath)) {
-                    return {
-                      path: resolvePath,
-                      external: true,
-                    };
-                  }
-                });
-              },
-            },
+            absoluteCssUrlsPlugin(),
             ...(postcssProcessor
               ? [postcssPlugin({ postcssProcessor, options })]
               : []),

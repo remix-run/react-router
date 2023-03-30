@@ -61,6 +61,7 @@ test.describe("CSS Modules", () => {
         ...rootRelativeImportedValueFixture(),
         ...imageUrlsFixture(),
         ...rootRelativeImageUrlsFixture(),
+        ...absoluteImageUrlsFixture(),
         ...clientEntrySideEffectsFixture(),
         ...deduplicatedCssFixture(),
         ...uniqueClassNamesFixture(),
@@ -534,6 +535,51 @@ test.describe("CSS Modules", () => {
     let locator = await page.locator(
       "[data-testid='root-relative-image-urls']"
     );
+    let backgroundImage = await locator.evaluate(
+      (element) => window.getComputedStyle(element).backgroundImage
+    );
+    expect(backgroundImage).toContain(".svg");
+    expect(imgStatus).toBe(200);
+  });
+
+  let absoluteImageUrlsFixture = () => ({
+    "app/routes/absolute-image-urls-test.jsx": js`
+      import { Test } from "~/test-components/absolute-image-urls";
+      export default function() {
+        return <Test />;
+      }
+    `,
+    "app/test-components/absolute-image-urls/index.jsx": js`
+      import styles from "./styles.module.css";
+      export function Test() {
+        return (
+          <div data-testid="absolute-image-urls" className={styles.root}>
+            Image URLs test
+          </div>
+        );
+      }
+    `,
+    "app/test-components/absolute-image-urls/styles.module.css": css`
+      .root {
+        background-color: peachpuff;
+        background-image: url(/absolute-image-urls/image.svg);
+        padding: ${TEST_PADDING_VALUE};
+      }
+    `,
+    "public/absolute-image-urls/image.svg": `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="50" fill="coral" />
+      </svg>
+    `,
+  });
+  test("absolute image URLs", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let imgStatus: number | null = null;
+    app.page.on("response", (res) => {
+      if (res.url().endsWith(".svg")) imgStatus = res.status();
+    });
+    await app.goto("/absolute-image-urls-test");
+    let locator = await page.locator("[data-testid='absolute-image-urls']");
     let backgroundImage = await locator.evaluate(
       (element) => window.getComputedStyle(element).backgroundImage
     );

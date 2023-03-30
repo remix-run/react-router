@@ -11,6 +11,7 @@ import { getAppDependencies } from "../../dependencies";
 import { loaders } from "../utils/loaders";
 import type { CompileOptions } from "../options";
 import { cssFilePlugin } from "../plugins/cssImports";
+import { absoluteCssUrlsPlugin } from "../plugins/absoluteCssUrlsPlugin";
 import { emptyModulesPlugin } from "../plugins/emptyModules";
 import { mdxPlugin } from "../plugins/mdx";
 import { externalPlugin } from "../plugins/external";
@@ -70,6 +71,7 @@ const createEsbuildConfig = (
       ? cssSideEffectImportsPlugin({ config, options })
       : null,
     cssFilePlugin({ config, options }),
+    absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
     mdxPlugin(config),
     emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),

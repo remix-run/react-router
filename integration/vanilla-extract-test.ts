@@ -58,6 +58,7 @@ test.describe("Vanilla Extract", () => {
             ...stableIdentifiersFixture(),
             ...imageUrlsViaCssUrlFixture(),
             ...imageUrlsViaRootRelativeCssUrlFixture(),
+            ...imageUrlsViaAbsoluteCssUrlFixture(),
             ...imageUrlsViaJsImportFixture(),
             ...imageUrlsViaRootRelativeJsImportFixture(),
             ...imageUrlsViaClassCompositionFixture(),
@@ -408,6 +409,50 @@ test.describe("Vanilla Extract", () => {
         await app.goto("/image-urls-via-root-relative-css-url-test");
         let locator = await page.locator(
           "[data-testid='image-urls-via-root-relative-css-url']"
+        );
+        let backgroundImage = await locator.evaluate(
+          (element) => window.getComputedStyle(element).backgroundImage
+        );
+        expect(backgroundImage).toContain(".svg");
+        expect(imgStatus).toBe(200);
+      });
+
+      let imageUrlsViaAbsoluteCssUrlFixture = () => ({
+        "app/fixtures/imageUrlsViaAbsoluteCssUrl/styles.css.ts": js`
+          import { style } from "@vanilla-extract/css";
+    
+          export const root = style({
+            backgroundColor: 'peachpuff',
+            backgroundImage: 'url("/imageUrlsViaAbsoluteCssUrl/image.svg")',
+            padding: ${JSON.stringify(TEST_PADDING_VALUE)}
+          });
+        `,
+        "public/imageUrlsViaAbsoluteCssUrl/image.svg": `
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="50" fill="coral" />
+          </svg>
+        `,
+        "app/routes/image-urls-via-absolute-css-url-test.jsx": js`
+          import * as styles from "../fixtures/imageUrlsViaAbsoluteCssUrl/styles.css";
+    
+          export default function() {
+            return (
+              <div data-testid="image-urls-via-absolute-css-url" className={styles.root}>
+                Image URLs via absolute CSS URL test
+              </div>
+            )
+          }
+        `,
+      });
+      test("image URLs via absolute CSS URL", async ({ page }) => {
+        let app = new PlaywrightFixture(appFixture, page);
+        let imgStatus: number | null = null;
+        app.page.on("response", (res) => {
+          if (res.url().endsWith(".svg")) imgStatus = res.status();
+        });
+        await app.goto("/image-urls-via-absolute-css-url-test");
+        let locator = await page.locator(
+          "[data-testid='image-urls-via-absolute-css-url']"
         );
         let backgroundImage = await locator.evaluate(
           (element) => window.getComputedStyle(element).backgroundImage
