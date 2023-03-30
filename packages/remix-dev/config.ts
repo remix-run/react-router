@@ -823,45 +823,44 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
 });
 
 export let browserBuildDirectoryWarning =
-  "⚠️ DEPRECATED: The `browserBuildDirectory` config option is deprecated. " +
-  "Use `assetsBuildDirectory` instead.  For more information, see " +
-  "https://remix.run/docs/en/1.15.0/file-conventions/remix-config";
+  "⚠️ REMIX FUTURE CHANGE: The `browserBuildDirectory` config option will be removed in v2. " +
+  "Use `assetsBuildDirectory` instead. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.15.0/pages/v2#browserbuilddirectory";
 
 export let serverBuildDirectoryWarning =
-  "⚠️ DEPRECATED: The `serverBuildDirectory` config option is deprecated. " +
-  "Use `serverBuildPath` instead.  For more information, see " +
-  "https://remix.run/docs/en/1.15.0/file-conventions/remix-config";
+  "⚠️ REMIX FUTURE CHANGE: The `serverBuildDirectory` config option will be removed in v2. " +
+  "Use `serverBuildPath` instead. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.15.0/pages/v2#serverbuilddirectory";
 
 export let serverBuildTargetWarning =
-  "⚠️ DEPRECATED: The `serverBuildTarget` config option is deprecated. Use a " +
-  "combination of `publicPath`, `serverBuildPath`, `serverConditions`, " +
-  "`serverDependenciesToBundle`, `serverMainFields`, `serverMinify`, " +
-  "`serverModuleFormat` and/or `serverPlatform` instead. For more information, " +
-  "see https://remix.run/docs/en/1.15.0/file-conventions/remix-config";
+  "⚠️ REMIX FUTURE CHANGE: The `serverBuildTarget` config option will be removed in v2. " +
+  "Use a combination of server module config values to achieve the same build output. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.15.0/pages/v2#serverbuildtarget";
 
 export let flatRoutesWarning =
-  "⚠️ DEPRECATED: The old nested folders route convention has been " +
-  "deprecated in favor of 'flat routes'.  Please enable the new routing " +
-  "convention via the `future.v2_routeConvention` flag in your " +
-  "`remix.config.js` file.  For more information, see " +
-  "https://remix.run/docs/en/1.15.0/file-conventions/route-files-v2.";
+  "⚠️ REMIX FUTURE CHANGE: The route file convention is changing in v2. " +
+  "You can prepare for this change at your convenience with the `v2_routeConvention` future flag. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.15.0/pages/v2#file-system-route-convention";
 
 export const errorBoundaryWarning =
-  "⚠️ DEPRECATED: The separation of `CatchBoundary` and `ErrorBoundary` has " +
-  "been deprecated and Remix v2 will use a singular `ErrorBoundary` for " +
-  "all thrown values (`Response` and `Error`). Please migrate to the new " +
-  "behavior in Remix v1 via the `future.v2_errorBoundary` flag in your " +
-  "`remix.config.js` file. For more information, see " +
-  "https://remix.run/docs/en/1.15.0/route/error-boundary-v2";
+  "⚠️ REMIX FUTURE CHANGE: The behaviors of `CatchBoundary` and `ErrorBoundary` are changing in v2. " +
+  "You can prepare for this change at your convenience with the `v2_errorBoundary` future flag. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.15.0/pages/v2#catchboundary-and-errorboundary";
 
 export const formMethodWarning =
-  "⚠️  DEPRECATED: Please enable the `future.v2_normalizeFormMethod` flag to " +
-  "prepare for the Remix v2 release. Lowercase `useNavigation().formMethod`" +
-  "values are being normalized to uppercase in v2 to align with the `fetch()` " +
-  "behavior.  For more information, please see " +
-  "https://remix.run/docs/en/1.15.0/hooks/use-navigation";
+  "⚠️ REMIX FUTURE CHANGE: APIs that provide `formMethod` will be changing in v2. " +
+  "All values will be uppercase (GET, POST, etc.) instead of lowercase (get, post, etc.) " +
+  "You can prepare for this change at your convenience with the `v2_normalizeFormMethod` future flag. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.15.0/pages/v2#formMethod";
 
 export const metaWarning =
-  "⚠️  DEPRECATED: Please enable the `future.v2_meta` flag to " +
-  "prepare for the Remix v2 release. For more information, see " +
-  "https://remix.run/docs/en/1.15.0/route/meta#md-metav2.";
+  "⚠️ REMIX FUTURE CHANGE: The route `meta` export signature is changing in v2" +
+  "You can prepare for this change at your convenience with the `v2_meta` future flag. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.15.0/pages/v2#meta";
