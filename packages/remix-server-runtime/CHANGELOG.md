@@ -1,20 +1,6 @@
 # `@remix-run/server-runtime`
 
-## 1.15.0-pre.3
-
-### Patch Changes
-
-- - Bump React Router dependencies to the latest version. [See the release notes for more details.](https://github.com/remix-run/react-router/releases/tag/react-router%406.10.0) ([`e14699547`](https://github.com/remix-run/remix/commit/e1469954737a2e45636b6aef73dc9ae251fb1b20))
-
-## 1.15.0-pre.2
-
-## 1.15.0-pre.1
-
-### Patch Changes
-
-- Update to `react-router-dom@6.10.0-pre.1` ([#5875](https://github.com/remix-run/remix/pull/5875))
-
-## 1.15.0-pre.0
+## 1.15.0
 
 ### Minor Changes
 
@@ -60,15 +46,16 @@
     - `useNavigation().formMethod` is uppercase
     - `useFetcher().formMethod` is uppercase
 
-- Add experimental support for Vanilla Extract caching which can be enabled by setting `future.unstable_vanillaExtract: { cache: true }` in `remix.config`. This is considered experimental due to the use of a brand new Vanilla Extract compiler under the hood. Note that in order to use this feature, you must be using at least `v1.10.0` of `@vanilla-extract/css`. ([#5735](https://github.com/remix-run/remix/pull/5735))
-- Deprecate `CatchBoundary` in favor of `future.v2_errorBoundary` ([#5718](https://github.com/remix-run/remix/pull/5718))
-- Add type deprecations for types now in React Router ([#5679](https://github.com/remix-run/remix/pull/5679))
+- Added deprecation warning for `CatchBoundary` in favor of `future.v2_errorBoundary` ([#5718](https://github.com/remix-run/remix/pull/5718))
+
+- Added experimental support for Vanilla Extract caching, which can be enabled by setting `future.unstable_vanillaExtract: { cache: true }` in `remix.config`. This is considered experimental due to the use of a brand new Vanilla Extract compiler under the hood. In order to use this feature, you must be using at least `v1.10.0` of `@vanilla-extract/css`. ([#5735](https://github.com/remix-run/remix/pull/5735))
 
 ### Patch Changes
 
-- Don't log server errors for aborted requests as that is an expected flow ([#5602](https://github.com/remix-run/remix/pull/5602))
-- Ensure stack traces are removed from all server side errors in production ([#5541](https://github.com/remix-run/remix/pull/5541))
-- Update to `react-router-dom@6.10.0-pre.0` and `@remix-run/router@1.5.0-pre.0` ([#5866](https://github.com/remix-run/remix/pull/5866))
+- Bumped React Router dependencies to the latest version. [See the release notes for more details.](https://github.com/remix-run/react-router/releases/tag/react-router%406.10.0) ([`e14699547`](https://github.com/remix-run/remix/commit/e1469954737a2e45636b6aef73dc9ae251fb1b20))
+- Added type deprecations for types now in React Router ([#5679](https://github.com/remix-run/remix/pull/5679))
+- Stopped logging server errors for aborted requests ([#5602](https://github.com/remix-run/remix/pull/5602))
+- We now ensure that stack traces are removed from all server side errors in production ([#5541](https://github.com/remix-run/remix/pull/5541))
 
 ## 1.14.3
 

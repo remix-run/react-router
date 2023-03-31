@@ -1,31 +1,10 @@
 # `@remix-run/dev`
 
-## 1.15.0-pre.3
-
-### Patch Changes
-
-- Update deprecation warnings with hardcoded links ([#5889](https://github.com/remix-run/remix/pull/5889))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.15.0-pre.3`
-
-## 1.15.0-pre.2
-
-### Patch Changes
-
-- Add deprecation warning for `future.v2_meta` ([#5878](https://github.com/remix-run/remix/pull/5878))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.15.0-pre.2`
-
-## 1.15.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.15.0-pre.1`
-
-## 1.15.0-pre.0
+## 1.15.0
 
 ### Minor Changes
+
+- Added deprecation warning for `v2_normalizeFormMethod` ([#5863](https://github.com/remix-run/remix/pull/5863))
 
 - Added a new `future.v2_normalizeFormMethod` flag to normalize the exposed `useNavigation().formMethod` as an uppercase HTTP method to align with the previous `useTransition` behavior as well as the `fetch()` behavior of normalizing to uppercase HTTP methods. ([#5815](https://github.com/remix-run/remix/pull/5815))
 
@@ -36,26 +15,24 @@
     - `useNavigation().formMethod` is uppercase
     - `useFetcher().formMethod` is uppercase
 
-- Add experimental support for Vanilla Extract caching which can be enabled by setting `future.unstable_vanillaExtract: { cache: true }` in `remix.config`. This is considered experimental due to the use of a brand new Vanilla Extract compiler under the hood. Note that in order to use this feature, you must be using at least `v1.10.0` of `@vanilla-extract/css`. ([#5735](https://github.com/remix-run/remix/pull/5735))
-- add support for tailwind.config.{mjs,ts} ([#5850](https://github.com/remix-run/remix/pull/5850))
-- Add deprecation warnings for `v2_normalizeFormMethod` ([#5863](https://github.com/remix-run/remix/pull/5863))
-- show deprecation warning when `browserBuildDirectory` config is used ([#5702](https://github.com/remix-run/remix/pull/5702))
-- show deprecation warning when `serverBuildDirectory` config is used ([#5704](https://github.com/remix-run/remix/pull/5704))
-- Deprecate `CatchBoundary` in favor of `future.v2_errorBoundary` ([#5718](https://github.com/remix-run/remix/pull/5718))
+- Added deprecation warning for `browserBuildDirectory` in `remix.config` ([#5702](https://github.com/remix-run/remix/pull/5702))
+
+- Added deprecation warning for `CatchBoundary` in favor of `future.v2_errorBoundary` ([#5718](https://github.com/remix-run/remix/pull/5718))
+
+- Added experimental support for Vanilla Extract caching, which can be enabled by setting `future.unstable_vanillaExtract: { cache: true }` in `remix.config`. This is considered experimental due to the use of a brand new Vanilla Extract compiler under the hood. In order to use this feature, you must be using at least `v1.10.0` of `@vanilla-extract/css`. ([#5735](https://github.com/remix-run/remix/pull/5735))
+
+- Added deprecation warning for `serverBuildDirectory` in `remix.config` ([#5704](https://github.com/remix-run/remix/pull/5704))
 
 ### Patch Changes
 
-- Ensure changes to CSS inserted via `@remix-run/css-bundle` are picked up during HMR ([#5823](https://github.com/remix-run/remix/pull/5823))
-- use path.resolve when re-exporting entry.client ([#5707](https://github.com/remix-run/remix/pull/5707))
-- Add support for `.mjs` and `.cjs` extensions when detecting CSS side-effect imports ([#5564](https://github.com/remix-run/remix/pull/5564))
-- update entry.client, requestIdleCallback/setTimeout doesn't really do anything more than startTransition. ([#5749](https://github.com/remix-run/remix/pull/5749))
-- flat routes perf improvements ([#5634](https://github.com/remix-run/remix/pull/5634))
-- resolves an issue when resolving react-refresh for pnpm users ([#5637](https://github.com/remix-run/remix/pull/5637))
-- add optional entry file support for React 17 ([#5681](https://github.com/remix-run/remix/pull/5681))
-- bumps json5 to resolve a potential security vulneratility ([#5799](https://github.com/remix-run/remix/pull/5799)). Also resolves some other security vulnerabilities in the root package.json used for building/testing remix.
+- Fixed issue to ensure changes to CSS inserted via `@remix-run/css-bundle` are picked up during HMR ([#5823](https://github.com/remix-run/remix/pull/5823))
+- We now use `path.resolve` when re-exporting `entry.client` ([#5707](https://github.com/remix-run/remix/pull/5707))
+- Added support for `.mjs` and `.cjs` extensions when detecting CSS side-effect imports ([#5564](https://github.com/remix-run/remix/pull/5564))
+- Fixed resolution issues for pnpm users installing `react-refresh` ([#5637](https://github.com/remix-run/remix/pull/5637))
+- Added deprecation warning for `future.v2_meta` ([#5878](https://github.com/remix-run/remix/pull/5878))
+- Added optional entry file support for React 17 ([#5681](https://github.com/remix-run/remix/pull/5681))
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.15.0-pre.0`
-  - `@remix-run/serve@1.15.0-pre.0`
+  - `@remix-run/server-runtime@1.15.0`
 
 ## 1.14.3
 
