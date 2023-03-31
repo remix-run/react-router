@@ -7,6 +7,7 @@ import {
   createFixture,
   css,
   js,
+  json,
 } from "./helpers/create-fixture";
 
 const TEST_PADDING_VALUE = "20px";
@@ -251,7 +252,7 @@ test.describe("CSS side-effect imports", () => {
         padding: ${TEST_PADDING_VALUE};
       }
     `,
-    "node_modules/@test-package/esm/index.js": js`
+    "node_modules/@test-package/esm/index.mjs": js`
       import React from 'react';
       import './styles.css';
 
@@ -266,6 +267,9 @@ test.describe("CSS side-effect imports", () => {
         );
       };
     `,
+    "node_modules/@test-package/esm/package.json": json({
+      exports: "./index.mjs",
+    }),
     "app/routes/esm-package-test.jsx": js`
       import { Test } from "@test-package/esm";
       export default function() {

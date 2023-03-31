@@ -42,12 +42,12 @@ export interface AssetsManifest {
 export async function createAssetsManifest({
   config,
   metafile,
-  cssBundlePath,
+  cssBundleHref,
   hmr,
 }: {
   config: RemixConfig;
   metafile: esbuild.Metafile;
-  cssBundlePath?: string;
+  cssBundleHref?: string;
   hmr?: AssetsManifest["hmr"];
 }): Promise<AssetsManifest> {
   function resolveUrl(outputPath: string): string {
@@ -125,8 +125,6 @@ export async function createAssetsManifest({
   let version = getHash(
     JSON.stringify({ entry, routes, hmrRoutes: hmr?.routes })
   ).slice(0, 8);
-
-  let cssBundleHref = cssBundlePath ? resolveUrl(cssBundlePath) : undefined;
 
   return { version, entry, routes, cssBundleHref, hmr };
 }

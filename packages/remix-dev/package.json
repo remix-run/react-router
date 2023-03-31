@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/dev",
-  "version": "1.14.3",
+  "version": "1.15.0",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
   "bugs": {
@@ -29,8 +29,8 @@
     "@babel/types": "^7.20.2",
     "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
     "@npmcli/package-json": "^2.0.0",
-    "@remix-run/server-runtime": "1.14.3",
-    "@vanilla-extract/integration": "^6.0.2",
+    "@remix-run/server-runtime": "1.15.0",
+    "@vanilla-extract/integration": "^6.2.0",
     "arg": "^5.0.1",
     "cacache": "^15.0.5",
     "chalk": "^4.1.2",
@@ -43,6 +43,7 @@
     "fast-glob": "3.2.11",
     "fs-extra": "^10.0.0",
     "get-port": "^5.1.1",
+    "glob-to-regexp": "0.4.1",
     "gunzip-maybe": "^1.4.2",
     "inquirer": "^8.2.1",
     "jsesc": "3.0.2",
@@ -50,7 +51,7 @@
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
     "lru-cache": "^7.14.1",
-    "minimatch": "^3.0.4",
+    "minimatch": "^3.0.5",
     "node-fetch": "^2.6.7",
     "ora": "^5.4.1",
     "postcss": "^8.4.19",
@@ -72,8 +73,9 @@
     "xdm": "^2.0.0"
   },
   "devDependencies": {
-    "@remix-run/serve": "1.14.3",
+    "@remix-run/serve": "1.15.0",
     "@types/cacache": "^15.0.0",
+    "@types/glob-to-regexp": "0.4.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/inquirer": "^8.2.0",
     "@types/jsesc": "^3.0.1",
@@ -91,7 +93,7 @@
     "type-fest": "^2.16.0"
   },
   "peerDependencies": {
-    "@remix-run/serve": "^1.14.3"
+    "@remix-run/serve": "^1.15.0"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {

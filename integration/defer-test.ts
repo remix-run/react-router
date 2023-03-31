@@ -33,11 +33,11 @@ test.describe("non-aborted", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
-      ////////////////////////////////////////////////////////////////////////////
-      // 💿 Next, add files to this object, just like files in a real app,
-      // `createFixture` will make an app and run your tests against it.
-      ////////////////////////////////////////////////////////////////////////////
+      future: {
+        v2_routeConvention: true,
+        v2_errorBoundary: true,
+        v2_normalizeFormMethod: true,
+      },
       files: {
         "app/components/counter.tsx": js`
           import { useState } from "react";
@@ -1288,7 +1288,8 @@ function monitorConsole(page: Page) {
         let arg0 = await args[0].jsonValue();
         if (
           typeof arg0 === "string" &&
-          arg0.includes("Download the React DevTools")
+          (arg0.includes("Download the React DevTools") ||
+            /DEPRECATED.*imagesizes.*imagesrcset/.test(arg0))
         ) {
           continue;
         }

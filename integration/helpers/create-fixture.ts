@@ -6,7 +6,7 @@ import getPort from "get-port";
 import stripIndent from "strip-indent";
 import { sync as spawnSync } from "cross-spawn";
 import type { JsonObject } from "type-fest";
-import type { ServerMode } from "@remix-run/server-runtime/mode";
+import { ServerMode } from "@remix-run/server-runtime/mode";
 import type { FutureConfig } from "@remix-run/server-runtime/entry";
 
 import type { ServerBuild } from "../../build/node_modules/@remix-run/server-runtime";
@@ -15,7 +15,7 @@ import { createRequestHandler as createExpressHandler } from "../../build/node_m
 
 const TMP_DIR = path.join(process.cwd(), ".tmp", "integration");
 
-interface FixtureInit {
+export interface FixtureInit {
   buildStdio?: Writable;
   sourcemap?: boolean;
   files?: { [filename: string]: string };
@@ -34,11 +34,11 @@ export function json(value: JsonObject) {
   return JSON.stringify(value, null, 2);
 }
 
-export async function createFixture(init: FixtureInit) {
-  let projectDir = await createFixtureProject(init);
+export async function createFixture(init: FixtureInit, mode?: ServerMode) {
+  let projectDir = await createFixtureProject(init, mode);
   let buildPath = path.resolve(projectDir, "build");
   let app: ServerBuild = await import(buildPath);
-  let handler = createRequestHandler(app, "production");
+  let handler = createRequestHandler(app, mode || ServerMode.Production);
 
   let requestDocument = async (href: string, init?: RequestInit) => {
     let url = new URL(href, "test://test");
@@ -106,7 +106,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         "*",
         createExpressHandler({
           build: fixture.build,
-          mode: mode || "production",
+          mode: mode || ServerMode.Production,
         })
       );
 
@@ -141,7 +141,8 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
 ////////////////////////////////////////////////////////////////////////////////
 
 export async function createFixtureProject(
-  init: FixtureInit = {}
+  init: FixtureInit = {},
+  mode?: ServerMode
 ): Promise<string> {
   let template = init.template ?? "node-template";
   let integrationTemplateDir = path.join(__dirname, template);
@@ -193,17 +194,29 @@ export async function createFixtureProject(
   }
 
   await writeTestFiles(init, projectDir);
-  build(projectDir, init.buildStdio, init.sourcemap);
+  build(projectDir, init.buildStdio, init.sourcemap, mode);
 
   return projectDir;
 }
 
-function build(projectDir: string, buildStdio?: Writable, sourcemap?: boolean) {
+function build(
+  projectDir: string,
+  buildStdio?: Writable,
+  sourcemap?: boolean,
+  mode?: ServerMode
+) {
   let buildArgs = ["node_modules/@remix-run/dev/dist/cli.js", "build"];
   if (sourcemap) {
     buildArgs.push("--sourcemap");
   }
-  let buildSpawn = spawnSync("node", buildArgs, { cwd: projectDir });
+
+  let buildSpawn = spawnSync("node", buildArgs, {
+    cwd: projectDir,
+    env: {
+      ...process.env,
+      NODE_ENV: mode || ServerMode.Production,
+    },
+  });
 
   // These logs are helpful for debugging. Remove comments if needed.
   // console.log("spawning @remix-run/dev/cli.js `build`:\n");

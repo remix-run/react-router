@@ -1,11 +1,16 @@
-import type { Location, Params } from "@remix-run/router";
+import type {
+  AgnosticRouteMatch,
+  Location,
+  Params,
+  RouterState,
+} from "@remix-run/router";
 import type { ComponentType } from "react";
 
 import type { AppLoadContext, AppData } from "./data";
 import type { LinkDescriptor } from "./links";
-import type { RouteData } from "./routeData";
-import type { Route } from "./routes";
 import type { SerializeFrom } from "./serialize";
+
+type RouteData = RouterState["loaderData"];
 
 export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule;
@@ -13,6 +18,11 @@ export interface RouteModules<RouteModule> {
 
 /**
  * The arguments passed to ActionFunction and LoaderFunction.
+ *
+ * Note this is almost identical to React Router's version but over there the
+ * context is optional since it's only there during static handler invocations.
+ * Keeping Remix's own definition for now so it can differentiate between
+ * client/server
  */
 export interface DataFunctionArgs {
   request: Request;
@@ -21,6 +31,7 @@ export interface DataFunctionArgs {
 }
 
 export type LoaderArgs = DataFunctionArgs;
+
 export type ActionArgs = DataFunctionArgs;
 
 /**
@@ -36,13 +47,24 @@ export interface ActionFunction {
 
 /**
  * A React component that is rendered when the server throws a Response.
+ *
+ * @deprecated Please enable the v2_errorBoundary flag
  */
 export type CatchBoundaryComponent = ComponentType;
 
 /**
  * A React component that is rendered when there is an error on a route.
+ *
+ * @deprecated Please enable the v2_errorBoundary flag
  */
 export type ErrorBoundaryComponent = ComponentType<{ error: Error }>;
+
+/**
+ * V2 version of the ErrorBoundary that eliminates the distinction between
+ * Error and Catch Boundaries and behaves like RR 6.4 errorElement and captures
+ * errors with useRouteError()
+ */
+export type V2_ErrorBoundaryComponent = ComponentType;
 
 /**
  * A function that returns HTTP headers to be used for a route. These headers
@@ -151,34 +173,46 @@ export type MetaFunction<
   ParentsLoaders extends Record<string, LoaderFunction> = {}
 > = V1_MetaFunction<Loader, ParentsLoaders>;
 
-interface RouteMatchWithMeta<Route> {
+interface V2_ServerRuntimeMetaMatch<
+  RouteId extends string = string,
+  Loader extends LoaderFunction | unknown = unknown
+> {
+  id: RouteId;
+  pathname: AgnosticRouteMatch["pathname"];
+  data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
+  handle?: unknown;
+  params: AgnosticRouteMatch["params"];
+  meta: V2_ServerRuntimeMetaDescriptor[];
+}
+
+type V2_ServerRuntimeMetaMatches<
+  MatchLoaders extends Record<string, unknown> = Record<string, unknown>
+> = Array<
+  {
+    [K in keyof MatchLoaders]: V2_ServerRuntimeMetaMatch<
+      Exclude<K, number | symbol>,
+      MatchLoaders[K]
+    >;
+  }[keyof MatchLoaders]
+>;
+
+export interface V2_ServerRuntimeMetaArgs<
+  Loader extends LoaderFunction | unknown = unknown,
+  MatchLoaders extends Record<string, unknown> = Record<string, unknown>
+> {
+  data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
   params: Params;
-  pathname: string;
-  route: Route;
-  meta: V2_HtmlMetaDescriptor[];
+  location: Location;
+  matches: V2_ServerRuntimeMetaMatches<MatchLoaders>;
 }
 
-interface ClientRoute extends Route {
-  loader?: LoaderFunction;
-  action: ActionFunction;
-  children?: ClientRoute[];
-  module: string;
-  hasLoader: boolean;
-}
-
-export interface V2_MetaFunction<
+export interface V2_ServerRuntimeMetaFunction<
   Loader extends LoaderFunction | unknown = unknown,
   ParentsLoaders extends Record<string, LoaderFunction> = {}
 > {
-  (args: {
-    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
-    parentsData: {
-      [k in keyof ParentsLoaders]: SerializeFrom<ParentsLoaders[k]>;
-    } & RouteData;
-    params: Params;
-    location: Location;
-    matches: RouteMatchWithMeta<ClientRoute>[];
-  }): V2_HtmlMetaDescriptor[];
+  (
+    args: V2_ServerRuntimeMetaArgs<Loader, ParentsLoaders>
+  ): V2_ServerRuntimeMetaDescriptor[];
 }
 
 /**
@@ -204,13 +238,22 @@ export type HtmlMetaDescriptor = V1_HtmlMetaDescriptor;
 
 export type MetaDescriptor = HtmlMetaDescriptor;
 
-export type V2_HtmlMetaDescriptor =
+export type V2_ServerRuntimeMetaDescriptor =
   | { charSet: "utf-8" }
   | { title: string }
   | { name: string; content: string }
   | { property: string; content: string }
   | { httpEquiv: string; content: string }
-  | { [name: string]: string };
+  | { "script:ld+json": LdJsonObject }
+  | { tagName: "meta" | "link"; [name: string]: string }
+  | { [name: string]: unknown };
+
+type LdJsonObject = { [Key in string]: LdJsonValue } & {
+  [Key in string]?: LdJsonValue | undefined;
+};
+type LdJsonArray = LdJsonValue[] | readonly LdJsonValue[];
+type LdJsonPrimitive = string | number | boolean | null;
+type LdJsonValue = LdJsonPrimitive | LdJsonObject | LdJsonArray;
 
 /**
  * A React component that is rendered for a route.
@@ -224,7 +267,7 @@ export type RouteHandle = any;
 
 export interface EntryRouteModule {
   CatchBoundary?: CatchBoundaryComponent;
-  ErrorBoundary?: ErrorBoundaryComponent;
+  ErrorBoundary?: ErrorBoundaryComponent | V2_ErrorBoundaryComponent;
   default: RouteComponent;
   handle?: RouteHandle;
   links?: LinksFunction;

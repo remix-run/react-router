@@ -19,8 +19,11 @@ export let hmrPlugin = ({
         };
       });
       build.onLoad({ filter: /.*/, namespace: "hmr-runtime" }, () => {
+        let reactRefreshRuntime = require
+          .resolve("react-refresh/runtime")
+          .replace(/\\/g, "/");
         let contents = `
-import RefreshRuntime from "react-refresh/runtime";
+import RefreshRuntime from "${reactRefreshRuntime}";
 
 declare global {
   interface Window {

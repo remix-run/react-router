@@ -40,15 +40,16 @@ export type {
   ErrorBoundaryComponent,
   HeadersFunction,
   HtmlMetaDescriptor,
-  V2_HtmlMetaDescriptor,
   LinksFunction,
   LoaderArgs,
   LoaderFunction,
   MetaDescriptor,
   MetaFunction,
-  V2_MetaFunction,
   RouteComponent,
   RouteHandle,
+  V2_ServerRuntimeMetaArgs,
+  V2_ServerRuntimeMetaDescriptor,
+  V2_ServerRuntimeMetaFunction,
 } from "./routeModules";
 
 export type { SerializeFrom } from "./serialize";

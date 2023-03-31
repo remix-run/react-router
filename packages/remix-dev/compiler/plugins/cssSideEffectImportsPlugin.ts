@@ -21,17 +21,19 @@ export function isCssSideEffectImportPath(path: string): boolean {
   return cssSideEffectFilter.test(path);
 }
 
-const loaders = ["js", "jsx", "ts", "tsx"] as const;
-const allJsFilesFilter = new RegExp(`\\.(${loaders.join("|")})$`);
+const extensions = ["js", "jsx", "ts", "tsx", "mjs", "cjs"] as const;
+const allJsFilesFilter = new RegExp(`\\.(${extensions.join("|")})$`);
 
-type Loader = typeof loaders[number];
-type Extension = `.${Loader}`;
+type Loader = "js" | "jsx" | "ts" | "tsx";
+type Extension = `.${typeof extensions[number]}`;
 
 const loaderForExtension: Record<Extension, Loader> = {
   ".js": "js",
   ".jsx": "jsx",
   ".ts": "ts",
   ".tsx": "tsx",
+  ".mjs": "js",
+  ".cjs": "js",
 };
 
 /**
