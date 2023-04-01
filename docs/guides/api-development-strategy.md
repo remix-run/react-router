@@ -51,8 +51,8 @@ The lifecycle is thus either:
 
 Here's the current future flags in React Router v6 today:
 
-| Flag | Description |
-| ---- | ----------- |
+| Flag                     | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
 | `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
 
 [future-flags-blog-post]: https://remix.run/blog/future-flags
