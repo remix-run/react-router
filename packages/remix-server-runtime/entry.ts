@@ -26,7 +26,9 @@ export interface FutureConfig {
   unstable_cssModules: boolean;
   unstable_cssSideEffectImports: boolean;
   unstable_dev: boolean | Dev;
+  /** @deprecated Use the `postcss` config option instead */
   unstable_postcss: boolean;
+  /** @deprecated Use the `tailwind` config option instead */
   unstable_tailwind: boolean;
   unstable_vanillaExtract: boolean | VanillaExtractOptions;
   v2_errorBoundary: boolean;

@@ -66,6 +66,7 @@ describe("readConfig", () => {
           "v2_routeConvention": Any<Boolean>,
         },
         "mdx": undefined,
+        "postcss": false,
         "publicPath": "/build/",
         "relativeAssetsBuildDirectory": Any<String>,
         "rootDirectory": Any<String>,
@@ -90,6 +91,7 @@ describe("readConfig", () => {
         "serverMode": "production",
         "serverModuleFormat": "cjs",
         "serverPlatform": "node",
+        "tailwind": false,
         "tsconfigPath": Any<String>,
         "watchPaths": Array [],
       }

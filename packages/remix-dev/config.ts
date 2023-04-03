@@ -52,7 +52,9 @@ interface FutureConfig {
   unstable_cssModules: boolean;
   unstable_cssSideEffectImports: boolean;
   unstable_dev: boolean | Dev;
+  /** @deprecated Use the `postcss` config option instead */
   unstable_postcss: boolean;
+  /** @deprecated Use the `tailwind` config option instead */
   unstable_tailwind: boolean;
   unstable_vanillaExtract: boolean | VanillaExtractOptions;
   v2_errorBoundary: boolean;
@@ -123,6 +125,12 @@ export interface AppConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
+   * Whether to process CSS using PostCSS if `postcss.config.js` is present.
+   * Defaults to `false`.
+   */
+  postcss?: boolean;
+
+  /**
    * A server entrypoint, relative to the root directory that becomes your
    * server's main module. If specified, Remix will compile this file along with
    * your application into a single file to be deployed to your server. This
@@ -189,6 +197,12 @@ export interface AppConfig {
    * The platform the server build is targeting. Defaults to "node".
    */
   serverPlatform?: ServerPlatform;
+
+  /**
+   * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
+   * Defaults to `false`.
+   */
+  tailwind?: boolean;
 
   /**
    * A list of filenames or a glob patterns to match files in the `app/routes`
@@ -283,6 +297,12 @@ export interface RemixConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
+   * Whether to process CSS using PostCSS if `postcss.config.js` is present.
+   * Defaults to `false`.
+   */
+  postcss: boolean;
+
+  /**
    * The path to the server build file. This file should end in a `.js`.
    */
   serverBuildPath: string;
@@ -348,6 +368,12 @@ export interface RemixConfig {
    * The platform the server build is targeting. Defaults to "node".
    */
   serverPlatform: ServerPlatform;
+
+  /**
+   * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
+   * Defaults to `false`.
+   */
+  tailwind: boolean;
 
   /**
    * A list of directories to watch.
@@ -455,7 +481,23 @@ export async function readConfig(
     serverModuleFormat === "esm" ? ["module", "main"] : ["main", "module"];
   serverMinify ??= false;
 
+  if (appConfig.future?.unstable_postcss !== undefined) {
+    warnOnce(
+      'The "future.unstable_postcss" config option is deprecated as this feature is now considered stable. Use the "postcss" config option instead.'
+    );
+  }
+
+  if (appConfig.future?.unstable_tailwind !== undefined) {
+    warnOnce(
+      'The "future.unstable_tailwind" config option is deprecated as this feature is now considered stable. Use the "tailwind" config option instead.'
+    );
+  }
+
   let mdx = appConfig.mdx;
+  let postcss =
+    appConfig.postcss ?? appConfig.future?.unstable_postcss === true;
+  let tailwind =
+    appConfig.tailwind ?? appConfig.future?.unstable_tailwind === true;
 
   let appDirectory = path.resolve(
     rootDirectory,
@@ -713,6 +755,8 @@ export async function readConfig(
     serverModuleFormat,
     serverPlatform,
     mdx,
+    postcss,
+    tailwind,
     watchPaths,
     tsconfigPath,
     future,

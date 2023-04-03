@@ -20,7 +20,7 @@ const defaultContext: RemixPostcssContext = {
 };
 
 function isPostcssEnabled(config: RemixConfig) {
-  return config.future.unstable_postcss || config.future.unstable_tailwind;
+  return config.postcss || config.tailwind;
 }
 
 function getCacheKey({ config, context }: Required<Options>) {
@@ -45,7 +45,7 @@ export async function loadPostcssPlugins({
 
   let plugins: Array<AcceptedPlugin> = [];
 
-  if (config.future.unstable_postcss) {
+  if (config.postcss) {
     try {
       let postcssConfig = await loadConfig(
         // We're nesting our custom context values in a "remix"
@@ -61,7 +61,7 @@ export async function loadPostcssPlugins({
     }
   }
 
-  if (config.future.unstable_tailwind) {
+  if (config.tailwind) {
     let tailwindPlugin = await loadTailwindPlugin(config);
     if (tailwindPlugin && !hasTailwindPlugin(plugins)) {
       plugins.push(tailwindPlugin);
@@ -105,7 +105,7 @@ let tailwindPluginCache = new Map<string, AcceptedPlugin | null>();
 async function loadTailwindPlugin(
   config: RemixConfig
 ): Promise<AcceptedPlugin | null> {
-  if (!config.future.unstable_tailwind) {
+  if (!config.tailwind) {
     return null;
   }
 
