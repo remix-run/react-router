@@ -57,12 +57,12 @@ test.describe("PostCSS enabled", () => {
                 postcssPlugin: 'replace',
                 Declaration (decl) {
                   decl.value = decl.value
-                    .replaceAll(
-                      "TEST_PADDING_VALUE",
+                    .replace(
+                      /TEST_PADDING_VALUE/g,
                       ${JSON.stringify(TEST_PADDING_VALUE)},
                     )
-                    .replaceAll(
-                      "TEST_POSTCSS_CONTEXT",
+                    .replace(
+                      /TEST_POSTCSS_CONTEXT/g,
                       Buffer.from(JSON.stringify(ctx)).toString("base64"),
                     );
                 },
@@ -372,8 +372,8 @@ test.describe("PostCSS enabled via unstable future flag", () => {
                 postcssPlugin: 'replace',
                 Declaration (decl) {
                   decl.value = decl.value
-                    .replaceAll(
-                      "TEST_PADDING_VALUE",
+                    .replace(
+                      /TEST_PADDING_VALUE/g,
                       ${JSON.stringify(TEST_PADDING_VALUE)},
                     );
                 },
@@ -458,8 +458,8 @@ test.describe("PostCSS disabled", () => {
                 postcssPlugin: 'replace',
                 Declaration (decl) {
                   decl.value = decl.value
-                    .replaceAll(
-                      "TEST_PADDING_VALUE",
+                    .replace(
+                      /TEST_PADDING_VALUE/g,
                       ${JSON.stringify(TEST_PADDING_VALUE)},
                     );
                 },
