@@ -57,7 +57,7 @@ But it's still sub optimal in most cases (especially if you're code-splitting ro
 React Router takes advantage of React 18's Suspense for data fetching using the [`defer` Response][defer response] utility and [`<Await />`][await] component / [`useAsyncValue`][useasyncvalue] hook. By using these APIs, you can solve both of these problems:
 
 1. Your data is no longer on a waterfall: document -> JavaScript -> Lazy Loaded Route & data (in parallel)
-2. Your can easily switch between rendering the fallback and waiting for the data
+2. Your code can easily switch between rendering the fallback and waiting for the data
 
 Let's take a dive into how to accomplish this.
 
