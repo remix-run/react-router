@@ -40,6 +40,9 @@ jobs:
       - name: 🏗 Build
         run: yarn build
 
+      - name: 🔬 Lint
+        run: yarn lint
+
       - name: 🧪 Run tests
         run: yarn test
 

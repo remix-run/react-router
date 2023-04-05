@@ -206,7 +206,8 @@ function getStatelessNavigator() {
   };
 }
 
-let detectErrorBoundary = (route: RouteObject) => Boolean(route.errorElement);
+let detectErrorBoundary = (route: RouteObject) =>
+  Boolean(route.ErrorBoundary) || Boolean(route.errorElement);
 
 type CreateStaticHandlerOptions = Omit<
   RouterCreateStaticHandlerOptions,

@@ -28,6 +28,8 @@ function SomeComponent() {
 }
 ```
 
+<docs-warning>The `useNavigation().formMethod` field is lowercase without the `future.v7_normalizeFormMethod` [Future Flag][api-development-strategy]. This is being normalized to uppercase to align with the `fetch()` behavior in v7, so please upgrade your React Router v6 applications to adopt the uppercase HTTP methods.</docs-warning>
+
 ## `navigation.state`
 
 - **idle** - There is no navigation pending.
@@ -98,3 +100,4 @@ Note that this link will not appear "pending" if a form is being submitted to th
 
 [location]: ../utils/location
 [pickingarouter]: ../routers/picking-a-router
+[api-development-strategy]: ../guides/api-development-strategy

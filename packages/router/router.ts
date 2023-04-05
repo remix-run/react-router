@@ -9,6 +9,7 @@ import {
 } from "./history";
 import type {
   DataResult,
+  DeferredData,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   DeferredResult,
@@ -22,15 +23,17 @@ import type {
   Submission,
   SuccessResult,
   AgnosticRouteMatch,
-  MutationFormMethod,
   ShouldRevalidateFunction,
   RouteManifest,
   ImmutableRouteKey,
   ActionFunction,
   LoaderFunction,
+  V7_MutationFormMethod,
+  V7_FormMethod,
+  HTMLFormMethod,
+  MutationFormMethod,
 } from "./utils";
 import {
-  DeferredData,
   ErrorResponse,
   ResultType,
   convertRoutesToDataRoutes,
@@ -327,14 +330,22 @@ export type HydrationState = Partial<
 >;
 
 /**
+ * Future flags to toggle new feature behavior
+ */
+export interface FutureConfig {
+  v7_normalizeFormMethod: boolean;
+}
+
+/**
  * Initialization options for createRouter
  */
 export interface RouterInit {
-  basename?: string;
   routes: AgnosticRouteObject[];
   history: History;
-  hydrationData?: HydrationState;
+  basename?: string;
   detectErrorBoundary?: DetectErrorBoundaryFunction;
+  future?: FutureConfig;
+  hydrationData?: HydrationState;
 }
 
 /**
@@ -415,7 +426,7 @@ type SubmissionNavigateOptions = {
   replace?: boolean;
   state?: any;
   preventScrollReset?: boolean;
-  formMethod?: FormMethod;
+  formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
   formData: FormData;
 };
@@ -449,7 +460,7 @@ export type NavigationStates = {
   Loading: {
     state: "loading";
     location: Location;
-    formMethod: FormMethod | undefined;
+    formMethod: FormMethod | V7_FormMethod | undefined;
     formAction: string | undefined;
     formEncType: FormEncType | undefined;
     formData: FormData | undefined;
@@ -457,7 +468,7 @@ export type NavigationStates = {
   Submitting: {
     state: "submitting";
     location: Location;
-    formMethod: FormMethod;
+    formMethod: FormMethod | V7_FormMethod;
     formAction: string;
     formEncType: FormEncType;
     formData: FormData;
@@ -483,7 +494,7 @@ type FetcherStates<TData = any> = {
   };
   Loading: {
     state: "loading";
-    formMethod: FormMethod | undefined;
+    formMethod: FormMethod | V7_FormMethod | undefined;
     formAction: string | undefined;
     formEncType: FormEncType | undefined;
     formData: FormData | undefined;
@@ -492,7 +503,7 @@ type FetcherStates<TData = any> = {
   };
   Submitting: {
     state: "submitting";
-    formMethod: FormMethod;
+    formMethod: FormMethod | V7_FormMethod;
     formAction: string;
     formEncType: FormEncType;
     formData: FormData;
@@ -582,6 +593,7 @@ interface RevalidatingFetcher extends FetchLoadMatch {
   key: string;
   match: AgnosticDataRouteMatch | null;
   matches: AgnosticDataRouteMatch[] | null;
+  controller: AbortController | null;
 }
 
 /**
@@ -676,6 +688,11 @@ export function createRouter(init: RouterInit): Router {
     manifest
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
+  // Config driven behavior flags
+  let future: FutureConfig = {
+    v7_normalizeFormMethod: false,
+    ...init.future,
+  };
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
@@ -862,34 +879,14 @@ export function createRouter(init: RouterInit): Router {
       }
     );
 
-    if (state.initialized) {
-      return router;
-    }
-
-    let lazyMatches = state.matches.filter((m) => m.route.lazy);
-
-    if (lazyMatches.length === 0) {
-      // Kick off initial data load if needed.  Use Pop to avoid modifying history
+    // Kick off initial data load if needed.  Use Pop to avoid modifying history
+    // Note we don't do any handling of lazy here.  For SPA's it'll get handled
+    // in the normal navigation flow.  For SSR it's expected that lazy modules are
+    // resolved prior to router creation since we can't go into a fallbackElement
+    // UI for SSR'd apps
+    if (!state.initialized) {
       startNavigation(HistoryAction.Pop, state.location);
-      return router;
     }
-
-    // Load lazy modules, then kick off initial data load if needed
-    let lazyPromises = lazyMatches.map((m) =>
-      loadLazyRouteModule(m.route, detectErrorBoundary, manifest)
-    );
-    Promise.all(lazyPromises).then(() => {
-      let initialized =
-        !state.matches.some((m) => m.route.loader) ||
-        init.hydrationData != null;
-      if (initialized) {
-        // We already have required loaderData so we can just set initialized
-        updateState({ initialized: true });
-      } else {
-        // We still need to kick off initial data loads
-        startNavigation(HistoryAction.Pop, state.location);
-      }
-    });
 
     return router;
   }
@@ -1033,7 +1030,11 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path, submission, error } = normalizeNavigateOptions(to, opts);
+    let { path, submission, error } = normalizeNavigateOptions(
+      to,
+      future,
+      opts
+    );
 
     let currentLocation = state.location;
     let nextLocation = createLocation(state.location, path, opts && opts.state);
@@ -1152,6 +1153,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     opts?: {
       submission?: Submission;
+      fetcherSubmission?: Submission;
       overrideNavigation?: Navigation;
       pendingError?: ErrorResponse;
       startUninterruptedRevalidation?: boolean;
@@ -1263,6 +1265,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       loadingNavigation,
       opts && opts.submission,
+      opts && opts.fetcherSubmission,
       opts && opts.replace,
       pendingActionData,
       pendingError
@@ -1385,6 +1388,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     overrideNavigation?: Navigation,
     submission?: Submission,
+    fetcherSubmission?: Submission,
     replace?: boolean,
     pendingActionData?: RouteData,
     pendingError?: RouteData
@@ -1406,19 +1410,20 @@ export function createRouter(init: RouterInit): Router {
 
     // If this was a redirect from an action we don't have a "submission" but
     // we have it on the loading navigation so use that if available
-    let activeSubmission = submission
-      ? submission
-      : loadingNavigation.formMethod &&
-        loadingNavigation.formAction &&
-        loadingNavigation.formData &&
-        loadingNavigation.formEncType
-      ? {
-          formMethod: loadingNavigation.formMethod,
-          formAction: loadingNavigation.formAction,
-          formData: loadingNavigation.formData,
-          formEncType: loadingNavigation.formEncType,
-        }
-      : undefined;
+    let activeSubmission =
+      submission || fetcherSubmission
+        ? submission || fetcherSubmission
+        : loadingNavigation.formMethod &&
+          loadingNavigation.formAction &&
+          loadingNavigation.formData &&
+          loadingNavigation.formEncType
+        ? {
+            formMethod: loadingNavigation.formMethod,
+            formAction: loadingNavigation.formAction,
+            formData: loadingNavigation.formData,
+            formEncType: loadingNavigation.formEncType,
+          }
+        : undefined;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
@@ -1491,9 +1496,24 @@ export function createRouter(init: RouterInit): Router {
     }
 
     pendingNavigationLoadId = ++incrementingLoadId;
-    revalidatingFetchers.forEach((rf) =>
-      fetchControllers.set(rf.key, pendingNavigationController!)
-    );
+    revalidatingFetchers.forEach((rf) => {
+      if (rf.controller) {
+        // Fetchers use an independent AbortController so that aborting a fetcher
+        // (via deleteFetcher) does not abort the triggering navigation that
+        // triggered the revalidation
+        fetchControllers.set(rf.key, rf.controller);
+      }
+    });
+
+    // Proxy navigation abort through to revalidation fetchers
+    let abortPendingFetchRevalidations = () =>
+      revalidatingFetchers.forEach((f) => abortFetcher(f.key));
+    if (pendingNavigationController) {
+      pendingNavigationController.signal.addEventListener(
+        "abort",
+        abortPendingFetchRevalidations
+      );
+    }
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
@@ -1511,6 +1531,12 @@ export function createRouter(init: RouterInit): Router {
     // Clean up _after_ loaders have completed.  Don't clean up if we short
     // circuited because fetchControllers would have been aborted and
     // reassigned to new controllers for the next navigation
+    if (pendingNavigationController) {
+      pendingNavigationController.signal.removeEventListener(
+        "abort",
+        abortPendingFetchRevalidations
+      );
+    }
     revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
@@ -1588,7 +1614,12 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path, submission } = normalizeNavigateOptions(href, opts, true);
+    let { path, submission } = normalizeNavigateOptions(
+      href,
+      future,
+      opts,
+      true
+    );
     let match = getTargetMatch(matches, path);
 
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
@@ -1680,6 +1711,7 @@ export function createRouter(init: RouterInit): Router {
       updateState({ fetchers: new Map(state.fetchers) });
 
       return startRedirectNavigation(state, actionResult, {
+        submission,
         isFetchActionRedirect: true,
       });
     }
@@ -1756,10 +1788,20 @@ export function createRouter(init: RouterInit): Router {
           " _hasFetcherDoneAnything ": true,
         };
         state.fetchers.set(staleKey, revalidatingFetcher);
-        fetchControllers.set(staleKey, abortController);
+        if (rf.controller) {
+          fetchControllers.set(staleKey, rf.controller);
+        }
       });
 
     updateState({ fetchers: new Map(state.fetchers) });
+
+    let abortPendingFetchRevalidations = () =>
+      revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
+
+    abortController.signal.addEventListener(
+      "abort",
+      abortPendingFetchRevalidations
+    );
 
     let { results, loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
@@ -1773,6 +1815,11 @@ export function createRouter(init: RouterInit): Router {
     if (abortController.signal.aborted) {
       return;
     }
+
+    abortController.signal.removeEventListener(
+      "abort",
+      abortPendingFetchRevalidations
+    );
 
     fetchReloadIds.delete(key);
     fetchControllers.delete(key);
@@ -2047,6 +2094,22 @@ export function createRouter(init: RouterInit): Router {
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
+    } else if (isFetchActionRedirect) {
+      // For a fetch action redirect, we kick off a new loading navigation
+      // without the fetcher submission, but we send it along for shouldRevalidate
+      await startNavigation(redirectHistoryAction, redirectLocation, {
+        overrideNavigation: {
+          state: "loading",
+          location: redirectLocation,
+          formMethod: undefined,
+          formAction: undefined,
+          formEncType: undefined,
+          formData: undefined,
+        },
+        fetcherSubmission: submission,
+        // Preserve this flag across redirects
+        preventScrollReset: pendingPreventScrollReset,
+      });
     } else {
       // Otherwise, we kick off a new loading navigation, preserving the
       // submission info for the duration of this navigation
@@ -2088,10 +2151,10 @@ export function createRouter(init: RouterInit): Router {
         )
       ),
       ...fetchersToLoad.map((f) => {
-        if (f.matches && f.match) {
+        if (f.matches && f.match && f.controller) {
           return callLoaderOrAction(
             "loader",
-            createClientSideRequest(init.history, f.path, request.signal),
+            createClientSideRequest(init.history, f.path, f.controller.signal),
             f.match,
             f.matches,
             manifest,
@@ -2115,7 +2178,7 @@ export function createRouter(init: RouterInit): Router {
         currentMatches,
         matchesToLoad,
         loaderResults,
-        request.signal,
+        loaderResults.map(() => request.signal),
         false,
         state.loaderData
       ),
@@ -2123,7 +2186,7 @@ export function createRouter(init: RouterInit): Router {
         currentMatches,
         fetchersToLoad.map((f) => f.match),
         fetcherResults,
-        request.signal,
+        fetchersToLoad.map((f) => (f.controller ? f.controller.signal : null)),
         true
       ),
     ]);
@@ -2461,12 +2524,12 @@ export function createStaticHandler(
     { requestContext }: { requestContext?: unknown } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
-    let method = request.method.toLowerCase();
+    let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (!isValidMethod(method) && method !== "head") {
+    if (!isValidMethod(method) && method !== "HEAD") {
       let error = getInternalRouterError(405, { method });
       let { matches: methodNotAllowedMatches, route } =
         getShortCircuitMatches(dataRoutes);
@@ -2543,12 +2606,12 @@ export function createStaticHandler(
     }: { requestContext?: unknown; routeId?: string } = {}
   ): Promise<any> {
     let url = new URL(request.url);
-    let method = request.method.toLowerCase();
+    let method = request.method;
     let location = createLocation("", createPath(url), null, "default");
     let matches = matchRoutes(dataRoutes, location, basename);
 
     // SSR supports HEAD requests while SPA doesn't
-    if (!isValidMethod(method) && method !== "head" && method !== "options") {
+    if (!isValidMethod(method) && method !== "HEAD" && method !== "OPTIONS") {
       throw getInternalRouterError(405, { method });
     } else if (!matches) {
       throw getInternalRouterError(404, { pathname: location.pathname });
@@ -2943,6 +3006,7 @@ function isSubmissionNavigation(
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
   to: To,
+  future: FutureConfig,
   opts?: RouterNavigateOptions,
   isFetcher = false
 ): {
@@ -2967,8 +3031,11 @@ function normalizeNavigateOptions(
   // Create a Submission on non-GET navigations
   let submission: Submission | undefined;
   if (opts.formData) {
+    let formMethod = opts.formMethod || "get";
     submission = {
-      formMethod: opts.formMethod || "get",
+      formMethod: future.v7_normalizeFormMethod
+        ? (formMethod.toUpperCase() as V7_FormMethod)
+        : (formMethod.toLowerCase() as FormMethod),
       formAction: stripHashFromPath(path),
       formEncType:
         (opts && opts.formEncType) || "application/x-www-form-urlencoded",
@@ -3096,7 +3163,14 @@ function getMatchesToLoad(
     // If the fetcher path no longer matches, push it in with null matches so
     // we can trigger a 404 in callLoadersAndMaybeResolveData
     if (!fetcherMatches) {
-      revalidatingFetchers.push({ key, ...f, matches: null, match: null });
+      revalidatingFetchers.push({
+        key,
+        routeId: f.routeId,
+        path: f.path,
+        matches: null,
+        match: null,
+        controller: null,
+      });
       return;
     }
 
@@ -3105,9 +3179,11 @@ function getMatchesToLoad(
     if (cancelledFetcherLoads.includes(key)) {
       revalidatingFetchers.push({
         key,
+        routeId: f.routeId,
+        path: f.path,
         matches: fetcherMatches,
         match: fetcherMatch,
-        ...f,
+        controller: new AbortController(),
       });
       return;
     }
@@ -3128,9 +3204,11 @@ function getMatchesToLoad(
     if (shouldRevalidate) {
       revalidatingFetchers.push({
         key,
+        routeId: f.routeId,
+        path: f.path,
         matches: fetcherMatches,
         match: fetcherMatch,
-        ...f,
+        controller: new AbortController(),
       });
     }
   });
@@ -3456,7 +3534,7 @@ async function callLoaderOrAction(
     return { type: resultType, error: result };
   }
 
-  if (result instanceof DeferredData) {
+  if (isDeferredData(result)) {
     return {
       type: ResultType.deferred,
       deferredData: result,
@@ -3482,6 +3560,9 @@ function createClientSideRequest(
 
   if (submission && isMutationMethod(submission.formMethod)) {
     let { formMethod, formEncType, formData } = submission;
+    // Didn't think we needed this but it turns out unlike other methods, patch
+    // won't be properly normalized to uppercase and results in a 405 error.
+    // See: https://fetch.spec.whatwg.org/#concept-method
     init.method = formMethod.toUpperCase();
     init.body =
       formEncType === "application/x-www-form-urlencoded"
@@ -3626,7 +3707,7 @@ function processLoaderData(
 
   // Process results from our revalidating fetchers
   for (let index = 0; index < revalidatingFetchers.length; index++) {
-    let { key, match } = revalidatingFetchers[index];
+    let { key, match, controller } = revalidatingFetchers[index];
     invariant(
       fetcherResults !== undefined && fetcherResults[index] !== undefined,
       "Did not find corresponding fetcher result"
@@ -3634,7 +3715,10 @@ function processLoaderData(
     let result = fetcherResults[index];
 
     // Process fetcher non-redirect errors
-    if (isErrorResult(result)) {
+    if (controller && controller.signal.aborted) {
+      // Nothing to do for aborted fetchers
+      continue;
+    } else if (isErrorResult(result)) {
       let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
       if (!(errors && errors[boundaryMatch.route.id])) {
         errors = {
@@ -3823,6 +3907,18 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
   return (result && result.type) === ResultType.redirect;
 }
 
+export function isDeferredData(value: any): value is DeferredData {
+  let deferred: DeferredData = value;
+  return (
+    deferred &&
+    typeof deferred === "object" &&
+    typeof deferred.data === "object" &&
+    typeof deferred.subscribe === "function" &&
+    typeof deferred.cancel === "function" &&
+    typeof deferred.resolveData === "function"
+  );
+}
+
 function isResponse(value: any): value is Response {
   return (
     value != null &&
@@ -3851,19 +3947,21 @@ function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
   );
 }
 
-function isValidMethod(method: string): method is FormMethod {
-  return validRequestMethods.has(method as FormMethod);
+function isValidMethod(method: string): method is FormMethod | V7_FormMethod {
+  return validRequestMethods.has(method.toLowerCase() as FormMethod);
 }
 
-function isMutationMethod(method?: string): method is MutationFormMethod {
-  return validMutationMethods.has(method as MutationFormMethod);
+function isMutationMethod(
+  method: string
+): method is MutationFormMethod | V7_MutationFormMethod {
+  return validMutationMethods.has(method.toLowerCase() as MutationFormMethod);
 }
 
 async function resolveDeferredResults(
   currentMatches: AgnosticDataRouteMatch[],
   matchesToLoad: (AgnosticDataRouteMatch | null)[],
   results: DataResult[],
-  signal: AbortSignal,
+  signals: (AbortSignal | null)[],
   isFetcher: boolean,
   currentLoaderData?: RouteData
 ) {
@@ -3889,6 +3987,11 @@ async function resolveDeferredResults(
       // Note: we do not have to touch activeDeferreds here since we race them
       // against the signal in resolveDeferredData and they'll get aborted
       // there if needed
+      let signal = signals[index];
+      invariant(
+        signal,
+        "Expected an AbortSignal for revalidating fetcher deferred result"
+      );
       await resolveDeferredData(result, signal, isFetcher).then((result) => {
         if (result) {
           results[index] = result || results[index];

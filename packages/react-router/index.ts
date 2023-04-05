@@ -21,6 +21,7 @@ import type {
   To,
   InitialEntry,
   LazyRouteFunction,
+  FutureConfig,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -233,6 +234,7 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
+    future?: FutureConfig;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
@@ -240,6 +242,7 @@ export function createMemoryRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
+    future: opts?.future,
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,
