@@ -46,7 +46,8 @@ import { useSearchParams } from "react-router-dom";
 
 function App() {
   let [searchParams, setSearchParams] = useSearchParams();
-
+  // searchParams.get('key');
+  
   function handleSubmit(event) {
     event.preventDefault();
     // The serialize function here would be responsible for
