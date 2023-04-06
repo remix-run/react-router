@@ -1216,7 +1216,7 @@ function useScrollRestoration({
 
       // been here before, scroll to it
       if (typeof restoreScrollPosition === "number") {
-        window.scrollTo(0, restoreScrollPosition);
+        window.scrollTo({ left: 0, top: restoreScrollPosition, behavior: 'instant' });
         return;
       }
 
@@ -1235,7 +1235,7 @@ function useScrollRestoration({
       }
 
       // otherwise go to the top on new locations
-      window.scrollTo(0, 0);
+      window.scrollTo({ left: 0, top: 0, behavior: 'instant' });
     }, [location, restoreScrollPosition, preventScrollReset]);
   }
 }
