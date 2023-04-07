@@ -47,4 +47,6 @@ The `navigate` function has two signatures:
 - Either pass a `To` value (same type as `<Link to>`) with an optional second `{ replace, state }` arg or
 - Pass the delta you want to go in the history stack. For example, `navigate(-1)` is equivalent to hitting the back button.
 
+If using `replace: true`, the navigation will replace the current entry in the history stack instead of adding a new one.
+
 [redirect]: ../fetch/redirect
