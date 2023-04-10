@@ -468,14 +468,18 @@ function DefaultErrorComponent() {
 
   let devInfo = null;
   if (__DEV__) {
+    console.error(
+      "Error handled by React Router default ErrorBoundary:",
+      error
+    );
+
     devInfo = (
       <>
         <p>💿 Hey developer 👋</p>
         <p>
           You can provide a way better UX than this when your app throws errors
-          by providing your own&nbsp;
-          <code style={codeStyles}>ErrorBoundary</code> prop on&nbsp;
-          <code style={codeStyles}>&lt;Route&gt;</code>
+          by providing your own <code style={codeStyles}>ErrorBoundary</code> or{" "}
+          <code style={codeStyles}>errorElement</code> prop on your route.
         </p>
       </>
     );
