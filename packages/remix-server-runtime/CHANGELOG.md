@@ -28,11 +28,11 @@
       ```tsx
       // before
       export function meta({ matches }) {
-        let rootModule = matches.find((match) => match.route.id === "root");
+        const rootModule = matches.find((match) => match.route.id === "root");
       }
       // after
       export function meta({ matches }) {
-        let rootModule = matches.find((match) => match.id === "root");
+        const rootModule = matches.find((match) => match.id === "root");
       }
       ```
   - Added support for generating `<script type='application/ld+json' />` and meta-related `<link />` tags to document head via the route `meta` function when using the `v2_meta` future flag
@@ -136,7 +136,7 @@ No significant changes to this package were made in this release. [See the relea
   import { useCatch } from "@remix-run/react";
 
   export function CatchBoundary() {
-    let caught = useCatch();
+    const caught = useCatch();
     return (
       <p>
         {caught.status} {caught.data}
@@ -154,7 +154,7 @@ No significant changes to this package were made in this release. [See the relea
   import { isRouteErrorResponse, useRouteError } from "@remix-run/react";
 
   export function ErrorBoundary() {
-    let error = useRouteError();
+    const error = useRouteError();
 
     return isRouteErrorResponse(error) ? (
       <p>

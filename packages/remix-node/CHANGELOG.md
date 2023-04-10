@@ -28,11 +28,11 @@
       ```tsx
       // before
       export function meta({ matches }) {
-        let rootModule = matches.find((match) => match.route.id === "root");
+        const rootModule = matches.find((match) => match.route.id === "root");
       }
       // after
       export function meta({ matches }) {
-        let rootModule = matches.find((match) => match.id === "root");
+        const rootModule = matches.find((match) => match.id === "root");
       }
       ```
   - Added support for generating `<script type='application/ld+json' />` and meta-related `<link />` tags to document head via the route `meta` function when using the `v2_meta` future flag
