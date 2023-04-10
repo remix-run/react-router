@@ -926,7 +926,6 @@ export function createRouter(init: RouterInit): Router {
 
   // Update our state and notify the calling context of the change
   function updateState(newState: Partial<RouterState>): void {
-    console.log("updating router state", state.location, newState.location);
     state = {
       ...state,
       ...newState,
