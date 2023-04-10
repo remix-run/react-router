@@ -3357,7 +3357,7 @@ async function loadLazyRouteModule(
   }
 
   // Mutate the route with the provided updates.  Do this first so we pass
-  // the updated version to detectErrorBoundary
+  // the updated version to enhanceAgnosticRoute
   Object.assign(routeToUpdate, routeUpdates);
 
   // Mutate the `hasErrorBoundary` property on the route based on the route
@@ -3365,9 +3365,9 @@ async function loadLazyRouteModule(
   // route again.
   Object.assign(routeToUpdate, {
     // To keep things framework agnostic, we use the provided
-    // `enhanceAgnosticRoute` or `detectErrorBoundary` function to set the
-    // framework-aware properties (`element`/`hasErrorBoundary`) since the
-    // logic will differ between frameworks.
+    // `enhanceAgnosticRoute` (or wrapped `detectErrorBoundary`) function to
+    // set the framework-aware properties (`element`/`hasErrorBoundary`) since
+    // the logic will differ between frameworks.
     ...enhanceAgnosticRoute(routeToUpdate),
     lazy: undefined,
   });
