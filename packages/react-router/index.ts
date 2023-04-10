@@ -209,7 +209,11 @@ export {
 };
 
 function enhanceAgnosticRoute(route: RouteObject) {
-  let updates: Partial<RouteObject> = {};
+  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
+    // Note: this check also occurs in createRoutesFromChildren so update
+    // there if you change this -- please and thank you!
+    hasErrorBoundary: route.ErrorBoundary != null || route.errorElement != null,
+  };
 
   if (route.Component) {
     if (__DEV__) {
@@ -241,12 +245,6 @@ function enhanceAgnosticRoute(route: RouteObject) {
       errorElement: React.createElement(route.ErrorBoundary),
       ErrorBoundary: undefined,
     });
-  }
-
-  // Note: this check also occurs in createRoutesFromChildren so update
-  // there if you change this -- please and thank you!
-  if (route.ErrorBoundary || route.errorElement) {
-    updates.hasErrorBoundary = true;
   }
 
   return updates;

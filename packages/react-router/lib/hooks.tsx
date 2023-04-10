@@ -637,21 +637,17 @@ export function _renderMatches(
     // Only data routers handle errors
     let errorElement: React.ReactNode | null = null;
     if (dataRouterState) {
-      if (match.route.ErrorBoundary) {
-        errorElement = <match.route.ErrorBoundary />;
-      } else {
-        errorElement = match.route.errorElement || defaultErrorElement;
-      }
+      errorElement = match.route.errorElement || defaultErrorElement;
     }
     let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
     let getChildren = () => {
-      let children: React.ReactNode = outlet;
+      let children: React.ReactNode;
       if (error) {
         children = errorElement;
-      } else if (match.route.Component) {
-        children = <match.route.Component />;
       } else if (match.route.element) {
         children = match.route.element;
+      } else {
+        children = outlet;
       }
       return (
         <RenderedRoute

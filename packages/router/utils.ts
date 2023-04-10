@@ -181,7 +181,9 @@ export interface DetectErrorBoundaryFunction {
  * properties from framework-agnostic properties
  */
 export interface EnhanceAgnosticRouteFunction {
-  (route: AgnosticRouteObject): Record<string, any>;
+  (route: AgnosticRouteObject): {
+    hasErrorBoundary: boolean;
+  } & Record<string, any>;
 }
 
 /**
