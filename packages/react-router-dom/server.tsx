@@ -290,6 +290,12 @@ export function createStaticRouter(
     revalidate() {
       throw msg("revalidate");
     },
+    resolvePath() {
+      //
+      // FIXME: TODO - Implement!
+      //
+      throw new Error("TODO - Not Implemented yet!");
+    },
     createHref,
     encodeLocation,
     getFetcher() {
