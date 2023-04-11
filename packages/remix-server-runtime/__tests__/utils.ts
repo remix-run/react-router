@@ -93,3 +93,5 @@ export function prettyHtml(source: string): string {
 export function isEqual<A, B>(
   arg: A extends B ? (B extends A ? true : false) : false
 ): void {}
+
+export type IsNever<T> = [T] extends [never] ? true : false;

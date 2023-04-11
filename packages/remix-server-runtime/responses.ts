@@ -9,11 +9,14 @@ import {
 import { serializeError } from "./errors";
 import type { ServerMode } from "./mode";
 
+declare const typedDeferredDataBrand: unique symbol;
+
 export type TypedDeferredData<Data extends Record<string, unknown>> = Pick<
   DeferredData,
   "init"
 > & {
   data: Data;
+  readonly [typedDeferredDataBrand]: "TypedDeferredData";
 };
 
 export type DeferFunction = <Data extends Record<string, unknown>>(
@@ -51,7 +54,7 @@ export const json: JsonFunction = (data, init = {}) => {
  * @see https://remix.run/docs/utils/defer
  */
 export const defer: DeferFunction = (data, init = {}) => {
-  return routerDefer(data, init) as TypedDeferredData<typeof data>;
+  return routerDefer(data, init) as unknown as TypedDeferredData<typeof data>;
 };
 
 export type RedirectFunction = (
