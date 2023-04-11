@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import minimatch from "minimatch";
+import { minimatch } from "minimatch";
 
 import type { ConfigRoute, RouteManifest } from "./routes";
 import { normalizeSlashes } from "./routes";

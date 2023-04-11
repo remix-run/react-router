@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import minimatch from "minimatch";
+import { minimatch } from "minimatch";
 
 import type { RouteManifest, DefineRouteFunction } from "./routes";
 import { defineRoutes, createRouteId } from "./routes";
