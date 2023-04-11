@@ -208,7 +208,7 @@ export {
   useRoutes,
 };
 
-function enhanceAgnosticRoute(route: RouteObject) {
+function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
     // Note: this check also occurs in createRoutesFromChildren so update
     // there if you change this -- please and thank you!
@@ -269,7 +269,7 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
-    enhanceAgnosticRoute,
+    mapRouteProperties,
   }).initialize();
 }
 
@@ -293,5 +293,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  enhanceAgnosticRoute as UNSAFE_enhanceAgnosticRoute,
+  mapRouteProperties as UNSAFE_mapRouteProperties,
 };

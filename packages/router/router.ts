@@ -32,7 +32,7 @@ import type {
   V7_FormMethod,
   HTMLFormMethod,
   MutationFormMethod,
-  EnhanceAgnosticRouteFunction,
+  MapRoutePropertiesFunction,
 } from "./utils";
 import {
   ErrorResponse,
@@ -345,10 +345,10 @@ export interface RouterInit {
   history: History;
   basename?: string;
   /**
-   * @deprecated Use `enhanceAgnosticRoute` instead
+   * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
-  enhanceAgnosticRoute?: EnhanceAgnosticRouteFunction;
+  mapRouteProperties?: MapRoutePropertiesFunction;
   future?: FutureConfig;
   hydrationData?: HydrationState;
 }
@@ -663,7 +663,7 @@ const isBrowser =
   typeof window.document.createElement !== "undefined";
 const isServer = !isBrowser;
 
-const defaultEnhanceAgnosticRoute: EnhanceAgnosticRouteFunction = (route) => ({
+const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
 
@@ -682,16 +682,17 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
-  let enhanceAgnosticRoute: EnhanceAgnosticRouteFunction;
-  if (init.enhanceAgnosticRoute) {
-    enhanceAgnosticRoute = init.enhanceAgnosticRoute;
+  let mapRouteProperties: MapRoutePropertiesFunction;
+  if (init.mapRouteProperties) {
+    mapRouteProperties = init.mapRouteProperties;
   } else if (init.detectErrorBoundary) {
+    // If they are still using the deprecated version, wrap it with the new API
     let detectErrorBoundary = init.detectErrorBoundary;
-    enhanceAgnosticRoute = (route) => ({
+    mapRouteProperties = (route) => ({
       hasErrorBoundary: detectErrorBoundary(route),
     });
   } else {
-    enhanceAgnosticRoute = defaultEnhanceAgnosticRoute;
+    mapRouteProperties = defaultMapRouteProperties;
   }
 
   // Routes keyed by ID
@@ -699,7 +700,7 @@ export function createRouter(init: RouterInit): Router {
   // Routes in tree format for matching
   let dataRoutes = convertRoutesToDataRoutes(
     init.routes,
-    enhanceAgnosticRoute,
+    mapRouteProperties,
     undefined,
     manifest
   );
@@ -1343,7 +1344,7 @@ export function createRouter(init: RouterInit): Router {
         actionMatch,
         matches,
         manifest,
-        enhanceAgnosticRoute,
+        mapRouteProperties,
         router.basename
       );
 
@@ -1701,7 +1702,7 @@ export function createRouter(init: RouterInit): Router {
       match,
       requestMatches,
       manifest,
-      enhanceAgnosticRoute,
+      mapRouteProperties,
       router.basename
     );
 
@@ -1944,7 +1945,7 @@ export function createRouter(init: RouterInit): Router {
       match,
       matches,
       manifest,
-      enhanceAgnosticRoute,
+      mapRouteProperties,
       router.basename
     );
 
@@ -2162,7 +2163,7 @@ export function createRouter(init: RouterInit): Router {
           match,
           matches,
           manifest,
-          enhanceAgnosticRoute,
+          mapRouteProperties,
           router.basename
         )
       ),
@@ -2174,7 +2175,7 @@ export function createRouter(init: RouterInit): Router {
             f.match,
             f.matches,
             manifest,
-            enhanceAgnosticRoute,
+            mapRouteProperties,
             router.basename
           );
         } else {
@@ -2494,10 +2495,10 @@ export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 export interface CreateStaticHandlerOptions {
   basename?: string;
   /**
-   * @deprecated Use `enhanceAgnosticRoute` instead
+   * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
-  enhanceAgnosticRoute?: EnhanceAgnosticRouteFunction;
+  mapRouteProperties?: MapRoutePropertiesFunction;
 }
 
 export function createStaticHandler(
@@ -2511,21 +2512,22 @@ export function createStaticHandler(
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
-  let enhanceAgnosticRoute: EnhanceAgnosticRouteFunction;
-  if (opts?.enhanceAgnosticRoute) {
-    enhanceAgnosticRoute = opts.enhanceAgnosticRoute;
+  let mapRouteProperties: MapRoutePropertiesFunction;
+  if (opts?.mapRouteProperties) {
+    mapRouteProperties = opts.mapRouteProperties;
   } else if (opts?.detectErrorBoundary) {
+    // If they are still using the deprecated version, wrap it with the new API
     let detectErrorBoundary = opts.detectErrorBoundary;
-    enhanceAgnosticRoute = (route) => ({
+    mapRouteProperties = (route) => ({
       hasErrorBoundary: detectErrorBoundary(route),
     });
   } else {
-    enhanceAgnosticRoute = defaultEnhanceAgnosticRoute;
+    mapRouteProperties = defaultMapRouteProperties;
   }
 
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    enhanceAgnosticRoute,
+    mapRouteProperties,
     undefined,
     manifest
   );
@@ -2782,7 +2784,7 @@ export function createStaticHandler(
         actionMatch,
         matches,
         manifest,
-        enhanceAgnosticRoute,
+        mapRouteProperties,
         basename,
         true,
         isRouteRequest,
@@ -2950,7 +2952,7 @@ export function createStaticHandler(
           match,
           matches,
           manifest,
-          enhanceAgnosticRoute,
+          mapRouteProperties,
           basename,
           true,
           isRouteRequest,
@@ -3302,7 +3304,7 @@ function shouldRevalidateLoader(
  */
 async function loadLazyRouteModule(
   route: AgnosticDataRouteObject,
-  enhanceAgnosticRoute: EnhanceAgnosticRouteFunction,
+  mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest
 ) {
   if (!route.lazy) {
@@ -3357,7 +3359,7 @@ async function loadLazyRouteModule(
   }
 
   // Mutate the route with the provided updates.  Do this first so we pass
-  // the updated version to enhanceAgnosticRoute
+  // the updated version to mapRouteProperties
   Object.assign(routeToUpdate, routeUpdates);
 
   // Mutate the `hasErrorBoundary` property on the route based on the route
@@ -3365,10 +3367,10 @@ async function loadLazyRouteModule(
   // route again.
   Object.assign(routeToUpdate, {
     // To keep things framework agnostic, we use the provided
-    // `enhanceAgnosticRoute` (or wrapped `detectErrorBoundary`) function to
+    // `mapRouteProperties` (or wrapped `detectErrorBoundary`) function to
     // set the framework-aware properties (`element`/`hasErrorBoundary`) since
     // the logic will differ between frameworks.
-    ...enhanceAgnosticRoute(routeToUpdate),
+    ...mapRouteProperties(routeToUpdate),
     lazy: undefined,
   });
 }
@@ -3379,7 +3381,7 @@ async function callLoaderOrAction(
   match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
   manifest: RouteManifest,
-  enhanceAgnosticRoute: EnhanceAgnosticRouteFunction,
+  mapRouteProperties: MapRoutePropertiesFunction,
   basename = "/",
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false,
@@ -3409,12 +3411,12 @@ async function callLoaderOrAction(
         // Run statically defined handler in parallel with lazy()
         let values = await Promise.all([
           runHandler(handler),
-          loadLazyRouteModule(match.route, enhanceAgnosticRoute, manifest),
+          loadLazyRouteModule(match.route, mapRouteProperties, manifest),
         ]);
         result = values[0];
       } else {
         // Load lazy route module, then run any returned handler
-        await loadLazyRouteModule(match.route, enhanceAgnosticRoute, manifest);
+        await loadLazyRouteModule(match.route, mapRouteProperties, manifest);
 
         handler = match.route[type];
         if (handler) {

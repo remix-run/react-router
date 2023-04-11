@@ -170,7 +170,7 @@ export interface ShouldRevalidateFunction {
  * Function provided by the framework-aware layers to set `hasErrorBoundary`
  * from the framework-aware `errorElement` prop
  *
- * @deprecated Use `enhanceAgnosticRoute` instead
+ * @deprecated Use `mapRouteProperties` instead
  */
 export interface DetectErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
@@ -180,7 +180,7 @@ export interface DetectErrorBoundaryFunction {
  * Function provided by the framework-aware layers to set any framework-specific
  * properties from framework-agnostic properties
  */
-export interface EnhanceAgnosticRouteFunction {
+export interface MapRoutePropertiesFunction {
   (route: AgnosticRouteObject): {
     hasErrorBoundary: boolean;
   } & Record<string, any>;
@@ -357,7 +357,7 @@ function isIndexRoute(
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
-  enhanceAgnosticRoute: EnhanceAgnosticRouteFunction,
+  mapRouteProperties: MapRoutePropertiesFunction,
   parentPath: number[] = [],
   manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
@@ -377,7 +377,7 @@ export function convertRoutesToDataRoutes(
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = {
         ...route,
-        ...enhanceAgnosticRoute(route),
+        ...mapRouteProperties(route),
         id,
       };
       manifest[id] = indexRoute;
@@ -385,7 +385,7 @@ export function convertRoutesToDataRoutes(
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
-        ...enhanceAgnosticRoute(route),
+        ...mapRouteProperties(route),
         id,
         children: undefined,
       };
@@ -394,7 +394,7 @@ export function convertRoutesToDataRoutes(
       if (route.children) {
         pathOrLayoutRoute.children = convertRoutesToDataRoutes(
           route.children,
-          enhanceAgnosticRoute,
+          mapRouteProperties,
           treePath,
           manifest
         );
