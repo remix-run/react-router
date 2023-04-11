@@ -23,7 +23,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
-  UNSAFE_detectErrorBoundary as detectErrorBoundary,
+  UNSAFE_mapRouteProperties as mapRouteProperties,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -220,7 +220,7 @@ export function createBrowserRouter(
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    detectErrorBoundary,
+    mapRouteProperties,
   }).initialize();
 }
 
@@ -234,7 +234,7 @@ export function createHashRouter(
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
-    detectErrorBoundary,
+    mapRouteProperties,
   }).initialize();
 }
 

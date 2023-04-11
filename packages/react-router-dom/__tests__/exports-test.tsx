@@ -1,7 +1,7 @@
 import * as ReactRouter from "react-router";
 import * as ReactRouterDOM from "react-router-dom";
 
-let nonReExportedKeys = new Set(["UNSAFE_detectErrorBoundary"]);
+let nonReExportedKeys = new Set(["UNSAFE_mapRouteProperties"]);
 
 describe("react-router-dom", () => {
   for (let key in ReactRouter) {

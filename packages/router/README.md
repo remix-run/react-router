@@ -2,7 +2,7 @@
 
 The `@remix-run/router` package is a framework-agnostic routing package (sometimes referred to as a browser-emulator) that serves as the heart of [React Router][react-router] and [Remix][remix] and provides all the core functionality for routing coupled with data loading and data mutations. It comes with built-in handling of errors, race-conditions, interruptions, cancellations, lazy-loading data, and much, much more.
 
-If you're using React Router, you should never `import` anything directly from the `@remix-run/router` or `react-router` packages, but you should have everything you need in either `react-router-dom` or `react-router-native`. Both of those packages re-export everything from `@remix-run/router` and `react-router`.
+If you're using React Router, you should never `import` anything directly from the `@remix-run/router` - you should have everything you need in `react-router-dom` (or `react-router`/`react-router-native` if you're not rendering in the browser). All of those packages should re-export everything you would otherwise need from `@remix-run/router`.
 
 > **Warning**
 >
@@ -16,11 +16,16 @@ A Router instance can be created using `createRouter`:
 // Create and initialize a router.  "initialize" contains all side effects
 // including history listeners and kicking off the initial data fetch
 let router = createRouter({
-  // Routes array
-  routes: ,
-  // History instance
-  history,
-}).initialize()
+  // Required properties
+  routes, // Routes array
+  history, // History instance
+
+  // Optional properties
+  basename, // Base path
+  mapRouteProperties, // Map function framework-agnostic routes to framework-aware routes
+  future, // Future flags
+  hydrationData, // Hydration data if using server-side-rendering
+}).initialize();
 ```
 
 Internally, the Router represents the state in an object of the following format, which is available through `router.state`. You can also register a subscriber of the signature `(state: RouterState) => void` to execute when the state updates via `router.subscribe()`;

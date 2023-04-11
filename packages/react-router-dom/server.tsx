@@ -17,6 +17,7 @@ import {
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
+import { UNSAFE_mapRouteProperties as mapRouteProperties } from "react-router";
 import type { Location, RouteObject, To } from "react-router-dom";
 import { Routes } from "react-router-dom";
 import {
@@ -206,12 +207,9 @@ function getStatelessNavigator() {
   };
 }
 
-let detectErrorBoundary = (route: RouteObject) =>
-  Boolean(route.ErrorBoundary) || Boolean(route.errorElement);
-
 type CreateStaticHandlerOptions = Omit<
   RouterCreateStaticHandlerOptions,
-  "detectErrorBoundary"
+  "detectErrorBoundary" | "mapRouteProperties"
 >;
 
 export function createStaticHandler(
@@ -220,7 +218,7 @@ export function createStaticHandler(
 ) {
   return routerCreateStaticHandler(routes, {
     ...opts,
-    detectErrorBoundary,
+    mapRouteProperties,
   });
 }
 
@@ -231,7 +229,7 @@ export function createStaticRouter(
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    detectErrorBoundary,
+    mapRouteProperties,
     undefined,
     manifest
   );

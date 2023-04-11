@@ -169,9 +169,21 @@ export interface ShouldRevalidateFunction {
 /**
  * Function provided by the framework-aware layers to set `hasErrorBoundary`
  * from the framework-aware `errorElement` prop
+ *
+ * @deprecated Use `mapRouteProperties` instead
  */
 export interface DetectErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
+}
+
+/**
+ * Function provided by the framework-aware layers to set any framework-specific
+ * properties from framework-agnostic properties
+ */
+export interface MapRoutePropertiesFunction {
+  (route: AgnosticRouteObject): {
+    hasErrorBoundary: boolean;
+  } & Record<string, any>;
 }
 
 /**
@@ -345,7 +357,7 @@ function isIndexRoute(
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
-  detectErrorBoundary: DetectErrorBoundaryFunction,
+  mapRouteProperties: MapRoutePropertiesFunction,
   parentPath: number[] = [],
   manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
@@ -365,7 +377,7 @@ export function convertRoutesToDataRoutes(
     if (isIndexRoute(route)) {
       let indexRoute: AgnosticDataIndexRouteObject = {
         ...route,
-        hasErrorBoundary: detectErrorBoundary(route),
+        ...mapRouteProperties(route),
         id,
       };
       manifest[id] = indexRoute;
@@ -373,8 +385,8 @@ export function convertRoutesToDataRoutes(
     } else {
       let pathOrLayoutRoute: AgnosticDataNonIndexRouteObject = {
         ...route,
+        ...mapRouteProperties(route),
         id,
-        hasErrorBoundary: detectErrorBoundary(route),
         children: undefined,
       };
       manifest[id] = pathOrLayoutRoute;
@@ -382,7 +394,7 @@ export function convertRoutesToDataRoutes(
       if (route.children) {
         pathOrLayoutRoute.children = convertRoutesToDataRoutes(
           route.children,
-          detectErrorBoundary,
+          mapRouteProperties,
           treePath,
           manifest
         );

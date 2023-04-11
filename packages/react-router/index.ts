@@ -1,3 +1,4 @@
+import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
@@ -207,27 +208,46 @@ export {
   useRoutes,
 };
 
-function detectErrorBoundary(route: RouteObject) {
-  if (__DEV__) {
-    if (route.Component && route.element) {
-      warning(
-        false,
-        "You should not include both `Component` and `element` on your route - " +
-          "`element` will be ignored."
-      );
+function mapRouteProperties(route: RouteObject) {
+  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
+    // Note: this check also occurs in createRoutesFromChildren so update
+    // there if you change this -- please and thank you!
+    hasErrorBoundary: route.ErrorBoundary != null || route.errorElement != null,
+  };
+
+  if (route.Component) {
+    if (__DEV__) {
+      if (route.element) {
+        warning(
+          false,
+          "You should not include both `Component` and `element` on your route - " +
+            "`Component` will be used."
+        );
+      }
     }
-    if (route.ErrorBoundary && route.errorElement) {
-      warning(
-        false,
-        "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
-          "`errorElement` will be ignored."
-      );
-    }
+    Object.assign(updates, {
+      element: React.createElement(route.Component),
+      Component: undefined,
+    });
   }
 
-  // Note: this check also occurs in createRoutesFromChildren so update
-  // there if you change this
-  return Boolean(route.ErrorBoundary) || Boolean(route.errorElement);
+  if (route.ErrorBoundary) {
+    if (__DEV__) {
+      if (route.errorElement) {
+        warning(
+          false,
+          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
+            "`ErrorBoundary` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      errorElement: React.createElement(route.ErrorBoundary),
+      ErrorBoundary: undefined,
+    });
+  }
+
+  return updates;
 }
 
 export function createMemoryRouter(
@@ -249,7 +269,7 @@ export function createMemoryRouter(
     }),
     hydrationData: opts?.hydrationData,
     routes,
-    detectErrorBoundary,
+    mapRouteProperties,
   }).initialize();
 }
 
@@ -273,5 +293,5 @@ export {
   RouteContext as UNSAFE_RouteContext,
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  detectErrorBoundary as UNSAFE_detectErrorBoundary,
+  mapRouteProperties as UNSAFE_mapRouteProperties,
 };
