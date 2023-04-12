@@ -6,6 +6,7 @@ import type {
   StaticHandlerContext,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
+  FutureConfig,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -224,7 +225,10 @@ export function createStaticHandler(
 
 export function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext
+  context: StaticHandlerContext,
+  opts?: {
+    future?: Partial<FutureConfig>;
+  }
 ): RemixRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
@@ -289,12 +293,6 @@ export function createStaticRouter(
     },
     revalidate() {
       throw msg("revalidate");
-    },
-    resolvePath() {
-      //
-      // FIXME: TODO - Implement!
-      //
-      throw new Error("TODO - Not Implemented yet!");
     },
     createHref,
     encodeLocation,

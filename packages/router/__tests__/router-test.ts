@@ -15543,7 +15543,7 @@ describe("a router", () => {
     });
   });
 
-  describe.only("router.resolveRoute", () => {
+  describe.skip("router.resolveRoute", () => {
     it("static routes", () => {
       let router = createRouter({
         routes: [

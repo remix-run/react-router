@@ -102,13 +102,13 @@ import {
   useActionData,
   useAsyncError,
   useAsyncValue,
+  useRouteId,
   useLoaderData,
   useMatches,
   useNavigation,
   useRevalidator,
   useRouteError,
   useRouteLoaderData,
-  useRouterNavigate,
 } from "./lib/hooks";
 
 // Exported for backwards compatibility, but not being used internally anymore
@@ -205,8 +205,8 @@ export {
   useResolvedPath,
   useRevalidator,
   useRouteError,
+  useRouteId,
   useRouteLoaderData,
-  useRouterNavigate,
   useRoutes,
 };
 
@@ -256,7 +256,7 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
-    future?: FutureConfig;
+    future?: Partial<Omit<FutureConfig, "v7_prependBasename">>;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
@@ -264,7 +264,10 @@ export function createMemoryRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: opts?.future,
+    future: {
+      ...opts?.future,
+      v7_prependBasename: true,
+    },
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,

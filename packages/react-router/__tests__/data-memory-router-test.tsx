@@ -3346,11 +3346,6 @@ function MemoryNavigate({
 }) {
   let dataRouterContext = React.useContext(DataRouterContext);
 
-  let basename = dataRouterContext?.basename;
-  if (basename && basename !== "/") {
-    to = to === "/" ? basename : joinPaths([basename, to]);
-  }
-
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
@@ -3363,9 +3358,17 @@ function MemoryNavigate({
     [dataRouterContext, to, formMethod, formData]
   );
 
+  // Only prepend the basename to the rendered href, send the non-prefixed `to`
+  // value into the router since it will prepend the basename
+  let basename = dataRouterContext?.basename;
+  let href = to;
+  if (basename && basename !== "/") {
+    href = to === "/" ? basename : joinPaths([basename, to]);
+  }
+
   return formData ? (
     <form onClick={onClickHandler} children={children} />
   ) : (
-    <a href={to} onClick={onClickHandler} children={children} />
+    <a href={href} onClick={onClickHandler} children={children} />
   );
 }

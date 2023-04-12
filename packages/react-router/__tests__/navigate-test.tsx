@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import type { RelativeRoutingType, To } from "react-router";
 import {
   MemoryRouter,
   Navigate,
@@ -9,10 +8,7 @@ import {
   Route,
   RouterProvider,
   createMemoryRouter,
-  createRoutesFromElements,
   useLocation,
-  useNavigate,
-  useRouterNavigate,
 } from "react-router";
 import { prettyDOM, render, screen, waitFor } from "@testing-library/react";
 

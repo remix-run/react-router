@@ -18,6 +18,7 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
+  useRouteId,
   unstable_useBlocker as useBlocker,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
@@ -168,8 +169,8 @@ export {
   useResolvedPath,
   useRevalidator,
   useRouteError,
+  useRouteId,
   useRouteLoaderData,
-  useRouterNavigate,
   useRoutes,
 } from "react-router";
 
@@ -206,7 +207,7 @@ declare global {
 
 interface DOMRouterOpts {
   basename?: string;
-  future?: FutureConfig;
+  future?: Partial<Omit<FutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
 }
@@ -217,7 +218,10 @@ export function createBrowserRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: opts?.future,
+    future: {
+      ...opts?.future,
+      v7_prependBasename: true,
+    },
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
@@ -231,7 +235,10 @@ export function createHashRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: opts?.future,
+    future: {
+      ...opts?.future,
+      v7_prependBasename: true,
+    },
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
@@ -947,9 +954,13 @@ export function useSubmit(): SubmitFunction {
   return useSubmitImpl();
 }
 
-function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
+function useSubmitImpl(
+  fetcherKey?: string,
+  fetcherRouteId?: string
+): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmitImpl);
-  let defaultAction = useFormAction();
+  let { basename } = React.useContext(NavigationContext);
+  let currentRouteId = useRouteId();
 
   return React.useCallback(
     (target, options = {}) => {
@@ -960,31 +971,39 @@ function useSubmitImpl(fetcherKey?: string, routeId?: string): SubmitFunction {
         );
       }
 
-      let { method, encType, formData, url } = getFormSubmissionInfo(
+      let { action, method, encType, formData } = getFormSubmissionInfo(
         target,
-        defaultAction,
-        options
+        options,
+        basename
       );
 
-      let href = url.pathname + url.search;
+      // Base options shared between fetch() and navigate()
       let opts = {
-        replace: options.replace,
         preventScrollReset: options.preventScrollReset,
         formData,
         formMethod: method as HTMLFormMethod,
         formEncType: encType as FormEncType,
       };
+
       if (fetcherKey) {
-        invariant(routeId != null, "No routeId available for useFetcher()");
-        router.fetch(fetcherKey, routeId, href, opts);
+        invariant(
+          fetcherRouteId != null,
+          "No routeId available for useFetcher()"
+        );
+        router.fetch(fetcherKey, fetcherRouteId, action, opts);
       } else {
-        router.navigate(href, opts);
+        router.navigate(action, {
+          ...opts,
+          replace: options.replace,
+          fromRouteId: currentRouteId,
+        });
       }
     },
-    [defaultAction, router, fetcherKey, routeId]
+    [router, basename, fetcherKey, fetcherRouteId, currentRouteId]
   );
 }
 
+// TODO: Deprecate entirely in favor of router.resolvePath()?
 export function useFormAction(
   action?: string,
   { relative }: { relative?: RelativeRoutingType } = {}
@@ -1022,10 +1041,10 @@ export function useFormAction(
   }
 
   if ((!action || action === ".") && match.route.index) {
-      path.search = path.search
-        ? path.search.replace(/^\?/, "?index&")
-        : "?index";
-    }
+    path.search = path.search
+      ? path.search.replace(/^\?/, "?index&")
+      : "?index";
+  }
 
   // If we're operating within a basename, prepend it to the pathname prior
   // to creating the form action.  If this is a root navigation, then just use
@@ -1117,7 +1136,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     // fetcher is no longer around.
     return () => {
       if (!router) {
-        console.warn(`No fetcher available to clean up from useFetcher()`);
+        console.warn(`No router available to clean up from useFetcher()`);
         return;
       }
       router.deleteFetcher(fetcherKey);

@@ -130,7 +130,7 @@ export interface Router {
    * @param to Path to navigate to
    * @param opts Navigation options (method, submission, etc.)
    */
-  navigate(to: To, opts?: RouterNavigateOptions): Promise<void>;
+  navigate(to: To | null, opts?: RouterNavigateOptions): Promise<void>;
 
   /**
    * @internal
@@ -146,7 +146,7 @@ export interface Router {
   fetch(
     key: string,
     routeId: string,
-    href: string,
+    href: string | null,
     opts?: RouterNavigateOptions
   ): void;
 
@@ -166,16 +166,6 @@ export interface Router {
    * @param location
    */
   createHref(location: Location | URL): string;
-
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
-   *
-   * Utility function to resolve a path from a given source route, taking into
-   * account relative routing and any applicable basename.
-   * @param location
-   */
-  resolvePath(to: To | undefined, opts?: ResolvePathOpts): string;
 
   /**
    * @internal
@@ -345,6 +335,7 @@ export type HydrationState = Partial<
  */
 export interface FutureConfig {
   v7_normalizeFormMethod: boolean;
+  v7_prependBasename: boolean;
 }
 
 /**
@@ -359,7 +350,7 @@ export interface RouterInit {
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
 }
 
@@ -423,11 +414,6 @@ export interface GetScrollRestorationKeyFunction {
  */
 export interface GetScrollPositionFunction {
   (): number;
-}
-
-export interface ResolvePathOpts {
-  fromRouteId?: string;
-  relative?: RelativeRoutingType;
 }
 
 export type RelativeRoutingType = "route" | "path";
@@ -723,9 +709,11 @@ export function createRouter(init: RouterInit): Router {
     manifest
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
+  let basename = init.basename || "/";
   // Config driven behavior flags
   let future: FutureConfig = {
     v7_normalizeFormMethod: false,
+    v7_prependBasename: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -746,11 +734,7 @@ export function createRouter(init: RouterInit): Router {
   // SSR did the initial scroll restoration.
   let initialScrollRestored = init.hydrationData != null;
 
-  let initialMatches = matchRoutes(
-    dataRoutes,
-    init.history.location,
-    init.basename
-  );
+  let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialErrors: RouteData | null = null;
 
   if (initialMatches == null) {
@@ -1057,7 +1041,7 @@ export function createRouter(init: RouterInit): Router {
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
   // replace with an optional submission
   async function navigate(
-    to: number | To,
+    to: number | To | null,
     opts?: RouterNavigateOptions
   ): Promise<void> {
     if (typeof to === "number") {
@@ -1065,11 +1049,19 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path, submission, error } = normalizeNavigateOptions(
-      to,
+    let normalizedPath = normalizeTo(
+      manifest,
       state.location,
       state.matches,
-      future,
+      basename,
+      future.v7_prependBasename,
+      to,
+      opts
+    );
+    let { path, submission, error } = normalizeNavigateOptions(
+      future.v7_normalizeFormMethod,
+      false,
+      normalizedPath,
       opts
     );
 
@@ -1214,7 +1206,7 @@ export function createRouter(init: RouterInit): Router {
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-    let matches = matchRoutes(routesToUse, location, init.basename);
+    let matches = matchRoutes(routesToUse, location, basename);
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
@@ -1474,7 +1466,7 @@ export function createRouter(init: RouterInit): Router {
       cancelledFetcherLoads,
       fetchLoadMatches,
       routesToUse,
-      init.basename,
+      basename,
       pendingActionData,
       pendingError
     );
@@ -1627,7 +1619,7 @@ export function createRouter(init: RouterInit): Router {
   function fetch(
     key: string,
     routeId: string,
-    href: string,
+    href: string | null,
     opts?: RouterFetchOptions
   ) {
     if (isServer) {
@@ -1641,23 +1633,31 @@ export function createRouter(init: RouterInit): Router {
     if (fetchControllers.has(key)) abortFetcher(key);
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    let matches = matchRoutes(routesToUse, href, init.basename);
+    let normalizedPath = normalizeTo(
+      manifest,
+      state.location,
+      state.matches,
+      basename,
+      future.v7_prependBasename,
+      href,
+      opts
+    );
+    let matches = matchRoutes(routesToUse, normalizedPath, basename);
+
     if (!matches) {
       setFetcherError(
         key,
         routeId,
-        getInternalRouterError(404, { pathname: href })
+        getInternalRouterError(404, { pathname: normalizedPath })
       );
       return;
     }
 
     let { path, submission } = normalizeNavigateOptions(
-      href,
-      state.location,
-      state.matches,
-      future,
-      opts,
-      true
+      future.v7_normalizeFormMethod,
+      true,
+      normalizedPath,
+      opts
     );
     let match = getTargetMatch(matches, path);
 
@@ -1777,7 +1777,7 @@ export function createRouter(init: RouterInit): Router {
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let matches =
       state.navigation.state !== "idle"
-        ? matchRoutes(routesToUse, state.navigation.location, init.basename)
+        ? matchRoutes(routesToUse, state.navigation.location, basename)
         : state.matches;
 
     invariant(matches, "Didn't find any matches after fetcher action");
@@ -1804,7 +1804,7 @@ export function createRouter(init: RouterInit): Router {
       cancelledFetcherLoads,
       fetchLoadMatches,
       routesToUse,
-      init.basename,
+      basename,
       { [match.route.id]: actionResult.data },
       undefined // No need to send through errors since we short circuit above
     );
@@ -2085,8 +2085,7 @@ export function createRouter(init: RouterInit): Router {
       typeof window?.location !== "undefined"
     ) {
       let url = init.history.createURL(redirect.location);
-      let isDifferentBasename =
-        stripBasename(url.pathname, init.basename || "/") == null;
+      let isDifferentBasename = stripBasename(url.pathname, basename) == null;
 
       if (window.location.origin !== url.origin || isDifferentBasename) {
         if (replace) {
@@ -2472,56 +2471,9 @@ export function createRouter(init: RouterInit): Router {
     inFlightDataRoutes = newRoutes;
   }
 
-  function resolvePath(to: To | undefined, opts?: ResolvePathOpts) {
-    let matches = getPathContributingMatches(state.matches);
-    let path = resolveTo(
-      to ? to : ".",
-      matches.map((m) => m.pathnameBase),
-      state.location.pathname,
-      opts?.relative === "path"
-    );
-
-    if (to == null) {
-      // Safe to write to these directly here since when `to` is undefined,
-      // resolveTo(".") will never include a search or hash
-      path.search = state.location.search;
-      path.hash = state.location.hash;
-    }
-
-    // Ensure index routes have the naked ?index param in them
-    let activeRoute =
-      opts && opts.fromRouteId && manifest[opts.fromRouteId]
-        ? manifest[opts.fromRouteId]
-        : null;
-
-    if ((!to || to === ".") && activeRoute && activeRoute.index) {
-      let params = new URLSearchParams(path.search);
-      if (
-        !params.has("index") ||
-        params.getAll("index").every((p) => p !== "")
-      ) {
-        path.search = path.search
-          ? path.search.replace(/^\?/, "?index&")
-          : "?index";
-      }
-    }
-
-    // If we're operating within a basename, prepend it to the pathname.  If
-    // this is a root navigation, then just use the raw basename which allows
-    // the basename to have full control over the presence of a trailing slash
-    // on root actions
-    let basename = router.basename || "/";
-    if (basename !== "/") {
-      path.pathname =
-        path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
-    }
-
-    return createPath(path);
-  }
-
   router = {
     get basename() {
-      return init.basename;
+      return basename;
     },
     get state() {
       return state;
@@ -2535,7 +2487,6 @@ export function createRouter(init: RouterInit): Router {
     navigate,
     fetch,
     revalidate,
-    resolvePath,
     // Passthrough to history-aware createHref used by useHref so we get proper
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),
@@ -3104,29 +3055,111 @@ function isSubmissionNavigation(
   return opts != null && "formData" in opts;
 }
 
+function normalizeTo(
+  manifest: RouteManifest,
+  location: Path,
+  matches: AgnosticDataRouteMatch[],
+  basename: string,
+  prependBasename: boolean,
+  to: To | null,
+  opts?: RouterNavigateOptions | RouterFetchOptions
+) {
+  let isSubmission = opts && isSubmissionNavigation(opts);
+  let contextualMatches: AgnosticDataRouteMatch[];
+  if (opts?.fromRouteId != null) {
+    contextualMatches = [];
+    for (let match of matches) {
+      contextualMatches.push(match);
+      if (match.route.id === opts.fromRouteId) {
+        break;
+      }
+    }
+  } else {
+    contextualMatches = matches;
+  }
+  let pathMatches = getPathContributingMatches(contextualMatches);
+  let match = pathMatches[pathMatches.length - 1];
+  let path = resolveTo(
+    to ? to : ".",
+    pathMatches.map((m) => m.pathnameBase),
+    location.pathname,
+    opts?.relative === "path"
+  );
+
+  if (to == null) {
+    // Safe to write to these directly here since when `to` is undefined,
+    // resolveTo(".") will never include a search or hash
+    path.search = location.search;
+    path.hash = location.hash;
+  }
+
+  // Ensure index routes have the naked ?index param in them
+  let activeRoute =
+    opts && opts.fromRouteId && manifest[opts.fromRouteId]
+      ? manifest[opts.fromRouteId]
+      : null;
+
+  // Previously we set the default action to ".". The problem with this is that
+  // `useResolvedPath(".")` excludes search params and the hash of the resolved
+  // URL. This is the intended behavior of when "." is specifically provided as
+  // the form action, but inconsistent w/ browsers when the action is omitted.
+  // https://github.com/remix-run/remix/issues/927
+  if (isSubmission && to == null) {
+    // Safe to write to these directly here since if action was undefined, we
+    // would have called useResolvedPath(".") which will never include a search
+    // or hash
+    path.search = location.search;
+    path.hash = location.hash;
+
+    // When grabbing search params from the URL, remove the automatically
+    // inserted ?index param so we match the useResolvedPath search behavior
+    // which would not include ?index
+    if (match.route.index) {
+      let params = new URLSearchParams(path.search);
+      params.delete("index");
+      path.search = params.toString() ? `?${params.toString()}` : "";
+    }
+  }
+
+  if ((!to || to === ".") && match.route.index) {
+    path.search = path.search
+      ? path.search.replace(/^\?/, "?index&")
+      : "?index";
+  }
+
+  if ((!to || to === ".") && activeRoute && activeRoute.index) {
+    let params = new URLSearchParams(path.search);
+    if (!params.has("index") || params.getAll("index").every((p) => p !== "")) {
+      path.search = path.search
+        ? path.search.replace(/^\?/, "?index&")
+        : "?index";
+    }
+  }
+
+  // If we're operating within a basename, prepend it to the pathname.  If
+  // this is a root navigation, then just use the raw basename which allows
+  // the basename to have full control over the presence of a trailing slash
+  // on root actions
+  if (prependBasename && basename !== "/") {
+    path.pathname =
+      path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
+  }
+
+  return createPath(path);
+}
+
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
-  to: To,
-  location: Location,
-  matches: AgnosticDataRouteMatch[],
-  future: FutureConfig,
-  opts?: RouterNavigateOptions,
-  isFetcher = false
+  normalizeFormMethod: boolean,
+  isFetcher = false,
+  path: string,
+  opts?: RouterNavigateOptions
 ): {
   path: string;
   submission?: Submission;
   error?: ErrorResponse;
 } {
-  let path = createPath(
-    resolveTo(
-      to,
-      getPathContributingMatches(matches).map((match) => match.pathnameBase),
-      location.pathname,
-      opts?.relative === "path"
-    )
-  );
-
   // Return location verbatim on non-submission navigations
   if (!opts || !isSubmissionNavigation(opts)) {
     return { path };
@@ -3144,7 +3177,7 @@ function normalizeNavigateOptions(
   if (opts.formData) {
     let formMethod = opts.formMethod || "get";
     submission = {
-      formMethod: future.v7_normalizeFormMethod
+      formMethod: normalizeFormMethod
         ? (formMethod.toUpperCase() as V7_FormMethod)
         : (formMethod.toLowerCase() as FormMethod),
       formAction: stripHashFromPath(path),
@@ -3552,28 +3585,14 @@ async function callLoaderOrAction(
 
       // Support relative routing in internal redirects
       if (!ABSOLUTE_URL_REGEX.test(location)) {
-        let activeMatches = matches.slice(0, matches.indexOf(match) + 1);
-        let routePathnames = getPathContributingMatches(activeMatches).map(
-          (match) => match.pathnameBase
+        location = normalizeTo(
+          manifest,
+          new URL(request.url),
+          matches.slice(0, matches.indexOf(match) + 1),
+          basename,
+          true,
+          location
         );
-        let resolvedLocation = resolveTo(
-          location,
-          routePathnames,
-          new URL(request.url).pathname
-        );
-        invariant(
-          createPath(resolvedLocation),
-          `Unable to resolve redirect location: ${location}`
-        );
-
-        // Prepend the basename to the redirect location if we have one
-        if (basename) {
-          let path = resolvedLocation.pathname;
-          resolvedLocation.pathname =
-            path === "/" ? basename : joinPaths([basename, path]);
-        }
-
-        location = createPath(resolvedLocation);
       } else if (!isStaticRequest) {
         // Strip off the protocol+origin for same-origin + same-basename absolute
         // redirects. If this is a static request, we can let it go back to the

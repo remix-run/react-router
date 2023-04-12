@@ -172,6 +172,7 @@ export {
   unstable_usePrompt,
   useRevalidator,
   useRouteError,
+  useRouteId,
   useRouteLoaderData,
   useSubmit,
   UNSAFE_DataRouterContext,

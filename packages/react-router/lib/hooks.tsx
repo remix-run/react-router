@@ -156,6 +156,13 @@ export interface NavigateFunction {
  * @see https://reactrouter.com/hooks/use-navigate
  */
 export function useNavigate(): NavigateFunction {
+  let isDataRouter = React.useContext(DataRouterContext) != null;
+  // Conditional usage is OK here because the usage of a data router is static
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return isDataRouter ? useNavigateStable() : useNavigateUnstable();
+}
+
+function useNavigateUnstable(): NavigateFunction {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -682,7 +689,7 @@ export function _renderMatches(
 enum DataRouterHook {
   UseBlocker = "useBlocker",
   UseRevalidator = "useRevalidator",
-  UseRouterNavigate = "useRouterNavigate",
+  UseNavigateStable = "useNavigate",
 }
 
 enum DataRouterStateHook {
@@ -694,7 +701,8 @@ enum DataRouterStateHook {
   UseRouteLoaderData = "useRouteLoaderData",
   UseMatches = "useMatches",
   UseRevalidator = "useRevalidator",
-  UseRouterNavigate = "useRouterNavigate",
+  UseNavigateStable = "useNavigate",
+  UseRouteId = "useRouteId",
 }
 
 function getDataRouterConsoleError(
@@ -721,6 +729,7 @@ function useRouteContext(hookName: DataRouterStateHook) {
   return route;
 }
 
+// Internal version with hookName-aware debugging
 function useCurrentRouteId(hookName: DataRouterStateHook) {
   let route = useRouteContext(hookName);
   let thisRoute = route.matches[route.matches.length - 1];
@@ -729,6 +738,13 @@ function useCurrentRouteId(hookName: DataRouterStateHook) {
     `${hookName} can only be used on routes that contain a unique "id"`
   );
   return thisRoute.route.id;
+}
+
+/**
+ * Returns the ID for the nearest contextual route
+ */
+export function useRouteId() {
+  return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
 /**
@@ -887,33 +903,20 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   return state.blockers.get(blockerKey) || blocker;
 }
 
-export function useRouterNavigate(): NavigateFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseRouterNavigate);
-  let id = useCurrentRouteId(DataRouterStateHook.UseRouterNavigate);
-
-  let activeRef = React.useRef(false);
-  React.useEffect(() => {
-    activeRef.current = true;
-  });
+/**
+ * Stable version of useNavigate that is used when we are in the context of
+ * a RouterProvider.
+ */
+function useNavigateStable(): NavigateFunction {
+  let { router } = useDataRouterContext(DataRouterHook.UseNavigateStable);
+  let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
 
   let navigate: NavigateFunction = React.useCallback(
     (to: To | number, options: NavigateOptions = {}) => {
-      // TODO: Do we still want this in a stable version?
-      warning(
-        activeRef.current,
-        `You should call navigate() in a React.useEffect(), not when ` +
-          `your component is first rendered.`
-      );
-
-      if (!activeRef.current) return;
-
       if (typeof to === "number") {
         router.navigate(to);
       } else {
-        router.navigate(to, {
-          fromRouteId: id,
-          ...options,
-        });
+        router.navigate(to, { fromRouteId: id, ...options });
       }
     },
     [router, id]

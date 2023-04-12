@@ -108,8 +108,8 @@ export {
   useResolvedPath,
   useRevalidator,
   useRouteError,
+  useRouteId,
   useRouteLoaderData,
-  useRouterNavigate,
   useRoutes,
 } from "react-router";
 
