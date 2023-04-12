@@ -2284,6 +2284,69 @@ function testDomRouter(
       `);
     });
 
+    it("allows a button to override the <form action>", async () => {
+      let router = createTestRouter(
+        createRoutesFromElements(
+          <Route path="/">
+            <Route
+              path="foo"
+              action={() => {
+                throw new Error("No");
+              }}
+            >
+              <Route
+                path="bar"
+                action={() => "Yes"}
+                Component={() => {
+                  let actionData = useActionData() as string | undefined;
+                  return (
+                    <Form method="post" action="/foo">
+                      <p>{actionData || "No"}</p>
+                      <button type="submit" formAction="/foo/bar">
+                        Submit
+                      </button>
+                    </Form>
+                  );
+                }}
+              />
+            </Route>
+          </Route>
+        ),
+        {
+          window: getWindow("/foo/bar"),
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/foo"
+      );
+      expect(
+        container.querySelector("button")?.getAttribute("formaction")
+      ).toBe("/foo/bar");
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("Yes"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <form
+              action="/foo"
+              method="post"
+            >
+              <p>
+                Yes
+              </p>
+              <button
+                formaction="/foo/bar"
+                type="submit"
+              >
+                Submit
+              </button>
+            </form>
+          </div>"
+        `);
+    });
+
     it("supports uppercase form method attributes", async () => {
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();

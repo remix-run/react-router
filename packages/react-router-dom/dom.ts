@@ -215,7 +215,8 @@ export function getFormSubmissionInfo(
       // When grabbing the action from the element, it will have had the basename
       // prefixed to ensure non-JS scenarios work, so strip it since we'll
       // re-prefix in the router
-      let attr = target.getAttribute("action") || form.getAttribute("action");
+      let attr =
+        target.getAttribute("formaction") || form.getAttribute("action");
       action = attr ? stripBasename(attr, basename) : null;
     }
 
