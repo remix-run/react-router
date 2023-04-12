@@ -172,12 +172,12 @@ export {
   unstable_usePrompt,
   useRevalidator,
   useRouteError,
-  useRouteId,
   useRouteLoaderData,
   useSubmit,
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_useScrollRestoration,
+  UNSAFE_useRouteId,
 } from "./react-router-dom";
 
 export type { StaticRouterProps } from "./lib/components";

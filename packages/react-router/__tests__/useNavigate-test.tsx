@@ -898,7 +898,7 @@ describe("useNavigate", () => {
           <nav>
             <button onClick={() => navigate("/home")}>Home</button>
             <button onClick={() => navigate("/about")}>About</button>
-            <p>{count.current}</p>
+            <p>{`count:${count.current}`}</p>
           </nav>
         );
       }
@@ -918,7 +918,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              0
+              count:0
             </p>
           </nav>,
           <h1>
@@ -948,7 +948,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              1
+              count:1
             </p>
           </nav>,
           <h1>
@@ -978,7 +978,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              2
+              count:2
             </p>
           </nav>,
           <h1>
@@ -1585,7 +1585,7 @@ describe("useNavigate", () => {
           <nav>
             <button onClick={() => router.navigate("/home")}>Home</button>
             <button onClick={() => router.navigate("/about")}>About</button>
-            <p>{count.current}</p>
+            <p>{`count:${count.current}`}</p>
           </nav>
         );
       }
@@ -1605,7 +1605,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              0
+              count:0
             </p>
           </nav>,
           <h1>
@@ -1635,7 +1635,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              1
+              count:1
             </p>
           </nav>,
           <h1>
@@ -1665,7 +1665,7 @@ describe("useNavigate", () => {
               About
             </button>
             <p>
-              1
+              count:1
             </p>
           </nav>,
           <h1>

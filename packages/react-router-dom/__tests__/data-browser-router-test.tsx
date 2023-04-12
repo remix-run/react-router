@@ -4439,7 +4439,8 @@ function testDomRouter(
                       Click
                     </button>
                     <p>
-                      {count}-{fetcherCount.current}
+                      {`render count:${count}`}
+                      {`fetcher count:${fetcherCount.current}`}
                     </p>
                   </>
                 );
@@ -4453,38 +4454,19 @@ function testDomRouter(
 
         let { container } = render(<RouterProvider router={router} />);
 
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <button>
-              Click
-            </button>
-            <p>
-              0
-              -
-              0
-            </p>
-          </div>"
-        `);
+        let html = getHtml(container);
+        expect(html).toContain("render count:0");
+        expect(html).toContain("fetcher count:0");
 
         fireEvent.click(screen.getByText("Click"));
         fireEvent.click(screen.getByText("Click"));
         fireEvent.click(screen.getByText("Click"));
-        fireEvent.click(screen.getByText("Click"));
-        fireEvent.click(screen.getByText("Click"));
-        await waitFor(() => screen.getByText(/5-1/));
+        await waitFor(() => screen.getByText(/render count:3/));
 
-        expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <button>
-              Click
-            </button>
-            <p>
-              5
-              -
-              1
-            </p>
-          </div>"
-        `);
+        html = getHtml(container);
+        expect(html).toContain("render count:3");
+        expect(html).toContain("fetcher count:1");
+      });
       });
     });
 

@@ -18,13 +18,13 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
-  useRouteId,
   unstable_useBlocker as useBlocker,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_useRouteId as useRouteId,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -169,7 +169,6 @@ export {
   useResolvedPath,
   useRevalidator,
   useRouteError,
-  useRouteId,
   useRouteLoaderData,
   useRoutes,
 } from "react-router";
@@ -194,6 +193,7 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_useRouteId,
 } from "react-router";
 //#endregion
 
@@ -1003,7 +1003,8 @@ function useSubmitImpl(
   );
 }
 
-// TODO: Deprecate entirely in favor of router.resolvePath()?
+// v7: Eventually we should deprecate this entirely in favor of using the
+// router method directly?
 export function useFormAction(
   action?: string,
   { relative }: { relative?: RelativeRoutingType } = {}

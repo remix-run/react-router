@@ -119,9 +119,6 @@ export interface SubmitOptions {
   /**
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
-   *
-   * Note: It is assumed the path is already resolved. If you need to resolve a
-   * relative path, use `useFormAction`.
    */
   action?: string;
 

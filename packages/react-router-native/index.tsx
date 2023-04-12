@@ -108,7 +108,6 @@ export {
   useResolvedPath,
   useRevalidator,
   useRouteError,
-  useRouteId,
   useRouteLoaderData,
   useRoutes,
 } from "react-router";
@@ -133,6 +132,7 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_useRouteId,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////

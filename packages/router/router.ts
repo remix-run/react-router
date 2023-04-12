@@ -1050,7 +1050,6 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let normalizedPath = normalizeTo(
-      manifest,
       state.location,
       state.matches,
       basename,
@@ -1634,7 +1633,6 @@ export function createRouter(init: RouterInit): Router {
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(
-      manifest,
       state.location,
       state.matches,
       basename,
@@ -3056,7 +3054,6 @@ function isSubmissionNavigation(
 }
 
 function normalizeTo(
-  manifest: RouteManifest,
   location: Path,
   matches: AgnosticDataRouteMatch[],
   basename: string,
@@ -3064,9 +3061,9 @@ function normalizeTo(
   to: To | null,
   opts?: RouterNavigateOptions | RouterFetchOptions
 ) {
-  let isSubmission = opts && isSubmissionNavigation(opts);
   let contextualMatches: AgnosticDataRouteMatch[];
   if (opts?.fromRouteId != null) {
+    // Grab matches up to the calling route route
     contextualMatches = [];
     for (let match of matches) {
       contextualMatches.push(match);
@@ -3079,6 +3076,8 @@ function normalizeTo(
   }
   let pathMatches = getPathContributingMatches(contextualMatches);
   let match = pathMatches[pathMatches.length - 1];
+
+  // Resolve the relative path
   let path = resolveTo(
     to ? to : ".",
     pathMatches.map((m) => m.pathnameBase),
@@ -3086,54 +3085,22 @@ function normalizeTo(
     opts?.relative === "path"
   );
 
+  // When `to` is not specified we inherit search/hash from the current
+  // location, unlike when to="." and we just inherit the path.
+  // See https://github.com/remix-run/remix/issues/927
   if (to == null) {
-    // Safe to write to these directly here since when `to` is undefined,
-    // resolveTo(".") will never include a search or hash
     path.search = location.search;
     path.hash = location.hash;
   }
 
-  // Ensure index routes have the naked ?index param in them
-  let activeRoute =
-    opts && opts.fromRouteId && manifest[opts.fromRouteId]
-      ? manifest[opts.fromRouteId]
-      : null;
-
-  // Previously we set the default action to ".". The problem with this is that
-  // `useResolvedPath(".")` excludes search params and the hash of the resolved
-  // URL. This is the intended behavior of when "." is specifically provided as
-  // the form action, but inconsistent w/ browsers when the action is omitted.
-  // https://github.com/remix-run/remix/issues/927
-  if (isSubmission && to == null) {
-    // Safe to write to these directly here since if action was undefined, we
-    // would have called useResolvedPath(".") which will never include a search
-    // or hash
-    path.search = location.search;
-    path.hash = location.hash;
-
-    // When grabbing search params from the URL, remove the automatically
-    // inserted ?index param so we match the useResolvedPath search behavior
-    // which would not include ?index
-    if (match.route.index) {
-      let params = new URLSearchParams(path.search);
-      params.delete("index");
-      path.search = params.toString() ? `?${params.toString()}` : "";
-    }
-  }
-
-  if ((!to || to === ".") && match.route.index) {
+  if (
+    (!to || to === ".") &&
+    match.route.index &&
+    !hasNakedIndexQuery(path.search)
+  ) {
     path.search = path.search
       ? path.search.replace(/^\?/, "?index&")
       : "?index";
-  }
-
-  if ((!to || to === ".") && activeRoute && activeRoute.index) {
-    let params = new URLSearchParams(path.search);
-    if (!params.has("index") || params.getAll("index").every((p) => p !== "")) {
-      path.search = path.search
-        ? path.search.replace(/^\?/, "?index&")
-        : "?index";
-    }
   }
 
   // If we're operating within a basename, prepend it to the pathname.  If
@@ -3586,7 +3553,6 @@ async function callLoaderOrAction(
       // Support relative routing in internal redirects
       if (!ABSOLUTE_URL_REGEX.test(location)) {
         location = normalizeTo(
-          manifest,
           new URL(request.url),
           matches.slice(0, matches.indexOf(match) + 1),
           basename,

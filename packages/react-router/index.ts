@@ -205,7 +205,6 @@ export {
   useResolvedPath,
   useRevalidator,
   useRouteError,
-  useRouteId,
   useRouteLoaderData,
   useRoutes,
 };
@@ -299,4 +298,5 @@ export {
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   mapRouteProperties as UNSAFE_mapRouteProperties,
+  useRouteId as UNSAFE_useRouteId,
 };
