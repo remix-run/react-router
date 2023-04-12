@@ -904,7 +904,7 @@ export const formMethodWarning =
   "https://remix.run/docs/en/v1.15.0/pages/v2#formMethod";
 
 export const metaWarning =
-  "⚠️ REMIX FUTURE CHANGE: The route `meta` export signature is changing in v2" +
+  "⚠️ REMIX FUTURE CHANGE: The route `meta` export signature is changing in v2. " +
   "You can prepare for this change at your convenience with the `v2_meta` future flag. " +
   "For instructions on making this change see " +
   "https://remix.run/docs/en/v1.15.0/pages/v2#meta";
