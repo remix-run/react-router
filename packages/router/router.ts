@@ -3467,7 +3467,7 @@ async function callLoaderOrAction(
   matches: AgnosticDataRouteMatch[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  basename = "/",
+  basename: string,
   isStaticRequest: boolean = false,
   isRouteRequest: boolean = false,
   requestContext?: unknown
