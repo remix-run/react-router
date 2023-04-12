@@ -1357,7 +1357,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        router.basename
+        basename
       );
 
       if (request.signal.aborted) {
@@ -1725,7 +1725,7 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       manifest,
       mapRouteProperties,
-      router.basename
+      basename
     );
 
     if (fetchRequest.signal.aborted) {
@@ -1968,7 +1968,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      router.basename
+      basename
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2185,7 +2185,7 @@ export function createRouter(init: RouterInit): Router {
           matches,
           manifest,
           mapRouteProperties,
-          router.basename
+          basename
         )
       ),
       ...fetchersToLoad.map((f) => {
@@ -2197,7 +2197,7 @@ export function createRouter(init: RouterInit): Router {
             f.matches,
             manifest,
             mapRouteProperties,
-            router.basename
+            basename
           );
         } else {
           let error: ErrorResult = {
