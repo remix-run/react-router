@@ -147,3 +147,7 @@ let { state } = useLocation();
 [history-replace-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState
 [history-push-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/pushState
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
+  
+## `reloadDocument`
+
+The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
