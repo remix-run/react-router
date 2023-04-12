@@ -23,11 +23,6 @@ test.describe("CSS side-effect imports", () => {
           module.exports = {
             serverDependenciesToBundle: [/@test-package/],
             future: {
-              // Enable all CSS future flags to
-              // ensure features don't clash
-              unstable_cssModules: true,
-              unstable_cssSideEffectImports: true,
-              unstable_vanillaExtract: true,
               v2_routeConvention: true,
             },
           };

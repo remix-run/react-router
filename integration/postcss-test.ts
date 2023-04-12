@@ -40,9 +40,6 @@ test.describe("PostCSS enabled", () => {
             tailwind: true,
             future: {
               v2_routeConvention: true,
-              unstable_cssModules: true,
-              unstable_cssSideEffectImports: true,
-              unstable_vanillaExtract: true,
             },
           };
         `,

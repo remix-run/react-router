@@ -27,10 +27,6 @@ test("builds deterministically under different paths", async () => {
   //  * vanillaExtractPlugin (via app/routes/foo.tsx' .css.ts file import)
   let init: FixtureInit = {
     future: {
-      unstable_cssModules: true,
-      unstable_cssSideEffectImports: true,
-      unstable_postcss: true,
-      unstable_vanillaExtract: true,
       v2_routeConvention: true,
     },
     files: {
@@ -91,69 +87,6 @@ test("builds deterministically under different paths", async () => {
         .side-effect {
           color: mintcream;
         }
-      `,
-    },
-  };
-  let dir1 = await createFixtureProject(init);
-  let dir2 = await createFixtureProject(init);
-
-  expect(dir1).not.toEqual(dir2);
-
-  let files1 = await globby(["build/index.js", "public/build/**/*.{js,css}"], {
-    cwd: dir1,
-  });
-  files1 = files1.sort();
-  let files2 = await globby(["build/index.js", "public/build/**/*.{js,css}"], {
-    cwd: dir2,
-  });
-  files2 = files2.sort();
-
-  expect(files1.length).toBeGreaterThan(0);
-  expect(files1).toEqual(files2);
-  files1.forEach((file, i) => {
-    expect(fs.readFileSync(path.join(dir1, file))).toEqual(
-      fs.readFileSync(path.join(dir2, files2[i]))
-    );
-  });
-});
-
-test("builds Vanilla Extract files deterministically under different paths with Vanilla Extract cache enabled", async () => {
-  let init: FixtureInit = {
-    future: {
-      unstable_vanillaExtract: { cache: true },
-      v2_routeConvention: true,
-    },
-    files: {
-      "app/routes/foo.tsx": js`
-        import { vanilla } from "~/styles/vanilla.css";
-        export default () => <div className={vanilla}>YAY</div>;
-      `,
-      "app/images/foo.svg": `
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="50" fill="coral" />
-        </svg>
-      `,
-      "app/styles/vanilla.css.ts": js`
-        import { style } from "@vanilla-extract/css";
-        import { chocolate } from "./chocolate.css";
-        import imageUrl from "~/images/foo.svg";
-
-        export const vanilla = style([
-          chocolate,
-          {
-            backgroundImage: [
-              "url(" + imageUrl + ")",
-              "url(~/images/foo.svg)",
-            ],
-          }
-        ]);
-      `,
-      "app/styles/chocolate.css.ts": js`
-        import { style } from "@vanilla-extract/css";
-
-        export const chocolate = style({
-          color: "chocolate",
-        });
       `,
     },
   };

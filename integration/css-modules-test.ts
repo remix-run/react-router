@@ -21,11 +21,6 @@ test.describe("CSS Modules", () => {
     fixture = await createFixture({
       future: {
         v2_routeConvention: true,
-        // Enable all CSS future flags to
-        // ensure features don't clash
-        unstable_cssModules: true,
-        unstable_cssSideEffectImports: true,
-        unstable_vanillaExtract: true,
       },
       files: {
         "app/root.jsx": js`

@@ -44,19 +44,12 @@ type Dev = {
   rebuildPollIntervalMs?: number;
 };
 
-export type VanillaExtractOptions = {
-  cache?: boolean;
-};
-
 interface FutureConfig {
-  unstable_cssModules: boolean;
-  unstable_cssSideEffectImports: boolean;
   unstable_dev: boolean | Dev;
   /** @deprecated Use the `postcss` config option instead */
   unstable_postcss: boolean;
   /** @deprecated Use the `tailwind` config option instead */
   unstable_tailwind: boolean;
-  unstable_vanillaExtract: boolean | VanillaExtractOptions;
   v2_errorBoundary: boolean;
   v2_meta: boolean;
   v2_normalizeFormMethod: boolean;
@@ -481,16 +474,36 @@ export async function readConfig(
     serverModuleFormat === "esm" ? ["module", "main"] : ["main", "module"];
   serverMinify ??= false;
 
-  if (appConfig.future?.unstable_postcss !== undefined) {
-    warnOnce(
-      'The "future.unstable_postcss" config option is deprecated as this feature is now considered stable. Use the "postcss" config option instead.'
-    );
-  }
+  if (appConfig.future) {
+    if ("unstable_cssModules" in appConfig.future) {
+      warnOnce(
+        'The "future.unstable_cssModules" config option has been removed as this feature is now enabled automatically.'
+      );
+    }
 
-  if (appConfig.future?.unstable_tailwind !== undefined) {
-    warnOnce(
-      'The "future.unstable_tailwind" config option is deprecated as this feature is now considered stable. Use the "tailwind" config option instead.'
-    );
+    if ("unstable_cssSideEffectImports" in appConfig.future) {
+      warnOnce(
+        'The "future.unstable_cssSideEffectImports" config option has been removed as this feature is now enabled automatically.'
+      );
+    }
+
+    if ("unstable_vanillaExtract" in appConfig.future) {
+      warnOnce(
+        'The "future.unstable_vanillaExtract" config option has been removed as this feature is now enabled automatically.'
+      );
+    }
+
+    if (appConfig.future.unstable_postcss !== undefined) {
+      warnOnce(
+        'The "future.unstable_postcss" config option has been deprecated as this feature is now considered stable. Use the "postcss" config option instead.'
+      );
+    }
+
+    if (appConfig.future.unstable_tailwind !== undefined) {
+      warnOnce(
+        'The "future.unstable_tailwind" config option has been deprecated as this feature is now considered stable. Use the "tailwind" config option instead.'
+      );
+    }
   }
 
   let mdx = appConfig.mdx;
@@ -716,13 +729,9 @@ export async function readConfig(
   }
 
   let future: FutureConfig = {
-    unstable_cssModules: appConfig.future?.unstable_cssModules === true,
-    unstable_cssSideEffectImports:
-      appConfig.future?.unstable_cssSideEffectImports === true,
     unstable_dev: appConfig.future?.unstable_dev ?? false,
     unstable_postcss: appConfig.future?.unstable_postcss === true,
     unstable_tailwind: appConfig.future?.unstable_tailwind === true,
-    unstable_vanillaExtract: appConfig.future?.unstable_vanillaExtract ?? false,
     v2_errorBoundary: appConfig.future?.v2_errorBoundary === true,
     v2_meta: appConfig.future?.v2_meta === true,
     v2_normalizeFormMethod: appConfig.future?.v2_normalizeFormMethod === true,

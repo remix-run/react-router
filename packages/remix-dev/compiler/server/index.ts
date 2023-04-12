@@ -47,19 +47,12 @@ const createEsbuildConfig = (
   }
 
   let { mode } = options;
-  let outputCss = false;
 
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
-    config.future.unstable_cssModules
-      ? cssModulesPlugin({ config, mode, outputCss })
-      : null,
-    config.future.unstable_vanillaExtract
-      ? vanillaExtractPlugin({ config, mode, outputCss })
-      : null,
-    config.future.unstable_cssSideEffectImports
-      ? cssSideEffectImportsPlugin({ config, options })
-      : null,
+    cssModulesPlugin({ config, mode, outputCss: false }),
+    vanillaExtractPlugin({ config, mode, outputCss: false }),
+    cssSideEffectImportsPlugin({ config, options }),
     cssFilePlugin({ config, options }),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
@@ -70,7 +63,7 @@ const createEsbuildConfig = (
     serverAssetsManifestPlugin(channels),
     serverBareModulesPlugin(config, options.onWarning),
     externalPlugin(/^node:.*/, { sideEffects: false }),
-  ].filter(isNotNull);
+  ];
 
   if (config.serverPlatform !== "node") {
     plugins.unshift(NodeModulesPolyfillPlugin());
@@ -181,7 +174,3 @@ export const create = async (
     dispose: () => undefined,
   };
 };
-
-function isNotNull<Value>(value: Value): value is Exclude<Value, null> {
-  return value !== null;
-}

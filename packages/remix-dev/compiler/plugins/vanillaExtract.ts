@@ -3,13 +3,12 @@ import type { Compiler } from "@vanilla-extract/integration";
 import { cssFileFilter, createCompiler } from "@vanilla-extract/integration";
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../../config";
-import type { CompileOptions } from "../../options";
-import { loaders } from "../../utils/loaders";
-import { getPostcssProcessor } from "../../utils/postcss";
-import { vanillaExtractSideEffectsPlugin } from "./sideEffects";
+import type { RemixConfig } from "../../config";
+import type { CompileOptions } from "../options";
+import { loaders } from "../utils/loaders";
+import { getPostcssProcessor } from "../utils/postcss";
 
-const pluginName = "vanilla-extract-plugin-cached";
+const pluginName = "vanilla-extract-plugin";
 const namespace = `${pluginName}-ns`;
 const virtualCssFileFilter = /\.vanilla.css$/;
 
@@ -19,9 +18,42 @@ const staticAssetRegexp = new RegExp(
     .join("|")})$`
 );
 
-let compiler: Compiler;
+let compiler: Compiler | undefined;
+function getCompiler(root: string, mode: CompileOptions["mode"]) {
+  compiler =
+    compiler ||
+    createCompiler({
+      root,
+      identifiers: mode === "production" ? "short" : "debug",
+      vitePlugins: [
+        {
+          name: "remix-assets",
+          enforce: "pre",
+          async resolveId(source) {
+            // Handle root-relative imports within Vanilla Extract files
+            if (source.startsWith("~")) {
+              return await this.resolve(source.replace("~", ""));
+            }
+            // Handle static asset JS imports
+            if (source.startsWith("/") && staticAssetRegexp.test(source)) {
+              return {
+                external: true,
+                id: "~" + source,
+              };
+            }
+          },
+          transform(code) {
+            // Translate Vite's fs import format for root-relative imports
+            return code.replace(/\/@fs\/~\//g, "~/");
+          },
+        },
+      ],
+    });
 
-export function vanillaExtractPluginCached({
+  return compiler;
+}
+
+export function vanillaExtractPlugin({
   config,
   mode,
   outputCss,
@@ -34,36 +66,6 @@ export function vanillaExtractPluginCached({
     name: pluginName,
     async setup(build) {
       let root = config.appDirectory;
-
-      compiler =
-        compiler ||
-        createCompiler({
-          root,
-          identifiers: mode === "production" ? "short" : "debug",
-          vitePlugins: [
-            {
-              name: "remix-assets",
-              enforce: "pre",
-              async resolveId(source) {
-                // Handle root-relative imports within Vanilla Extract files
-                if (source.startsWith("~")) {
-                  return await this.resolve(source.replace("~", ""));
-                }
-                // Handle static asset JS imports
-                if (source.startsWith("/") && staticAssetRegexp.test(source)) {
-                  return {
-                    external: true,
-                    id: "~" + source,
-                  };
-                }
-              },
-              transform(code) {
-                // Translate Vite's fs import format for root-relative imports
-                return code.replace(/\/@fs\/~\//g, "~/");
-              },
-            },
-          ],
-        });
 
       let postcssProcessor = await getPostcssProcessor({
         config,
@@ -82,12 +84,41 @@ export function vanillaExtractPluginCached({
         };
       });
 
-      vanillaExtractSideEffectsPlugin.setup(build);
+      // Mark all .css.ts/js files as having side effects. This is to ensure
+      // that all usages of `globalStyle` are included in the CSS bundle, even
+      // if a .css.ts/js file has no exports or is otherwise tree-shaken.
+      let preventInfiniteLoop = {};
+      build.onResolve(
+        { filter: /\.css(\.(j|t)sx?)?(\?.*)?$/, namespace: "file" },
+        async (args) => {
+          if (args.pluginData === preventInfiniteLoop) {
+            return null;
+          }
+
+          let resolvedPath = (
+            await build.resolve(args.path, {
+              resolveDir: args.resolveDir,
+              kind: args.kind,
+              pluginData: preventInfiniteLoop,
+            })
+          ).path;
+
+          if (!cssFileFilter.test(resolvedPath)) {
+            return null;
+          }
+
+          return {
+            path: resolvedPath,
+            sideEffects: true,
+          };
+        }
+      );
 
       build.onLoad(
         { filter: virtualCssFileFilter, namespace },
         async ({ path }) => {
           let [relativeFilePath] = path.split(".vanilla.css");
+          let compiler = getCompiler(root, mode);
           let { css, filePath } = compiler.getCssForFile(relativeFilePath);
           let resolveDir = dirname(resolve(root, filePath));
 
@@ -109,6 +140,7 @@ export function vanillaExtractPluginCached({
       );
 
       build.onLoad({ filter: cssFileFilter }, async ({ path: filePath }) => {
+        let compiler = getCompiler(root, mode);
         let { source, watchFiles } = await compiler.processVanillaFile(
           filePath,
           { outputCss }

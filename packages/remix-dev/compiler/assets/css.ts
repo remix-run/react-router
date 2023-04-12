@@ -24,17 +24,6 @@ import {
 } from "./plugins/cssBundleEntry";
 import type { WriteChannel } from "../../channel";
 
-function isNotNull<Value>(value: Value): value is Exclude<Value, null> {
-  return value !== null;
-}
-
-const isCssBundlingEnabled = (config: RemixConfig): boolean =>
-  Boolean(
-    config.future.unstable_cssModules ||
-      config.future.unstable_cssSideEffectImports ||
-      config.future.unstable_vanillaExtract
-  );
-
 const getExternals = (remixConfig: RemixConfig): string[] => {
   // For the browser build, exclude node built-ins that don't have a
   // browser-safe alternative installed in node_modules. Nothing should
@@ -61,16 +50,10 @@ const createEsbuildConfig = (
   let { mode } = options;
 
   let plugins: esbuild.Plugin[] = [
-    isCssBundlingEnabled(config) ? cssBundleEntryModulePlugin(config) : null,
-    config.future.unstable_cssModules
-      ? cssModulesPlugin({ config, mode, outputCss: true })
-      : null,
-    config.future.unstable_vanillaExtract
-      ? vanillaExtractPlugin({ config, mode, outputCss: true })
-      : null,
-    config.future.unstable_cssSideEffectImports
-      ? cssSideEffectImportsPlugin({ config, options })
-      : null,
+    cssBundleEntryModulePlugin(config),
+    cssModulesPlugin({ config, mode, outputCss: true }),
+    vanillaExtractPlugin({ config, mode, outputCss: true }),
+    cssSideEffectImportsPlugin({ config, options }),
     cssFilePlugin({ config, options }),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
@@ -78,7 +61,7 @@ const createEsbuildConfig = (
     emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
     NodeModulesPolyfillPlugin(),
     externalPlugin(/^node:.*/, { sideEffects: false }),
-  ].filter(isNotNull);
+  ];
 
   return {
     entryPoints: {
@@ -87,17 +70,7 @@ const createEsbuildConfig = (
     outdir: config.assetsBuildDirectory,
     platform: "browser",
     format: "esm",
-    external: [
-      // This allows Vanilla Extract to bundle asset imports, e.g. `import href
-      // from './image.svg'` resolves to a string like "/build/_assets/XXXX.svg"
-      // which will then appear in the compiled CSS, e.g. `background:
-      // url("/build/_assets/XXXX.svg")`. If we don't mark this path as
-      // external, esbuild will try to bundle it again but won't find it.
-      config.future.unstable_vanillaExtract
-        ? `${config.publicPath}_assets/*`
-        : null,
-      ...getExternals(config),
-    ].filter(isNotNull),
+    external: getExternals(config),
     loader: loaders,
     bundle: true,
     logLevel: "silent",
@@ -139,10 +112,6 @@ export let create = async (
     write: false,
   });
   let compile = async () => {
-    if (!isCssBundlingEnabled(remixConfig)) {
-      return;
-    }
-
     try {
       let { outputFiles } = await ctx.rebuild();
 

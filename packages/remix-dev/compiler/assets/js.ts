@@ -69,13 +69,6 @@ const getExternals = (remixConfig: RemixConfig): string[] => {
   return nodeBuiltins.filter((mod) => !dependencies.includes(mod));
 };
 
-const isCssBundlingEnabled = (config: RemixConfig): boolean =>
-  Boolean(
-    config.future.unstable_cssModules ||
-      config.future.unstable_cssSideEffectImports ||
-      config.future.unstable_vanillaExtract
-  );
-
 const createEsbuildConfig = (
   config: RemixConfig,
   options: CompileOptions,
@@ -109,15 +102,9 @@ const createEsbuildConfig = (
 
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(options.onWarning),
-    config.future.unstable_cssModules
-      ? cssModulesPlugin({ config, mode, outputCss: false })
-      : null,
-    config.future.unstable_vanillaExtract
-      ? vanillaExtractPlugin({ config, mode, outputCss: false })
-      : null,
-    config.future.unstable_cssSideEffectImports
-      ? cssSideEffectImportsPlugin({ config, options })
-      : null,
+    cssModulesPlugin({ config, mode, outputCss: false }),
+    vanillaExtractPlugin({ config, mode, outputCss: false }),
+    cssSideEffectImportsPlugin({ config, options }),
     cssFilePlugin({ config, options }),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
@@ -169,7 +156,7 @@ const createEsbuildConfig = (
         });
       },
     } as esbuild.Plugin,
-  ].filter(isNotNull);
+  ];
 
   if (mode === "development" && config.future.unstable_dev) {
     // TODO prebundle deps instead of chunking just these ones
@@ -189,10 +176,7 @@ const createEsbuildConfig = (
     };
 
     plugins.push(hmrPlugin({ remixConfig: config }));
-
-    if (isCssBundlingEnabled(config)) {
-      plugins.push(cssBundleUpdatePlugin(channels));
-    }
+    plugins.push(cssBundleUpdatePlugin(channels));
   }
 
   return {
@@ -200,17 +184,7 @@ const createEsbuildConfig = (
     outdir: config.assetsBuildDirectory,
     platform: "browser",
     format: "esm",
-    external: [
-      // This allows Vanilla Extract to bundle asset imports, e.g. `import href
-      // from './image.svg'` resolves to a string like "/build/_assets/XXXX.svg"
-      // which will then appear in the compiled CSS, e.g. `background:
-      // url("/build/_assets/XXXX.svg")`. If we don't mark this path as
-      // external, esbuild will try to bundle it again but won't find it.
-      config.future.unstable_vanillaExtract
-        ? `${config.publicPath}_assets/*`
-        : null,
-      ...getExternals(config),
-    ].filter(isNotNull),
+    external: getExternals(config),
     loader: loaders,
     bundle: true,
     logLevel: "silent",
@@ -289,7 +263,3 @@ export const create = async (
     dispose: ctx.dispose,
   };
 };
-
-function isNotNull<Value>(value: Value): value is Exclude<Value, null> {
-  return value !== null;
-}
