@@ -1055,7 +1055,8 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       to,
-      opts
+      opts?.fromRouteId,
+      opts?.relative
     );
     let { path, submission, error } = normalizeNavigateOptions(
       future.v7_normalizeFormMethod,
@@ -1638,7 +1639,8 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       href,
-      opts
+      routeId,
+      opts?.relative
     );
     let matches = matchRoutes(routesToUse, normalizedPath, basename);
 
@@ -3059,30 +3061,32 @@ function normalizeTo(
   basename: string,
   prependBasename: boolean,
   to: To | null,
-  opts?: RouterNavigateOptions | RouterFetchOptions
+  fromRouteId?: string,
+  relative?: RelativeRoutingType
 ) {
   let contextualMatches: AgnosticDataRouteMatch[];
-  if (opts?.fromRouteId != null) {
-    // Grab matches up to the calling route route
+  let activeRouteMatch: AgnosticDataRouteMatch | undefined;
+  if (fromRouteId != null) {
+    // Grab matches up to the calling route
     contextualMatches = [];
     for (let match of matches) {
       contextualMatches.push(match);
-      if (match.route.id === opts.fromRouteId) {
+      if (match.route.id === fromRouteId) {
+        activeRouteMatch = match;
         break;
       }
     }
   } else {
     contextualMatches = matches;
+    activeRouteMatch = matches[matches.length - 1];
   }
-  let pathMatches = getPathContributingMatches(contextualMatches);
-  let match = pathMatches[pathMatches.length - 1];
 
   // Resolve the relative path
   let path = resolveTo(
     to ? to : ".",
-    pathMatches.map((m) => m.pathnameBase),
+    getPathContributingMatches(contextualMatches).map((m) => m.pathnameBase),
     location.pathname,
-    opts?.relative === "path"
+    relative === "path"
   );
 
   // When `to` is not specified we inherit search/hash from the current
@@ -3093,9 +3097,11 @@ function normalizeTo(
     path.hash = location.hash;
   }
 
+  // Add an ?index param for matched index routes if we don't already have one
   if (
     (!to || to === ".") &&
-    match.route.index &&
+    activeRouteMatch &&
+    activeRouteMatch.route.index &&
     !hasNakedIndexQuery(path.search)
   ) {
     path.search = path.search

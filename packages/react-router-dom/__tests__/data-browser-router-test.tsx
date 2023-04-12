@@ -3458,6 +3458,7 @@ function testDomRouter(
 
         async function clickAndAssert(btnText: string, expectedOutput: string) {
           fireEvent.click(screen.getByText(btnText));
+          await new Promise((r) => setTimeout(r, 1));
           await waitFor(() => screen.getByText(new RegExp(expectedOutput)));
           expect(getHtml(container.querySelector("#output")!)).toContain(
             expectedOutput
