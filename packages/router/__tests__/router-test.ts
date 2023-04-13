@@ -15669,7 +15669,6 @@ describe("a router", () => {
       });
 
       it("from a splat route", () => {
-        debugger;
         assertRoutingToSelf(
           [
             {
