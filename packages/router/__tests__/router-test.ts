@@ -3707,6 +3707,7 @@ describe("a router", () => {
           ],
           future: {
             v7_normalizeFormMethod: true,
+            v7_prependBasename: false,
           },
         });
         let A = await t.navigate("/child", {
@@ -15746,16 +15747,13 @@ describe("a router", () => {
       });
 
       it("from an index route with a path", () => {
-        assertRoutingToParent(
-          [
-            {
-              id: "activeRoute",
-              path: "bar",
-              index: true,
-            },
-          ],
-          "/foo"
-        );
+        assertRoutingToParent([
+          {
+            id: "activeRoute",
+            path: "bar",
+            index: true,
+          },
+        ]);
       });
 
       it("from a dynamic param route", () => {
