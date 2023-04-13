@@ -3125,7 +3125,7 @@ function normalizeTo(
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
   normalizeFormMethod: boolean,
-  isFetcher = false,
+  isFetcher: boolean,
   path: string,
   opts?: RouterNavigateOptions
 ): {

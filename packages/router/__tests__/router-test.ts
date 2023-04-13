@@ -14,6 +14,7 @@ import type {
 } from "../index";
 import {
   createMemoryHistory,
+  createPath,
   createRouter,
   createStaticHandler,
   defer,
@@ -15543,128 +15544,418 @@ describe("a router", () => {
     });
   });
 
-  describe.skip("router.resolveRoute", () => {
-    it("static routes", () => {
-      let router = createRouter({
-        routes: [
-          {
-            path: "/",
-            children: [
+  describe("path resolution", () => {
+    describe("routing to self", () => {
+      // Utility that accepts children of /foo routes and executes the same
+      // routing tests starting at /foo/bar/?a=b#hash
+      function assertRoutingToSelf(fooChildren, expectedPath, expectIndex) {
+        const getRouter = () =>
+          createRouter({
+            routes: [
               {
-                path: "foo",
+                path: "/",
                 children: [
                   {
-                    id: "activeRoute",
-                    path: "bar",
+                    path: "foo",
+                    children: fooChildren,
                   },
                 ],
               },
             ],
-          },
-        ],
-        history: createMemoryHistory({
-          initialEntries: ["/foo/bar?a=1#hash"],
-        }),
+            history: createMemoryHistory({
+              initialEntries: ["/foo/bar?a=1#hash"],
+            }),
+          }).initialize();
+
+        // Null should preserve the search/hash
+        let router = getRouter();
+        router.navigate(null, { fromRouteId: "activeRoute" });
+        expect(createPath(router.state.location)).toBe(
+          expectedPath + (expectIndex ? "?index&a=1#hash" : "?a=1#hash")
+        );
+        router.dispose();
+
+        // "." and "" should not preserve the search and hash
+        router = getRouter();
+        router.navigate(".", { fromRouteId: "activeRoute" });
+        expect(createPath(router.state.location)).toBe(
+          expectedPath + (expectIndex ? "?index" : "")
+        );
+        router.dispose();
+
+        router = getRouter();
+        router.navigate("", { fromRouteId: "activeRoute" });
+        expect(createPath(router.state.location)).toBe(
+          expectedPath + (expectIndex ? "?index" : "")
+        );
+        router.dispose();
+      }
+
+      /* eslint-disable jest/expect-expect */
+      it("from a static route", () => {
+        assertRoutingToSelf(
+          [
+            {
+              id: "activeRoute",
+              path: "bar",
+            },
+          ],
+          "/foo/bar",
+          false
+        );
       });
-      expect(
-        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
-      ).toBe("/foo/bar?a=1#hash");
-      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar"
-      );
-      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar"
-      );
+
+      it("from a layout route", () => {
+        assertRoutingToSelf(
+          [
+            {
+              id: "activeRoute",
+              path: "bar",
+              children: [
+                {
+                  index: true,
+                },
+              ],
+            },
+          ],
+          "/foo/bar",
+          false
+        );
+      });
+
+      it("from an index route", () => {
+        assertRoutingToSelf(
+          [
+            {
+              path: "bar",
+              children: [
+                {
+                  id: "activeRoute",
+                  index: true,
+                },
+              ],
+            },
+          ],
+          "/foo/bar",
+          true
+        );
+      });
+
+      it("from an index route with a path", () => {
+        assertRoutingToSelf(
+          [
+            {
+              id: "activeRoute",
+              path: "bar",
+              index: true,
+            },
+          ],
+          "/foo/bar",
+          true
+        );
+      });
+
+      it("from a dynamic param route", () => {
+        assertRoutingToSelf(
+          [
+            {
+              id: "activeRoute",
+              path: ":param",
+            },
+          ],
+          "/foo/bar",
+          false
+        );
+      });
+
+      it("from a splat route", () => {
+        debugger;
+        assertRoutingToSelf(
+          [
+            {
+              id: "activeRoute",
+              path: "*",
+            },
+          ],
+          "/foo",
+          false
+        );
+      });
+      /* eslint-enable jest/expect-expect */
     });
 
-    it("layout routes", () => {
-      let router = createRouter({
-        routes: [
+    describe("routing to parent", () => {
+      function assertRoutingToParent(fooChildren) {
+        let router = createRouter({
+          routes: [
+            {
+              path: "/",
+              children: [
+                {
+                  path: "foo",
+                  children: fooChildren,
+                },
+              ],
+            },
+          ],
+          history: createMemoryHistory({
+            initialEntries: ["/foo/bar?a=1#hash"],
+          }),
+        }).initialize();
+
+        // Null should preserve the search/hash
+        router.navigate("..", { fromRouteId: "activeRoute" });
+        expect(createPath(router.state.location)).toBe("/foo");
+      }
+
+      /* eslint-disable jest/expect-expect */
+      it("from a static route", () => {
+        assertRoutingToParent([
           {
-            path: "/",
+            id: "activeRoute",
+            path: "bar",
+          },
+        ]);
+      });
+
+      it("from a layout route", () => {
+        assertRoutingToParent([
+          {
+            id: "activeRoute",
+            path: "bar",
             children: [
               {
-                path: "foo",
+                index: true,
+              },
+            ],
+          },
+        ]);
+      });
+
+      it("from an index route", () => {
+        assertRoutingToParent([
+          {
+            path: "bar",
+            children: [
+              {
+                id: "activeRoute",
+                index: true,
+              },
+            ],
+          },
+        ]);
+      });
+
+      it("from an index route with a path", () => {
+        assertRoutingToParent(
+          [
+            {
+              id: "activeRoute",
+              path: "bar",
+              index: true,
+            },
+          ],
+          "/foo"
+        );
+      });
+
+      it("from a dynamic param route", () => {
+        assertRoutingToParent([
+          {
+            id: "activeRoute",
+            path: ":param",
+          },
+        ]);
+      });
+
+      it("from a splat route", () => {
+        assertRoutingToParent([
+          {
+            id: "activeRoute",
+            path: "*",
+          },
+        ]);
+      });
+      /* eslint-enable jest/expect-expect */
+    });
+
+    describe("routing to sibling", () => {
+      function assertRoutingToSibling(fooChildren) {
+        let router = createRouter({
+          routes: [
+            {
+              path: "/",
+              children: [
+                {
+                  path: "foo",
+                  children: [
+                    ...fooChildren,
+                    {
+                      path: "bar-sibling",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          history: createMemoryHistory({
+            initialEntries: ["/foo/bar?a=1#hash"],
+          }),
+        }).initialize();
+
+        // Null should preserve the search/hash
+        router.navigate("../bar-sibling", { fromRouteId: "activeRoute" });
+        expect(createPath(router.state.location)).toBe("/foo/bar-sibling");
+      }
+
+      /* eslint-disable jest/expect-expect */
+      it("from a static route", () => {
+        assertRoutingToSibling([
+          {
+            id: "activeRoute",
+            path: "bar",
+          },
+        ]);
+      });
+
+      it("from a layout route", () => {
+        assertRoutingToSibling([
+          {
+            id: "activeRoute",
+            path: "bar",
+            children: [
+              {
+                index: true,
+              },
+            ],
+          },
+        ]);
+      });
+
+      it("from an index route", () => {
+        assertRoutingToSibling([
+          {
+            path: "bar",
+            children: [
+              {
+                id: "activeRoute",
+                index: true,
+              },
+            ],
+          },
+        ]);
+      });
+
+      it("from an index route with a path", () => {
+        assertRoutingToSibling([
+          {
+            id: "activeRoute",
+            path: "bar",
+            index: true,
+          },
+        ]);
+      });
+
+      it("from a dynamic param route", () => {
+        assertRoutingToSibling([
+          {
+            id: "activeRoute",
+            path: ":param",
+          },
+        ]);
+      });
+
+      it("from a splat route", () => {
+        assertRoutingToSibling([
+          {
+            id: "activeRoute",
+            path: "*",
+          },
+        ]);
+      });
+      /* eslint-enable jest/expect-expect */
+    });
+
+    describe("routing to child", () => {
+      function assertRoutingToChild(fooChildren) {
+        const getRouter = () =>
+          createRouter({
+            routes: [
+              {
+                path: "/",
                 children: [
                   {
-                    id: "activeRoute",
-                    path: "bar",
-                    children: [
-                      {
-                        index: true,
-                      },
-                    ],
+                    path: "foo",
+                    children: [...fooChildren],
                   },
                 ],
               },
             ],
-          },
-        ],
-        history: createMemoryHistory({
-          initialEntries: ["/foo/bar?a=1#hash"],
-        }),
-      });
-      expect(
-        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
-      ).toBe("/foo/bar?a=1#hash");
-      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar"
-      );
-      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar"
-      );
-    });
+            history: createMemoryHistory({
+              initialEntries: ["/foo/bar?a=1#hash"],
+            }),
+          }).initialize();
 
-    it("index routes", () => {
-      let router = createRouter({
-        routes: [
+        let router = getRouter();
+        router.navigate("baz", { fromRouteId: "activeRoute" });
+        expect(createPath(router.state.location)).toBe("/foo/bar/baz");
+        router.dispose();
+
+        router = getRouter();
+        router.navigate("./baz", { fromRouteId: "activeRoute" });
+        expect(createPath(router.state.location)).toBe("/foo/bar/baz");
+        router.dispose();
+      }
+
+      /* eslint-disable jest/expect-expect */
+      it("from a static route", () => {
+        assertRoutingToChild([
           {
-            path: "/",
+            id: "activeRoute",
+            path: "bar",
+            children: [{ path: "baz" }],
+          },
+        ]);
+      });
+
+      it("from a layout route", () => {
+        assertRoutingToChild([
+          {
+            id: "activeRoute",
+            path: "bar",
             children: [
               {
-                path: "foo",
-                children: [
-                  {
-                    path: "bar",
-                    children: [
-                      {
-                        id: "activeRoute",
-                        index: true,
-                      },
-                    ],
-                  },
-                ],
+                index: true,
               },
+              { path: "baz" },
             ],
           },
-        ],
-        history: createMemoryHistory({
-          initialEntries: ["/foo/bar?a=1#hash"],
-        }),
+        ]);
       });
-      expect(
-        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
-      ).toBe("/foo/bar?index&a=1#hash");
-      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar?index"
-      );
-      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar?index"
-      );
+
+      it("from a dynamic param route", () => {
+        assertRoutingToChild([
+          {
+            id: "activeRoute",
+            path: ":param",
+            children: [{ path: "baz" }],
+          },
+        ]);
+      });
+      /* eslint-enable jest/expect-expect */
     });
 
-    it("index routes with a path", () => {
+    it("should not append ?index to get submission navigations to self from index route", () => {
       let router = createRouter({
         routes: [
           {
             path: "/",
             children: [
               {
-                path: "foo",
+                path: "path",
                 children: [
                   {
-                    id: "activeRoute",
-                    path: "bar",
+                    id: "activeRouteId",
                     index: true,
                   },
                 ],
@@ -15672,85 +15963,29 @@ describe("a router", () => {
             ],
           },
         ],
-        history: createMemoryHistory({
-          initialEntries: ["/foo/bar?a=1#hash"],
-        }),
-      });
-      expect(
-        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
-      ).toBe("/foo/bar?index&a=1#hash");
-      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar?index"
-      );
-      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar?index"
-      );
-    });
+        history: createMemoryHistory({ initialEntries: ["/path"] }),
+      }).initialize();
 
-    it("dynamic routes", () => {
-      let router = createRouter({
-        routes: [
-          {
-            path: "/",
-            children: [
-              {
-                path: "foo",
-                children: [
-                  {
-                    id: "activeRoute",
-                    path: ":param",
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-        history: createMemoryHistory({
-          initialEntries: ["/foo/bar?a=1#hash"],
-        }),
+      router.navigate(null, {
+        fromRouteId: "activeRouteId",
+        formData: createFormData({}),
       });
-      expect(
-        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
-      ).toBe("/foo/bar?a=1#hash");
-      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar"
-      );
-      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
-        "/foo/bar"
-      );
-    });
+      expect(createPath(router.state.location)).toBe("/path");
+      expect(router.state.matches[2].route.index).toBe(true);
 
-    it("splat routes", () => {
-      let router = createRouter({
-        routes: [
-          {
-            path: "/",
-            children: [
-              {
-                path: "foo",
-                children: [
-                  {
-                    id: "activeRoute",
-                    path: "*",
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-        history: createMemoryHistory({
-          initialEntries: ["/foo/bar?a=1#hash"],
-        }),
+      router.navigate(".", {
+        fromRouteId: "activeRouteId",
+        formData: createFormData({}),
       });
-      expect(
-        router.resolvePath(undefined, { fromRouteId: "activeRoute" })
-      ).toBe("/foo?a=1#hash");
-      expect(router.resolvePath(".", { fromRouteId: "activeRoute" })).toBe(
-        "/foo"
-      );
-      expect(router.resolvePath("", { fromRouteId: "activeRoute" })).toBe(
-        "/foo"
-      );
+      expect(createPath(router.state.location)).toBe("/path");
+      expect(router.state.matches[2].route.index).toBe(true);
+
+      router.navigate("", {
+        fromRouteId: "activeRouteId",
+        formData: createFormData({}),
+      });
+      expect(createPath(router.state.location)).toBe("/path");
+      expect(router.state.matches[2].route.index).toBe(true);
     });
   });
 });
