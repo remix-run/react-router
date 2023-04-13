@@ -141,10 +141,14 @@ async function dev(
   projectDir: string,
   flags: { debug?: boolean; port?: number; appServerPort?: number }
 ) {
-  if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
+  if (process.env.NODE_ENV && process.env.NODE_ENV !== "development") {
+    console.warn(
+      `NODE_ENV=${process.env.NODE_ENV} overwritten to 'development'`
+    );
+  }
 
   if (flags.debug) inspector.open();
-  await commands.dev(projectDir, process.env.NODE_ENV, flags);
+  await commands.dev(projectDir, flags);
 }
 
 /**

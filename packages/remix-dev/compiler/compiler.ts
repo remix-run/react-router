@@ -1,8 +1,7 @@
 import { createChannel } from "../channel";
-import type { RemixConfig } from "../config";
 import { type Manifest } from "../manifest";
-import type { CompileOptions } from "./options";
 import * as AssetsCompiler from "./assets";
+import type { Context } from "./context";
 import * as ServerCompiler from "./server";
 
 type Compiler = {
@@ -10,16 +9,13 @@ type Compiler = {
   dispose: () => void;
 };
 
-export let create = async (
-  config: RemixConfig,
-  options: CompileOptions
-): Promise<Compiler> => {
+export let create = async (ctx: Context): Promise<Compiler> => {
   let channels = {
     manifest: createChannel<Manifest>(),
   };
 
-  let assets = await AssetsCompiler.create(config, options, channels);
-  let server = await ServerCompiler.create(config, options, channels);
+  let assets = await AssetsCompiler.create(ctx, channels);
+  let server = await ServerCompiler.create(ctx, channels);
   return {
     compile: async () => {
       channels.manifest = createChannel();
@@ -31,7 +27,7 @@ export let create = async (
 
         return manifest;
       } catch (error: unknown) {
-        options.onCompileFailure?.(error as Error);
+        ctx.options.onCompileFailure?.(error as Error);
         return undefined;
       }
     },

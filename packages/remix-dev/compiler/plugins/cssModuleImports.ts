@@ -4,9 +4,8 @@ import fse from "fs-extra";
 import postcss from "postcss";
 import postcssModules from "postcss-modules";
 
-import type { CompileOptions } from "../options";
-import type { RemixConfig } from "../../config";
 import { loadPostcssPlugins } from "../utils/postcss";
+import type { Context } from "../context";
 
 const pluginName = "css-modules-plugin";
 const namespace = `${pluginName}-ns`;
@@ -19,15 +18,10 @@ interface PluginData {
   compiledCss: string;
 }
 
-export const cssModulesPlugin = ({
-  config,
-  mode,
-  outputCss,
-}: {
-  config: RemixConfig;
-  mode: CompileOptions["mode"];
-  outputCss: boolean;
-}): Plugin => {
+export const cssModulesPlugin = (
+  { config, options }: Context,
+  { outputCss }: { outputCss: boolean }
+): Plugin => {
   return {
     name: pluginName,
     setup: async (build: PluginBuild) => {
@@ -60,7 +54,7 @@ export const cssModulesPlugin = ({
           ...postcssPlugins,
           postcssModules({
             generateScopedName:
-              mode === "production"
+              options.mode === "production"
                 ? "[hash:base64:5]"
                 : "[name]__[local]__[hash:base64:5]",
             getJSON: function (_, json) {

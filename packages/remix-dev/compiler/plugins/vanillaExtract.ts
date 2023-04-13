@@ -3,10 +3,10 @@ import type { Compiler } from "@vanilla-extract/integration";
 import { cssFileFilter, createCompiler } from "@vanilla-extract/integration";
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../config";
-import type { CompileOptions } from "../options";
+import type { Options } from "../options";
 import { loaders } from "../utils/loaders";
 import { getPostcssProcessor } from "../utils/postcss";
+import type { Context } from "../context";
 
 const pluginName = "vanilla-extract-plugin";
 const namespace = `${pluginName}-ns`;
@@ -19,7 +19,7 @@ const staticAssetRegexp = new RegExp(
 );
 
 let compiler: Compiler | undefined;
-function getCompiler(root: string, mode: CompileOptions["mode"]) {
+function getCompiler(root: string, mode: Options["mode"]) {
   compiler =
     compiler ||
     createCompiler({
@@ -53,15 +53,10 @@ function getCompiler(root: string, mode: CompileOptions["mode"]) {
   return compiler;
 }
 
-export function vanillaExtractPlugin({
-  config,
-  mode,
-  outputCss,
-}: {
-  config: RemixConfig;
-  mode: CompileOptions["mode"];
-  outputCss: boolean;
-}): Plugin {
+export function vanillaExtractPlugin(
+  { config, options }: Context,
+  { outputCss }: { outputCss: boolean }
+): Plugin {
   return {
     name: pluginName,
     async setup(build) {
@@ -118,7 +113,7 @@ export function vanillaExtractPlugin({
         { filter: virtualCssFileFilter, namespace },
         async ({ path }) => {
           let [relativeFilePath] = path.split(".vanilla.css");
-          let compiler = getCompiler(root, mode);
+          let compiler = getCompiler(root, options.mode);
           let { css, filePath } = compiler.getCssForFile(relativeFilePath);
           let resolveDir = dirname(resolve(root, filePath));
 
@@ -140,7 +135,7 @@ export function vanillaExtractPlugin({
       );
 
       build.onLoad({ filter: cssFileFilter }, async ({ path: filePath }) => {
-        let compiler = getCompiler(root, mode);
+        let compiler = getCompiler(root, options.mode);
         let { source, watchFiles } = await compiler.processVanillaFile(
           filePath,
           { outputCss }

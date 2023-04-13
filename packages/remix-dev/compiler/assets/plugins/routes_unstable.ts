@@ -6,10 +6,10 @@ import generate from "@babel/generator";
 import type { RemixConfig } from "../../../config";
 import invariant from "../../../invariant";
 import * as Transform from "../../../transform";
-import type { CompileOptions } from "../../options";
 import { getLoaderForFile } from "../../utils/loaders";
 import { getRouteModuleExports } from "../../utils/routeExports";
 import { applyHMR } from "./hmr";
+import type { Context } from "../../context";
 
 const serverOnlyExports = new Set(["action", "loader"]);
 
@@ -74,10 +74,9 @@ type Route = RemixConfig["routes"][string];
  * that re-export only the route module exports that are safe for the browser.
  */
 export function browserRouteModulesPlugin(
-  config: RemixConfig,
+  { config, options }: Context,
   suffixMatcher: RegExp,
-  onLoader: (filename: string, code: string) => void,
-  mode: CompileOptions["mode"]
+  onLoader: (filename: string, code: string) => void
 ): esbuild.Plugin {
   return {
     name: "browser-route-modules",
@@ -129,7 +128,7 @@ export function browserRouteModulesPlugin(
           );
           let contents = transform(sourceCode, routeFile);
 
-          if (mode === "development" && config.future.unstable_dev) {
+          if (options.mode === "development" && config.future.unstable_dev) {
             contents = await applyHMR(
               contents,
               {

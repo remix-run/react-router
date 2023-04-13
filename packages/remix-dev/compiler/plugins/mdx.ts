@@ -3,11 +3,11 @@ import * as path from "path";
 import type * as esbuild from "esbuild";
 import { remarkMdxFrontmatter } from "remark-mdx-frontmatter";
 
-import type { RemixConfig } from "../../config";
 import { getLoaderForFile } from "../utils/loaders";
 import { createMatchPath } from "../utils/tsconfig";
+import type { Context } from "../context";
 
-export function mdxPlugin(config: RemixConfig): esbuild.Plugin {
+export function mdxPlugin({ config }: Pick<Context, "config">): esbuild.Plugin {
   return {
     name: "remix-mdx",
     async setup(build) {

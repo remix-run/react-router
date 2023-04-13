@@ -5,7 +5,7 @@ import type { Processor } from "postcss";
 
 import invariant from "../../invariant";
 import type { RemixConfig } from "../../config";
-import type { CompileOptions } from "../options";
+import type { Options } from "../options";
 import { getPostcssProcessor } from "../utils/postcss";
 import { absoluteCssUrlsPlugin } from "./absoluteCssUrlsPlugin";
 
@@ -24,7 +24,7 @@ export function cssFilePlugin({
   options,
 }: {
   config: RemixConfig;
-  options: CompileOptions;
+  options: Options;
 }): esbuild.Plugin {
   return {
     name: "css-file",
@@ -121,7 +121,7 @@ function postcssPlugin({
   options,
 }: {
   postcssProcessor: Processor;
-  options: CompileOptions;
+  options: Options;
 }): esbuild.Plugin {
   return {
     name: "postcss-plugin",

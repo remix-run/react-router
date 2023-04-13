@@ -3,6 +3,7 @@ import type esbuild from "esbuild";
 import type { RemixConfig } from "../../../config";
 import { getRouteModuleExports } from "../../utils/routeExports";
 import invariant from "../../../invariant";
+import type { Context } from "../../context";
 
 type Route = RemixConfig["routes"][string];
 
@@ -21,7 +22,7 @@ const browserSafeRouteExports: { [name: string]: boolean } = {
  * that re-export only the route module exports that are safe for the browser.
  */
 export function browserRouteModulesPlugin(
-  config: RemixConfig,
+  { config }: Context,
   suffixMatcher: RegExp
 ): esbuild.Plugin {
   return {

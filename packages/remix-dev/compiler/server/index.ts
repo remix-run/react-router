@@ -6,7 +6,6 @@ import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfil
 import type { RemixConfig } from "../../config";
 import { type Manifest } from "../../manifest";
 import { loaders } from "../utils/loaders";
-import type { CompileOptions } from "../options";
 import { cssModulesPlugin } from "../plugins/cssModuleImports";
 import { cssSideEffectImportsPlugin } from "../plugins/cssSideEffectImports";
 import { vanillaExtractPlugin } from "../plugins/vanillaExtract";
@@ -21,6 +20,7 @@ import { serverEntryModulePlugin } from "./plugins/entry";
 import { serverRouteModulesPlugin } from "./plugins/routes";
 import { externalPlugin } from "../plugins/external";
 import type { ReadChannel } from "../../channel";
+import type { Context } from "../context";
 
 type Compiler = {
   // produce ./build/index.js
@@ -29,54 +29,51 @@ type Compiler = {
 };
 
 const createEsbuildConfig = (
-  config: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   channels: { manifest: ReadChannel<Manifest> }
 ): esbuild.BuildOptions => {
   let stdin: esbuild.StdinOptions | undefined;
   let entryPoints: string[] | undefined;
 
-  if (config.serverEntryPoint) {
-    entryPoints = [config.serverEntryPoint];
+  if (ctx.config.serverEntryPoint) {
+    entryPoints = [ctx.config.serverEntryPoint];
   } else {
     stdin = {
-      contents: config.serverBuildTargetEntryModule,
-      resolveDir: config.rootDirectory,
+      contents: ctx.config.serverBuildTargetEntryModule,
+      resolveDir: ctx.config.rootDirectory,
       loader: "ts",
     };
   }
 
-  let { mode } = options;
-
   let plugins: esbuild.Plugin[] = [
-    deprecatedRemixPackagePlugin(options.onWarning),
-    cssModulesPlugin({ config, mode, outputCss: false }),
-    vanillaExtractPlugin({ config, mode, outputCss: false }),
-    cssSideEffectImportsPlugin({ config, options }),
-    cssFilePlugin({ config, options }),
+    deprecatedRemixPackagePlugin(ctx),
+    cssModulesPlugin(ctx, { outputCss: false }),
+    vanillaExtractPlugin(ctx, { outputCss: false }),
+    cssSideEffectImportsPlugin(ctx),
+    cssFilePlugin(ctx),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
-    mdxPlugin(config),
-    emptyModulesPlugin(config, /\.client(\.[jt]sx?)?$/),
-    serverRouteModulesPlugin(config),
-    serverEntryModulePlugin(config, { liveReloadPort: options.liveReloadPort }),
+    mdxPlugin(ctx),
+    emptyModulesPlugin(ctx, /\.client(\.[jt]sx?)?$/),
+    serverRouteModulesPlugin(ctx),
+    serverEntryModulePlugin(ctx),
     serverAssetsManifestPlugin(channels),
-    serverBareModulesPlugin(config, options.onWarning),
+    serverBareModulesPlugin(ctx),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
 
-  if (config.serverPlatform !== "node") {
+  if (ctx.config.serverPlatform !== "node") {
     plugins.unshift(NodeModulesPolyfillPlugin());
   }
 
   return {
-    absWorkingDir: config.rootDirectory,
+    absWorkingDir: ctx.config.rootDirectory,
     stdin,
     entryPoints,
-    outfile: config.serverBuildPath,
-    conditions: config.serverConditions,
-    platform: config.serverPlatform,
-    format: config.serverModuleFormat,
+    outfile: ctx.config.serverBuildPath,
+    conditions: ctx.config.serverConditions,
+    platform: ctx.config.serverPlatform,
+    format: ctx.config.serverModuleFormat,
     treeShaking: true,
     // The type of dead code elimination we want to do depends on the
     // minify syntax property: https://github.com/evanw/esbuild/issues/672#issuecomment-1029682369
@@ -86,29 +83,29 @@ const createEsbuildConfig = (
     // PR makes dev mode behave closer to production in terms of dead
     // code elimination / tree shaking is concerned.
     minifySyntax: true,
-    minify: options.mode === "production" && config.serverMinify,
-    mainFields: config.serverMainFields,
-    target: options.target,
+    minify: ctx.options.mode === "production" && ctx.config.serverMinify,
+    mainFields: ctx.config.serverMainFields,
+    target: ctx.options.target,
     loader: loaders,
     bundle: true,
     logLevel: "silent",
     // As pointed out by https://github.com/evanw/esbuild/issues/2440, when tsconfig is set to
     // `undefined`, esbuild will keep looking for a tsconfig.json recursively up. This unwanted
     // behavior can only be avoided by creating an empty tsconfig file in the root directory.
-    tsconfig: config.tsconfigPath,
-    sourcemap: options.sourcemap, // use linked (true) to fix up .map file
+    tsconfig: ctx.config.tsconfigPath,
+    sourcemap: ctx.options.sourcemap, // use linked (true) to fix up .map file
     // The server build needs to know how to generate asset URLs for imports
     // of CSS and other files.
     assetNames: "_assets/[name]-[hash]",
-    publicPath: config.publicPath,
+    publicPath: ctx.config.publicPath,
     define: {
-      "process.env.NODE_ENV": JSON.stringify(options.mode),
+      "process.env.NODE_ENV": JSON.stringify(ctx.options.mode),
       "process.env.REMIX_DEV_SERVER_WS_PORT": JSON.stringify(
-        config.devServerPort
+        ctx.config.devServerPort
       ),
     },
     jsx: "automatic",
-    jsxDev: options.mode !== "production",
+    jsxDev: ctx.options.mode !== "production",
     plugins,
   };
 };
@@ -157,17 +154,16 @@ async function writeServerBuildResult(
 }
 
 export const create = async (
-  remixConfig: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   channels: { manifest: ReadChannel<Manifest> }
 ): Promise<Compiler> => {
-  let ctx = await esbuild.context({
-    ...createEsbuildConfig(remixConfig, options, channels),
+  let compiler = await esbuild.context({
+    ...createEsbuildConfig(ctx, channels),
     write: false,
   });
   let compile = async () => {
-    let { outputFiles } = await ctx.rebuild();
-    await writeServerBuildResult(remixConfig, outputFiles!);
+    let { outputFiles } = await compiler.rebuild();
+    await writeServerBuildResult(ctx.config, outputFiles!);
   };
   return {
     compile,

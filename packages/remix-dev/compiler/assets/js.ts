@@ -7,7 +7,6 @@ import type { RemixConfig } from "../../config";
 import { type Manifest } from "../../manifest";
 import { getAppDependencies } from "../../dependencies";
 import { loaders } from "../utils/loaders";
-import type { CompileOptions } from "../options";
 import { browserRouteModulesPlugin } from "./plugins/routes";
 import { browserRouteModulesPlugin as browserRouteModulesPlugin_v2 } from "./plugins/routes_unstable";
 import { cssFilePlugin } from "../plugins/cssImports";
@@ -25,6 +24,7 @@ import { hmrPlugin } from "./plugins/hmr";
 import { createMatchPath } from "../utils/tsconfig";
 import { getPreferredPackageManager } from "../../cli/getPreferredPackageManager";
 import { type ReadChannel } from "../../channel";
+import type { Context } from "../context";
 
 type Compiler = {
   // produce ./public/build/
@@ -70,26 +70,23 @@ const getExternals = (remixConfig: RemixConfig): string[] => {
 };
 
 const createEsbuildConfig = (
-  config: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   onLoader: (filename: string, code: string) => void,
   channels: { cssBundleHref: ReadChannel<string | undefined> }
 ): esbuild.BuildOptions => {
   let entryPoints: Record<string, string> = {
-    "entry.client": config.entryClientFilePath,
+    "entry.client": ctx.config.entryClientFilePath,
   };
 
-  for (let id of Object.keys(config.routes)) {
+  for (let id of Object.keys(ctx.config.routes)) {
     // All route entry points are virtual modules that will be loaded by the
     // browserEntryPointsPlugin. This allows us to tree-shake server-only code
     // that we don't want to run in the browser (i.e. action & loader).
-    entryPoints[id] = config.routes[id].file + "?browser";
+    entryPoints[id] = ctx.config.routes[id].file + "?browser";
   }
 
-  let { mode } = options;
-
-  let matchPath = config.tsconfigPath
-    ? createMatchPath(config.tsconfigPath)
+  let matchPath = ctx.config.tsconfigPath
+    ? createMatchPath(ctx.config.tsconfigPath)
     : undefined;
   function resolvePath(id: string) {
     if (!matchPath) {
@@ -101,18 +98,18 @@ const createEsbuildConfig = (
   }
 
   let plugins: esbuild.Plugin[] = [
-    deprecatedRemixPackagePlugin(options.onWarning),
-    cssModulesPlugin({ config, mode, outputCss: false }),
-    vanillaExtractPlugin({ config, mode, outputCss: false }),
-    cssSideEffectImportsPlugin({ config, options }),
-    cssFilePlugin({ config, options }),
+    deprecatedRemixPackagePlugin(ctx),
+    cssModulesPlugin(ctx, { outputCss: false }),
+    vanillaExtractPlugin(ctx, { outputCss: false }),
+    cssSideEffectImportsPlugin(ctx),
+    cssFilePlugin(ctx),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
-    mdxPlugin(config),
-    config.future.unstable_dev
-      ? browserRouteModulesPlugin_v2(config, /\?browser$/, onLoader, mode)
-      : browserRouteModulesPlugin(config, /\?browser$/),
-    emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
+    mdxPlugin(ctx),
+    ctx.config.future.unstable_dev
+      ? browserRouteModulesPlugin_v2(ctx, /\?browser$/, onLoader)
+      : browserRouteModulesPlugin(ctx, /\?browser$/),
+    emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
     NodeModulesPolyfillPlugin(),
     externalPlugin(/^node:.*/, { sideEffects: false }),
     {
@@ -131,7 +128,7 @@ const createEsbuildConfig = (
           let packageName = getNpmPackageName(args.path);
           let pkgManager = getPreferredPackageManager();
           if (
-            options.onWarning &&
+            ctx.options.onWarning &&
             !isNodeBuiltIn(packageName) &&
             !/\bnode_modules\b/.test(args.importer) &&
             // Silence spurious warnings when using Yarn PnP. Yarn PnP doesn’t use
@@ -143,7 +140,7 @@ const createEsbuildConfig = (
             try {
               require.resolve(args.path);
             } catch (error: unknown) {
-              options.onWarning(
+              ctx.options.onWarning(
                 `The path "${args.path}" is imported in ` +
                   `${path.relative(process.cwd(), args.importer)} but ` +
                   `"${args.path}" was not found in your node_modules. ` +
@@ -158,7 +155,7 @@ const createEsbuildConfig = (
     } as esbuild.Plugin,
   ];
 
-  if (mode === "development" && config.future.unstable_dev) {
+  if (ctx.options.mode === "development" && ctx.config.future.unstable_dev) {
     // TODO prebundle deps instead of chunking just these ones
     let isolateChunks = [
       require.resolve("react"),
@@ -175,40 +172,40 @@ const createEsbuildConfig = (
       ...Object.fromEntries(isolateChunks.map((imprt) => [imprt, imprt])),
     };
 
-    plugins.push(hmrPlugin({ remixConfig: config }));
+    plugins.push(hmrPlugin(ctx));
     plugins.push(cssBundleUpdatePlugin(channels));
   }
 
   return {
     entryPoints,
-    outdir: config.assetsBuildDirectory,
+    outdir: ctx.config.assetsBuildDirectory,
     platform: "browser",
     format: "esm",
-    external: getExternals(config),
+    external: getExternals(ctx.config),
     loader: loaders,
     bundle: true,
     logLevel: "silent",
     splitting: true,
-    sourcemap: options.sourcemap,
+    sourcemap: ctx.options.sourcemap,
     // As pointed out by https://github.com/evanw/esbuild/issues/2440, when tsconfig is set to
     // `undefined`, esbuild will keep looking for a tsconfig.json recursively up. This unwanted
     // behavior can only be avoided by creating an empty tsconfig file in the root directory.
-    tsconfig: config.tsconfigPath,
+    tsconfig: ctx.config.tsconfigPath,
     mainFields: ["browser", "module", "main"],
     treeShaking: true,
-    minify: options.mode === "production",
+    minify: ctx.options.mode === "production",
     entryNames: "[dir]/[name]-[hash]",
     chunkNames: "_shared/[name]-[hash]",
     assetNames: "_assets/[name]-[hash]",
-    publicPath: config.publicPath,
+    publicPath: ctx.config.publicPath,
     define: {
-      "process.env.NODE_ENV": JSON.stringify(options.mode),
+      "process.env.NODE_ENV": JSON.stringify(ctx.options.mode),
       "process.env.REMIX_DEV_SERVER_WS_PORT": JSON.stringify(
-        config.devServerPort
+        ctx.config.devServerPort
       ),
     },
     jsx: "automatic",
-    jsxDev: options.mode !== "production",
+    jsxDev: ctx.options.mode !== "production",
     plugins,
     supported: {
       "import-meta": true,
@@ -217,35 +214,34 @@ const createEsbuildConfig = (
 };
 
 export const create = async (
-  remixConfig: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   channels: { cssBundleHref: ReadChannel<string | undefined> }
 ): Promise<Compiler> => {
   let hmrRoutes: Record<string, { loaderHash: string }> = {};
   let onLoader = (filename: string, code: string) => {
-    let key = path.relative(remixConfig.rootDirectory, filename);
+    let key = path.relative(ctx.config.rootDirectory, filename);
     hmrRoutes[key] = { loaderHash: code };
   };
 
-  let ctx = await esbuild.context({
-    ...createEsbuildConfig(remixConfig, options, onLoader, channels),
+  let compiler = await esbuild.context({
+    ...createEsbuildConfig(ctx, onLoader, channels),
     metafile: true, // TODO is this needed when using context api?
   });
 
   let compile = async () => {
     hmrRoutes = {};
-    let { metafile } = await ctx.rebuild();
+    let { metafile } = await compiler.rebuild();
 
     let hmr: Manifest["hmr"] | undefined = undefined;
-    if (options.mode === "development" && remixConfig.future.unstable_dev) {
+    if (ctx.options.mode === "development" && ctx.config.future.unstable_dev) {
       let hmrRuntimeOutput = Object.entries(metafile.outputs).find(
         ([_, output]) => output.inputs["hmr-runtime:remix:hmr"]
       )?.[0];
       invariant(hmrRuntimeOutput, "Expected to find HMR runtime in outputs");
       let hmrRuntime =
-        remixConfig.publicPath +
+        ctx.config.publicPath +
         path.relative(
-          remixConfig.assetsBuildDirectory,
+          ctx.config.assetsBuildDirectory,
           path.resolve(hmrRuntimeOutput)
         );
       hmr = {
@@ -260,6 +256,6 @@ export const create = async (
 
   return {
     compile,
-    dispose: ctx.dispose,
+    dispose: compiler.dispose,
   };
 };

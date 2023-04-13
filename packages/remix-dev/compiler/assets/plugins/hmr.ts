@@ -3,12 +3,9 @@ import * as path from "node:path";
 import * as esbuild from "esbuild";
 
 import type { RemixConfig } from "../../../config";
+import type { Context } from "../../context";
 
-export let hmrPlugin = ({
-  remixConfig,
-}: {
-  remixConfig: RemixConfig;
-}): esbuild.Plugin => {
+export let hmrPlugin = ({ config }: Context): esbuild.Plugin => {
   return {
     name: "remix-hmr",
     setup: async (build) => {
@@ -106,7 +103,7 @@ declare global {
   }
 }
         `;
-        return { loader: "ts", contents, resolveDir: remixConfig.appDirectory };
+        return { loader: "ts", contents, resolveDir: config.appDirectory };
       });
 
       build.onLoad({ filter: /.*/, namespace: "file" }, async (args) => {
@@ -117,7 +114,7 @@ declare global {
           !args.path.match(/react-router[-dom]?[/\\]$/) &&
           (!args.path.match(/\.[tj]sx?$/) ||
             !fs.existsSync(args.path) ||
-            !args.path.startsWith(remixConfig.appDirectory))
+            !args.path.startsWith(config.appDirectory))
         ) {
           return undefined;
         }
@@ -127,9 +124,9 @@ declare global {
         let resultCode = await applyHMR(
           sourceCode,
           args,
-          remixConfig,
+          config,
           !!build.initialOptions.sourcemap,
-          args.path.startsWith(remixConfig.appDirectory)
+          args.path.startsWith(config.appDirectory)
             ? fs.statSync(args.path).mtimeMs
             : undefined
         );

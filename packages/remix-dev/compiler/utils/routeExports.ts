@@ -2,9 +2,9 @@ import * as path from "path";
 import * as esbuild from "esbuild";
 
 import * as cache from "../../cache";
-import type { RemixConfig } from "../../config";
 import { mdxPlugin } from "../plugins/mdx";
 import { getFileHash } from "./crypto";
+import type { RemixConfig } from "../../config";
 
 type CachedRouteExports = { hash: string; exports: string[] };
 
@@ -57,7 +57,7 @@ async function _getRouteModuleExports(
       ".js": "jsx",
     },
     logLevel: "silent",
-    plugins: [mdxPlugin(config)],
+    plugins: [mdxPlugin({ config })],
   });
   let metafile = result.metafile!;
 

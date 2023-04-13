@@ -7,6 +7,7 @@ import WebSocket from "ws";
 import type { WatchOptions } from "../compiler";
 import { watch } from "../compiler";
 import type { RemixConfig } from "../config";
+import { warnOnce } from "../warnOnce";
 
 const relativePath = (file: string) => path.relative(process.cwd(), file);
 
@@ -20,7 +21,7 @@ let clean = (config: RemixConfig) => {
 
 export async function liveReload(
   config: RemixConfig,
-  options: WatchOptions = {}
+  { onInitialBuild }: WatchOptions = {}
 ) {
   clean(config);
   let wss = new WebSocket.Server({ port: config.devServerPort });
@@ -40,27 +41,38 @@ export async function liveReload(
     broadcast({ type: "LOG", message: _message });
   }
 
-  let dispose = await watch(config, {
-    mode: options.mode,
-    onInitialBuild: options.onInitialBuild,
-    onRebuildStart() {
-      clean(config);
-      log("Rebuilding...");
+  let dispose = await watch(
+    {
+      config,
+      options: {
+        // TODO: remove target in v2
+        target: "node14",
+        mode: "development",
+        sourcemap: true,
+        onWarning: warnOnce,
+      },
     },
-    onRebuildFinish(durationMs: number) {
-      log(`Rebuilt in ${prettyMs(durationMs)}`);
-      broadcast({ type: "RELOAD" });
-    },
-    onFileCreated(file) {
-      log(`File created: ${relativePath(file)}`);
-    },
-    onFileChanged(file) {
-      log(`File changed: ${relativePath(file)}`);
-    },
-    onFileDeleted(file) {
-      log(`File deleted: ${relativePath(file)}`);
-    },
-  });
+    {
+      onInitialBuild,
+      onRebuildStart() {
+        clean(config);
+        log("Rebuilding...");
+      },
+      onRebuildFinish(durationMs: number) {
+        log(`Rebuilt in ${prettyMs(durationMs)}`);
+        broadcast({ type: "RELOAD" });
+      },
+      onFileCreated(file) {
+        log(`File created: ${relativePath(file)}`);
+      },
+      onFileChanged(file) {
+        log(`File changed: ${relativePath(file)}`);
+      },
+      onFileDeleted(file) {
+        log(`File deleted: ${relativePath(file)}`);
+      },
+    }
+  );
 
   exitHook(() => clean(config));
   return async () => {

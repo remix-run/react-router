@@ -1,14 +1,14 @@
 import * as path from "path";
 import type esbuild from "esbuild";
 
-import type { RemixConfig } from "../../config";
+import type { Context } from "../context";
 
 /**
  * This plugin substitutes an empty module for any modules in the `app`
  * directory that match the given `filter`.
  */
 export function emptyModulesPlugin(
-  config: RemixConfig,
+  { config }: Context,
   filter: RegExp
 ): esbuild.Plugin {
   return {

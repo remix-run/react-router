@@ -5,10 +5,8 @@ import * as path from "path";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { type Manifest } from "../manifest";
-import { warnOnce } from "../warnOnce";
-import { logCompileFailure } from "./onCompileFailure";
-import type { CompileOptions } from "./options";
 import * as Compiler from "./compiler";
+import type { Context } from "./context";
 
 function isEntryPoint(config: RemixConfig, file: string): boolean {
   let appFile = path.relative(config.appDirectory, file);
@@ -20,7 +18,7 @@ function isEntryPoint(config: RemixConfig, file: string): boolean {
   return entryPoints.includes(appFile);
 }
 
-export type WatchOptions = Partial<CompileOptions> & {
+export type WatchOptions = {
   reloadConfig?(root: string): Promise<RemixConfig>;
   onRebuildStart?(): void;
   onRebuildFinish?(durationMs: number, manifest?: Manifest): void;
@@ -31,15 +29,9 @@ export type WatchOptions = Partial<CompileOptions> & {
 };
 
 export async function watch(
-  config: RemixConfig,
+  { config, options }: Context,
   {
-    mode = "development",
-    liveReloadPort,
-    target = "node14",
-    sourcemap = true,
     reloadConfig = readConfig,
-    onWarning = warnOnce,
-    onCompileFailure = logCompileFailure,
     onRebuildStart,
     onRebuildFinish,
     onFileCreated,
@@ -48,17 +40,8 @@ export async function watch(
     onInitialBuild,
   }: WatchOptions = {}
 ): Promise<() => Promise<void>> {
-  let options: CompileOptions = {
-    mode,
-    liveReloadPort,
-    target,
-    sourcemap,
-    onCompileFailure,
-    onWarning,
-  };
-
   let start = Date.now();
-  let compiler = await Compiler.create(config, options);
+  let compiler = await Compiler.create({ config, options });
 
   // initial build
   let manifest = await compiler.compile();
@@ -72,11 +55,11 @@ export async function watch(
     try {
       config = await reloadConfig(config.rootDirectory);
     } catch (error: unknown) {
-      onCompileFailure(error as Error);
+      options.onCompileFailure?.(error as Error);
       return;
     }
 
-    compiler = await Compiler.create(config, options);
+    compiler = await Compiler.create({ config, options });
     let manifest = await compiler.compile();
     onRebuildFinish?.(Date.now() - start, manifest);
   }, 500);
@@ -117,7 +100,7 @@ export async function watch(
       try {
         config = await reloadConfig(config.rootDirectory);
       } catch (error: unknown) {
-        onCompileFailure(error as Error);
+        options.onCompileFailure?.(error as Error);
         return;
       }
 

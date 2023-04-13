@@ -1,12 +1,12 @@
 import path from "path";
 import type { Plugin } from "esbuild";
 
+import type { Context } from "../context";
+
 /**
  * A plugin to warn users when importing from the deprecated `remix` package
  */
-export function deprecatedRemixPackagePlugin(
-  onWarning?: (warning: string, key: string) => void
-): Plugin {
+export function deprecatedRemixPackagePlugin(ctx: Context): Plugin {
   return {
     name: "deprecated-remix-package",
     setup(build) {
@@ -20,7 +20,7 @@ export function deprecatedRemixPackagePlugin(
             `underlying \`@remix-run/*\` package. ` +
             `Run \`npx @remix-run/dev@latest codemod replace-remix-magic-imports\` ` +
             `to automatically migrate your code.`;
-          onWarning?.(warningMessage, importer);
+          ctx.options.onWarning?.(warningMessage, importer);
         }
         return undefined;
       });

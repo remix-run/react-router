@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../../config";
+import type { Context } from "../../context";
 
 export const cssBundleEntryModuleId = "__remix_cssBundleEntryModule__";
 const filter = new RegExp(`^${cssBundleEntryModuleId}$`);
@@ -10,7 +10,7 @@ const filter = new RegExp(`^${cssBundleEntryModuleId}$`);
  * Creates a virtual module that imports all browser build entry points so that
  * all reachable CSS can be included in a single file at the end of the build.
  */
-export function cssBundleEntryModulePlugin(config: RemixConfig): Plugin {
+export function cssBundleEntryModulePlugin({ config }: Context): Plugin {
   return {
     name: "css-bundle-entry-module",
     setup(build) {

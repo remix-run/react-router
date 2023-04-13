@@ -4,7 +4,6 @@ import { builtinModules } from "module";
 import { isAbsolute, relative } from "path";
 import type { Plugin } from "esbuild";
 
-import type { RemixConfig } from "../../../config";
 import {
   serverBuildVirtualModule,
   assetsManifestVirtualModule,
@@ -12,19 +11,17 @@ import {
 import { isCssSideEffectImportPath } from "../../plugins/cssSideEffectImports";
 import { createMatchPath } from "../../utils/tsconfig";
 import { getPreferredPackageManager } from "../../../cli/getPreferredPackageManager";
+import type { Context } from "../../context";
 
 /**
  * A plugin responsible for resolving bare module ids based on server target.
  * This includes externalizing for node based platforms, and bundling for single file
  * environments such as cloudflare.
  */
-export function serverBareModulesPlugin(
-  remixConfig: RemixConfig,
-  onWarning?: (warning: string, key: string) => void
-): Plugin {
+export function serverBareModulesPlugin({ config, options }: Context): Plugin {
   // Resolve paths according to tsconfig paths property
-  let matchPath = remixConfig.tsconfigPath
-    ? createMatchPath(remixConfig.tsconfigPath)
+  let matchPath = config.tsconfigPath
+    ? createMatchPath(config.tsconfigPath)
     : undefined;
   function resolvePath(id: string) {
     if (!matchPath) {
@@ -79,7 +76,7 @@ export function serverBareModulesPlugin(
 
         // Warn if we can't find an import for a package.
         if (
-          onWarning &&
+          options.onWarning &&
           !isNodeBuiltIn(packageName) &&
           !/\bnode_modules\b/.test(importer) &&
           // Silence spurious warnings when using Yarn PnP. Yarn PnP doesn’t use
@@ -91,7 +88,7 @@ export function serverBareModulesPlugin(
           try {
             require.resolve(path);
           } catch (error: unknown) {
-            onWarning(
+            options.onWarning(
               `The path "${path}" is imported in ` +
                 `${relative(process.cwd(), importer)} but ` +
                 `"${path}" was not found in your node_modules. ` +
@@ -101,11 +98,11 @@ export function serverBareModulesPlugin(
           }
         }
 
-        if (remixConfig.serverDependenciesToBundle === "all") {
+        if (config.serverDependenciesToBundle === "all") {
           return undefined;
         }
 
-        for (let pattern of remixConfig.serverDependenciesToBundle) {
+        for (let pattern of config.serverDependenciesToBundle) {
           // bundle it if the path matches the pattern
           if (
             typeof pattern === "string" ? path === pattern : pattern.test(path)
@@ -115,12 +112,12 @@ export function serverBareModulesPlugin(
         }
 
         if (
-          onWarning &&
+          options.onWarning &&
           !isNodeBuiltIn(packageName) &&
           kind !== "dynamic-import" &&
-          remixConfig.serverPlatform === "node"
+          config.serverPlatform === "node"
         ) {
-          warnOnceIfEsmOnlyPackage(packageName, path, onWarning);
+          warnOnceIfEsmOnlyPackage(packageName, path, options.onWarning);
         }
 
         // Externalize everything else if we've gotten here.

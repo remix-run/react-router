@@ -12,6 +12,7 @@ import { type RemixConfig } from "../config";
 import { loadEnv } from "./env";
 import * as LiveReload from "./liveReload";
 import * as HMR from "./hmr";
+import { warnOnce } from "../warnOnce";
 
 let info = (message: string) => console.info(`💿 ${message}`);
 
@@ -115,41 +116,55 @@ export let serve = async (
   let port = await findPort(dev.port);
   let socket = LiveReload.serve({ port });
   let prevManifest: Manifest | undefined = undefined;
-  let dispose = await Compiler.watch(config, {
-    mode: "development",
-    liveReloadPort: port,
-    onInitialBuild: (durationMs, manifest) => {
-      info(`Built in ${prettyMs(durationMs)}`);
-      prevManifest = manifest;
+  let dispose = await Compiler.watch(
+    {
+      config,
+      options: {
+        // TODO: remove target in v2
+        target: "node14",
+        mode: "development",
+        liveReloadPort: port,
+        sourcemap: true,
+        onWarning: warnOnce,
+      },
     },
-    onRebuildStart: () => {
-      clean(config);
-      socket.log("Rebuilding...");
-    },
-    onRebuildFinish: async (durationMs, manifest) => {
-      if (!manifest) return;
-      socket.log(`Rebuilt in ${prettyMs(durationMs)}`);
+    {
+      onInitialBuild: (durationMs, manifest) => {
+        info(`Built in ${prettyMs(durationMs)}`);
+        prevManifest = manifest;
+      },
+      onRebuildStart: () => {
+        clean(config);
+        socket.log("Rebuilding...");
+      },
+      onRebuildFinish: async (durationMs, manifest) => {
+        if (!manifest) return;
+        socket.log(`Rebuilt in ${prettyMs(durationMs)}`);
 
-      info(`Waiting for ${appServerOrigin}...`);
-      let start = Date.now();
-      await waitForAppServer(manifest.version);
-      info(`${appServerOrigin} ready in ${prettyMs(Date.now() - start)}`);
-      await new Promise((resolve) => {
-        setTimeout(resolve, -1);
-      });
+        info(`Waiting for ${appServerOrigin}...`);
+        let start = Date.now();
+        await waitForAppServer(manifest.version);
+        info(`${appServerOrigin} ready in ${prettyMs(Date.now() - start)}`);
+        await new Promise((resolve) => {
+          setTimeout(resolve, -1);
+        });
 
-      if (manifest.hmr && prevManifest) {
-        let updates = HMR.updates(config, manifest, prevManifest);
-        socket.hmr(manifest, updates);
-      } else {
-        socket.reload();
-      }
-      prevManifest = manifest;
-    },
-    onFileCreated: (file) => socket.log(`File created: ${relativePath(file)}`),
-    onFileChanged: (file) => socket.log(`File changed: ${relativePath(file)}`),
-    onFileDeleted: (file) => socket.log(`File deleted: ${relativePath(file)}`),
-  });
+        if (manifest.hmr && prevManifest) {
+          let updates = HMR.updates(config, manifest, prevManifest);
+          socket.hmr(manifest, updates);
+        } else {
+          socket.reload();
+        }
+        prevManifest = manifest;
+      },
+      onFileCreated: (file) =>
+        socket.log(`File created: ${relativePath(file)}`),
+      onFileChanged: (file) =>
+        socket.log(`File changed: ${relativePath(file)}`),
+      onFileDeleted: (file) =>
+        socket.log(`File deleted: ${relativePath(file)}`),
+    }
+  );
 
   // clean up build directories when dev server exits
   exitHook(() => clean(config));

@@ -1,8 +1,7 @@
 import type { Channel } from "../../channel";
 import { createChannel } from "../../channel";
-import type { RemixConfig } from "../../config";
 import type { Manifest } from "../../manifest";
-import type { CompileOptions } from "../options";
+import type { Context } from "../context";
 import * as CssCompiler from "./css";
 import * as JsCompiler from "./js";
 import {
@@ -11,8 +10,7 @@ import {
 } from "./manifest";
 
 export let create = async (
-  config: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   channels: { manifest: Channel<Manifest> }
 ) => {
   // setup channels
@@ -22,8 +20,8 @@ export let create = async (
 
   // create subcompilers
   let compiler = {
-    css: await CssCompiler.create(config, options, _channels),
-    js: await JsCompiler.create(config, options, _channels),
+    css: await CssCompiler.create(ctx, _channels),
+    js: await JsCompiler.create(ctx, _channels),
   };
 
   let compile = async () => {
@@ -42,13 +40,13 @@ export let create = async (
 
     // manifest
     let manifest = await createManifest({
-      config,
+      config: ctx.config,
       cssBundleHref: css,
       metafile: js.metafile,
       hmr: js.hmr,
     });
     channels.manifest.write(manifest);
-    await writeManifestFile(config, manifest);
+    await writeManifestFile(ctx.config, manifest);
 
     return manifest;
   };

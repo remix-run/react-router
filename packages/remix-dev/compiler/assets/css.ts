@@ -9,7 +9,6 @@ import postcssDiscardDuplicates from "postcss-discard-duplicates";
 import type { RemixConfig } from "../../config";
 import { getAppDependencies } from "../../dependencies";
 import { loaders } from "../utils/loaders";
-import type { CompileOptions } from "../options";
 import { cssFilePlugin } from "../plugins/cssImports";
 import { absoluteCssUrlsPlugin } from "../plugins/absoluteCssUrlsPlugin";
 import { emptyModulesPlugin } from "../plugins/emptyModules";
@@ -23,14 +22,15 @@ import {
   cssBundleEntryModuleId,
 } from "./plugins/cssBundleEntry";
 import type { WriteChannel } from "../../channel";
+import type { Context } from "../context";
 
-const getExternals = (remixConfig: RemixConfig): string[] => {
+const getExternals = (config: RemixConfig): string[] => {
   // For the browser build, exclude node built-ins that don't have a
   // browser-safe alternative installed in node_modules. Nothing should
   // *actually* be external in the browser build (we want to bundle all deps) so
   // this is really just making sure we don't accidentally have any dependencies
   // on node built-ins in browser bundles.
-  let dependencies = Object.keys(getAppDependencies(remixConfig));
+  let dependencies = Object.keys(getAppDependencies(config));
   let fakeBuiltins = nodeBuiltins.filter((mod) => dependencies.includes(mod));
 
   if (fakeBuiltins.length > 0) {
@@ -43,22 +43,17 @@ const getExternals = (remixConfig: RemixConfig): string[] => {
   return nodeBuiltins.filter((mod) => !dependencies.includes(mod));
 };
 
-const createEsbuildConfig = (
-  config: RemixConfig,
-  options: CompileOptions
-): esbuild.BuildOptions => {
-  let { mode } = options;
-
+const createEsbuildConfig = (ctx: Context): esbuild.BuildOptions => {
   let plugins: esbuild.Plugin[] = [
-    cssBundleEntryModulePlugin(config),
-    cssModulesPlugin({ config, mode, outputCss: true }),
-    vanillaExtractPlugin({ config, mode, outputCss: true }),
-    cssSideEffectImportsPlugin({ config, options }),
-    cssFilePlugin({ config, options }),
+    cssBundleEntryModulePlugin(ctx),
+    cssModulesPlugin(ctx, { outputCss: true }),
+    vanillaExtractPlugin(ctx, { outputCss: true }),
+    cssSideEffectImportsPlugin(ctx),
+    cssFilePlugin(ctx),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
-    mdxPlugin(config),
-    emptyModulesPlugin(config, /\.server(\.[jt]sx?)?$/),
+    mdxPlugin(ctx),
+    emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
     NodeModulesPolyfillPlugin(),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
@@ -67,33 +62,33 @@ const createEsbuildConfig = (
     entryPoints: {
       "css-bundle": cssBundleEntryModuleId,
     },
-    outdir: config.assetsBuildDirectory,
+    outdir: ctx.config.assetsBuildDirectory,
     platform: "browser",
     format: "esm",
-    external: getExternals(config),
+    external: getExternals(ctx.config),
     loader: loaders,
     bundle: true,
     logLevel: "silent",
-    sourcemap: options.sourcemap,
+    sourcemap: ctx.options.sourcemap,
     // As pointed out by https://github.com/evanw/esbuild/issues/2440, when tsconfig is set to
     // `undefined`, esbuild will keep looking for a tsconfig.json recursively up. This unwanted
     // behavior can only be avoided by creating an empty tsconfig file in the root directory.
-    tsconfig: config.tsconfigPath,
+    tsconfig: ctx.config.tsconfigPath,
     mainFields: ["browser", "module", "main"],
     treeShaking: true,
-    minify: options.mode === "production",
+    minify: ctx.options.mode === "production",
     entryNames: "[dir]/[name]-[hash]",
     chunkNames: "_shared/[name]-[hash]",
     assetNames: "_assets/[name]-[hash]",
-    publicPath: config.publicPath,
+    publicPath: ctx.config.publicPath,
     define: {
-      "process.env.NODE_ENV": JSON.stringify(options.mode),
+      "process.env.NODE_ENV": JSON.stringify(ctx.options.mode),
       "process.env.REMIX_DEV_SERVER_WS_PORT": JSON.stringify(
-        config.devServerPort
+        ctx.config.devServerPort
       ),
     },
     jsx: "automatic",
-    jsxDev: options.mode !== "production",
+    jsxDev: ctx.options.mode !== "production",
     plugins,
     supported: {
       "import-meta": true,
@@ -102,25 +97,24 @@ const createEsbuildConfig = (
 };
 
 export let create = async (
-  remixConfig: RemixConfig,
-  options: CompileOptions,
+  ctx: Context,
   channels: { cssBundleHref: WriteChannel<string | undefined> }
 ) => {
-  let ctx = await esbuild.context({
-    ...createEsbuildConfig(remixConfig, options),
+  let compiler = await esbuild.context({
+    ...createEsbuildConfig(ctx),
     metafile: true,
     write: false,
   });
   let compile = async () => {
     try {
-      let { outputFiles } = await ctx.rebuild();
+      let { outputFiles } = await compiler.rebuild();
 
       let isCssBundleFile = (
         outputFile: esbuild.OutputFile,
         extension: ".css" | ".css.map"
       ): boolean => {
         return (
-          path.dirname(outputFile.path) === remixConfig.assetsBuildDirectory &&
+          path.dirname(outputFile.path) === ctx.config.assetsBuildDirectory &&
           path.basename(outputFile.path).startsWith("css-bundle") &&
           outputFile.path.endsWith(extension)
         );
@@ -138,9 +132,9 @@ export let create = async (
       let cssBundlePath = cssBundleFile.path;
 
       let cssBundleHref =
-        remixConfig.publicPath +
+        ctx.config.publicPath +
         path.relative(
-          remixConfig.assetsBuildDirectory,
+          ctx.config.assetsBuildDirectory,
           path.resolve(cssBundlePath)
         );
 
@@ -153,7 +147,7 @@ export let create = async (
       ]).process(cssBundleFile.text, {
         from: cssBundlePath,
         to: cssBundlePath,
-        map: options.sourcemap && {
+        map: ctx.options.sourcemap && {
           prev: outputFiles.find((outputFile) =>
             isCssBundleFile(outputFile, ".css.map")
           )?.text,
@@ -167,7 +161,7 @@ export let create = async (
 
       await Promise.all([
         fse.writeFile(cssBundlePath, css),
-        options.mode !== "production" && map
+        ctx.options.mode !== "production" && map
           ? fse.writeFile(`${cssBundlePath}.map`, map.toString()) // Write our updated source map rather than esbuild's
           : null,
         ...outputFiles
@@ -186,6 +180,6 @@ export let create = async (
   };
   return {
     compile,
-    dispose: ctx.dispose,
+    dispose: compiler.dispose,
   };
 };
