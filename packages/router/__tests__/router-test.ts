@@ -4834,6 +4834,7 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "head",
+        // @ts-expect-error
         formData: formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
@@ -4874,6 +4875,7 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "options",
+        // @ts-expect-error
         formData: formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
@@ -6004,6 +6006,161 @@ describe("a router", () => {
 
       let req = A.actions.root.stub.mock.calls[0][0].request.clone();
       expect((await req.formData()).get("file")).toEqual("file.txt");
+    });
+
+    it("serializes payload as application/x-www-form-urlencoded", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let payload = { a: "1" };
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        payload,
+      });
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        payload,
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+      expect((await request.formData()).get("a")).toBe("1");
+    });
+
+    it("serializes payload as application/json if specified (object)", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let payload = { a: "1" };
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        payload,
+      });
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        payload,
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      expect(JSON.parse(await request.text())).toEqual(payload);
+    });
+
+    it("serializes payload as application/json if specified (array)", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let payload = [1, 2, 3];
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        payload,
+      });
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        payload,
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      expect(JSON.parse(await request.text())).toEqual(payload);
+    });
+
+    it("serializes payload as text/plain if specified", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let payload = "plain text";
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "text/plain",
+        payload,
+      });
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        payload,
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe("text/plain");
+      expect(await request.text()).toEqual(payload);
+    });
+
+    it("does not serialize payload when encType=undefined", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let payload = { a: "1" };
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        payload,
+      });
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        payload,
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.body).toBe(null);
+      expect(request.headers.get("Content-Type")).toBe(null);
+    });
+
+    it("does not serialize payload when encType=null", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let payload = { a: "1" };
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: null,
+        payload,
+      });
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+        payload,
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.body).toBe(null);
+      expect(request.headers.get("Content-Type")).toBe(null);
     });
 
     it("races actions and loaders against abort signals", async () => {

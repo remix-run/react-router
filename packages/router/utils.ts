@@ -89,6 +89,8 @@ export type V7_MutationFormMethod = Exclude<V7_FormMethod, "GET">;
 export type FormEncType =
   | "application/x-www-form-urlencoded"
   | "multipart/form-data"
+  | "application/json"
+  | "text/plain"
   | null; // Opt-out of serialization
 
 /**
@@ -101,8 +103,8 @@ export type Submission = {
   formAction: string;
   formEncType: FormEncType;
 } & (
-  | { formData: FormData; payload: undefined }
-  | { formData: undefined; payload: NonNullable<unknown> | null }
+  | { formData: FormData; payload?: undefined }
+  | { formData?: undefined; payload: NonNullable<unknown> | null }
 );
 
 /**

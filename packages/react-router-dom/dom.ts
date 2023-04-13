@@ -253,10 +253,18 @@ export function getFormSubmissionInfo(
       `Cannot submit element that is not <form>, <button>, or ` +
         `<input type="submit|image">`
     );
-  } else if (options.encType === null) {
+  } else if (
+    options.encType !== undefined &&
+    options.encType !== "application/x-www-form-urlencoded" &&
+    options.encType !== "multipart/form-data"
+  ) {
+    // Any encType other than these (null, application/json, text/plain) means
+    // we will not be submitting as FormData so send the payload through.  The
+    // @remix-run/router will handle serialization of the payload upon Request
+    // creation if needed
     method = options.method || defaultMethod;
     action = options.action || null;
-    encType = null;
+    encType = options.encType;
     payload = target;
   } else {
     method = options.method || defaultMethod;
@@ -273,6 +281,8 @@ export function getFormSubmissionInfo(
           formData.append(name, value);
         }
       } else if (target != null) {
+        // To be deprecated in v7 so the default behavior of undefined matches
+        // the null behavior of no-serialization
         for (let name of Object.keys(target)) {
           // @ts-expect-error
           formData.append(name, target[name]);
