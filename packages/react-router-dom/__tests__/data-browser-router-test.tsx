@@ -3188,10 +3188,82 @@ function testDomRouter(
         }
 
         fireEvent.click(screen.getByText("Submit"));
-        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        let request = actionSpy.mock.calls[0][0].request;
+        expect(request.headers.get("Content-Type")).toBe(
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        );
+        let formData = await request.formData();
         expect(formData.get("a")).toBe("1");
         expect(formData.get("b")).toBe("2");
         expect(actionSpy.mock.calls[0][0].payload).toBe(undefined);
+      });
+
+      it("serializes JSON on submit(object)/encType:application/json submissions", async () => {
+        let actionSpy = jest.fn();
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          ),
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        let payload = { a: "1", b: "2" };
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <button
+              onClick={() =>
+                submit(payload, {
+                  method: "post",
+                  encType: "application/json",
+                })
+              }
+            >
+              Submit
+            </button>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let request = actionSpy.mock.calls[0][0].request;
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual({ a: "1", b: "2" });
+        expect(actionSpy.mock.calls[0][0].payload).toBe(payload);
+      });
+
+      it("serializes text on submit(object)/encType:text/plain submissions", async () => {
+        let actionSpy = jest.fn();
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          ),
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        let payload = "look ma, no formData!";
+        function FormPage() {
+          let submit = useSubmit();
+          return (
+            <button
+              onClick={() =>
+                submit(payload, {
+                  method: "post",
+                  encType: "text/plain",
+                })
+              }
+            >
+              Submit
+            </button>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        let request = actionSpy.mock.calls[0][0].request;
+        expect(request.headers.get("Content-Type")).toBe("text/plain");
+        expect(await request.text()).toEqual(payload);
+        expect(actionSpy.mock.calls[0][0].payload).toBe(payload);
       });
 
       it("does not serialize formData on submit(object)/encType:null submissions", async () => {

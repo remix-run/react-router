@@ -6059,7 +6059,7 @@ describe("a router", () => {
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe("application/json");
-      expect(JSON.parse(await request.text())).toEqual(payload);
+      expect(await request.json()).toEqual(payload);
     });
 
     it("serializes payload as application/json if specified (array)", async () => {
@@ -6085,7 +6085,7 @@ describe("a router", () => {
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
       expect(request.headers.get("Content-Type")).toBe("application/json");
-      expect(JSON.parse(await request.text())).toEqual(payload);
+      expect(await request.json()).toEqual(payload);
     });
 
     it("serializes payload as text/plain if specified", async () => {
