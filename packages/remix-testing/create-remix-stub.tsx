@@ -9,8 +9,18 @@ import type {
   UNSAFE_RouteModules as RouteModules,
   UNSAFE_RemixContextObject as RemixContextObject,
 } from "@remix-run/react";
-import type { DataRouteObject, RouteObject } from "react-router-dom";
+import type {
+  DataRouteObject,
+  IndexRouteObject,
+  NonIndexRouteObject,
+  RouteObject,
+} from "react-router-dom";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import type {
+  ActionFunction,
+  AppLoadContext,
+  LoaderFunction,
+} from "@remix-run/server-runtime";
 
 type RemixStubOptions = {
   /**
@@ -42,7 +52,55 @@ type RemixStubOptions = {
   remixConfigFuture?: Partial<FutureConfig>;
 };
 
-export function createRemixStub(routes: (RouteObject | DataRouteObject)[]) {
+function patchRoutesWithContext(
+  routes: (StubRouteObject | StubDataRouteObject)[],
+  context: AppLoadContext
+): (RouteObject | DataRouteObject)[] {
+  return routes.map((route) => {
+    if (route.loader) {
+      let loader = route.loader;
+      route.loader = (args) => loader({ ...args, context });
+    }
+
+    if (route.action) {
+      let action = route.action;
+      route.action = (args) => action({ ...args, context });
+    }
+
+    if (route.children) {
+      return {
+        ...route,
+        children: patchRoutesWithContext(route.children, context),
+      };
+    }
+
+    return route as RouteObject | DataRouteObject;
+  }) as (RouteObject | DataRouteObject)[];
+}
+
+interface StubIndexRouteObject
+  extends Omit<IndexRouteObject, "loader" | "action"> {
+  loader?: LoaderFunction;
+  action?: ActionFunction;
+}
+
+interface StubNonIndexRouteObject
+  extends Omit<NonIndexRouteObject, "loader" | "action"> {
+  loader?: LoaderFunction;
+  action?: ActionFunction;
+}
+
+type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
+
+type StubDataRouteObject = StubRouteObject & {
+  children?: DataRouteObject[];
+  id: string;
+};
+
+export function createRemixStub(
+  routes: (StubRouteObject | StubDataRouteObject)[],
+  context: AppLoadContext = {}
+) {
   return function RemixStub({
     initialEntries,
     initialIndex,
@@ -53,7 +111,10 @@ export function createRemixStub(routes: (RouteObject | DataRouteObject)[]) {
     let remixContextRef = React.useRef<RemixContextObject>();
 
     if (routerRef.current == null) {
-      routerRef.current = createMemoryRouter(routes, {
+      // update the routes to include context in the loader/action
+      let patched = patchRoutesWithContext(routes, context);
+
+      routerRef.current = createMemoryRouter(patched, {
         initialEntries,
         initialIndex,
         hydrationData,
