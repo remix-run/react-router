@@ -2695,6 +2695,39 @@ function testDomRouter(
             "/foo/bar?index&a=1#hash"
           );
         });
+
+        // eslint-disable-next-line jest/expect-expect
+        it('does not put ?index param in final URL for <Form method="get"', async () => {
+          let testWindow = getWindow("/form");
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="form">
+                  <Route
+                    index={true}
+                    element={
+                      <Form>
+                        <button type="submit" name="name" value="value">
+                          Submit
+                        </button>
+                      </Form>
+                    }
+                  />
+                </Route>
+              </Route>
+            ),
+            {
+              window: testWindow,
+            }
+          );
+          render(<RouterProvider router={router} />);
+
+          assertLocation(testWindow, "/form", "");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?name=value");
+        });
       });
 
       describe("dynamic routes", () => {

@@ -3167,9 +3167,9 @@ function normalizeNavigateOptions(
   // Flatten submission onto URLSearchParams for GET submissions
   let parsedPath = parsePath(path);
   let searchParams = convertFormDataToSearchParams(opts.formData);
-  // Since fetcher GET submissions only run a single loader (as opposed to
-  // navigation GET submissions which run all loaders), we need to preserve
-  // any incoming ?index params
+  // On GET navigation submissions we can drop the ?index param from the
+  // resulting location since all loaders will run.  But fetcher GET submissions
+  // only run a single loader so we need to preserve any incoming ?index params
   if (isFetcher && parsedPath.search && hasNakedIndexQuery(parsedPath.search)) {
     searchParams.append("index", "");
   }
