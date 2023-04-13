@@ -142,12 +142,13 @@ You can access this state value while on the "new-path" route:
 let { state } = useLocation();
 ```
 
+## `reloadDocument`
+
+The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
+
 [link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
 [history-replace-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState
 [history-push-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/pushState
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
   
-## `reloadDocument`
-
-The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
