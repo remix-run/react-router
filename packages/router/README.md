@@ -106,7 +106,17 @@ router.fetch("key", "/page", {
 
 By default, active loaders will revalidate after any navigation or fetcher mutation. If you need to kick off a revalidation for other use-cases, you can use `router.revalidate()` to re-execute all active loaders.
 
+### Future Flags
+
+We use _Future Flags_ in the router to help us introduce breaking changes in an opt-in fashion ahead of major releases. Please check out the [blog post][future-flags-post] and [React Router Docs][api-development-strategy] for more information on this process. The currently available future flags in `@remix-run/router` are:
+
+| Flag | Description |
+| `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
+| `v7_prependBasename` | Prepend the `basename` to incoming `router.navigate`/`router.fetch` paths |
+
 [react-router]: https://reactrouter.com
 [remix]: https://remix.run
 [react-router-repo]: https://github.com/remix-run/react-router
 [remix-routers-repo]: https://github.com/brophdawg11/remix-routers
+[api-development-strategy]: https://reactrouter.com/en/main/guides/api-development-strategy
+[future-flags-post]: https://remix.run/blog/future-flags
