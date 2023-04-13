@@ -109,6 +109,16 @@ export function getSearchParamsForLocation(
   return searchParams;
 }
 
+export type SubmitTarget =
+  | HTMLFormElement
+  | HTMLButtonElement
+  | HTMLInputElement
+  | FormData
+  | URLSearchParams
+  | { [name: string]: string }
+  | NonNullable<unknown> // Raw payload submissions
+  | null;
+
 export interface SubmitOptions {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
@@ -124,9 +134,14 @@ export interface SubmitOptions {
 
   /**
    * The action URL used to submit the form. Overrides `<form encType>`.
-   * Defaults to "application/x-www-form-urlencoded".
+   * Defaults to "application/x-www-form-urlencoded".  Specifying `null` will
+   * opt-out of serialization and will submit the data directly to your action
+   * in the `payload` parameter.
+   *
+   * In v7, the default behavior will change from "application/x-www-form-urlencoded"
+   * to `null` and will make serialization opt-in
    */
-  encType?: FormEncType;
+  encType?: FormEncType | null;
 
   /**
    * Set `true` to replace the current entry in the browser's history stack
@@ -150,26 +165,21 @@ export interface SubmitOptions {
 }
 
 export function getFormSubmissionInfo(
-  target:
-    | HTMLFormElement
-    | HTMLButtonElement
-    | HTMLInputElement
-    | FormData
-    | URLSearchParams
-    | { [name: string]: string }
-    | null,
+  target: SubmitTarget,
   options: SubmitOptions,
   basename: string
 ): {
   action: string | null;
   method: string;
-  encType: string;
-  formData: FormData;
+  encType: string | null;
+  formData: FormData | undefined;
+  payload: any;
 } {
   let method: string;
   let action: string | null = null;
-  let encType: string;
-  let formData: FormData;
+  let encType: string | null;
+  let formData: FormData | undefined = undefined;
+  let payload: unknown = undefined;
 
   if (isFormElement(target)) {
     let submissionTrigger: HTMLButtonElement | HTMLInputElement = (
@@ -243,6 +253,11 @@ export function getFormSubmissionInfo(
       `Cannot submit element that is not <form>, <button>, or ` +
         `<input type="submit|image">`
     );
+  } else if (options.encType === null) {
+    method = options.method || defaultMethod;
+    action = options.action || null;
+    encType = null;
+    payload = target;
   } else {
     method = options.method || defaultMethod;
     action = options.action || null;
@@ -259,11 +274,12 @@ export function getFormSubmissionInfo(
         }
       } else if (target != null) {
         for (let name of Object.keys(target)) {
+          // @ts-expect-error
           formData.append(name, target[name]);
         }
       }
     }
   }
 
-  return { action, method: method.toLowerCase(), encType, formData };
+  return { action, method: method.toLowerCase(), encType, formData, payload };
 }

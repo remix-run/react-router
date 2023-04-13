@@ -2220,6 +2220,7 @@ describe("a router", () => {
           "formMethod": "post",
           "nextParams": {},
           "nextUrl": "http://localhost/",
+          "payload": undefined,
         }
       `);
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
@@ -2281,6 +2282,7 @@ describe("a router", () => {
           "formMethod": "post",
           "nextParams": {},
           "nextUrl": "http://localhost/",
+          "payload": undefined,
         }
       `);
 
@@ -9746,6 +9748,7 @@ describe("a router", () => {
               "b": "three",
             },
             "nextUrl": "http://localhost/two/three",
+            "payload": undefined,
           }
         `);
 
