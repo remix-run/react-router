@@ -2,7 +2,7 @@ import * as path from "path";
 import * as fse from "fs-extra";
 import { builtinModules as nodeBuiltins } from "module";
 import * as esbuild from "esbuild";
-import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import { polyfillNode as NodeModulesPolyfillPlugin } from "esbuild-plugin-polyfill-node";
 import postcss from "postcss";
 import postcssDiscardDuplicates from "postcss-discard-duplicates";
 

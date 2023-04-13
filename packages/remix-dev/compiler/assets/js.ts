@@ -1,7 +1,7 @@
 import * as path from "path";
 import { builtinModules as nodeBuiltins } from "module";
 import * as esbuild from "esbuild";
-import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import { polyfillNode as NodeModulesPolyfillPlugin } from "esbuild-plugin-polyfill-node";
 
 import type { RemixConfig } from "../../config";
 import { type Manifest } from "../../manifest";
