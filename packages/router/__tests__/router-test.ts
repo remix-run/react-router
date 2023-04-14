@@ -10280,6 +10280,150 @@ describe("a router", () => {
         await F.actions.index.resolve("INDEX ACTION");
         expect(t.router.getFetcher(key).data).toBe("INDEX ACTION");
       });
+
+      it("throws a 404 ErrorResponse without ?index and parent route has no loader", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "parent",
+              path: "parent",
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: true,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/parent"],
+          hydrationData: { loaderData: { index: "INDEX" } },
+        });
+
+        let key = "KEY";
+        await t.fetch("/parent");
+        expect(t.router.state.errors).toMatchInlineSnapshot(`
+          {
+            "parent": ErrorResponse {
+              "data": "Error: No route matches URL "/parent"",
+              "error": [Error: No route matches URL "/parent"],
+              "internal": true,
+              "status": 404,
+              "statusText": "Not Found",
+            },
+          }
+        `);
+        expect(t.router.getFetcher(key).data).toBe(undefined);
+      });
+
+      it("throws a 404 ErrorResponse with ?index and index route has no loader", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "parent",
+              path: "parent",
+              loader: true,
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/parent"],
+          hydrationData: { loaderData: { parent: "PARENT" } },
+        });
+
+        let key = "KEY";
+        await t.fetch("/parent?index");
+        expect(t.router.state.errors).toMatchInlineSnapshot(`
+          {
+            "parent": ErrorResponse {
+              "data": "Error: No route matches URL "/parent?index"",
+              "error": [Error: No route matches URL "/parent?index"],
+              "internal": true,
+              "status": 404,
+              "statusText": "Not Found",
+            },
+          }
+        `);
+        expect(t.router.getFetcher(key).data).toBe(undefined);
+      });
+
+      it("throws a 405 ErrorResponse without ?index and parent route has no action", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "parent",
+              path: "parent",
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  action: true,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/parent"],
+        });
+
+        let key = "KEY";
+        await t.fetch("/parent", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.errors).toMatchInlineSnapshot(`
+          {
+            "parent": ErrorResponse {
+              "data": "Error: You made a POST request to "/parent" but did not provide an \`action\` for route "parent", so there is no way to handle the request.",
+              "error": [Error: You made a POST request to "/parent" but did not provide an \`action\` for route "parent", so there is no way to handle the request.],
+              "internal": true,
+              "status": 405,
+              "statusText": "Method Not Allowed",
+            },
+          }
+        `);
+        expect(t.router.getFetcher(key).data).toBe(undefined);
+      });
+
+      it("throws a 405 ErrorResponse with ?index and index route has no action", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "parent",
+              path: "parent",
+              action: true,
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                },
+              ],
+            },
+          ],
+          initialEntries: ["/parent"],
+        });
+
+        let key = "KEY";
+        await t.fetch("/parent?index", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        expect(t.router.state.errors).toMatchInlineSnapshot(`
+          {
+            "parent": ErrorResponse {
+              "data": "Error: You made a POST request to "/parent?index" but did not provide an \`action\` for route "parent", so there is no way to handle the request.",
+              "error": [Error: You made a POST request to "/parent?index" but did not provide an \`action\` for route "parent", so there is no way to handle the request.],
+              "internal": true,
+              "status": 405,
+              "statusText": "Method Not Allowed",
+            },
+          }
+        `);
+        expect(t.router.getFetcher(key).data).toBe(undefined);
+      });
     });
   });
 
@@ -15444,12 +15588,20 @@ describe("a router", () => {
       expect(currentRouter.state.loaderData).toEqual({
         root: "ROOT*",
       });
-      // Fetcher should have been revalidated but thrown an errow since the
+      // Fetcher should have been revalidated but throw an error since the
       // loader was removed
       expect(currentRouter.state.fetchers.get("key")?.data).toBe(undefined);
-      expect(currentRouter.state.errors).toEqual({
-        root: new Error('Could not find the loader to run on the "foo" route'),
-      });
+      expect(currentRouter.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": ErrorResponse {
+            "data": "Error: No route matches URL "/foo"",
+            "error": [Error: No route matches URL "/foo"],
+            "internal": true,
+            "status": 404,
+            "statusText": "Not Found",
+          },
+        }
+      `);
     });
 
     it("should retain existing routes until revalidation completes on route removal (fetch)", async () => {
