@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import minimatch from "minimatch";
+import { Minimatch } from "minimatch";
 
 import type { RouteManifest, DefineRouteFunction } from "./routes";
 import { defineRoutes, createRouteId } from "./routes";
@@ -32,7 +32,10 @@ export function defineConventionalRoutes(
   visitFiles(path.join(appDir, "routes"), (file) => {
     if (
       ignoredFilePatterns &&
-      ignoredFilePatterns.some((pattern) => minimatch(file, pattern))
+      ignoredFilePatterns.some((pattern) => {
+        let minimatch = new Minimatch(pattern);
+        return minimatch.match(file);
+      })
     ) {
       return;
     }
