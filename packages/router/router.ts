@@ -814,7 +814,7 @@ export function createRouter(init: RouterInit): Router {
   // Fetchers that triggered data reloads as a result of their actions
   let fetchReloadIds = new Map<string, number>();
 
-  // Fetchers that triggered redirect navigations from their actions
+  // Fetchers that triggered redirect navigations
   let fetchRedirectIds = new Set<string>();
 
   // Most recent href/match for fetcher.load calls for fetchers
@@ -1470,12 +1470,14 @@ export function createRouter(init: RouterInit): Router {
 
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
+      let updatedFetchers = markFetchRedirectsDone();
       completeNavigation(location, {
         matches,
         loaderData: {},
         // Commit pending error if we're short circuiting
         errors: pendingError || null,
         ...(pendingActionData ? { actionData: pendingActionData } : {}),
+        ...(updatedFetchers ? { fetchers: new Map(state.fetchers) } : {}),
       });
       return { shortCircuited: true };
     }
@@ -1587,15 +1589,15 @@ export function createRouter(init: RouterInit): Router {
       });
     });
 
-    markFetchRedirectsDone();
+    let updatedFetchers = markFetchRedirectsDone();
     let didAbortFetchLoads = abortStaleFetchLoads(pendingNavigationLoadId);
+    let shouldUpdateFetchers =
+      updatedFetchers || didAbortFetchLoads || revalidatingFetchers.length > 0;
 
     return {
       loaderData,
       errors,
-      ...(didAbortFetchLoads || revalidatingFetchers.length > 0
-        ? { fetchers: new Map(state.fetchers) }
-        : {}),
+      ...(shouldUpdateFetchers ? { fetchers: new Map(state.fetchers) } : {}),
     };
   }
 
@@ -1959,7 +1961,7 @@ export function createRouter(init: RouterInit): Router {
         result;
     }
 
-    // We can delete this so long as we weren't aborted by ou our own fetcher
+    // We can delete this so long as we weren't aborted by our our own fetcher
     // re-load which would have put _new_ controller is in fetchControllers
     if (fetchControllers.get(key) === abortController) {
       fetchControllers.delete(key);
@@ -1971,6 +1973,7 @@ export function createRouter(init: RouterInit): Router {
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
+      fetchRedirectIds.add(key);
       await startRedirectNavigation(state, result);
       return;
     }
@@ -2270,17 +2273,20 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  function markFetchRedirectsDone(): void {
+  function markFetchRedirectsDone(): boolean {
     let doneKeys = [];
+    let updatedFetchers = false;
     for (let key of fetchRedirectIds) {
       let fetcher = state.fetchers.get(key);
       invariant(fetcher, `Expected fetcher: ${key}`);
       if (fetcher.state === "loading") {
         fetchRedirectIds.delete(key);
         doneKeys.push(key);
+        updatedFetchers = true;
       }
     }
     markFetchersDone(doneKeys);
+    return updatedFetchers;
   }
 
   function abortStaleFetchLoads(landedId: number): boolean {
@@ -3133,14 +3139,6 @@ function getMatchesToLoad(
   let currentUrl = history.createURL(state.location);
   let nextUrl = history.createURL(location);
 
-  let defaultShouldRevalidate =
-    // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
-    isRevalidationRequired ||
-    // Clicked the same link, resubmitted a GET form
-    currentUrl.toString() === nextUrl.toString() ||
-    // Search params affect all loaders
-    currentUrl.search !== nextUrl.search;
-
   // Pick navigation matches that are net-new or qualify for revalidation
   let boundaryId = pendingError ? Object.keys(pendingError)[0] : undefined;
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
@@ -3177,7 +3175,12 @@ function getMatchesToLoad(
       ...submission,
       actionResult,
       defaultShouldRevalidate:
-        defaultShouldRevalidate ||
+        // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
+        isRevalidationRequired ||
+        // Clicked the same link, resubmitted a GET form
+        currentUrl.toString() === nextUrl.toString() ||
+        // Search params affect all loaders
+        currentUrl.search !== nextUrl.search ||
         isNewRouteInstance(currentRouteMatch, nextRouteMatch),
     });
   });
@@ -3231,7 +3234,8 @@ function getMatchesToLoad(
       nextParams: matches[matches.length - 1].params,
       ...submission,
       actionResult,
-      defaultShouldRevalidate,
+      // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
+      defaultShouldRevalidate: isRevalidationRequired,
     });
     if (shouldRevalidate) {
       revalidatingFetchers.push({
