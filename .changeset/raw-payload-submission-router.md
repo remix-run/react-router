@@ -2,14 +2,14 @@
 "@remix-run/router": minor
 ---
 
-Add support for a new `payload` parameter for `router.navigate` and `router.fetch` submissions. This allows you to submit data to an action without requiring serialization into a `FormData` instance. This `payload` value wil be passed unaltered to your action function.
+Add support for a new `payload` parameter for `router.navigate`/`router.fetch` submissions. This allows you to submit data to an `action` without requiring serialization into a `FormData` instance. This `payload` value will be passed unaltered to your `action` function.
 
 ```js
 router.navigate("/", { payload: { key: "value" } });
 
 function action({ request, payload }) {
-  // payload is `{ key: 'value' }`
-  // request.body is `null`
+  // payload      => { key: 'value' }
+  // request.body => null
 }
 ```
 
@@ -22,8 +22,8 @@ router.navigate("/", {
 });
 
 function action({ request, payload }) {
-  // payload is `{ key: 'value' }`
-  // await request.text() is '{"key":"value"}'
+  // payload              => { key: 'value' }
+  // await request.json() => {"key":"value"}
 }
 ```
 
@@ -34,8 +34,8 @@ router.navigate("/", {
 });
 
 function action({ request, payload }) {
-  // payload is `{ key: 'value' }`
-  // await request.formData() is a `FormData` instance with a single entry of key=value
+  // payload                  => { key: 'value' }
+  // await request.formData() => FormData instance with a single entry of key=value
 }
 ```
 
@@ -46,7 +46,7 @@ router.navigate("/", {
 });
 
 function action({ request, payload }) {
-  // payload is "Plain ol' text"
-  // await request.text() is "Plain ol' text"
+  // payload              => "Plain ol' text"
+  // await request.text() => "Plain ol' text"
 }
 ```

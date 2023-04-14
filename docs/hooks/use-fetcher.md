@@ -38,6 +38,7 @@ function SomeComponent() {
   // build your UI with these properties
   fetcher.state;
   fetcher.formData;
+  fetcher.payload;
   fetcher.formMethod;
   fetcher.formAction;
   fetcher.data;
@@ -131,6 +132,8 @@ export function useIdleLogout() {
   }, [userIsIdle]);
 }
 ```
+
+`fetcher.submit` is a wrapper around a [`useSubmit`][use-submit] call for the fetcher instance, so it also accepts the same options as `useSubmit`.
 
 If you want to submit to an index route, use the [`?index` param][indexsearchparam].
 
@@ -231,3 +234,4 @@ fetcher.formMethod; // "post"
 [link]: ../components/link
 [form]: ../components/form
 [api-development-strategy]: ../guides/api-development-strategy
+[use-submit]: ./use-submit.md
