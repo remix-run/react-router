@@ -15942,6 +15942,57 @@ describe("a router", () => {
       /* eslint-enable jest/expect-expect */
     });
 
+    it("resolves relative routes when using relative:path", () => {
+      let history = createMemoryHistory({
+        initialEntries: ["/a/b/c/d/e/f"],
+      });
+      let routes = [
+        {
+          id: "a",
+          path: "/a",
+          children: [
+            {
+              id: "bc",
+              path: "b/c",
+              children: [
+                {
+                  id: "de",
+                  path: "d/e",
+                  children: [
+                    {
+                      id: "f",
+                      path: "f",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ];
+
+      // Navigating without relative:path
+      let router = createRouter({ routes, history }).initialize();
+      router.navigate("..");
+      expect(router.state.location.pathname).toBe("/a/b/c/d/e");
+      router.navigate("/a/b/c/d/e/f");
+
+      router.navigate("../..");
+      expect(router.state.location.pathname).toBe("/a/b/c");
+      router.navigate("/a/b/c/d/e/f");
+
+      // Navigating with relative:path
+      router.navigate("..", { relative: "path" });
+      expect(router.state.location.pathname).toBe("/a/b/c/d/e");
+      router.navigate("/a/b/c/d/e/f");
+
+      router.navigate("../..", { relative: "path" });
+      expect(router.state.location.pathname).toBe("/a/b/c/d");
+      router.navigate("/a/b/c/d/e/f");
+
+      router.dispose();
+    });
+
     it("should not append ?index to get submission navigations to self from index route", () => {
       let router = createRouter({
         routes: [

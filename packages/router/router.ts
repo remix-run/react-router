@@ -3066,8 +3066,11 @@ function normalizeTo(
 ) {
   let contextualMatches: AgnosticDataRouteMatch[];
   let activeRouteMatch: AgnosticDataRouteMatch | undefined;
-  if (fromRouteId != null) {
-    // Grab matches up to the calling route
+  if (fromRouteId != null && relative !== "path") {
+    // Grab matches up to the calling route so our route-relative logic is
+    // relative to the correct source route.  When using relative:path,
+    // fromRouteId is ignored since that is always relative to the current
+    // location path
     contextualMatches = [];
     for (let match of matches) {
       contextualMatches.push(match);
@@ -3099,7 +3102,7 @@ function normalizeTo(
 
   // Add an ?index param for matched index routes if we don't already have one
   if (
-    (!to || to === ".") &&
+    (to == null || to === "" || to === ".") &&
     activeRouteMatch &&
     activeRouteMatch.route.index &&
     !hasNakedIndexQuery(path.search)
