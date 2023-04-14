@@ -225,10 +225,7 @@ export function createStaticHandler(
 
 export function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext,
-  opts?: {
-    future?: Partial<FutureConfig>;
-  }
+  context: StaticHandlerContext
 ): RemixRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
