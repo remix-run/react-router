@@ -8,6 +8,7 @@ import type {
   RouterState,
   To,
   LazyRouteFunction,
+  RelativeRoutingType,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -27,7 +28,6 @@ import type {
   RouteObject,
   Navigator,
   NonIndexRouteObject,
-  RelativeRoutingType,
 } from "./context";
 import {
   LocationContext,

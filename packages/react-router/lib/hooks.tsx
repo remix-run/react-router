@@ -8,6 +8,7 @@ import type {
   Path,
   PathMatch,
   PathPattern,
+  RelativeRoutingType,
   Router as RemixRouter,
   To,
 } from "@remix-run/router";
@@ -30,7 +31,6 @@ import type {
   RouteMatch,
   RouteObject,
   DataRouteMatch,
-  RelativeRoutingType,
 } from "./context";
 import {
   DataRouterContext,
@@ -156,6 +156,13 @@ export interface NavigateFunction {
  * @see https://reactrouter.com/hooks/use-navigate
  */
 export function useNavigate(): NavigateFunction {
+  let isDataRouter = React.useContext(DataRouterContext) != null;
+  // Conditional usage is OK here because the usage of a data router is static
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return isDataRouter ? useNavigateStable() : useNavigateUnstable();
+}
+
+function useNavigateUnstable(): NavigateFunction {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -682,6 +689,7 @@ export function _renderMatches(
 enum DataRouterHook {
   UseBlocker = "useBlocker",
   UseRevalidator = "useRevalidator",
+  UseNavigateStable = "useNavigate",
 }
 
 enum DataRouterStateHook {
@@ -693,6 +701,8 @@ enum DataRouterStateHook {
   UseRouteLoaderData = "useRouteLoaderData",
   UseMatches = "useMatches",
   UseRevalidator = "useRevalidator",
+  UseNavigateStable = "useNavigate",
+  UseRouteId = "useRouteId",
 }
 
 function getDataRouterConsoleError(
@@ -719,6 +729,7 @@ function useRouteContext(hookName: DataRouterStateHook) {
   return route;
 }
 
+// Internal version with hookName-aware debugging
 function useCurrentRouteId(hookName: DataRouterStateHook) {
   let route = useRouteContext(hookName);
   let thisRoute = route.matches[route.matches.length - 1];
@@ -727,6 +738,13 @@ function useCurrentRouteId(hookName: DataRouterStateHook) {
     `${hookName} can only be used on routes that contain a unique "id"`
   );
   return thisRoute.route.id;
+}
+
+/**
+ * Returns the ID for the nearest contextual route
+ */
+export function useRouteId() {
+  return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
 /**
@@ -883,6 +901,28 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // Prefer the blocker from state since DataRouterContext is memoized so this
   // ensures we update on blocker state updates
   return state.blockers.get(blockerKey) || blocker;
+}
+
+/**
+ * Stable version of useNavigate that is used when we are in the context of
+ * a RouterProvider.
+ */
+function useNavigateStable(): NavigateFunction {
+  let { router } = useDataRouterContext(DataRouterHook.UseNavigateStable);
+  let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
+
+  let navigate: NavigateFunction = React.useCallback(
+    (to: To | number, options: NavigateOptions = {}) => {
+      if (typeof to === "number") {
+        router.navigate(to);
+      } else {
+        router.navigate(to, { fromRouteId: id, ...options });
+      }
+    },
+    [router, id]
+  );
+
+  return navigate;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

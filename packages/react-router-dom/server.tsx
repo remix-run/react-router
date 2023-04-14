@@ -6,6 +6,7 @@ import type {
   StaticHandlerContext,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
+  FutureConfig,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,

@@ -17,6 +17,7 @@ import type {
   PathMatch,
   PathPattern,
   RedirectFunction,
+  RelativeRoutingType,
   Router as RemixRouter,
   ShouldRevalidateFunction,
   To,
@@ -76,7 +77,6 @@ import type {
   NonIndexRouteObject,
   RouteMatch,
   RouteObject,
-  RelativeRoutingType,
 } from "./lib/context";
 import {
   DataRouterContext,
@@ -102,6 +102,7 @@ import {
   useActionData,
   useAsyncError,
   useAsyncValue,
+  useRouteId,
   useLoaderData,
   useMatches,
   useNavigation,
@@ -254,7 +255,7 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
-    future?: FutureConfig;
+    future?: Partial<Omit<FutureConfig, "v7_prependBasename">>;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
@@ -262,7 +263,10 @@ export function createMemoryRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: opts?.future,
+    future: {
+      ...opts?.future,
+      v7_prependBasename: true,
+    },
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,
@@ -294,4 +298,5 @@ export {
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   mapRouteProperties as UNSAFE_mapRouteProperties,
+  useRouteId as UNSAFE_useRouteId,
 };

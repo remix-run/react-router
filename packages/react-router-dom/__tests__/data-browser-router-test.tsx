@@ -33,6 +33,7 @@ import {
   defer,
   useLocation,
   useMatches,
+  useSearchParams,
   createRoutesFromElements,
 } from "react-router-dom";
 
@@ -2283,6 +2284,69 @@ function testDomRouter(
       `);
     });
 
+    it("allows a button to override the <form action>", async () => {
+      let router = createTestRouter(
+        createRoutesFromElements(
+          <Route path="/">
+            <Route
+              path="foo"
+              action={() => {
+                throw new Error("No");
+              }}
+            >
+              <Route
+                path="bar"
+                action={() => "Yes"}
+                Component={() => {
+                  let actionData = useActionData() as string | undefined;
+                  return (
+                    <Form method="post" action="/foo">
+                      <p>{actionData || "No"}</p>
+                      <button type="submit" formAction="/foo/bar">
+                        Submit
+                      </button>
+                    </Form>
+                  );
+                }}
+              />
+            </Route>
+          </Route>
+        ),
+        {
+          window: getWindow("/foo/bar"),
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(container.querySelector("form")?.getAttribute("action")).toBe(
+        "/foo"
+      );
+      expect(
+        container.querySelector("button")?.getAttribute("formaction")
+      ).toBe("/foo/bar");
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("Yes"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <form
+              action="/foo"
+              method="post"
+            >
+              <p>
+                Yes
+              </p>
+              <button
+                formaction="/foo/bar"
+                type="submit"
+              >
+                Submit
+              </button>
+            </form>
+          </div>"
+        `);
+    });
+
     it("supports uppercase form method attributes", async () => {
       let loaderDefer = createDeferred();
       let actionDefer = createDeferred();
@@ -2630,6 +2694,39 @@ function testDomRouter(
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
             "/foo/bar?index&a=1#hash"
           );
+        });
+
+        // eslint-disable-next-line jest/expect-expect
+        it('does not put ?index param in final URL for <Form method="get"', async () => {
+          let testWindow = getWindow("/form");
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="form">
+                  <Route
+                    index={true}
+                    element={
+                      <Form>
+                        <button type="submit" name="name" value="value">
+                          Submit
+                        </button>
+                      </Form>
+                    }
+                  />
+                </Route>
+              </Route>
+            ),
+            {
+              window: testWindow,
+            }
+          );
+          render(<RouterProvider router={router} />);
+
+          assertLocation(testWindow, "/form", "");
+
+          fireEvent.click(screen.getByText("Submit"));
+          await new Promise((r) => setTimeout(r, 0));
+          assertLocation(testWindow, "/form", "?name=value");
         });
       });
 
@@ -3394,6 +3491,7 @@ function testDomRouter(
 
         async function clickAndAssert(btnText: string, expectedOutput: string) {
           fireEvent.click(screen.getByText(btnText));
+          await new Promise((r) => setTimeout(r, 1));
           await waitFor(() => screen.getByText(new RegExp(expectedOutput)));
           expect(getHtml(container.querySelector("#output")!)).toContain(
             expectedOutput
@@ -4410,6 +4508,286 @@ function testDomRouter(
             </p>
           </div>"
         `);
+      });
+
+      it("useFetcher is stable across across location changes", async () => {
+        let router = createBrowserRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                const [, setSearchParams] = useSearchParams();
+                let [count, setCount] = React.useState(0);
+                let fetcherCount = React.useRef(0);
+                let fetcher = useFetcher();
+                React.useEffect(() => {
+                  fetcherCount.current++;
+                }, [fetcher.submit]);
+                return (
+                  <>
+                    <button
+                      onClick={() => {
+                        setCount(count + 1);
+                        setSearchParams({
+                          random: Math.random().toString(),
+                        });
+                      }}
+                    >
+                      Click
+                    </button>
+                    <p>
+                      {`render count:${count}`}
+                      {`fetcher count:${fetcherCount.current}`}
+                    </p>
+                  </>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        let html = getHtml(container);
+        expect(html).toContain("render count:0");
+        expect(html).toContain("fetcher count:0");
+
+        fireEvent.click(screen.getByText("Click"));
+        fireEvent.click(screen.getByText("Click"));
+        fireEvent.click(screen.getByText("Click"));
+        await waitFor(() => screen.getByText(/render count:3/));
+
+        html = getHtml(container);
+        expect(html).toContain("render count:3");
+        expect(html).toContain("fetcher count:1");
+      });
+
+      describe("with a basename", () => {
+        it("prepends the basename to fetcher.load paths", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/" element={<Comp />}>
+                <Route path="fetch" loader={() => "FETCH"} />
+              </Route>
+            ),
+            {
+              basename: "/base",
+              window: getWindow("/base"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Comp() {
+            let fetcher = useFetcher();
+            return (
+              <>
+                <p>{`data:${fetcher.data}`}</p>
+                <button onClick={() => fetcher.load("/fetch")}>load</button>
+              </>
+            );
+          }
+
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:undefined
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+
+          fireEvent.click(screen.getByText("load"));
+          await waitFor(() => screen.getByText(/FETCH/));
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:FETCH
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+        });
+
+        it('prepends the basename to fetcher.submit({ method: "get" }) paths', async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/" element={<Comp />}>
+                <Route path="fetch" loader={() => "FETCH"} />
+              </Route>
+            ),
+            {
+              basename: "/base",
+              window: getWindow("/base"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Comp() {
+            let fetcher = useFetcher();
+            return (
+              <>
+                <p>{`data:${fetcher.data}`}</p>
+                <button
+                  onClick={() =>
+                    fetcher.submit({}, { method: "get", action: "/fetch" })
+                  }
+                >
+                  load
+                </button>
+              </>
+            );
+          }
+
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:undefined
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+
+          fireEvent.click(screen.getByText("load"));
+          await waitFor(() => screen.getByText(/FETCH/));
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:FETCH
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+        });
+
+        it('prepends the basename to fetcher.submit({ method: "post" }) paths', async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/" element={<Comp />}>
+                <Route path="fetch" action={() => "FETCH"} />
+              </Route>
+            ),
+            {
+              basename: "/base",
+              window: getWindow("/base"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Comp() {
+            let fetcher = useFetcher();
+            return (
+              <>
+                <p>{`data:${fetcher.data}`}</p>
+                <button
+                  onClick={() =>
+                    fetcher.submit({}, { method: "post", action: "/fetch" })
+                  }
+                >
+                  submit
+                </button>
+              </>
+            );
+          }
+
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:undefined
+              </p>
+              <button>
+                submit
+              </button>
+            </div>"
+          `);
+
+          fireEvent.click(screen.getByText("submit"));
+          await waitFor(() => screen.getByText(/FETCH/));
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:FETCH
+              </p>
+              <button>
+                submit
+              </button>
+            </div>"
+          `);
+        });
+        it("prepends the basename to fetcher.Form paths", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/" element={<Comp />}>
+                <Route path="fetch" action={() => "FETCH"} />
+              </Route>
+            ),
+            {
+              basename: "/base",
+              window: getWindow("/base"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Comp() {
+            let fetcher = useFetcher();
+            return (
+              <>
+                <p>{`data:${fetcher.data}`}</p>
+                <fetcher.Form method="post" action="/fetch">
+                  <button type="submit">submit</button>
+                </fetcher.Form>
+              </>
+            );
+          }
+
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:undefined
+              </p>
+              <form
+                action="/base/fetch"
+                method="post"
+              >
+                <button
+                  type="submit"
+                >
+                  submit
+                </button>
+              </form>
+            </div>"
+          `);
+
+          fireEvent.click(screen.getByText("submit"));
+          await waitFor(() => screen.getByText(/FETCH/));
+          expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:FETCH
+              </p>
+              <form
+                action="/base/fetch"
+                method="post"
+              >
+                <button
+                  type="submit"
+                >
+                  submit
+                </button>
+              </form>
+            </div>"
+          `);
+        });
       });
     });
 
