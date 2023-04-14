@@ -34,7 +34,7 @@ Whenever the location changes, `<Routes>` looks through all its child routes to 
 </Routes>
 ```
 
-[location]: ../hook/location
+[location]: ../hooks/use-location
 [outlet]: ./outlet
 [use-route]: ../hooks/use-routes
 [createbrowserrouter]: ../routers/create-browser-router
