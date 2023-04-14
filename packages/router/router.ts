@@ -3425,9 +3425,11 @@ async function callLoaderOrAction(
           // previously-lazy-loaded routes
           result = await runHandler(handler);
         } else if (type === "action") {
+          let url = new URL(request.url);
+          let pathname = url.pathname + url.search;
           throw getInternalRouterError(405, {
             method: request.method,
-            pathname: new URL(request.url).pathname,
+            pathname,
             routeId: match.route.id,
           });
         } else {
@@ -3436,12 +3438,13 @@ async function callLoaderOrAction(
           return { type: ResultType.data, data: undefined };
         }
       }
+    } else if (!handler) {
+      let url = new URL(request.url);
+      let pathname = url.pathname + url.search;
+      throw getInternalRouterError(404, {
+        pathname,
+      });
     } else {
-      invariant<Function>(
-        handler,
-        `Could not find the ${type} to run on the "${match.route.id}" route`
-      );
-
       result = await runHandler(handler);
     }
 
