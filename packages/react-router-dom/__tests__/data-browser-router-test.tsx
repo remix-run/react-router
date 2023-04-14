@@ -3132,60 +3132,61 @@ function testDomRouter(
 
       it("serializes formData on submit(object) submissions", async () => {
         let actionSpy = jest.fn();
+        let payload = { a: "1", b: "2" };
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
-          ),
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                return (
+                  <button onClick={() => submit(payload, { method: "post" })}>
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
           { window: getWindow("/") }
         );
         render(<RouterProvider router={router} />);
-
-        function FormPage() {
-          let submit = useSubmit();
-          return (
-            <button
-              onClick={() => submit({ a: "1", b: "2" }, { method: "post" })}
-            >
-              Submit
-            </button>
-          );
-        }
 
         fireEvent.click(screen.getByText("Submit"));
         let formData = await actionSpy.mock.calls[0][0].request.formData();
         expect(formData.get("a")).toBe("1");
         expect(formData.get("b")).toBe("2");
-        expect(actionSpy.mock.calls[0][0].payload).toBe(undefined);
+        expect(actionSpy.mock.calls[0][0].payload).toBe(payload);
       });
 
       it("serializes formData on submit(object)/encType:application/x-www-form-urlencoded submissions", async () => {
         let actionSpy = jest.fn();
+        let payload = { a: "1", b: "2" };
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
-          ),
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                return (
+                  <button
+                    onClick={() =>
+                      submit(payload, {
+                        method: "post",
+                        encType: "application/x-www-form-urlencoded",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
           { window: getWindow("/") }
         );
         render(<RouterProvider router={router} />);
-
-        function FormPage() {
-          let submit = useSubmit();
-          return (
-            <button
-              onClick={() =>
-                submit(
-                  { a: "1", b: "2" },
-                  {
-                    method: "post",
-                    encType: "application/x-www-form-urlencoded",
-                  }
-                )
-              }
-            >
-              Submit
-            </button>
-          );
-        }
 
         fireEvent.click(screen.getByText("Submit"));
         let request = actionSpy.mock.calls[0][0].request;
@@ -3195,35 +3196,37 @@ function testDomRouter(
         let formData = await request.formData();
         expect(formData.get("a")).toBe("1");
         expect(formData.get("b")).toBe("2");
-        expect(actionSpy.mock.calls[0][0].payload).toBe(undefined);
+        expect(actionSpy.mock.calls[0][0].payload).toBe(payload);
       });
 
       it("serializes JSON on submit(object)/encType:application/json submissions", async () => {
         let actionSpy = jest.fn();
+        let payload = { a: "1", b: "2" };
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
-          ),
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                return (
+                  <button
+                    onClick={() =>
+                      submit(payload, {
+                        method: "post",
+                        encType: "application/json",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
           { window: getWindow("/") }
         );
         render(<RouterProvider router={router} />);
-
-        let payload = { a: "1", b: "2" };
-        function FormPage() {
-          let submit = useSubmit();
-          return (
-            <button
-              onClick={() =>
-                submit(payload, {
-                  method: "post",
-                  encType: "application/json",
-                })
-              }
-            >
-              Submit
-            </button>
-          );
-        }
 
         fireEvent.click(screen.getByText("Submit"));
         let request = actionSpy.mock.calls[0][0].request;
@@ -3234,30 +3237,32 @@ function testDomRouter(
 
       it("serializes text on submit(object)/encType:text/plain submissions", async () => {
         let actionSpy = jest.fn();
+        let payload = "look ma, no formData!";
         let router = createTestRouter(
-          createRoutesFromElements(
-            <Route path="/" action={actionSpy} element={<FormPage />} />
-          ),
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                return (
+                  <button
+                    onClick={() =>
+                      submit(payload, {
+                        method: "post",
+                        encType: "text/plain",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
           { window: getWindow("/") }
         );
         render(<RouterProvider router={router} />);
-
-        let payload = "look ma, no formData!";
-        function FormPage() {
-          let submit = useSubmit();
-          return (
-            <button
-              onClick={() =>
-                submit(payload, {
-                  method: "post",
-                  encType: "text/plain",
-                })
-              }
-            >
-              Submit
-            </button>
-          );
-        }
 
         fireEvent.click(screen.getByText("Submit"));
         let request = actionSpy.mock.calls[0][0].request;

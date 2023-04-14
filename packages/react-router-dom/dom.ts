@@ -253,42 +253,29 @@ export function getFormSubmissionInfo(
       `Cannot submit element that is not <form>, <button>, or ` +
         `<input type="submit|image">`
     );
-  } else if (
-    options.encType !== undefined &&
-    options.encType !== "application/x-www-form-urlencoded" &&
-    options.encType !== "multipart/form-data"
-  ) {
-    // Any encType other than these (null, application/json, text/plain) means
-    // we will not be submitting as FormData so send the payload through.  The
-    // @remix-run/router will handle serialization of the payload upon Request
-    // creation if needed
-    method = options.method || defaultMethod;
-    action = options.action || null;
-    encType = options.encType;
-    payload = target;
-  } else {
+  } else if (target instanceof FormData) {
     method = options.method || defaultMethod;
     action = options.action || null;
     encType = options.encType || defaultEncType;
-
-    if (target instanceof FormData) {
-      formData = target;
-    } else {
-      formData = new FormData();
-
-      if (target instanceof URLSearchParams) {
-        for (let [name, value] of target) {
-          formData.append(name, value);
-        }
-      } else if (target != null) {
-        // To be deprecated in v7 so the default behavior of undefined matches
-        // the null behavior of no-serialization
-        for (let name of Object.keys(target)) {
-          // @ts-expect-error
-          formData.append(name, target[name]);
-        }
-      }
+    formData = target;
+  } else if (target instanceof URLSearchParams) {
+    method = options.method || defaultMethod;
+    action = options.action || null;
+    encType = options.encType || defaultEncType;
+    formData = new FormData();
+    for (let [name, value] of target) {
+      formData.append(name, value);
     }
+  } else {
+    // Anything left at this point is a raw payload and router will serialize
+    // it into the request based on the encType
+    method = options.method || defaultMethod;
+    action = options.action || null;
+    // In v7 we want to remove the defaultEncType from here so it defaults to
+    // no serialization
+    encType =
+      options.encType === null ? null : options.encType || defaultEncType;
+    payload = target;
   }
 
   return { action, method: method.toLowerCase(), encType, formData, payload };
