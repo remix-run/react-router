@@ -3156,7 +3156,7 @@ function testDomRouter(
         let formData = await actionSpy.mock.calls[0][0].request.formData();
         expect(formData.get("a")).toBe("1");
         expect(formData.get("b")).toBe("2");
-        expect(actionSpy.mock.calls[0][0].payload).toBe(payload);
+        expect(actionSpy.mock.calls[0][0].payload).toBe(undefined);
       });
 
       it("serializes formData on submit(object)/encType:application/x-www-form-urlencoded submissions", async () => {
@@ -3196,7 +3196,7 @@ function testDomRouter(
         let formData = await request.formData();
         expect(formData.get("a")).toBe("1");
         expect(formData.get("b")).toBe("2");
-        expect(actionSpy.mock.calls[0][0].payload).toBe(payload);
+        expect(actionSpy.mock.calls[0][0].payload).toBe(undefined);
       });
 
       it("serializes JSON on submit(object)/encType:application/json submissions", async () => {
