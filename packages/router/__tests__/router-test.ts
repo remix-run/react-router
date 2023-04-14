@@ -6249,17 +6249,10 @@ describe("a router", () => {
 
       let fetch = await t.fetch("/parent", "key");
 
-      let B = await fetch.loaders.parent.redirectReturn(
-        "..",
-        undefined,
-        undefined,
-        ["parent"]
-      );
+      await fetch.loaders.parent.redirectReturn("..", undefined, undefined, [
+        "parent",
+      ]);
 
-      // We called fetcher.load('/parent') from the root route, so when we
-      // redirect back to the root it triggers a revalidation of the
-      // fetcher.load('/parent')
-      await B.loaders.parent.resolve("Revalidated");
       // No root loader so redirect lands immediately
       expect(t.router.state).toMatchObject({
         location: {
@@ -6271,7 +6264,7 @@ describe("a router", () => {
       });
       expect(t.router.state.fetchers.get("key")).toMatchObject({
         state: "idle",
-        data: "Revalidated",
+        data: undefined,
       });
     });
 
@@ -9578,7 +9571,7 @@ describe("a router", () => {
         });
       });
 
-      it("revalidates fetchers on searchParams changes", async () => {
+      it("does not revalidate fetchers on searchParams changes", async () => {
         let key = "key";
         let t = setup({
           routes: TASK_ROUTES,
@@ -9601,15 +9594,15 @@ describe("a router", () => {
         let B = await t.navigate("/tasks/1?key=value", undefined, ["index"]);
         await B.loaders.root.resolve("ROOT 2");
         await B.loaders.tasksId.resolve("TASK 2");
-        await B.loaders.index.resolve("FETCH 2");
         expect(t.router.state.loaderData).toMatchObject({
           root: "ROOT 2",
           tasksId: "TASK 2",
         });
         expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
-          data: "FETCH 2",
+          data: "FETCH 1",
         });
+        expect(B.loaders.index.stub).not.toHaveBeenCalled();
       });
 
       it("revalidates fetchers on links to the current location", async () => {
@@ -9635,15 +9628,15 @@ describe("a router", () => {
         let B = await t.navigate("/tasks/1", undefined, ["index"]);
         await B.loaders.root.resolve("ROOT 2");
         await B.loaders.tasksId.resolve("TASK 2");
-        await B.loaders.index.resolve("FETCH 2");
         expect(t.router.state.loaderData).toMatchObject({
           root: "ROOT 2",
           tasksId: "TASK 2",
         });
         expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
-          data: "FETCH 2",
+          data: "FETCH 1",
         });
+        expect(B.loaders.index.stub).not.toHaveBeenCalled();
       });
 
       it("does not revalidate idle fetchers when a loader navigation is performed", async () => {
@@ -10094,8 +10087,12 @@ describe("a router", () => {
         let A = await t.fetch("/tasks/1", key1);
         await A.loaders.tasksId.resolve("TASKS 1");
 
-        // Loading navigation with query param to trigger revalidations
-        let C = await t.navigate("/tasks?key=value");
+        // Submission navigation to trigger revalidations
+        let C = await t.navigate("/tasks", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        await C.actions.tasks.resolve("TASKS ACTION");
 
         // Fetcher should go back into a loading state
         expect(t.router.state.fetchers.get(key1)).toMatchObject({
@@ -10107,12 +10104,16 @@ describe("a router", () => {
         t.router.deleteFetcher(key1);
         expect(t.router.state.fetchers.get(key1)).toBeUndefined();
 
-        // Resolve navigation loaders
+        // Resolve navigation action/loaders
         await C.loaders.root.resolve("ROOT*");
         await C.loaders.tasks.resolve("TASKS LOADER");
 
         expect(t.router.state).toMatchObject({
           errors: null,
+          navigation: IDLE_NAVIGATION,
+          actionData: {
+            tasks: "TASKS ACTION",
+          },
           loaderData: {
             tasks: "TASKS LOADER",
             root: "ROOT*",
