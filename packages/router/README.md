@@ -17,12 +17,19 @@ A Router instance can be created using `createRouter`:
 // including history listeners and kicking off the initial data fetch
 let router = createRouter({
   // Required properties
-  routes, // Routes array
-  history, // History instance
+  routes: [{
+    path: '/',
+    loader: ({ request, params }) => { /* ... */ },
+    children: [{
+      path: 'home',
+      loader: ({ request, params }) => { /* ... */ },
+    }]
+  },
+  history: createBrowserHistory(),
 
   // Optional properties
   basename, // Base path
-  mapRouteProperties, // Map function framework-agnostic routes to framework-aware routes
+  mapRouteProperties, // Map framework-agnostic routes to framework-aware routes
   future, // Future flags
   hydrationData, // Hydration data if using server-side-rendering
 }).initialize();
@@ -82,6 +89,11 @@ formData.append(key, value);
 router.navigate("/page", {
   formMethod: "post",
   formData,
+});
+
+// Relative routing from a source routeId
+router.navigate("../../somewhere", {
+  fromRouteId: "active-route-id",
 });
 ```
 
