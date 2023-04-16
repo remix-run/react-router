@@ -19,6 +19,9 @@ export default function App() {
             parent route elements. See the note about <Outlet> below. */}
       <Routes>
         <Route path="/" element={<Layout />}>
+          
+          {/* Because index routes share the same URL as their parent,
+              the ?index param lets you disambiguate between the two. */}
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="dashboard" element={<Dashboard />} />
