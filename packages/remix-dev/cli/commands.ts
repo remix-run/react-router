@@ -14,7 +14,6 @@ import * as devServer_unstable from "../devServer_unstable";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
-import { log } from "../logging";
 import { createApp } from "./create";
 import { getPreferredPackageManager } from "./getPreferredPackageManager";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
@@ -128,7 +127,7 @@ export async function setup(platformArg?: string) {
 
   await setupRemix(platform);
 
-  log(`Successfully setup Remix for ${platform}.`);
+  console.log(`Successfully setup Remix for ${platform}.`);
 }
 
 export async function routes(
@@ -149,7 +148,7 @@ export async function build(
 ): Promise<void> {
   let mode = parseMode(modeArg) ?? "production";
 
-  log(`Building Remix app in ${mode} mode...`);
+  console.log(`Building Remix app in ${mode} mode...`);
 
   if (modeArg === "production" && sourcemap) {
     console.warn(
@@ -172,8 +171,6 @@ export async function build(
   await compiler.build({
     config,
     options: {
-      // TODO: remove target in v2
-      target: "node14",
       mode,
       sourcemap,
       onWarning: warnOnce,
@@ -184,7 +181,7 @@ export async function build(
     },
   });
 
-  log(`built in ${prettyMs(Date.now() - start)}`);
+  console.log(`built in ${prettyMs(Date.now() - start)}`);
 }
 
 export async function watch(

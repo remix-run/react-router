@@ -45,8 +45,6 @@ export async function liveReload(
     {
       config,
       options: {
-        // TODO: remove target in v2
-        target: "node14",
         mode: "development",
         sourcemap: true,
         onWarning: warnOnce,

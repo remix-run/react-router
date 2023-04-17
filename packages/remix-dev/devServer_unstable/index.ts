@@ -120,8 +120,6 @@ export let serve = async (
     {
       config,
       options: {
-        // TODO: remove target in v2
-        target: "node14",
         mode: "development",
         liveReloadPort: port,
         sourcemap: true,

@@ -85,7 +85,7 @@ const createEsbuildConfig = (
     minifySyntax: true,
     minify: ctx.options.mode === "production" && ctx.config.serverMinify,
     mainFields: ctx.config.serverMainFields,
-    target: ctx.options.target,
+    target: "node14",
     loader: loaders,
     bundle: true,
     logLevel: "silent",
