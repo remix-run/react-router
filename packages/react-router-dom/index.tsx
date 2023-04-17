@@ -966,6 +966,8 @@ function useSubmitImpl(
       let { action, method, encType, formData, payload } =
         getFormSubmissionInfo(target, options, basename);
 
+      let path = typeof action === "function" ? null : action;
+
       // Base options shared between fetch() and navigate()
       let opts = {
         preventScrollReset: options.preventScrollReset,
@@ -973,6 +975,7 @@ function useSubmitImpl(
         payload,
         formMethod: method,
         formEncType: encType,
+        action: typeof action === "function" ? action : undefined,
       };
 
       if (fetcherKey) {
@@ -980,9 +983,9 @@ function useSubmitImpl(
           fetcherRouteId != null,
           "No routeId available for useFetcher()"
         );
-        router.fetch(fetcherKey, fetcherRouteId, action, opts);
+        router.fetch(fetcherKey, fetcherRouteId, path, opts);
       } else {
-        router.navigate(action, {
+        router.navigate(path, {
           ...opts,
           replace: options.replace,
           fromRouteId: currentRouteId,

@@ -2042,6 +2042,98 @@ function testDomRouter(
       `);
     });
 
+    it("allows direct actions to be passed to useSubmit", async () => {
+      let router = createTestRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              let actionData = useActionData() as string | undefined;
+              let submit = useSubmit();
+              return (
+                <>
+                  <button
+                    onClick={() =>
+                      submit(new FormData(), {
+                        method: "post",
+                        action: () => "ACTION",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                  <p>{actionData || "empty"}</p>
+                </>
+              );
+            },
+          },
+        ],
+        {
+          window: getWindow("/"),
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("empty");
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("ACTION"));
+      expect(getHtml(container)).toMatch("ACTION");
+    });
+
+    it("allows direct actions to override the current route action", async () => {
+      let router = createTestRouter(
+        [
+          {
+            path: "/",
+            action: () => "ACTION ROUTE",
+            Component() {
+              let actionData = useActionData() as string | undefined;
+              let submit = useSubmit();
+              return (
+                <>
+                  <button
+                    onClick={() =>
+                      submit(new FormData(), {
+                        method: "post",
+                      })
+                    }
+                  >
+                    Submit Route
+                  </button>
+                  <button
+                    onClick={() =>
+                      submit(new FormData(), {
+                        method: "post",
+                        action: () => "ACTION OVERRIDE",
+                      })
+                    }
+                  >
+                    Submit Override
+                  </button>
+                  <p>{actionData || "empty"}</p>
+                </>
+              );
+            },
+          },
+        ],
+        {
+          window: getWindow("/"),
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("empty");
+
+      fireEvent.click(screen.getByText("Submit Route"));
+      await waitFor(() => screen.getByText("ACTION ROUTE"));
+      expect(getHtml(container)).toMatch("ACTION ROUTE");
+
+      fireEvent.click(screen.getByText("Submit Override"));
+      await waitFor(() => screen.getByText("ACTION OVERRIDE"));
+      expect(getHtml(container)).toMatch("ACTION OVERRIDE");
+    });
+
     it('supports a basename on <Form method="get">', async () => {
       let testWindow = getWindow("/base/path");
       let router = createTestRouter(
@@ -4805,6 +4897,95 @@ function testDomRouter(
         html = getHtml(container);
         expect(html).toContain("render count:3");
         expect(html).toContain("fetcher count:1");
+      });
+
+      it("allows direct actions to be passed to fetcher.submit()", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                let fetcher = useFetcher();
+                return (
+                  <>
+                    <button
+                      onClick={() =>
+                        fetcher.submit(new FormData(), {
+                          method: "post",
+                          action: () => "ACTION",
+                        })
+                      }
+                    >
+                      Submit
+                    </button>
+                    <p>{fetcher.data || "empty"}</p>
+                  </>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatch("empty");
+
+        fireEvent.click(screen.getByText("Submit"));
+        await waitFor(() => screen.getByText("ACTION"));
+        expect(getHtml(container)).toMatch("ACTION");
+      });
+
+      it("allows direct actions to override the fetch route action", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: () => "ACTION ROUTE",
+              Component() {
+                let fetcher = useFetcher();
+                return (
+                  <>
+                    <button
+                      onClick={() =>
+                        fetcher.submit(new FormData(), {
+                          method: "post",
+                        })
+                      }
+                    >
+                      Submit Route
+                    </button>
+                    <button
+                      onClick={() =>
+                        fetcher.submit(new FormData(), {
+                          method: "post",
+                          action: () => "ACTION OVERRIDE",
+                        })
+                      }
+                    >
+                      Submit Override
+                    </button>
+                    <p>{fetcher.data || "empty"}</p>
+                  </>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatch("empty");
+        fireEvent.click(screen.getByText("Submit Route"));
+        await waitFor(() => screen.getByText("ACTION ROUTE"));
+        expect(getHtml(container)).toMatch("ACTION ROUTE");
+
+        fireEvent.click(screen.getByText("Submit Override"));
+        await waitFor(() => screen.getByText("ACTION OVERRIDE"));
+        expect(getHtml(container)).toMatch("ACTION OVERRIDE");
       });
 
       describe("with a basename", () => {

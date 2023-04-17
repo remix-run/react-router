@@ -1,4 +1,5 @@
 import type {
+  ActionFunction,
   FormEncType,
   HTMLFormMethod,
   RelativeRoutingType,
@@ -130,7 +131,7 @@ export interface SubmitOptions {
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
    */
-  action?: string;
+  action?: string | ActionFunction;
 
   /**
    * The action URL used to submit the form. Overrides `<form encType>`.
@@ -169,14 +170,14 @@ export function getFormSubmissionInfo(
   options: SubmitOptions,
   basename: string
 ): {
-  action: string | null;
+  action: string | ActionFunction | null;
   method: string;
   encType: string | null;
   formData: FormData | undefined;
   payload: any;
 } {
   let method: string;
-  let action: string | null = null;
+  let action: string | ActionFunction | null = null;
   let encType: string | null;
   let formData: FormData | undefined = undefined;
   let payload: unknown = undefined;
