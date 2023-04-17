@@ -19,7 +19,7 @@ jobs:
         with:
           close-issue-message: >
             This issue has been automatically closed because we didn't hear
-            anything from the original author after the previous notice anymore.
+            anything from the original author after the previous notice.
           close-pr-message: >
             This PR has been automatically closed because we didn't hear
             anything from the original author after the previous notice anymore.
