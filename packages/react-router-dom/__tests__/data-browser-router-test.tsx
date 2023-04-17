@@ -5466,14 +5466,3 @@ function getHtml(container: HTMLElement) {
     },
   });
 }
-
-async function waitForRouterInitialize(router) {
-  return await new Promise((resolve) => {
-    let unsubscribe = router.subscribe((updatedState) => {
-      if (updatedState.initialized) {
-        unsubscribe();
-        resolve(router);
-      }
-    });
-  });
-}
