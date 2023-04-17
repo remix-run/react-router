@@ -22,7 +22,7 @@ jobs:
             anything from the original author after the previous notice.
           close-pr-message: >
             This PR has been automatically closed because we didn't hear
-            anything from the original author after the previous notice anymore.
+            anything from the original author after the previous notice.
           stale-issue-label: needs-response
           stale-issue-message: >
             This issue has been automatically marked stale because we haven't
