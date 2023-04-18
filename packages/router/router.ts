@@ -1074,6 +1074,21 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    if (
+      to != null &&
+      opts &&
+      "action" in opts &&
+      typeof opts.action === "function"
+    ) {
+      to = null;
+      warning(
+        false,
+        "router.navigate() should not include a `to` location when a custom " +
+          "`action` is passed, the `to` will be ignored in favor of the current " +
+          "location."
+      );
+    }
+
     let normalizedPath = normalizeTo(
       state.location,
       state.matches,
@@ -1662,6 +1677,20 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (fetchControllers.has(key)) abortFetcher(key);
+
+    if (
+      href != null &&
+      opts &&
+      "action" in opts &&
+      typeof opts.action === "function"
+    ) {
+      href = null;
+      warning(
+        false,
+        "router.fetch() should not include an `href` when a custom `action` is " +
+          "passed, the `href` will be ignored iun favor of the current location."
+      );
+    }
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(

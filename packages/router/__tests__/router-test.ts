@@ -6311,7 +6311,7 @@ describe("a router", () => {
       });
     });
 
-    it("allows direct actions to override the next route action", async () => {
+    it("falls back to current location if `to` provided alongside a direct action", async () => {
       let router = createRouter({
         routes: [
           { id: "root", path: "/" },
@@ -6328,10 +6328,10 @@ describe("a router", () => {
       });
 
       expect(router.state).toMatchObject({
-        location: { pathname: "/path" },
+        location: { pathname: "/" },
         loaderData: {},
         actionData: {
-          path: "ACTION OVERRIDE",
+          root: "ACTION OVERRIDE",
         },
         navigation: IDLE_NAVIGATION,
       });
@@ -11000,7 +11000,7 @@ describe("a router", () => {
         }).initialize();
 
         let key = "key";
-        router.fetch(key, "root", null, {
+        router.fetch(key, "root", "/", {
           formMethod: "post",
           formData: createFormData({}),
           action: () => "ACTION OVERRIDE",
@@ -11021,7 +11021,7 @@ describe("a router", () => {
         });
       });
 
-      it("allows direct actions to override the next route action", async () => {
+      it("falls back to current location if `href` provided alongside a direct action", async () => {
         let router = createRouter({
           routes: [
             { id: "root", path: "/" },
@@ -11040,7 +11040,7 @@ describe("a router", () => {
 
         expect(router.state.fetchers.get(key)).toMatchObject({
           state: "submitting",
-          formAction: "/path",
+          formAction: "/",
           data: undefined,
         });
 
