@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) React Training 2015-2019
+Copyright (c) React Training 2015-2019  
 Copyright (c) Shopify Inc. 2020
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
