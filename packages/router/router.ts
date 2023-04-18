@@ -1,4 +1,4 @@
-import type { History, Location, Path, To } from "./history";
+import type { Action, History, Location, Path, To } from "./history";
 import {
   Action as HistoryAction,
   createLocation,
@@ -432,6 +432,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
 type BaseSubmissionOptions = {
   formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
+  action?: ActionFunction;
 } & (
   | { formData: FormData; payload?: undefined }
   | { formData?: undefined; payload: any }
