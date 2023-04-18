@@ -203,6 +203,8 @@ function TaskCheckbox({ task }) {
 }
 ```
 
+If you opt-out of serialization using `encType:null`, then `fetcher.formData` will be `undefined` and your data will be exposed on `fetcher.payload`.
+
 ## `fetcher.formAction`
 
 Tells you the action url the form is being submitted to.
@@ -226,6 +228,10 @@ fetcher.formMethod; // "post"
 ```
 
 <docs-warning>The `fetcher.formMethod` field is lowercase without the `future.v7_normalizeFormMethod` [Future Flag][api-development-strategy]. This is being normalized to uppercase to align with the `fetch()` behavior in v7, so please upgrade your React Router v6 applications to adopt the uppercase HTTP methods.</docs-warning>
+
+## `fetcher.payload`
+
+Any POST, PUT, PATCH, or DELETE that started from a `fetcher.submit(payload, { encType: null })` will have your `payload` value represented in `fetcher.payload`.
 
 [loader]: ../route/loader
 [action]: ../route/action
