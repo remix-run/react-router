@@ -147,7 +147,7 @@ export interface Router {
     key: string,
     routeId: string,
     href: string | null,
-    opts?: RouterNavigateOptions
+    opts?: RouterFetchOptions
   ): void;
 
   /**
@@ -418,13 +418,25 @@ export interface GetScrollPositionFunction {
 
 export type RelativeRoutingType = "route" | "path";
 
-type BaseNavigateOptions = {
-  replace?: boolean;
-  state?: any;
+type BaseNavigateOrFetchOptions = {
+  fromRouteId?: string;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  fromRouteId?: string;
 };
+
+type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
+  replace?: boolean;
+  state?: any;
+};
+
+type BaseSubmissionOptions = {
+  formMethod?: HTMLFormMethod;
+  formEncType?: FormEncType;
+  action?: ActionFunction;
+} & (
+  | { formData: FormData; payload?: undefined }
+  | { formData?: undefined; payload: any }
+);
 
 /**
  * Options for a navigate() call for a Link navigation
@@ -434,13 +446,7 @@ type LinkNavigateOptions = BaseNavigateOptions;
 /**
  * Options for a navigate() call for a Form navigation
  */
-type SubmissionNavigateOptions = BaseNavigateOptions & {
-  formMethod?: HTMLFormMethod;
-  formEncType?: FormEncType;
-} & (
-    | { formData: FormData; payload?: undefined }
-    | { formData?: undefined; payload: any }
-  );
+type SubmissionNavigateOptions = BaseNavigateOptions & BaseSubmissionOptions;
 
 /**
  * Options to pass to navigate() for either a Link or Form navigation
@@ -450,11 +456,19 @@ export type RouterNavigateOptions =
   | SubmissionNavigateOptions;
 
 /**
+ * Options for a navigate() call for a Link navigation
+ */
+type LoadFetchOptions = BaseNavigateOrFetchOptions;
+
+/**
+ * Options for a navigate() call for a Form navigation
+ */
+type SubmitFetchOptions = BaseNavigateOrFetchOptions & BaseSubmissionOptions;
+
+/**
  * Options to pass to fetch()
  */
-export type RouterFetchOptions =
-  | Omit<LinkNavigateOptions, "replace">
-  | Omit<SubmissionNavigateOptions, "replace">;
+export type RouterFetchOptions = LoadFetchOptions | SubmitFetchOptions;
 
 /**
  * Potential states for state.navigation
