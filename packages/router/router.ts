@@ -790,7 +790,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Use this internal flag to force revalidation of all loaders:
   //  - submissions (completed or interrupted)
-  //  - useRevalidate()
+  //  - useRevalidator()
   //  - X-Remix-Revalidate (from redirect)
   let isRevalidationRequired = false;
 
@@ -3263,7 +3263,7 @@ function getMatchesToLoad(
       ...submission,
       actionResult,
       defaultShouldRevalidate:
-        // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
+        // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
         isRevalidationRequired ||
         // Clicked the same link, resubmitted a GET form
         currentUrl.toString() === nextUrl.toString() ||
@@ -3322,7 +3322,7 @@ function getMatchesToLoad(
       nextParams: matches[matches.length - 1].params,
       ...submission,
       actionResult,
-      // Forced revalidation due to submission, useRevalidate, or X-Remix-Revalidate
+      // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
       defaultShouldRevalidate: isRevalidationRequired,
     });
     if (shouldRevalidate) {

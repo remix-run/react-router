@@ -909,7 +909,7 @@ describe("createMemoryRouter", () => {
     });
   });
 
-  it("reloads data using useRevalidate", async () => {
+  it("reloads data using useRevalidator", async () => {
     let count = 1;
     let router = createMemoryRouter(
       createRoutesFromElements(
