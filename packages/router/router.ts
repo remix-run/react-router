@@ -457,7 +457,9 @@ export type RouterNavigateOptions =
 /**
  * Options for a navigate() call for a Link navigation
  */
-type LoadFetchOptions = BaseNavigateOrFetchOptions;
+type LoadFetchOptions = BaseNavigateOrFetchOptions & {
+  loader?: LoaderFunction;
+};
 
 /**
  * Options for a navigate() call for a Form navigation
@@ -1407,7 +1409,7 @@ export function createRouter(init: RouterInit): Router {
         manifest,
         mapRouteProperties,
         basename,
-        { actionOverride: opts.actionOverride }
+        { handlerOverride: opts.actionOverride }
       );
 
       if (request.signal.aborted) {
@@ -1681,14 +1683,15 @@ export function createRouter(init: RouterInit): Router {
     if (
       href != null &&
       opts &&
-      "action" in opts &&
-      typeof opts.action === "function"
+      (("loader" in opts && typeof opts.loader === "function") ||
+        ("action" in opts && typeof opts.action === "function"))
     ) {
       href = null;
       warning(
         false,
-        "router.fetch() should not include an `href` when a custom `action` is " +
-          "passed, the `href` will be ignored iun favor of the current location."
+        "router.fetch() should not include an `href` when a custom `loader` or " +
+          "`action` is passed, the `href` will be ignored in favor of the " +
+          "current location."
       );
     }
 
@@ -1739,7 +1742,15 @@ export function createRouter(init: RouterInit): Router {
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, { routeId, path });
-    handleFetcherLoader(key, routeId, path, match, matches, submission);
+    handleFetcherLoader(
+      key,
+      routeId,
+      path,
+      match,
+      matches,
+      submission,
+      opts && "loader" in opts ? opts.loader : undefined
+    );
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1796,7 +1807,7 @@ export function createRouter(init: RouterInit): Router {
       manifest,
       mapRouteProperties,
       basename,
-      { actionOverride }
+      { handlerOverride: actionOverride }
     );
 
     if (fetchRequest.signal.aborted) {
@@ -2002,7 +2013,8 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
-    submission?: Submission
+    submission?: Submission,
+    loaderOverride?: LoaderFunction
   ) {
     let existingFetcher = state.fetchers.get(key);
     // Put this fetcher into it's loading state
@@ -2033,7 +2045,8 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      { handlerOverride: loaderOverride }
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -3564,7 +3577,7 @@ async function callLoaderOrAction(
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
   opts: {
-    actionOverride?: ActionFunction;
+    handlerOverride?: LoaderFunction | ActionFunction;
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
     requestContext?: unknown;
@@ -3592,10 +3605,7 @@ async function callLoaderOrAction(
   };
 
   try {
-    let handler =
-      type === "action" && opts.actionOverride
-        ? opts.actionOverride
-        : match.route[type];
+    let handler = opts.handlerOverride || match.route[type];
 
     if (match.route.lazy) {
       if (handler) {

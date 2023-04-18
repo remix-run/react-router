@@ -10762,6 +10762,92 @@ describe("a router", () => {
       });
     });
 
+    describe("fetcher loads", () => {
+      it("allows direct loaders to be passed as a function", async () => {
+        let router = createRouter({
+          routes: [{ id: "root", path: "/" }],
+          history: createMemoryHistory(),
+          future: { v7_normalizeFormMethod: true },
+        }).initialize();
+
+        let loaderDfd = createDeferred();
+        let loaderSpy = jest.fn(() => loaderDfd.promise);
+        let key = "key";
+        router.fetch(key, "root", null, {
+          loader: loaderSpy,
+        });
+
+        // @ts-expect-error
+        let request = loaderSpy.mock.calls[0][0].request as Request;
+        expect(request.url).toBe("http://localhost/");
+
+        expect(router.state.fetchers.get("key")).toMatchObject({
+          state: "loading",
+          data: undefined,
+        });
+
+        await loaderDfd.resolve("LOADER");
+
+        expect(router.state.fetchers.get("key")).toMatchObject({
+          state: "idle",
+          data: "LOADER",
+        });
+      });
+
+      it("allows direct loaders to override the current route loader", async () => {
+        let router = createRouter({
+          routes: [{ id: "root", path: "/", loader: () => "LOADER" }],
+          history: createMemoryHistory(),
+          future: { v7_normalizeFormMethod: true },
+        }).initialize();
+
+        let key = "key";
+        router.fetch(key, "root", null, {
+          loader: () => "LOADER OVERRIDE",
+        });
+
+        expect(router.state.fetchers.get(key)).toMatchObject({
+          state: "loading",
+          data: undefined,
+        });
+
+        await tick();
+
+        expect(router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "LOADER OVERRIDE",
+        });
+      });
+
+      it("falls back to current location if `href` provided alongside a direct loader", async () => {
+        let router = createRouter({
+          routes: [
+            { id: "root", path: "/" },
+            { id: "path", path: "/path", loader: () => "LOADER" },
+          ],
+          history: createMemoryHistory(),
+          future: { v7_normalizeFormMethod: true },
+        }).initialize();
+
+        let key = "key";
+        router.fetch(key, "root", "/path", {
+          loader: () => "LOADER OVERRIDE",
+        });
+
+        expect(router.state.fetchers.get(key)).toMatchObject({
+          state: "loading",
+          data: undefined,
+        });
+
+        await tick();
+
+        expect(router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "LOADER OVERRIDE",
+        });
+      });
+    });
+
     describe("fetcher submissions", () => {
       it("serializes payload as application/x-www-form-urlencoded", async () => {
         let t = setup({

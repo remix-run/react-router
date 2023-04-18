@@ -4899,6 +4899,77 @@ function testDomRouter(
         expect(html).toContain("fetcher count:1");
       });
 
+      it("allows direct loaders to be passed to fetcher.load()", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                let fetcher = useFetcher();
+                return (
+                  <>
+                    <button onClick={() => fetcher.load(() => "LOADER")}>
+                      Load
+                    </button>
+                    <p>{fetcher.data || "empty"}</p>
+                  </>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatch("empty");
+
+        fireEvent.click(screen.getByText("Load"));
+        await waitFor(() => screen.getByText("LOADER"));
+        expect(getHtml(container)).toMatch("LOADER");
+      });
+
+      it("allows direct loaders to override the fetch route loader", async () => {
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              loader: () => "LOADER ROUTE",
+              Component() {
+                let fetcher = useFetcher();
+                return (
+                  <>
+                    <button onClick={() => fetcher.load(".")}>
+                      Load Route
+                    </button>
+                    <button
+                      onClick={() => fetcher.load(() => "LOADER OVERRIDE")}
+                    >
+                      Load Override
+                    </button>
+                    <p>{fetcher.data || "empty"}</p>
+                  </>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatch("empty");
+        fireEvent.click(screen.getByText("Load Route"));
+        await waitFor(() => screen.getByText("LOADER ROUTE"));
+        expect(getHtml(container)).toMatch("LOADER ROUTE");
+
+        fireEvent.click(screen.getByText("Load Override"));
+        await waitFor(() => screen.getByText("LOADER OVERRIDE"));
+        expect(getHtml(container)).toMatch("LOADER OVERRIDE");
+      });
+
       it("allows direct actions to be passed to fetcher.submit()", async () => {
         let router = createTestRouter(
           [
