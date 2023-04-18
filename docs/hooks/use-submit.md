@@ -91,7 +91,7 @@ You may also choose which type of serialization you'd like via the `encType` opt
 
 ```tsx
 let obj = { key: "value" };
-submit(obj, encType: 'application/x-www-form-urlencoded'); // -> request.formData()
+submit(obj, { encType: 'application/x-www-form-urlencoded' }); // -> request.formData()
 ```
 
 ```tsx
@@ -108,7 +108,7 @@ submit(obj, { encType: "text/plain" }); // -> request.text()
 
 ### Opting out of serialization
 
-Sometimes in a client-side application, it's overkill to require serialization into `request.formData` when you have a raw JSON object in your component and want to submit it to your `action` directly. If you'd like to opt out of serialization, you can pass `encType: null` to your second options argument, and your data will be sent to your acton function verbatim as a `payload` parameter:
+Sometimes in a client-side application, it's overkill to require serialization into `request.formData` when you have a raw JSON object in your component and want to submit it to your `action` directly. If you'd like to opt out of serialization, you can pass `encType: null` to your second options argument, and your data will be sent to your action function verbatim as a `payload` parameter:
 
 ```tsx
 let obj = { key: "value" };
