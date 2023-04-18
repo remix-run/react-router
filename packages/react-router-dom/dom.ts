@@ -257,10 +257,13 @@ export function getFormSubmissionInfo(
     options.encType !== undefined &&
     options.encType !== "application/x-www-form-urlencoded"
   ) {
-    // Any encType other than these (null, application/json, text/plain) means
-    // we will not be submitting as FormData so send the payload through.  The
-    // @remix-run/router will handle serialization of the payload upon Request
-    // creation if needed
+    // The default behavior is to encode as application/x-www-form-urlencoded
+    // into FormData which is handled in the else block below.
+    //
+    // Any other encType value (null, application/json, text/plain) means
+    // we will not be submitting as FormData so send the payload through
+    // directly.  The @remix-run/router will handle serialization of the
+    // payload upon Request creation if needed.
     method = options.method || defaultMethod;
     action = options.action || null;
     encType = options.encType;
