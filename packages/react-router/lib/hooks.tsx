@@ -10,6 +10,7 @@ import type {
   PathPattern,
   RelativeRoutingType,
   Router as RemixRouter,
+  RevalidationState,
   To,
 } from "@remix-run/router";
 import {
@@ -506,6 +507,7 @@ const defaultErrorElement = <DefaultErrorComponent />;
 
 type RenderErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
+  revalidation: RevalidationState;
   error: any;
   component: React.ReactNode;
   routeContext: RouteContextObject;
@@ -513,6 +515,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
 
 type RenderErrorBoundaryState = {
   location: Location;
+  revalidation: RevalidationState;
   error: any;
 };
 
@@ -524,6 +527,7 @@ export class RenderErrorBoundary extends React.Component<
     super(props);
     this.state = {
       location: props.location,
+      revalidation: props.revalidation,
       error: props.error,
     };
   }
@@ -544,10 +548,14 @@ export class RenderErrorBoundary extends React.Component<
     // Whether we're in an error state or not, we update the location in state
     // so that when we are in an error state, it gets reset when a new location
     // comes in and the user recovers from the error.
-    if (state.location !== props.location) {
+    if (
+      state.location !== props.location ||
+      (state.revalidation !== "idle" && props.revalidation === "idle")
+    ) {
       return {
         error: props.error,
         location: props.location,
+        revalidation: props.revalidation,
       };
     }
 
@@ -558,6 +566,7 @@ export class RenderErrorBoundary extends React.Component<
     return {
       error: props.error || state.error,
       location: state.location,
+      revalidation: props.revalidation || state.revalidation,
     };
   }
 
@@ -675,6 +684,7 @@ export function _renderMatches(
       (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? (
       <RenderErrorBoundary
         location={dataRouterState.location}
+        revalidation={dataRouterState.revalidation}
         component={errorElement}
         error={error}
         children={getChildren()}
