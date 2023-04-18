@@ -10799,6 +10799,7 @@ describe("a router", () => {
           routes: [{ id: "root", path: "/", loader: () => "LOADER" }],
           history: createMemoryHistory(),
           future: { v7_normalizeFormMethod: true },
+          hydrationData: { loaderData: { root: null } },
         }).initialize();
 
         let key = "key";
