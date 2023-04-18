@@ -115,7 +115,6 @@ export type Submission = {
 interface DataFunctionArgs {
   request: Request;
   params: Params;
-  payload: any;
   context?: any;
 }
 
@@ -127,7 +126,9 @@ export interface LoaderFunctionArgs extends DataFunctionArgs {}
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs extends DataFunctionArgs {}
+export interface ActionFunctionArgs extends DataFunctionArgs {
+  payload: any;
+}
 
 /**
  * Loaders and actions can return anything except `undefined` (`null` is a
