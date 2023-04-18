@@ -1098,7 +1098,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
   });
   let submit = useSubmitImpl(fetcherKey, routeId);
 
-  let fetcher = router.getFetcher<TData>(fetcherKey);
+  let fetcher = useMemo(()=> router.getFetcher<TData>(fetcherKey), [fetcherKey]);
 
   let fetcherWithComponents = React.useMemo(
     () => ({
