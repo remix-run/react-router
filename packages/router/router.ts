@@ -432,7 +432,6 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
 type BaseSubmissionOptions = {
   formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
-  action?: ActionFunction;
 } & (
   | { formData: FormData; payload?: undefined }
   | { formData?: undefined; payload: any }
