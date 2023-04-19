@@ -78,11 +78,29 @@ const createEsbuildConfig = (
     "entry.client": ctx.config.entryClientFilePath,
   };
 
+  let routeModulePaths = new Map<string, string>();
   for (let id of Object.keys(ctx.config.routes)) {
-    // All route entry points are virtual modules that will be loaded by the
-    // browserEntryPointsPlugin. This allows us to tree-shake server-only code
-    // that we don't want to run in the browser (i.e. action & loader).
-    entryPoints[id] = ctx.config.routes[id].file + "?browser";
+    entryPoints[id] = ctx.config.routes[id].file;
+    if (ctx.config.future.unstable_dev) {
+      // In V2 we are doing AST transforms to remove server code, this means we
+      // have to re-map all route modules back to the same module in the graph
+      // otherwise we will have duplicate modules in the graph. We have to resolve
+      // the path as we get the relative for the entrypoint and absolute for imports
+      // from other modules.
+      routeModulePaths.set(
+        ctx.config.routes[id].file,
+        ctx.config.routes[id].file
+      );
+      routeModulePaths.set(
+        path.resolve(ctx.config.appDirectory, ctx.config.routes[id].file),
+        ctx.config.routes[id].file
+      );
+    } else {
+      // All route entry points are virtual modules that will be loaded by the
+      // browserEntryPointsPlugin. This allows us to tree-shake server-only code
+      // that we don't want to run in the browser (i.e. action & loader).
+      entryPoints[id] += "?browser";
+    }
   }
 
   let matchPath = ctx.config.tsconfigPath
@@ -105,10 +123,10 @@ const createEsbuildConfig = (
     cssFilePlugin(ctx),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
-    mdxPlugin(ctx),
     ctx.config.future.unstable_dev
-      ? browserRouteModulesPlugin_v2(ctx, /\?browser$/, onLoader)
+      ? browserRouteModulesPlugin_v2(ctx, routeModulePaths, onLoader)
       : browserRouteModulesPlugin(ctx, /\?browser$/),
+    mdxPlugin(ctx),
     emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
     NodeModulesPolyfillPlugin(),
     externalPlugin(/^node:.*/, { sideEffects: false }),
