@@ -203,7 +203,7 @@ function TaskCheckbox({ task }) {
 }
 ```
 
-If you opt-out of serialization using `encType:null`, then `fetcher.formData` will be `undefined` and your data will be exposed on `fetcher.payload`.
+If you opt-out of serialization using `encType: null`, then `fetcher.formData` will be `undefined` and your data will be exposed on `fetcher.payload`.
 
 ## `fetcher.formAction`
 

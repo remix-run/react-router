@@ -91,7 +91,7 @@ let isRedirecting =
 
 Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have your form's submission data attached to it. This is primarily useful to build "Optimistic UI" with the `submission.formData` [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 
-If you opt-out of serialization using `encType:null`, then `navigation.formData` will be `undefined` and your data will be exposed on `navigation.payload`.
+If you opt-out of serialization using `encType: null`, then `navigation.formData` will be `undefined` and your data will be exposed on `navigation.payload`.
 
 In the case of a GET form submission, `formData` will be empty and the data will be reflected in `navigation.location.search`.
 
