@@ -965,18 +965,21 @@ function useSubmitImpl(
       }
 
       let { action, method, encType, formData, payload } =
-        getFormSubmissionInfo(target, options, basename);
+        getFormSubmissionInfo(target, options.encType, basename);
 
-      let path = typeof action === "function" ? null : action;
+      let path =
+        typeof options.action === "function" ? null : options.action || action;
+      let routerAction =
+        typeof options.action === "function" ? options.action : null;
 
       // Base options shared between fetch() and navigate()
       let opts = {
         preventScrollReset: options.preventScrollReset,
         formData,
         payload,
-        formMethod: method,
-        formEncType: encType,
-        action: typeof action === "function" ? action : undefined,
+        formMethod: options.method || method,
+        formEncType: options.encType || encType,
+        action: routerAction,
       };
 
       if (fetcherKey) {
