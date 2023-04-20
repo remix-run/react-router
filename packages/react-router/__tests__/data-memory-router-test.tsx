@@ -1806,14 +1806,14 @@ describe("createMemoryRouter", () => {
             💿 Hey developer 👋
           </p>
           <p>
-            You can provide a way better UX than this when your app throws errors by providing your own
+            You can provide a way better UX than this when your app throws errors by providing your own 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               ErrorBoundary
             </code>
              or
-
+             
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -1925,14 +1925,14 @@ describe("createMemoryRouter", () => {
             💿 Hey developer 👋
           </p>
           <p>
-            You can provide a way better UX than this when your app throws errors by providing your own
+            You can provide a way better UX than this when your app throws errors by providing your own 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               ErrorBoundary
             </code>
              or
-
+             
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -2159,14 +2159,14 @@ describe("createMemoryRouter", () => {
             💿 Hey developer 👋
           </p>
           <p>
-            You can provide a way better UX than this when your app throws errors by providing your own
+            You can provide a way better UX than this when your app throws errors by providing your own 
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
               ErrorBoundary
             </code>
              or
-
+             
             <code
               style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
             >
@@ -2345,14 +2345,14 @@ describe("createMemoryRouter", () => {
               💿 Hey developer 👋
             </p>
             <p>
-              You can provide a way better UX than this when your app throws errors by providing your own
+              You can provide a way better UX than this when your app throws errors by providing your own 
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
                 ErrorBoundary
               </code>
                or
-
+               
               <code
                 style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
               >
