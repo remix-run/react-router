@@ -319,6 +319,7 @@ export function useRoutes(
   );
 
   let { navigator } = React.useContext(NavigationContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
@@ -432,7 +433,10 @@ export function useRoutes(
         })
       ),
     parentMatches,
-    dataRouterStateContext || undefined
+    // Only pass along the dataRouterStateContext when we're rendering from the
+    // RouterProvider layer.  If routes is different then we're rendering from
+    // a descendant <Routes> tree
+    dataRouterContext?.router.routes === routes ? dataRouterStateContext : null
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -613,7 +617,7 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: RemixRouter["state"]
+  dataRouterState: RemixRouter["state"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -635,7 +639,9 @@ export function _renderMatches(
     );
     invariant(
       errorIndex >= 0,
-      `Could not find a matching route for the current errors: ${errors}`
+      `Could not find a matching route for errors on route IDs: ${Object.keys(
+        errors
+      ).join(",")}`
     );
     renderedMatches = renderedMatches.slice(
       0,
