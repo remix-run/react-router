@@ -1,10 +1,6 @@
-import * as path from "path";
-import * as fse from "fs-extra";
 import { builtinModules as nodeBuiltins } from "module";
 import * as esbuild from "esbuild";
 import { polyfillNode as NodeModulesPolyfillPlugin } from "esbuild-plugin-polyfill-node";
-import postcss from "postcss";
-import postcssDiscardDuplicates from "postcss-discard-duplicates";
 
 import type { RemixConfig } from "../../config";
 import { getAppDependencies } from "../../dependencies";
@@ -20,9 +16,9 @@ import { vanillaExtractPlugin } from "../plugins/vanillaExtract";
 import {
   cssBundleEntryModulePlugin,
   cssBundleEntryModuleId,
-} from "./plugins/cssBundleEntry";
-import type { WriteChannel } from "../../channel";
+} from "./plugins/bundleEntry";
 import type { Context } from "../context";
+import { isBundle } from "./bundle";
 
 const getExternals = (config: RemixConfig): string[] => {
   // For the browser build, exclude node built-ins that don't have a
@@ -44,20 +40,6 @@ const getExternals = (config: RemixConfig): string[] => {
 };
 
 const createEsbuildConfig = (ctx: Context): esbuild.BuildOptions => {
-  let plugins: esbuild.Plugin[] = [
-    cssBundleEntryModulePlugin(ctx),
-    cssModulesPlugin(ctx, { outputCss: true }),
-    vanillaExtractPlugin(ctx, { outputCss: true }),
-    cssSideEffectImportsPlugin(ctx),
-    cssFilePlugin(ctx),
-    absoluteCssUrlsPlugin(),
-    externalPlugin(/^https?:\/\//, { sideEffects: false }),
-    mdxPlugin(ctx),
-    emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
-    NodeModulesPolyfillPlugin(),
-    externalPlugin(/^node:.*/, { sideEffects: false }),
-  ];
-
   return {
     entryPoints: {
       "css-bundle": cssBundleEntryModuleId,
@@ -89,97 +71,40 @@ const createEsbuildConfig = (ctx: Context): esbuild.BuildOptions => {
     },
     jsx: "automatic",
     jsxDev: ctx.options.mode !== "production",
-    plugins,
+    plugins: [
+      cssBundleEntryModulePlugin(ctx),
+      cssModulesPlugin(ctx, { outputCss: true }),
+      vanillaExtractPlugin(ctx, { outputCss: true }),
+      cssSideEffectImportsPlugin(ctx),
+      cssFilePlugin(ctx),
+      absoluteCssUrlsPlugin(),
+      externalPlugin(/^https?:\/\//, { sideEffects: false }),
+      mdxPlugin(ctx),
+      emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
+      NodeModulesPolyfillPlugin(),
+      externalPlugin(/^node:.*/, { sideEffects: false }),
+    ],
     supported: {
       "import-meta": true,
     },
   };
 };
 
-export let create = async (
-  ctx: Context,
-  channels: { cssBundleHref: WriteChannel<string | undefined> }
-) => {
+export let create = async (ctx: Context) => {
   let compiler = await esbuild.context({
     ...createEsbuildConfig(ctx),
-    metafile: true,
     write: false,
   });
   let compile = async () => {
-    try {
-      let { outputFiles } = await compiler.rebuild();
-
-      let isCssBundleFile = (
-        outputFile: esbuild.OutputFile,
-        extension: ".css" | ".css.map"
-      ): boolean => {
-        return (
-          path.dirname(outputFile.path) === ctx.config.assetsBuildDirectory &&
-          path.basename(outputFile.path).startsWith("css-bundle") &&
-          outputFile.path.endsWith(extension)
-        );
-      };
-
-      let cssBundleFile = outputFiles.find((outputFile) =>
-        isCssBundleFile(outputFile, ".css")
-      );
-
-      if (!cssBundleFile) {
-        channels.cssBundleHref.write(undefined);
-        return;
-      }
-
-      let cssBundlePath = cssBundleFile.path;
-
-      let cssBundleHref =
-        ctx.config.publicPath +
-        path.relative(
-          ctx.config.assetsBuildDirectory,
-          path.resolve(cssBundlePath)
-        );
-
-      channels.cssBundleHref.write(cssBundleHref);
-
-      let { css, map } = await postcss([
-        // We need to discard duplicate rules since "composes"
-        // in CSS Modules can result in duplicate styles
-        postcssDiscardDuplicates(),
-      ]).process(cssBundleFile.text, {
-        from: cssBundlePath,
-        to: cssBundlePath,
-        map: ctx.options.sourcemap && {
-          prev: outputFiles.find((outputFile) =>
-            isCssBundleFile(outputFile, ".css.map")
-          )?.text,
-          inline: false,
-          annotation: false,
-          sourcesContent: true,
-        },
-      });
-
-      await fse.ensureDir(path.dirname(cssBundlePath));
-
-      await Promise.all([
-        fse.writeFile(cssBundlePath, css),
-        ctx.options.mode !== "production" && map
-          ? fse.writeFile(`${cssBundlePath}.map`, map.toString()) // Write our updated source map rather than esbuild's
-          : null,
-        ...outputFiles
-          .filter((outputFile) => !/\.(css|js|map)$/.test(outputFile.path))
-          .map(async (asset) => {
-            await fse.ensureDir(path.dirname(asset.path));
-            await fse.writeFile(asset.path, asset.contents);
-          }),
-      ]);
-
-      return cssBundleHref;
-    } catch (error) {
-      channels.cssBundleHref.write(undefined);
-      throw error;
-    }
+    let { outputFiles } = await compiler.rebuild();
+    let bundle = outputFiles.find((outputFile) =>
+      isBundle(ctx, outputFile, ".css")
+    );
+    return { bundle, outputFiles };
   };
   return {
     compile,
+    cancel: compiler.cancel,
     dispose: compiler.dispose,
   };
 };

@@ -7,6 +7,7 @@ import { readConfig } from "../config";
 import { type Manifest } from "../manifest";
 import * as Compiler from "./compiler";
 import type { Context } from "./context";
+import { logThrown } from "./utils/log";
 
 function isEntryPoint(config: RemixConfig, file: string): boolean {
   let appFile = path.relative(config.appDirectory, file);
@@ -42,9 +43,14 @@ export async function watch(
 ): Promise<() => Promise<void>> {
   let start = Date.now();
   let compiler = await Compiler.create({ config, options });
+  let compile = () =>
+    compiler.compile().catch((thrown) => {
+      logThrown(thrown);
+      return undefined;
+    });
 
   // initial build
-  let manifest = await compiler.compile();
+  let manifest = await compile();
   onInitialBuild?.(Date.now() - start, manifest);
 
   let restart = debounce(async () => {
@@ -54,20 +60,20 @@ export async function watch(
 
     try {
       config = await reloadConfig(config.rootDirectory);
-    } catch (error: unknown) {
-      options.onCompileFailure?.(error as Error);
+    } catch (thrown: unknown) {
+      logThrown(thrown);
       return;
     }
 
     compiler = await Compiler.create({ config, options });
-    let manifest = await compiler.compile();
+    let manifest = await compile();
     onRebuildFinish?.(Date.now() - start, manifest);
   }, 500);
 
   let rebuild = debounce(async () => {
     onRebuildStart?.();
     let start = Date.now();
-    let manifest = await compiler.compile();
+    let manifest = await compile();
     onRebuildFinish?.(Date.now() - start, manifest);
   }, 100);
 
@@ -99,8 +105,8 @@ export async function watch(
 
       try {
         config = await reloadConfig(config.rootDirectory);
-      } catch (error: unknown) {
-        options.onCompileFailure?.(error as Error);
+      } catch (thrown: unknown) {
+        logThrown(thrown);
         return;
       }
 

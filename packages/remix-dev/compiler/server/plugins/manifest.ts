@@ -1,7 +1,7 @@
 import type { Plugin } from "esbuild";
 import jsesc from "jsesc";
 
-import type { ReadChannel } from "../../../channel";
+import type * as Channel from "../../../channel";
 import { type Manifest } from "../../../manifest";
 import { assetsManifestVirtualModule } from "../virtualModules";
 
@@ -11,7 +11,7 @@ import { assetsManifestVirtualModule } from "../virtualModules";
  * assets manifest in the server build.
  */
 export function serverAssetsManifestPlugin(channels: {
-  manifest: ReadChannel<Manifest>;
+  manifest: Channel.Type<Manifest>;
 }): Plugin {
   let filter = assetsManifestVirtualModule.filter;
 
@@ -26,8 +26,10 @@ export function serverAssetsManifestPlugin(channels: {
       });
 
       build.onLoad({ filter }, async () => {
+        let manifest = await channels.manifest.result;
+        if (!manifest.ok) throw Error("canceled");
         return {
-          contents: `export default ${jsesc(await channels.manifest.read(), {
+          contents: `export default ${jsesc(manifest.value, {
             es6: true,
           })};`,
           loader: "js",

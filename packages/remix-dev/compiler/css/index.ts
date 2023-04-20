@@ -1,2 +1,2 @@
 export { create as createCompiler } from "./compiler";
-export { write } from "./write";
+export { write as writeBundle } from "./bundle";

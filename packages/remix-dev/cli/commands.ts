@@ -168,18 +168,19 @@ export async function build(
   let start = Date.now();
   let config = await readConfig(remixRoot);
   fse.emptyDirSync(config.assetsBuildDirectory);
-  await compiler.build({
-    config,
-    options: {
-      mode,
-      sourcemap,
-      onWarning: warnOnce,
-      onCompileFailure: (failure) => {
-        compiler.logCompileFailure(failure);
-        throw Error();
+  await compiler
+    .build({
+      config,
+      options: {
+        mode,
+        sourcemap,
+        onWarning: warnOnce,
       },
-    },
-  });
+    })
+    .catch((thrown) => {
+      compiler.logThrown(thrown);
+      process.exit(1);
+    });
 
   console.log(`built in ${prettyMs(Date.now() - start)}`);
 }

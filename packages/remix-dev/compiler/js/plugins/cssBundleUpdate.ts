@@ -1,7 +1,7 @@
 import type { Plugin } from "esbuild";
 import { readFile } from "fs-extra";
 
-import type { ReadChannel } from "../../../channel";
+import type * as Channel from "../../../channel";
 
 const pluginName = "css-bundle-update-plugin";
 const namespace = `${pluginName}-ns`;
@@ -13,7 +13,7 @@ const namespace = `${pluginName}-ns`;
  * disk so it never triggers an update.
  */
 export function cssBundleUpdatePlugin(channels: {
-  cssBundleHref: ReadChannel<string | undefined>;
+  cssBundleHref: Channel.Type<string | undefined>;
 }): Plugin {
   return {
     name: pluginName,
@@ -52,15 +52,14 @@ export function cssBundleUpdatePlugin(channels: {
       });
 
       build.onLoad({ filter: /.*/, namespace }, async (args) => {
-        let [cssBundleHref, contents] = await Promise.all([
-          channels.cssBundleHref.read(),
-          readFile(args.path, "utf8"),
-        ]);
+        let cssBundleHref = await channels.cssBundleHref.result;
+        if (!cssBundleHref.ok) throw Error("canceled");
+        let contents = await readFile(args.path, "utf8");
 
-        if (cssBundleHref) {
+        if (cssBundleHref.value) {
           contents = contents.replace(
             /__INJECT_CSS_BUNDLE_HREF__/g,
-            JSON.stringify(cssBundleHref)
+            JSON.stringify(cssBundleHref.value)
           );
         }
 
