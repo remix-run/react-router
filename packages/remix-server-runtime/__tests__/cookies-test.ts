@@ -142,6 +142,18 @@ describe("cookies", () => {
     expect(setCookie).not.toEqual(setCookie2);
   });
 
+  it("makes the default secrets to be an empty array", async () => {
+    let cookie = createCookie("my-cookie");
+
+    expect(cookie.isSigned).toBe(false);
+
+    let cookie2 = createCookie("my-cookie2", {
+      secrets: undefined,
+    });
+
+    expect(cookie2.isSigned).toBe(false);
+  });
+
   it("makes the default path of cookies to be /", async () => {
     let cookie = createCookie("my-cookie");
 
