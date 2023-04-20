@@ -122,9 +122,10 @@ By default, active loaders will revalidate after any navigation or fetcher mutat
 
 We use _Future Flags_ in the router to help us introduce breaking changes in an opt-in fashion ahead of major releases. Please check out the [blog post][future-flags-post] and [React Router Docs][api-development-strategy] for more information on this process. The currently available future flags in `@remix-run/router` are:
 
-| Flag | Description |
-| `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
-| `v7_prependBasename` | Prepend the `basename` to incoming `router.navigate`/`router.fetch` paths |
+| Flag                     | Description                                                               |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method     |
+| `v7_prependBasename`     | Prepend the `basename` to incoming `router.navigate`/`router.fetch` paths |
 
 [react-router]: https://reactrouter.com
 [remix]: https://remix.run
