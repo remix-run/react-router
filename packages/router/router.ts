@@ -1,4 +1,4 @@
-import type { Action, History, Location, Path, To } from "./history";
+import type { History, Location, Path, To } from "./history";
 import {
   Action as HistoryAction,
   createLocation,
