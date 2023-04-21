@@ -432,6 +432,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
 type BaseSubmissionOptions = {
   formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
+  action?: ActionFunction;
 } & (
   | { formData: FormData; payload?: undefined }
   | { formData?: undefined; payload: any }
@@ -457,7 +458,9 @@ export type RouterNavigateOptions =
 /**
  * Options for a navigate() call for a Link navigation
  */
-type LoadFetchOptions = BaseNavigateOrFetchOptions;
+type LoadFetchOptions = BaseNavigateOrFetchOptions & {
+  loader?: LoaderFunction;
+};
 
 /**
  * Options for a navigate() call for a Form navigation
@@ -1074,6 +1077,21 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    if (
+      to != null &&
+      opts &&
+      "action" in opts &&
+      typeof opts.action === "function"
+    ) {
+      to = null;
+      warning(
+        false,
+        "router.navigate() should not include a `to` location when a custom " +
+          "`action` is passed, the `to` will be ignored in favor of the current " +
+          "location."
+      );
+    }
+
     let normalizedPath = normalizeTo(
       state.location,
       state.matches,
@@ -1133,6 +1151,7 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       historyAction,
     });
+
     if (blockerKey) {
       // Put the blocker into a blocked state
       updateBlocker(blockerKey, {
@@ -1163,6 +1182,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
+      action: opts && "action" in opts ? opts.action : undefined,
     });
   }
 
@@ -1213,6 +1233,7 @@ export function createRouter(init: RouterInit): Router {
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
       replace?: boolean;
+      action?: ActionFunction;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1291,7 +1312,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
-        { replace: opts.replace }
+        { replace: opts.replace, actionOverride: opts.action }
       );
 
       if (actionOutput.shortCircuited) {
@@ -1350,7 +1371,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
-    opts?: { replace?: boolean }
+    opts: { replace?: boolean; actionOverride?: ActionFunction } = {}
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
 
@@ -1366,7 +1387,11 @@ export function createRouter(init: RouterInit): Router {
     let result: DataResult;
     let actionMatch = getTargetMatch(matches, location);
 
-    if (!actionMatch.route.action && !actionMatch.route.lazy) {
+    if (
+      !actionMatch.route.action &&
+      !actionMatch.route.lazy &&
+      !opts.actionOverride
+    ) {
       result = {
         type: ResultType.error,
         error: getInternalRouterError(405, {
@@ -1384,7 +1409,8 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        basename
+        basename,
+        { handlerOverride: opts.actionOverride }
       );
 
       if (request.signal.aborted) {
@@ -1655,6 +1681,21 @@ export function createRouter(init: RouterInit): Router {
 
     if (fetchControllers.has(key)) abortFetcher(key);
 
+    if (
+      href != null &&
+      opts &&
+      (("loader" in opts && typeof opts.loader === "function") ||
+        ("action" in opts && typeof opts.action === "function"))
+    ) {
+      href = null;
+      warning(
+        false,
+        "router.fetch() should not include an `href` when a custom `loader` or " +
+          "`action` is passed, the `href` will be ignored in favor of the " +
+          "current location."
+      );
+    }
+
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(
       state.location,
@@ -1687,14 +1728,30 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      handleFetcherAction(key, routeId, path, match, matches, submission);
+      handleFetcherAction(
+        key,
+        routeId,
+        path,
+        match,
+        matches,
+        submission,
+        opts && "action" in opts ? opts.action : undefined
+      );
       return;
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, { routeId, path });
-    handleFetcherLoader(key, routeId, path, match, matches, submission);
+    handleFetcherLoader(
+      key,
+      routeId,
+      path,
+      match,
+      matches,
+      submission,
+      opts && "loader" in opts ? opts.loader : undefined
+    );
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1705,12 +1762,13 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
-    submission: Submission
+    submission: Submission,
+    actionOverride: ActionFunction | undefined
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
-    if (!match.route.action && !match.route.lazy) {
+    if (!match.route.action && !match.route.lazy && !actionOverride) {
       let error = getInternalRouterError(405, {
         method: submission.formMethod,
         pathname: path,
@@ -1749,7 +1807,8 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      { handlerOverride: actionOverride }
     );
 
     if (fetchRequest.signal.aborted) {
@@ -1955,7 +2014,8 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
-    submission?: Submission
+    submission?: Submission,
+    loaderOverride?: LoaderFunction
   ) {
     let existingFetcher = state.fetchers.get(key);
     // Put this fetcher into it's loading state
@@ -1986,7 +2046,8 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      { handlerOverride: loaderOverride }
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2832,9 +2893,7 @@ export function createStaticHandler(
         manifest,
         mapRouteProperties,
         basename,
-        true,
-        isRouteRequest,
-        requestContext
+        { isStaticRequest: true, isRouteRequest, requestContext }
       );
 
       if (request.signal.aborted) {
@@ -3001,9 +3060,7 @@ export function createStaticHandler(
           manifest,
           mapRouteProperties,
           basename,
-          true,
-          isRouteRequest,
-          requestContext
+          { isStaticRequest: true, isRouteRequest, requestContext }
         )
       ),
     ]);
@@ -3520,9 +3577,12 @@ async function callLoaderOrAction(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
-  isStaticRequest: boolean = false,
-  isRouteRequest: boolean = false,
-  requestContext?: unknown
+  opts: {
+    handlerOverride?: LoaderFunction | ActionFunction;
+    isStaticRequest?: boolean;
+    isRouteRequest?: boolean;
+    requestContext?: unknown;
+  } = {}
 ): Promise<DataResult> {
   let resultType;
   let result;
@@ -3539,14 +3599,14 @@ async function callLoaderOrAction(
         request,
         payload,
         params: match.params,
-        context: requestContext,
+        context: opts.requestContext,
       }),
       abortPromise,
     ]);
   };
 
   try {
-    let handler = match.route[type];
+    let handler = opts.handlerOverride || match.route[type];
 
     if (match.route.lazy) {
       if (handler) {
@@ -3625,7 +3685,7 @@ async function callLoaderOrAction(
           true,
           location
         );
-      } else if (!isStaticRequest) {
+      } else if (!opts.isStaticRequest) {
         // Strip off the protocol+origin for same-origin + same-basename absolute
         // redirects. If this is a static request, we can let it go back to the
         // browser as-is
@@ -3643,7 +3703,7 @@ async function callLoaderOrAction(
       // Instead, throw the Response and let the server handle it with an HTTP
       // redirect.  We also update the Location header in place in this flow so
       // basename and relative routing is taken into account
-      if (isStaticRequest) {
+      if (opts.isStaticRequest) {
         result.headers.set("Location", location);
         throw result;
       }
@@ -3659,7 +3719,7 @@ async function callLoaderOrAction(
     // For SSR single-route requests, we want to hand Responses back directly
     // without unwrapping.  We do this with the QueryRouteResponse wrapper
     // interface so we can know whether it was returned or thrown
-    if (isRouteRequest) {
+    if (opts.isRouteRequest) {
       // eslint-disable-next-line no-throw-literal
       throw {
         type: resultType || ResultType.data,
