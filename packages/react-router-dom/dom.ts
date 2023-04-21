@@ -183,11 +183,11 @@ export function getFormSubmissionInfo(
   let payload: unknown = undefined;
 
   if (isFormElement(target)) {
-      // When grabbing the action from the element, it will have had the basename
-      // prefixed to ensure non-JS scenarios work, so strip it since we'll
-      // re-prefix in the router
-      let attr = target.getAttribute("action");
-      action = attr ? stripBasename(attr, basename) : null;
+    // When grabbing the action from the element, it will have had the basename
+    // prefixed to ensure non-JS scenarios work, so strip it since we'll
+    // re-prefix in the router
+    let attr = target.getAttribute("action");
+    action = attr ? stripBasename(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
     encType = target.getAttribute("enctype") || defaultEncType;
 
@@ -207,11 +207,11 @@ export function getFormSubmissionInfo(
 
     // <button>/<input type="submit"> may override attributes of <form>
 
-      // When grabbing the action from the element, it will have had the basename
-      // prefixed to ensure non-JS scenarios work, so strip it since we'll
-      // re-prefix in the router
+    // When grabbing the action from the element, it will have had the basename
+    // prefixed to ensure non-JS scenarios work, so strip it since we'll
+    // re-prefix in the router
     let attr = target.getAttribute("formaction") || form.getAttribute("action");
-      action = attr ? stripBasename(attr, basename) : null;
+    action = attr ? stripBasename(attr, basename) : null;
 
     method =
       target.getAttribute("formmethod") ||
