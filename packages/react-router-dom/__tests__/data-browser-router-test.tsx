@@ -9,7 +9,7 @@ import {
   prettyDOM,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { ErrorResponse, IDLE_NAVIGATION, Navigation } from "@remix-run/router";
+import type { ErrorResponse } from "@remix-run/router";
 import type { RouteObject } from "react-router-dom";
 import {
   Form,
