@@ -88,19 +88,24 @@ export type V7_MutationFormMethod = Exclude<V7_FormMethod, "GET">;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
-  | "multipart/form-data";
+  | "multipart/form-data"
+  | "application/json"
+  | "text/plain"
+  | null; // Opt-out of serialization
 
 /**
  * @private
  * Internal interface to pass around for action submissions, not intended for
  * external consumption
  */
-export interface Submission {
+export type Submission = {
   formMethod: FormMethod | V7_FormMethod;
   formAction: string;
   formEncType: FormEncType;
-  formData: FormData;
-}
+} & (
+  | { formData: FormData; payload?: undefined }
+  | { formData?: undefined; payload: NonNullable<unknown> | null }
+);
 
 /**
  * @private
@@ -121,7 +126,9 @@ export interface LoaderFunctionArgs extends DataFunctionArgs {}
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs extends DataFunctionArgs {}
+export interface ActionFunctionArgs extends DataFunctionArgs {
+  payload: any;
+}
 
 /**
  * Loaders and actions can return anything except `undefined` (`null` is a
@@ -161,6 +168,7 @@ export interface ShouldRevalidateFunction {
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
     formData?: Submission["formData"];
+    payload?: any;
     actionResult?: DataResult;
     defaultShouldRevalidate: boolean;
   }): boolean;
