@@ -2,7 +2,7 @@
 "react-router-dom": minor
 ---
 
-Add direct `handler` function support to `useSubmit`/`fetcher.submit`/`fetcher.load`. This allows you to skip the creation of a new route to handle the `loader` or `action` (generally useful for fetching to a different endpoint). If both a call-site handler and a route-defined handler exist, the call-site hndler will be used
+Add direct `action` function support to `useSubmit`/`fetcher.submit` and direct `loader` support to `fetcher.load`. This allows you to skip the creation of a new route to handle the `action` or `loader`. If both a call-site handler and a route-defined handler exist, the call-site handler will be used.
 
 **`useSubmit:`**
 

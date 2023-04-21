@@ -2,7 +2,7 @@
 "@remix-run/router": minor
 ---
 
-Add support for direct `handler` functions to be passed to `router.navigate` (submission navigations only) and `router.fetch`. This allows you to skip the creation of a new route to handle the `loader` or `action` (generally useful for fetching to a different endpoint), or you can also override the defined route `loader` or `action` at the call-site.
+- Add support for direct `action` functions to be passed to `router.navigate`. This allows you to skip the creation of a new route to handle the `action` , or you can also override the defined route `action` at the call-site.
 
 **Defining an `action` at the callsite:**
 
@@ -31,6 +31,8 @@ router.navigate(null, {
   }
 })
 ```
+
+- Add support for direct `action`/`loader` functions to be passed to `router.fetch`. This allows you to skip the creation of a new route to handle the `loader` or `action`, or you can also override the defined route `loader` or `action` at the call-site.
 
 **Fetching to a direct loader without a defined route:**
 
