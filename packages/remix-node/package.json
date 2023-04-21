@@ -13,7 +13,9 @@
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "sideEffects": ["./install.js"],
+  "sideEffects": [
+    "./install.js"
+  ],
   "dependencies": {
     "@remix-run/server-runtime": "1.15.0",
     "@remix-run/web-fetch": "^4.3.2",
