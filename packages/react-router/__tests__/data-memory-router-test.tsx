@@ -887,7 +887,7 @@ describe("createMemoryRouter", () => {
 
     spy.mockClear();
     fireEvent.click(screen.getByText("Link to Child"));
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => screen.getByText("Child"));
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>

@@ -5,7 +5,6 @@ import type {
   Location,
   MemoryHistory,
   Router as RemixRouter,
-  RouterState,
   To,
   LazyRouteFunction,
   RelativeRoutingType,
@@ -19,7 +18,6 @@ import {
   stripBasename,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
-import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
 import type {
   DataRouteObject,
@@ -57,17 +55,17 @@ export function RouterProvider({
   fallbackElement,
   router,
 }: RouterProviderProps): React.ReactElement {
-  let getState = React.useCallback(() => router.state, [router]);
+  let [state, setState] = React.useState(router.state);
 
-  // Sync router state to our component state to force re-renders
-  let state: RouterState = useSyncExternalStoreShim(
-    router.subscribe,
-    getState,
-    // We have to provide this so React@18 doesn't complain during hydration,
-    // but we pass our serialized hydration data into the router so state here
-    // is already synced with what the server saw
-    getState
-  );
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  React.useLayoutEffect(() => {
+    return router.subscribe((newState) => {
+      if (newState !== state) {
+        setState(newState);
+      }
+    });
+  }, [router, state]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
