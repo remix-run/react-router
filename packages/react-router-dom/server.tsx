@@ -18,12 +18,17 @@ import {
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import { UNSAFE_mapRouteProperties as mapRouteProperties } from "react-router";
-import type { Location, RouteObject, To } from "react-router-dom";
-import { Routes } from "react-router-dom";
+import type {
+  DataRouteObject,
+  Location,
+  RouteObject,
+  To,
+} from "react-router-dom";
 import {
   createPath,
   parsePath,
   Router,
+  useRoutes,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
 } from "react-router-dom";
@@ -127,7 +132,7 @@ export function StaticRouterProvider({
             navigationType={dataRouterContext.router.state.historyAction}
             navigator={dataRouterContext.navigator}
           >
-            <Routes />
+            <DataRoutes routes={router.routes} />
           </Router>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
@@ -140,6 +145,14 @@ export function StaticRouterProvider({
       ) : null}
     </>
   );
+}
+
+function DataRoutes({
+  routes,
+}: {
+  routes: DataRouteObject[];
+}): React.ReactElement | null {
+  return useRoutes(routes);
 }
 
 function serializeErrors(

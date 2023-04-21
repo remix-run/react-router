@@ -10,6 +10,7 @@ import type {
   PathPattern,
   RelativeRoutingType,
   Router as RemixRouter,
+  RevalidationState,
   To,
 } from "@remix-run/router";
 import {
@@ -319,6 +320,7 @@ export function useRoutes(
   );
 
   let { navigator } = React.useContext(NavigationContext);
+  let dataRouterContext = React.useContext(DataRouterContext);
   let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
@@ -432,7 +434,10 @@ export function useRoutes(
         })
       ),
     parentMatches,
-    dataRouterStateContext || undefined
+    // Only pass along the dataRouterStateContext when we're rendering from the
+    // RouterProvider layer.  If routes is different then we're rendering from
+    // a descendant <Routes> tree
+    dataRouterContext?.router.routes === routes ? dataRouterStateContext : null
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -506,6 +511,7 @@ const defaultErrorElement = <DefaultErrorComponent />;
 
 type RenderErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
+  revalidation: RevalidationState;
   error: any;
   component: React.ReactNode;
   routeContext: RouteContextObject;
@@ -513,6 +519,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
 
 type RenderErrorBoundaryState = {
   location: Location;
+  revalidation: RevalidationState;
   error: any;
 };
 
@@ -524,6 +531,7 @@ export class RenderErrorBoundary extends React.Component<
     super(props);
     this.state = {
       location: props.location,
+      revalidation: props.revalidation,
       error: props.error,
     };
   }
@@ -544,10 +552,14 @@ export class RenderErrorBoundary extends React.Component<
     // Whether we're in an error state or not, we update the location in state
     // so that when we are in an error state, it gets reset when a new location
     // comes in and the user recovers from the error.
-    if (state.location !== props.location) {
+    if (
+      state.location !== props.location ||
+      (state.revalidation !== "idle" && props.revalidation === "idle")
+    ) {
       return {
         error: props.error,
         location: props.location,
+        revalidation: props.revalidation,
       };
     }
 
@@ -558,6 +570,7 @@ export class RenderErrorBoundary extends React.Component<
     return {
       error: props.error || state.error,
       location: state.location,
+      revalidation: props.revalidation || state.revalidation,
     };
   }
 
@@ -613,7 +626,7 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: RemixRouter["state"]
+  dataRouterState: RemixRouter["state"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -635,7 +648,9 @@ export function _renderMatches(
     );
     invariant(
       errorIndex >= 0,
-      `Could not find a matching route for the current errors: ${errors}`
+      `Could not find a matching route for errors on route IDs: ${Object.keys(
+        errors
+      ).join(",")}`
     );
     renderedMatches = renderedMatches.slice(
       0,
@@ -675,6 +690,7 @@ export function _renderMatches(
       (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? (
       <RenderErrorBoundary
         location={dataRouterState.location}
+        revalidation={dataRouterState.revalidation}
         component={errorElement}
         error={error}
         children={getChildren()}
