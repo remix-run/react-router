@@ -451,17 +451,26 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
       // Only check for external origins client-side
       if (isBrowser) {
-        let currentUrl = new URL(window.location.href);
-        let targetUrl = to.startsWith("//")
-          ? new URL(currentUrl.protocol + to)
-          : new URL(to);
-        let path = stripBasename(targetUrl.pathname, basename);
+        try {
+          let currentUrl = new URL(window.location.href);
+          let targetUrl = to.startsWith("//")
+            ? new URL(currentUrl.protocol + to)
+            : new URL(to);
+          let path = stripBasename(targetUrl.pathname, basename);
 
-        if (targetUrl.origin === currentUrl.origin && path != null) {
-          // Strip the protocol/origin/basename for same-origin absolute URLs
-          to = path + targetUrl.search + targetUrl.hash;
-        } else {
-          isExternal = true;
+          if (targetUrl.origin === currentUrl.origin && path != null) {
+            // Strip the protocol/origin/basename for same-origin absolute URLs
+            to = path + targetUrl.search + targetUrl.hash;
+          } else {
+            isExternal = true;
+          }
+        } catch (e) {
+          // We can't do external URL detection without a valid URL
+          warning(
+            false,
+            `<Link to="${to}"> contains an invalid URL which will probably break ` +
+              `when clicked - please update to a valid URL path.`
+          );
         }
       }
     }
