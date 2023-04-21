@@ -1,4 +1,5 @@
 import type {
+  ActionFunction,
   FormEncType,
   HTMLFormMethod,
   RelativeRoutingType,
@@ -109,6 +110,16 @@ export function getSearchParamsForLocation(
   return searchParams;
 }
 
+export type SubmitTarget =
+  | HTMLFormElement
+  | HTMLButtonElement
+  | HTMLInputElement
+  | FormData
+  | URLSearchParams
+  | { [name: string]: string }
+  | NonNullable<unknown> // Raw payload submissions
+  | null;
+
 export interface SubmitOptions {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
@@ -120,13 +131,18 @@ export interface SubmitOptions {
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
    */
-  action?: string;
+  action?: string | ActionFunction;
 
   /**
    * The action URL used to submit the form. Overrides `<form encType>`.
-   * Defaults to "application/x-www-form-urlencoded".
+   * Defaults to "application/x-www-form-urlencoded".  Specifying `null` will
+   * opt-out of serialization and will submit the data directly to your action
+   * in the `payload` parameter.
+   *
+   * In v7, the default behavior will change from "application/x-www-form-urlencoded"
+   * to `null` and will make serialization opt-in
    */
-  encType?: FormEncType;
+  encType?: FormEncType | null;
 
   /**
    * Set `true` to replace the current entry in the browser's history stack
@@ -150,50 +166,32 @@ export interface SubmitOptions {
 }
 
 export function getFormSubmissionInfo(
-  target:
-    | HTMLFormElement
-    | HTMLButtonElement
-    | HTMLInputElement
-    | FormData
-    | URLSearchParams
-    | { [name: string]: string }
-    | null,
-  options: SubmitOptions,
+  target: SubmitTarget,
+  formEncType: FormEncType | undefined,
   basename: string
 ): {
   action: string | null;
   method: string;
-  encType: string;
-  formData: FormData;
+  encType: string | null;
+  formData: FormData | undefined;
+  payload: any;
 } {
   let method: string;
-  let action: string | null = null;
-  let encType: string;
-  let formData: FormData;
+  let action: string | null;
+  let encType: string | null;
+  let formData: FormData | undefined = undefined;
+  let payload: unknown = undefined;
 
   if (isFormElement(target)) {
-    let submissionTrigger: HTMLButtonElement | HTMLInputElement = (
-      options as any
-    ).submissionTrigger;
-
-    if (options.action) {
-      action = options.action;
-    } else {
       // When grabbing the action from the element, it will have had the basename
       // prefixed to ensure non-JS scenarios work, so strip it since we'll
       // re-prefix in the router
       let attr = target.getAttribute("action");
       action = attr ? stripBasename(attr, basename) : null;
-    }
-    method = options.method || target.getAttribute("method") || defaultMethod;
-    encType =
-      options.encType || target.getAttribute("enctype") || defaultEncType;
+    method = target.getAttribute("method") || defaultMethod;
+    encType = target.getAttribute("enctype") || defaultEncType;
 
     formData = new FormData(target);
-
-    if (submissionTrigger && submissionTrigger.name) {
-      formData.append(submissionTrigger.name, submissionTrigger.value);
-    }
   } else if (
     isButtonElement(target) ||
     (isInputElement(target) &&
@@ -209,24 +207,17 @@ export function getFormSubmissionInfo(
 
     // <button>/<input type="submit"> may override attributes of <form>
 
-    if (options.action) {
-      action = options.action;
-    } else {
       // When grabbing the action from the element, it will have had the basename
       // prefixed to ensure non-JS scenarios work, so strip it since we'll
       // re-prefix in the router
-      let attr =
-        target.getAttribute("formaction") || form.getAttribute("action");
+    let attr = target.getAttribute("formaction") || form.getAttribute("action");
       action = attr ? stripBasename(attr, basename) : null;
-    }
 
     method =
-      options.method ||
       target.getAttribute("formmethod") ||
       form.getAttribute("method") ||
       defaultMethod;
     encType =
-      options.encType ||
       target.getAttribute("formenctype") ||
       form.getAttribute("enctype") ||
       defaultEncType;
@@ -243,10 +234,25 @@ export function getFormSubmissionInfo(
       `Cannot submit element that is not <form>, <button>, or ` +
         `<input type="submit|image">`
     );
+  } else if (
+    formEncType !== undefined &&
+    formEncType !== "application/x-www-form-urlencoded"
+  ) {
+    // The default behavior is to encode as application/x-www-form-urlencoded
+    // into FormData which is handled in the else block below.
+    //
+    // Any other encType value (null, application/json, text/plain) means
+    // we will not be submitting as FormData so send the payload through
+    // directly.  The @remix-run/router will handle serialization of the
+    // payload upon Request creation if needed.
+    method = defaultMethod;
+    action = null;
+    encType = null;
+    payload = target;
   } else {
-    method = options.method || defaultMethod;
-    action = options.action || null;
-    encType = options.encType || defaultEncType;
+    method = defaultMethod;
+    action = null;
+    encType = defaultEncType;
 
     if (target instanceof FormData) {
       formData = target;
@@ -258,12 +264,19 @@ export function getFormSubmissionInfo(
           formData.append(name, value);
         }
       } else if (target != null) {
+        // When a raw object is sent - even though we encode it into formData,
+        // we still expose it as payload so it aligns with the behavior if
+        // encType were application/json or text/plain
+        payload = target;
+        // To be deprecated in v7 so the default behavior of undefined matches
+        // the null behavior of no-serialization
         for (let name of Object.keys(target)) {
+          // @ts-expect-error
           formData.append(name, target[name]);
         }
       }
     }
   }
 
-  return { action, method: method.toLowerCase(), encType, formData };
+  return { action, method: method.toLowerCase(), encType, formData, payload };
 }
