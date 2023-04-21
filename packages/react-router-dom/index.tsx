@@ -37,6 +37,7 @@ import type {
   History,
   HTMLFormMethod,
   HydrationState,
+  LoaderFunction,
   Router as RemixRouter,
   V7_FormMethod,
 } from "@remix-run/router";
@@ -55,6 +56,7 @@ import type {
   SubmitOptions,
   ParamKeyValuePair,
   URLSearchParamsInit,
+  SubmitTarget,
 } from "./dom";
 import {
   createSearchParams,
@@ -923,15 +925,6 @@ type SetURLSearchParams = (
   navigateOpts?: NavigateOptions
 ) => void;
 
-type SubmitTarget =
-  | HTMLFormElement
-  | HTMLButtonElement
-  | HTMLInputElement
-  | FormData
-  | URLSearchParams
-  | { [name: string]: string }
-  | null;
-
 /**
  * Submits a HTML `<form>` to the server without reloading the page.
  */
@@ -980,18 +973,22 @@ function useSubmitImpl(
         );
       }
 
-      let { action, method, encType, formData } = getFormSubmissionInfo(
-        target,
-        options,
-        basename
-      );
+      let { action, method, encType, formData, payload } =
+        getFormSubmissionInfo(target, options.encType, basename);
+
+      let path =
+        typeof options.action === "function" ? null : options.action || action;
+      let routerAction =
+        typeof options.action === "function" ? options.action : null;
 
       // Base options shared between fetch() and navigate()
       let opts = {
         preventScrollReset: options.preventScrollReset,
         formData,
-        formMethod: method as HTMLFormMethod,
-        formEncType: encType as FormEncType,
+        payload,
+        formMethod: options.method || method,
+        formEncType: options.encType || encType,
+        action: routerAction,
       };
 
       if (fetcherKey) {
@@ -999,9 +996,9 @@ function useSubmitImpl(
           fetcherRouteId != null,
           "No routeId available for useFetcher()"
         );
-        router.fetch(fetcherKey, fetcherRouteId, action, opts);
+        router.fetch(fetcherKey, fetcherRouteId, path, opts);
       } else {
-        router.navigate(action, {
+        router.navigate(path, {
           ...opts,
           replace: options.replace,
           fromRouteId: currentRouteId,
@@ -1097,7 +1094,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
     // navigation events
     options?: Omit<SubmitOptions, "replace" | "preventScrollReset">
   ) => void;
-  load: (href: string) => void;
+  load: (href: string | LoaderFunction) => void;
 };
 
 /**
@@ -1121,10 +1118,14 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     invariant(routeId, `No routeId available for fetcher.Form()`);
     return createFetcherForm(fetcherKey, routeId);
   });
-  let [load] = React.useState(() => (href: string) => {
+  let [load] = React.useState(() => (href: string | LoaderFunction) => {
     invariant(router, "No router available for fetcher.load()");
     invariant(routeId, "No routeId available for fetcher.load()");
-    router.fetch(fetcherKey, routeId, href);
+    if (typeof href === "function") {
+      router.fetch(fetcherKey, routeId, null, { loader: href });
+    } else {
+      router.fetch(fetcherKey, routeId, href);
+    }
   });
   let submit = useSubmitImpl(fetcherKey, routeId);
 
