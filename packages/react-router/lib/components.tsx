@@ -116,13 +116,25 @@ export function RouterProvider({
             navigationType={router.state.historyAction}
             navigator={navigator}
           >
-            {router.state.initialized ? <Routes /> : fallbackElement}
+            {router.state.initialized ? (
+              <DataRoutes routes={router.routes} />
+            ) : (
+              fallbackElement
+            )}
           </Router>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}
     </>
   );
+}
+
+function DataRoutes({
+  routes,
+}: {
+  routes: DataRouteObject[];
+}): React.ReactElement | null {
+  return useRoutes(routes);
 }
 
 export interface MemoryRouterProps {
@@ -393,15 +405,7 @@ export function Routes({
   children,
   location,
 }: RoutesProps): React.ReactElement | null {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  // When in a DataRouterContext _without_ children, we use the router routes
-  // directly.  If we have children, then we're in a descendant tree and we
-  // need to use child routes.
-  let routes =
-    dataRouterContext && !children
-      ? (dataRouterContext.router.routes as DataRouteObject[])
-      : createRoutesFromChildren(children);
-  return useRoutes(routes, location);
+  return useRoutes(createRoutesFromChildren(children), location);
 }
 
 export interface AwaitResolveRenderFunction {

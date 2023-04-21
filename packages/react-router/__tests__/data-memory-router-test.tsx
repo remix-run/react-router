@@ -1019,11 +1019,6 @@ describe("createMemoryRouter", () => {
       ),
       {
         initialEntries: ["/deep/path/to/descendant/routes"],
-        hydrationData: {
-          loaderData: {
-            "0-0": "count=1",
-          },
-        },
       }
     );
     let { container } = render(<RouterProvider router={router} />);
@@ -1053,6 +1048,56 @@ describe("createMemoryRouter", () => {
       "<div>
         <h1>
           👋 Hello from the other side!
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("renders <Routes> alongside a data router ErrorBoundary", () => {
+    let router = createMemoryRouter(
+      [
+        {
+          path: "*",
+          Component() {
+            return (
+              <>
+                <Outlet />
+                <Routes>
+                  <Route index element={<h1>Descendant</h1>} />
+                </Routes>
+              </>
+            );
+          },
+          children: [
+            {
+              id: "index",
+              index: true,
+              Component: () => <h1>Child</h1>,
+              ErrorBoundary() {
+                return <p>{(useRouteError() as Error).message}</p>;
+              },
+            },
+          ],
+        },
+      ],
+      {
+        initialEntries: ["/"],
+        hydrationData: {
+          errors: {
+            index: new Error("Broken!"),
+          },
+        },
+      }
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Broken!
+        </p>
+        <h1>
+          Descendant
         </h1>
       </div>"
     `);
