@@ -283,6 +283,10 @@ export function getFormSubmissionInfo(
           formData.append(name, value);
         }
       } else if (target != null) {
+        // When a raw object is sent - even though we encode it into formData,
+        // we still expose it as payload so it aligns with the behavior if
+        // encType were application/json or text/plain
+        payload = target;
         // To be deprecated in v7 so the default behavior of undefined matches
         // the null behavior of no-serialization
         for (let name of Object.keys(target)) {

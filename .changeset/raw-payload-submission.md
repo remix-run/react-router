@@ -2,21 +2,45 @@
 "react-router-dom": minor
 ---
 
-- Support submission of raw payloads through `useSubmit`/`fetcher.submit` by opting out of serialization into `request.formData` using `encType: null`. When opting-out of serialization, your data will be passed to the action in a new `payload` parameter:
+- Support better submission and control of serialization of raw payloads through `useSubmit`/`fetcher.submit`. The default `encType` will still be `application/x-www-form-urlencoded` as it is today, but actions will now also receive a raw `payload` parameter when you submit a raw value (not an HTML element, `FormData`, or `URLSearchParams`).
+
+The default behavior will still serialize into `FormData`:
+
+```jsx
+function Component() {
+  let submit = useSubmit();
+  submit({ key: "value" });
+  // navigation.formEncType => "application/x-www-form-urlencoded"
+  // navigation.formData    => FormData instance
+  // navigation.payload     => { key: "Value" }
+}
+
+function action({ request, payload }) {
+  // request.headers.get("Content-Type") => "application/x-www-form-urlencoded"
+  // request.formData                    => FormData instance
+  // payload                             => { key: 'value' }
+}
+```
+
+You may opt out of this default serialization using `encType: null`:
 
 ```jsx
 function Component() {
   let submit = useSubmit();
   submit({ key: "value" }, { encType: null });
+  // navigation.formEncType => null
+  // navigation.formData    => undefined
+  // navigation.payload     => { key: "Value" }
 }
 
 function action({ request, payload }) {
-  // payload      => { key: 'value' }
-  // request.body => null
+  // request.headers.get("Content-Type") => null
+  // request.formData                    => undefined
+  // payload                             => { key: 'value' }
 }
 ```
 
-Since the default behavior in `useSubmit` today is to serialize to `application/x-www-form-urlencoded`, that will remain the behavior for `encType:undefined` in v6. But in v7, we plan to change the default behavior for `undefined` to skip serialization. In order to better prepare for this change, we encourage developers to add explicit content types to scenarios in which they are submitting raw JSON objects:
+_Note: we plan to change the default behavior of `{ encType: undefined }` to match this "no serialization" behavior in React Router v7. In order to better prepare for this change, we encourage developers to add explicit content types to scenarios in which they are submitting raw JSON objects:_
 
 ```jsx
 function Component() {
@@ -36,11 +60,15 @@ function Component() {
 function Component() {
   let submit = useSubmit();
   submit({ key: "value" }, { encType: "application/json" });
+  // navigation.formEncType => "application/json"
+  // navigation.formData    => undefined
+  // navigation.payload     => { key: "Value" }
 }
 
 function action({ request, payload }) {
-  // payload              => { key: 'value' }
-  // await request.json() => {"key":"value"}
+  // request.headers.get("Content-Type") => "application/json"
+  // request.json                        => { key: 'value' }
+  // payload                             => { key: 'value' }
 }
 ```
 
@@ -48,11 +76,15 @@ function action({ request, payload }) {
 function Component() {
   let submit = useSubmit();
   submit({ key: "value" }, { encType: "application/x-www-form-urlencoded" });
+  // navigation.formEncType => "application/x-www-form-urlencoded"
+  // navigation.formData    => FormData instance
+  // navigation.payload     => { key: "Value" }
 }
 
 function action({ request, payload }) {
-  // payload                  => { key: 'value' }
-  // await request.formData() => FormData instance with a single entry of key=value
+  // request.headers.get("Content-Type") => "application/x-www-form-urlencoded"
+  // request.formData                    => { key: 'value' }
+  // payload                             => { key: 'value' }
 }
 ```
 
@@ -60,10 +92,14 @@ function action({ request, payload }) {
 function Component() {
   let submit = useSubmit();
   submit("Plain ol' text", { encType: "text/plain" });
+  // navigation.formEncType => "text/plain"
+  // navigation.formData    => undefined
+  // navigation.payload     => "Plain ol' text"
 }
 
 function action({ request, payload }) {
-  // payload              => "Plain ol' text"
-  // await request.text() => "Plain ol' text"
+  // request.headers.get("Content-Type") => "text/plain"
+  // request.text                        => "Plain ol' text"
+  // payload                             => "Plain ol' text"
 }
 ```

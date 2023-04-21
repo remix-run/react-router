@@ -3178,17 +3178,6 @@ function normalizeNavigateOptions(
     };
   }
 
-  // formData/payload are mutually exclusive
-  if (
-    (opts.formData == null && opts.payload === undefined) ||
-    (opts.formData != null && opts.payload !== undefined)
-  ) {
-    return {
-      path,
-      error: getInternalRouterError(400, { type: "formData-payload" }),
-    };
-  }
-
   // Create a Submission on non-GET navigations
   let submission: Submission;
   let rawFormMethod = opts.formMethod || "get";
@@ -3196,10 +3185,9 @@ function normalizeNavigateOptions(
     ? (rawFormMethod.toUpperCase() as V7_FormMethod)
     : (rawFormMethod.toLowerCase() as FormMethod);
   let formAction = stripHashFromPath(path);
-  let formData: FormData;
 
   // User opted-out of serialization, so just pass along the payload directly
-  if (opts.payload !== undefined) {
+  if (opts.payload !== undefined && opts.formData == null) {
     // Any payload encType's besides these pass through as a normal payload and
     // get serialized in createClientSideRequest since they are not represented
     // via formData
@@ -3212,18 +3200,17 @@ function normalizeNavigateOptions(
     };
 
     return { path, submission };
-  } else {
-    // We know this exists due to the mutually exclusive check above
-    formData = opts.formData!;
   }
+
+  invariant(opts.formData, "Expected a FormData instance");
 
   submission = {
     formMethod,
     formAction,
     formEncType:
       (opts && opts.formEncType) || "application/x-www-form-urlencoded",
-    formData,
-    payload: undefined,
+    formData: opts.formData,
+    payload: opts.payload,
   };
 
   if (isMutationMethod(submission.formMethod)) {
@@ -3232,7 +3219,7 @@ function normalizeNavigateOptions(
 
   // Flatten submission onto URLSearchParams for GET submissions
   let parsedPath = parsePath(path);
-  let searchParams = convertFormDataToSearchParams(formData);
+  let searchParams = convertFormDataToSearchParams(opts.formData);
   // On GET navigation submissions we can drop the ?index param from the
   // resulting location since all loaders will run.  But fetcher GET submissions
   // only run a single loader so we need to preserve any incoming ?index params
@@ -4037,7 +4024,7 @@ function getInternalRouterError(
     pathname?: string;
     routeId?: string;
     method?: string;
-    type?: "defer-action" | "formData-payload";
+    type?: "defer-action";
   } = {}
 ) {
   let statusText = "Unknown Server Error";
@@ -4052,10 +4039,6 @@ function getInternalRouterError(
         `so there is no way to handle the request.`;
     } else if (type === "defer-action") {
       errorMessage = "defer() is not supported in actions";
-    } else if (type === "formData-payload") {
-      errorMessage =
-        "You must include either `formData` or `payload` on a mutation " +
-        "submission navigation, but not both";
     }
   } else if (status === 403) {
     statusText = "Forbidden";
