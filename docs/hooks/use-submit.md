@@ -91,7 +91,9 @@ You may also choose which type of serialization you'd like via the `encType` opt
 
 ```tsx
 let obj = { key: "value" };
-submit(obj, { encType: 'application/x-www-form-urlencoded' }); // -> request.formData()
+submit(obj, {
+  encType: "application/x-www-form-urlencoded",
+}); // -> request.formData()
 ```
 
 ```tsx
