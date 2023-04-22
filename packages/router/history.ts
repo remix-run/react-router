@@ -414,6 +414,9 @@ export type HashHistoryOptions = UrlHistoryOptions;
 export function createHashHistory(
   options: HashHistoryOptions = {}
 ): HashHistory {
+  if (!window.location.hash) {
+    window.location.hash = '/';
+  }
   function createHashLocation(
     window: Window,
     globalHistory: Window["history"]
