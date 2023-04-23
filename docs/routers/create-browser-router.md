@@ -124,4 +124,4 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [route]: ../route/route
 [routes]: ../components/routes
 [historyapi]: https://developer.mozilla.org/en-US/docs/Web/API/History
-[api-development-strategy]: ../guides/api-development-strategy.md
+[api-development-strategy]: ../guides/api-development-strategy
