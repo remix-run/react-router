@@ -231,16 +231,16 @@ test("HMR", async ({ page }) => {
   let dev = execa("npm", ["run", "dev"], { cwd: projectDir });
   let devStdout = bufferize(dev.stdout!);
   let devStderr = bufferize(dev.stderr!);
-  await wait(
-    () => {
-      let stderr = devStderr();
-      if (stderr.length > 0) throw Error(stderr);
-      return /✅ app ready: /.test(devStdout());
-    },
-    { timeoutMs: 10_000 }
-  );
-
   try {
+    await wait(
+      () => {
+        let stderr = devStderr();
+        if (stderr.length > 0) throw Error(stderr);
+        return /✅ app ready: /.test(devStdout());
+      },
+      { timeoutMs: 10_000 }
+    );
+
     await page.goto(`http://localhost:${appServerPort}`, {
       waitUntil: "networkidle",
     });

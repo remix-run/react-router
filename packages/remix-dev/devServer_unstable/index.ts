@@ -63,6 +63,7 @@ export let serve = async (
         }
       },
       onRebuildStart: () => {
+        state.buildHashChannel?.err();
         clean(config);
         websocket.log("Rebuilding...");
       },
@@ -81,7 +82,9 @@ export let serve = async (
             state.appServer = startAppServer(options.command);
           }
         }
-        await state.buildHashChannel.result;
+        let { ok } = await state.buildHashChannel.result;
+        // result not ok -> new build started before this one finished. do not process outdated manifest
+        if (!ok) return;
 
         if (manifest.hmr && state.prevManifest) {
           let updates = HMR.updates(config, manifest, state.prevManifest);
