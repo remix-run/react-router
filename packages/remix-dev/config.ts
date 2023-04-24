@@ -455,6 +455,11 @@ export async function readConfig(
   let serverEntryPoint = appConfig.server;
   let serverMainFields = appConfig.serverMainFields;
   let serverMinify = appConfig.serverMinify;
+
+  if (!appConfig.serverModuleFormat) {
+    warnOnce(serverModuleFormatWarning, "serverModuleFormatWarning")
+  }
+
   let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
   let serverPlatform = appConfig.serverPlatform || "node";
   if (isCloudflareRuntime) {
@@ -894,6 +899,12 @@ export let serverBuildTargetWarning =
   "Use a combination of server module config values to achieve the same build output. " +
   "For instructions on making this change see " +
   "https://remix.run/docs/en/v1.15.0/pages/v2#serverbuildtarget";
+
+export const serverModuleFormatWarning =
+  "⚠️ REMIX FUTURE CHANGE: The `serverModuleFormat` config default option will be changing in v2 " +
+  "from `cjs` to `esm`. You can prepare for this change by explicitly specifying `serverModuleFormat: 'cjs'`. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.16.0/pages/v2#servermoduleformat";
 
 export let flatRoutesWarning =
   "⚠️ REMIX FUTURE CHANGE: The route file convention is changing in v2. " +

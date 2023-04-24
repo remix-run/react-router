@@ -13,6 +13,7 @@ import {
   flatRoutesWarning,
   formMethodWarning,
   metaWarning,
+  serverModuleFormatWarning,
 } from "../config";
 
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
@@ -358,6 +359,8 @@ describe("the create command", () => {
         formMethodWarning +
         "\n" +
         metaWarning +
+        "\n" +
+        serverModuleFormatWarning +
         "\n" +
         flatRoutesWarning +
         "\n\n" +

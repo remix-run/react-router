@@ -17,6 +17,7 @@ let fixture = (options: {
   files: {
     "remix.config.js": js`
       module.exports = {
+        serverModuleFormat: "cjs",
         tailwind: true,
         future: {
           unstable_dev: {
