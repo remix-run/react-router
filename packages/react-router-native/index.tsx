@@ -27,6 +27,7 @@ export type {
   unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  FetcherWithMethods,
   Fetcher,
   Hash,
   IndexRouteObject,
@@ -62,6 +63,8 @@ export type {
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
+  SubmitFunction,
+  SubmitOptions,
   To,
 } from "react-router";
 export {
@@ -92,6 +95,8 @@ export {
   useActionData,
   useAsyncError,
   useAsyncValue,
+  useFetcher,
+  useFetchers,
   unstable_useBlocker,
   useHref,
   useInRouterContext,
@@ -110,6 +115,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  useSubmit,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
