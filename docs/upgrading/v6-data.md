@@ -27,7 +27,7 @@ We built the new `<RouterProvider>` component such that it would enable the new 
 
 Let's assume we've got a current application with 2 descendant route trees, and assume these routes are all doing in-component data fetching, and rendering their own loading and error states.
 
-```jsx
+```tsx
 import * as React from "react";
 import {
   BrowserRouter,
@@ -87,7 +87,7 @@ We can render this application inside a `RouterProvider` with only a few small c
 3. Create a data router singleton with a splat route for the `Root` element
 4. Add a new `App` component rendering a `<RouterProvider>`
 
-```jsx lines=[10-13,15-18,20-21,22-23]
+```tsx lines=[10-13,15-18,20-21,22-23]
 import * as React from "react";
 import {
   createBrowserRouter,
@@ -137,7 +137,7 @@ function UserApp() {
 
 Let's start with the `/` route for the `<Home>` component. All we need to do is lift the `<Route>` definition up to the data router:
 
-```jsx lines=[2,13]
+```tsx lines=[2,13]
 const router = createBrowserRouter([
   { path: "/", Component: Home }, // 🆕
   { path: "*", Component: Root },
@@ -162,7 +162,7 @@ Now you can add data APIs to your home route (`loader`, `action`, `errorElement`
 
 Now let's look at lifting the Blog App upwards, but still doing it one leaf route at a time. In order to lift the `/blog` index route up, we need the `/blog/*` splat route lifted as well, but we can still render the `/blog/posts` route where it is and do that separately.
 
-```jsx lines=[3-12,23,32]
+```tsx lines=[3-12,23,32]
 const router = createBrowserRouter([
   { path: "/", Component: Home },
   {
