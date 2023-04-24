@@ -106,7 +106,9 @@ let text = "Plain ol' text";
 submit(obj, { encType: "text/plain" }); // -> request.text()
 ```
 
-<docs-warn>In future versions of React Router, the default behavior will not serialize raw JSON payloads. If you are submitting raw JSON today it's recommended to specify an explicit `encType`.</docs-warn>
+<docs-info>If you're using `createMemoryRouter`, then the `FormData` APIs of `useSubmit` aren't relevant, and all submissions are `payload` based.</docs-info>
+
+<docs-warn>In future versions of React Router DOM, the default behavior will not serialize raw JSON payloads. If you are submitting raw JSON today it's recommended to specify an explicit `encType`.</docs-warn>
 
 ### Opting out of serialization
 

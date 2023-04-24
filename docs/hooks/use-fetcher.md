@@ -82,6 +82,8 @@ function SomeComponent() {
 }
 ```
 
+<docs-warn>`fetcher.Form` is only available in the DOM-based versions of React Router (`createBrowserRouter`and `createHashRouter`) but not in the memory-based versions (`createMemoryRouter`)</docs-warn>
+
 ## `fetcher.load()`
 
 Loads data from a route loader.
