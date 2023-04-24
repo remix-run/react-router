@@ -457,7 +457,7 @@ export async function readConfig(
   let serverMinify = appConfig.serverMinify;
 
   if (!appConfig.serverModuleFormat) {
-    warnOnce(serverModuleFormatWarning, "serverModuleFormatWarning")
+    warnOnce(serverModuleFormatWarning, "serverModuleFormatWarning");
   }
 
   let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
