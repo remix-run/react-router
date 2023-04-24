@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  act,
   render,
   fireEvent,
   waitFor,
@@ -32,6 +33,10 @@ import {
   useNavigation,
   useRevalidator,
   UNSAFE_DataRouterContext as DataRouterContext,
+  useFetcher,
+  useFetchers,
+  useSubmit,
+  useNavigate,
 } from "react-router";
 
 describe("createMemoryRouter", () => {
@@ -615,8 +620,6 @@ describe("createMemoryRouter", () => {
   it("executes route actions/loaders on submission navigations", async () => {
     let barDefer = createDeferred();
     let barActionDefer = createDeferred();
-    let formData = new FormData();
-    formData.append("test", "value");
 
     let router = createMemoryRouter(
       createRoutesFromElements(
@@ -638,7 +641,11 @@ describe("createMemoryRouter", () => {
       let navigation = useNavigation();
       return (
         <div>
-          <MemoryNavigate to="/bar" formMethod="post" formData={formData}>
+          <MemoryNavigate
+            to="/bar"
+            formMethod="post"
+            payload={{ key: "value" }}
+          >
             Post to Bar
           </MemoryNavigate>
           <p>{navigation.state}</p>
@@ -1101,6 +1108,1990 @@ describe("createMemoryRouter", () => {
         </h1>
       </div>"
     `);
+  });
+
+  describe("useSubmit", () => {
+    it("executes route actions/loaders on useSubmit navigations", async () => {
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
+
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            action={() => actionDefer.promise}
+            loader={() => loaderDefer.promise}
+            element={<Home />}
+          />
+        ),
+        {
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Home() {
+        let data = useLoaderData() as string;
+        let actionData = useActionData() as string | undefined;
+        let navigation = useNavigation();
+        let submit = useSubmit();
+        return (
+          <div>
+            <button
+              onClick={() => submit({ key: "value" }, { method: "post" })}
+            >
+              Submit Form
+            </button>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+              <p>{actionData}</p>
+            </div>
+            <Outlet />
+          </div>
+        );
+      }
+
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("submitting"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            submitting
+          </p>
+          <p />
+          <p />
+        </div>"
+      `);
+
+      actionDefer.resolve("Action Data");
+      await waitFor(() => screen.getByText("loading"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            loading
+          </p>
+          <p />
+          <p>
+            Action Data
+          </p>
+        </div>"
+      `);
+
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+          <p>
+            Action Data
+          </p>
+        </div>"
+      `);
+    });
+
+    it("executes lazy route actions/loaders on useSubmit navigations", async () => {
+      let loaderDefer = createDeferred();
+      let actionDefer = createDeferred();
+
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Home />}>
+            <Route index element={<h1>Home</h1>} />
+            <Route
+              path="action"
+              lazy={async () => ({
+                action: () => actionDefer.promise,
+                loader: () => loaderDefer.promise,
+                element: <h1>Action</h1>,
+              })}
+            />
+          </Route>
+        ),
+        {}
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Home() {
+        let data = useMatches().pop()?.data as string | undefined;
+        let actionData = useActionData() as string | undefined;
+        let navigation = useNavigation();
+        let submit = useSubmit();
+        return (
+          <div>
+            <button
+              onClick={() =>
+                submit({ key: "value" }, { method: "post", action: "/action" })
+              }
+            >
+              Submit Form
+            </button>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <p>{data}</p>
+              <p>{actionData}</p>
+              <Outlet />
+            </div>
+          </div>
+        );
+      }
+
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p />
+          <p />
+          <h1>
+            Home
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit Form"));
+      await waitFor(() => screen.getByText("submitting"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            submitting
+          </p>
+          <p />
+          <p />
+          <h1>
+            Home
+          </h1>
+        </div>"
+      `);
+
+      actionDefer.resolve("Action Data");
+      await waitFor(() => screen.getByText("loading"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            loading
+          </p>
+          <p />
+          <p>
+            Action Data
+          </p>
+          <h1>
+            Home
+          </h1>
+        </div>"
+      `);
+
+      loaderDefer.resolve("Loader Data");
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          id="output"
+        >
+          <p>
+            idle
+          </p>
+          <p>
+            Loader Data
+          </p>
+          <p>
+            Action Data
+          </p>
+          <h1>
+            Action
+          </h1>
+        </div>"
+      `);
+    });
+
+    it('defaults useSubmit({ method: "get" }) to be a PUSH navigation', async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
+            <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
+          </Route>
+        ),
+        {
+          hydrationData: {},
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Layout() {
+        let navigate = useNavigate();
+        let submit = useSubmit();
+        let formData = new FormData();
+        formData.append("test", "value");
+        return (
+          <>
+            <button
+              onClick={() => submit(formData, { action: "1", method: "get" })}
+            >
+              Submit
+            </button>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("index"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+    });
+
+    it('defaults useSubmit({ method: "post" }) to a new location to be a PUSH navigation', async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
+            <Route
+              path="2"
+              action={() => "action"}
+              loader={() => "2"}
+              element={<h1>Page 2</h1>}
+            />
+          </Route>
+        ),
+        {
+          hydrationData: {},
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Layout() {
+        let navigate = useNavigate();
+        let submit = useSubmit();
+        let formData = new FormData();
+        formData.append("test", "value");
+        return (
+          <>
+            <MemoryNavigate to="1">Go to 1</MemoryNavigate>
+            <button
+              onClick={() => {
+                submit(formData, { action: "2", method: "post" });
+              }}
+            >
+              Submit
+            </button>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go to 1"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("Page 2"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            Page 2
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+    });
+
+    it('defaults useSubmit({ method: "post" }) to the same location to be a REPLACE navigation', async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route element={<Layout />}>
+            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route
+              path="1"
+              action={() => "action"}
+              loader={() => "1"}
+              element={<h1>Page 1</h1>}
+            />
+          </Route>
+        ),
+        {
+          hydrationData: {},
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Layout() {
+        let navigate = useNavigate();
+        let submit = useSubmit();
+        let actionData = useActionData() as string | undefined;
+        let formData = new FormData();
+        formData.append("test", "value");
+        return (
+          <>
+            <MemoryNavigate to="1">Go to 1</MemoryNavigate>
+            <button
+              onClick={() => {
+                submit(formData, { action: "1", method: "post" });
+              }}
+            >
+              Submit
+            </button>
+            <button onClick={() => navigate(-1)}>Go back</button>
+            <div className="output">
+              {actionData ? <p>{actionData}</p> : null}
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go to 1"));
+      await waitFor(() => screen.getByText("Page 1"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("action"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <p>
+            action
+          </p>
+          <h1>
+            Page 1
+          </h1>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Go back"));
+      await waitFor(() => screen.getByText("index"));
+      expect(getHtml(container.querySelector(".output")!))
+        .toMatchInlineSnapshot(`
+        "<div
+          class="output"
+        >
+          <h1>
+            index
+          </h1>
+        </div>"
+      `);
+    });
+
+    it("allows direct actions to be passed to useSubmit", async () => {
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              let actionData = useActionData() as string | undefined;
+              let submit = useSubmit();
+              return (
+                <>
+                  <button
+                    onClick={() =>
+                      submit(new FormData(), {
+                        method: "post",
+                        action: () => "ACTION",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                  <p>{actionData || "empty"}</p>
+                </>
+              );
+            },
+          },
+        ],
+        {}
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("empty");
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("ACTION"));
+      expect(getHtml(container)).toMatch("ACTION");
+    });
+
+    it("does not serialize on submit(object) submissions", async () => {
+      let actionSpy = jest.fn();
+      let payload = { a: "1", b: "2" };
+      let navigation;
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          action: actionSpy,
+          Component() {
+            let submit = useSubmit();
+            let n = useNavigation();
+            if (n.state === "submitting") {
+              navigation = n;
+            }
+            return (
+              <button onClick={() => submit(payload, { method: "post" })}>
+                Submit
+              </button>
+            );
+          },
+        },
+      ]);
+      render(<RouterProvider router={router} />);
+
+      fireEvent.click(screen.getByText("Submit"));
+      expect(navigation.formData).toBe(undefined);
+      expect(navigation.payload).toBe(payload);
+      let { request, payload: actionPayload } = actionSpy.mock.calls[0][0];
+      expect(request.headers.get("Content-Type")).toBeNull();
+      expect(request.body).toBe(null);
+      expect(actionPayload).toBe(payload);
+    });
+
+    it("serializes formData on submit(object)/encType:application/x-www-form-urlencoded submissions", async () => {
+      let actionSpy = jest.fn();
+      let payload = { a: "1", b: "2" };
+      let navigation;
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          action: actionSpy,
+          Component() {
+            let submit = useSubmit();
+            let n = useNavigation();
+            if (n.state === "submitting") {
+              navigation = n;
+            }
+            return (
+              <button
+                onClick={() =>
+                  submit(payload, {
+                    method: "post",
+                    encType: "application/x-www-form-urlencoded",
+                  })
+                }
+              >
+                Submit
+              </button>
+            );
+          },
+        },
+      ]);
+      render(<RouterProvider router={router} />);
+
+      fireEvent.click(screen.getByText("Submit"));
+      expect(navigation.formData).toBeUndefined();
+      expect(navigation.payload).toBe(payload);
+      let { request, payload: actionPayload } = actionSpy.mock.calls[0][0];
+      expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
+        `"application/x-www-form-urlencoded;charset=UTF-8"`
+      );
+      let actionFormData = await request.formData();
+      expect(actionFormData.get("a")).toBe("1");
+      expect(actionFormData.get("b")).toBe("2");
+      expect(actionPayload).toBe(payload);
+    });
+
+    it("serializes JSON on submit(object)/encType:application/json submissions", async () => {
+      let actionSpy = jest.fn();
+      let payload = { a: "1", b: "2" };
+      let navigation;
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          action: actionSpy,
+          Component() {
+            let submit = useSubmit();
+            let n = useNavigation();
+            if (n.state === "submitting") {
+              navigation = n;
+            }
+            return (
+              <button
+                onClick={() =>
+                  submit(payload, {
+                    method: "post",
+                    encType: "application/json",
+                  })
+                }
+              >
+                Submit
+              </button>
+            );
+          },
+        },
+      ]);
+      render(<RouterProvider router={router} />);
+
+      fireEvent.click(screen.getByText("Submit"));
+      expect(navigation.formData).toBe(undefined);
+      expect(navigation.payload).toBe(payload);
+      let { request, payload: actionPayload } = actionSpy.mock.calls[0][0];
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      expect(await request.json()).toEqual({ a: "1", b: "2" });
+      expect(actionPayload).toBe(payload);
+    });
+
+    it("serializes text on submit(object)/encType:text/plain submissions", async () => {
+      let actionSpy = jest.fn();
+      let payload = "look ma, no formData!";
+      let navigation;
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          action: actionSpy,
+          Component() {
+            let submit = useSubmit();
+            let n = useNavigation();
+            if (n.state === "submitting") {
+              navigation = n;
+            }
+            return (
+              <button
+                onClick={() =>
+                  submit(payload, {
+                    method: "post",
+                    encType: "text/plain",
+                  })
+                }
+              >
+                Submit
+              </button>
+            );
+          },
+        },
+      ]);
+      render(<RouterProvider router={router} />);
+
+      fireEvent.click(screen.getByText("Submit"));
+      expect(navigation.formData).toBe(undefined);
+      expect(navigation.payload).toBe(payload);
+      let { request, payload: actionPayload } = actionSpy.mock.calls[0][0];
+      expect(request.headers.get("Content-Type")).toBe("text/plain");
+      expect(await request.text()).toEqual(payload);
+      expect(actionPayload).toBe(payload);
+    });
+  });
+
+  describe("useFetcher(s)", () => {
+    it("handles fetcher.load and fetcher.submit", async () => {
+      let count = 0;
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Comp />}
+            action={({ payload }) => ({ count: count + payload.increment })}
+            loader={async ({ request }) => {
+              // Need to add a domain on here in node unit testing so it's a
+              // valid URL. When running in the browser the domain is
+              // automatically added in new Request()
+              let increment =
+                new URL(`https://remix.test${request.url}`).searchParams.get(
+                  "increment"
+                ) || "1";
+              count = count + parseInt(increment, 10);
+              return { count };
+            }}
+          />
+        ),
+        {
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        return (
+          <>
+            <p id="output">
+              {fetcher.state}
+              {fetcher.data ? JSON.stringify(fetcher.data) : null}
+            </p>
+            <button onClick={() => fetcher.load("/")}>load 1</button>
+            <button onClick={() => fetcher.load("/?increment=5")}>
+              load 5
+            </button>
+            <button
+              onClick={() =>
+                fetcher.submit(
+                  { increment: 10 },
+                  {
+                    method: "post",
+                  }
+                )
+              }
+            >
+              submit 10
+            </button>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<p
+          id="output"
+        >
+          idle
+        </p>"
+      `);
+
+      fireEvent.click(screen.getByText("load 1"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<p
+          id="output"
+        >
+          loading
+        </p>"
+      `);
+
+      await waitFor(() => screen.getByText(/idle/));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<p
+          id="output"
+        >
+          idle
+          {"count":1}
+        </p>"
+      `);
+
+      fireEvent.click(screen.getByText("load 5"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<p
+          id="output"
+        >
+          loading
+          {"count":1}
+        </p>"
+      `);
+
+      await waitFor(() => screen.getByText(/idle/));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<p
+          id="output"
+        >
+          idle
+          {"count":6}
+        </p>"
+      `);
+
+      fireEvent.click(screen.getByText("submit 10"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<p
+          id="output"
+        >
+          submitting
+          {"count":6}
+        </p>"
+      `);
+
+      await waitFor(() => screen.getByText(/idle/));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+        "<p
+          id="output"
+        >
+          idle
+          {"count":16}
+        </p>"
+      `);
+    });
+
+    it("handles fetcher ?index params", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/parent"
+            element={<Outlet />}
+            action={() => "PARENT ACTION"}
+            loader={() => "PARENT LOADER"}
+          >
+            <Route
+              index
+              element={<Index />}
+              action={() => "INDEX ACTION"}
+              loader={() => "INDEX LOADER"}
+            />
+          </Route>
+        ),
+        {
+          initialEntries: ["/parent"],
+          hydrationData: { loaderData: { parent: null, index: null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Index() {
+        let fetcher = useFetcher();
+
+        return (
+          <>
+            <p id="output">{fetcher.data}</p>
+            <button onClick={() => fetcher.load("/parent")}>Load parent</button>
+            <button onClick={() => fetcher.load("/parent?index")}>
+              Load index
+            </button>
+            <button onClick={() => fetcher.submit({})}>Submit empty</button>
+            <button
+              onClick={() =>
+                fetcher.submit({}, { method: "get", action: "/parent" })
+              }
+            >
+              Submit parent get
+            </button>
+            <button
+              onClick={() =>
+                fetcher.submit({}, { method: "get", action: "/parent?index" })
+              }
+            >
+              Submit index get
+            </button>
+            <button
+              onClick={() =>
+                fetcher.submit({}, { method: "post", action: "/parent" })
+              }
+            >
+              Submit parent post
+            </button>
+            <button
+              onClick={() =>
+                fetcher.submit({}, { method: "post", action: "/parent?index" })
+              }
+            >
+              Submit index post
+            </button>
+          </>
+        );
+      }
+
+      async function clickAndAssert(btnText: string, expectedOutput: string) {
+        fireEvent.click(screen.getByText(btnText));
+        await new Promise((r) => setTimeout(r, 1));
+        await waitFor(() => screen.getByText(new RegExp(expectedOutput)));
+        expect(getHtml(container.querySelector("#output")!)).toContain(
+          expectedOutput
+        );
+      }
+
+      await clickAndAssert("Load parent", "PARENT LOADER");
+      await clickAndAssert("Load index", "INDEX LOADER");
+      await clickAndAssert("Submit empty", "INDEX LOADER");
+      await clickAndAssert("Submit parent get", "PARENT LOADER");
+      await clickAndAssert("Submit index get", "INDEX LOADER");
+      await clickAndAssert("Submit parent post", "PARENT ACTION");
+      await clickAndAssert("Submit index post", "INDEX ACTION");
+    });
+
+    it("handles fetcher.load errors", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Comp />}
+            errorElement={<ErrorElement />}
+            loader={async () => {
+              throw new Error("Kaboom!");
+            }}
+          />
+        ),
+        {
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        return (
+          <>
+            <p>
+              {fetcher.state}
+              {fetcher.data ? JSON.stringify(fetcher.data) : null}
+            </p>
+            <button onClick={() => fetcher.load("/")}>load</button>
+          </>
+        );
+      }
+
+      function ErrorElement() {
+        let error = useRouteError() as Error;
+        return <p>{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      fireEvent.click(screen.getByText("load"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              loading
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      await waitFor(() => screen.getByText("Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+    });
+
+    it("handles fetcher.load errors (defer)", async () => {
+      let dfd = createDeferred();
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Comp />}
+            errorElement={<ErrorElement />}
+            loader={() => defer({ value: dfd.promise })}
+          />
+        ),
+        {
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        return (
+          <>
+            <p>
+              {fetcher.state}
+              {fetcher.data ? JSON.stringify(fetcher.data.value) : null}
+            </p>
+            <button onClick={() => fetcher.load("/")}>load</button>
+          </>
+        );
+      }
+
+      function ErrorElement() {
+        let error = useRouteError() as Error;
+        return <p>{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      fireEvent.click(screen.getByText("load"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              loading
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      dfd.reject(new Error("Kaboom!"));
+      await waitFor(() => screen.getByText("Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+    });
+
+    it("handles fetcher.submit errors", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            element={<Comp />}
+            errorElement={<ErrorElement />}
+            action={async () => {
+              throw new Error("Kaboom!");
+            }}
+          />
+        ),
+        {
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        return (
+          <>
+            <p>
+              {fetcher.state}
+              {fetcher.data ? JSON.stringify(fetcher.data) : null}
+            </p>
+            <button
+              onClick={() => fetcher.submit(new FormData(), { method: "post" })}
+            >
+              submit
+            </button>
+          </>
+        );
+      }
+
+      function ErrorElement() {
+        let error = useRouteError() as Error;
+        return <p>{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+            </p>
+            <button>
+              submit
+            </button>
+          </div>"
+        `);
+
+      fireEvent.click(screen.getByText("submit"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              submitting
+            </p>
+            <button>
+              submit
+            </button>
+          </div>"
+        `);
+
+      await waitFor(() => screen.getByText("Kaboom!"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Kaboom!
+            </p>
+          </div>"
+        `);
+    });
+
+    it("does not serialize fetcher.submit(object) calls", async () => {
+      let actionSpy = jest.fn();
+      let payload = { key: "value" };
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            action: actionSpy,
+            Component() {
+              let fetcher = useFetcher();
+              return (
+                <button
+                  onClick={() => fetcher.submit(payload, { method: "post" })}
+                >
+                  Submit
+                </button>
+              );
+            },
+          },
+        ],
+        {}
+      );
+
+      render(<RouterProvider router={router} />);
+      fireEvent.click(screen.getByText("Submit"));
+      expect(actionSpy.mock.calls[0][0].payload).toEqual(payload);
+      expect(actionSpy.mock.calls[0][0].request.body).toBe(null);
+    });
+
+    it("show all fetchers via useFetchers and cleans up fetchers on unmount", async () => {
+      let dfd1 = createDeferred();
+      let dfd2 = createDeferred();
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Parent />}>
+            <Route
+              path="/1"
+              loader={async () => await dfd1.promise}
+              element={<Comp1 />}
+            />
+            <Route
+              path="/2"
+              loader={async () => await dfd2.promise}
+              element={<Comp2 />}
+            />
+          </Route>
+        ),
+        {
+          initialEntries: ["/1"],
+          hydrationData: { loaderData: { "0": null, "0-0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Parent() {
+        let fetchers = useFetchers();
+        return (
+          <>
+            <MemoryNavigate to="/1">Link to 1</MemoryNavigate>
+            <MemoryNavigate to="/2">Link to 2</MemoryNavigate>
+            <div id="output">
+              <p>{JSON.stringify(fetchers.map((f) => f.state))}</p>
+              <Outlet />
+            </div>
+          </>
+        );
+      }
+
+      function Comp1() {
+        let fetcher = useFetcher();
+        return (
+          <>
+            <p>
+              1{fetcher.state}
+              {fetcher.data || "null"}
+            </p>
+            <button onClick={() => fetcher.load("/1")}>load</button>
+          </>
+        );
+      }
+
+      function Comp2() {
+        let fetcher = useFetcher();
+        return (
+          <>
+            <p>
+              2{fetcher.state}
+              {fetcher.data || "null"}
+            </p>
+            <button onClick={() => fetcher.load("/2")}>load</button>
+          </>
+        );
+      }
+
+      // Initial state - no useFetchers reflected yet
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              []
+            </p>
+            <p>
+              1
+              idle
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      // Activate Comp1 fetcher
+      fireEvent.click(screen.getByText("load"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              ["loading"]
+            </p>
+            <p>
+              1
+              loading
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      // Resolve Comp1 fetcher - UI updates
+      dfd1.resolve("data 1");
+      await waitFor(() => screen.getByText(/data 1/));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              ["idle"]
+            </p>
+            <p>
+              1
+              idle
+              data 1
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      // Link to Comp2 - loaders run
+      fireEvent.click(screen.getByText("Link to 2"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              ["idle"]
+            </p>
+            <p>
+              1
+              idle
+              data 1
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      // Resolve Comp2 loader and complete navigation - Comp1 fetcher is still
+      // reflected here since deleteFetcher doesn't updateState
+      // TODO: Is this expected?
+      dfd2.resolve("data 2");
+      await waitFor(() => screen.getByText(/2.*idle/));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              ["idle"]
+            </p>
+            <p>
+              2
+              idle
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      // Activate Comp2 fetcher, which now officially kicks out Comp1's
+      // fetcher from useFetchers and reflects Comp2's fetcher
+      fireEvent.click(screen.getByText("load"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              ["loading"]
+            </p>
+            <p>
+              2
+              loading
+              null
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      // Comp2 loader resolves with the same data, useFetchers reflects idle-done
+      await waitFor(() => screen.getByText(/2.*idle/));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              ["idle"]
+            </p>
+            <p>
+              2
+              idle
+              data 2
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+    });
+
+    it("handles revalidating fetchers", async () => {
+      let count = 0;
+      let fetchCount = 0;
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <>
+            <Route
+              path="/"
+              element={<Comp />}
+              action={async ({ payload }) => {
+                count += payload.increment;
+                return { count };
+              }}
+              loader={async () => ({ count: ++count })}
+            />
+            <Route
+              path="/fetch"
+              loader={async () => ({ fetchCount: ++fetchCount })}
+            />
+          </>
+        ),
+        {
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        let submit = useSubmit();
+        return (
+          <>
+            <p id="output">
+              {fetcher.state}
+              {fetcher.data ? JSON.stringify(fetcher.data) : null}
+            </p>
+            <button onClick={() => fetcher.load("/fetch")}>load fetcher</button>
+            <button
+              onClick={() => {
+                submit({ increment: 10 }, { method: "post" });
+              }}
+            >
+              submit
+            </button>
+          </>
+        );
+      }
+
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            idle
+          </p>"
+        `);
+
+      await act(async () => {
+        fireEvent.click(screen.getByText("load fetcher"));
+        await waitFor(() => screen.getByText(/idle/));
+      });
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            idle
+            {"fetchCount":1}
+          </p>"
+        `);
+
+      await act(async () => {
+        fireEvent.click(screen.getByText("submit"));
+        await waitFor(() => screen.getByText(/idle/));
+      });
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            idle
+            {"fetchCount":2}
+          </p>"
+        `);
+    });
+
+    it("handles fetcher 404 errors at the correct spot in the route hierarchy", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
+            <Route
+              path="child"
+              element={<Comp />}
+              errorElement={<ErrorElement />}
+            />
+          </Route>
+        ),
+        {
+          initialEntries: ["/child"],
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        return <button onClick={() => fetcher.load("/not-found")}>load</button>;
+      }
+
+      function ErrorElement() {
+        let { status, statusText } = useRouteError() as ErrorResponse;
+        return <p>contextual error:{`${status} ${statusText}`}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      fireEvent.click(screen.getByText("load"));
+      await waitFor(() => screen.getByText(/Not Found/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              contextual error:
+              404 Not Found
+            </p>
+          </div>"
+        `);
+    });
+
+    it("handles fetcher.load errors at the correct spot in the route hierarchy", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
+            <Route
+              path="child"
+              element={<Comp />}
+              errorElement={<ErrorElement />}
+            />
+            <Route
+              path="fetch"
+              loader={() => {
+                throw new Error("Kaboom!");
+              }}
+              errorElement={<p>Not I!</p>}
+            />
+          </Route>
+        ),
+        {
+          initialEntries: ["/child"],
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        return <button onClick={() => fetcher.load("/fetch")}>load</button>;
+      }
+
+      function ErrorElement() {
+        let error = useRouteError() as Error;
+        return <p>contextual error:{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+      fireEvent.click(screen.getByText("load"));
+      await waitFor(() => screen.getByText(/Kaboom!/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              contextual error:
+              Kaboom!
+            </p>
+          </div>"
+        `);
+    });
+
+    it("handles fetcher.submit errors at the correct spot in the route hierarchy", async () => {
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Outlet />} errorElement={<p>Not I!</p>}>
+            <Route
+              path="child"
+              element={<Comp />}
+              errorElement={<ErrorElement />}
+            />
+            <Route
+              path="fetch"
+              action={() => {
+                throw new Error("Kaboom!");
+              }}
+              errorElement={<p>Not I!</p>}
+            />
+          </Route>
+        ),
+        {
+          initialEntries: ["/child"],
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Comp() {
+        let fetcher = useFetcher();
+        return (
+          <button
+            onClick={() =>
+              fetcher.submit(
+                { key: "value" },
+                { method: "post", action: "/fetch" }
+              )
+            }
+          >
+            submit
+          </button>
+        );
+      }
+
+      function ErrorElement() {
+        let error = useRouteError() as Error;
+        return <p>contextual error:{error.message}</p>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <button>
+                submit
+              </button>
+            </div>"
+          `);
+
+      fireEvent.click(screen.getByText("submit"));
+      await waitFor(() => screen.getByText(/Kaboom!/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                contextual error:
+                Kaboom!
+              </p>
+            </div>"
+          `);
+    });
+
+    it("useFetcher is stable across across location changes", async () => {
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              let [count, setCount] = React.useState(0);
+              let location = useLocation();
+              let navigate = useNavigate();
+              let fetcher = useFetcher();
+              let fetcherCount = React.useRef(0);
+              React.useEffect(() => {
+                fetcherCount.current++;
+              }, [fetcher.submit]);
+              return (
+                <>
+                  <button
+                    onClick={() => {
+                      setCount(count + 1);
+                      let random = Math.random().toString();
+                      navigate(`${location.pathname}?random=${random}`);
+                    }}
+                  >
+                    Click
+                  </button>
+                  <p>
+                    {`render count:${count}`}
+                    {`fetcher count:${fetcherCount.current}`}
+                  </p>
+                </>
+              );
+            },
+          },
+        ],
+        {}
+      );
+
+      let { container } = render(<RouterProvider router={router} />);
+
+      let html = getHtml(container);
+      expect(html).toContain("render count:0");
+      expect(html).toContain("fetcher count:0");
+
+      fireEvent.click(screen.getByText("Click"));
+      fireEvent.click(screen.getByText("Click"));
+      fireEvent.click(screen.getByText("Click"));
+      await waitFor(() => screen.getByText(/render count:3/));
+
+      html = getHtml(container);
+      expect(html).toContain("render count:3");
+      expect(html).toContain("fetcher count:1");
+    });
+
+    it("allows direct loaders to be passed to fetcher.load()", async () => {
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <button onClick={() => fetcher.load(() => "LOADER")}>
+                    Load
+                  </button>
+                  <p>{fetcher.data || "empty"}</p>
+                </>
+              );
+            },
+          },
+        ],
+        {}
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("empty");
+
+      fireEvent.click(screen.getByText("Load"));
+      await waitFor(() => screen.getByText("LOADER"));
+      expect(getHtml(container)).toMatch("LOADER");
+    });
+
+    it("allows direct loaders to override the fetch route loader", async () => {
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            loader: () => "LOADER ROUTE",
+            Component() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <button onClick={() => fetcher.load(".")}>Load Route</button>
+                  <button onClick={() => fetcher.load(() => "LOADER OVERRIDE")}>
+                    Load Override
+                  </button>
+                  <p>{fetcher.data || "empty"}</p>
+                </>
+              );
+            },
+          },
+        ],
+        {
+          hydrationData: { loaderData: { "0": null } },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("empty");
+      fireEvent.click(screen.getByText("Load Route"));
+      await waitFor(() => screen.getByText("LOADER ROUTE"));
+      expect(getHtml(container)).toMatch("LOADER ROUTE");
+
+      fireEvent.click(screen.getByText("Load Override"));
+      await waitFor(() => screen.getByText("LOADER OVERRIDE"));
+      expect(getHtml(container)).toMatch("LOADER OVERRIDE");
+    });
+
+    it("allows direct actions to be passed to fetcher.submit()", async () => {
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <button
+                    onClick={() =>
+                      fetcher.submit(new FormData(), {
+                        method: "post",
+                        action: () => "ACTION",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                  <p>{fetcher.data || "empty"}</p>
+                </>
+              );
+            },
+          },
+        ],
+        {}
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("empty");
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText("ACTION"));
+      expect(getHtml(container)).toMatch("ACTION");
+    });
+
+    it("allows direct actions to override the fetch route action", async () => {
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            action: () => "ACTION ROUTE",
+            Component() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <button
+                    onClick={() =>
+                      fetcher.submit(new FormData(), {
+                        method: "post",
+                      })
+                    }
+                  >
+                    Submit Route
+                  </button>
+                  <button
+                    onClick={() =>
+                      fetcher.submit(new FormData(), {
+                        method: "post",
+                        action: () => "ACTION OVERRIDE",
+                      })
+                    }
+                  >
+                    Submit Override
+                  </button>
+                  <p>{fetcher.data || "empty"}</p>
+                </>
+              );
+            },
+          },
+        ],
+        {}
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("empty");
+      fireEvent.click(screen.getByText("Submit Route"));
+      await waitFor(() => screen.getByText("ACTION ROUTE"));
+      expect(getHtml(container)).toMatch("ACTION ROUTE");
+
+      fireEvent.click(screen.getByText("Submit Override"));
+      await waitFor(() => screen.getByText("ACTION OVERRIDE"));
+      expect(getHtml(container)).toMatch("ACTION OVERRIDE");
+    });
+
+    describe("with a basename", () => {
+      it("prepends the basename to fetcher.load paths", async () => {
+        let router = createMemoryRouter(
+          createRoutesFromElements(
+            <Route path="/" element={<Comp />}>
+              <Route path="fetch" loader={() => "FETCH"} />
+            </Route>
+          ),
+          {
+            basename: "/base",
+            initialEntries: ["/base"],
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>{`data:${fetcher.data}`}</p>
+              <button onClick={() => fetcher.load("/fetch")}>load</button>
+            </>
+          );
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:undefined
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+
+        fireEvent.click(screen.getByText("load"));
+        await waitFor(() => screen.getByText(/FETCH/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:FETCH
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+      });
+
+      it('prepends the basename to fetcher.submit({ method: "get" }) paths', async () => {
+        let router = createMemoryRouter(
+          createRoutesFromElements(
+            <Route path="/" element={<Comp />}>
+              <Route path="fetch" loader={() => "FETCH"} />
+            </Route>
+          ),
+          {
+            basename: "/base",
+            initialEntries: ["/base"],
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>{`data:${fetcher.data}`}</p>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "get", action: "/fetch" })
+                }
+              >
+                load
+              </button>
+            </>
+          );
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:undefined
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+
+        fireEvent.click(screen.getByText("load"));
+        await waitFor(() => screen.getByText(/FETCH/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:FETCH
+              </p>
+              <button>
+                load
+              </button>
+            </div>"
+          `);
+      });
+
+      it('prepends the basename to fetcher.submit({ method: "post" }) paths', async () => {
+        let router = createMemoryRouter(
+          createRoutesFromElements(
+            <Route path="/" element={<Comp />}>
+              <Route path="fetch" action={() => "FETCH"} />
+            </Route>
+          ),
+          {
+            basename: "/base",
+            initialEntries: ["/base"],
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        function Comp() {
+          let fetcher = useFetcher();
+          return (
+            <>
+              <p>{`data:${fetcher.data}`}</p>
+              <button
+                onClick={() =>
+                  fetcher.submit({}, { method: "post", action: "/fetch" })
+                }
+              >
+                submit
+              </button>
+            </>
+          );
+        }
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:undefined
+              </p>
+              <button>
+                submit
+              </button>
+            </div>"
+          `);
+
+        fireEvent.click(screen.getByText("submit"));
+        await waitFor(() => screen.getByText(/FETCH/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                data:FETCH
+              </p>
+              <button>
+                submit
+              </button>
+            </div>"
+          `);
+      });
+    });
   });
 
   describe("errors", () => {
@@ -3375,11 +5366,13 @@ function MemoryNavigate({
   to,
   formMethod,
   formData,
+  payload,
   children,
 }: {
   to: string;
   formMethod?: FormMethod;
   formData?: FormData;
+  payload?: NonNullable<unknown>;
   children: React.ReactNode;
 }) {
   let dataRouterContext = React.useContext(DataRouterContext);
@@ -3387,13 +5380,23 @@ function MemoryNavigate({
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
-      if (formMethod && formData) {
-        dataRouterContext?.router.navigate(to, { formMethod, formData });
+      if (formMethod) {
+        if (formData) {
+          dataRouterContext?.router.navigate(to, {
+            formMethod,
+            formData,
+          });
+        } else {
+          dataRouterContext?.router.navigate(to, {
+            formMethod,
+            payload,
+          });
+        }
       } else {
         dataRouterContext?.router.navigate(to);
       }
     },
-    [dataRouterContext, to, formMethod, formData]
+    [dataRouterContext, to, formMethod, formData, payload]
   );
 
   // Only prepend the basename to the rendered href, send the non-prefixed `to`
@@ -3404,7 +5407,7 @@ function MemoryNavigate({
     href = to === "/" ? basename : joinPaths([basename, to]);
   }
 
-  return formData ? (
+  return formData || payload ? (
     <form onClick={onClickHandler} children={children} />
   ) : (
     <a href={href} onClick={onClickHandler} children={children} />

@@ -128,13 +128,14 @@ export interface SubmitOptions {
   method?: HTMLFormMethod;
 
   /**
-   * The action URL path used to submit the form. Overrides `<form action>`.
-   * Defaults to the path of the current route.
+   * The action URL path used to submit the form (or a direct action to be
+   * executed). Overrides `<form action>`. Defaults to the path of the current
+   * route.
    */
   action?: string | ActionFunction;
 
   /**
-   * The action URL used to submit the form. Overrides `<form encType>`.
+   * The encType to be used to encode the submission. Overrides `<form encType>`.
    * Defaults to "application/x-www-form-urlencoded".  Specifying `null` will
    * opt-out of serialization and will submit the data directly to your action
    * in the `payload` parameter.

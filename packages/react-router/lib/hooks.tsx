@@ -1,7 +1,12 @@
 import * as React from "react";
 import type {
+  ActionFunction,
   Blocker,
   BlockerFunction,
+  Fetcher,
+  FormEncType,
+  HTMLFormMethod,
+  LoaderFunction,
   Location,
   ParamParseKey,
   Params,
@@ -706,6 +711,8 @@ enum DataRouterHook {
   UseBlocker = "useBlocker",
   UseRevalidator = "useRevalidator",
   UseNavigateStable = "useNavigate",
+  UseFetcher = "useFetcher",
+  UseSubmitImpl = "useSubmit",
 }
 
 enum DataRouterStateHook {
@@ -719,6 +726,7 @@ enum DataRouterStateHook {
   UseRevalidator = "useRevalidator",
   UseNavigateStable = "useNavigate",
   UseRouteId = "useRouteId",
+  UseFetchers = "useFetchers",
 }
 
 function getDataRouterConsoleError(
@@ -939,6 +947,180 @@ function useNavigateStable(): NavigateFunction {
   );
 
   return navigate;
+}
+
+type SubmitPayload = NonNullable<unknown> | null;
+
+/**
+ * Submits a payload to an action without reloading the page.
+ */
+export interface SubmitFunction {
+  (
+    /**
+     * Data to be submitted to the action
+     */
+    payload: SubmitPayload,
+
+    /**
+     * Options that override the default submission behavior
+     */
+    options?: SubmitOptions
+  ): void;
+}
+
+export interface SubmitOptions {
+  /**
+   * The HTTP method used to submit. Defaults to "GET".
+   */
+  method?: HTMLFormMethod;
+
+  /**
+   * The action URL path used to submit the form, or the action function to
+   * execute. Defaults to the path of the current route.
+   */
+  action?: string | ActionFunction;
+
+  /**
+   * Optional encType to be used to encode the submission into the action `request`
+   */
+  encType?: FormEncType | null;
+
+  /**
+   * Set `true` to replace the current entry in the history stack instead of
+   * creating a new one (i.e. stay on "the same page"). Defaults to `false`.
+   */
+  replace?: boolean;
+
+  /**
+   * Determines whether the action is relative to the route hierarchy or
+   * the pathname.  Use this if you want to opt out of navigating the route
+   * hierarchy and want to instead route based on /-delimited URL segments
+   */
+  relative?: RelativeRoutingType;
+}
+
+/**
+ * Returns a function that may be used to programmatically submit some
+ * arbitrary data to the server.
+ */
+export function useSubmit(): SubmitFunction {
+  return useSubmitImpl();
+}
+
+function useSubmitImpl(
+  fetcherKey?: string,
+  fetcherRouteId?: string
+): SubmitFunction {
+  let { router } = useDataRouterContext(DataRouterHook.UseSubmitImpl);
+  let currentRouteId = useRouteId();
+
+  return React.useCallback(
+    (payload, options = {}) => {
+      let path =
+        typeof options.action === "function" ? null : options.action || null;
+      let routerAction =
+        typeof options.action === "function" ? options.action : undefined;
+
+      // Base options shared between fetch() and navigate()
+      let opts = {
+        payload,
+        formMethod: options.method || "get",
+        formEncType: options.encType,
+        action: routerAction,
+      };
+
+      if (fetcherKey) {
+        invariant(
+          fetcherRouteId != null,
+          "No routeId available for useFetcher()"
+        );
+        router.fetch(fetcherKey, fetcherRouteId, path, opts);
+      } else {
+        router.navigate(path, {
+          ...opts,
+          replace: options.replace,
+          fromRouteId: currentRouteId,
+        });
+      }
+    },
+    [router, fetcherKey, fetcherRouteId, currentRouteId]
+  );
+}
+
+let fetcherId = 0;
+
+export type FetcherWithMethods<TData> = Fetcher<TData> & {
+  submit: (
+    target: SubmitPayload,
+    // Fetchers cannot replace/preventScrollReset because they are not
+    // navigation events
+    options?: Omit<SubmitOptions, "replace" | "preventScrollReset">
+  ) => void;
+  load: (href: string | LoaderFunction) => void;
+};
+
+/**
+ * Interacts with route loaders and actions without causing a navigation. Great
+ * for any interaction that stays on the same page.
+ */
+export function useFetcher<TData = any>(): FetcherWithMethods<TData> {
+  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
+
+  let route = React.useContext(RouteContext);
+  invariant(route, `useFetcher must be used inside a RouteContext`);
+
+  let routeId = route.matches[route.matches.length - 1]?.route.id;
+  invariant(
+    routeId != null,
+    `useFetcher can only be used on routes that contain a unique "id"`
+  );
+
+  let [fetcherKey] = React.useState(() => String(++fetcherId));
+  let [load] = React.useState(() => (href: string | LoaderFunction) => {
+    invariant(router, "No router available for fetcher.load()");
+    invariant(routeId, "No routeId available for fetcher.load()");
+    if (typeof href === "function") {
+      router.fetch(fetcherKey, routeId, null, { loader: href });
+    } else {
+      router.fetch(fetcherKey, routeId, href);
+    }
+  });
+  let submit = useSubmitImpl(fetcherKey, routeId);
+
+  let fetcher = router.getFetcher<TData>(fetcherKey);
+
+  let fetcherWithMethods = React.useMemo(
+    () => ({
+      submit,
+      load,
+      ...fetcher,
+    }),
+    [fetcher, submit, load]
+  );
+
+  React.useEffect(() => {
+    // Is this busted when the React team gets real weird and calls effects
+    // twice on mount?  We really just need to garbage collect here when this
+    // fetcher is no longer around.
+    return () => {
+      if (!router) {
+        console.warn(`No router available to clean up from useFetcher()`);
+        return;
+      }
+      router.deleteFetcher(fetcherKey);
+    };
+  }, [router, fetcherKey]);
+
+  return fetcherWithMethods;
+}
+
+/**
+ * Provides all fetchers currently on the page. Useful for layouts and parent
+ * routes that need to provide pending/optimistic UI regarding the fetch.
+ */
+export function useFetchers(): Fetcher[] {
+  let state = useDataRouterState(DataRouterStateHook.UseFetchers);
+  return [...state.fetchers.values()];
 }
 
 const alreadyWarned: Record<string, boolean> = {};

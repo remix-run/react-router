@@ -979,7 +979,7 @@ function useSubmitImpl(
       let path =
         typeof options.action === "function" ? null : options.action || action;
       let routerAction =
-        typeof options.action === "function" ? options.action : null;
+        typeof options.action === "function" ? options.action : undefined;
 
       // Base options shared between fetch() and navigate()
       let opts = {

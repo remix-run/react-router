@@ -85,7 +85,12 @@ import {
   NavigationContext,
   RouteContext,
 } from "./lib/context";
-import type { NavigateFunction } from "./lib/hooks";
+import type {
+  FetcherWithMethods,
+  NavigateFunction,
+  SubmitFunction,
+  SubmitOptions,
+} from "./lib/hooks";
 import {
   useBlocker,
   useHref,
@@ -102,6 +107,8 @@ import {
   useActionData,
   useAsyncError,
   useAsyncValue,
+  useFetcher,
+  useFetchers,
   useRouteId,
   useLoaderData,
   useMatches,
@@ -109,6 +116,7 @@ import {
   useRevalidator,
   useRouteError,
   useRouteLoaderData,
+  useSubmit,
 } from "./lib/hooks";
 
 // Exported for backwards compatibility, but not being used internally anymore
@@ -126,6 +134,7 @@ export type {
   DataRouteMatch,
   DataRouteObject,
   Fetcher,
+  FetcherWithMethods,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
@@ -160,6 +169,8 @@ export type {
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
+  SubmitFunction,
+  SubmitOptions,
   To,
 };
 export {
@@ -190,6 +201,8 @@ export {
   useAsyncError,
   useAsyncValue,
   useBlocker as unstable_useBlocker,
+  useFetcher,
+  useFetchers,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -207,6 +220,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  useSubmit,
 };
 
 function mapRouteProperties(route: RouteObject) {
