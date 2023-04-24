@@ -312,6 +312,15 @@ export function useRoutes(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string
 ): React.ReactElement | null {
+  return useRoutesImpl(routes, locationArg);
+}
+
+// Internal implementation with accept optional param for RouterProvider usage
+export function useRoutesImpl(
+  routes: RouteObject[],
+  locationArg?: Partial<Location> | string,
+  dataRouterState?: RemixRouter["state"]
+): React.ReactElement | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -320,8 +329,6 @@ export function useRoutes(
   );
 
   let { navigator } = React.useContext(NavigationContext);
-  let dataRouterContext = React.useContext(DataRouterContext);
-  let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
@@ -434,10 +441,7 @@ export function useRoutes(
         })
       ),
     parentMatches,
-    // Only pass along the dataRouterStateContext when we're rendering from the
-    // RouterProvider layer.  If routes is different then we're rendering from
-    // a descendant <Routes> tree
-    dataRouterContext?.router.routes === routes ? dataRouterStateContext : null
+    dataRouterState
   );
 
   // When a user passes in a `locationArg`, the associated routes need to

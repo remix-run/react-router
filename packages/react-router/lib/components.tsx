@@ -41,6 +41,7 @@ import {
   useOutlet,
   useRoutes,
   _renderMatches,
+  useRoutesImpl,
 } from "./hooks";
 
 export interface RouterProviderProps {
@@ -132,7 +133,9 @@ function DataRoutes({
 }: {
   routes: DataRouteObject[];
 }): React.ReactElement | null {
-  return useRoutes(routes);
+  let state = React.useContext(DataRouterStateContext);
+  invariant(state, "No Router state available for DataRoutes");
+  return useRoutesImpl(routes, undefined, state);
 }
 
 export interface MemoryRouterProps {
