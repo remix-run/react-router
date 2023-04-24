@@ -9838,6 +9838,53 @@ describe("a router", () => {
         });
       });
 
+      it("updates router state with fetchers after action-driven revalidations", async () => {
+        let t = setup({
+          routes: TASK_ROUTES,
+          initialEntries: ["/"],
+          hydrationData: { loaderData: { root: "ROOT", index: "INDEX" } },
+        });
+
+        let key = "key";
+        let A = await t.fetch("/tasks/1", key);
+        await A.loaders.tasksId.resolve("TASKS 1");
+        expect(A.fetcher.state).toBe("idle");
+        expect(A.fetcher.data).toBe("TASKS 1");
+
+        let C = await t.navigate("/tasks", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        // Add a helper for the fetcher that will be revalidating
+        t.shimHelper(C.loaders, "navigation", "loader", "tasksId");
+
+        // Resolve the action
+        await C.actions.tasks.resolve("TASKS ACTION");
+
+        // Fetcher should go back into a loading state
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+        let currentFetchers = t.router.state.fetchers;
+        let newFetchersInstance = false;
+        let unsub = t.router.subscribe((s) => {
+          if (currentFetchers !== s.fetchers) {
+            newFetchersInstance = true;
+          }
+        });
+
+        // Resolve navigation loaders + fetcher loader
+        await C.loaders.root.resolve("ROOT*");
+        await C.loaders.tasks.resolve("TASKS LOADER");
+        await C.loaders.tasksId.resolve("TASKS ID*");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "TASKS ID*",
+        });
+
+        expect(newFetchersInstance).toBe(true);
+        unsub();
+      });
+
       it("revalidates fetchers on action redirects", async () => {
         let t = setup({
           routes: TASK_ROUTES,

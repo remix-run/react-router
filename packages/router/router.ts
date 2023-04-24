@@ -610,6 +610,10 @@ interface HandleLoadersResult extends ShortCircuitable {
    * errors thrown from the current set of loaders
    */
   errors?: RouterState["errors"];
+  /**
+   * fetchers updates via revalidation
+   */
+  fetchers?: RouterState["fetchers"];
 }
 
 /**
@@ -1335,7 +1339,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Call loaders
-    let { shortCircuited, loaderData, errors } = await handleLoaders(
+    let { shortCircuited, loaderData, errors, fetchers } = await handleLoaders(
       request,
       location,
       matches,
@@ -1361,6 +1365,7 @@ export function createRouter(init: RouterInit): Router {
       ...(pendingActionData ? { actionData: pendingActionData } : {}),
       loaderData,
       errors,
+      ...(fetchers ? { fetchers } : {}),
     });
   }
 
