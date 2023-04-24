@@ -1,7 +1,7 @@
+import type { Result } from "./result";
+
 type Resolve<V> = (value: V | PromiseLike<V>) => void;
 type Reject = (reason?: any) => void;
-
-type Result<V, E = unknown> = { ok: true; value: V } | { ok: false; error: E };
 
 export type Type<V, E = unknown> = {
   ok: (value: V) => void;

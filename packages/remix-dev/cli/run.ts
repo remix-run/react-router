@@ -1,7 +1,6 @@
 import * as path from "path";
 import os from "os";
 import arg from "arg";
-import inspector from "inspector";
 import inquirer from "inquirer";
 import semver from "semver";
 import fse from "fs-extra";
@@ -137,20 +136,6 @@ const npxInterop = {
   pnpm: "pnpm exec",
 };
 
-async function dev(
-  projectDir: string,
-  flags: { debug?: boolean; port?: number; appServerPort?: number }
-) {
-  if (process.env.NODE_ENV && process.env.NODE_ENV !== "development") {
-    console.warn(
-      `NODE_ENV=${process.env.NODE_ENV} overwritten to 'development'`
-    );
-  }
-
-  if (flags.debug) inspector.open();
-  await commands.dev(projectDir, flags);
-}
-
 /**
  * Programmatic interface for running the Remix CLI with the given command line
  * arguments.
@@ -166,12 +151,14 @@ export async function run(argv: string[] = process.argv.slice(2)) {
 
   let args = arg(
     {
-      "--app-server-port": Number,
+      "--command": String,
+      "-c": "--command",
       "--debug": Boolean,
       "--no-delete": Boolean,
       "--dry": Boolean,
       "--force": Boolean,
       "--help": Boolean,
+      "--http-port": Number,
       "-h": "--help",
       "--install": Boolean,
       "--no-install": Boolean,
@@ -181,6 +168,8 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--port": Number,
       "-p": "--port",
       "--remix-version": String,
+      "--restart": Boolean,
+      "--no-restart": Boolean,
       "--sourcemap": Boolean,
       "--template": String,
       "--token": String,
@@ -188,6 +177,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--no-typescript": Boolean,
       "--version": Boolean,
       "-v": "--version",
+      "--websocket-port": Number,
     },
     {
       argv,
@@ -212,6 +202,15 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     return;
   }
 
+  if (flags["http-port"]) {
+    flags.httpPort = flags["http-port"];
+    delete flags["http-port"];
+  }
+  if (flags["websocket-port"]) {
+    flags.websocketPort = flags["websocket-port"];
+    delete flags["websocket-port"];
+  }
+
   if (args["--no-delete"]) {
     flags.delete = false;
   }
@@ -222,6 +221,10 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     flags.interactive = false;
   }
   flags.interactive = flags.interactive ?? require.main === module;
+  if (args["--no-restart"]) {
+    flags.restart = false;
+    delete flags["no-restart"];
+  }
   if (args["--no-typescript"]) {
     flags.typescript = false;
   }
@@ -498,10 +501,10 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       break;
     }
     case "dev":
-      await dev(input[1], flags);
+      await commands.dev(input[1], flags);
       break;
     default:
       // `remix ./my-project` is shorthand for `remix dev ./my-project`
-      await dev(input[0], flags);
+      await commands.dev(input[0], flags);
   }
 }

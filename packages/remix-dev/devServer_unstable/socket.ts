@@ -25,17 +25,17 @@ export let serve = (options: { port: number }) => {
     });
   };
 
-  let reload = () => broadcast({ type: "RELOAD" });
-
   let log = (messageText: string) => {
     let _message = `💿 ${messageText}`;
     console.log(_message);
     broadcast({ type: "LOG", message: _message });
   };
 
+  let reload = () => broadcast({ type: "RELOAD" });
+
   let hmr = (assetsManifest: Manifest, updates: HMR.Update[]) => {
     broadcast({ type: "HMR", assetsManifest, updates });
   };
 
-  return { reload, hmr, log, close: wss.close };
+  return { log, reload, hmr, close: wss.close };
 };

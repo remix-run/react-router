@@ -1,6 +1,8 @@
 import * as path from "path";
 import { execSync } from "child_process";
+import inspector from "inspector";
 import * as fse from "fs-extra";
+import getPort, { makeRange } from "get-port";
 import ora from "ora";
 import prettyMs from "pretty-ms";
 import * as esbuild from "esbuild";
@@ -206,17 +208,52 @@ export async function watch(
 
 export async function dev(
   remixRoot: string,
-  flags: { port?: number; appServerPort?: number } = {}
+  flags: {
+    debug?: boolean;
+    port?: number; // TODO: remove for v2
+    command?: string;
+    httpPort?: number;
+    restart?: boolean;
+    websocketPort?: number;
+  } = {}
 ) {
+  if (process.env.NODE_ENV && process.env.NODE_ENV !== "development") {
+    console.warn(
+      `Expected NODE_ENV to be 'development' but got ${process.env.NODE_ENV}`
+    );
+  }
+  if (flags.debug) inspector.open();
+
   let config = await readConfig(remixRoot);
 
-  if (config.future.unstable_dev !== false) {
-    await devServer_unstable.serve(config, flags);
+  if (config.future.unstable_dev === false) {
+    await devServer.serve(config, flags.port);
     return await new Promise(() => {});
   }
 
-  await devServer.serve(config, flags.port);
-  return await new Promise(() => {});
+  let { unstable_dev } = config.future;
+
+  let command =
+    flags.command ?? (unstable_dev === true ? undefined : unstable_dev.command);
+  let httpPort =
+    flags.httpPort ??
+    (unstable_dev === true ? undefined : unstable_dev.httpPort) ??
+    (await findPort());
+  let websocketPort =
+    flags.websocketPort ??
+    (unstable_dev === true ? undefined : unstable_dev.websocketPort) ??
+    (await findPort());
+  let restart =
+    flags.restart ??
+    (unstable_dev === true ? undefined : unstable_dev.restart) ??
+    true;
+
+  await devServer_unstable.serve(config, {
+    command,
+    httpPort,
+    websocketPort,
+    restart,
+  });
 }
 
 export async function codemod(
@@ -442,3 +479,5 @@ let parseMode = (
   console.error(`Unrecognized mode: ${mode}`);
   process.exit(1);
 };
+
+let findPort = async () => getPort({ port: makeRange(3001, 3100) });

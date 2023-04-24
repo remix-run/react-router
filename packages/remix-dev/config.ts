@@ -38,10 +38,12 @@ export type ServerModuleFormat = "esm" | "cjs";
 export type ServerPlatform = "node" | "neutral";
 
 type Dev = {
-  port?: number;
-  appServerPort?: number;
-  remixRequestHandlerPath?: string;
-  rebuildPollIntervalMs?: number;
+  port?: number; // TODO: remove in v2
+
+  command?: string;
+  httpPort?: number;
+  websocketPort?: number;
+  restart?: boolean;
 };
 
 interface FutureConfig {

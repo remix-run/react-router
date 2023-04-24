@@ -7,3 +7,5 @@ export { createApp } from "./cli/create";
 
 export { type Manifest as AssetsManifest } from "./manifest";
 export { getDependenciesToBundle } from "./dependencies";
+
+export { ping } from "./devServer_unstable/ping";
