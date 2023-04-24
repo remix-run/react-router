@@ -44,6 +44,11 @@ test.describe("Revalidation", () => {
             }
           `,
 
+          "app/routes/_index.jsx": js`
+            export default function Component() {
+              return <h1>Index</h1>;
+            }
+          `,
           "app/routes/parent.jsx": js`
             import { json } from "@remix-run/node";
             import { Outlet, useLoaderData } from "@remix-run/react";
