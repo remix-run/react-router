@@ -150,6 +150,23 @@ export interface NavigateFunction {
   (delta: number): void;
 }
 
+const navigateEffectWarning =
+  `You should call navigate() in a React.useEffect(), not when ` +
+  `your component is first rendered.`;
+
+// Mute warnings for calls to useNavigate in SSR environments
+function useIsomorphicLayoutEffect(
+  cb: Parameters<typeof React.useLayoutEffect>[0]
+) {
+  let isStatic = React.useContext(NavigationContext).static;
+  if (!isStatic) {
+    // We should be able to get rid of this once react 18.3 is released
+    // See: https://github.com/facebook/react/pull/26395
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(cb);
+  }
+}
+
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
@@ -180,18 +197,16 @@ function useNavigateUnstable(): NavigateFunction {
   );
 
   let activeRef = React.useRef(false);
-  React.useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     activeRef.current = true;
   });
 
   let navigate: NavigateFunction = React.useCallback(
     (to: To | number, options: NavigateOptions = {}) => {
-      warning(
-        activeRef.current,
-        `You should call navigate() in a React.useEffect(), not when ` +
-          `your component is first rendered.`
-      );
+      warning(activeRef.current, navigateEffectWarning);
 
+      // Short circuit here since if this happens on first render the navigate
+      // is useless because we haven't wired up our history listener yet
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
@@ -931,8 +946,19 @@ function useNavigateStable(): NavigateFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseNavigateStable);
   let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
 
+  let activeRef = React.useRef(false);
+  useIsomorphicLayoutEffect(() => {
+    activeRef.current = true;
+  });
+
   let navigate: NavigateFunction = React.useCallback(
     (to: To | number, options: NavigateOptions = {}) => {
+      warning(activeRef.current, navigateEffectWarning);
+
+      // Short circuit here since if this happens on first render the navigate
+      // is useless because we haven't wired up our router subscriber yet
+      if (!activeRef.current) return;
+
       if (typeof to === "number") {
         router.navigate(to);
       } else {

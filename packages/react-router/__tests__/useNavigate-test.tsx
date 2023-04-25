@@ -301,6 +301,211 @@ describe("useNavigate", () => {
     );
   });
 
+  describe("navigating in effects versus render", () => {
+    let warnSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    describe("MemoryRouter", () => {
+      it("does not allow navigation from the render cycle", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter>
+              <Routes>
+                <Route index element={<Home />} />
+                <Route path="about" element={<h1>About</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Home() {
+          let navigate = useNavigate();
+          navigate("/about");
+          return <h1>Home</h1>;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Home
+          </h1>
+        `);
+        expect(warnSpy).toHaveBeenCalledWith(
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+        );
+      });
+
+      it("allows navigation from effects", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter>
+              <Routes>
+                <Route index element={<Home />} />
+                <Route path="about" element={<h1>About</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Home() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/about"), [navigate]);
+          return <h1>Home</h1>;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("allows navigation in child useEffects", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/home"]}>
+              <Routes>
+                <Route path="home" element={<Parent />} />
+                <Route path="about" element={<h1>About</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Parent() {
+          let navigate = useNavigate();
+          let onChildRendered = React.useCallback(
+            () => navigate("/about"),
+            [navigate]
+          );
+          return <Child onChildRendered={onChildRendered} />;
+        }
+
+        function Child({ onChildRendered }) {
+          React.useEffect(() => onChildRendered());
+          return null;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+      });
+    });
+
+    describe("RouterProvider", () => {
+      it("does not allow navigation from the render cycle", async () => {
+        let router = createMemoryRouter([
+          {
+            index: true,
+            Component() {
+              let navigate = useNavigate();
+              navigate("/about");
+              return <h1>Home</h1>;
+            },
+          },
+          {
+            path: "about",
+            element: <h1>About</h1>,
+          },
+        ]);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Home
+          </h1>
+        `);
+        expect(warnSpy).toHaveBeenCalledWith(
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+        );
+      });
+
+      it("allows navigation from effects", () => {
+        let router = createMemoryRouter([
+          {
+            index: true,
+            Component() {
+              let navigate = useNavigate();
+              React.useEffect(() => navigate("/about"), [navigate]);
+              return <h1>Home</h1>;
+            },
+          },
+          {
+            path: "about",
+            element: <h1>About</h1>,
+          },
+        ]);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("allows navigation in child useEffects", () => {
+        let router = createMemoryRouter([
+          {
+            index: true,
+            Component() {
+              let navigate = useNavigate();
+              let onChildRendered = React.useCallback(
+                () => navigate("/about"),
+                [navigate]
+              );
+              return <Child onChildRendered={onChildRendered} />;
+            },
+          },
+          {
+            path: "about",
+            element: <h1>About</h1>,
+          },
+        ]);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        function Child({ onChildRendered }) {
+          React.useEffect(() => onChildRendered());
+          return null;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+      });
+    });
+  });
+
   describe("with state", () => {
     it("adds the state to location.state", () => {
       function Home() {
