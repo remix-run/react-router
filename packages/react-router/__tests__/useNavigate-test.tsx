@@ -167,77 +167,6 @@ describe("useNavigate", () => {
       ]
     `);
   });
-  
-  it("transitions to the new location when called immediately", () => {
-    const Home = React.forwardRef(function Home(_props, ref) {
-      let navigate = useNavigate();
-
-      React.useImperativeHandle(ref, () => ({
-        navigate: () => navigate("/about")
-      }))
-
-      return null
-    })
-
-    let homeRef;
-
-    let renderer: TestRenderer.ReactTestRenderer;
-    renderer = TestRenderer.create(
-      <MemoryRouter initialEntries={["/home"]}>
-        <Routes>
-          <Route path="home" element={<Home ref={(ref) => homeRef = ref} />} />
-          <Route path="about" element={<h1>About</h1>} />
-        </Routes>
-      </MemoryRouter>
-    );
-
-    TestRenderer.act(() => {
-      homeRef.navigate();
-    })
-
-    expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      <h1>
-        About
-      </h1>
-    `);
-  });
-
-  it("allows navigation in child useEffects", () => {
-    function Child({ onChildRendered }) {
-
-      React.useEffect(() => {
-        onChildRendered();
-      });
-
-      return null;
-    }
-
-    function Parent() {
-      let navigate = useNavigate();
-
-      let onChildRendered = React.useCallback(() => navigate("/about"), []);
-
-      return <Child onChildRendered={onChildRendered} />;
-    }
-
-    let renderer: TestRenderer.ReactTestRenderer;
-    TestRenderer.act(() => {
-      renderer = TestRenderer.create(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Routes>
-            <Route path="home" element={<Parent />} />
-            <Route path="about" element={<h1>About</h1>} />
-          </Routes>
-        </MemoryRouter>
-      );
-    });
-
-    expect(renderer.toJSON()).toMatchInlineSnapshot(`
-      <h1>
-        About
-      </h1>
-    `);
-  });
 
   it("navigates to the new location with empty query string when no query string is provided", () => {
     function Home() {
@@ -370,6 +299,208 @@ describe("useNavigate", () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
+  });
+
+  describe("navigating in effects versus render", () => {
+    let warnSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
+    describe("MemoryRouter", () => {
+      it("does not allow navigation from the render cycle", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter>
+              <Routes>
+                <Route index element={<Home />} />
+                <Route path="about" element={<h1>About</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Home() {
+          let navigate = useNavigate();
+          navigate("/about");
+          return <h1>Home</h1>;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Home
+          </h1>
+        `);
+        expect(warnSpy).toHaveBeenCalledWith(
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+        );
+      });
+
+      it("allows navigation from effects", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter>
+              <Routes>
+                <Route index element={<Home />} />
+                <Route path="about" element={<h1>About</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Home() {
+          let navigate = useNavigate();
+          React.useEffect(() => navigate("/about"), []);
+          return <h1>Home</h1>;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("allows navigation in child useEffects", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/home"]}>
+              <Routes>
+                <Route path="home" element={<Parent />} />
+                <Route path="about" element={<h1>About</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Parent() {
+          let navigate = useNavigate();
+          let onChildRendered = React.useCallback(() => navigate("/about"), []);
+          return <Child onChildRendered={onChildRendered} />;
+        }
+
+        function Child({ onChildRendered }) {
+          React.useEffect(() => onChildRendered());
+          return null;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+      });
+    });
+
+    describe("RouterProvider", () => {
+      it("does not allow navigation from the render cycle", async () => {
+        let router = createMemoryRouter([
+          {
+            index: true,
+            Component() {
+              let navigate = useNavigate();
+              navigate("/about");
+              return <h1>Home</h1>;
+            },
+          },
+          {
+            path: "about",
+            element: <h1>About</h1>,
+          },
+        ]);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Home
+          </h1>
+        `);
+        expect(warnSpy).toHaveBeenCalledWith(
+          "You should call navigate() in a React.useEffect(), not when your component is first rendered."
+        );
+      });
+
+      it("allows navigation from effects", () => {
+        let router = createMemoryRouter([
+          {
+            index: true,
+            Component() {
+              let navigate = useNavigate();
+              React.useEffect(() => navigate("/about"), []);
+              return <h1>Home</h1>;
+            },
+          },
+          {
+            path: "about",
+            element: <h1>About</h1>,
+          },
+        ]);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+        expect(warnSpy).not.toHaveBeenCalled();
+      });
+
+      it("allows navigation in child useEffects", () => {
+        let router = createMemoryRouter([
+          {
+            index: true,
+            Component() {
+              let navigate = useNavigate();
+              let onChildRendered = React.useCallback(
+                () => navigate("/about"),
+                []
+              );
+              return <Child onChildRendered={onChildRendered} />;
+            },
+          },
+          {
+            path: "about",
+            element: <h1>About</h1>,
+          },
+        ]);
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        function Child({ onChildRendered }) {
+          React.useEffect(() => onChildRendered());
+          return null;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            About
+          </h1>
+        `);
+      });
+    });
   });
 
   describe("with state", () => {
