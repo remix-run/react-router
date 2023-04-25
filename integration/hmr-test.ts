@@ -63,7 +63,7 @@ let fixture = (options: {
       let path = require("path");
       let express = require("express");
       let { createRequestHandler } = require("@remix-run/express");
-      let { ping } = require("@remix-run/dev");
+      let { devReady } = require("@remix-run/node");
 
       const app = express();
       app.use(express.static("public", { immutable: true, maxAge: "1y" }));
@@ -84,7 +84,7 @@ let fixture = (options: {
         let build = require(BUILD_DIR);
         console.log('✅ app ready: http://localhost:' + port);
         if (process.env.NODE_ENV === 'development') {
-          ping(build);
+          devReady(build);
         }
       });
     `,

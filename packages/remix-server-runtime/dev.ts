@@ -1,6 +1,6 @@
-import type { ServerBuild } from "@remix-run/server-runtime";
+import type { ServerBuild } from "./build";
 
-export let ping = (
+export let devReady = (
   build: ServerBuild,
   options: {
     scheme?: string;
