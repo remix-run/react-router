@@ -204,7 +204,7 @@ function useNavigateUnstable(): NavigateFunction {
       warning(activeRef.current, navigateEffectWarning);
 
       // Short circuit here since if this happens on first render the navigate
-      // is useless because we haven't wired up our subscriber yet
+      // is useless because we haven't wired up our history listener yet
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
@@ -954,7 +954,7 @@ function useNavigateStable(): NavigateFunction {
       warning(activeRef.current, navigateEffectWarning);
 
       // Short circuit here since if this happens on first render the navigate
-      // is useless because we haven't wired up our subscriber yet
+      // is useless because we haven't wired up our router subscriber yet
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
