@@ -167,6 +167,77 @@ describe("useNavigate", () => {
       ]
     `);
   });
+  
+  it("transitions to the new location when called immediately", () => {
+    const Home = React.forwardRef(function Home(_props, ref) {
+      let navigate = useNavigate();
+
+      React.useImperativeHandle(ref, () => ({
+        navigate: () => navigate("/about")
+      }))
+
+      return null
+    })
+
+    let homeRef;
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    renderer = TestRenderer.create(
+      <MemoryRouter initialEntries={["/home"]}>
+        <Routes>
+          <Route path="home" element={<Home ref={(ref) => homeRef = ref} />} />
+          <Route path="about" element={<h1>About</h1>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    TestRenderer.act(() => {
+      homeRef.navigate();
+    })
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        About
+      </h1>
+    `);
+  });
+
+  it("allows navigation in child useEffects", () => {
+    function Child({ onChildRendered }) {
+
+      React.useEffect(() => {
+        onChildRendered();
+      });
+
+      return null;
+    }
+
+    function Parent() {
+      let navigate = useNavigate();
+
+      let onChildRendered = React.useCallback(() => navigate("/about"), []);
+
+      return <Child onChildRendered={onChildRendered} />;
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Routes>
+            <Route path="home" element={<Parent />} />
+            <Route path="about" element={<h1>About</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        About
+      </h1>
+    `);
+  });
 
   it("navigates to the new location with empty query string when no query string is provided", () => {
     function Home() {
