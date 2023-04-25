@@ -224,9 +224,10 @@ export async function dev(
 ) {
   if (process.env.NODE_ENV && process.env.NODE_ENV !== "development") {
     console.warn(
-      `Expected NODE_ENV to be 'development' but got ${process.env.NODE_ENV}`
+      `Forcing NODE_ENV to be 'development'. Was: ${process.env.NODE_ENV}`
     );
   }
+  process.env.NODE_ENV = "development";
   if (flags.debug) inspector.open();
 
   let config = await readConfig(remixRoot);
