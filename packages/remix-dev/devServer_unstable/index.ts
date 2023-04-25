@@ -35,6 +35,17 @@ let patchPublicPath = (
   };
 };
 
+let detectBin = async (): Promise<string> => {
+  let pkgManager = detectPackageManager() ?? "npm";
+  if (pkgManager === "npm") {
+    // npm v9 removed the `bin` command, so have to use `prefix`
+    let { stdout } = await execa(pkgManager, ["prefix"]);
+    return stdout.trim() + "/node_modules/.bin";
+  }
+  let { stdout } = await execa(pkgManager, ["bin"]);
+  return stdout.trim();
+};
+
 export let serve = async (
   initialConfig: RemixConfig,
   options: {
@@ -58,8 +69,7 @@ export let serve = async (
     prevManifest?: Manifest;
   } = {};
 
-  let pkgManager = detectPackageManager() ?? "npm";
-  let bin = (await execa(pkgManager, ["bin"])).stdout.trim();
+  let bin = await detectBin();
   let startAppServer = (command: string) => {
     console.log(`> ${command}`);
     return execa.command(command, {
