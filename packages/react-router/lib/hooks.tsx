@@ -160,6 +160,8 @@ function useIsomorphicLayoutEffect(
 ) {
   let isStatic = React.useContext(NavigationContext).static;
   if (!isStatic) {
+    // We should be able to get rid of this once react 18.3 is released
+    // See: https://github.com/facebook/react/pull/26395
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(cb);
   }
