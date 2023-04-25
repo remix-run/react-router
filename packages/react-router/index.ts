@@ -109,6 +109,7 @@ import {
   useRevalidator,
   useRouteError,
   useRouteLoaderData,
+  useRoutesImpl,
 } from "./lib/hooks";
 
 // Exported for backwards compatibility, but not being used internally anymore
@@ -299,4 +300,5 @@ export {
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
   mapRouteProperties as UNSAFE_mapRouteProperties,
   useRouteId as UNSAFE_useRouteId,
+  useRoutesImpl as UNSAFE_useRoutesImpl,
 };
