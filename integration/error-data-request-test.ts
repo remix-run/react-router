@@ -129,17 +129,13 @@ test.describe("ErrorBoundary", () => {
   });
 
   test("returns a 405 x-remix-error on a data fetch with a bad method", async () => {
-    let response = await fixture.requestData(
-      `/loader-return-json`,
-      "routes/loader-return-json",
-      {
+    expect(() =>
+      fixture.requestData("/loader-return-json", "routes/loader-return-json", {
         method: "TRACE",
-      }
+      })
+    ).rejects.toThrowError(
+      `Failed to construct 'Request': 'TRACE' HTTP method is unsupported.`
     );
-    expect(response.status).toBe(405);
-    expect(response.headers.get("X-Remix-Error")).toBe("yes");
-    expect(await response.text()).toMatch("Unexpected Server Error");
-    assertConsoleError('Error: Invalid request method "TRACE"');
   });
 
   test("returns a 403 x-remix-error on a data fetch GET to a bad path", async () => {
