@@ -6,6 +6,7 @@ import type {
   StaticHandlerContext,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
+  RouterState,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -17,7 +18,10 @@ import {
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import { UNSAFE_mapRouteProperties as mapRouteProperties } from "react-router";
+import {
+  UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_useRoutesImpl as useRoutesImpl,
+} from "react-router";
 import type {
   DataRouteObject,
   Location,
@@ -28,7 +32,6 @@ import {
   createPath,
   parsePath,
   Router,
-  useRoutes,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
 } from "react-router-dom";
@@ -122,17 +125,19 @@ export function StaticRouterProvider({
     hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
   }
 
+  let { state } = dataRouterContext.router;
+
   return (
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
+        <DataRouterStateContext.Provider value={state}>
           <Router
             basename={dataRouterContext.basename}
-            location={dataRouterContext.router.state.location}
-            navigationType={dataRouterContext.router.state.historyAction}
+            location={state.location}
+            navigationType={state.historyAction}
             navigator={dataRouterContext.navigator}
           >
-            <DataRoutes routes={router.routes} />
+            <DataRoutes routes={router.routes} state={state} />
           </Router>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
@@ -149,10 +154,12 @@ export function StaticRouterProvider({
 
 function DataRoutes({
   routes,
+  state,
 }: {
   routes: DataRouteObject[];
+  state: RouterState;
 }): React.ReactElement | null {
-  return useRoutes(routes);
+  return useRoutesImpl(routes, undefined, state);
 }
 
 function serializeErrors(
