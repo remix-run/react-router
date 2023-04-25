@@ -51,9 +51,10 @@ export let serve = async (
       config,
       options: {
         mode: "development",
-        liveReloadPort: options.websocketPort, // TODO: rename liveReloadPort
         sourcemap: true,
         onWarning: warnOnce,
+        devHttpPort: options.httpPort,
+        devWebsocketPort: options.websocketPort,
       },
     },
     {

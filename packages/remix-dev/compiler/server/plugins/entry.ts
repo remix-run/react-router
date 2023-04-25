@@ -51,9 +51,9 @@ ${Object.keys(config.routes)
   export const publicPath = ${JSON.stringify(config.publicPath)};
   export const entry = { module: entryServer };
   ${
-    options.liveReloadPort
+    options.devWebsocketPort
       ? `export const dev = ${JSON.stringify({
-          liveReloadPort: options.liveReloadPort,
+          websocketPort: options.devWebsocketPort,
         })}`
       : ""
   }

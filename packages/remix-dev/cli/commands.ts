@@ -24,6 +24,7 @@ import { CodemodError } from "../codemod/utils/error";
 import { TaskError } from "../codemod/utils/task";
 import { transpile as convertFileToJS } from "./useJavascript";
 import { warnOnce } from "../warnOnce";
+import type { Options } from "../compiler/options";
 
 export async function create({
   appTemplate,
@@ -169,24 +170,27 @@ export async function build(
 
   let start = Date.now();
   let config = await readConfig(remixRoot);
+  let options: Options = {
+    mode,
+    sourcemap,
+    onWarning: warnOnce,
+  };
+  if (config.future.unstable_dev) {
+    let dev = await resolveDev(config.future.unstable_dev);
+    options.devHttpPort = dev.httpPort;
+    options.devWebsocketPort = dev.websocketPort;
+  }
+
   fse.emptyDirSync(config.assetsBuildDirectory);
-  await compiler
-    .build({
-      config,
-      options: {
-        mode,
-        sourcemap,
-        onWarning: warnOnce,
-      },
-    })
-    .catch((thrown) => {
-      compiler.logThrown(thrown);
-      process.exit(1);
-    });
+  await compiler.build({ config, options }).catch((thrown) => {
+    compiler.logThrown(thrown);
+    process.exit(1);
+  });
 
   console.log(`built in ${prettyMs(Date.now() - start)}`);
 }
 
+// TODO: replace watch in v2
 export async function watch(
   remixRootOrConfig: string | RemixConfig,
   modeArg?: string
@@ -232,28 +236,7 @@ export async function dev(
   }
 
   let { unstable_dev } = config.future;
-
-  let command =
-    flags.command ?? (unstable_dev === true ? undefined : unstable_dev.command);
-  let httpPort =
-    flags.httpPort ??
-    (unstable_dev === true ? undefined : unstable_dev.httpPort) ??
-    (await findPort());
-  let websocketPort =
-    flags.websocketPort ??
-    (unstable_dev === true ? undefined : unstable_dev.websocketPort) ??
-    (await findPort());
-  let restart =
-    flags.restart ??
-    (unstable_dev === true ? undefined : unstable_dev.restart) ??
-    true;
-
-  await devServer_unstable.serve(config, {
-    command,
-    httpPort,
-    websocketPort,
-    restart,
-  });
+  await devServer_unstable.serve(config, await resolveDev(unstable_dev, flags));
 }
 
 export async function codemod(
@@ -481,3 +464,37 @@ let parseMode = (
 };
 
 let findPort = async () => getPort({ port: makeRange(3001, 3100) });
+
+let resolveDev = async (
+  dev: Exclude<RemixConfig["future"]["unstable_dev"], false>,
+  flags: {
+    command?: string;
+    httpPort?: number;
+    restart?: boolean;
+    websocketPort?: number;
+  } = {}
+): Promise<{
+  command?: string;
+  httpPort: number;
+  restart: boolean;
+  websocketPort: number;
+}> => {
+  let command = flags.command ?? (dev === true ? undefined : dev.command);
+  let httpPort =
+    flags.httpPort ??
+    (dev === true ? undefined : dev.httpPort) ??
+    (await findPort());
+  let websocketPort =
+    flags.websocketPort ??
+    (dev === true ? undefined : dev.websocketPort) ??
+    (await findPort());
+  let restart =
+    flags.restart ?? (dev === true ? undefined : dev.restart) ?? true;
+
+  return {
+    command,
+    httpPort,
+    websocketPort,
+    restart,
+  };
+};
