@@ -28,7 +28,6 @@ We built the new `<RouterProvider>` component such that it would enable the new 
 Let's assume we've got a current application with 2 descendant route trees, and assume these routes are all doing in-component data fetching, and rendering their own loading and error states.
 
 ```tsx
-import * as React from "react";
 import {
   BrowserRouter,
   Link,
@@ -87,8 +86,7 @@ We can render this application inside a `RouterProvider` with only a few small c
 3. Create a data router singleton with a splat route for the `Root` element
 4. Add a new `App` component rendering a `<RouterProvider>`
 
-```tsx lines=[10-13,15-18,20-21,22-23]
-import * as React from "react";
+```tsx lines=[9-12,14-17,19-20,21-22]
 import {
   createBrowserRouter,
   Link,
