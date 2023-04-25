@@ -41,6 +41,14 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
   \`dev\` Options:
     --debug             Attach Node.js inspector
     --port, -p          Choose the port from which to run your app
+
+    [unstable_dev]
+    --command, -c       Command used to run your app server
+    --http-scheme       HTTP(S) scheme for the dev server. Default: http
+    --http-host         HTTP(S) host for the dev server. Default: localhost
+    --http-port         HTTP(S) port for the dev server. Default: any open port
+    --no-restart        Do not restart the app server when rebuilds occur.
+    --websocket-port    Websocket port for the dev server. Default: any open port
   \`init\` Options:
     --no-delete         Skip deleting the \`remix.init\` script
   \`routes\` Options:
@@ -151,14 +159,11 @@ export async function run(argv: string[] = process.argv.slice(2)) {
 
   let args = arg(
     {
-      "--command": String,
-      "-c": "--command",
       "--debug": Boolean,
       "--no-delete": Boolean,
       "--dry": Boolean,
       "--force": Boolean,
       "--help": Boolean,
-      "--http-port": Number,
       "-h": "--help",
       "--install": Boolean,
       "--no-install": Boolean,
@@ -168,8 +173,6 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--port": Number,
       "-p": "--port",
       "--remix-version": String,
-      "--restart": Boolean,
-      "--no-restart": Boolean,
       "--sourcemap": Boolean,
       "--template": String,
       "--token": String,
@@ -177,6 +180,14 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--no-typescript": Boolean,
       "--version": Boolean,
       "-v": "--version",
+
+      // dev server
+      "--command": String,
+      "-c": "--command",
+      "--http-scheme": String,
+      "--http-host": String,
+      "--http-port": Number,
+      "--no-restart": Boolean,
       "--websocket-port": Number,
     },
     {
@@ -202,6 +213,14 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     return;
   }
 
+  if (flags["http-scheme"]) {
+    flags.httpScheme = flags["http-scheme"];
+    delete flags["http-scheme"];
+  }
+  if (flags["http-host"]) {
+    flags.httpHost = flags["http-host"];
+    delete flags["http-host"];
+  }
   if (flags["http-port"]) {
     flags.httpPort = flags["http-port"];
     delete flags["http-port"];

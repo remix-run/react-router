@@ -7,18 +7,43 @@ import express from "express";
 import * as Channel from "../channel";
 import { type Manifest } from "../manifest";
 import * as Compiler from "../compiler";
-import { type RemixConfig } from "../config";
+import { readConfig, type RemixConfig } from "../config";
 import { loadEnv } from "./env";
 import * as Socket from "./socket";
 import * as HMR from "./hmr";
 import { warnOnce } from "../warnOnce";
 import { detectPackageManager } from "../cli/detectPackageManager";
 
+type Origin = {
+  scheme: string;
+  host: string;
+  port: number;
+};
+
+let stringifyOrigin = (o: Origin) => `${o.scheme}://${o.host}:${o.port}`;
+
+let patchPublicPath = (
+  config: RemixConfig,
+  devHttpOrigin: Origin
+): RemixConfig => {
+  // set public path to point to dev server
+  // so that browser asks the dev server for assets
+  return {
+    ...config,
+    // dev server has its own origin, to `/build/` path will not cause conflicts with app server routes
+    publicPath: stringifyOrigin(devHttpOrigin) + "/build/",
+  };
+};
+
 export let serve = async (
   initialConfig: RemixConfig,
   options: {
     command?: string;
-    httpPort: number;
+    httpOrigin: {
+      scheme: string;
+      host: string;
+      port: number;
+    };
     websocketPort: number;
     restart: boolean;
   }
@@ -42,23 +67,27 @@ export let serve = async (
       env: {
         NODE_ENV: "development",
         PATH: `${bin}:${process.env.PATH}`,
-        REMIX_DEV_HTTP_PORT: String(options.httpPort),
+        REMIX_DEV_HTTP_ORIGIN: stringifyOrigin(options.httpOrigin),
       },
     });
   };
 
   let dispose = await Compiler.watch(
     {
-      config: initialConfig,
+      config: patchPublicPath(initialConfig, options.httpOrigin),
       options: {
         mode: "development",
         sourcemap: true,
         onWarning: warnOnce,
-        devHttpPort: options.httpPort,
+        devHttpOrigin: options.httpOrigin,
         devWebsocketPort: options.websocketPort,
       },
     },
     {
+      reloadConfig: async (root) => {
+        let config = await readConfig(root);
+        return patchPublicPath(config, options.httpOrigin);
+      },
       onBuildStart: (ctx) => {
         state.buildHashChannel?.err();
         clean(ctx.config);
@@ -110,6 +139,20 @@ export let serve = async (
   );
 
   let httpServer = express()
+    // statically serve built assets
+    .use((_, res, next) => {
+      res.header("Access-Control-Allow-Origin", "*");
+      next();
+    })
+    .use(
+      "/build",
+      express.static(initialConfig.assetsBuildDirectory, {
+        immutable: true,
+        maxAge: "1y",
+      })
+    )
+
+    // handle `devReady` messages
     .use(express.json())
     .post("/ping", (req, res) => {
       let { buildHash } = req.body;
@@ -122,8 +165,8 @@ export let serve = async (
       }
       res.sendStatus(200);
     })
-    .listen(options.httpPort, () => {
-      console.log(`dev server listening on port ${options.httpPort}`);
+    .listen(options.httpOrigin.port, () => {
+      console.log("Remix dev server ready");
     });
 
   return new Promise(() => {}).finally(async () => {

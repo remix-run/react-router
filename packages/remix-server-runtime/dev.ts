@@ -1,25 +1,17 @@
 import type { ServerBuild } from "./build";
 
-export let devReady = (
-  build: ServerBuild,
-  options: {
-    scheme?: string;
-    host?: string;
-    port?: number;
-  } = {}
-) => {
-  let scheme = options.scheme ?? "http";
-  let host = options.host ?? "localhost";
-  let port = options.port ?? Number(process.env.REMIX_DEV_HTTP_PORT);
-  if (!port) throw Error("Dev server port not set");
-  if (isNaN(port))
-    throw Error(
-      `Dev server port must be a number. Got: ${JSON.stringify(port)}`
-    );
+export let devReady = (build: ServerBuild, origin?: string) => {
+  origin ??= process.env.REMIX_DEV_HTTP_ORIGIN;
+  if (!origin) throw Error("Dev server origin not set");
 
-  fetch(`${scheme}://${host}:${port}/ping`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ buildHash: build.assets.version }),
-  });
+  try {
+    fetch(`${origin}/ping`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ buildHash: build.assets.version }),
+    });
+  } catch (error) {
+    console.error(`Could not reach Remix dev server at ${origin}`);
+    throw error;
+  }
 };

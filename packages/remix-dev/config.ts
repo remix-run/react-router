@@ -41,6 +41,8 @@ type Dev = {
   port?: number; // TODO: remove in v2
 
   command?: string;
+  httpScheme?: string;
+  httpHost?: string;
   httpPort?: number;
   websocketPort?: number;
   restart?: boolean;

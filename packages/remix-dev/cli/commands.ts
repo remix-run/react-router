@@ -177,7 +177,7 @@ export async function build(
   };
   if (config.future.unstable_dev) {
     let dev = await resolveDev(config.future.unstable_dev);
-    options.devHttpPort = dev.httpPort;
+    options.devHttpOrigin = dev.httpOrigin;
     options.devWebsocketPort = dev.websocketPort;
   }
 
@@ -212,7 +212,11 @@ export async function dev(
   flags: {
     debug?: boolean;
     port?: number; // TODO: remove for v2
+
+    // unstable_dev
     command?: string;
+    httpScheme?: string;
+    httpHost?: string;
     httpPort?: number;
     restart?: boolean;
     websocketPort?: number;
@@ -466,17 +470,27 @@ let resolveDev = async (
   dev: Exclude<RemixConfig["future"]["unstable_dev"], false>,
   flags: {
     command?: string;
+    httpScheme?: string;
+    httpHost?: string;
     httpPort?: number;
     restart?: boolean;
     websocketPort?: number;
   } = {}
 ): Promise<{
   command?: string;
-  httpPort: number;
+  httpOrigin: {
+    scheme: string;
+    host: string;
+    port: number;
+  };
   restart: boolean;
   websocketPort: number;
 }> => {
   let command = flags.command ?? (dev === true ? undefined : dev.command);
+  let httpScheme =
+    flags.httpScheme ?? (dev === true ? undefined : dev.httpScheme) ?? "http";
+  let httpHost =
+    flags.httpHost ?? (dev === true ? undefined : dev.httpHost) ?? "localhost";
   let httpPort =
     flags.httpPort ??
     (dev === true ? undefined : dev.httpPort) ??
@@ -490,7 +504,11 @@ let resolveDev = async (
 
   return {
     command,
-    httpPort,
+    httpOrigin: {
+      scheme: httpScheme,
+      host: httpHost,
+      port: httpPort,
+    },
     websocketPort,
     restart,
   };

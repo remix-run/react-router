@@ -102,8 +102,8 @@ const createEsbuildConfig = (
       "process.env.REMIX_DEV_SERVER_WS_PORT": JSON.stringify(
         ctx.config.devServerPort
       ),
-      "process.env.REMIX_DEV_HTTP_PORT": JSON.stringify(
-        ctx.options.devHttpPort ?? ""
+      "process.env.REMIX_DEV_HTTP_ORIGIN": JSON.stringify(
+        ctx.options.devHttpOrigin ?? "" // TODO: remove nullish check in v2
       ),
     },
     jsx: "automatic",
