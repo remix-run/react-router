@@ -17,7 +17,7 @@ import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
 import { createApp } from "./create";
-import { getPreferredPackageManager } from "./getPreferredPackageManager";
+import { detectPackageManager } from "./detectPackageManager";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
 import runCodemod from "../codemod";
 import { CodemodError } from "../codemod/utils/error";
@@ -82,7 +82,7 @@ export async function init(
 
   let initPackageJson = path.resolve(initScriptDir, "package.json");
   let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));
-  let packageManager = getPreferredPackageManager();
+  let packageManager = detectPackageManager() ?? "npm";
 
   if (await fse.pathExists(initPackageJson)) {
     execSync(`${packageManager} install`, {

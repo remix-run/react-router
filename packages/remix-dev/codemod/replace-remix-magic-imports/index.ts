@@ -6,7 +6,7 @@ import semver from "semver";
 
 import { blue, cyan, gray } from "../../colors";
 import { readConfig } from "../../config";
-import { getPreferredPackageManager } from "../../cli/getPreferredPackageManager";
+import { detectPackageManager } from "../../cli/detectPackageManager";
 import type { Codemod } from "../codemod";
 import { CodemodError } from "../utils/error";
 import * as log from "../utils/log";
@@ -177,7 +177,7 @@ const codemod: Codemod = async (projectDir, options) => {
   );
 
   if (!options.dry) {
-    let packageManager = getPreferredPackageManager();
+    let packageManager = detectPackageManager() ?? "npm";
     log.info(
       `👉 To update your lockfile, run ${code(`${packageManager} install`)}`
     );

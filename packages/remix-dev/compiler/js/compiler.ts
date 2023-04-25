@@ -22,7 +22,7 @@ import { vanillaExtractPlugin } from "../plugins/vanillaExtract";
 import invariant from "../../invariant";
 import { hmrPlugin } from "./plugins/hmr";
 import { createMatchPath } from "../utils/tsconfig";
-import { getPreferredPackageManager } from "../../cli/getPreferredPackageManager";
+import { detectPackageManager } from "../../cli/detectPackageManager";
 import type * as Channel from "../../channel";
 import type { Context } from "../context";
 
@@ -145,7 +145,7 @@ const createEsbuildConfig = (
           }
 
           let packageName = getNpmPackageName(args.path);
-          let pkgManager = getPreferredPackageManager();
+          let pkgManager = detectPackageManager() ?? "npm";
           if (
             ctx.options.onWarning &&
             !isNodeBuiltIn(packageName) &&

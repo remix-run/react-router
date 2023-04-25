@@ -13,7 +13,7 @@ import { ServerMode, isValidServerMode } from "./config/serverModes";
 import { writeConfigDefaults } from "./config/write-tsconfig-defaults";
 import { serverBuildVirtualModule } from "./compiler/server/virtualModules";
 import { flatRoutes } from "./config/flat-routes";
-import { getPreferredPackageManager } from "./cli/getPreferredPackageManager";
+import { detectPackageManager } from "./cli/detectPackageManager";
 import { warnOnce } from "./warnOnce";
 
 export interface RemixMdxConfig {
@@ -599,7 +599,7 @@ export async function readConfig(
 
       await pkgJson.save();
 
-      let packageManager = getPreferredPackageManager();
+      let packageManager = detectPackageManager() ?? "npm";
 
       execSync(`${packageManager} install`, {
         cwd: remixRoot,

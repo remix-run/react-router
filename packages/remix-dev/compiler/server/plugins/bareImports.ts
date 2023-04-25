@@ -10,7 +10,7 @@ import {
 } from "../virtualModules";
 import { isCssSideEffectImportPath } from "../../plugins/cssSideEffectImports";
 import { createMatchPath } from "../../utils/tsconfig";
-import { getPreferredPackageManager } from "../../../cli/getPreferredPackageManager";
+import { detectPackageManager } from "../../../cli/detectPackageManager";
 import type { Context } from "../../context";
 
 /**
@@ -72,7 +72,7 @@ export function serverBareModulesPlugin({ config, options }: Context): Plugin {
         }
 
         let packageName = getNpmPackageName(path);
-        let pkgManager = getPreferredPackageManager();
+        let pkgManager = detectPackageManager() ?? "npm";
 
         // Warn if we can't find an import for a package.
         if (

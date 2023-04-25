@@ -12,6 +12,7 @@ import { loadEnv } from "./env";
 import * as Socket from "./socket";
 import * as HMR from "./hmr";
 import { warnOnce } from "../warnOnce";
+import { detectPackageManager } from "../cli/detectPackageManager";
 
 export let serve = async (
   config: RemixConfig,
@@ -32,12 +33,14 @@ export let serve = async (
     prevManifest?: Manifest;
   } = {};
 
+  let pkgManager = detectPackageManager() ?? "npm";
+  let bin = (await execa(pkgManager, ["bin"])).stdout.trim();
   let startAppServer = (command: string) => {
     return execa.command(command, {
       stdio: "inherit",
       env: {
         NODE_ENV: "development",
-        PATH: `${process.cwd()}/node_modules/.bin:${process.env.PATH}`,
+        PATH: `${bin}:${process.env.PATH}`,
         REMIX_DEV_HTTP_PORT: String(options.httpPort),
       },
     });

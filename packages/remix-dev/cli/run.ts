@@ -8,7 +8,7 @@ import fse from "fs-extra";
 import * as colors from "../colors";
 import * as commands from "./commands";
 import { validateNewProjectPath, validateTemplate } from "./create";
-import { getPreferredPackageManager } from "./getPreferredPackageManager";
+import { detectPackageManager } from "./detectPackageManager";
 
 const helpText = `
 ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
@@ -313,7 +313,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
         return;
       }
 
-      let packageManager = getPreferredPackageManager();
+      let packageManager = detectPackageManager() ?? "npm";
       let answers = await inquirer
         .prompt<{
           appType: "template" | "stack";
