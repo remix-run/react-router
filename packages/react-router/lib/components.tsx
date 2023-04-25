@@ -8,6 +8,7 @@ import type {
   To,
   LazyRouteFunction,
   RelativeRoutingType,
+  RouterState,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -116,7 +117,7 @@ export function RouterProvider({
             navigator={navigator}
           >
             {router.state.initialized ? (
-              <DataRoutes routes={router.routes} />
+              <DataRoutes routes={router.routes} state={state} />
             ) : (
               fallbackElement
             )}
@@ -130,11 +131,11 @@ export function RouterProvider({
 
 function DataRoutes({
   routes,
+  state,
 }: {
   routes: DataRouteObject[];
+  state: RouterState;
 }): React.ReactElement | null {
-  let state = React.useContext(DataRouterStateContext);
-  invariant(state, "No Router state available for DataRoutes");
   return useRoutesImpl(routes, undefined, state);
 }
 
