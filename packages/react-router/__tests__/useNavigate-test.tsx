@@ -358,7 +358,7 @@ describe("useNavigate", () => {
 
         function Home() {
           let navigate = useNavigate();
-          React.useEffect(() => navigate("/about"), []);
+          React.useEffect(() => navigate("/about"), [navigate]);
           return <h1>Home</h1>;
         }
 
@@ -386,7 +386,10 @@ describe("useNavigate", () => {
 
         function Parent() {
           let navigate = useNavigate();
-          let onChildRendered = React.useCallback(() => navigate("/about"), []);
+          let onChildRendered = React.useCallback(
+            () => navigate("/about"),
+            [navigate]
+          );
           return <Child onChildRendered={onChildRendered} />;
         }
 
@@ -442,7 +445,7 @@ describe("useNavigate", () => {
             index: true,
             Component() {
               let navigate = useNavigate();
-              React.useEffect(() => navigate("/about"), []);
+              React.useEffect(() => navigate("/about"), [navigate]);
               return <h1>Home</h1>;
             },
           },
@@ -473,7 +476,7 @@ describe("useNavigate", () => {
               let navigate = useNavigate();
               let onChildRendered = React.useCallback(
                 () => navigate("/about"),
-                []
+                [navigate]
               );
               return <Child onChildRendered={onChildRendered} />;
             },
