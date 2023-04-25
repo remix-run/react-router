@@ -302,7 +302,7 @@ test("HMR", async ({ page }) => {
 
     // detect HMR'd content and style changes
     await page.waitForLoadState("networkidle");
-    
+
     let h1 = page.getByText("Changed");
     await h1.waitFor({ timeout: HMR_TIMEOUT_MS });
     expect(h1).toHaveCSS("color", "rgb(255, 255, 255)");
@@ -419,7 +419,7 @@ test("HMR", async ({ page }) => {
     aboutCounter = await page.waitForSelector(
       `#about-counter:has-text("inc 0")`
     );
-    
+
     // This should not have triggered any revalidation but our detection is
     // failing for x-module changes for route module imports
     // expect(dataRequests).toBe(2);
