@@ -187,7 +187,7 @@ export async function build(
     process.exit(1);
   });
 
-  console.log(`built in ${prettyMs(Date.now() - start)}`);
+  console.log(`Built in ${prettyMs(Date.now() - start)}`);
 }
 
 // TODO: replace watch in v2
@@ -203,10 +203,7 @@ export async function watch(
       ? remixRootOrConfig
       : await readConfig(remixRootOrConfig);
 
-  devServer.liveReload(config, {
-    onInitialBuild: (durationMs) =>
-      console.log(`💿 Built in ${prettyMs(durationMs)}`),
-  });
+  devServer.liveReload(config);
   return await new Promise(() => {});
 }
 

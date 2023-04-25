@@ -4,7 +4,6 @@ import path from "path";
 import prettyMs from "pretty-ms";
 import WebSocket from "ws";
 
-import type { WatchOptions } from "../compiler";
 import { watch } from "../compiler";
 import type { RemixConfig } from "../config";
 import { warnOnce } from "../warnOnce";
@@ -19,10 +18,7 @@ let clean = (config: RemixConfig) => {
   }
 };
 
-export async function liveReload(
-  config: RemixConfig,
-  { onInitialBuild }: WatchOptions = {}
-) {
+export async function liveReload(config: RemixConfig) {
   clean(config);
   let wss = new WebSocket.Server({ port: config.devServerPort });
   function broadcast(event: { type: string } & Record<string, unknown>) {
@@ -41,6 +37,7 @@ export async function liveReload(
     broadcast({ type: "LOG", message: _message });
   }
 
+  let hasBuilt = false;
   let dispose = await watch(
     {
       config,
@@ -51,13 +48,14 @@ export async function liveReload(
       },
     },
     {
-      onInitialBuild,
-      onRebuildStart() {
+      onBuildStart() {
         clean(config);
-        log("Rebuilding...");
+        log((hasBuilt ? "Rebuilding" : "Building") + "...");
       },
-      onRebuildFinish(durationMs: number) {
-        log(`Rebuilt in ${prettyMs(durationMs)}`);
+      onBuildFinish(_, durationMs: number, manifest) {
+        if (manifest === undefined) return;
+        hasBuilt = true;
+        log((hasBuilt ? "Rebuilt" : "Built") + ` in ${prettyMs(durationMs)}`);
         broadcast({ type: "RELOAD" });
       },
       onFileCreated(file) {

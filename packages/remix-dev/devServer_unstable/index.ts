@@ -15,7 +15,7 @@ import { warnOnce } from "../warnOnce";
 import { detectPackageManager } from "../cli/detectPackageManager";
 
 export let serve = async (
-  config: RemixConfig,
+  initialConfig: RemixConfig,
   options: {
     command?: string;
     httpPort: number;
@@ -23,7 +23,7 @@ export let serve = async (
     restart: boolean;
   }
 ) => {
-  await loadEnv(config.rootDirectory);
+  await loadEnv(initialConfig.rootDirectory);
   let websocket = Socket.serve({ port: options.websocketPort });
 
   let state: {
@@ -36,6 +36,7 @@ export let serve = async (
   let pkgManager = detectPackageManager() ?? "npm";
   let bin = (await execa(pkgManager, ["bin"])).stdout.trim();
   let startAppServer = (command: string) => {
+    console.log(`> ${command}`);
     return execa.command(command, {
       stdio: "inherit",
       env: {
@@ -48,7 +49,7 @@ export let serve = async (
 
   let dispose = await Compiler.watch(
     {
-      config,
+      config: initialConfig,
       options: {
         mode: "development",
         sourcemap: true,
@@ -58,45 +59,44 @@ export let serve = async (
       },
     },
     {
-      onInitialBuild: (durationMs, manifest) => {
-        console.info(`💿 Built in ${prettyMs(durationMs)}`);
-        state.prevManifest = manifest;
-        if (options.command && manifest) {
-          console.log(`starting: ${options.command}`);
-          state.appServer = startAppServer(options.command);
-        }
-      },
-      onRebuildStart: () => {
+      onBuildStart: (ctx) => {
         state.buildHashChannel?.err();
-        clean(config);
-        websocket.log("Rebuilding...");
+        clean(ctx.config);
+        websocket.log(state.prevManifest ? "Rebuilding..." : "Building...");
       },
-      onRebuildFinish: async (durationMs, manifest) => {
+      onBuildFinish: async (ctx, durationMs, manifest) => {
         if (!manifest) return;
-        websocket.log(`Rebuilt in ${prettyMs(durationMs)}`);
 
-        // TODO: should we restart the app server when build failed?
+        websocket.log(
+          (state.prevManifest ? "Rebuilt" : "Built") +
+            ` in ${prettyMs(durationMs)}`
+        );
         state.latestBuildHash = manifest.version;
         state.buildHashChannel = Channel.create();
-        console.log(`Waiting (${state.latestBuildHash})`);
-        if (state.appServer === undefined || options.restart) {
-          console.log(`restarting: ${options.command}`);
+
+        let start = Date.now();
+        console.log(`Waiting for app server (${state.latestBuildHash})`);
+        if (
+          options.command &&
+          (state.appServer === undefined || options.restart)
+        ) {
           await kill(state.appServer);
-          if (options.command) {
-            state.appServer = startAppServer(options.command);
-          }
+          state.appServer = startAppServer(options.command);
         }
         let { ok } = await state.buildHashChannel.result;
         // result not ok -> new build started before this one finished. do not process outdated manifest
         if (!ok) return;
+        console.log(`App server took ${prettyMs(Date.now() - start)}`);
 
         if (manifest.hmr && state.prevManifest) {
-          let updates = HMR.updates(config, manifest, state.prevManifest);
+          let updates = HMR.updates(ctx.config, manifest, state.prevManifest);
           websocket.hmr(manifest, updates);
-          console.log("> HMR");
-        } else {
+
+          let hdr = updates.some((u) => u.revalidate);
+          console.log("> HMR" + (hdr ? " + HDR" : ""));
+        } else if (state.prevManifest !== undefined) {
           websocket.reload();
-          console.log("> Reload");
+          console.log("> Live reload");
         }
         state.prevManifest = manifest;
       },
