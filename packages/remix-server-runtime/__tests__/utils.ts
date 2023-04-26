@@ -48,7 +48,13 @@ export function mockServerBuild(
     entry: {
       module: {
         default: jest.fn(
-          async (request, responseStatusCode, responseHeaders, entryContext) =>
+          async (
+            request,
+            responseStatusCode,
+            responseHeaders,
+            entryContext,
+            loadContext
+          ) =>
             new Response(null, {
               status: responseStatusCode,
               headers: responseHeaders,
