@@ -2,9 +2,9 @@
 
 The `react-router` package is the heart of [React Router](https://github.com/remix-run/react-router) and provides all
 the core functionality for both
-[`react-router-dom`](/packages/react-router-dom)
+[`react-router-dom`](https://github.com/remix-run/react-router/tree/main/packages/react-router-dom)
 and
-[`react-router-native`](/packages/react-router-native).
+[`react-router-native`](https://github.com/remix-run/react-router/tree/main/packages/react-router-native).
 
 If you're using React Router, you should never `import` anything directly from
 the `react-router` package, but you should have everything you need in either
