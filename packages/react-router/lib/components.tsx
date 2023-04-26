@@ -63,11 +63,14 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => {
     return router.subscribe((newState) => {
-      if (newState !== state) {
-        setState(newState);
-      }
+      setState((prevState) => {
+        if (prevState !== newState) {
+          return newState;
+        }
+        return prevState;
+      });
     });
-  }, [router, state]);
+  }, [router]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
