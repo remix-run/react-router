@@ -1,5 +1,14 @@
 # `@remix-run/node`
 
+## 1.16.0-pre.0
+
+### Patch Changes
+
+- add `@remix-run/node/install` side-effect to allow `node --require @remix-run/node/install` ([#6132](https://github.com/remix-run/remix/pull/6132))
+- add missing files to published package ([#6179](https://github.com/remix-run/remix/pull/6179))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.16.0-pre.0`
+
 ## 1.15.0
 
 ### Minor Changes
