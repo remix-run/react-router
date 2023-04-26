@@ -104,6 +104,23 @@ const createEsbuildConfig = (
     }
   }
 
+  if (
+    ctx.options.mode === "development" &&
+    ctx.config.future.unstable_dev !== false
+  ) {
+    let defaultsDirectory = path.resolve(
+      __dirname,
+      "..",
+      "..",
+      "config",
+      "defaults"
+    );
+    entryPoints["__remix_entry_dev"] = path.join(
+      defaultsDirectory,
+      "entry.dev.ts"
+    );
+  }
+
   let matchPath = ctx.config.tsconfigPath
     ? createMatchPath(ctx.config.tsconfigPath)
     : undefined;
@@ -175,22 +192,6 @@ const createEsbuildConfig = (
   ];
 
   if (ctx.options.mode === "development" && ctx.config.future.unstable_dev) {
-    // TODO prebundle deps instead of chunking just these ones
-    let isolateChunks = [
-      require.resolve("react"),
-      require.resolve("react/jsx-dev-runtime"),
-      require.resolve("react/jsx-runtime"),
-      require.resolve("react-dom"),
-      require.resolve("react-dom/client"),
-      require.resolve("react-refresh/runtime"),
-      require.resolve("@remix-run/react"),
-      "remix:hmr",
-    ];
-    entryPoints = {
-      ...entryPoints,
-      ...Object.fromEntries(isolateChunks.map((imprt) => [imprt, imprt])),
-    };
-
     plugins.push(hmrPlugin(ctx));
     plugins.push(cssBundleUpdatePlugin(channels));
   }
