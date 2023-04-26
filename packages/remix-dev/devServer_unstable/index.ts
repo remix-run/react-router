@@ -113,6 +113,8 @@ export let serve = async (
           (state.prevManifest ? "Rebuilt" : "Built") +
             ` in ${prettyMs(durationMs)}`
         );
+        let prevManifest = state.prevManifest;
+        state.prevManifest = manifest;
         state.latestBuildHash = manifest.version;
         state.buildHashChannel = Channel.create();
 
@@ -130,17 +132,16 @@ export let serve = async (
         if (!ok) return;
         console.log(`App server took ${prettyMs(Date.now() - start)}`);
 
-        if (manifest.hmr && state.prevManifest) {
-          let updates = HMR.updates(ctx.config, manifest, state.prevManifest);
+        if (manifest.hmr && prevManifest) {
+          let updates = HMR.updates(ctx.config, manifest, prevManifest);
           websocket.hmr(manifest, updates);
 
           let hdr = updates.some((u) => u.revalidate);
           console.log("> HMR" + (hdr ? " + HDR" : ""));
-        } else if (state.prevManifest !== undefined) {
+        } else if (prevManifest !== undefined) {
           websocket.reload();
           console.log("> Live reload");
         }
-        state.prevManifest = manifest;
       },
       onFileCreated: (file) =>
         websocket.log(`File created: ${relativePath(file)}`),
