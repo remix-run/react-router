@@ -136,6 +136,7 @@ export function StaticRouterProvider({
             location={state.location}
             navigationType={state.historyAction}
             navigator={dataRouterContext.navigator}
+            static={true}
           >
             <DataRoutes routes={router.routes} state={state} />
           </Router>
