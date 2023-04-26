@@ -117,7 +117,12 @@ export function serverBareModulesPlugin({ config, options }: Context): Plugin {
           kind !== "dynamic-import" &&
           config.serverPlatform === "node"
         ) {
-          warnOnceIfEsmOnlyPackage(packageName, path, importer, options.onWarning);
+          warnOnceIfEsmOnlyPackage(
+            packageName,
+            path,
+            importer,
+            options.onWarning
+          );
         }
 
         // Externalize everything else if we've gotten here.
@@ -149,10 +154,14 @@ function warnOnceIfEsmOnlyPackage(
   packageName: string,
   fullImportPath: string,
   importer: string,
-  onWarning: (msg: string, key: string) => void,
+  onWarning: (msg: string, key: string) => void
 ) {
   try {
-    let packageDir = resolveModuleBasePath(packageName, fullImportPath, importer);
+    let packageDir = resolveModuleBasePath(
+      packageName,
+      fullImportPath,
+      importer
+    );
     let packageJsonFile = path.join(packageDir, "package.json");
 
     if (!fs.existsSync(packageJsonFile)) {
@@ -194,8 +203,14 @@ function warnOnceIfEsmOnlyPackage(
 
 // https://github.com/nodejs/node/issues/33460#issuecomment-919184789
 // adapted to use the fullImportPath to resolve sub packages like @heroicons/react/solid
-function resolveModuleBasePath(packageName: string, fullImportPath: string, importer: string) {
-  let moduleMainFilePath = require.resolve(fullImportPath, { paths: [importer] });
+function resolveModuleBasePath(
+  packageName: string,
+  fullImportPath: string,
+  importer: string
+) {
+  let moduleMainFilePath = require.resolve(fullImportPath, {
+    paths: [importer],
+  });
 
   let packageNameParts = packageName.split("/");
 
