@@ -664,7 +664,9 @@ const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
 const redirectStatusCodes = new Set([301, 302, 303, 307, 308]);
 const redirectPreserveMethodStatusCodes = new Set([307, 308]);
 
-const EMPTY_SUBMISSION = {
+export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
+  state: "idle",
+  location: undefined,
   formMethod: undefined,
   formAction: undefined,
   formEncType: undefined,
@@ -679,16 +681,21 @@ const EMPTY_SUBMISSION = {
   },
 };
 
-export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
-  state: "idle",
-  location: undefined,
-  ...EMPTY_SUBMISSION,
-};
-
 export const IDLE_FETCHER: FetcherStates["Idle"] = {
   state: "idle",
   data: undefined,
-  ...EMPTY_SUBMISSION,
+  formMethod: undefined,
+  formAction: undefined,
+  formEncType: undefined,
+  get text() {
+    return undefined;
+  },
+  get formData() {
+    return undefined;
+  },
+  get json() {
+    return undefined;
+  },
 };
 
 export const IDLE_BLOCKER: BlockerUnblocked = {
@@ -1332,33 +1339,7 @@ export function createRouter(init: RouterInit): Router {
 
       pendingActionData = actionOutput.pendingActionData;
       pendingError = actionOutput.pendingActionError;
-
-      if (opts.submission) {
-        let navigation: NavigationStates["Loading"] = {
-          state: "loading",
-          location,
-          formMethod: opts.submission.formMethod,
-          formAction: opts.submission.formAction,
-          formEncType: opts.submission.formEncType,
-          get text() {
-            return opts.submission?.text;
-          },
-          get formData() {
-            return opts.submission?.formData;
-          },
-          get json() {
-            return opts.submission?.json;
-          },
-        };
-        loadingNavigation = navigation;
-      } else {
-        let navigation: NavigationStates["Loading"] = {
-          state: "loading",
-          location,
-          ...EMPTY_SUBMISSION,
-        };
-        loadingNavigation = navigation;
-      }
+      loadingNavigation = getLoadingNavigation(location, opts.submission);
 
       // Create a GET request for the loaders
       request = new Request(request.url, { signal: request.signal });
@@ -1406,22 +1387,7 @@ export function createRouter(init: RouterInit): Router {
     interruptActiveLoads();
 
     // Put us in a submitting state
-    let navigation: NavigationStates["Submitting"] = {
-      state: "submitting",
-      location,
-      formMethod: submission.formMethod,
-      formAction: submission.formAction,
-      formEncType: submission.formEncType,
-      get text() {
-        return submission.text;
-      },
-      get formData() {
-        return submission.formData;
-      },
-      get json() {
-        return submission.json;
-      },
-    };
+    let navigation = getSubmittingNavigation(location, submission);
     updateState({ navigation });
 
     // Call our action and get the result
@@ -1516,35 +1482,8 @@ export function createRouter(init: RouterInit): Router {
     pendingError?: RouteData
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
-    let loadingNavigation = overrideNavigation;
-    if (!loadingNavigation) {
-      if (submission) {
-        let navigation: NavigationStates["Loading"] = {
-          state: "loading",
-          location,
-          formMethod: submission.formMethod,
-          formAction: submission.formAction,
-          formEncType: submission.formEncType,
-          get text() {
-            return submission.text;
-          },
-          get formData() {
-            return submission.formData;
-          },
-          get json() {
-            return submission.json;
-          },
-        };
-        loadingNavigation = navigation;
-      } else {
-        let navigation: NavigationStates["Loading"] = {
-          state: "loading",
-          location,
-          ...EMPTY_SUBMISSION,
-        };
-        loadingNavigation = navigation;
-      }
-    }
+    let loadingNavigation =
+      overrideNavigation || getLoadingNavigation(location, submission);
 
     // If this was a redirect from an action we don't have a "submission" but
     // we have it on the loading navigation so use that if available
@@ -1619,12 +1558,10 @@ export function createRouter(init: RouterInit): Router {
     if (!isUninterruptedRevalidation) {
       revalidatingFetchers.forEach((rf) => {
         let fetcher = state.fetchers.get(rf.key);
-        let revalidatingFetcher: FetcherStates["Loading"] = {
-          state: "loading",
-          data: fetcher && fetcher.data,
-          ...EMPTY_SUBMISSION,
-          " _hasFetcherDoneAnything ": true,
-        };
+        let revalidatingFetcher = getLoadingFetcher(
+          undefined,
+          fetcher ? fetcher.data : undefined
+        );
         state.fetchers.set(rf.key, revalidatingFetcher);
       });
       let actionData = pendingActionData || state.actionData;
@@ -1848,23 +1785,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Put this fetcher into it's submitting state
     let existingFetcher = state.fetchers.get(key);
-    let fetcher: FetcherStates["Submitting"] = {
-      state: "submitting",
-      formMethod: submission.formMethod,
-      formAction: submission.formAction,
-      formEncType: submission.formEncType,
-      get text() {
-        return submission.text;
-      },
-      get formData() {
-        return submission.formData;
-      },
-      get json() {
-        return submission.json;
-      },
-      data: existingFetcher && existingFetcher.data,
-      " _hasFetcherDoneAnything ": true,
-    };
+    let fetcher = getSubmittingFetcher(submission, existingFetcher);
     state.fetchers.set(key, fetcher);
     updateState({ fetchers: new Map(state.fetchers) });
 
@@ -1901,23 +1822,7 @@ export function createRouter(init: RouterInit): Router {
     if (isRedirectResult(actionResult)) {
       fetchControllers.delete(key);
       fetchRedirectIds.add(key);
-      let loadingFetcher: FetcherStates["Loading"] = {
-        state: "loading",
-        formMethod: submission.formMethod,
-        formAction: submission.formAction,
-        formEncType: submission.formEncType,
-        get text() {
-          return submission.text;
-        },
-        get formData() {
-          return submission.formData;
-        },
-        get json() {
-          return submission.json;
-        },
-        data: undefined,
-        " _hasFetcherDoneAnything ": true,
-      };
+      let loadingFetcher = getLoadingFetcher(submission);
       state.fetchers.set(key, loadingFetcher);
       updateState({ fetchers: new Map(state.fetchers) });
 
@@ -1957,23 +1862,7 @@ export function createRouter(init: RouterInit): Router {
     let loadId = ++incrementingLoadId;
     fetchReloadIds.set(key, loadId);
 
-    let loadFetcher: FetcherStates["Loading"] = {
-      state: "loading",
-      data: actionResult.data,
-      formMethod: submission.formMethod,
-      formAction: submission.formAction,
-      formEncType: submission.formEncType,
-      get text() {
-        return submission.text;
-      },
-      get formData() {
-        return submission.formData;
-      },
-      get json() {
-        return submission.json;
-      },
-      " _hasFetcherDoneAnything ": true,
-    };
+    let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     state.fetchers.set(key, loadFetcher);
 
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
@@ -2000,12 +1889,10 @@ export function createRouter(init: RouterInit): Router {
       .forEach((rf) => {
         let staleKey = rf.key;
         let existingFetcher = state.fetchers.get(staleKey);
-        let revalidatingFetcher: FetcherStates["Loading"] = {
-          state: "loading",
-          data: existingFetcher && existingFetcher.data,
-          ...EMPTY_SUBMISSION,
-          " _hasFetcherDoneAnything ": true,
-        };
+        let revalidatingFetcher = getLoadingFetcher(
+          undefined,
+          existingFetcher ? existingFetcher.data : undefined
+        );
         state.fetchers.set(staleKey, revalidatingFetcher);
         if (rf.controller) {
           fetchControllers.set(staleKey, rf.controller);
@@ -2061,12 +1948,7 @@ export function createRouter(init: RouterInit): Router {
       activeDeferreds
     );
 
-    let doneFetcher: FetcherStates["Idle"] = {
-      state: "idle",
-      data: actionResult.data,
-      ...EMPTY_SUBMISSION,
-      " _hasFetcherDoneAnything ": true,
-    };
+    let doneFetcher = getDoneFetcher(actionResult.data);
     state.fetchers.set(key, doneFetcher);
 
     let didAbortFetchLoads = abortStaleFetchLoads(loadId);
@@ -2117,34 +1999,11 @@ export function createRouter(init: RouterInit): Router {
   ) {
     let existingFetcher = state.fetchers.get(key);
     // Put this fetcher into it's loading state
-    if (submission) {
-      let loadingFetcher: FetcherStates["Loading"] = {
-        state: "loading",
-        formMethod: submission.formMethod,
-        formAction: submission.formAction,
-        formEncType: submission.formEncType,
-        get text() {
-          return submission.text;
-        },
-        get formData() {
-          return submission.formData;
-        },
-        get json() {
-          return submission.json;
-        },
-        data: existingFetcher && existingFetcher.data,
-        " _hasFetcherDoneAnything ": true,
-      };
-      state.fetchers.set(key, loadingFetcher);
-    } else {
-      let loadingFetcher: FetcherStates["Loading"] = {
-        state: "loading",
-        ...EMPTY_SUBMISSION,
-        data: existingFetcher && existingFetcher.data,
-        " _hasFetcherDoneAnything ": true,
-      };
-      state.fetchers.set(key, loadingFetcher);
-    }
+    let loadingFetcher = getLoadingFetcher(
+      submission,
+      existingFetcher ? existingFetcher.data : undefined
+    );
+    state.fetchers.set(key, loadingFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
 
     // Call the loader for this fetcher route match
@@ -2213,12 +2072,7 @@ export function createRouter(init: RouterInit): Router {
     invariant(!isDeferredResult(result), "Unhandled fetcher deferred data");
 
     // Put the fetcher back into an idle state
-    let doneFetcher: FetcherStates["Idle"] = {
-      state: "idle",
-      data: result.data,
-      ...EMPTY_SUBMISSION,
-      " _hasFetcherDoneAnything ": true,
-    };
+    let doneFetcher = getDoneFetcher(result.data);
     state.fetchers.set(key, doneFetcher);
     updateState({ fetchers: new Map(state.fetchers) });
   }
@@ -2333,18 +2187,19 @@ export function createRouter(init: RouterInit): Router {
       submission &&
       isMutationMethod(submission.formMethod)
     ) {
+      let closureSubmission = submission;
       let navigationSubmission: Submission = {
         formMethod: submission.formMethod,
         formAction: redirect.location,
         formEncType: submission.formEncType,
         get text() {
-          return submission?.text as Submission["text"];
+          return closureSubmission.text;
         },
         get formData() {
-          return submission?.formData as Submission["formData"];
+          return closureSubmission.formData;
         },
         get json() {
-          return submission?.json as Submission["json"];
+          return closureSubmission.text;
         },
       };
       await startNavigation(redirectHistoryAction, redirectLocation, {
@@ -2356,45 +2211,17 @@ export function createRouter(init: RouterInit): Router {
       // For a fetch action redirect, we kick off a new loading navigation
       // without the fetcher submission, but we send it along for shouldRevalidate
       await startNavigation(redirectHistoryAction, redirectLocation, {
-        overrideNavigation: {
-          state: "loading",
-          location: redirectLocation,
-          ...EMPTY_SUBMISSION,
-        },
+        overrideNavigation: getLoadingNavigation(redirectLocation),
         fetcherSubmission: submission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
-    } else if (submission) {
-      // If we have a submission, preserving it through the redirect navigation
-      let overrideNavigation: NavigationStates["Loading"] = {
-        state: "loading",
-        location: redirectLocation,
-        formMethod: submission.formMethod,
-        formAction: submission.formAction,
-        formEncType: submission.formEncType,
-        get text() {
-          return submission?.text;
-        },
-        get formData() {
-          return submission?.formData;
-        },
-        get json() {
-          return submission?.json;
-        },
-      };
-      await startNavigation(redirectHistoryAction, redirectLocation, {
-        overrideNavigation,
-        // Preserve this flag across redirects
-        preventScrollReset: pendingPreventScrollReset,
-      });
     } else {
-      // Normal loading redirect
-      let overrideNavigation: NavigationStates["Loading"] = {
-        state: "loading",
-        location: redirectLocation,
-        ...EMPTY_SUBMISSION,
-      };
+      // If we have a submission, we will preserve it through the redirect navigation
+      let overrideNavigation = getLoadingNavigation(
+        redirectLocation,
+        submission
+      );
       await startNavigation(redirectHistoryAction, redirectLocation, {
         overrideNavigation,
         // Preserve this flag across redirects
@@ -2515,12 +2342,7 @@ export function createRouter(init: RouterInit): Router {
   function markFetchersDone(keys: string[]) {
     for (let key of keys) {
       let fetcher = getFetcher(key);
-      let doneFetcher: FetcherStates["Idle"] = {
-        state: "idle",
-        data: fetcher.data,
-        ...EMPTY_SUBMISSION,
-        " _hasFetcherDoneAnything ": true,
-      };
+      let doneFetcher = getDoneFetcher(fetcher.data);
       state.fetchers.set(key, doneFetcher);
     }
   }
@@ -3361,9 +3183,6 @@ function normalizeTo(
   return createPath(path);
 }
 
-const getBodyTypeError = (type: "formData" | "json") =>
-  new TypeError(`Request is not encoded as ${type}`);
-
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
@@ -3405,13 +3224,11 @@ function normalizeNavigateOptions(
       get text() {
         return typeof body === "string" ? body : JSON.stringify(body);
       },
-      // @ts-expect-error It's ok the return type isn't FormData :)
       get formData() {
-        throw getBodyTypeError("formData");
+        return throwBodyEncTypeError<FormData>("formData");
       },
-      // @ts-expect-error It's ok the return type isn't FormData :)
       get json() {
-        throw getBodyTypeError("json");
+        return throwBodyEncTypeError<object>("json");
       },
     };
 
@@ -3427,9 +3244,8 @@ function normalizeNavigateOptions(
       get text() {
         return JSON.stringify(body);
       },
-      // @ts-expect-error It's ok the return type isn't FormData :)
       get formData() {
-        throw getBodyTypeError("formData");
+        return throwBodyEncTypeError<FormData>("formData");
       },
       get json() {
         return body;
@@ -3474,9 +3290,8 @@ function normalizeNavigateOptions(
     get formData() {
       return formData;
     },
-    // @ts-expect-error It's ok the return type isn't FormData :)
     get json() {
-      throw getBodyTypeError("json");
+      return throwBodyEncTypeError<object>("json");
     },
   };
 
@@ -4200,12 +4015,7 @@ function processLoaderData(
       // in resolveDeferredResults
       invariant(false, "Unhandled fetcher deferred data");
     } else {
-      let doneFetcher: FetcherStates["Idle"] = {
-        state: "idle",
-        data: result.data,
-        ...EMPTY_SUBMISSION,
-        " _hasFetcherDoneAnything ": true,
-      };
+      let doneFetcher = getDoneFetcher(result.data);
       state.fetchers.set(key, doneFetcher);
     }
   }
@@ -4545,4 +4355,166 @@ function getTargetMatch(
   return pathMatches[pathMatches.length - 1];
 }
 
+// Utility to throw but keep return types happy in submissions/navigations/fetchers
+function throwBodyEncTypeError<T extends FormData | object>(
+  type: "formData" | "json"
+): T {
+  throw new TypeError(`Request is not encoded as ${type}`);
+}
+
+function getLoadingNavigation(
+  location: Location,
+  submission?: Submission
+): NavigationStates["Loading"] {
+  if (submission) {
+    let navigation: NavigationStates["Loading"] = {
+      state: "loading",
+      location,
+      formMethod: submission.formMethod,
+      formAction: submission.formAction,
+      formEncType: submission.formEncType,
+      get text() {
+        return submission.text;
+      },
+      get formData() {
+        return submission.formData;
+      },
+      get json() {
+        return submission.json;
+      },
+    };
+    return navigation;
+  } else {
+    let navigation: NavigationStates["Loading"] = {
+      state: "loading",
+      location,
+      formMethod: undefined,
+      formAction: undefined,
+      formEncType: undefined,
+      get text() {
+        return undefined;
+      },
+      get formData() {
+        return undefined;
+      },
+      get json() {
+        return undefined;
+      },
+    };
+    return navigation;
+  }
+}
+
+function getSubmittingNavigation(
+  location: Location,
+  submission: Submission
+): NavigationStates["Submitting"] {
+  let navigation: NavigationStates["Submitting"] = {
+    state: "submitting",
+    location,
+    formMethod: submission.formMethod,
+    formAction: submission.formAction,
+    formEncType: submission.formEncType,
+    get text() {
+      return submission.text;
+    },
+    get formData() {
+      return submission.formData;
+    },
+    get json() {
+      return submission.json;
+    },
+  };
+  return navigation;
+}
+
+function getLoadingFetcher(
+  submission?: Submission,
+  data?: Fetcher["data"]
+): FetcherStates["Loading"] {
+  if (submission) {
+    let fetcher: FetcherStates["Loading"] = {
+      state: "loading",
+      formMethod: submission.formMethod,
+      formAction: submission.formAction,
+      formEncType: submission.formEncType,
+      get text() {
+        return submission.text;
+      },
+      get formData() {
+        return submission.formData;
+      },
+      get json() {
+        return submission.json;
+      },
+      data,
+      " _hasFetcherDoneAnything ": true,
+    };
+    return fetcher;
+  } else {
+    let fetcher: FetcherStates["Loading"] = {
+      state: "loading",
+      formMethod: undefined,
+      formAction: undefined,
+      formEncType: undefined,
+      get text() {
+        return undefined;
+      },
+      get formData() {
+        return undefined;
+      },
+      get json() {
+        return undefined;
+      },
+      data,
+      " _hasFetcherDoneAnything ": true,
+    };
+    return fetcher;
+  }
+}
+
+function getSubmittingFetcher(
+  submission: Submission,
+  existingFetcher?: Fetcher
+): FetcherStates["Submitting"] {
+  let fetcher: FetcherStates["Submitting"] = {
+    state: "submitting",
+    formMethod: submission.formMethod,
+    formAction: submission.formAction,
+    formEncType: submission.formEncType,
+    get text() {
+      return submission.text;
+    },
+    get formData() {
+      return submission.formData;
+    },
+    get json() {
+      return submission.json;
+    },
+    data: existingFetcher ? existingFetcher.data : undefined,
+    " _hasFetcherDoneAnything ": true,
+  };
+  return fetcher;
+}
+
+function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
+  let fetcher: FetcherStates["Idle"] = {
+    state: "idle",
+    formMethod: undefined,
+    formAction: undefined,
+    formEncType: undefined,
+    get text() {
+      return undefined;
+    },
+    get formData() {
+      return undefined;
+    },
+    get json() {
+      return undefined;
+    },
+    data,
+    " _hasFetcherDoneAnything ": true,
+  };
+  return fetcher;
+}
 //#endregion
