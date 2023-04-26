@@ -108,16 +108,6 @@ If you find yourself calling this function inside of click handlers, you can pro
 
 <docs-info>Any `fetcher.load` calls that are active on the page will be re-executed as part of revalidation (either after a navigation submission, another fetcher submission, or a `useRevalidator()` call)</docs-info>
 
-### Direct `loader` specification
-
-If you want to perform a `fetcher.load`, but you don't want/need to create a route for your `loader`, you can pass a `loader` directly to `fetcher.load`:
-
-```tsx
-fetcher.load(() => {
-  // Custom loader implementation here
-});
-```
-
 ## `fetcher.submit()`
 
 The imperative version of `<fetcher.Form>`. If a user interaction should initiate the fetch, you should use `<fetcher.Form>`. But if you, the programmer are initiating the fetch (not in response to a user clicking a button, etc.), then use this function.
@@ -148,18 +138,6 @@ export function useIdleLogout() {
 If you want to submit to an index route, use the [`?index` param][indexsearchparam].
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
-
-### Direct `action` specification
-
-If you want to perform a `fetcher.submit`, but you don't want/need to create a route for your `action`, you can pass an `action` directly to `fetcher.submit`:
-
-```tsx
-fetcher.submit(data, {
-  action({ payload }) {
-    // Custom action implementation here
-  },
-});
-```
 
 ## `fetcher.data`
 

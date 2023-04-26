@@ -124,7 +124,7 @@ function action({ request, payload }) {
 
 ## Submit options
 
-The second argument is a set of options that map (mostly) directly to form submission attributes:
+The second argument is a set of options that map directly to form submission attributes:
 
 ```tsx
 submit(null, {
@@ -134,18 +134,6 @@ submit(null, {
 
 // same as
 <Form action="/logout" method="post" />;
-```
-
-### Direct `action` specification
-
-If you want to perform a submission, but you don't want/need to create a route for your `action`, you can pass an `action` to `useSubmit` which will perform a submission navigation to the current location but will use the provided `action`:
-
-```tsx
-submit(data, {
-  action({ request }) {
-    // Custom action implementation here
-  },
-});
 ```
 
 [pickingarouter]: ../routers/picking-a-router

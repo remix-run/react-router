@@ -1,5 +1,4 @@
 import type {
-  ActionFunction,
   FormEncType,
   HTMLFormMethod,
   RelativeRoutingType,
@@ -131,7 +130,7 @@ export interface SubmitOptions {
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
    */
-  action?: string | ActionFunction;
+  action?: string;
 
   /**
    * The action URL used to submit the form. Overrides `<form encType>`.
@@ -167,7 +166,7 @@ export interface SubmitOptions {
 
 export function getFormSubmissionInfo(
   target: SubmitTarget,
-  formEncType: FormEncType | undefined,
+  options: SubmitOptions,
   basename: string
 ): {
   action: string | null;
@@ -177,21 +176,34 @@ export function getFormSubmissionInfo(
   payload: any;
 } {
   let method: string;
-  let action: string | null;
+  let action: string | null = null;
   let encType: string | null;
   let formData: FormData | undefined = undefined;
   let payload: unknown = undefined;
 
   if (isFormElement(target)) {
-    // When grabbing the action from the element, it will have had the basename
-    // prefixed to ensure non-JS scenarios work, so strip it since we'll
-    // re-prefix in the router
-    let attr = target.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
-    method = target.getAttribute("method") || defaultMethod;
-    encType = target.getAttribute("enctype") || defaultEncType;
+    let submissionTrigger: HTMLButtonElement | HTMLInputElement = (
+      options as any
+    ).submissionTrigger;
+
+    if (options.action) {
+      action = options.action;
+    } else {
+      // When grabbing the action from the element, it will have had the basename
+      // prefixed to ensure non-JS scenarios work, so strip it since we'll
+      // re-prefix in the router
+      let attr = target.getAttribute("action");
+      action = attr ? stripBasename(attr, basename) : null;
+    }
+    method = options.method || target.getAttribute("method") || defaultMethod;
+    encType =
+      options.encType || target.getAttribute("enctype") || defaultEncType;
 
     formData = new FormData(target);
+
+    if (submissionTrigger && submissionTrigger.name) {
+      formData.append(submissionTrigger.name, submissionTrigger.value);
+    }
   } else if (
     isButtonElement(target) ||
     (isInputElement(target) &&
@@ -207,17 +219,24 @@ export function getFormSubmissionInfo(
 
     // <button>/<input type="submit"> may override attributes of <form>
 
-    // When grabbing the action from the element, it will have had the basename
-    // prefixed to ensure non-JS scenarios work, so strip it since we'll
-    // re-prefix in the router
-    let attr = target.getAttribute("formaction") || form.getAttribute("action");
-    action = attr ? stripBasename(attr, basename) : null;
+    if (options.action) {
+      action = options.action;
+    } else {
+      // When grabbing the action from the element, it will have had the basename
+      // prefixed to ensure non-JS scenarios work, so strip it since we'll
+      // re-prefix in the router
+      let attr =
+        target.getAttribute("formaction") || form.getAttribute("action");
+      action = attr ? stripBasename(attr, basename) : null;
+    }
 
     method =
+      options.method ||
       target.getAttribute("formmethod") ||
       form.getAttribute("method") ||
       defaultMethod;
     encType =
+      options.encType ||
       target.getAttribute("formenctype") ||
       form.getAttribute("enctype") ||
       defaultEncType;
@@ -235,8 +254,8 @@ export function getFormSubmissionInfo(
         `<input type="submit|image">`
     );
   } else if (
-    formEncType !== undefined &&
-    formEncType !== "application/x-www-form-urlencoded"
+    options.encType !== undefined &&
+    options.encType !== "application/x-www-form-urlencoded"
   ) {
     // The default behavior is to encode as application/x-www-form-urlencoded
     // into FormData which is handled in the else block below.
@@ -245,14 +264,14 @@ export function getFormSubmissionInfo(
     // we will not be submitting as FormData so send the payload through
     // directly.  The @remix-run/router will handle serialization of the
     // payload upon Request creation if needed.
-    method = defaultMethod;
-    action = null;
-    encType = null;
+    method = options.method || defaultMethod;
+    action = options.action || null;
+    encType = options.encType;
     payload = target;
   } else {
-    method = defaultMethod;
-    action = null;
-    encType = defaultEncType;
+    method = options.method || defaultMethod;
+    action = options.action || null;
+    encType = options.encType || defaultEncType;
 
     if (target instanceof FormData) {
       formData = target;
