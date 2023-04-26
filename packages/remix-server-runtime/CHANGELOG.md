@@ -131,7 +131,7 @@ No significant changes to this package were made in this release. [See the relea
 
 - Added the `v2_errorBoundary` future flag to opt into the next version of Remix's `ErrorBoundary` behavior. This removes the separate `CatchBoundary` and `ErrorBoundary` and consolidates them into a single `ErrorBoundary`, following the logic used by `errorElement` in React Router. You can then use `isRouteErrorResponse` to differentiate between thrown `Response`/`Error` instances. ([#4918](https://github.com/remix-run/remix/pull/4918))
 
-  ```jsx
+  ```tsx
   // Current (Remix v1 default)
   import { useCatch } from "@remix-run/react";
 
@@ -149,7 +149,7 @@ No significant changes to this package were made in this release. [See the relea
   }
   ```
 
-  ```jsx
+  ```tsx
   // Using future.v2_errorBoundary
   import { isRouteErrorResponse, useRouteError } from "@remix-run/react";
 
