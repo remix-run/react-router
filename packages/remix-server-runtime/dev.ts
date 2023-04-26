@@ -1,6 +1,6 @@
 import type { ServerBuild } from "./build";
 
-export let devReady = (build: ServerBuild, origin?: string) => {
+export let broadcastDevReady = (build: ServerBuild, origin?: string) => {
   origin ??= process.env.REMIX_DEV_HTTP_ORIGIN;
   if (!origin) throw Error("Dev server origin not set");
 

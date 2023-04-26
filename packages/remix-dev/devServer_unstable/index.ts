@@ -166,7 +166,7 @@ export let serve = async (
       })
     )
 
-    // handle `devReady` messages
+    // handle `broadcastDevReady` messages
     .use(express.json())
     .post("/ping", (req, res) => {
       let { buildHash } = req.body;

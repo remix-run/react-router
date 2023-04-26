@@ -39,7 +39,7 @@ export {
   createRequestHandler,
   createSession,
   defer,
-  devReady,
+  broadcastDevReady,
   isCookie,
   isSession,
   json,
