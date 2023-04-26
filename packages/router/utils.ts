@@ -90,8 +90,7 @@ export type FormEncType =
   | "application/x-www-form-urlencoded"
   | "multipart/form-data"
   | "application/json"
-  | "text/plain"
-  | null; // Opt-out of serialization
+  | "text/plain";
 
 /**
  * @private
@@ -102,10 +101,10 @@ export type Submission = {
   formMethod: FormMethod | V7_FormMethod;
   formAction: string;
   formEncType: FormEncType;
-} & (
-  | { formData: FormData; payload?: undefined }
-  | { formData?: undefined; payload: NonNullable<unknown> | null }
-);
+  get text(): string;
+  get formData(): FormData;
+  get json(): Record<string, any> | Array<any> | number | string | boolean;
+};
 
 /**
  * @private
@@ -126,9 +125,7 @@ export interface LoaderFunctionArgs extends DataFunctionArgs {}
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs extends DataFunctionArgs {
-  payload: any;
-}
+export interface ActionFunctionArgs extends DataFunctionArgs {}
 
 /**
  * Loaders and actions can return anything except `undefined` (`null` is a
@@ -167,8 +164,9 @@ export interface ShouldRevalidateFunction {
     formMethod?: Submission["formMethod"];
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
+    text?: Submission["text"];
     formData?: Submission["formData"];
-    payload?: any;
+    json?: Submission["json"];
     actionResult?: DataResult;
     defaultShouldRevalidate: boolean;
   }): boolean;
