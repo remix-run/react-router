@@ -24,7 +24,7 @@ import {
 export type GetLoadContextFunction = (
   req: express.Request,
   res: express.Response
-) => AppLoadContext;
+) => Promise<AppLoadContext> | AppLoadContext;
 
 export type RequestHandler = (
   req: express.Request,
@@ -53,7 +53,7 @@ export function createRequestHandler({
   ) => {
     try {
       let request = createRemixRequest(req, res);
-      let loadContext = getLoadContext?.(req, res);
+      let loadContext = await getLoadContext?.(req, res);
 
       let response = (await handleRequest(
         request,
