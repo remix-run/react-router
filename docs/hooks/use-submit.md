@@ -78,50 +78,6 @@ formData.append("cheese", "gouda");
 submit(formData);
 ```
 
-### Payload Serialization
-
-You may also submit raw JSON to your `action` and the default behavior will be to encode the key/values into `FormData`:
-
-```tsx
-let obj = { key: "value" };
-submit(obj); // -> request.formData()
-```
-
-You may also choose which type of serialization you'd like via the `encType` option:
-
-```tsx
-let obj = { key: "value" };
-submit(obj, {
-  encType: "application/x-www-form-urlencoded",
-}); // -> request.formData()
-```
-
-```tsx
-let obj = { key: "value" };
-submit(obj, { encType: "application/json" }); // -> request.json()
-```
-
-```tsx
-let text = "Plain ol' text";
-submit(obj, { encType: "text/plain" }); // -> request.text()
-```
-
-<docs-warn>In future versions of React Router, the default behavior will not serialize raw JSON payloads. If you are submitting raw JSON today it's recommended to specify an explicit `encType`.</docs-warn>
-
-### Opting out of serialization
-
-Sometimes in a client-side application, it's overkill to require serialization into `request.formData` when you have a raw JSON object in your component and want to submit it to your `action` directly. If you'd like to opt out of serialization, you can pass `encType: null` to your second options argument, and your data will be sent to your action function verbatim as a `payload` parameter:
-
-```tsx
-let obj = { key: "value" };
-submit(obj, { encType: null });
-
-function action({ request, payload }) {
-  // payload is `obj` from your component
-  // request.body === null
-}
-```
-
 ## Submit options
 
 The second argument is a set of options that map directly to form submission attributes:

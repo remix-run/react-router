@@ -38,7 +38,6 @@ function SomeComponent() {
   // build your UI with these properties
   fetcher.state;
   fetcher.formData;
-  fetcher.payload;
   fetcher.formMethod;
   fetcher.formAction;
   fetcher.data;
@@ -133,8 +132,6 @@ export function useIdleLogout() {
 }
 ```
 
-`fetcher.submit` is a wrapper around a [`useSubmit`][use-submit] call for the fetcher instance, so it also accepts the same options as `useSubmit`.
-
 If you want to submit to an index route, use the [`?index` param][indexsearchparam].
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
@@ -203,8 +200,6 @@ function TaskCheckbox({ task }) {
 }
 ```
 
-If you opt-out of serialization using `encType: null`, then `fetcher.formData` will be `undefined` and your data will be exposed on `fetcher.payload`.
-
 ## `fetcher.formAction`
 
 Tells you the action url the form is being submitted to.
@@ -229,10 +224,6 @@ fetcher.formMethod; // "post"
 
 <docs-warning>The `fetcher.formMethod` field is lowercase without the `future.v7_normalizeFormMethod` [Future Flag][api-development-strategy]. This is being normalized to uppercase to align with the `fetch()` behavior in v7, so please upgrade your React Router v6 applications to adopt the uppercase HTTP methods.</docs-warning>
 
-## `fetcher.payload`
-
-Any POST, PUT, PATCH, or DELETE that started from a `fetcher.submit(payload, { encType: null })` will have your `payload` value represented in `fetcher.payload`.
-
 [loader]: ../route/loader
 [action]: ../route/action
 [pickingarouter]: ../routers/picking-a-router
@@ -240,4 +231,3 @@ Any POST, PUT, PATCH, or DELETE that started from a `fetcher.submit(payload, { e
 [link]: ../components/link
 [form]: ../components/form
 [api-development-strategy]: ../guides/api-development-strategy
-[use-submit]: ./use-submit.md

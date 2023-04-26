@@ -109,16 +109,6 @@ export function getSearchParamsForLocation(
   return searchParams;
 }
 
-export type SubmitTarget =
-  | HTMLFormElement
-  | HTMLButtonElement
-  | HTMLInputElement
-  | FormData
-  | URLSearchParams
-  | { [name: string]: string }
-  | NonNullable<unknown> // Raw payload submissions
-  | null;
-
 export interface SubmitOptions {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
@@ -134,14 +124,9 @@ export interface SubmitOptions {
 
   /**
    * The action URL used to submit the form. Overrides `<form encType>`.
-   * Defaults to "application/x-www-form-urlencoded".  Specifying `null` will
-   * opt-out of serialization and will submit the data directly to your action
-   * in the `payload` parameter.
-   *
-   * In v7, the default behavior will change from "application/x-www-form-urlencoded"
-   * to `null` and will make serialization opt-in
+   * Defaults to "application/x-www-form-urlencoded".
    */
-  encType?: FormEncType | null;
+  encType?: FormEncType;
 
   /**
    * Set `true` to replace the current entry in the browser's history stack
@@ -165,21 +150,26 @@ export interface SubmitOptions {
 }
 
 export function getFormSubmissionInfo(
-  target: SubmitTarget,
+  target:
+    | HTMLFormElement
+    | HTMLButtonElement
+    | HTMLInputElement
+    | FormData
+    | URLSearchParams
+    | { [name: string]: string }
+    | null,
   options: SubmitOptions,
   basename: string
 ): {
   action: string | null;
   method: string;
-  encType: string | null;
-  formData: FormData | undefined;
-  payload: any;
+  encType: string;
+  formData: FormData;
 } {
   let method: string;
   let action: string | null = null;
-  let encType: string | null;
-  let formData: FormData | undefined = undefined;
-  let payload: unknown = undefined;
+  let encType: string;
+  let formData: FormData;
 
   if (isFormElement(target)) {
     let submissionTrigger: HTMLButtonElement | HTMLInputElement = (
@@ -253,21 +243,6 @@ export function getFormSubmissionInfo(
       `Cannot submit element that is not <form>, <button>, or ` +
         `<input type="submit|image">`
     );
-  } else if (
-    options.encType !== undefined &&
-    options.encType !== "application/x-www-form-urlencoded"
-  ) {
-    // The default behavior is to encode as application/x-www-form-urlencoded
-    // into FormData which is handled in the else block below.
-    //
-    // Any other encType value (null, application/json, text/plain) means
-    // we will not be submitting as FormData so send the payload through
-    // directly.  The @remix-run/router will handle serialization of the
-    // payload upon Request creation if needed.
-    method = options.method || defaultMethod;
-    action = options.action || null;
-    encType = options.encType;
-    payload = target;
   } else {
     method = options.method || defaultMethod;
     action = options.action || null;
@@ -283,19 +258,12 @@ export function getFormSubmissionInfo(
           formData.append(name, value);
         }
       } else if (target != null) {
-        // When a raw object is sent - even though we encode it into formData,
-        // we still expose it as payload so it aligns with the behavior if
-        // encType were application/json or text/plain
-        payload = target;
-        // To be deprecated in v7 so the default behavior of undefined matches
-        // the null behavior of no-serialization
         for (let name of Object.keys(target)) {
-          // @ts-expect-error
           formData.append(name, target[name]);
         }
       }
     }
   }
 
-  return { action, method: method.toLowerCase(), encType, formData, payload };
+  return { action, method: method.toLowerCase(), encType, formData };
 }
