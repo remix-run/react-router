@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 1.16.0-pre.1
+
+### Patch Changes
+
+- fix(react,dev): dev chunking and refresh race condition ([#6201](https://github.com/remix-run/remix/pull/6201))
+- rename devReady to broadcastDevReady ([#6194](https://github.com/remix-run/remix/pull/6194))
+- forcibly kill app server during dev ([#6197](https://github.com/remix-run/remix/pull/6197))
+- show first compilation error instead of cancelation errors ([#6202](https://github.com/remix-run/remix/pull/6202))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.16.0-pre.1`
+
 ## 1.16.0-pre.0
 
 ### Minor Changes
