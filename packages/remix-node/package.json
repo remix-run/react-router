@@ -37,6 +37,8 @@
   "files": [
     "dist/",
     "globals.d.ts",
+    "install.d.ts",
+    "install.js",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
