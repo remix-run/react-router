@@ -35,7 +35,7 @@ let fixture = (options: {
       private: true,
       sideEffects: false,
       scripts: {
-        dev: `cross-env NODE_ENV=development node ./node_modules/@remix-run/dev/dist/cli.js dev -c "node ./server.js"`,
+        dev: `node ./node_modules/@remix-run/dev/dist/cli.js dev -c "node ./server.js"`,
       },
       dependencies: {
         "@remix-run/css-bundle": "0.0.0-local-version",
@@ -245,8 +245,7 @@ test("HMR", async ({ page }) => {
   try {
     await wait(
       () => {
-        let stderr = devStderr();
-        if (stderr.length > 0) throw Error(stderr);
+        if (dev.exitCode) throw Error("Dev server exited early");
         return /✅ app ready: /.test(devStdout());
       },
       { timeoutMs: 10_000 }

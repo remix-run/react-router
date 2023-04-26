@@ -49,18 +49,21 @@ let detectBin = async (): Promise<string> => {
 export let serve = async (
   initialConfig: RemixConfig,
   options: {
-    command?: string;
-    httpOrigin: {
-      scheme: string;
-      host: string;
-      port: number;
-    };
+    command: string;
+    httpScheme: string;
+    httpHost: string;
+    httpPort: number;
     websocketPort: number;
     restart: boolean;
   }
 ) => {
   await loadEnv(initialConfig.rootDirectory);
   let websocket = Socket.serve({ port: options.websocketPort });
+  let httpOrigin: Origin = {
+    scheme: options.httpScheme,
+    host: options.httpHost,
+    port: options.httpPort,
+  };
 
   let state: {
     latestBuildHash?: string;
@@ -77,26 +80,26 @@ export let serve = async (
       env: {
         NODE_ENV: "development",
         PATH: `${bin}:${process.env.PATH}`,
-        REMIX_DEV_HTTP_ORIGIN: stringifyOrigin(options.httpOrigin),
+        REMIX_DEV_HTTP_ORIGIN: stringifyOrigin(httpOrigin),
       },
     });
   };
 
   let dispose = await Compiler.watch(
     {
-      config: patchPublicPath(initialConfig, options.httpOrigin),
+      config: patchPublicPath(initialConfig, httpOrigin),
       options: {
         mode: "development",
         sourcemap: true,
         onWarning: warnOnce,
-        devHttpOrigin: options.httpOrigin,
+        devHttpOrigin: httpOrigin,
         devWebsocketPort: options.websocketPort,
       },
     },
     {
       reloadConfig: async (root) => {
         let config = await readConfig(root);
-        return patchPublicPath(config, options.httpOrigin);
+        return patchPublicPath(config, httpOrigin);
       },
       onBuildStart: (ctx) => {
         state.buildHashChannel?.err();
@@ -175,7 +178,7 @@ export let serve = async (
       }
       res.sendStatus(200);
     })
-    .listen(options.httpOrigin.port, () => {
+    .listen(httpOrigin.port, () => {
       console.log("Remix dev server ready");
     });
 
