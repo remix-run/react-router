@@ -22,6 +22,7 @@
     "remove-use-sync-external-store",
     "revalidate-error-boundary",
     "revalidating-fetcher-controller",
+    "soft-moons-sneeze",
     "stable-navigate-submit"
   ]
 }

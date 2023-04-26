@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.11.0-pre.1
+
+### Patch Changes
+
+- Add static prop to `StaticRouterProvider`'s internal `Router` component ([#10401](https://github.com/remix-run/react-router/pull/10401))
+- Updated dependencies:
+  - `react-router@6.11.0-pre.1`
+
 ## 6.11.0-pre.0
 
 ### Minor Changes
