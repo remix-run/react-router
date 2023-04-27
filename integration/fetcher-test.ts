@@ -352,3 +352,107 @@ test.describe("useFetcher", () => {
     );
   });
 });
+
+test.describe("fetcher aborts and adjacent forms", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      future: {
+        v2_routeConvention: true,
+      },
+      files: {
+        "app/routes/_index.jsx": js`
+          import * as React from "react";
+          import {
+            Form,
+            useFetcher,
+            useLoaderData,
+            useNavigation
+          } from "@remix-run/react";
+
+          export async function loader({ request }) {
+            // 1 second timeout on data
+            await new Promise((r) => setTimeout(r, 1000));
+            return { foo: 'bar' };
+          }
+
+          export default function Index() {
+            const [open, setOpen] = React.useState(true);
+            const { data } = useLoaderData();
+            const navigation = useNavigation();
+
+            return (
+              <div>
+                  {navigation.state === 'idle' && <div id="idle">Idle</div>}
+                  <Form id="main-form">
+                    <input id="submit-form" type="submit" />
+                  </Form>
+
+                  <button id="open" onClick={() => setOpen(true)}>Show async form</button>
+                  {open && <Child onClose={() => setOpen(false)} />}
+              </div>
+            );
+          }
+
+          function Child({ onClose }) {
+            const fetcher = useFetcher();
+
+            return (
+              <fetcher.Form method="get" action="/api">
+                <button id="submit-fetcher" type="submit">Trigger fetcher (shows a message)</button>
+                <button
+                  type="submit"
+                  form="main-form"
+                  id="submit-and-close"
+                  onClick={() => setTimeout(onClose, 250)}
+                >
+                  Submit main form and close async form
+                </button>
+              </fetcher.Form>
+            );
+          }
+        `,
+
+        "app/routes/api.jsx": js`
+          export async function loader() {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            return { message: 'Hello world!' }
+          }
+        `,
+      },
+    });
+
+    appFixture = await createAppFixture(fixture);
+  });
+
+  test.afterAll(() => {
+    appFixture.close();
+  });
+
+  test("Unmounting a fetcher does not cancel the request of an adjacent form", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+
+    // Works as expected before the fetcher is loaded
+
+    // submit the main form and unmount the fetcher form
+    await app.clickElement("#submit-and-close");
+    // Wait for our navigation state to be "Idle"
+    await page.waitForSelector("#idle", { timeout: 2000 });
+
+    // Breaks after the fetcher is loaded
+
+    // re-mount the fetcher form
+    await app.clickElement("#open");
+    // submit the fetcher form
+    await app.clickElement("#submit-fetcher");
+    // submit the main form and unmount the fetcher form
+    await app.clickElement("#submit-and-close");
+    // Wait for navigation state to be "Idle"
+    await page.waitForSelector("#idle", { timeout: 2000 });
+  });
+});
