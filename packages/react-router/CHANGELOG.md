@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.11.0-pre.2
+
+### Patch Changes
+
+- Avoid uneccesary unsubscribe/resubscribes on router state changes ([#10409](https://github.com/remix-run/react-router/pull/10409))
+
 ## 6.11.0-pre.1
 
 ## 6.11.0-pre.0
