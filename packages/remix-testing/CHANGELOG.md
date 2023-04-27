@@ -1,5 +1,14 @@
 # `@remix-run/testing`
 
+## 1.16.0-pre.4
+
+### Patch Changes
+
+- Bump to React Router `6.11.0-pre.2` ([#6223](https://github.com/remix-run/remix/pull/6223))
+- Updated dependencies:
+  - `@remix-run/react@1.16.0-pre.4`
+  - `@remix-run/node@1.16.0-pre.4`
+
 ## 1.16.0-pre.3
 
 ### Patch Changes

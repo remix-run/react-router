@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.16.0-pre.4
+
+### Patch Changes
+
+- Revert "Fix a bug in route matching that was preventing a single splat (`$.jsx`) route from matching a root `/` path" ([#6222](https://github.com/remix-run/remix/pull/6222))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.16.0-pre.4`
+
 ## 1.16.0-pre.3
 
 ### Patch Changes
