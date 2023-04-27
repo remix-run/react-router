@@ -124,11 +124,11 @@
   Enable `unstable_dev` in `remix.config.js`:
 
   ```js
-  {
+  module.exports = {
     future: {
-      "unstable_dev": true
-    }
-  }
+      unstable_dev: true,
+    },
+  };
   ```
 
   ## Remix App Server
@@ -170,12 +170,12 @@
   import { devReady } from "@remix-run/node";
 
   // Path to Remix's server build directory ('build/' by default)
-  let BUILD_DIR = path.join(process.cwd(), "build");
+  const BUILD_DIR = path.join(process.cwd(), "build");
 
   // <code setting up your express server>
 
   app.listen(3000, () => {
-    let build = require(BUILD_DIR);
+    const build = require(BUILD_DIR);
     console.log("Ready: http://localhost:" + port);
 
     // in development, call `devReady` _after_ your server is up and running
@@ -199,7 +199,7 @@
   - You want to handle server updates yourself (e.g. via require cache purging)
 
   ```js
-  {
+  module.exports = {
     future: {
       unstable_dev: {
         // Command to run your app server
@@ -215,9 +215,9 @@
         // Whether the app server should be restarted when app is rebuilt
         // See `Advanced > restart` for more
         restart: false, // default: `true`
-      }
-    }
-  }
+      },
+    },
+  };
   ```
 
   You can also configure via flags. For example:

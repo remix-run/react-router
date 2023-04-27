@@ -68,6 +68,7 @@ describe("readConfig", () => {
           "root": Object {
             "file": "root.tsx",
             "id": "root",
+            "path": "",
           },
         },
         "serverBuildPath": Any<String>,
