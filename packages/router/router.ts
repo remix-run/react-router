@@ -3266,7 +3266,8 @@ function getMatchesToLoad(
         // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
         isRevalidationRequired ||
         // Clicked the same link, resubmitted a GET form
-        currentUrl.toString() === nextUrl.toString() ||
+        currentUrl.pathname + currentUrl.search ===
+          nextUrl.pathname + nextUrl.search ||
         // Search params affect all loaders
         currentUrl.search !== nextUrl.search ||
         isNewRouteInstance(currentRouteMatch, nextRouteMatch),
@@ -4003,9 +4004,22 @@ function stripHashFromPath(path: To) {
 }
 
 function isHashChangeOnly(a: Location, b: Location): boolean {
-  return (
-    a.pathname === b.pathname && a.search === b.search && a.hash !== b.hash
-  );
+  if (a.pathname !== b.pathname || a.search !== b.search) {
+    return false;
+  }
+
+  if (a.hash === "") {
+    // No hash -> hash
+    return b.hash !== "";
+  } else if (a.hash === b.hash) {
+    // current hash -> same hash
+    return true;
+  } else if (b.hash !== "") {
+    // current hash -> new hash
+    return true;
+  }
+
+  return false;
 }
 
 function isDeferredResult(result: DataResult): result is DeferredResult {
