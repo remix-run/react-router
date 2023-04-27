@@ -15,7 +15,7 @@ export { createCookieSessionStorageFactory } from "./sessions/cookieStorage";
 export { createMemorySessionStorageFactory } from "./sessions/memoryStorage";
 export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./upload/memoryUploadHandler";
 export { MaxPartSizeExceededError } from "./upload/errors";
-export { broadcastDevReady } from "./dev";
+export { broadcastDevReady, logDevReady } from "./dev";
 
 // Types for the Remix server runtime interface
 export type {

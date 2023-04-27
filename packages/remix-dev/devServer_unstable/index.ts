@@ -1,5 +1,6 @@
+import * as path from "node:path";
+import * as stream from "node:stream";
 import fs from "fs-extra";
-import path from "node:path";
 import prettyMs from "pretty-ms";
 import execa from "execa";
 import express from "express";
@@ -75,14 +76,41 @@ export let serve = async (
   let bin = await detectBin();
   let startAppServer = (command: string) => {
     console.log(`> ${command}`);
-    return execa.command(command, {
-      stdio: "inherit",
+    let newAppServer = execa.command(command, {
+      stdio: "pipe",
       env: {
         NODE_ENV: "development",
         PATH: `${bin}:${process.env.PATH}`,
         REMIX_DEV_HTTP_ORIGIN: stringifyOrigin(httpOrigin),
       },
     });
+
+    if (newAppServer.stdin)
+      process.stdin.pipe(newAppServer.stdin, { end: true });
+    if (newAppServer.stderr)
+      newAppServer.stderr.pipe(process.stderr, { end: false });
+    if (newAppServer.stdout) {
+      newAppServer.stdout
+        .pipe(new stream.PassThrough({
+          transform(chunk, _, callback) {
+            let str: string = chunk.toString();
+            let matches = str && str.matchAll(/\[REMIX DEV\] ([A-f0-9]+) ready/g);
+            if (matches) {
+              for (let match of matches) {
+                let buildHash = match[1];
+                if (buildHash === state.latestBuildHash) {
+                  state.buildHashChannel?.ok();
+                }
+              }
+            }
+
+            callback(null, chunk);
+          }
+        }))
+        .pipe(process.stdout, { end: false });
+    }
+
+    return newAppServer;
   };
 
   let dispose = await Compiler.watch(

@@ -40,6 +40,7 @@ export {
   createSession,
   defer,
   broadcastDevReady,
+  logDevReady,
   isCookie,
   isSession,
   json,
