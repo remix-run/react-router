@@ -10,7 +10,6 @@ import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
 import { ServerMode, isValidServerMode } from "./config/serverModes";
-import { writeConfigDefaults } from "./config/write-tsconfig-defaults";
 import { serverBuildVirtualModule } from "./compiler/server/virtualModules";
 import { flatRoutes } from "./config/flat-routes";
 import { detectPackageManager } from "./cli/detectPackageManager";
@@ -731,10 +730,6 @@ export async function readConfig(
     tsconfigPath = rootTsconfig;
   } else if (fse.existsSync(rootJsConfig)) {
     tsconfigPath = rootJsConfig;
-  }
-
-  if (tsconfigPath) {
-    writeConfigDefaults(tsconfigPath);
   }
 
   let future: FutureConfig = {
