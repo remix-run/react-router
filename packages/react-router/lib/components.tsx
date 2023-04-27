@@ -57,17 +57,10 @@ export function RouterProvider({
   fallbackElement,
   router,
 }: RouterProviderProps): React.ReactElement {
-  let [state, setState] = React.useState(router.state);
-
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
-  React.useLayoutEffect(() => {
-    return router.subscribe((newState) => {
-      if (newState !== state) {
-        setState(newState);
-      }
-    });
-  }, [router, state]);
+  let [state, setState] = React.useState(router.state);
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
