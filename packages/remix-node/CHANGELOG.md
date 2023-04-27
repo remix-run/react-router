@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 1.16.0-pre.2
+
+### Patch Changes
+
+- add logDevReady as replacement for platforms that can't initialize async I/O outside of the request response lifecycle. ([#6204](https://github.com/remix-run/remix/pull/6204))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.16.0-pre.2`
+
 ## 1.16.0-pre.1
 
 ### Patch Changes
