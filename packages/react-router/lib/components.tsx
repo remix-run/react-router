@@ -5,9 +5,10 @@ import type {
   Location,
   MemoryHistory,
   Router as RemixRouter,
-  RouterState,
   To,
   LazyRouteFunction,
+  RelativeRoutingType,
+  RouterState,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -18,7 +19,6 @@ import {
   stripBasename,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
-import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
 import type {
   DataRouteObject,
@@ -27,7 +27,6 @@ import type {
   RouteObject,
   Navigator,
   NonIndexRouteObject,
-  RelativeRoutingType,
 } from "./context";
 import {
   LocationContext,
@@ -43,6 +42,7 @@ import {
   useOutlet,
   useRoutes,
   _renderMatches,
+  useRoutesImpl,
 } from "./hooks";
 
 export interface RouterProviderProps {
@@ -57,17 +57,10 @@ export function RouterProvider({
   fallbackElement,
   router,
 }: RouterProviderProps): React.ReactElement {
-  let getState = React.useCallback(() => router.state, [router]);
-
-  // Sync router state to our component state to force re-renders
-  let state: RouterState = useSyncExternalStoreShim(
-    router.subscribe,
-    getState,
-    // We have to provide this so React@18 doesn't complain during hydration,
-    // but we pass our serialized hydration data into the router so state here
-    // is already synced with what the server saw
-    getState
-  );
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  let [state, setState] = React.useState(router.state);
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
@@ -116,13 +109,27 @@ export function RouterProvider({
             navigationType={router.state.historyAction}
             navigator={navigator}
           >
-            {router.state.initialized ? <Routes /> : fallbackElement}
+            {router.state.initialized ? (
+              <DataRoutes routes={router.routes} state={state} />
+            ) : (
+              fallbackElement
+            )}
           </Router>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}
     </>
   );
+}
+
+function DataRoutes({
+  routes,
+  state,
+}: {
+  routes: DataRouteObject[];
+  state: RouterState;
+}): React.ReactElement | null {
+  return useRoutesImpl(routes, undefined, state);
 }
 
 export interface MemoryRouterProps {
@@ -393,15 +400,7 @@ export function Routes({
   children,
   location,
 }: RoutesProps): React.ReactElement | null {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  // When in a DataRouterContext _without_ children, we use the router routes
-  // directly.  If we have children, then we're in a descendant tree and we
-  // need to use child routes.
-  let routes =
-    dataRouterContext && !children
-      ? (dataRouterContext.router.routes as DataRouteObject[])
-      : createRoutesFromChildren(children);
-  return useRoutes(routes, location);
+  return useRoutes(createRoutesFromChildren(children), location);
 }
 
 export interface AwaitResolveRenderFunction {

@@ -132,6 +132,7 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_useRouteId,
 } from "react-router";
 
 ////////////////////////////////////////////////////////////////////////////////

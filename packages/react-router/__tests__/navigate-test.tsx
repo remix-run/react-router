@@ -27,6 +27,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           About
@@ -49,6 +50,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           About
@@ -71,6 +73,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           About
@@ -93,6 +96,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           About
@@ -121,6 +125,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           About
@@ -152,6 +157,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           About
@@ -196,6 +202,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Home
@@ -221,6 +228,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Destination
@@ -246,6 +254,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Contacts
@@ -268,6 +277,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Contacts
@@ -293,6 +303,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Contacts
@@ -324,6 +335,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Contacts
@@ -355,6 +367,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Contacts
@@ -383,6 +396,7 @@ describe("<Navigate>", () => {
         );
       });
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>
           Destination
@@ -419,6 +433,7 @@ describe("<Navigate>", () => {
         );
       }
 
+      // @ts-expect-error
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         [
           <h1>
