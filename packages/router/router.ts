@@ -418,17 +418,20 @@ export interface GetScrollPositionFunction {
 
 export type RelativeRoutingType = "route" | "path";
 
+// Allowed for any navigation or fetch
 type BaseNavigateOrFetchOptions = {
-  fromRouteId?: string;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
 };
 
+// Only allowed for navigations
 type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
+  fromRouteId?: string;
 };
 
+// Only allowed for submission navigations
 type BaseSubmissionOptions = {
   formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
@@ -439,35 +442,33 @@ type BaseSubmissionOptions = {
 );
 
 /**
- * Options for a navigate() call for a Link navigation
+ * Options for a navigate() call for a normal (non-submission) navigation
  */
-export type LinkNavigateOptions = BaseNavigateOptions;
+type LinkNavigateOptions = BaseNavigateOptions;
 
 /**
- * Options for a navigate() call for a Form navigation
+ * Options for a navigate() call for a submission navigation
  */
-export type SubmissionNavigateOptions = BaseNavigateOptions &
-  BaseSubmissionOptions;
+type SubmissionNavigateOptions = BaseNavigateOptions & BaseSubmissionOptions;
 
 /**
- * Options to pass to navigate() for either a Link or Form navigation
+ * Options to pass to navigate() for a navigation
  */
 export type RouterNavigateOptions =
   | LinkNavigateOptions
   | SubmissionNavigateOptions;
 
 /**
- * Options for a navigate() call for a Link navigation
+ * Options for a fetch() load
  */
-export type LoadFetchOptions = BaseNavigateOrFetchOptions & {
+type LoadFetchOptions = BaseNavigateOrFetchOptions & {
   loader?: LoaderFunction;
 };
 
 /**
- * Options for a navigate() call for a Form navigation
+ * Options for a fetch() submission
  */
-export type SubmitFetchOptions = BaseNavigateOrFetchOptions &
-  BaseSubmissionOptions;
+type SubmitFetchOptions = BaseNavigateOrFetchOptions & BaseSubmissionOptions;
 
 /**
  * Options to pass to fetch()

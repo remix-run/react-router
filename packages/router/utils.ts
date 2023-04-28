@@ -97,14 +97,14 @@ export type FormEncType =
  * Internal interface to pass around for action submissions, not intended for
  * external consumption
  */
-export type Submission = {
+export interface Submission {
   formMethod: FormMethod | V7_FormMethod;
   formAction: string;
   formEncType: FormEncType;
   get text(): string;
   get formData(): FormData;
   get json(): Record<string, any> | Array<any> | number | string | boolean;
-};
+}
 
 /**
  * @private
