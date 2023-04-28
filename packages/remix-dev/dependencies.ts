@@ -5,14 +5,27 @@ import type { RemixConfig } from "./config";
 
 type PackageDependencies = { [packageName: string]: string };
 
-function getPackageDependencies(packageJsonFile: string): PackageDependencies {
+function getPackageDependencies(
+  packageJsonFile: string,
+  includeDev?: boolean
+): PackageDependencies {
   let pkg = JSON.parse(fs.readFileSync(packageJsonFile, "utf8"));
-  return pkg?.dependencies || {};
+  let deps = pkg?.dependencies || {};
+
+  if (includeDev) {
+    Object.assign(deps, pkg?.devDependencies || {});
+  }
+
+  return deps;
 }
 
-export function getAppDependencies(config: RemixConfig): PackageDependencies {
+export function getAppDependencies(
+  config: RemixConfig,
+  includeDev?: boolean
+): PackageDependencies {
   return getPackageDependencies(
-    path.resolve(config.rootDirectory, "package.json")
+    path.resolve(config.rootDirectory, "package.json"),
+    includeDev
   );
 }
 

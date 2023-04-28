@@ -540,7 +540,7 @@ let resolveDevServe = async (
     )}`;
 
     let usingRemixAppServer =
-      getAppDependencies(config)["@remix-run/serve"] !== undefined;
+      getAppDependencies(config, true)["@remix-run/serve"] !== undefined;
     if (!usingRemixAppServer) {
       console.error(
         [
