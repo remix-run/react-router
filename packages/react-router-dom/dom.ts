@@ -134,15 +134,10 @@ export interface SubmitOptions {
   action?: string | ActionFunction;
 
   /**
-   * The action URL used to submit the form. Overrides `<form encType>`.
-   * Defaults to "application/x-www-form-urlencoded".  Specifying `null` will
-   * opt-out of serialization and will submit the data directly to your action
-   * in the `payload` parameter.
-   *
-   * In v7, the default behavior will change from "application/x-www-form-urlencoded"
-   * to `null` and will make serialization opt-in
+   * The encoding used to submit the form. Overrides `<form encType>`.
+   * Defaults to "application/x-www-form-urlencoded".
    */
-  encType?: FormEncType | null;
+  encType?: FormEncType;
 
   /**
    * Set `true` to replace the current entry in the browser's history stack
@@ -174,13 +169,13 @@ export function getFormSubmissionInfo(
   method: string;
   encType: string | null;
   formData: FormData | undefined;
-  payload: any;
+  body: any;
 } {
   let method: string;
   let action: string | null;
   let encType: string | null;
   let formData: FormData | undefined = undefined;
-  let payload: unknown = undefined;
+  let body = undefined;
 
   if (isFormElement(target)) {
     // When grabbing the action from the element, it will have had the basename
@@ -248,12 +243,13 @@ export function getFormSubmissionInfo(
     method = defaultMethod;
     action = null;
     encType = null;
-    payload = target;
+    body = target;
   } else {
     method = defaultMethod;
     action = null;
     encType = defaultEncType;
 
+    // TODO: Can all this go away now that the router handles it?
     if (target instanceof FormData) {
       formData = target;
     } else {
@@ -267,7 +263,7 @@ export function getFormSubmissionInfo(
         // When a raw object is sent - even though we encode it into formData,
         // we still expose it as payload so it aligns with the behavior if
         // encType were application/json or text/plain
-        payload = target;
+        body = target;
         // To be deprecated in v7 so the default behavior of undefined matches
         // the null behavior of no-serialization
         for (let name of Object.keys(target)) {
@@ -278,5 +274,5 @@ export function getFormSubmissionInfo(
     }
   }
 
-  return { action, method: method.toLowerCase(), encType, formData, payload };
+  return { action, method: method.toLowerCase(), encType, formData, body };
 }

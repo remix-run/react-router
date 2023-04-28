@@ -39,6 +39,9 @@ import type {
   HydrationState,
   LoaderFunction,
   Router as RemixRouter,
+  RouterFetchOptions,
+  RouterNavigateOptions,
+  SubmitFetchOptions,
   V7_FormMethod,
 } from "@remix-run/router";
 import {
@@ -973,21 +976,23 @@ function useSubmitImpl(
         );
       }
 
-      let { action, method, encType, formData, payload } =
-        getFormSubmissionInfo(target, options.encType, basename);
+      let { action, method, encType, formData, body } = getFormSubmissionInfo(
+        target,
+        options.encType,
+        basename
+      );
 
       let path =
         typeof options.action === "function" ? null : options.action || action;
       let routerAction =
-        typeof options.action === "function" ? options.action : null;
+        typeof options.action === "function" ? options.action : undefined;
 
-      // Base options shared between fetch() and navigate()
-      let opts = {
+      let opts: RouterFetchOptions | RouterNavigateOptions = {
         preventScrollReset: options.preventScrollReset,
         formData,
-        payload,
-        formMethod: options.method || method,
-        formEncType: options.encType || encType,
+        body,
+        formMethod: options.method || (method as HTMLFormMethod),
+        formEncType: options.encType || (encType as FormEncType),
         action: routerAction,
       };
 
@@ -1133,10 +1138,24 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
 
   let fetcherWithComponents = React.useMemo(
     () => ({
+      state: fetcher.state,
+      formMethod: fetcher.formMethod,
+      formAction: fetcher.formAction,
+      formEncType: fetcher.formEncType,
+      get text() {
+        return fetcher.text;
+      },
+      get formData() {
+        return fetcher.formData;
+      },
+      get json() {
+        return fetcher.json;
+      },
+      data: fetcher.data,
+      " _hasFetcherDoneAnything ": fetcher[" _hasFetcherDoneAnything "],
       Form,
       submit,
       load,
-      ...fetcher,
     }),
     [fetcher, Form, submit, load]
   );

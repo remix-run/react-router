@@ -441,12 +441,13 @@ type BaseSubmissionOptions = {
 /**
  * Options for a navigate() call for a Link navigation
  */
-type LinkNavigateOptions = BaseNavigateOptions;
+export type LinkNavigateOptions = BaseNavigateOptions;
 
 /**
  * Options for a navigate() call for a Form navigation
  */
-type SubmissionNavigateOptions = BaseNavigateOptions & BaseSubmissionOptions;
+export type SubmissionNavigateOptions = BaseNavigateOptions &
+  BaseSubmissionOptions;
 
 /**
  * Options to pass to navigate() for either a Link or Form navigation
@@ -458,14 +459,15 @@ export type RouterNavigateOptions =
 /**
  * Options for a navigate() call for a Link navigation
  */
-type LoadFetchOptions = BaseNavigateOrFetchOptions & {
+export type LoadFetchOptions = BaseNavigateOrFetchOptions & {
   loader?: LoaderFunction;
 };
 
 /**
  * Options for a navigate() call for a Form navigation
  */
-type SubmitFetchOptions = BaseNavigateOrFetchOptions & BaseSubmissionOptions;
+export type SubmitFetchOptions = BaseNavigateOrFetchOptions &
+  BaseSubmissionOptions;
 
 /**
  * Options to pass to fetch()
