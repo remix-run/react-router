@@ -1,42 +1,22 @@
 # `react-router-dom`
 
-## 6.11.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.11.0-pre.2`
-
-## 6.11.0-pre.1
-
-### Patch Changes
-
-- Add static prop to `StaticRouterProvider`'s internal `Router` component ([#10401](https://github.com/remix-run/react-router/pull/10401))
-- Updated dependencies:
-  - `react-router@6.11.0-pre.1`
-
-## 6.11.0-pre.0
+## 6.11.0
 
 ### Minor Changes
 
-- - Enable relative routing in the `@remix-run/router` when providing a source route ID from which the path is relative to: ([#10336](https://github.com/remix-run/react-router/pull/10336))
-
-    - Example: `router.navigate("../path", { fromRouteId: "some-route" })`.
-    - This also applies to `router.fetch` which already receives a source route ID
-
-  - Introduce a new `@remix-run/router` `future.v7_prependBasename` flag to enable `basename` prefixing to all paths coming into `router.navigate` and `router.fetch`.
-    - Previously the `basename` was prepended in the React Router layer, but now that relative routing is being handled by the router we need prepend the `basename` _after_ resolving any relative paths
-    - This also enables `basename` support in `useFetcher` as well
+- Enable `basename` support in `useFetcher` ([#10336](https://github.com/remix-run/react-router/pull/10336))
+  - If you were previously working around this issue by manually prepending the `basename` then you will need to remove the manually prepended `basename` from your `fetcher` calls (`fetcher.load('/basename/route') -> fetcher.load('/route')`)
 
 ### Patch Changes
 
 - Fix inadvertent re-renders when using `Component` instead of `element` on a route definition ([#10287](https://github.com/remix-run/react-router/pull/10287))
 - Fail gracefully on `<Link to="//">` and other invalid URL values ([#10367](https://github.com/remix-run/react-router/pull/10367))
-- Switched from `useSyncExternalStore` to `useState` for internal `@remix-run/router` router state syncing in `<RouterProvider>`. We found some [subtle bugs](https://codesandbox.io/s/use-sync-external-store-loop-9g7b81) where router state updates got propagated _before_ other normal `useState` updates, which could lead to footguns in `useEffect` calls. ([#10377](https://github.com/remix-run/react-router/pull/10377))
+- Switched from `useSyncExternalStore` to `useState` for internal `@remix-run/router` router state syncing in `<RouterProvider>`. We found some [subtle bugs](https://codesandbox.io/s/use-sync-external-store-loop-9g7b81) where router state updates got propagated _before_ other normal `useState` updates, which could lead to footguns in `useEffect` calls. ([#10377](https://github.com/remix-run/react-router/pull/10377), [#10409](https://github.com/remix-run/react-router/pull/10409))
+- Add static prop to `StaticRouterProvider`'s internal `Router` component ([#10401](https://github.com/remix-run/react-router/pull/10401))
 - When using a `RouterProvider`, `useNavigate`/`useSubmit`/`fetcher.submit` are now stable across location changes, since we can handle relative routing via the `@remix-run/router` instance and get rid of our dependence on `useLocation()`. When using `BrowserRouter`, these hooks remain unstable across location changes because they still rely on `useLocation()`. ([#10336](https://github.com/remix-run/react-router/pull/10336))
 - Updated dependencies:
-  - `react-router@6.11.0-pre.0`
-  - `@remix-run/router@1.6.0-pre.0`
+  - `react-router@6.11.0`
+  - `@remix-run/router@1.6.0`
 
 ## 6.10.0
 
