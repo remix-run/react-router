@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 1.16.0-pre.5
+
+### Patch Changes
+
+- look for @remix-run/serve in devDependencies when running remix dev ([#6228](https://github.com/remix-run/remix/pull/6228))
+- write mjs server output files ([#6225](https://github.com/remix-run/remix/pull/6225))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.16.0-pre.5`
+
 ## 1.16.0-pre.4
 
 ### Patch Changes
