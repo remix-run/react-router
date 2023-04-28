@@ -55,6 +55,7 @@ import type {
   SubmitOptions,
   ParamKeyValuePair,
   URLSearchParamsInit,
+  SubmitTarget,
 } from "./dom";
 import {
   createSearchParams,
@@ -923,15 +924,6 @@ type SetURLSearchParams = (
   navigateOpts?: NavigateOptions
 ) => void;
 
-type SubmitTarget =
-  | HTMLFormElement
-  | HTMLButtonElement
-  | HTMLInputElement
-  | FormData
-  | URLSearchParams
-  | { [name: string]: string }
-  | null;
-
 /**
  * Submits a HTML `<form>` to the server without reloading the page.
  */
@@ -980,18 +972,16 @@ function useSubmitImpl(
         );
       }
 
-      let { action, method, encType, formData } = getFormSubmissionInfo(
-        target,
-        options,
-        basename
-      );
+      let { action, method, encType, formData, payload } =
+        getFormSubmissionInfo(target, options, basename);
 
       // Base options shared between fetch() and navigate()
       let opts = {
         preventScrollReset: options.preventScrollReset,
         formData,
-        formMethod: method as HTMLFormMethod,
-        formEncType: encType as FormEncType,
+        payload,
+        formMethod: method,
+        formEncType: encType,
       };
 
       if (fetcherKey) {
