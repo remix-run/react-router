@@ -120,4 +120,8 @@ Adding the `caseSensitive` prop changes the matching logic to make it case sensi
 
 When a `NavLink` is active it will automatically apply `<a aria-current="page">` to the underlying anchor tag. See [aria-current][aria-current] on MDN.
 
+## `reloadDocument`
+
+The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
+
 [aria-current]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current
