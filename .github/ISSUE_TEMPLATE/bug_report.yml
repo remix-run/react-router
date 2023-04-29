@@ -23,7 +23,7 @@ body:
 
         ### Test Case Starters:
 
-        * [Using `<RouterProvider>`](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/data-router?file=src/App.tsx)
+        * [Using `<RouterProvider>`](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic-data-router?file=src/app.tsx)
         * [Using `<BrowserRouter>`](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/basic?file=src/App.tsx)
   - type: input
     attributes:

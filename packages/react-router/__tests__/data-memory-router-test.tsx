@@ -887,7 +887,7 @@ describe("createMemoryRouter", () => {
 
     spy.mockClear();
     fireEvent.click(screen.getByText("Link to Child"));
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => screen.getByText("Child"));
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -909,7 +909,7 @@ describe("createMemoryRouter", () => {
     });
   });
 
-  it("reloads data using useRevalidate", async () => {
+  it("reloads data using useRevalidator", async () => {
     let count = 1;
     let router = createMemoryRouter(
       createRoutesFromElements(
@@ -1019,11 +1019,6 @@ describe("createMemoryRouter", () => {
       ),
       {
         initialEntries: ["/deep/path/to/descendant/routes"],
-        hydrationData: {
-          loaderData: {
-            "0-0": "count=1",
-          },
-        },
       }
     );
     let { container } = render(<RouterProvider router={router} />);
@@ -1053,6 +1048,56 @@ describe("createMemoryRouter", () => {
       "<div>
         <h1>
           👋 Hello from the other side!
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("renders <Routes> alongside a data router ErrorBoundary", () => {
+    let router = createMemoryRouter(
+      [
+        {
+          path: "*",
+          Component() {
+            return (
+              <>
+                <Outlet />
+                <Routes>
+                  <Route index element={<h1>Descendant</h1>} />
+                </Routes>
+              </>
+            );
+          },
+          children: [
+            {
+              id: "index",
+              index: true,
+              Component: () => <h1>Child</h1>,
+              ErrorBoundary() {
+                return <p>{(useRouteError() as Error).message}</p>;
+              },
+            },
+          ],
+        },
+      ],
+      {
+        initialEntries: ["/"],
+        hydrationData: {
+          errors: {
+            index: new Error("Broken!"),
+          },
+        },
+      }
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Broken!
+        </p>
+        <h1>
+          Descendant
         </h1>
       </div>"
     `);
@@ -1747,35 +1792,11 @@ describe("createMemoryRouter", () => {
       );
       let { container } = render(<RouterProvider router={router} />);
 
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h2>
-            Unexpected Application Error!
-          </h2>
-          <h3
-            style="font-style: italic;"
-          >
-            404 Not Found
-          </h3>
-          <p>
-            💿 Hey developer 👋
-          </p>
-          <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              ErrorBoundary
-            </code>
-             prop on 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              &lt;Route&gt;
-            </code>
-          </p>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("404 Not Found");
+      expect(html).toMatch("💿 Hey developer 👋");
+      expect(html).not.toMatch(/stack/i);
     });
 
     it("renders navigation errors with a default if no errorElements are provided", async () => {
@@ -1859,40 +1880,11 @@ describe("createMemoryRouter", () => {
       error.stack = "FAKE STACK TRACE";
       barDefer.reject(error);
       await waitFor(() => screen.getByText("Kaboom!"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h2>
-            Unexpected Application Error!
-          </h2>
-          <h3
-            style="font-style: italic;"
-          >
-            Kaboom!
-          </h3>
-          <pre
-            style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
-          >
-            FAKE STACK TRACE
-          </pre>
-          <p>
-            💿 Hey developer 👋
-          </p>
-          <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              ErrorBoundary
-            </code>
-             prop on 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              &lt;Route&gt;
-            </code>
-          </p>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("Kaboom!");
+      expect(html).toMatch("FAKE STACK TRACE");
+      expect(html).toMatch("💿 Hey developer 👋");
     });
 
     // This test ensures that when manual routes are used, we add hasErrorBoundary
@@ -2091,40 +2083,11 @@ describe("createMemoryRouter", () => {
         throw error;
       }
 
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h2>
-            Unexpected Application Error!
-          </h2>
-          <h3
-            style="font-style: italic;"
-          >
-            Kaboom!
-          </h3>
-          <pre
-            style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
-          >
-            FAKE STACK TRACE
-          </pre>
-          <p>
-            💿 Hey developer 👋
-          </p>
-          <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              ErrorBoundary
-            </code>
-             prop on 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              &lt;Route&gt;
-            </code>
-          </p>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("Kaboom!");
+      expect(html).toMatch("FAKE STACK TRACE");
+      expect(html).toMatch("💿 Hey developer 👋");
     });
 
     it("does not handle render errors for non-data routers", async () => {
@@ -2274,42 +2237,11 @@ describe("createMemoryRouter", () => {
 
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <h2>
-              Unexpected Application Error!
-            </h2>
-            <h3
-              style="font-style: italic;"
-            >
-              Kaboom!
-            </h3>
-            <pre
-              style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              FAKE STACK TRACE
-            </pre>
-            <p>
-              💿 Hey developer 👋
-            </p>
-            <p>
-              You can provide a way better UX than this when your app throws errors by providing your own 
-              <code
-                style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-              >
-                ErrorBoundary
-              </code>
-               prop on 
-              <code
-                style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-              >
-                &lt;Route&gt;
-              </code>
-            </p>
-          </div>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("Kaboom!");
+      expect(html).toMatch("FAKE STACK TRACE");
+      expect(html).toMatch("💿 Hey developer 👋");
 
       router.navigate(-1);
       await waitFor(() => {
@@ -2499,6 +2431,120 @@ describe("createMemoryRouter", () => {
         "You cannot `useLoaderData` in an errorElement (routeId: 0)"
       );
       errorSpy.mockRestore();
+    });
+
+    it("allows a successful useRevalidator to resolve the error boundary (loader + child boundary)", async () => {
+      let shouldFail = true;
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            Component={() => (
+              <>
+                <MemoryNavigate to="child">/child</MemoryNavigate>
+                <Outlet />
+              </>
+            )}
+          >
+            <Route
+              path="child"
+              loader={() => {
+                if (shouldFail) {
+                  shouldFail = false;
+                  throw new Error("Broken");
+                } else {
+                  return "Fixed";
+                }
+              }}
+              Component={() => <p>{("Child:" + useLoaderData()) as string}</p>}
+              ErrorBoundary={() => {
+                let { revalidate } = useRevalidator();
+                return (
+                  <>
+                    <p>{"Error:" + (useRouteError() as Error).message}</p>
+                    <button onClick={() => revalidate()}>Try again</button>
+                  </>
+                );
+              }}
+            />
+          </Route>
+        )
+      );
+
+      let { container } = render(
+        <div>
+          <RouterProvider router={router} />
+        </div>
+      );
+
+      fireEvent.click(screen.getByText("/child"));
+      await waitFor(() => screen.getByText("Error:Broken"));
+      expect(getHtml(container)).toMatch("Error:Broken");
+      expect(router.state.errors).not.toBe(null);
+
+      fireEvent.click(screen.getByText("Try again"));
+      await waitFor(() => {
+        expect(queryByText(container, "Child:Fixed")).toBeInTheDocument();
+      });
+      expect(getHtml(container)).toMatch("Child:Fixed");
+      expect(router.state.errors).toBe(null);
+    });
+
+    it("allows a successful useRevalidator to resolve the error boundary (loader + parent boundary)", async () => {
+      let shouldFail = true;
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            Component={() => (
+              <>
+                <MemoryNavigate to="child">/child</MemoryNavigate>
+                <Outlet />
+              </>
+            )}
+            ErrorBoundary={() => {
+              let { revalidate } = useRevalidator();
+              return (
+                <>
+                  <p>{"Error:" + (useRouteError() as Error).message}</p>
+                  <button onClick={() => revalidate()}>Try again</button>
+                </>
+              );
+            }}
+          >
+            <Route
+              path="child"
+              loader={() => {
+                if (shouldFail) {
+                  shouldFail = false;
+                  throw new Error("Broken");
+                } else {
+                  return "Fixed";
+                }
+              }}
+              Component={() => <p>{("Child:" + useLoaderData()) as string}</p>}
+            />
+          </Route>
+        )
+      );
+
+      let { container } = render(
+        <div>
+          <RouterProvider router={router} />
+        </div>
+      );
+
+      fireEvent.click(screen.getByText("/child"));
+      await waitFor(() => screen.getByText("Error:Broken"));
+      expect(getHtml(container)).toMatch("Error:Broken");
+      expect(router.state.errors).not.toBe(null);
+
+      fireEvent.click(screen.getByText("Try again"));
+      await waitFor(() => {
+        expect(queryByText(container, "Child:Fixed")).toBeInTheDocument();
+      });
+      expect(getHtml(container)).toMatch("Child:Fixed");
+      expect(router.state.errors).toBe(null);
     });
   });
 
@@ -3338,11 +3384,6 @@ function MemoryNavigate({
 }) {
   let dataRouterContext = React.useContext(DataRouterContext);
 
-  let basename = dataRouterContext?.basename;
-  if (basename && basename !== "/") {
-    to = to === "/" ? basename : joinPaths([basename, to]);
-  }
-
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
@@ -3355,9 +3396,17 @@ function MemoryNavigate({
     [dataRouterContext, to, formMethod, formData]
   );
 
+  // Only prepend the basename to the rendered href, send the non-prefixed `to`
+  // value into the router since it will prepend the basename
+  let basename = dataRouterContext?.basename;
+  let href = to;
+  if (basename && basename !== "/") {
+    href = to === "/" ? basename : joinPaths([basename, to]);
+  }
+
   return formData ? (
     <form onClick={onClickHandler} children={children} />
   ) : (
-    <a href={to} onClick={onClickHandler} children={children} />
+    <a href={href} onClick={onClickHandler} children={children} />
   );
 }

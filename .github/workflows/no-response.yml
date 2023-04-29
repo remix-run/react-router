@@ -15,20 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🥺 Handle Ghosting
-        uses: actions/stale@v7
+        uses: actions/stale@v8
         with:
-          days-before-close: 10
           close-issue-message: >
-            This issue has been automatically closed because we haven't received a
-            response from the original author 🙈. This automation helps keep the issue
-            tracker clean from issues that aren't actionable. Please reach out if you
-            have more information for us! 🙂
+            This issue has been automatically closed because we didn't hear
+            anything from the original author after the previous notice.
           close-pr-message: >
-            This PR has been automatically closed because we haven't received a
-            response from the original author 🙈. This automation helps keep the issue
-            tracker clean from PRs that aren't actionable. Please reach out if you
-            have more information for us! 🙂
-          # don't automatically mark issues/PRs as stale
-          days-before-stale: -1
+            This PR has been automatically closed because we didn't hear
+            anything from the original author after the previous notice.
           stale-issue-label: needs-response
+          stale-issue-message: >
+            This issue has been automatically marked stale because we haven't
+            received a response from the original author in a while 🙈. This
+            automation helps keep the issue tracker clean from issues that are
+            not actionable. Please reach out if you have more information for us
+            or you think this issue shouldn't be closed! 🙂 If you don't do so
+            within 7 days, this issue will be automatically closed.
           stale-pr-label: needs-response
+          stale-pr-message: >
+            This PR has been automatically marked stale because we haven't
+            received a response from the original author in a while 🙈. This
+            automation helps keep the issue tracker clean from issues that are
+            not actionable. Please reach out if you have more information for us
+            or you think this issue shouldn't be closed! 🙂 If you don't do so
+            within 7 days, this PR will be automatically closed.

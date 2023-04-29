@@ -177,6 +177,7 @@ export {
   UNSAFE_DataRouterContext,
   UNSAFE_DataRouterStateContext,
   UNSAFE_useScrollRestoration,
+  UNSAFE_useRouteId,
 } from "./react-router-dom";
 
 export type { StaticRouterProps } from "./lib/components";

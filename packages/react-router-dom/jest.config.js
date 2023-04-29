@@ -1,3 +1,4 @@
+/** @type {import('jest').Config} */
 module.exports = {
   testEnvironment: "jsdom",
   testMatch: ["**/__tests__/*-test.[jt]s?(x)"],
@@ -20,4 +21,5 @@ module.exports = {
     "^react-router$": "<rootDir>/../react-router/index.ts",
     "^react-router-dom$": "<rootDir>/index.tsx",
   },
+  reporters: ["default"],
 };

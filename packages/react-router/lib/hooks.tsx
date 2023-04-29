@@ -8,7 +8,9 @@ import type {
   Path,
   PathMatch,
   PathPattern,
+  RelativeRoutingType,
   Router as RemixRouter,
+  RevalidationState,
   To,
 } from "@remix-run/router";
 import {
@@ -30,7 +32,6 @@ import type {
   RouteMatch,
   RouteObject,
   DataRouteMatch,
-  RelativeRoutingType,
 } from "./context";
 import {
   DataRouterContext,
@@ -149,6 +150,23 @@ export interface NavigateFunction {
   (delta: number): void;
 }
 
+const navigateEffectWarning =
+  `You should call navigate() in a React.useEffect(), not when ` +
+  `your component is first rendered.`;
+
+// Mute warnings for calls to useNavigate in SSR environments
+function useIsomorphicLayoutEffect(
+  cb: Parameters<typeof React.useLayoutEffect>[0]
+) {
+  let isStatic = React.useContext(NavigationContext).static;
+  if (!isStatic) {
+    // We should be able to get rid of this once react 18.3 is released
+    // See: https://github.com/facebook/react/pull/26395
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useLayoutEffect(cb);
+  }
+}
+
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
@@ -156,6 +174,13 @@ export interface NavigateFunction {
  * @see https://reactrouter.com/hooks/use-navigate
  */
 export function useNavigate(): NavigateFunction {
+  let isDataRouter = React.useContext(DataRouterContext) != null;
+  // Conditional usage is OK here because the usage of a data router is static
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  return isDataRouter ? useNavigateStable() : useNavigateUnstable();
+}
+
+function useNavigateUnstable(): NavigateFunction {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -172,18 +197,16 @@ export function useNavigate(): NavigateFunction {
   );
 
   let activeRef = React.useRef(false);
-  React.useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     activeRef.current = true;
   });
 
   let navigate: NavigateFunction = React.useCallback(
     (to: To | number, options: NavigateOptions = {}) => {
-      warning(
-        activeRef.current,
-        `You should call navigate() in a React.useEffect(), not when ` +
-          `your component is first rendered.`
-      );
+      warning(activeRef.current, navigateEffectWarning);
 
+      // Short circuit here since if this happens on first render the navigate
+      // is useless because we haven't wired up our history listener yet
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
@@ -304,6 +327,15 @@ export function useRoutes(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string
 ): React.ReactElement | null {
+  return useRoutesImpl(routes, locationArg);
+}
+
+// Internal implementation with accept optional param for RouterProvider usage
+export function useRoutesImpl(
+  routes: RouteObject[],
+  locationArg?: Partial<Location> | string,
+  dataRouterState?: RemixRouter["state"]
+): React.ReactElement | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -312,7 +344,6 @@ export function useRoutes(
   );
 
   let { navigator } = React.useContext(NavigationContext);
-  let dataRouterStateContext = React.useContext(DataRouterStateContext);
   let { matches: parentMatches } = React.useContext(RouteContext);
   let routeMatch = parentMatches[parentMatches.length - 1];
   let parentParams = routeMatch ? routeMatch.params : {};
@@ -425,7 +456,7 @@ export function useRoutes(
         })
       ),
     parentMatches,
-    dataRouterStateContext || undefined
+    dataRouterState
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -468,14 +499,18 @@ function DefaultErrorComponent() {
 
   let devInfo = null;
   if (__DEV__) {
+    console.error(
+      "Error handled by React Router default ErrorBoundary:",
+      error
+    );
+
     devInfo = (
       <>
         <p>💿 Hey developer 👋</p>
         <p>
           You can provide a way better UX than this when your app throws errors
-          by providing your own&nbsp;
-          <code style={codeStyles}>ErrorBoundary</code> prop on&nbsp;
-          <code style={codeStyles}>&lt;Route&gt;</code>
+          by providing your own <code style={codeStyles}>ErrorBoundary</code> or{" "}
+          <code style={codeStyles}>errorElement</code> prop on your route.
         </p>
       </>
     );
@@ -491,8 +526,11 @@ function DefaultErrorComponent() {
   );
 }
 
+const defaultErrorElement = <DefaultErrorComponent />;
+
 type RenderErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
+  revalidation: RevalidationState;
   error: any;
   component: React.ReactNode;
   routeContext: RouteContextObject;
@@ -500,6 +538,7 @@ type RenderErrorBoundaryProps = React.PropsWithChildren<{
 
 type RenderErrorBoundaryState = {
   location: Location;
+  revalidation: RevalidationState;
   error: any;
 };
 
@@ -511,6 +550,7 @@ export class RenderErrorBoundary extends React.Component<
     super(props);
     this.state = {
       location: props.location,
+      revalidation: props.revalidation,
       error: props.error,
     };
   }
@@ -531,10 +571,14 @@ export class RenderErrorBoundary extends React.Component<
     // Whether we're in an error state or not, we update the location in state
     // so that when we are in an error state, it gets reset when a new location
     // comes in and the user recovers from the error.
-    if (state.location !== props.location) {
+    if (
+      state.location !== props.location ||
+      (state.revalidation !== "idle" && props.revalidation === "idle")
+    ) {
       return {
         error: props.error,
         location: props.location,
+        revalidation: props.revalidation,
       };
     }
 
@@ -545,6 +589,7 @@ export class RenderErrorBoundary extends React.Component<
     return {
       error: props.error || state.error,
       location: state.location,
+      revalidation: props.revalidation || state.revalidation,
     };
   }
 
@@ -600,7 +645,7 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState?: RemixRouter["state"]
+  dataRouterState: RemixRouter["state"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -622,7 +667,9 @@ export function _renderMatches(
     );
     invariant(
       errorIndex >= 0,
-      `Could not find a matching route for the current errors: ${errors}`
+      `Could not find a matching route for errors on route IDs: ${Object.keys(
+        errors
+      ).join(",")}`
     );
     renderedMatches = renderedMatches.slice(
       0,
@@ -635,23 +682,17 @@ export function _renderMatches(
     // Only data routers handle errors
     let errorElement: React.ReactNode | null = null;
     if (dataRouterState) {
-      if (match.route.ErrorBoundary) {
-        errorElement = <match.route.ErrorBoundary />;
-      } else if (match.route.errorElement) {
-        errorElement = match.route.errorElement;
-      } else {
-        errorElement = <DefaultErrorComponent />;
-      }
+      errorElement = match.route.errorElement || defaultErrorElement;
     }
     let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
     let getChildren = () => {
-      let children: React.ReactNode = outlet;
+      let children: React.ReactNode;
       if (error) {
         children = errorElement;
-      } else if (match.route.Component) {
-        children = <match.route.Component />;
       } else if (match.route.element) {
         children = match.route.element;
+      } else {
+        children = outlet;
       }
       return (
         <RenderedRoute
@@ -668,6 +709,7 @@ export function _renderMatches(
       (match.route.ErrorBoundary || match.route.errorElement || index === 0) ? (
       <RenderErrorBoundary
         location={dataRouterState.location}
+        revalidation={dataRouterState.revalidation}
         component={errorElement}
         error={error}
         children={getChildren()}
@@ -682,6 +724,7 @@ export function _renderMatches(
 enum DataRouterHook {
   UseBlocker = "useBlocker",
   UseRevalidator = "useRevalidator",
+  UseNavigateStable = "useNavigate",
 }
 
 enum DataRouterStateHook {
@@ -693,6 +736,8 @@ enum DataRouterStateHook {
   UseRouteLoaderData = "useRouteLoaderData",
   UseMatches = "useMatches",
   UseRevalidator = "useRevalidator",
+  UseNavigateStable = "useNavigate",
+  UseRouteId = "useRouteId",
 }
 
 function getDataRouterConsoleError(
@@ -719,6 +764,7 @@ function useRouteContext(hookName: DataRouterStateHook) {
   return route;
 }
 
+// Internal version with hookName-aware debugging
 function useCurrentRouteId(hookName: DataRouterStateHook) {
   let route = useRouteContext(hookName);
   let thisRoute = route.matches[route.matches.length - 1];
@@ -727,6 +773,13 @@ function useCurrentRouteId(hookName: DataRouterStateHook) {
     `${hookName} can only be used on routes that contain a unique "id"`
   );
   return thisRoute.route.id;
+}
+
+/**
+ * Returns the ID for the nearest contextual route
+ */
+export function useRouteId() {
+  return useCurrentRouteId(DataRouterStateHook.UseRouteId);
 }
 
 /**
@@ -883,6 +936,39 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // Prefer the blocker from state since DataRouterContext is memoized so this
   // ensures we update on blocker state updates
   return state.blockers.get(blockerKey) || blocker;
+}
+
+/**
+ * Stable version of useNavigate that is used when we are in the context of
+ * a RouterProvider.
+ */
+function useNavigateStable(): NavigateFunction {
+  let { router } = useDataRouterContext(DataRouterHook.UseNavigateStable);
+  let id = useCurrentRouteId(DataRouterStateHook.UseNavigateStable);
+
+  let activeRef = React.useRef(false);
+  useIsomorphicLayoutEffect(() => {
+    activeRef.current = true;
+  });
+
+  let navigate: NavigateFunction = React.useCallback(
+    (to: To | number, options: NavigateOptions = {}) => {
+      warning(activeRef.current, navigateEffectWarning);
+
+      // Short circuit here since if this happens on first render the navigate
+      // is useless because we haven't wired up our router subscriber yet
+      if (!activeRef.current) return;
+
+      if (typeof to === "number") {
+        router.navigate(to);
+      } else {
+        router.navigate(to, { fromRouteId: id, ...options });
+      }
+    },
+    [router, id]
+  );
+
+  return navigate;
 }
 
 const alreadyWarned: Record<string, boolean> = {};

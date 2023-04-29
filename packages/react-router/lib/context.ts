@@ -5,6 +5,7 @@ import type {
   AgnosticNonIndexRouteObject,
   History,
   Location,
+  RelativeRoutingType,
   Router,
   StaticHandlerContext,
   To,
@@ -87,8 +88,6 @@ export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 if (__DEV__) {
   AwaitContext.displayName = "Await";
 }
-
-export type RelativeRoutingType = "route" | "path";
 
 export interface NavigateOptions {
   replace?: boolean;

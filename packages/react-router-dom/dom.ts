@@ -1,5 +1,9 @@
-import type { FormEncType, HTMLFormMethod } from "@remix-run/router";
-import type { RelativeRoutingType } from "react-router";
+import type {
+  FormEncType,
+  HTMLFormMethod,
+  RelativeRoutingType,
+} from "@remix-run/router";
+import { stripBasename } from "@remix-run/router";
 
 export const defaultMethod: HTMLFormMethod = "get";
 const defaultEncType: FormEncType = "application/x-www-form-urlencoded";
@@ -115,9 +119,6 @@ export interface SubmitOptions {
   /**
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
-   *
-   * Note: It is assumed the path is already resolved. If you need to resolve a
-   * relative path, use `useFormAction`.
    */
   action?: string;
 
@@ -157,16 +158,16 @@ export function getFormSubmissionInfo(
     | URLSearchParams
     | { [name: string]: string }
     | null,
-  defaultAction: string,
-  options: SubmitOptions
+  options: SubmitOptions,
+  basename: string
 ): {
-  url: URL;
+  action: string | null;
   method: string;
   encType: string;
   formData: FormData;
 } {
   let method: string;
-  let action: string;
+  let action: string | null = null;
   let encType: string;
   let formData: FormData;
 
@@ -175,8 +176,16 @@ export function getFormSubmissionInfo(
       options as any
     ).submissionTrigger;
 
+    if (options.action) {
+      action = options.action;
+    } else {
+      // When grabbing the action from the element, it will have had the basename
+      // prefixed to ensure non-JS scenarios work, so strip it since we'll
+      // re-prefix in the router
+      let attr = target.getAttribute("action");
+      action = attr ? stripBasename(attr, basename) : null;
+    }
     method = options.method || target.getAttribute("method") || defaultMethod;
-    action = options.action || target.getAttribute("action") || defaultAction;
     encType =
       options.encType || target.getAttribute("enctype") || defaultEncType;
 
@@ -200,16 +209,22 @@ export function getFormSubmissionInfo(
 
     // <button>/<input type="submit"> may override attributes of <form>
 
+    if (options.action) {
+      action = options.action;
+    } else {
+      // When grabbing the action from the element, it will have had the basename
+      // prefixed to ensure non-JS scenarios work, so strip it since we'll
+      // re-prefix in the router
+      let attr =
+        target.getAttribute("formaction") || form.getAttribute("action");
+      action = attr ? stripBasename(attr, basename) : null;
+    }
+
     method =
       options.method ||
       target.getAttribute("formmethod") ||
       form.getAttribute("method") ||
       defaultMethod;
-    action =
-      options.action ||
-      target.getAttribute("formaction") ||
-      form.getAttribute("action") ||
-      defaultAction;
     encType =
       options.encType ||
       target.getAttribute("formenctype") ||
@@ -230,7 +245,7 @@ export function getFormSubmissionInfo(
     );
   } else {
     method = options.method || defaultMethod;
-    action = options.action || defaultAction;
+    action = options.action || null;
     encType = options.encType || defaultEncType;
 
     if (target instanceof FormData) {
@@ -250,8 +265,5 @@ export function getFormSubmissionInfo(
     }
   }
 
-  let { protocol, host } = window.location;
-  let url = new URL(action, `${protocol}//${host}`);
-
-  return { url, method: method.toLowerCase(), encType, formData };
+  return { action, method: method.toLowerCase(), encType, formData };
 }

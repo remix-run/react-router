@@ -121,7 +121,7 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [fetcher]: ../hooks/use-fetcher
 [browser-router]: ./browser-router
 [form]: ../components/form
-[route]: ../components/route
+[route]: ../route/route
 [routes]: ../components/routes
 [historyapi]: https://developer.mozilla.org/en-US/docs/Web/API/History
-[api-development-strategy]: ../guides/api-development-strategy.md
+[api-development-strategy]: ../guides/api-development-strategy
