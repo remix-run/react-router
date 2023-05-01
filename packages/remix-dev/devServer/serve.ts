@@ -2,10 +2,9 @@ import getPort, { makeRange } from "get-port";
 import type { Server } from "http";
 import os from "os";
 
-import type { RemixConfig } from "../config";
-import type { CompileOptions } from "../compiler";
-import { loadEnv } from "../env";
+import { loadEnv } from "../devServer_unstable/env";
 import { liveReload } from "./liveReload";
+import type { RemixConfig } from "../config";
 
 function purgeAppRequireCache(buildPath: string) {
   for (let key in require.cache) {
@@ -25,11 +24,7 @@ function tryImport(packageName: string) {
   }
 }
 
-export async function serve(
-  config: RemixConfig,
-  mode: CompileOptions["mode"],
-  portPreference?: number
-) {
+export async function serve(config: RemixConfig, portPreference?: number) {
   if (config.serverEntryPoint) {
     throw new Error("remix dev is not supported for custom servers.");
   }
@@ -60,7 +55,7 @@ export async function serve(
   app.use(
     createApp(
       config.serverBuildPath,
-      mode,
+      "development",
       config.publicPath,
       config.assetsBuildDirectory
     )

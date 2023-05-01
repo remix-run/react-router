@@ -1,11 +1,30 @@
 import { test, expect } from "@playwright/test";
 import fs from "fs/promises";
 import path from "path";
+import shell from "shelljs";
+import glob from "glob";
 
 import { createFixtureProject, js, json } from "./helpers/create-fixture";
 
+const searchFiles = async (pattern: string | RegExp, files: string[]) => {
+  let result = shell.grep("-l", pattern, files);
+  return result.stdout
+    .trim()
+    .split("\n")
+    .filter((line) => line.length > 0);
+};
+
+const findCodeFiles = async (directory: string) =>
+  glob.sync("**/*.@(js|jsx|ts|tsx)", {
+    cwd: directory,
+    absolute: true,
+  });
+
 test.describe("cloudflare compiler", () => {
   let projectDir: string;
+
+  let findBrowserBundle = (projectDir: string): string =>
+    path.resolve(projectDir, "public", "build");
 
   test.beforeAll(async () => {
     projectDir = await createFixtureProject({
@@ -40,6 +59,13 @@ test.describe("cloudflare compiler", () => {
           import { content as browserPackage } from "browser-pkg";
           import { content as esmOnlyPackage } from "esm-only-pkg";
           import { content as cjsOnlyPackage } from "cjs-only-pkg";
+          import hooks, {AsyncLocalStorage} from "node:async_hooks";
+
+          export async function loader() {
+            console.log(hooks, AsyncLocalStorage);
+
+            return null;
+          }
 
           export default function Index() {
             return (
@@ -202,5 +228,17 @@ test.describe("cloudflare compiler", () => {
     for (let name of magicExportsForNode) {
       expect(magicRemix).toContain(name);
     }
+  });
+
+  test("node externals are not bundled in the browser bundle", async () => {
+    let browserBundle = findBrowserBundle(projectDir);
+    let browserCodeFiles = await findCodeFiles(browserBundle);
+
+    let asyncHooks = await searchFiles(
+      /async_hooks|AsyncLocalStorage/,
+      browserCodeFiles
+    );
+
+    expect(asyncHooks).toHaveLength(0);
   });
 });

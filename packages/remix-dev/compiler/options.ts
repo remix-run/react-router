@@ -1,30 +1,15 @@
-import type * as esbuild from "esbuild";
+type Mode = "development" | "production" | "test";
 
-const modes = ["development", "production", "test"] as const;
-
-type Mode = typeof modes[number];
-
-export const parseMode = (raw: string, fallback?: Mode): Mode => {
-  if ((modes as readonly string[]).includes(raw)) {
-    return raw as Mode;
-  }
-  if (!fallback) {
-    throw Error(`Unrecognized mode: '${raw}'`);
-  }
-  return fallback;
-};
-
-type Target =
-  | "browser" // TODO: remove
-  | "server" // TODO: remove
-  | "cloudflare-workers"
-  | "node14";
-
-export type CompileOptions = {
+export type Options = {
   mode: Mode;
-  liveReloadPort?: number;
-  target: Target;
   sourcemap: boolean;
   onWarning?: (message: string, key: string) => void;
-  onCompileFailure?: (failure: Error | esbuild.BuildFailure) => void;
+
+  // TODO: required in v2
+  devHttpOrigin?: {
+    scheme: string;
+    host: string;
+    port: number;
+  };
+  devWebsocketPort?: number;
 };

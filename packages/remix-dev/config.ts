@@ -10,11 +10,11 @@ import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
 import { defineConventionalRoutes } from "./config/routesConvention";
 import { ServerMode, isValidServerMode } from "./config/serverModes";
-import { serverBuildVirtualModule } from "./compiler/virtualModules";
-import { writeConfigDefaults } from "./compiler/utils/tsconfig/write-config-defaults";
+import { writeConfigDefaults } from "./config/write-tsconfig-defaults";
+import { serverBuildVirtualModule } from "./compiler/server/virtualModules";
 import { flatRoutes } from "./config/flat-routes";
-import { getPreferredPackageManager } from "./cli/getPreferredPackageManager";
-import { warnOnce } from "./compiler/warnings";
+import { detectPackageManager } from "./cli/detectPackageManager";
+import { warnOnce } from "./warnOnce";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
@@ -38,23 +38,22 @@ export type ServerModuleFormat = "esm" | "cjs";
 export type ServerPlatform = "node" | "neutral";
 
 type Dev = {
-  port?: number;
-  appServerPort?: number;
-  remixRequestHandlerPath?: string;
-  rebuildPollIntervalMs?: number;
-};
+  port?: number; // TODO: remove in v2
 
-export type VanillaExtractOptions = {
-  cache?: boolean;
+  command?: string;
+  httpScheme?: string;
+  httpHost?: string;
+  httpPort?: number;
+  websocketPort?: number;
+  restart?: boolean;
 };
 
 interface FutureConfig {
-  unstable_cssModules: boolean;
-  unstable_cssSideEffectImports: boolean;
   unstable_dev: boolean | Dev;
+  /** @deprecated Use the `postcss` config option instead */
   unstable_postcss: boolean;
+  /** @deprecated Use the `tailwind` config option instead */
   unstable_tailwind: boolean;
-  unstable_vanillaExtract: boolean | VanillaExtractOptions;
   v2_errorBoundary: boolean;
   v2_meta: boolean;
   v2_normalizeFormMethod: boolean;
@@ -123,6 +122,12 @@ export interface AppConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
+   * Whether to process CSS using PostCSS if `postcss.config.js` is present.
+   * Defaults to `false`.
+   */
+  postcss?: boolean;
+
+  /**
    * A server entrypoint, relative to the root directory that becomes your
    * server's main module. If specified, Remix will compile this file along with
    * your application into a single file to be deployed to your server. This
@@ -189,6 +194,12 @@ export interface AppConfig {
    * The platform the server build is targeting. Defaults to "node".
    */
   serverPlatform?: ServerPlatform;
+
+  /**
+   * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
+   * Defaults to `false`.
+   */
+  tailwind?: boolean;
 
   /**
    * A list of filenames or a glob patterns to match files in the `app/routes`
@@ -283,6 +294,12 @@ export interface RemixConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
+   * Whether to process CSS using PostCSS if `postcss.config.js` is present.
+   * Defaults to `false`.
+   */
+  postcss: boolean;
+
+  /**
    * The path to the server build file. This file should end in a `.js`.
    */
   serverBuildPath: string;
@@ -348,6 +365,12 @@ export interface RemixConfig {
    * The platform the server build is targeting. Defaults to "node".
    */
   serverPlatform: ServerPlatform;
+
+  /**
+   * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
+   * Defaults to `false`.
+   */
+  tailwind: boolean;
 
   /**
    * A list of directories to watch.
@@ -434,6 +457,11 @@ export async function readConfig(
   let serverEntryPoint = appConfig.server;
   let serverMainFields = appConfig.serverMainFields;
   let serverMinify = appConfig.serverMinify;
+
+  if (!appConfig.serverModuleFormat) {
+    warnOnce(serverModuleFormatWarning, "serverModuleFormatWarning");
+  }
+
   let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
   let serverPlatform = appConfig.serverPlatform || "node";
   if (isCloudflareRuntime) {
@@ -455,7 +483,43 @@ export async function readConfig(
     serverModuleFormat === "esm" ? ["module", "main"] : ["main", "module"];
   serverMinify ??= false;
 
+  if (appConfig.future) {
+    if ("unstable_cssModules" in appConfig.future) {
+      warnOnce(
+        'The "future.unstable_cssModules" config option has been removed as this feature is now enabled automatically.'
+      );
+    }
+
+    if ("unstable_cssSideEffectImports" in appConfig.future) {
+      warnOnce(
+        'The "future.unstable_cssSideEffectImports" config option has been removed as this feature is now enabled automatically.'
+      );
+    }
+
+    if ("unstable_vanillaExtract" in appConfig.future) {
+      warnOnce(
+        'The "future.unstable_vanillaExtract" config option has been removed as this feature is now enabled automatically.'
+      );
+    }
+
+    if (appConfig.future.unstable_postcss !== undefined) {
+      warnOnce(
+        'The "future.unstable_postcss" config option has been deprecated as this feature is now considered stable. Use the "postcss" config option instead.'
+      );
+    }
+
+    if (appConfig.future.unstable_tailwind !== undefined) {
+      warnOnce(
+        'The "future.unstable_tailwind" config option has been deprecated as this feature is now considered stable. Use the "tailwind" config option instead.'
+      );
+    }
+  }
+
   let mdx = appConfig.mdx;
+  let postcss =
+    appConfig.postcss ?? appConfig.future?.unstable_postcss === true;
+  let tailwind =
+    appConfig.tailwind ?? appConfig.future?.unstable_tailwind === true;
 
   let appDirectory = path.resolve(
     rootDirectory,
@@ -537,7 +601,7 @@ export async function readConfig(
 
       await pkgJson.save();
 
-      let packageManager = getPreferredPackageManager();
+      let packageManager = detectPackageManager() ?? "npm";
 
       execSync(`${packageManager} install`, {
         cwd: remixRoot,
@@ -674,13 +738,9 @@ export async function readConfig(
   }
 
   let future: FutureConfig = {
-    unstable_cssModules: appConfig.future?.unstable_cssModules === true,
-    unstable_cssSideEffectImports:
-      appConfig.future?.unstable_cssSideEffectImports === true,
     unstable_dev: appConfig.future?.unstable_dev ?? false,
     unstable_postcss: appConfig.future?.unstable_postcss === true,
     unstable_tailwind: appConfig.future?.unstable_tailwind === true,
-    unstable_vanillaExtract: appConfig.future?.unstable_vanillaExtract ?? false,
     v2_errorBoundary: appConfig.future?.v2_errorBoundary === true,
     v2_meta: appConfig.future?.v2_meta === true,
     v2_normalizeFormMethod: appConfig.future?.v2_normalizeFormMethod === true,
@@ -713,6 +773,8 @@ export async function readConfig(
     serverModuleFormat,
     serverPlatform,
     mdx,
+    postcss,
+    tailwind,
     watchPaths,
     tsconfigPath,
     future,
@@ -840,6 +902,12 @@ export let serverBuildTargetWarning =
   "For instructions on making this change see " +
   "https://remix.run/docs/en/v1.15.0/pages/v2#serverbuildtarget";
 
+export const serverModuleFormatWarning =
+  "⚠️ REMIX FUTURE CHANGE: The `serverModuleFormat` config default option will be changing in v2 " +
+  "from `cjs` to `esm`. You can prepare for this change by explicitly specifying `serverModuleFormat: 'cjs'`. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.16.0/pages/v2#servermoduleformat";
+
 export let flatRoutesWarning =
   "⚠️ REMIX FUTURE CHANGE: The route file convention is changing in v2. " +
   "You can prepare for this change at your convenience with the `v2_routeConvention` future flag. " +
@@ -860,7 +928,7 @@ export const formMethodWarning =
   "https://remix.run/docs/en/v1.15.0/pages/v2#formMethod";
 
 export const metaWarning =
-  "⚠️ REMIX FUTURE CHANGE: The route `meta` export signature is changing in v2" +
+  "⚠️ REMIX FUTURE CHANGE: The route `meta` export signature is changing in v2. " +
   "You can prepare for this change at your convenience with the `v2_meta` future flag. " +
   "For instructions on making this change see " +
   "https://remix.run/docs/en/v1.15.0/pages/v2#meta";

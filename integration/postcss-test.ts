@@ -27,21 +27,22 @@ async function jsonFromBase64CssContent({
   return JSON.parse(json);
 }
 
-test.describe("PostCSS", () => {
+test.describe("PostCSS enabled", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        v2_routeConvention: true,
-        unstable_cssModules: true,
-        unstable_cssSideEffectImports: true,
-        unstable_postcss: true,
-        unstable_tailwind: true,
-        unstable_vanillaExtract: true,
-      },
       files: {
+        "remix.config.js": js`
+          module.exports = {
+            postcss: true,
+            tailwind: true,
+            future: {
+              v2_routeConvention: true,
+            },
+          };
+        `,
         // We provide a test plugin that replaces the strings
         // "TEST_PADDING_VALUE" and "TEST_POSTCSS_CONTEXT".
         // This lets us assert that the plugin is being run
@@ -53,12 +54,12 @@ test.describe("PostCSS", () => {
                 postcssPlugin: 'replace',
                 Declaration (decl) {
                   decl.value = decl.value
-                    .replaceAll(
-                      "TEST_PADDING_VALUE",
+                    .replace(
+                      /TEST_PADDING_VALUE/g,
                       ${JSON.stringify(TEST_PADDING_VALUE)},
                     )
-                    .replaceAll(
-                      "TEST_POSTCSS_CONTEXT",
+                    .replace(
+                      /TEST_POSTCSS_CONTEXT/g,
                       Buffer.from(JSON.stringify(ctx)).toString("base64"),
                     );
                 },
@@ -348,5 +349,175 @@ test.describe("PostCSS", () => {
     );
     let padding = await locator.evaluate((el) => getComputedStyle(el).padding);
     expect(padding).toBe(TEST_PADDING_VALUE);
+  });
+});
+
+test.describe("PostCSS enabled via unstable future flag", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      future: {
+        unstable_postcss: true,
+      },
+      files: {
+        "postcss.config.js": js`
+          module.exports = (ctx) => ({
+            plugins: [
+              {
+                postcssPlugin: 'replace',
+                Declaration (decl) {
+                  decl.value = decl.value
+                    .replace(
+                      /TEST_PADDING_VALUE/g,
+                      ${JSON.stringify(TEST_PADDING_VALUE)},
+                    );
+                },
+              },
+            ],
+          });
+        `,
+        "app/root.jsx": js`
+          import { Links, Outlet } from "@remix-run/react";
+          export default function Root() {
+            return (
+              <html>
+                <head>
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                </body>
+              </html>
+            )
+          }
+        `,
+        "app/routes/postcss-unstable-future-flag-test.jsx": js`
+          import { Test, links as testLinks } from "~/test-components/postcss-unstable-future-flag";
+          export function links() {
+            return [...testLinks()];
+          }
+          export default function() {
+            return <Test />;
+          }
+        `,
+        "app/test-components/postcss-unstable-future-flag/index.jsx": js`
+          import stylesHref from "./styles.css";
+          export function links() {
+            return [{ rel: 'stylesheet', href: stylesHref }];
+          }
+          export function Test() {
+            return (
+              <div data-testid="postcss-unstable-future-flag" className="postcss-unstable-future-flag-test">
+                <p>PostCSS unstable future flag test.</p>
+              </div>
+            );
+          }
+        `,
+        "app/test-components/postcss-unstable-future-flag/styles.css": css`
+          .postcss-unstable-future-flag-test {
+            padding: TEST_PADDING_VALUE;
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+  });
+
+  test.afterAll(() => appFixture.close());
+
+  test("uses PostCSS config", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/postcss-unstable-future-flag-test");
+    let locator = await page.getByTestId("postcss-unstable-future-flag");
+    let padding = await locator.evaluate((el) => getComputedStyle(el).padding);
+    expect(padding).toBe(TEST_PADDING_VALUE);
+  });
+});
+
+test.describe("PostCSS disabled", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      files: {
+        "remix.config.js": js`
+          module.exports = {
+            postcss: false,
+          };
+        `,
+        "postcss.config.js": js`
+          module.exports = (ctx) => ({
+            plugins: [
+              {
+                postcssPlugin: 'replace',
+                Declaration (decl) {
+                  decl.value = decl.value
+                    .replace(
+                      /TEST_PADDING_VALUE/g,
+                      ${JSON.stringify(TEST_PADDING_VALUE)},
+                    );
+                },
+              },
+            ],
+          });
+        `,
+        "app/root.jsx": js`
+          import { Links, Outlet } from "@remix-run/react";
+          export default function Root() {
+            return (
+              <html>
+                <head>
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                </body>
+              </html>
+            )
+          }
+        `,
+        "app/routes/postcss-disabled-test.jsx": js`
+          import { Test, links as testLinks } from "~/test-components/postcss-disabled";
+          export function links() {
+            return [...testLinks()];
+          }
+          export default function() {
+            return <Test />;
+          }
+        `,
+        "app/test-components/postcss-disabled/index.jsx": js`
+          import stylesHref from "./styles.css";
+          export function links() {
+            return [{ rel: 'stylesheet', href: stylesHref }];
+          }
+          export function Test() {
+            return (
+              <div data-testid="postcss-disabled" className="postcss-disabled-test">
+                <p>PostCSS disabled test.</p>
+              </div>
+            );
+          }
+        `,
+        "app/test-components/postcss-disabled/styles.css": css`
+          .postcss-disabled-test {
+            padding: TEST_PADDING_VALUE;
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+  });
+
+  test.afterAll(() => appFixture.close());
+
+  test("ignores PostCSS config", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/postcss-disabled-test");
+    let locator = await page.locator("[data-testid='postcss-disabled']");
+    let padding = await locator.evaluate((el) => getComputedStyle(el).padding);
+    expect(padding).not.toBe(TEST_PADDING_VALUE);
   });
 });

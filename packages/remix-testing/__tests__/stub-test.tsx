@@ -2,6 +2,7 @@ import * as React from "react";
 import { render, screen } from "@testing-library/react";
 import { unstable_createRemixStub } from "@remix-run/testing";
 import { Outlet, useLoaderData, useMatches } from "@remix-run/react";
+import type { DataFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 
 test("renders a route", () => {
@@ -62,6 +63,67 @@ test("loaders work", async () => {
 
   expect(await screen.findByTestId("data")).toHaveTextContent(
     /message: hello/i
+  );
+});
+
+test("can pass a predefined loader", () => {
+  async function loader(_args: DataFunctionArgs) {
+    return json({ hi: "there" });
+  }
+
+  unstable_createRemixStub([
+    {
+      path: "/example",
+      loader,
+    },
+  ]);
+});
+
+test("can pass context values", async () => {
+  function App() {
+    let data = useLoaderData();
+    return (
+      <div>
+        <pre data-testid="root">Context: {data.context}</pre>;
+        <Outlet />
+      </div>
+    );
+  }
+
+  function Hello() {
+    let data = useLoaderData();
+    return <pre data-testid="hello">Context: {data.context}</pre>;
+  }
+
+  let RemixStub = unstable_createRemixStub(
+    [
+      {
+        path: "/",
+        element: <App />,
+        loader({ context }) {
+          return json(context);
+        },
+        children: [
+          {
+            path: "hello",
+            element: <Hello />,
+            loader({ context }) {
+              return json(context);
+            },
+          },
+        ],
+      },
+    ],
+    { context: "hello" }
+  );
+
+  render(<RemixStub initialEntries={["/hello"]} />);
+
+  expect(await screen.findByTestId("root")).toHaveTextContent(
+    /context: hello/i
+  );
+  expect(await screen.findByTestId("hello")).toHaveTextContent(
+    /context: hello/i
   );
 });
 

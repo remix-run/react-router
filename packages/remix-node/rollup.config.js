@@ -43,6 +43,11 @@ module.exports = function rollup() {
             { src: "LICENSE.md", dest: [outputDir, sourceDir] },
             { src: `${sourceDir}/package.json`, dest: outputDir },
             { src: `${sourceDir}/README.md`, dest: outputDir },
+            // This needs to end up in the root of the pkg but also needs to
+            // reference other compiled files. Just copying these are easier
+            // than dealing with output configuration for sharing chunks x-builds.
+            { src: `${sourceDir}/install.js`, dest: outputDir },
+            { src: `${sourceDir}/install.d.ts`, dest: outputDir },
           ],
         }),
         magicExportsPlugin({ packageName, version }),

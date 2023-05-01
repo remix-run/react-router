@@ -115,6 +115,14 @@ describe("remix CLI", () => {
           \`dev\` Options:
             --debug             Attach Node.js inspector
             --port, -p          Choose the port from which to run your app
+
+            [unstable_dev]
+            --command, -c       Command used to run your app server
+            --http-scheme       HTTP(S) scheme for the dev server. Default: http
+            --http-host         HTTP(S) host for the dev server. Default: localhost
+            --http-port         HTTP(S) port for the dev server. Default: any open port
+            --no-restart        Do not restart the app server when rebuilds occur.
+            --websocket-port    Websocket port for the dev server. Default: any open port
           \`init\` Options:
             --no-delete         Skip deleting the \`remix.init\` script
           \`routes\` Options:

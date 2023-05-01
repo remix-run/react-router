@@ -4,11 +4,10 @@ import * as path from "path";
 
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
-import { logCompileFailure } from "./onCompileFailure";
-import type { CompileOptions } from "./options";
-import type { CompileResult } from "./remixCompiler";
-import { compile, createRemixCompiler, dispose } from "./remixCompiler";
-import { warnOnce } from "./warnings";
+import { type Manifest } from "../manifest";
+import * as Compiler from "./compiler";
+import type { Context } from "./context";
+import { logThrown } from "./utils/log";
 
 function isEntryPoint(config: RemixConfig, file: string): boolean {
   let appFile = path.relative(config.appDirectory, file);
@@ -20,82 +19,69 @@ function isEntryPoint(config: RemixConfig, file: string): boolean {
   return entryPoints.includes(appFile);
 }
 
-export type WatchOptions = Partial<CompileOptions> & {
+export type WatchOptions = {
   reloadConfig?(root: string): Promise<RemixConfig>;
-  onRebuildStart?(): void;
-  onRebuildFinish?(durationMs: number, result?: CompileResult): void;
+  onBuildStart?(ctx: Context): void;
+  onBuildFinish?(ctx: Context, durationMs: number, manifest?: Manifest): void;
   onFileCreated?(file: string): void;
   onFileChanged?(file: string): void;
   onFileDeleted?(file: string): void;
-  onInitialBuild?(durationMs: number, result?: CompileResult): void;
 };
 
 export async function watch(
-  config: RemixConfig,
+  ctx: Context,
   {
-    mode = "development",
-    liveReloadPort,
-    target = "node14",
-    sourcemap = true,
     reloadConfig = readConfig,
-    onWarning = warnOnce,
-    onCompileFailure = logCompileFailure,
-    onRebuildStart,
-    onRebuildFinish,
+    onBuildStart,
+    onBuildFinish,
     onFileCreated,
     onFileChanged,
     onFileDeleted,
-    onInitialBuild,
   }: WatchOptions = {}
 ): Promise<() => Promise<void>> {
-  let options: CompileOptions = {
-    mode,
-    liveReloadPort,
-    target,
-    sourcemap,
-    onCompileFailure,
-    onWarning,
-  };
-
   let start = Date.now();
-  let compiler = createRemixCompiler(config, options);
+  let compiler = await Compiler.create(ctx);
+  let compile = () =>
+    compiler.compile().catch((thrown) => {
+      logThrown(thrown);
+      return undefined;
+    });
 
   // initial build
-  let result = await compile(compiler, { onCompileFailure });
-  onInitialBuild?.(Date.now() - start, result);
+  onBuildStart?.(ctx);
+  let manifest = await compile();
+  onBuildFinish?.(ctx, Date.now() - start, manifest);
 
   let restart = debounce(async () => {
-    onRebuildStart?.();
+    onBuildStart?.(ctx);
     let start = Date.now();
-    dispose(compiler);
+    compiler.dispose();
 
     try {
-      config = await reloadConfig(config.rootDirectory);
-    } catch (error: unknown) {
-      onCompileFailure(error as Error);
+      ctx.config = await reloadConfig(ctx.config.rootDirectory);
+    } catch (thrown: unknown) {
+      logThrown(thrown);
       return;
     }
 
-    compiler = createRemixCompiler(config, options);
-    let result = await compile(compiler, { onCompileFailure });
-    onRebuildFinish?.(Date.now() - start, result);
+    compiler = await Compiler.create(ctx);
+    let manifest = await compile();
+    onBuildFinish?.(ctx, Date.now() - start, manifest);
   }, 500);
 
   let rebuild = debounce(async () => {
-    onRebuildStart?.();
+    onBuildStart?.(ctx);
     let start = Date.now();
-    let result = await compile(compiler, {
-      onCompileFailure,
-    });
-    onRebuildFinish?.(Date.now() - start, result);
+    let manifest = await compile();
+    onBuildFinish?.(ctx, Date.now() - start, manifest);
   }, 100);
 
-  let toWatch = [config.appDirectory];
-  if (config.serverEntryPoint) {
-    toWatch.push(config.serverEntryPoint);
+  let toWatch = [ctx.config.appDirectory];
+  if (ctx.config.serverEntryPoint) {
+    toWatch.push(ctx.config.serverEntryPoint);
   }
 
-  config.watchPaths?.forEach((watchPath) => {
+  ctx.config.watchPaths?.forEach((watchPath) => {
     toWatch.push(watchPath);
   });
 
@@ -117,21 +103,21 @@ export async function watch(
       onFileCreated?.(file);
 
       try {
-        config = await reloadConfig(config.rootDirectory);
-      } catch (error: unknown) {
-        onCompileFailure(error as Error);
+        ctx.config = await reloadConfig(ctx.config.rootDirectory);
+      } catch (thrown: unknown) {
+        logThrown(thrown);
         return;
       }
 
-      await (isEntryPoint(config, file) ? restart : rebuild)();
+      await (isEntryPoint(ctx.config, file) ? restart : rebuild)();
     })
     .on("unlink", async (file) => {
       onFileDeleted?.(file);
-      await (isEntryPoint(config, file) ? restart : rebuild)();
+      await (isEntryPoint(ctx.config, file) ? restart : rebuild)();
     });
 
   return async () => {
     await watcher.close().catch(() => undefined);
-    dispose(compiler);
+    compiler.dispose();
   };
 }

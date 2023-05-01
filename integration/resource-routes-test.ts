@@ -191,3 +191,68 @@ test.describe("loader in an app", async () => {
     );
   });
 });
+
+test.describe("Development server", async () => {
+  let appFixture: AppFixture;
+  let fixture: Fixture;
+  let _consoleError: typeof console.error;
+
+  test.beforeAll(async () => {
+    _consoleError = console.error;
+    console.error = () => {};
+
+    fixture = await createFixture(
+      {
+        future: {
+          v2_routeConvention: true,
+          v2_errorBoundary: true,
+        },
+        files: {
+          "app/routes/_index.jsx": js`
+            import { Link } from "@remix-run/react";
+            export default () => <Link to="/child">Child</Link>;
+          `,
+          "app/routes/_main.jsx": js`
+            import { useRouteError } from "@remix-run/react";
+            export function ErrorBoundary() {
+              return <pre>{useRouteError().message}</pre>;
+            }
+          `,
+          "app/routes/_main.child.jsx": js`
+            export default function Component() {
+              throw new Error('Error from render')
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    appFixture = await createAppFixture(fixture, ServerMode.Development);
+  });
+
+  test.afterAll(() => {
+    appFixture.close();
+    console.error = _consoleError;
+  });
+
+  test.describe("with JavaScript", () => {
+    runTests();
+  });
+
+  test.describe("without JavaScript", () => {
+    test.use({ javaScriptEnabled: false });
+    runTests();
+  });
+
+  function runTests() {
+    test("should not treat an ErrorBoundary-only route as a resource route", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/child");
+      let html = await app.getHtml();
+      expect(html).not.toMatch("has no component");
+      expect(html).toMatch("Error from render");
+    });
+  }
+});

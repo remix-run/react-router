@@ -21,13 +21,6 @@ test.describe("CSS Modules", () => {
     fixture = await createFixture({
       future: {
         v2_routeConvention: true,
-        // Enable all CSS future flags to
-        // ensure features don't clash
-        unstable_cssModules: true,
-        unstable_cssSideEffectImports: true,
-        unstable_postcss: true,
-        unstable_tailwind: true,
-        unstable_vanillaExtract: true,
       },
       files: {
         "app/root.jsx": js`
@@ -61,9 +54,11 @@ test.describe("CSS Modules", () => {
         ...rootRelativeImportedValueFixture(),
         ...imageUrlsFixture(),
         ...rootRelativeImageUrlsFixture(),
+        ...absoluteImageUrlsFixture(),
         ...clientEntrySideEffectsFixture(),
         ...deduplicatedCssFixture(),
         ...uniqueClassNamesFixture(),
+        ...treeShakingFixture(),
       },
     });
     appFixture = await createAppFixture(fixture);
@@ -540,6 +535,51 @@ test.describe("CSS Modules", () => {
     expect(imgStatus).toBe(200);
   });
 
+  let absoluteImageUrlsFixture = () => ({
+    "app/routes/absolute-image-urls-test.jsx": js`
+      import { Test } from "~/test-components/absolute-image-urls";
+      export default function() {
+        return <Test />;
+      }
+    `,
+    "app/test-components/absolute-image-urls/index.jsx": js`
+      import styles from "./styles.module.css";
+      export function Test() {
+        return (
+          <div data-testid="absolute-image-urls" className={styles.root}>
+            Image URLs test
+          </div>
+        );
+      }
+    `,
+    "app/test-components/absolute-image-urls/styles.module.css": css`
+      .root {
+        background-color: peachpuff;
+        background-image: url(/absolute-image-urls/image.svg);
+        padding: ${TEST_PADDING_VALUE};
+      }
+    `,
+    "public/absolute-image-urls/image.svg": `
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="50" fill="coral" />
+      </svg>
+    `,
+  });
+  test("absolute image URLs", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let imgStatus: number | null = null;
+    app.page.on("response", (res) => {
+      if (res.url().endsWith(".svg")) imgStatus = res.status();
+    });
+    await app.goto("/absolute-image-urls-test");
+    let locator = await page.locator("[data-testid='absolute-image-urls']");
+    let backgroundImage = await locator.evaluate(
+      (element) => window.getComputedStyle(element).backgroundImage
+    );
+    expect(backgroundImage).toContain(".svg");
+    expect(imgStatus).toBe(200);
+  });
+
   let clientEntrySideEffectsFixture = () => ({
     "app/entry.client.jsx": js`
       import { RemixBrowser } from "@remix-run/react";
@@ -701,5 +741,61 @@ test.describe("CSS Modules", () => {
     let element = await app.getElement("[data-testid='unique-class-names']");
     let classNames = element.attr("class")?.split(" ");
     expect(new Set(classNames).size).toBe(2);
+  });
+
+  let treeShakingFixture = () => ({
+    "app/routes/tree-shaking-test.jsx": js`
+      import { UsedTest } from "~/test-components/tree-shaking";
+      export default function() {
+        return <UsedTest />;
+      }
+    `,
+    "app/test-components/tree-shaking/index.js": js`
+      export { UsedTest } from "./used";
+      export { UnusedTest } from "./unused";
+    `,
+    "app/test-components/tree-shaking/used/index.jsx": js`
+      import styles from "./styles.module.css";
+      export function UsedTest() {
+        return (
+          <div data-testid="tree-shaking" className={[styles.root, 'global-class-from-unused-component'].join(' ')}>
+            Tree shaking test
+          </div>
+        );
+      }
+    `,
+    "app/test-components/tree-shaking/used/styles.module.css": css`
+      .root {
+        background: peachpuff;
+        padding: ${TEST_PADDING_VALUE};
+      }
+    `,
+    "app/test-components/tree-shaking/unused/index.jsx": js`
+      import styles from "./styles.module.css";
+      export function UnusedTest() {
+        return (
+          <div data-testid="tree-shaking" className={[styles.root, 'global-class-from-unused-component'].join(' ')}>
+            Unused component
+          </div>
+        );
+      }
+    `,
+    "app/test-components/tree-shaking/unused/styles.module.css": css`
+      :global(.global-class-from-unused-component) {
+        padding: 999px !important;
+      }
+      .root {
+        background: peachpuff;
+      }
+    `,
+  });
+  test("tree shaking of unused component styles", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/tree-shaking-test");
+    let locator = await page.locator("[data-testid='tree-shaking']");
+    let padding = await locator.evaluate(
+      (element) => window.getComputedStyle(element).padding
+    );
+    expect(padding).toBe(TEST_PADDING_VALUE);
   });
 });

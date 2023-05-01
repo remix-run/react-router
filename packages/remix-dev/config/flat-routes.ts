@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import globToRegex from "glob-to-regexp";
+import { makeRe } from "minimatch";
 
 import type { ConfigRoute, RouteManifest } from "./routes";
 import { normalizeSlashes } from "./routes";
@@ -77,9 +77,9 @@ export function flatRoutes(
   ignoredFilePatterns: string[] = [],
   prefix = "routes"
 ) {
-  let ignoredFileRegex = ignoredFilePatterns.map((pattern) => {
-    return globToRegex(pattern);
-  });
+  let ignoredFileRegex = ignoredFilePatterns
+    .map((re) => makeRe(re))
+    .filter((re: any): re is RegExp => !!re);
   let routesDir = path.join(appDirectory, prefix);
 
   let rootRoute = findConfig(appDirectory, "root", routeModuleExts);

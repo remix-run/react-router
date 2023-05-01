@@ -1,5 +1,13 @@
 # `@remix-run/express`
 
+## 1.16.0
+
+### Patch Changes
+
+- feat: support async `getLoadContext` in all adapters ([#6170](https://github.com/remix-run/remix/pull/6170))
+- Updated dependencies:
+  - `@remix-run/node@1.16.0`
+
 ## 1.15.0
 
 ### Patch Changes

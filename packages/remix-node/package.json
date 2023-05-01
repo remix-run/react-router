@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/node",
-  "version": "1.15.0",
+  "version": "1.16.0",
   "description": "Node.js platform abstractions for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"
@@ -13,10 +13,12 @@
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "sideEffects": false,
+  "sideEffects": [
+    "./install.js"
+  ],
   "dependencies": {
-    "@remix-run/server-runtime": "1.15.0",
-    "@remix-run/web-fetch": "^4.3.2",
+    "@remix-run/server-runtime": "1.16.0",
+    "@remix-run/web-fetch": "^4.3.4",
     "@remix-run/web-file": "^3.0.2",
     "@remix-run/web-stream": "^1.0.3",
     "@web3-storage/multipart-parser": "^1.0.0",
@@ -35,6 +37,8 @@
   "files": [
     "dist/",
     "globals.d.ts",
+    "install.d.ts",
+    "install.js",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"

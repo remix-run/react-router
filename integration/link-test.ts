@@ -220,6 +220,9 @@ test.describe("route module link export", () => {
                     <li>
                       <Link to="/resources">Resource routes</Link>
                     </li>
+                    <li>
+                      <Link to="/parent/child">Errored child route</Link>
+                    </li>
                   </ul>
                 </nav>
               </div>
@@ -471,6 +474,42 @@ test.describe("route module link export", () => {
           }
 
         `,
+
+        "app/routes/parent.jsx": js`
+          import { Outlet } from "@remix-run/react";
+
+          export function links() {
+            return [
+              { "data-test-id": "red" },
+            ];
+          }
+          
+          export default function Component() {
+            return <div data-test-id="/parent"><Outlet /></div>;
+          }
+          
+          export function ErrorBoundary() {
+            return <h1 data-test-id="/parent:error-boundary">Error Boundary</h1>;
+          }
+        `,
+
+        "app/routes/parent.child.jsx": js`
+          import { Outlet } from "@remix-run/react";
+
+          export function loader() {
+            throw new Response(null, { status: 404 });
+          }
+
+          export function links() {
+            return [
+              { "data-test-id": "blue" },
+            ];
+          }
+          
+          export default function Component() {
+            return <div data-test-id="/parent"><Outlet /></div>;
+          }
+        `,
       },
     });
     appFixture = await createAppFixture(fixture);
@@ -511,6 +550,17 @@ test.describe("route module link export", () => {
     expect(stylesheetResponses.length).toEqual(1);
   });
 
+  test("does not render errored child route links", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/", true);
+    await page.click('a[href="/parent/child"]');
+    await page.waitForSelector('[data-test-id="/parent:error-boundary"]');
+    await page.waitForSelector('[data-test-id="red"]', { state: "attached" });
+    await page.waitForSelector('[data-test-id="blue"]', {
+      state: "detached",
+    });
+  });
+
   test.describe("no js", () => {
     test.use({ javaScriptEnabled: false });
 
@@ -533,6 +583,16 @@ test.describe("route module link export", () => {
       await page.waitForSelector('[data-test-id="/responsive-image-preload"]');
       let locator = page.locator("link[rel=preload][as=image]");
       expect(await locator.getAttribute("imagesizes")).toBe("100vw");
+    });
+
+    test("does not render errored child route links", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/parent/child");
+      await page.waitForSelector('[data-test-id="/parent:error-boundary"]');
+      await page.waitForSelector('[data-test-id="red"]', { state: "attached" });
+      await page.waitForSelector('[data-test-id="blue"]', {
+        state: "detached",
+      });
     });
   });
 

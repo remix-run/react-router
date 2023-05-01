@@ -43,18 +43,16 @@ function runTests(ext: typeof extensions[number]) {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        // Enable all CSS future flags to
-        // ensure features don't clash
-        unstable_cssModules: true,
-        unstable_cssSideEffectImports: true,
-        unstable_postcss: true,
-        unstable_tailwind: true,
-        unstable_vanillaExtract: true,
-        v2_routeConvention: true,
-      },
-
       files: {
+        "remix.config.js": js`
+          module.exports = {
+            tailwind: true,
+            future: {
+              v2_routeConvention: true,
+            },
+          };
+        `,
+
         [tailwindConfigName]: tailwindConfig,
 
         "app/tailwind.css": css`
@@ -326,10 +324,163 @@ function runTests(ext: typeof extensions[number]) {
   });
 }
 
-test.describe("Tailwind", () => {
+test.describe("Tailwind enabled", () => {
   for (let ext of extensions) {
     test.describe(`tailwind.config.${ext}`, () => {
       runTests(ext);
     });
   }
+});
+
+test.describe("Tailwind enabled via unstable future flag", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      future: {
+        unstable_tailwind: true,
+      },
+      files: {
+        "tailwind.config.js": js`
+          module.exports = {
+            content: ["./app/**/*.{ts,tsx,jsx,js}"],
+            theme: {
+              spacing: {
+                'test': ${JSON.stringify(TEST_PADDING_VALUE)}
+              },
+            },
+          }
+        `,
+        "app/tailwind.css": css`
+          @tailwind base;
+          @tailwind components;
+          @tailwind utilities;
+        `,
+        "app/root.jsx": js`
+          import { Links, Outlet } from "@remix-run/react";
+          import { cssBundleHref } from "@remix-run/css-bundle";
+          import tailwindHref from "./tailwind.css"
+          export function links() {
+            return [
+              { rel: "stylesheet", href: tailwindHref },
+              { rel: "stylesheet", href: cssBundleHref }
+            ];
+          }
+          export default function Root() {
+            return (
+              <html>
+                <head>
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                </body>
+              </html>
+            )
+          }
+        `,
+        "app/routes/unstable-future-flag-test.jsx": js`
+          export default function() {
+            return (
+              <div data-testid="unstable-future-flag" className="p-test">
+                Unstable future flag test
+              </div>
+            );
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+  });
+
+  test.afterAll(() => appFixture.close());
+
+  test("uses Tailwind config", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/unstable-future-flag-test");
+    let locator = page.getByTestId("unstable-future-flag");
+    let padding = await locator.evaluate(
+      (element) => window.getComputedStyle(element).padding
+    );
+    expect(padding).toBe(TEST_PADDING_VALUE);
+  });
+});
+
+test.describe("Tailwind disabled", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      files: {
+        "remix.config.js": js`
+          module.exports = {
+            tailwind: false,
+          };
+        `,
+
+        "tailwind.config.js": js`
+          module.exports = {
+            content: ["./app/**/*.{ts,tsx,jsx,js}"],
+            theme: {
+              spacing: {
+                'test': ${JSON.stringify(TEST_PADDING_VALUE)}
+              },
+            },
+          };
+        `,
+
+        "app/tailwind.css": css`
+          @tailwind base;
+          @tailwind components;
+          @tailwind utilities;
+        `,
+
+        "app/root.jsx": js`
+          import { Links, Outlet } from "@remix-run/react";
+          import tailwindHref from "./tailwind.css"
+          export function links() {
+            return [
+              { rel: "stylesheet", href: tailwindHref },
+            ];
+          }
+          export default function Root() {
+            return (
+              <html>
+                <head>
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                </body>
+              </html>
+            )
+          }
+        `,
+        "app/routes/tailwind-disabled-test.jsx": js`
+          export default function() {
+            return (
+              <div data-testid="tailwind-disabled" className="p-test">
+                Tailwind disabled test
+              </div>
+            );
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+  });
+
+  test.afterAll(() => appFixture.close());
+
+  test("ignores Tailwind config", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/tailwind-disabled-test");
+    let locator = page.getByTestId("tailwind-disabled");
+    let padding = await locator.evaluate(
+      (element) => window.getComputedStyle(element).padding
+    );
+    expect(padding).not.toBe(TEST_PADDING_VALUE);
+  });
 });

@@ -86,8 +86,7 @@ export const createCookieFactory =
     unsign: UnsignFunction;
   }): CreateCookieFunction =>
   (name, cookieOptions = {}) => {
-    let { secrets, ...options } = {
-      secrets: [],
+    let { secrets = [], ...options } = {
       path: "/",
       sameSite: "lax" as const,
       ...cookieOptions,

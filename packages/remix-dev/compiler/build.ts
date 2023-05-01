@@ -1,25 +1,7 @@
-import type { RemixConfig } from "../config";
-import { warnOnce } from "./warnings";
-import { logCompileFailure } from "./onCompileFailure";
-import type { CompileOptions } from "./options";
-import { compile, createRemixCompiler } from "./remixCompiler";
+import * as Compiler from "./compiler";
+import type { Context } from "./context";
 
-export async function build(
-  config: RemixConfig,
-  {
-    mode = "production",
-    target = "node14",
-    sourcemap = false,
-    onWarning = warnOnce,
-    onCompileFailure = logCompileFailure,
-  }: Partial<CompileOptions> = {}
-): Promise<void> {
-  let compiler = createRemixCompiler(config, {
-    mode,
-    target,
-    sourcemap,
-    onWarning,
-    onCompileFailure,
-  });
-  await compile(compiler, { onCompileFailure });
+export async function build(ctx: Context): Promise<void> {
+  let compiler = await Compiler.create(ctx);
+  await compiler.compile();
 }

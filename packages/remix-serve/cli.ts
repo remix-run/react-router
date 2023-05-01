@@ -1,6 +1,7 @@
 import "./env";
 import path from "path";
 import os from "os";
+import { broadcastDevReady } from "@remix-run/node";
 
 import { createApp } from "./index";
 
@@ -16,6 +17,7 @@ if (!buildPathArg) {
 }
 
 let buildPath = path.resolve(process.cwd(), buildPathArg);
+let build = require(buildPath);
 
 let onListen = () => {
   let address =
@@ -31,9 +33,13 @@ let onListen = () => {
       `Remix App Server started at http://localhost:${port} (http://${address}:${port})`
     );
   }
+  if (
+    build.future?.unstable_dev !== false &&
+    process.env.NODE_ENV === "development"
+  ) {
+    broadcastDevReady(build);
+  }
 };
-
-let build = require(buildPath);
 
 let app = createApp(
   buildPath,
