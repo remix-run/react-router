@@ -91,22 +91,25 @@ export let serve = async (
       newAppServer.stderr.pipe(process.stderr, { end: false });
     if (newAppServer.stdout) {
       newAppServer.stdout
-        .pipe(new stream.PassThrough({
-          transform(chunk, _, callback) {
-            let str: string = chunk.toString();
-            let matches = str && str.matchAll(/\[REMIX DEV\] ([A-f0-9]+) ready/g);
-            if (matches) {
-              for (let match of matches) {
-                let buildHash = match[1];
-                if (buildHash === state.latestBuildHash) {
-                  state.buildHashChannel?.ok();
+        .pipe(
+          new stream.PassThrough({
+            transform(chunk, _, callback) {
+              let str: string = chunk.toString();
+              let matches =
+                str && str.matchAll(/\[REMIX DEV\] ([A-f0-9]+) ready/g);
+              if (matches) {
+                for (let match of matches) {
+                  let buildHash = match[1];
+                  if (buildHash === state.latestBuildHash) {
+                    state.buildHashChannel?.ok();
+                  }
                 }
               }
-            }
 
-            callback(null, chunk);
-          }
-        }))
+              callback(null, chunk);
+            },
+          })
+        )
         .pipe(process.stdout, { end: false });
     }
 
