@@ -3,9 +3,9 @@ import { test, expect } from "@playwright/test";
 import { createFixture, js } from "./helpers/create-fixture";
 import type { Fixture } from "./helpers/create-fixture";
 
-let fixture: Fixture;
-
 test.describe("rendering", () => {
+  let fixture: Fixture;
+
   let ROOT_$ = "FLAT";
   let ROOT_INDEX = "ROOT_INDEX";
   let FLAT_$ = "FLAT";
@@ -126,107 +126,5 @@ test.describe("rendering", () => {
   test("parentless deep match", async () => {
     let res = await fixture.requestDocument("/parentless/chip");
     expect(await res.text()).toMatch(PARENTLESS_$);
-  });
-});
-
-test.describe("root splat route without index", () => {
-  test("matches routes correctly (v1)", async ({ page }) => {
-    fixture = await createFixture({
-      future: { v2_routeConvention: false },
-      files: {
-        "app/routes/$.jsx": js`
-          export default function Component() {
-            return <h1>Hello Splat</h1>
-          }
-        `,
-      },
-    });
-
-    let res = await fixture.requestDocument("/");
-    expect(await res.text()).toMatch("Hello Splat");
-
-    res = await fixture.requestDocument("/splat");
-    expect(await res.text()).toMatch("Hello Splat");
-
-    res = await fixture.requestDocument("/splat/deep/path");
-    expect(await res.text()).toMatch("Hello Splat");
-  });
-
-  test("matches routes correctly (v2)", async ({ page }) => {
-    fixture = await createFixture({
-      future: { v2_routeConvention: true },
-      files: {
-        "app/routes/$.jsx": js`
-          export default function Component() {
-            return <h1>Hello Splat</h1>
-          }
-        `,
-      },
-    });
-
-    let res = await fixture.requestDocument("/");
-    expect(await res.text()).toMatch("Hello Splat");
-
-    res = await fixture.requestDocument("/splat");
-    expect(await res.text()).toMatch("Hello Splat");
-
-    res = await fixture.requestDocument("/splat/deep/path");
-    expect(await res.text()).toMatch("Hello Splat");
-  });
-});
-
-test.describe("root splat route with index", () => {
-  test("matches routes correctly (v1)", async ({ page }) => {
-    fixture = await createFixture({
-      future: { v2_routeConvention: false },
-      files: {
-        "app/routes/index.jsx": js`
-          export default function Component() {
-            return <h1>Hello Index</h1>
-          }
-        `,
-        "app/routes/$.jsx": js`
-          export default function Component() {
-            return <h1>Hello Splat</h1>
-          }
-        `,
-      },
-    });
-
-    let res = await fixture.requestDocument("/");
-    expect(await res.text()).toMatch("Hello Index");
-
-    res = await fixture.requestDocument("/splat");
-    expect(await res.text()).toMatch("Hello Splat");
-
-    res = await fixture.requestDocument("/splat/deep/path");
-    expect(await res.text()).toMatch("Hello Splat");
-  });
-
-  test("matches routes correctly (v2)", async ({ page }) => {
-    fixture = await createFixture({
-      future: { v2_routeConvention: true },
-      files: {
-        "app/routes/_index.jsx": js`
-          export default function Component() {
-            return <h1>Hello Index</h1>
-          }
-        `,
-        "app/routes/$.jsx": js`
-          export default function Component() {
-            return <h1>Hello Splat</h1>
-          }
-        `,
-      },
-    });
-
-    let res = await fixture.requestDocument("/");
-    expect(await res.text()).toMatch("Hello Index");
-
-    res = await fixture.requestDocument("/splat");
-    expect(await res.text()).toMatch("Hello Splat");
-
-    res = await fixture.requestDocument("/splat/deep/path");
-    expect(await res.text()).toMatch("Hello Splat");
   });
 });

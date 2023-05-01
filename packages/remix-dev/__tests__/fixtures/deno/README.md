@@ -85,7 +85,7 @@ deploying to [Deno Deploy](https://deno.com/deploy).
 3. Replace `<your deno deploy project>` in the `deploy` script in `package.json`
    with your Deno Deploy project name:
 
-```json
+```json filename=package.json
 {
   "scripts": {
     "deploy": "deployctl deploy --project=<your deno deploy project> --include=.cache,build,public ./build/index.js"

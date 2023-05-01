@@ -119,7 +119,7 @@ export class PlaywrightFixture {
   /**
    * Perform any interaction and wait for the network to be idle:
    *
-   * ```js
+   * ```ts
    * await app.waitForNetworkAfter(page, () => app.page.focus("#el"))
    * ```
    */
