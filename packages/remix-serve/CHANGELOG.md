@@ -1,70 +1,13 @@
 # `@remix-run/serve`
 
-## 1.16.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.16.0-pre.7`
-  - `@remix-run/node@1.16.0-pre.7`
-
-## 1.16.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.16.0-pre.6`
-  - `@remix-run/express@1.16.0-pre.6`
-
-## 1.16.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.16.0-pre.5`
-  - `@remix-run/node@1.16.0-pre.5`
-
-## 1.16.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.16.0-pre.4`
-  - `@remix-run/node@1.16.0-pre.4`
-
-## 1.16.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.16.0-pre.3`
-  - `@remix-run/node@1.16.0-pre.3`
-
-## 1.16.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.16.0-pre.2`
-  - `@remix-run/express@1.16.0-pre.2`
-
-## 1.16.0-pre.1
-
-### Patch Changes
-
-- rename devReady to broadcastDevReady ([#6194](https://github.com/remix-run/remix/pull/6194))
-- Updated dependencies:
-  - `@remix-run/node@1.16.0-pre.1`
-  - `@remix-run/express@1.16.0-pre.1`
-
-## 1.16.0-pre.0
+## 1.16.0
 
 ### Patch Changes
 
 - add `@remix-run/node/install` side-effect to allow `node --require @remix-run/node/install` ([#6132](https://github.com/remix-run/remix/pull/6132))
 - Updated dependencies:
-  - `@remix-run/express@1.16.0-pre.0`
-  - `@remix-run/node@1.16.0-pre.0`
+  - `@remix-run/express@1.16.0`
+  - `@remix-run/node@1.16.0`
 
 ## 1.15.0
 

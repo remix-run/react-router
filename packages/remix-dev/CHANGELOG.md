@@ -1,64 +1,6 @@
 # `@remix-run/dev`
 
-## 1.16.0-pre.7
-
-### Patch Changes
-
-- don't forward on injects for CSS compiler as it's never loading any JS code and esbuild seems to have a bug with CSS entries + inject ([#6238](https://github.com/remix-run/remix/pull/6238))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.7`
-
-## 1.16.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.6`
-
-## 1.16.0-pre.5
-
-### Patch Changes
-
-- look for @remix-run/serve in devDependencies when running remix dev ([#6228](https://github.com/remix-run/remix/pull/6228))
-- write mjs server output files ([#6225](https://github.com/remix-run/remix/pull/6225))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.5`
-
-## 1.16.0-pre.4
-
-### Patch Changes
-
-- Revert "Fix a bug in route matching that was preventing a single splat (`$.jsx`) route from matching a root `/` path" ([#6222](https://github.com/remix-run/remix/pull/6222))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.4`
-
-## 1.16.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.3`
-
-## 1.16.0-pre.2
-
-### Patch Changes
-
-- add logDevReady as replacement for platforms that can't initialize async I/O outside of the request response lifecycle. ([#6204](https://github.com/remix-run/remix/pull/6204))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.2`
-
-## 1.16.0-pre.1
-
-### Patch Changes
-
-- fix(react,dev): dev chunking and refresh race condition ([#6201](https://github.com/remix-run/remix/pull/6201))
-- rename devReady to broadcastDevReady ([#6194](https://github.com/remix-run/remix/pull/6194))
-- forcibly kill app server during dev ([#6197](https://github.com/remix-run/remix/pull/6197))
-- show first compilation error instead of cancelation errors ([#6202](https://github.com/remix-run/remix/pull/6202))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.1`
-
-## 1.16.0-pre.0
+## 1.16.0
 
 ### Minor Changes
 
@@ -66,235 +8,7 @@
 
   These CSS bundling features were previously only available via `future.unstable_cssModules`, `future.unstable_vanillaExtract` and `future.unstable_cssSideEffectImports` options in `remix.config.js`, but they have now been stabilized.
 
-  **CSS Bundle Setup**
-
-  In order to use these features, you first need to set up CSS bundling in your project. First install the `@remix-run/css-bundle` package.
-
-  ```sh
-  npm i @remix-run/css-bundle
-  ```
-
-  Then return the exported `cssBundleHref` as a stylesheet link descriptor from the `links` function at the root of your app.
-
-  ```tsx
-  import type { LinksFunction } from "@remix-run/node"; // or cloudflare/deno
-  import { cssBundleHref } from "@remix-run/css-bundle";
-
-  export const links: LinksFunction = () => {
-    return [
-      ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-      // ...
-    ];
-  };
-  ```
-
-  **CSS Modules**
-
-  To use [CSS Modules](https://github.com/css-modules/css-modules), you can opt in via the `.module.css` file name convention. For example:
-
-  ```css
-  .root {
-    border: solid 1px;
-    background: white;
-    color: #454545;
-  }
-  ```
-
-  ```tsx
-  import styles from "./styles.module.css";
-
-  export const Button = React.forwardRef(({ children, ...props }, ref) => {
-    return <button {...props} ref={ref} className={styles.root} />;
-  });
-  Button.displayName = "Button";
-  ```
-
-  **Vanilla Extract**
-
-  To use [Vanilla Extract](http://vanilla-extract.style), first install its `css` package as a dev dependency.
-
-  ```sh
-  npm install -D @vanilla-extract/css
-  ```
-
-  You can then opt in via the `.css.ts`/`.css.js` file name convention. For example:
-
-  ```ts
-  import { style } from "@vanilla-extract/css";
-
-  export const root = style({
-    border: "solid 1px",
-    background: "white",
-    color: "#454545",
-  });
-  ```
-
-  ```tsx
-  import * as styles from "./styles.css"; // Note that `.ts` is omitted here
-
-  export const Button = React.forwardRef(({ children, ...props }, ref) => {
-    return <button {...props} ref={ref} className={styles.root} />;
-  });
-  Button.displayName = "Button";
-  ```
-
-  **CSS Side-Effect Imports**
-
-  Any CSS files that are imported as side-effects (e.g. `import "./styles.css"`) will be automatically included in the CSS bundle.
-
-  Since JavaScript runtimes don't support importing CSS in this way, you'll also need to add any packages using CSS side-effect imports to the [`serverDependenciesToBundle`](https://remix.run/docs/en/main/file-conventions/remix-config#serverdependenciestobundle) option in your `remix.config.js` file. This ensures that any CSS imports are compiled out of your code before running it on the server. For example, to use [React Spectrum](https://react-spectrum.adobe.com/react-spectrum/index.html):
-
-  ```js filename=remix.config.js
-  // remix.config.js
-  module.exports = {
-    serverDependenciesToBundle: [
-      /^@adobe\/react-spectrum/,
-      /^@react-spectrum/,
-      /^@spectrum-icons/,
-    ],
-    // ...
-  };
-  ```
-
-- Dev server improvements ([#6133](https://github.com/remix-run/remix/pull/6133))
-
-  - Push-based app server syncing that doesn't rely on polling
-  - App server as a managed subprocess
-  - Gracefully handle new files and routes without crashing
-  - Statically serve static assets to avoid fetch errors during app server reboots
-
-  # Guide
-
-  Enable `unstable_dev` in `remix.config.js`:
-
-  ```js
-  module.exports = {
-    future: {
-      unstable_dev: true,
-    },
-  };
-  ```
-
-  ## Remix App Server
-
-  Update `package.json` scripts
-
-  ```json
-  {
-    "scripts": {
-      "dev": "remix dev"
-    }
-  }
-  ```
-
-  That's it!
-
-  ```sh
-  npm run dev
-  ```
-
-  ## Other app servers
-
-  Update `package.json` scripts, specifying the command to run you app server with the `-c`/`--command` flag:
-
-  ```json
-  {
-    "scripts": {
-      "dev": "remix dev -c 'node ./server.js'"
-    }
-  }
-  ```
-
-  Then, call `devReady` in your server when its up and running.
-
-  For example, an Express server would call `devReady` at the end of `listen`:
-
-  ```js
-  // <other imports>
-  import { devReady } from "@remix-run/node";
-
-  // Path to Remix's server build directory ('build/' by default)
-  const BUILD_DIR = path.join(process.cwd(), "build");
-
-  // <code setting up your express server>
-
-  app.listen(3000, () => {
-    const build = require(BUILD_DIR);
-    console.log("Ready: http://localhost:" + port);
-
-    // in development, call `devReady` _after_ your server is up and running
-    if (process.env.NODE_ENV === "development") {
-      devReady(build);
-    }
-  });
-  ```
-
-  That's it!
-
-  ```sh
-  npm run dev
-  ```
-
-  # Configuration
-
-  Most users won't need to configure the dev server, but you might need to if:
-
-  - You are setting up custom origins for SSL support or for Docker networking
-  - You want to handle server updates yourself (e.g. via require cache purging)
-
-  ```js
-  module.exports = {
-    future: {
-      unstable_dev: {
-        // Command to run your app server
-        command: "wrangler", // default: `remix-serve ./build`
-        // HTTP(S) scheme used when sending `devReady` messages to the dev server
-        httpScheme: "https", // default: `"http"`
-        // HTTP(S) host used when sending `devReady` messages to the dev server
-        httpHost: "mycustomhost", // default: `"localhost"`
-        // HTTP(S) port internally used by the dev server to statically serve built assets and to receive app server `devReady` messages
-        httpPort: 8001, // default: Remix chooses an open port in the range 3001-3099
-        // Websocket port internally used by the dev server for sending updates to the browser (Live reload, HMR, HDR)
-        websocketPort: 8002, // default: Remix chooses an open port in the range 3001-3099
-        // Whether the app server should be restarted when app is rebuilt
-        // See `Advanced > restart` for more
-        restart: false, // default: `true`
-      },
-    },
-  };
-  ```
-
-  You can also configure via flags. For example:
-
-  ```sh
-  remix dev -c 'nodemon ./server.mjs' --http-port=3001 --websocket-port=3002 --no-restart
-  ```
-
-  See `remix dev --help` for more details.
-
-  ### restart
-
-  If you want to manage app server updates yourself, you can use the `--no-restart` flag so that the Remix dev server doesn't restart the app server subprocess when a rebuild succeeds.
-
-  For example, if you rely on require cache purging to keep your app server running while server changes are pulled in, then you'll want to use `--no-restart`.
-
-  🚨 It is then your responsibility to call `devReady` whenever server changes are incorporated in your app server. 🚨
-
-  So for require cache purging, you'd want to:
-
-  1. Purge the require cache
-  2. `require` your server build
-  3. Call `devReady` within a `if (process.env.NODE_ENV === 'development')`
-
-  ([Looking at you, Kent](https://github.com/kentcdodds/kentcdodds.com/blob/main/server/index.ts#L298) 😆)
-
-  ***
-
-  The ultimate solution for `--no-restart` would be for you to implement _server-side_ HMR for your app server.
-  Note: server-side HMR is not to be confused with the client-side HMR provided by Remix.
-  Then your app server could continuously update itself with new build with 0 downtime and without losing in-memory data that wasn't affected by the server changes.
-
-  This is left as an exercise to the reader.
+  In order to use these features, check out our guide to [CSS bundling](https://remix.run/docs/en/1.16.0/guides/styling#css-bundling) in your project.
 
 - Stabilize built-in PostCSS support via the new `postcss` option in `remix.config.js`. As a result, the `future.unstable_postcss` option has also been deprecated. ([#5960](https://github.com/remix-run/remix/pull/5960))
 
@@ -302,29 +16,25 @@
 
   If you followed the original PostCSS setup guide for Remix, you may have a folder structure that looks like this, separating your source files from its processed output:
 
-  ```
-  .
-  ├── app
-  │   └── styles (processed files)
-  │       ├── app.css
-  │       └── routes
-  │           └── index.css
-  └── styles (source files)
-      ├── app.css
-      └── routes
-          └── index.css
-  ```
+      .
+      ├── app
+      │   └── styles (processed files)
+      │       ├── app.css
+      │       └── routes
+      │           └── index.css
+      └── styles (source files)
+          ├── app.css
+          └── routes
+              └── index.css
 
   After you've enabled the new `postcss` option, you can delete the processed files from `app/styles` folder and move your source files from `styles` to `app/styles`:
 
-  ```
-  .
-  ├── app
-  │   └── styles (source files)
-  │       ├── app.css
-  │       └── routes
-  │           └── index.css
-  ```
+      .
+      ├── app
+      │   └── styles (source files)
+      │       ├── app.css
+      │       └── routes
+      │           └── index.css
 
   You should then remove `app/styles` from your `.gitignore` file since it now contains source files rather than processed output.
 
@@ -385,18 +95,140 @@
   }
   ```
 
+- The Remix dev server spins up your app server as a managed subprocess. ([#6133](https://github.com/remix-run/remix/pull/6133))
+  This keeps your development environment as close to production as possible.
+  It also means that the Remix dev server is compatible with _any_ app server.
+
+  By default, the dev server will use the Remix App Server, but you opt to use your own app server by specifying the command to run it via the `-c`/`--command` flag:
+
+  ```sh
+  remix dev # uses `remix-serve <serve build path>` as the app server
+  remix dev -c "node ./server.js" # uses your custom app server at `./server.js`
+  ```
+
+  The dev server will:
+
+  - force `NODE_ENV=development` and warn you if it was previously set to something else
+  - rebuild your app whenever your Remix app code changes
+  - restart your app server whenever rebuilds succeed
+  - handle live reload and HMR + Hot Data Revalidation
+
+  ### App server coordination
+
+  In order to manage your app server, the dev server needs to be told what server build is currently being used by your app server.
+  This works by having the app server send a "I'm ready!" message with the Remix server build hash as the payload.
+
+  This is handled automatically in Remix App Server and is set up for you via calls to `broadcastDevReady` or `logDevReady` in the official Remix templates.
+
+  If you are not using Remix App Server and your server doesn't call `broadcastDevReady`, you'll need to call it in your app server _after_ it is up and running.
+  For example, in an Express server:
+
+  ```js
+  // server.js
+  // <other imports>
+  import { broadcastDevReady } from "@remix-run/node";
+
+  // Path to Remix's server build directory ('build/' by default)
+  const BUILD_DIR = path.join(process.cwd(), "build");
+
+  // <code setting up your express server>
+
+  app.listen(3000, () => {
+    const build = require(BUILD_DIR);
+    console.log("Ready: http://localhost:" + port);
+
+    // in development, call `broadcastDevReady` _after_ your server is up and running
+    if (process.env.NODE_ENV === "development") {
+      broadcastDevReady(build);
+    }
+  });
+  ```
+
+  ### Options
+
+  Options priority order is: 1. flags, 2. config, 3. defaults.
+
+  | Option         | flag               | config           | default                           |
+  | -------------- | ------------------ | ---------------- | --------------------------------- |
+  | Command        | `-c` / `--command` | `command`        | `remix-serve <server build path>` |
+  | HTTP(S) scheme | `--http-scheme`    | `httpScheme`     | `http`                            |
+  | HTTP(S) host   | `--http-host`      | `httpHost`       | `localhost`                       |
+  | HTTP(S) port   | `--http-port`      | `httpPort`       | Dynamically chosen open port      |
+  | Websocket port | `--websocket-port` | `websocketPort`  | Dynamically chosen open port      |
+  | No restart     | `--no-restart`     | `restart: false` | `restart: true`                   |
+
+  🚨 The `--http-*` flags are only used for internal dev server <-> app server communication.
+  Your app will run on your app server's normal URL.
+
+  To set `unstable_dev` configuration, replace `unstable_dev: true` with `unstable_dev: { <options> }`.
+  For example, to set the HTTP(S) port statically:
+
+  ```js
+  // remix.config.js
+  module.exports = {
+    future: {
+      unstable_dev: {
+        httpPort: 8001,
+      },
+    },
+  };
+  ```
+
+  #### SSL and custom hosts
+
+  You should only need to use the `--http-*` flags and `--websocket-port` flag if you need fine-grain control of what scheme/host/port for the dev server.
+  If you are setting up SSL or Docker networking, these are the flags you'll want to use.
+
+  🚨 Remix **will not** set up SSL and custom host for you.
+  The `--http-scheme` and `--http-host` flag are for you to tell Remix how you've set things up.
+  It is your task to set up SSL certificates and host files if you want those features.
+
+  #### `--no-restart` and `require` cache purging
+
+  If you want to manage server changes yourself, you can use the `--no-restart` flag to tell the dev server to refrain from restarting your app server when builds succeed:
+
+  ```sh
+  remix dev -c "node ./server.js" --no-restart
+  ```
+
+  For example, you could purge the `require` cache of your app server to keep it running while picking up server changes.
+  If you do so, you should watch the server build path (`build/` by default) for changes and only purge the `require` cache when changes are detected.
+
+  🚨 If you use `--no-restart`, it is your responsibility to call `broadcastDevReady` when your app server has picked up server changes.
+  For example, with `chokidar`:
+
+  ```js
+  // server.dev.js
+  const BUILD_PATH = path.resolve(__dirname, "build");
+
+  const watcher = chokidar.watch(BUILD_PATH);
+
+  watcher.on("change", () => {
+    // 1. purge require cache
+    purgeRequireCache();
+    // 2. load updated server build
+    const build = require(BUILD_PATH);
+    // 3. tell dev server that this app server is now ready
+    broadcastDevReady(build);
+  });
+  ```
+
 ### Patch Changes
 
 - Fix absolute paths in CSS `url()` rules when using CSS Modules, Vanilla Extract and CSS side-effect imports ([#5788](https://github.com/remix-run/remix/pull/5788))
-- add warning for v2 "cjs"->"esm" serverModuleFormat default change ([#6154](https://github.com/remix-run/remix/pull/6154))
-- Use correct require context in bareImports plugin. ([#6181](https://github.com/remix-run/remix/pull/6181))
+- look for @remix-run/serve in `devDependencies` when running remix dev ([#6228](https://github.com/remix-run/remix/pull/6228))
+- add warning for v2 "cjs"->"esm" `serverModuleFormat` default change ([#6154](https://github.com/remix-run/remix/pull/6154))
+- write mjs server output files ([#6225](https://github.com/remix-run/remix/pull/6225))
+- fix(react,dev): dev chunking and refresh race condition ([#6201](https://github.com/remix-run/remix/pull/6201))
+- Use correct require context in `bareImports` plugin. ([#6181](https://github.com/remix-run/remix/pull/6181))
 - use minimatch for regex instead of glob-to-regexp ([#6017](https://github.com/remix-run/remix/pull/6017))
+- add `logDevReady` as replacement for platforms that can't initialize async I/O outside of the request response lifecycle. ([#6204](https://github.com/remix-run/remix/pull/6204))
 - Use the "automatic" JSX runtime when processing MDX files. ([#6098](https://github.com/remix-run/remix/pull/6098))
-- Fix a bug in route matching that wass preventing a single splat (`$.jsx`) route from matching a root `/` path ([#6130](https://github.com/remix-run/remix/pull/6130))
+- forcibly kill app server during dev ([#6197](https://github.com/remix-run/remix/pull/6197))
+- show first compilation error instead of cancelation errors ([#6202](https://github.com/remix-run/remix/pull/6202))
 - Resolve imports from route modules across the graph back to the virtual module created by the v2 routes plugin. This fixes issues where we would duplicate portions of route modules that were imported. ([#6098](https://github.com/remix-run/remix/pull/6098))
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.16.0-pre.0`
-  - `@remix-run/serve@1.16.0-pre.0`
+  - `@remix-run/server-runtime@1.16.0`
 
 ## 1.15.0
 
