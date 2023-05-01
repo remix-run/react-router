@@ -1,5 +1,7 @@
 # `@remix-run/server-runtime`
 
+## 1.16.0-pre.7
+
 ## 1.16.0-pre.6
 
 ### Patch Changes

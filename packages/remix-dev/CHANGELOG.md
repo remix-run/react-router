@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.16.0-pre.7
+
+### Patch Changes
+
+- don't forward on injects for CSS compiler as it's never loading any JS code and esbuild seems to have a bug with CSS entries + inject ([#6238](https://github.com/remix-run/remix/pull/6238))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.16.0-pre.7`
+
 ## 1.16.0-pre.6
 
 ### Patch Changes

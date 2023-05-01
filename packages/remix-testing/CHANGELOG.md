@@ -1,5 +1,13 @@
 # `@remix-run/testing`
 
+## 1.16.0-pre.7
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/node@1.16.0-pre.7`
+  - `@remix-run/react@1.16.0-pre.7`
+
 ## 1.16.0-pre.6
 
 ### Patch Changes
