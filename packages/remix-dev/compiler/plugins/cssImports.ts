@@ -30,26 +30,56 @@ export function cssFilePlugin({
     name: "css-file",
 
     async setup(build) {
-      let buildOps = build.initialOptions;
+      let {
+        absWorkingDir,
+        assetNames,
+        chunkNames,
+        conditions,
+        define,
+        external,
+        sourceRoot,
+        treeShaking,
+        tsconfig,
+        format,
+        loader,
+        mainFields,
+        nodePaths,
+        platform,
+        publicPath,
+        target,
+      } = build.initialOptions;
 
       let postcssProcessor = await getPostcssProcessor({ config });
 
       build.onLoad({ filter: /\.css$/ }, async (args) => {
         let { metafile, outputFiles, warnings, errors } = await esbuild.build({
-          ...buildOps,
+          absWorkingDir,
+          assetNames,
+          chunkNames,
+          conditions,
+          define,
+          external,
+          format,
+          mainFields,
+          nodePaths,
+          platform,
+          publicPath,
+          sourceRoot,
+          target,
+          treeShaking,
+          tsconfig,
           minify: options.mode === "production",
+          bundle: true,
           minifySyntax: true,
           metafile: true,
           write: false,
           sourcemap: Boolean(options.sourcemap && postcssProcessor), // We only need source maps if we're processing the CSS with PostCSS
           splitting: false,
-          stdin: undefined,
-          outfile: undefined,
           outdir: config.assetsBuildDirectory,
-          entryNames: buildOps.assetNames,
+          entryNames: assetNames,
           entryPoints: [args.path],
           loader: {
-            ...buildOps.loader,
+            ...loader,
             ".css": "css",
           },
           plugins: [
