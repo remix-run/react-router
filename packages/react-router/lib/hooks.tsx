@@ -263,7 +263,9 @@ export function useOutletContext<Context = unknown>(): Context {
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
-  if (outlet) {
+  // Don't hide ancestor contexts through intermediary Outlet's without context
+  // https://github.com/remix-run/react-router/issues/8492
+  if (outlet && context) {
     return (
       <OutletContext.Provider value={context}>{outlet}</OutletContext.Provider>
     );

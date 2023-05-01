@@ -6,6 +6,7 @@ import {
   Route,
   useOutlet,
   useOutletContext,
+  Outlet,
 } from "react-router";
 
 describe("useOutlet", () => {
@@ -349,6 +350,34 @@ describe("useOutlet", () => {
             </li>
           </ul>
         </div>
+      `);
+    });
+
+    it("returns the context to deep children", () => {
+      function Page() {
+        let context = useOutletContext() as { someKey: string };
+        return <p>{context?.someKey}</p>;
+      }
+
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/child"]}>
+            <Routes>
+              <Route path="/" element={<Outlet context={{ someKey: 1 }} />}>
+                <Route path="child" element={<Outlet />}>
+                  <Route index element={<Page />} />
+                </Route>
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <p>
+          1
+        </p>
       `);
     });
   });
