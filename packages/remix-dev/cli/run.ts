@@ -48,6 +48,7 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     --http-host         HTTP(S) host for the dev server. Default: localhost
     --http-port         HTTP(S) port for the dev server. Default: any open port
     --no-restart        Do not restart the app server when rebuilds occur.
+    --public-directory  Path to public assets directory relative to Remix project root. Default: public
     --websocket-port    Websocket port for the dev server. Default: any open port
   \`init\` Options:
     --no-delete         Skip deleting the \`remix.init\` script
@@ -188,6 +189,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--http-host": String,
       "--http-port": Number,
       "--no-restart": Boolean,
+      "--public-directory": String,
       "--websocket-port": Number,
     },
     {
@@ -224,6 +226,10 @@ export async function run(argv: string[] = process.argv.slice(2)) {
   if (flags["http-port"]) {
     flags.httpPort = flags["http-port"];
     delete flags["http-port"];
+  }
+  if (flags["public-directory"]) {
+    flags.publicDirectory = flags["public-directory"];
+    delete flags["public-directory"];
   }
   if (flags["websocket-port"]) {
     flags.websocketPort = flags["websocket-port"];

@@ -45,6 +45,7 @@ type Dev = {
   httpPort?: number;
   websocketPort?: number;
   restart?: boolean;
+  publicDirectory?: string;
 };
 
 interface FutureConfig {

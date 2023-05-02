@@ -230,7 +230,7 @@ test("HMR", async ({ page }) => {
     }
   });
 
-  let portRange = makeRange(3080, 3099);
+  let portRange = makeRange(4080, 4099);
   let appServerPort = await getPort({ port: portRange });
   let httpPort = await getPort({ port: portRange });
   let webSocketPort = await getPort({ port: portRange });
