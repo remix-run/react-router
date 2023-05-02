@@ -174,10 +174,10 @@ function useIsomorphicLayoutEffect(
  * @see https://reactrouter.com/hooks/use-navigate
  */
 export function useNavigate(): NavigateFunction {
-  let isDataRouter = React.useContext(DataRouterContext) != null;
+  let { isDataRoute } = React.useContext(RouteContext);
   // Conditional usage is OK here because the usage of a data router is static
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  return isDataRouter ? useNavigateStable() : useNavigateUnstable();
+  return isDataRoute ? useNavigateStable() : useNavigateUnstable();
 }
 
 function useNavigateUnstable(): NavigateFunction {
@@ -697,7 +697,11 @@ export function _renderMatches(
       return (
         <RenderedRoute
           match={match}
-          routeContext={{ outlet, matches }}
+          routeContext={{
+            outlet,
+            matches,
+            isDataRoute: dataRouterState != null,
+          }}
           children={children}
         />
       );
@@ -713,7 +717,7 @@ export function _renderMatches(
         component={errorElement}
         error={error}
         children={getChildren()}
-        routeContext={{ outlet: null, matches }}
+        routeContext={{ outlet: null, matches, isDataRoute: true }}
       />
     ) : (
       getChildren()
