@@ -38,18 +38,19 @@ You may need to make changes to a pre-release prior to publishing a final stable
 ### Publishing the stable release
 
 - Exit Changesets pre-release mode: `yarn changeset pre exit`.
-- Commit the deleted pre-release file along with any unpublished changesets, and push the the `release-*` branch to GitHub.
+- Commit the edited pre-release file along with any unpublished changesets, and push the the `release-*` branch to GitHub.
 - Wait for the release workflow to finish. The Changesets action in the workflow will open a PR that will increment all versions and generate the changelogs for the stable release.
 - Review the updated `CHANGELOG` files and make any adjustments necessary.
   - We should remove the changelogs for all pre-releases ahead of publishing the stable version.
   - [TODO: We should automate this]
+- Prepare the github release notes
+  - Copy the relevant changelog entries from all packages into the Release Notes and adjust accordingly, matching the format used by prior releases
 - Merge the PR into the `release-*` branch.
 - Once the PR is merged, the release workflow will publish the updated packages to npm.
 - Once the release is published:
   - merge the `release-*` branch into `main` and push it up to GitHub
   - merge the `release-*` branch into `dev` and push it up to GitHub
   - Convert the `react-router@6.x.y` tag to a Release on Github with the name `v6.x.y`
-  - Copy the relevant changelog entries from all packages into the Release Notes and adjust accordingly, matching the format used by prior releases
 
 ### Hotfix releases
 

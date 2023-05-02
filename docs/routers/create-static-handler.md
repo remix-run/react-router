@@ -82,13 +82,52 @@ interface StaticHandler {
 
 These are the same `routes`/`basename` you would pass to [`createBrowserRouter`][createbrowserrouter]
 
-## `handler.query(request)`
+## `handler.query(request, opts)`
 
 The `handler.query()` method takes in a Fetch request, performs route matching, and executes all relevant route action/loader methods depending on the request. The return `context` value contains all of the information required to render the HTML document for the request (route-level `actionData`, `loaderData`, `errors`, etc.). If any of the matched routes return or throw a redirect response, then `query()` will return that redirect in the form of Fetch `Response`.
 
-## `handler.queryRoute(request, routeId?)`
+### `opts.requestContext`
 
-The `handler.queryRoute` is a more-targeted version that queries a singular route and runs it's loader or action based on the request. You can specify a specific `routeId` or let it match the appropriate route automatically based on the request. The return value is the values returned from the loader or action, which is usually a `Response` object.
+If you need to pass information from your server into Remix actions/loaders, you can do so with `opts.requestContext` and it will show up in your actions/loaders in the context parameter.
+
+```ts
+const routes = [{
+  path: '/',
+  loader({ request, context }) {
+    // Access `context.dataFormExpressMiddleware` here
+  },
+}];
+
+export async function render(req: express.Request) {
+  let { query, dataRoutes } = createStaticHandler(routes);
+  let remixRequest = createFetchRequest(request);
+  let staticHandlerContext = await query(remixRequest, {
+    // Pass data from the express layer to the remix layer here
+    requestContext: {
+      dataFromExpressMiddleware: req.something
+    }
+ });
+ ...
+}
+```
+
+## `handler.queryRoute(request, opts)`
+
+The `handler.queryRoute` is a more-targeted version that queries a singular route and runs it's loader or action based on the request. By default, it will match the target route based on the request URL. The return value is the values returned from the loader or action, which is usually a `Response` object.
+
+### `opts.routeId`
+
+If you need to call a specific route action/loader that doesn't exactly correspond to the URL (for example, a parent route loader), you can specify a `routeId`:
+
+```js
+staticHandler.queryRoute(new Request("/parent/child"), {
+  routeId: "parent",
+});
+```
+
+### `opts.requestContext`
+
+If you need to pass information from your server into Remix actions/loaders, you can do so with `opts.requestContext` and it will show up in your actions/loaders in the context parameter. See the example in the `query()` section above.
 
 **See also:**
 
