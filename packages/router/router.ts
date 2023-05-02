@@ -3094,7 +3094,7 @@ function normalizeTo(
   let path = resolveTo(
     to ? to : ".",
     getPathContributingMatches(contextualMatches).map((m) => m.pathnameBase),
-    location.pathname,
+    stripBasename(location.pathname, basename) || location.pathname,
     relative === "path"
   );
 

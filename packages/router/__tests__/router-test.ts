@@ -16220,5 +16220,29 @@ describe("a router", () => {
       expect(createPath(router.state.location)).toBe("/path");
       expect(router.state.matches[2].route.index).toBe(true);
     });
+
+    it("handles pathless relative routing when a basename is present", () => {
+      let router = createRouter({
+        routes: [{ path: "/path" }],
+        future: { v7_prependBasename: true },
+        history: createMemoryHistory({ initialEntries: ["/base/path"] }),
+        basename: "/base",
+      }).initialize();
+
+      expect(createPath(router.state.location)).toBe("/base/path");
+      expect(router.state.matches[0].route.path).toBe("/path");
+
+      router.navigate(".?a=1");
+      expect(createPath(router.state.location)).toBe("/base/path?a=1");
+      expect(router.state.matches[0].route.path).toBe("/path");
+
+      router.navigate("?b=2");
+      expect(createPath(router.state.location)).toBe("/base/path?b=2");
+      expect(router.state.matches[0].route.path).toBe("/path");
+
+      router.navigate("/path?c=3");
+      expect(createPath(router.state.location)).toBe("/base/path?c=3");
+      expect(router.state.matches[0].route.path).toBe("/path");
+    });
   });
 });
