@@ -689,6 +689,14 @@ export function _renderMatches(
       let children: React.ReactNode;
       if (error) {
         children = errorElement;
+      } else if (match.route.Component) {
+        // Note: This is a de-optimized path since React won't re-use the
+        // ReactElement since it's identity changes with each new
+        // React.createElement call.  We keep this so folks can use
+        // `<Route Component={...}>` in `<Routes>` but generally `Component`
+        // usage is only advised in `RouterProvider` when we can convert it to
+        // `element` ahead of time.
+        children = <match.route.Component />;
       } else if (match.route.element) {
         children = match.route.element;
       } else {
