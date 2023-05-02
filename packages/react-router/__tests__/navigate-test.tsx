@@ -487,26 +487,23 @@ describe("<Navigate>", () => {
   });
 
   it("handles sync relative navigations in StrictMode using a data router", async () => {
-    const router = createMemoryRouter(
-      [
-        {
-          path: "/a",
-          children: [
-            {
-              index: true,
-              // This is a relative navigation from the current location of /a.
-              // Ensure we don't route from /a -> /a/b -> /a/b/b
-              Component: () => <Navigate to={"b"} replace />,
-            },
-            {
-              path: "b",
-              element: <h1>Page B</h1>,
-            },
-          ],
-        },
-      ],
-      { initialEntries: ["/a"] }
-    );
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        children: [
+          {
+            index: true,
+            // This is a relative navigation from the current location of /a.
+            // Ensure we don't route from / -> /b -> /b/b
+            Component: () => <Navigate to={"b"} replace />,
+          },
+          {
+            path: "b",
+            element: <h1>Page B</h1>,
+          },
+        ],
+      },
+    ]);
 
     let { container } = render(
       <React.StrictMode>
