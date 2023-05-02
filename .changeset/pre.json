@@ -8,5 +8,11 @@
     "react-router-native": "6.11.0",
     "@remix-run/router": "1.6.0"
   },
-  "changesets": []
+  "changesets": [
+    "descendant-routes-component",
+    "empty-path-basename-navigation",
+    "navigate-from-routes",
+    "navigate-strict-mode",
+    "same-hash-links"
+  ]
 }
