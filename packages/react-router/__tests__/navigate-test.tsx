@@ -485,6 +485,88 @@ describe("<Navigate>", () => {
       </div>"
     `);
   });
+
+  it("handles sync relative navigations in StrictMode using a data router", async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/a",
+          children: [
+            {
+              index: true,
+              // This is a relative navigation from the current location of /a.
+              // Ensure we don't route from /a -> /a/b -> /a/b/b
+              Component: () => <Navigate to={"b"} replace />,
+            },
+            {
+              path: "b",
+              element: <h1>Page B</h1>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/a"] }
+    );
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("handles async relative navigations in StrictMode using a data router", async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/a",
+          children: [
+            {
+              index: true,
+              // This is a relative navigation from the current location of /a.
+              // Ensure we don't route from /a -> /a/b -> /a/b/b
+              Component: () => <Navigate to={"b"} replace />,
+            },
+            {
+              path: "b",
+              async loader() {
+                await new Promise((r) => setTimeout(r, 10));
+                return null;
+              },
+              element: <h1>Page B</h1>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/a"] }
+    );
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+      </div>"
+    `);
+  });
 });
 
 function getHtml(container: HTMLElement) {
