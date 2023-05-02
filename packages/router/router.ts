@@ -2474,7 +2474,13 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
-    inFlightDataRoutes = newRoutes;
+    manifest = {};
+    inFlightDataRoutes = convertRoutesToDataRoutes(
+      newRoutes,
+      mapRouteProperties,
+      undefined,
+      manifest
+    );
   }
 
   router = {
