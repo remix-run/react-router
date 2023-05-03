@@ -15351,7 +15351,7 @@ describe("a router", () => {
 
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
-      expect(t.router.routes).toBe(newRoutes);
+      expect(t.router.routes).toEqual(newRoutes);
 
       // Loader data should be updated and foo removed
       expect(t.router.state.loaderData).toEqual({
@@ -15401,7 +15401,7 @@ describe("a router", () => {
 
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
-      expect(t.router.routes).toBe(newRoutes);
+      expect(t.router.routes).toEqual(newRoutes);
 
       // Loader data should be updated
       expect(t.router.state.loaderData).toEqual({
@@ -15467,7 +15467,7 @@ describe("a router", () => {
 
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
-      expect(t.router.routes).toBe(newRoutes);
+      expect(t.router.routes).toEqual(newRoutes);
 
       // Loader data should be updated
       expect(t.router.state.loaderData).toEqual({
@@ -15527,7 +15527,7 @@ describe("a router", () => {
 
       // Routes should be updated
       expect(t.router.routes).not.toBe(ogRoutes);
-      expect(t.router.routes).toBe(newRoutes);
+      expect(t.router.routes).toEqual(newRoutes);
 
       // Loader data should be updated
       expect(t.router.state.loaderData).toEqual({
@@ -15582,8 +15582,8 @@ describe("a router", () => {
         {
           path: "/",
           id: "root",
-          hasErrorBoundary: true,
           loader: () => rootDfd2.promise,
+          hasErrorBoundary: true,
           children: [
             {
               index: true,
@@ -15616,7 +15616,7 @@ describe("a router", () => {
 
       // Routes should be updated
       expect(currentRouter.routes).not.toEqual(ogRoutes);
-      expect(currentRouter.routes).toBe(newRoutes);
+      expect(currentRouter.routes).toEqual(newRoutes);
 
       // Loader data should be updated
       expect(currentRouter.state.loaderData).toEqual({
@@ -15684,12 +15684,13 @@ describe("a router", () => {
         {
           path: "/",
           id: "root",
-          hasErrorBoundary: true,
           loader: () => rootDfd2.promise,
+          hasErrorBoundary: true,
           children: [
             {
               index: true,
               id: "index",
+              hasErrorBoundary: false,
             },
           ],
         },
@@ -15711,7 +15712,7 @@ describe("a router", () => {
 
       // Routes should be updated
       expect(currentRouter.routes).not.toEqual(ogRoutes);
-      expect(currentRouter.routes).toBe(newRoutes);
+      expect(currentRouter.routes).toEqual(newRoutes);
 
       // Loader data should be updated
       expect(currentRouter.state.loaderData).toEqual({
