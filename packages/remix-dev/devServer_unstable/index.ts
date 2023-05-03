@@ -68,10 +68,10 @@ export let serve = async (
   };
 
   let state: {
-    latestBuildHash?: string;
-    buildHashChannel?: Channel.Type<void>;
     appServer?: execa.ExecaChildProcess;
+    manifest?: Manifest;
     prevManifest?: Manifest;
+    appReady?: Channel.Type<void>;
   } = {};
 
   let bin = await detectBin();
@@ -101,8 +101,8 @@ export let serve = async (
               if (matches) {
                 for (let match of matches) {
                   let buildHash = match[1];
-                  if (buildHash === state.latestBuildHash) {
-                    state.buildHashChannel?.ok();
+                  if (buildHash === state.manifest?.version) {
+                    state.appReady?.ok();
                   }
                 }
               }
@@ -134,24 +134,24 @@ export let serve = async (
         return patchPublicPath(config, httpOrigin);
       },
       onBuildStart: (ctx) => {
-        state.buildHashChannel?.err();
+        state.appReady?.err();
         clean(ctx.config);
         websocket.log(state.prevManifest ? "Rebuilding..." : "Building...");
       },
-      onBuildFinish: async (ctx, durationMs, manifest) => {
-        if (!manifest) return;
+      onBuildManifest: (manifest: Manifest) => {
+        state.manifest = manifest;
+      },
+      onBuildFinish: async (ctx, durationMs, succeeded) => {
+        if (!succeeded) return;
 
         websocket.log(
           (state.prevManifest ? "Rebuilt" : "Built") +
             ` in ${prettyMs(durationMs)}`
         );
-        let prevManifest = state.prevManifest;
-        state.prevManifest = manifest;
-        state.latestBuildHash = manifest.version;
-        state.buildHashChannel = Channel.create();
+        state.appReady = Channel.create();
 
         let start = Date.now();
-        console.log(`Waiting for app server (${state.latestBuildHash})`);
+        console.log(`Waiting for app server (${state.manifest?.version})`);
         if (
           options.command &&
           (state.appServer === undefined || options.restart)
@@ -159,21 +159,27 @@ export let serve = async (
           await kill(state.appServer);
           state.appServer = startAppServer(options.command);
         }
-        let { ok } = await state.buildHashChannel.result;
+        let { ok } = await state.appReady.result;
         // result not ok -> new build started before this one finished. do not process outdated manifest
-        if (!ok) return;
-        console.log(`App server took ${prettyMs(Date.now() - start)}`);
+        if (ok) {
+          console.log(`App server took ${prettyMs(Date.now() - start)}`);
 
-        if (manifest.hmr && prevManifest) {
-          let updates = HMR.updates(ctx.config, manifest, prevManifest);
-          websocket.hmr(manifest, updates);
+          if (state.manifest?.hmr && state.prevManifest) {
+            let updates = HMR.updates(
+              ctx.config,
+              state.manifest,
+              state.prevManifest
+            );
+            websocket.hmr(state.manifest, updates);
 
-          let hdr = updates.some((u) => u.revalidate);
-          console.log("> HMR" + (hdr ? " + HDR" : ""));
-        } else if (prevManifest !== undefined) {
-          websocket.reload();
-          console.log("> Live reload");
+            let hdr = updates.some((u) => u.revalidate);
+            console.log("> HMR" + (hdr ? " + HDR" : ""));
+          } else if (state.prevManifest !== undefined) {
+            websocket.reload();
+            console.log("> Live reload");
+          }
         }
+        state.prevManifest = state.manifest;
       },
       onFileCreated: (file) =>
         websocket.log(`File created: ${relativePath(file)}`),
@@ -207,8 +213,8 @@ export let serve = async (
         console.warn(`Unrecognized payload: ${req.body}`);
         res.sendStatus(400);
       }
-      if (buildHash === state.latestBuildHash) {
-        state.buildHashChannel?.ok();
+      if (buildHash === state.manifest?.version) {
+        state.appReady?.ok();
       }
       res.sendStatus(200);
     })
