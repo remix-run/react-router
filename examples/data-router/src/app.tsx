@@ -28,11 +28,6 @@ let router = createBrowserRouter([
   {
     path: "/",
     Component: Layout,
-    async action({ request }) {
-      console.log(request.headers.get("Content-Type"));
-      console.log(await request.text());
-      return null;
-    },
     children: [
       {
         index: true,
@@ -87,25 +82,6 @@ export function Layout() {
     ["loading", "submitting"].includes(f.state)
   );
 
-  let fetcher = useFetcher();
-  let [myObject, setMyObject] = React.useState({});
-  let handleSubmit = React.useCallback(() => {
-    fetcher.submit(myObject, {
-      method: "post",
-      encType: "application/json",
-      async action({ request }) {
-        // You can deserialize a *new* object identity in the action
-        let deserialized = await request.json();
-        console.log("deserialized", deserialized);
-        // But with inline actions you have direct access to the source object
-        console.log("myObject", myObject);
-        // They are not the same:
-        console.log(deserialized === myObject); // false
-        return null;
-      },
-    });
-  }, [fetcher, myObject]);
-
   return (
     <>
       <h1>Data Router Example</h1>
@@ -156,23 +132,6 @@ export function Layout() {
         on the top-right hand corner to see when we're actively navigating.
       </p>
       <hr />
-      <button onClick={handleSubmit}>Submit Direct Fetcher Action</button>
-      <input
-        onInput={(e) => {
-          try {
-            let obj = JSON.parse((e.target as HTMLInputElement).value);
-            setMyObject(obj);
-            console.log("set new value!", obj);
-          } catch (e) {
-            console.error(e);
-          }
-        }}
-      />
-      <Form method="post" encType="text/plain">
-        <button type="submit" name="name" value="value">
-          Submit Fetcher Form
-        </button>
-      </Form>
       <Outlet />
     </>
   );
