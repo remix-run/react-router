@@ -638,6 +638,15 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   method?: HTMLFormMethod;
 
   /**
+   * `<form encType>` - enhancing beyond the normal string type and limiting
+   * to the built-in browser supported values
+   */
+  encType?: Extract<
+    FormEncType,
+    "application/x-www-form-urlencoded" | "multipart/form-data"
+  >;
+
+  /**
    * Normal `<form action>` but supports React Router's relative paths.
    */
   action?: string;
@@ -951,7 +960,11 @@ export interface SubmitFunction {
  * Submits a fetcher `<form>` to the server without reloading the page.
  */
 export interface FetcherSubmitFunction {
-  (target: SubmitTarget, options?: SubmitOptions<true>): void;
+  (
+    target: SubmitTarget,
+    // Fetchers cannot replace because they are not navigation events
+    options?: Omit<SubmitOptions<true>, "replace">
+  ): void;
 }
 
 function validateClientSideSubmission() {
@@ -978,7 +991,6 @@ export function useSubmit(): SubmitFunction {
 
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
-        options.encType,
         basename
       );
 
@@ -1012,7 +1024,6 @@ function useSubmitFetcher(
 
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
-        options.encType,
         basename
       );
 
@@ -1105,12 +1116,7 @@ let fetcherId = 0;
 
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
-  submit: (
-    target: SubmitTarget,
-    // Fetchers cannot replace/preventScrollReset because they are not
-    // navigation events
-    options?: Omit<SubmitOptions, "replace" | "preventScrollReset">
-  ) => void;
+  submit: FetcherSubmitFunction;
   load: (href: string | LoaderFunction) => void;
 };
 

@@ -28,6 +28,11 @@ let router = createBrowserRouter([
   {
     path: "/",
     Component: Layout,
+    async action({ request }) {
+      console.log(request.headers.get("Content-Type"));
+      console.log(await request.text());
+      return null;
+    },
     children: [
       {
         index: true,
@@ -155,7 +160,7 @@ export function Layout() {
       <input
         onInput={(e) => {
           try {
-            let obj = JSON.parse(e.target.value);
+            let obj = JSON.parse((e.target as HTMLInputElement).value);
             setMyObject(obj);
             console.log("set new value!", obj);
           } catch (e) {
@@ -163,6 +168,11 @@ export function Layout() {
           }
         }}
       />
+      <Form method="post" encType="text/plain">
+        <button type="submit" name="name" value="value">
+          Submit Fetcher Form
+        </button>
+      </Form>
       <Outlet />
     </>
   );

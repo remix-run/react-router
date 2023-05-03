@@ -4,7 +4,7 @@ import type {
   HTMLFormMethod,
   RelativeRoutingType,
 } from "@remix-run/router";
-import { stripBasename } from "@remix-run/router";
+import { stripBasename, UNSAFE_warning as warning } from "@remix-run/router";
 
 export const defaultMethod: HTMLFormMethod = "get";
 const defaultEncType: FormEncType = "application/x-www-form-urlencoded";
@@ -160,9 +160,27 @@ export interface SubmitOptions<AllowInlineAction = false> {
   preventScrollReset?: boolean;
 }
 
+const supportedFormEncTypes: Set<FormEncType> = new Set([
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+]);
+
+function getFormEncType(encType: string | null) {
+  let validEncType = encType || defaultEncType;
+  if (!supportedFormEncTypes.has(validEncType as FormEncType)) {
+    warning(
+      false,
+      `"${encType}" is not a valid encType for \`<Form>\`/\`<fetcher.Form>\` ` +
+        `and will default to "application/x-www-form-urlencoded"`
+    );
+
+    validEncType = defaultEncType;
+  }
+  return validEncType;
+}
+
 export function getFormSubmissionInfo(
   target: SubmitTarget,
-  formEncType: FormEncType | undefined,
   basename: string
 ): {
   action: string | null;
@@ -184,7 +202,7 @@ export function getFormSubmissionInfo(
     let attr = target.getAttribute("action");
     action = attr ? stripBasename(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
-    encType = target.getAttribute("enctype") || defaultEncType;
+    encType = getFormEncType(target.getAttribute("enctype"));
 
     formData = new FormData(target);
   } else if (
@@ -212,10 +230,9 @@ export function getFormSubmissionInfo(
       target.getAttribute("formmethod") ||
       form.getAttribute("method") ||
       defaultMethod;
-    encType =
-      target.getAttribute("formenctype") ||
-      form.getAttribute("enctype") ||
-      defaultEncType;
+    encType = getFormEncType(
+      target.getAttribute("formenctype") || form.getAttribute("enctype")
+    );
 
     formData = new FormData(form);
 
