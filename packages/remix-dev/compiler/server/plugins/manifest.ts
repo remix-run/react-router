@@ -4,6 +4,7 @@ import jsesc from "jsesc";
 import type * as Channel from "../../../channel";
 import { type Manifest } from "../../../manifest";
 import { assetsManifestVirtualModule } from "../virtualModules";
+import { Cancel } from "../../cancel";
 
 /**
  * Creates a virtual module called `@remix-run/dev/assets-manifest` that exports
@@ -27,7 +28,7 @@ export function serverAssetsManifestPlugin(channels: {
 
       build.onLoad({ filter }, async () => {
         let manifest = await channels.manifest.result;
-        if (!manifest.ok) throw Error("canceled");
+        if (!manifest.ok) throw new Cancel("server");
         return {
           contents: `export default ${jsesc(manifest.value, {
             es6: true,

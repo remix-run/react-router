@@ -2,6 +2,7 @@ import type { Plugin } from "esbuild";
 import { readFile } from "fs-extra";
 
 import type * as Channel from "../../../channel";
+import { Cancel } from "../../cancel";
 
 const pluginName = "css-bundle-update-plugin";
 const namespace = `${pluginName}-ns`;
@@ -53,7 +54,7 @@ export function cssBundleUpdatePlugin(channels: {
 
       build.onLoad({ filter: /.*/, namespace }, async (args) => {
         let cssBundleHref = await channels.cssBundleHref.result;
-        if (!cssBundleHref.ok) throw Error("canceled");
+        if (!cssBundleHref.ok) throw new Cancel("js");
         let contents = await readFile(args.path, "utf8");
 
         if (cssBundleHref.value) {

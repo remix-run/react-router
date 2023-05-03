@@ -74,6 +74,7 @@ export async function watch(
   }, 500);
 
   let rebuild = debounce(async () => {
+    await compiler.cancel();
     onBuildStart?.(ctx);
     let start = Date.now();
     let manifest = await compile();
