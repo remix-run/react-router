@@ -1476,12 +1476,44 @@ describe("a router", () => {
       });
     });
 
-    it("does not load anything on hash change only <Link> navigations", async () => {
+    it("does not run loaders on hash change only navigations", async () => {
       let t = initializeTmTest();
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
       let A = await t.navigate("/#bar");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+    });
+
+    it("does not run loaders on same-hash navigations", async () => {
+      let t = initializeTmTest({ url: "/#bar" });
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/#bar");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(A.loaders.index.stub.mock.calls.length).toBe(0);
+    });
+
+    it("runs loaders on same-hash navigations to new paths", async () => {
+      let t = initializeTmTest({ url: "/#bar" });
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/foo#bar");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(A.loaders.foo.stub.mock.calls.length).toBe(1);
+    });
+
+    it("runs loaders on hash removal navigations (same path)", async () => {
+      let t = initializeTmTest({ url: "/#bar" });
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(1);
+      expect(A.loaders.index.stub.mock.calls.length).toBe(1);
+    });
+
+    it("runs loaders on hash removal navigations (nested path)", async () => {
+      let t = initializeTmTest({ url: "/#bar" });
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/foo");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(A.loaders.foo.stub.mock.calls.length).toBe(1);
     });
 
     it('does not load anything on hash change only empty <Form method="get"> navigations', async () => {
@@ -16187,6 +16219,30 @@ describe("a router", () => {
       });
       expect(createPath(router.state.location)).toBe("/path");
       expect(router.state.matches[2].route.index).toBe(true);
+    });
+
+    it("handles pathless relative routing when a basename is present", () => {
+      let router = createRouter({
+        routes: [{ path: "/path" }],
+        future: { v7_prependBasename: true },
+        history: createMemoryHistory({ initialEntries: ["/base/path"] }),
+        basename: "/base",
+      }).initialize();
+
+      expect(createPath(router.state.location)).toBe("/base/path");
+      expect(router.state.matches[0].route.path).toBe("/path");
+
+      router.navigate(".?a=1");
+      expect(createPath(router.state.location)).toBe("/base/path?a=1");
+      expect(router.state.matches[0].route.path).toBe("/path");
+
+      router.navigate("?b=2");
+      expect(createPath(router.state.location)).toBe("/base/path?b=2");
+      expect(router.state.matches[0].route.path).toBe("/path");
+
+      router.navigate("/path?c=3");
+      expect(createPath(router.state.location)).toBe("/base/path?c=3");
+      expect(router.state.matches[0].route.path).toBe("/path");
     });
   });
 });

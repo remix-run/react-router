@@ -174,10 +174,10 @@ function useIsomorphicLayoutEffect(
  * @see https://reactrouter.com/hooks/use-navigate
  */
 export function useNavigate(): NavigateFunction {
-  let isDataRouter = React.useContext(DataRouterContext) != null;
+  let { isDataRoute } = React.useContext(RouteContext);
   // Conditional usage is OK here because the usage of a data router is static
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  return isDataRouter ? useNavigateStable() : useNavigateUnstable();
+  return isDataRoute ? useNavigateStable() : useNavigateUnstable();
 }
 
 function useNavigateUnstable(): NavigateFunction {
@@ -689,6 +689,14 @@ export function _renderMatches(
       let children: React.ReactNode;
       if (error) {
         children = errorElement;
+      } else if (match.route.Component) {
+        // Note: This is a de-optimized path since React won't re-use the
+        // ReactElement since it's identity changes with each new
+        // React.createElement call.  We keep this so folks can use
+        // `<Route Component={...}>` in `<Routes>` but generally `Component`
+        // usage is only advised in `RouterProvider` when we can convert it to
+        // `element` ahead of time.
+        children = <match.route.Component />;
       } else if (match.route.element) {
         children = match.route.element;
       } else {
@@ -697,7 +705,11 @@ export function _renderMatches(
       return (
         <RenderedRoute
           match={match}
-          routeContext={{ outlet, matches }}
+          routeContext={{
+            outlet,
+            matches,
+            isDataRoute: dataRouterState != null,
+          }}
           children={children}
         />
       );
@@ -713,7 +725,7 @@ export function _renderMatches(
         component={errorElement}
         error={error}
         children={getChildren()}
-        routeContext={{ outlet: null, matches }}
+        routeContext={{ outlet: null, matches, isDataRoute: true }}
       />
     ) : (
       getChildren()

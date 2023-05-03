@@ -485,6 +485,371 @@ describe("<Navigate>", () => {
       </div>"
     `);
   });
+
+  it("handles sync relative navigations in StrictMode using a data router", async () => {
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        children: [
+          {
+            index: true,
+            // This is a relative navigation from the current location of /a.
+            // Ensure we don't route from / -> /b -> /b/b
+            Component: () => <Navigate to={"b"} replace />,
+          },
+          {
+            path: "b",
+            element: <h1>Page B</h1>,
+          },
+        ],
+      },
+    ]);
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("handles async relative navigations in StrictMode using a data router", async () => {
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/a",
+          children: [
+            {
+              index: true,
+              // This is a relative navigation from the current location of /a.
+              // Ensure we don't route from /a -> /a/b -> /a/b/b
+              Component: () => <Navigate to={"b"} replace />,
+            },
+            {
+              path: "b",
+              async loader() {
+                await new Promise((r) => setTimeout(r, 10));
+                return null;
+              },
+              element: <h1>Page B</h1>,
+            },
+          ],
+        },
+      ],
+      { initialEntries: ["/a"] }
+    );
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+      </div>"
+    `);
+  });
+
+  it("handles setState in render in StrictMode using a data router (sync loader)", async () => {
+    let renders: number[] = [];
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        children: [
+          {
+            index: true,
+            Component() {
+              let [count, setCount] = React.useState(0);
+              if (count === 0) {
+                setCount(1);
+              }
+              return <Navigate to={"b"} replace state={{ count }} />;
+            },
+          },
+          {
+            path: "b",
+            Component() {
+              let { state } = useLocation() as { state: { count: number } };
+              renders.push(state.count);
+              return (
+                <>
+                  <h1>Page B</h1>
+                  <p>{state.count}</p>
+                </>
+              );
+            },
+          },
+        ],
+      },
+    ]);
+
+    let navigateSpy = jest.spyOn(router, "navigate");
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+        <p>
+          1
+        </p>
+      </div>"
+    `);
+    expect(navigateSpy).toHaveBeenCalledTimes(2);
+    expect(navigateSpy.mock.calls[0]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 1 } },
+    ]);
+    expect(navigateSpy.mock.calls[1]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 1 } },
+    ]);
+    expect(renders).toEqual([1, 1]);
+  });
+
+  it("handles setState in effect in StrictMode using a data router (sync loader)", async () => {
+    let renders: number[] = [];
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        children: [
+          {
+            index: true,
+            Component() {
+              // When state managed by react and changes during render, we'll
+              // only "see" the value from the first pass through here in our
+              // effects
+              let [count, setCount] = React.useState(0);
+              React.useEffect(() => {
+                if (count === 0) {
+                  setCount(1);
+                }
+              }, [count]);
+              return <Navigate to={"b"} replace state={{ count }} />;
+            },
+          },
+          {
+            path: "b",
+            Component() {
+              let { state } = useLocation() as { state: { count: number } };
+              renders.push(state.count);
+              return (
+                <>
+                  <h1>Page B</h1>
+                  <p>{state.count}</p>
+                </>
+              );
+            },
+          },
+        ],
+      },
+    ]);
+
+    let navigateSpy = jest.spyOn(router, "navigate");
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+        <p>
+          0
+        </p>
+      </div>"
+    `);
+    expect(navigateSpy).toHaveBeenCalledTimes(2);
+    expect(navigateSpy.mock.calls[0]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 0 } },
+    ]);
+    expect(navigateSpy.mock.calls[1]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 0 } },
+    ]);
+    expect(renders).toEqual([0, 0]);
+  });
+
+  it("handles setState in render in StrictMode using a data router (async loader)", async () => {
+    let renders: number[] = [];
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        children: [
+          {
+            index: true,
+            Component() {
+              let [count, setCount] = React.useState(0);
+              if (count === 0) {
+                setCount(1);
+              }
+              return <Navigate to={"b"} replace state={{ count }} />;
+            },
+          },
+          {
+            path: "b",
+            async loader() {
+              await new Promise((r) => setTimeout(r, 10));
+              return null;
+            },
+            Component() {
+              let { state } = useLocation() as { state: { count: number } };
+              renders.push(state.count);
+              return (
+                <>
+                  <h1>Page B</h1>
+                  <p>{state.count}</p>
+                </>
+              );
+            },
+          },
+        ],
+      },
+    ]);
+
+    let navigateSpy = jest.spyOn(router, "navigate");
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+        <p>
+          1
+        </p>
+      </div>"
+    `);
+    expect(navigateSpy).toHaveBeenCalledTimes(2);
+    expect(navigateSpy.mock.calls[0]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 1 } },
+    ]);
+    expect(navigateSpy.mock.calls[1]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 1 } },
+    ]);
+    // /a/b rendered with the same state value both times
+    expect(renders).toEqual([1, 1]);
+  });
+
+  it("handles setState in effect in StrictMode using a data router (async loader)", async () => {
+    let renders: number[] = [];
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        children: [
+          {
+            index: true,
+            Component() {
+              // When state managed by react and changes during render, we'll
+              // only "see" the value from the first pass through here in our
+              // effects
+              let [count, setCount] = React.useState(0);
+              React.useEffect(() => {
+                if (count === 0) {
+                  setCount(1);
+                }
+              }, [count]);
+              return <Navigate to={"b"} replace state={{ count }} />;
+            },
+          },
+          {
+            path: "b",
+            async loader() {
+              await new Promise((r) => setTimeout(r, 10));
+              return null;
+            },
+            Component() {
+              let { state } = useLocation() as { state: { count: number } };
+              renders.push(state.count);
+              return (
+                <>
+                  <h1>Page B</h1>
+                  <p>{state.count}</p>
+                </>
+              );
+            },
+          },
+        ],
+      },
+    ]);
+
+    let navigateSpy = jest.spyOn(router, "navigate");
+
+    let { container } = render(
+      <React.StrictMode>
+        <RouterProvider router={router} />
+      </React.StrictMode>
+    );
+
+    await waitFor(() => screen.getByText("Page B"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Page B
+        </h1>
+        <p>
+          1
+        </p>
+      </div>"
+    `);
+    expect(navigateSpy).toHaveBeenCalledTimes(3);
+    expect(navigateSpy.mock.calls[0]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 0 } },
+    ]);
+    expect(navigateSpy.mock.calls[1]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 0 } },
+    ]);
+    // StrictMode only applies the double-effect execution on component mount,
+    // not component update
+    expect(navigateSpy.mock.calls[2]).toMatchObject([
+      { pathname: "/b" },
+      { state: { count: 1 } },
+    ]);
+    // /a/b rendered with the latest state value both times
+    expect(renders).toEqual([1, 1]);
+  });
 });
 
 function getHtml(container: HTMLElement) {

@@ -16,8 +16,10 @@ import {
   createMemoryHistory,
   UNSAFE_invariant as invariant,
   parsePath,
+  resolveTo,
   stripBasename,
   UNSAFE_warning as warning,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
 
 import type {
@@ -34,6 +36,7 @@ import {
   DataRouterContext,
   DataRouterStateContext,
   AwaitContext,
+  RouteContext,
 } from "./context";
 import {
   useAsyncValue,
@@ -43,6 +46,7 @@ import {
   useRoutes,
   _renderMatches,
   useRoutesImpl,
+  useLocation,
 } from "./hooks";
 
 export interface RouterProviderProps {
@@ -214,18 +218,24 @@ export function Navigate({
       `only ever rendered in response to some user interaction or state change.`
   );
 
-  let dataRouterState = React.useContext(DataRouterStateContext);
+  let { matches } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
   let navigate = useNavigate();
 
-  React.useEffect(() => {
-    // Avoid kicking off multiple navigations if we're in the middle of a
-    // data-router navigation, since components get re-rendered when we enter
-    // a submitting/loading state
-    if (dataRouterState && dataRouterState.navigation.state !== "idle") {
-      return;
-    }
-    navigate(to, { replace, state, relative });
-  });
+  // Resolve the path outside of the effect so that when effects run twice in
+  // StrictMode they navigate to the same place
+  let path = resolveTo(
+    to,
+    getPathContributingMatches(matches).map((match) => match.pathnameBase),
+    locationPathname,
+    relative === "path"
+  );
+  let jsonPath = JSON.stringify(path);
+
+  React.useEffect(
+    () => navigate(JSON.parse(jsonPath), { replace, state, relative }),
+    [navigate, jsonPath, relative, replace, state]
+  );
 
   return null;
 }
