@@ -8,6 +8,7 @@ import { type Manifest } from "../manifest";
 import * as Compiler from "./compiler";
 import type { Context } from "./context";
 import { logThrown } from "./utils/log";
+import { normalizeSlashes } from "../config/routes";
 
 function isEntryPoint(config: RemixConfig, file: string): boolean {
   let appFile = path.relative(config.appDirectory, file);
@@ -16,7 +17,8 @@ function isEntryPoint(config: RemixConfig, file: string): boolean {
     config.entryServerFile,
     ...Object.values(config.routes).map((route) => route.file),
   ];
-  return entryPoints.includes(appFile);
+  let normalized = normalizeSlashes(appFile);
+  return entryPoints.includes(normalized);
 }
 
 export type WatchOptions = {
