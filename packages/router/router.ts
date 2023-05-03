@@ -435,7 +435,6 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
 type BaseSubmissionOptions = {
   formMethod?: HTMLFormMethod;
   formEncType?: FormEncType;
-  action?: ActionFunction;
 } & (
   | { formData: FormData; body?: undefined }
   | { formData?: undefined; body: any }
@@ -468,7 +467,10 @@ type LoadFetchOptions = BaseNavigateOrFetchOptions & {
 /**
  * Options for a fetch() submission
  */
-type SubmitFetchOptions = BaseNavigateOrFetchOptions & BaseSubmissionOptions;
+type SubmitFetchOptions = BaseNavigateOrFetchOptions &
+  BaseSubmissionOptions & {
+    action?: ActionFunction;
+  };
 
 /**
  * Options to pass to fetch()
@@ -1098,21 +1100,6 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    if (
-      to != null &&
-      opts &&
-      "action" in opts &&
-      typeof opts.action === "function"
-    ) {
-      to = null;
-      warning(
-        false,
-        "router.navigate() should not include a `to` location when a custom " +
-          "`action` is passed, the `to` will be ignored in favor of the current " +
-          "location."
-      );
-    }
-
     let normalizedPath = normalizeTo(
       state.location,
       state.matches,
@@ -1203,7 +1190,6 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
-      action: opts && "action" in opts ? opts.action : undefined,
     });
   }
 
@@ -1254,7 +1240,6 @@ export function createRouter(init: RouterInit): Router {
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
       replace?: boolean;
-      action?: ActionFunction;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1333,7 +1318,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
-        { replace: opts.replace, actionOverride: opts.action }
+        { replace: opts.replace }
       );
 
       if (actionOutput.shortCircuited) {
@@ -1385,7 +1370,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
-    opts: { replace?: boolean; actionOverride?: ActionFunction } = {}
+    opts: { replace?: boolean } = {}
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
 
@@ -1397,11 +1382,7 @@ export function createRouter(init: RouterInit): Router {
     let result: DataResult;
     let actionMatch = getTargetMatch(matches, location);
 
-    if (
-      !actionMatch.route.action &&
-      !actionMatch.route.lazy &&
-      !opts.actionOverride
-    ) {
+    if (!actionMatch.route.action && !actionMatch.route.lazy) {
       result = {
         type: ResultType.error,
         error: getInternalRouterError(405, {
@@ -1418,8 +1399,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        basename,
-        { handlerOverride: opts.actionOverride }
+        basename
       );
 
       if (request.signal.aborted) {
