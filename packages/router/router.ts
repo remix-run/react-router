@@ -3222,9 +3222,12 @@ function normalizeNavigateOptions(
     return { path, submission };
   }
 
-  let formData: FormData;
+  // Use FormData directly if it was passed in
+  let formData: FormData | undefined =
+    opts.body instanceof FormData ? opts.body : opts.formData;
 
-  if (opts.body) {
+  // Otherwise try to construct one from the body
+  if (!formData && opts.body) {
     let body = opts.body;
     formData = new FormData();
 
@@ -3237,11 +3240,9 @@ function normalizeNavigateOptions(
         formData.append(name, body[name]);
       }
     }
-  } else if (opts.formData) {
-    formData = opts.formData;
-  } else {
-    throw new Error("Expected a FormData instance");
   }
+
+  invariant(formData, "Unable to construct a FormData instance");
 
   let searchParams = convertFormDataToSearchParams(formData);
 
@@ -3255,7 +3256,7 @@ function normalizeNavigateOptions(
       return searchParams.toString();
     },
     get formData() {
-      return formData;
+      return formData as FormData;
     },
     get json() {
       return throwBodyEncTypeError<object>("json");

@@ -39,8 +39,6 @@ import type {
   HydrationState,
   LoaderFunction,
   Router as RemixRouter,
-  RouterFetchOptions,
-  RouterNavigateOptions,
   V7_FormMethod,
 } from "@remix-run/router";
 import {

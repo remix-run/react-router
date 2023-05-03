@@ -229,49 +229,11 @@ export function getFormSubmissionInfo(
       `Cannot submit element that is not <form>, <button>, or ` +
         `<input type="submit|image">`
     );
-  } else if (
-    formEncType !== undefined &&
-    formEncType !== "application/x-www-form-urlencoded"
-  ) {
-    // The default behavior is to encode as application/x-www-form-urlencoded
-    // into FormData which is handled in the else block below.
-    //
-    // Any other encType value (null, application/json, text/plain) means
-    // we will not be submitting as FormData so send the payload through
-    // directly.  The @remix-run/router will handle serialization of the
-    // payload upon Request creation if needed.
-    method = defaultMethod;
-    action = null;
-    encType = null;
-    body = target;
   } else {
     method = defaultMethod;
     action = null;
     encType = defaultEncType;
-
-    // TODO: Can all this go away now that the router handles it?
-    if (target instanceof FormData) {
-      formData = target;
-    } else {
-      formData = new FormData();
-
-      if (target instanceof URLSearchParams) {
-        for (let [name, value] of target) {
-          formData.append(name, value);
-        }
-      } else if (target != null) {
-        // When a raw object is sent - even though we encode it into formData,
-        // we still expose it as payload so it aligns with the behavior if
-        // encType were application/json or text/plain
-        body = target;
-        // To be deprecated in v7 so the default behavior of undefined matches
-        // the null behavior of no-serialization
-        for (let name of Object.keys(target)) {
-          // @ts-expect-error
-          formData.append(name, target[name]);
-        }
-      }
-    }
+    body = target;
   }
 
   return { action, method: method.toLowerCase(), encType, formData, body };
