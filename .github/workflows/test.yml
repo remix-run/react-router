@@ -24,7 +24,6 @@ jobs:
         node:
           - 16
           - 18
-          - latest
 
     runs-on: ubuntu-latest
 
