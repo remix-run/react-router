@@ -2,7 +2,7 @@
 "react-router-dom": minor
 ---
 
-Add support for `application/json` and `text/plain` encodings for `useSubmit`/`fetcher.submit`. To reflect these additional types, `useNavigation` now also contains `navigation.json` and `navigation.text` which are getter functions mimicking `request.json` and `request.text`. Just as a `Request` does, if you access one of these methods for the incorrect encoding type, it will throw an Error (i.e. accessing `request.formData` when `encType` is `application/json`).
+Add support for `application/json` and `text/plain` encodings for `useSubmit`/`fetcher.submit`. To reflect these additional types, `useNavigation`/`useFetcher` now also contain `navigation.json`/`navigation.text` and `fetcher.json`/`fetcher.text` which are getter functions mimicking `request.json` and `request.text`. Just as a `Request` does, if you access one of these methods for the incorrect encoding type, it will throw an Error (i.e. accessing `navigation.formData` when `navigation.formEncType` is `application/json`).
 
 ```jsx
 // The default behavior will still serialize as FormData
@@ -32,7 +32,7 @@ function Component() {
   // navigation.text        => '{"key":"value"}'
 }
 
-function action({ request, payload }) {
+function action({ request }) {
   // request.headers.get("Content-Type") => "application/json"
   // request.json                        => { key: "value" }
   // request.text                        => '{"key":"value"}'
@@ -48,7 +48,7 @@ function Component() {
   // navigation.text        => "Text submission"
 }
 
-function action({ request, payload }) {
+function action({ request }) {
   // request.headers.get("Content-Type") => "text/plain"
   // request.text                        => "Text submission"
 }

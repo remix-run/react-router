@@ -7,6 +7,7 @@ Add support for `application/json` and `text/plain` encodings for `router.naviga
 ```js
 // By default, the encoding is "application/x-www-form-urlencoded"
 router.navigate("/", {
+  formMethod: "post",
   body: { key: "value" },
 });
 
@@ -19,8 +20,9 @@ function action({ request }) {
 ```js
 // Pass `formEncType` to opt-into a different encoding
 router.navigate("/", {
-  body: { key: "value" },
+  formMethod: "post",
   formEncType: "application/json",
+  body: { key: "value" },
 });
 
 function action({ request }) {
@@ -31,8 +33,9 @@ function action({ request }) {
 
 ```js
 router.navigate("/", {
-  body: "Text submission",
+  formMethod: "post",
   formEncType: "text/plain",
+  body: "Text submission",
 });
 
 function action({ request }) {

@@ -17,7 +17,6 @@ let router = createBrowserRouter([
 
       fetcher.submit(data, {
         formMethod: "post",
-        encType: null,
         action({ request }) {
           // Define your inline action here
         },
