@@ -23,7 +23,8 @@ jobs:
       matrix:
         node:
           - 16
-          - lts
+          - 18
+          - latest
 
     runs-on: ubuntu-latest
 
