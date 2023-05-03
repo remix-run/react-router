@@ -2,4 +2,4 @@
 "@remix-run/router": patch
 ---
 
-surface errors to the proper error boundary after \_internalSetRoutes
+Fix HMR-driven error boundaries by properly reconstructing new routes and `manifest` in `\_internalSetRoutes`
