@@ -99,6 +99,8 @@ export function browserRouteModulesPlugin(
         };
       });
 
+      let cache = new Map();
+
       build.onLoad(
         { filter: /.*/, namespace: "browser-route-module" },
         async (args) => {
@@ -130,28 +132,42 @@ export function browserRouteModulesPlugin(
 
           let sourceCode = fs.readFileSync(routeFile, "utf8");
 
-          let transform = removeServerExports((loader: string) =>
-            onLoader(routeFile, loader)
-          );
-          let contents = transform(sourceCode, routeFile);
-
-          if (options.mode === "development" && config.future.unstable_dev) {
-            contents = await applyHMR(
-              contents,
-              {
-                ...args,
-                path: routeFile,
-              },
-              config,
-              !!build.initialOptions.sourcemap
+          let value = cache.get(file);
+          if (!value || value.sourceCode !== sourceCode) {
+            let extractedLoader;
+            let transform = removeServerExports(
+              (loader: string) => (extractedLoader = loader)
             );
+            let contents = transform(sourceCode, routeFile);
+
+            if (options.mode === "development" && config.future.unstable_dev) {
+              contents = await applyHMR(
+                contents,
+                {
+                  ...args,
+                  path: routeFile,
+                },
+                config,
+                !!build.initialOptions.sourcemap
+              );
+            }
+            value = {
+              sourceCode,
+              extractedLoader,
+              output: {
+                contents,
+                loader: getLoaderForFile(routeFile),
+                resolveDir: path.dirname(routeFile),
+              },
+            };
+            cache.set(file, value);
           }
 
-          return {
-            contents,
-            loader: getLoaderForFile(routeFile),
-            resolveDir: path.dirname(routeFile),
-          };
+          if (value.extractedLoader) {
+            onLoader(routeFile, value.extractedLoader);
+          }
+
+          return value.output;
         }
       );
     },

@@ -9,6 +9,8 @@ export let hmrPlugin = ({ config }: Context): esbuild.Plugin => {
   return {
     name: "remix-hmr",
     setup: async (build) => {
+      let cache = new Map();
+
       build.onResolve({ filter: /^remix:hmr$/ }, (args) => {
         return {
           namespace: "hmr-runtime",
@@ -121,21 +123,30 @@ declare global {
 
         let sourceCode = fs.readFileSync(args.path, "utf8");
 
-        let resultCode = await applyHMR(
-          sourceCode,
-          args,
-          config,
-          !!build.initialOptions.sourcemap,
-          args.path.startsWith(config.appDirectory)
-            ? fs.statSync(args.path).mtimeMs
-            : undefined
-        );
+        let value = cache.get(args.path);
 
-        return {
-          contents: resultCode,
-          loader: args.path.endsWith("x") ? "tsx" : "ts",
-          resolveDir: path.dirname(args.path),
-        };
+        if (!value || value.sourceCode !== sourceCode) {
+          let resultCode = await applyHMR(
+            sourceCode,
+            args,
+            config,
+            !!build.initialOptions.sourcemap,
+            args.path.startsWith(config.appDirectory)
+              ? fs.statSync(args.path).mtimeMs
+              : undefined
+          );
+          value = {
+            sourceCode,
+            output: {
+              contents: resultCode,
+              loader: args.path.endsWith("x") ? "tsx" : "ts",
+              resolveDir: path.dirname(args.path),
+            },
+          };
+          cache.set(args.path, value);
+        }
+
+        return value.output;
       });
     },
   };
