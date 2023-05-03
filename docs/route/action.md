@@ -105,18 +105,6 @@ For more information on `formData` see [Working with FormData][workingwithformda
 
 Note that when using [`useSubmit`][usesubmit] you may also pass `encType: "application/json"` or `encType: "text/plain"` to instead serialize your payload into `request.json()` or `request.text()`.
 
-## `payload`
-
-A `payload` is provided to your action when you submit imperatively with [`useSubmit`][usesubmit] and provide a raw javascript value. This value might also be serialized into the request depending on the `encType`.
-
-```jsx
-function Component {
-  let submit = useSubmit();
-  submit({ key: "value" }, { encType: null });
-  // action payload is { key: 'value' }
-}
-```
-
 ## Returning Responses
 
 While you can return anything you want from an action and get access to it from [`useActionData`][useactiondata], you can also return a web [Response][response].

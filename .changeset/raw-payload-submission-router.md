@@ -2,19 +2,40 @@
 "@remix-run/router": minor
 ---
 
-Add support for a new `payload` parameter for `router.navigate`/`router.fetch` submissions. This allows you to submit data to an `action` without requiring serialization into a `FormData` instance. This `payload` value will be passed unaltered to your `action` function.
+Add support for `application/json` and `text/plain` encodings for `router.navigate`/`router.fetch` submissions. To leverage these encodings, pass your data in a `body` parameter and specify the desired `formEncType`:
 
 ```js
-router.navigate("/", { payload: { key: "value" } });
+// By default, the encoding is "application/x-www-form-urlencoded"
+router.navigate("/", {
+  body: { key: "value" },
+});
 
-function action({ request, payload }) {
-  // payload      => { key: 'value' }
-  // request.body => null
+function action({ request }) {
+  // request.formData => FormData instance with entry [key=value]
+  // request.text => "key=value"
 }
 ```
 
-You may also opt-into serialization of this `payload` into your `request` using the `formEncType` parameter:
+```js
+// Pass `formEncType` to opt-into a different encoding
+router.navigate("/", {
+  body: { key: "value" },
+  formEncType: "application/json",
+});
 
-- `formEncType: "application/x-ww-form-urlencoded"` => serializes into `request.formData()`
-- `formEncType: "application/json"` => serializes into `request.json()`
-- `formEncType: "text/plain"` => serializes into `request.text()`
+function action({ request }) {
+  // request.json => { key: "value" }
+  // request.text => '{ "key":"value" }'
+}
+```
+
+```js
+router.navigate("/", {
+  body: "Text submission",
+  formEncType: "text/plain",
+});
+
+function action({ request }) {
+  // request.text => "Text submission"
+}
+```

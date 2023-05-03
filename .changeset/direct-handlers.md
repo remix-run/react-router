@@ -2,30 +2,7 @@
 "react-router-dom": minor
 ---
 
-Add direct `action` function support to `useSubmit`/`fetcher.submit` and direct `loader` support to `fetcher.load`. This allows you to skip the creation of a new route to handle the `action` or `loader`. If both a call-site handler and a route-defined handler exist, the call-site handler will be used.
-
-**`useSubmit:`**
-
-```jsx
-let router = createBrowserRouter([
-  {
-    path: "/",
-    Component() {
-      let submit = useSubmit();
-
-      submit(data, {
-        formMethod: "post",
-        encType: null,
-        action({ payload }) {
-          // You may now define your action here
-        },
-      });
-    },
-  },
-]);
-```
-
-**`fetcher.load`/`fetcher.submit`:**
+Add support for inline handler functions to be passed to `fetcher.load` and `fetcher.submit`, allowing you to skip the creation of a new route to handle the fetch. Inline handlers will override any handlers defined on the active route.
 
 ```jsx
 let router = createBrowserRouter([
@@ -34,15 +11,15 @@ let router = createBrowserRouter([
     Component() {
       let fetcher = useFetcher();
 
-      fetcher.load(() => {
-        // You may now define a loader here
+      fetcher.load(({ request }) => {
+        // Define your inline loader here
       });
 
       fetcher.submit(data, {
         formMethod: "post",
         encType: null,
-        action({ payload }) {
-          // You may now define your action here
+        action({ request }) {
+          // Define your inline action here
         },
       });
     },

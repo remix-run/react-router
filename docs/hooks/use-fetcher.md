@@ -38,7 +38,8 @@ function SomeComponent() {
   // build your UI with these properties
   fetcher.state;
   fetcher.formData;
-  fetcher.payload;
+  fetcher.json;
+  fetcher.text;
   fetcher.formMethod;
   fetcher.formAction;
   fetcher.data;
@@ -225,7 +226,13 @@ function TaskCheckbox({ task }) {
 }
 ```
 
-If you opt-out of serialization using `encType: null`, then `fetcher.formData` will be `undefined` and your data will be exposed on `fetcher.payload`.
+## `fetcher.json`
+
+When using `fetcher.submit(data, { formEncType: "application/json" })`, the submitted JSON is available via `fetcher.json`.
+
+## `fetcher.text`
+
+When using `fetcher.submit(data, { formEncType: "text/plain" })`, the submitted text is available via `fetcher.text`.
 
 ## `fetcher.formAction`
 
@@ -250,10 +257,6 @@ fetcher.formMethod; // "post"
 ```
 
 <docs-warning>The `fetcher.formMethod` field is lowercase without the `future.v7_normalizeFormMethod` [Future Flag][api-development-strategy]. This is being normalized to uppercase to align with the `fetch()` behavior in v7, so please upgrade your React Router v6 applications to adopt the uppercase HTTP methods.</docs-warning>
-
-## `fetcher.payload`
-
-Any POST, PUT, PATCH, or DELETE that started from a `fetcher.submit(payload, { encType: null })` will have your `payload` value represented in `fetcher.payload`.
 
 [loader]: ../route/loader
 [action]: ../route/action

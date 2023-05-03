@@ -66,7 +66,8 @@ interface ShouldRevalidateFunction {
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
     formData?: Submission["formData"];
-    payload?: Submission["payload"];
+    json?: Submission["json"];
+    text?: Submission["text"];
     actionResult?: DataResult;
     defaultShouldRevalidate: boolean;
   }): boolean;

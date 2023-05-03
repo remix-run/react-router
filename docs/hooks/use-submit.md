@@ -78,49 +78,28 @@ formData.append("cheese", "gouda");
 submit(formData);
 ```
 
-### Payload Serialization
-
-You may also submit raw JSON to your `action` and the default behavior will be to encode the key/values into `FormData`:
+The default behavior if you submit a JSON object is to encode the data into `FormData`:
 
 ```tsx
-let obj = { key: "value" };
-submit(obj); // -> request.formData()
+submit({ key: "value" });
+// will serialize into request.formData() in your action
 ```
 
-You may also choose which type of serialization you'd like via the `encType` option:
+Or you can opt-into JSON encoding:
 
 ```tsx
-let obj = { key: "value" };
-submit(obj, {
-  encType: "application/x-www-form-urlencoded",
-}); // -> request.formData()
+submit({ key: "value" }, { encType: "application/json" });
+// will serialize into request.json() in your action
 ```
+
+Or plain text:
 
 ```tsx
-let obj = { key: "value" };
-submit(obj, { encType: "application/json" }); // -> request.json()
+submit("value", { encType: "text/plain" });
+// will serialize into request.text() in your action
 ```
 
-```tsx
-let text = "Plain ol' text";
-submit(obj, { encType: "text/plain" }); // -> request.text()
-```
-
-<docs-warn>In future versions of React Router, the default behavior will not serialize raw JSON payloads. If you are submitting raw JSON today it's recommended to specify an explicit `encType`.</docs-warn>
-
-### Opting out of serialization
-
-Sometimes in a client-side application, it's overkill to require serialization into `request.formData` when you have a raw JSON object in your component and want to submit it to your `action` directly. If you'd like to opt out of serialization, you can pass `encType: null` to your second options argument, and your data will be sent to your action function verbatim as a `payload` parameter:
-
-```tsx
-let obj = { key: "value" };
-submit(obj, { encType: null });
-
-function action({ request, payload }) {
-  // payload is `obj` from your component
-  // request.body === null
-}
-```
+If you do not want to serialize your data at all, it's recommended to use a direct object reference via an inline action (see below).
 
 ## Submit options
 
@@ -136,7 +115,7 @@ submit(null, {
 <Form action="/logout" method="post" />;
 ```
 
-### Direct `action` specification
+### Inline action
 
 If you want to perform a submission, but you don't want/need to create a route for your `action`, you can pass an `action` to `useSubmit` which will perform a submission navigation to the current location but will use the provided `action`:
 
