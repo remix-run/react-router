@@ -1,6 +1,6 @@
 # `react-router`
 
-## 6.11.1-pre.0
+## 6.11.1
 
 ### Patch Changes
 
@@ -8,7 +8,7 @@
 - Fix bug when calling `useNavigate` from `<Routes>` inside a `<RouterProvider>` ([#10432](https://github.com/remix-run/react-router/pull/10432))
 - Fix usage of `<Navigate>` in strict mode when using a data router ([#10435](https://github.com/remix-run/react-router/pull/10435))
 - Updated dependencies:
-  - `@remix-run/router@1.6.1-pre.0`
+  - `@remix-run/router@1.6.1`
 
 ## 6.11.0
 

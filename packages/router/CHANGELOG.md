@@ -1,10 +1,10 @@
 # `@remix-run/router`
 
-## 1.6.1-pre.0
+## 1.6.1
 
 ### Patch Changes
 
-- Fix basename handling when navigating without a path ([#10433](https://github.com/remix-run/react-router/pull/10433))
+- Fix `basename` handling when navigating without a path ([#10433](https://github.com/remix-run/react-router/pull/10433))
 - "Same hash" navigations no longer re-run loaders to match browser behavior (i.e. `/path#hash -> /path#hash`) ([#10408](https://github.com/remix-run/react-router/pull/10408))
 
 ## 1.6.0
