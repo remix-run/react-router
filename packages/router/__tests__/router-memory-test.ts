@@ -178,4 +178,68 @@ describe("a memory router", () => {
       search: "",
     });
   });
+
+  it("can submit non-FormData values without window", async () => {
+    let actionSpy = jest.fn();
+
+    let router = createRouter({
+      routes: [
+        {
+          path: "/",
+          action: actionSpy,
+        },
+      ],
+      history: createMemoryHistory(),
+    });
+
+    router.navigate("/", {
+      formMethod: "post",
+      formEncType: "application/json",
+      body: { key: "value" },
+    });
+    let request = actionSpy.mock.calls[0][0].request;
+    expect(await request.json()).toEqual({ key: "value" });
+
+    router.navigate("/", {
+      formMethod: "post",
+      formEncType: "text/plain",
+      body: "body",
+    });
+    request = actionSpy.mock.calls[1][0].request;
+    expect(await request.text()).toEqual("body");
+
+    router.dispose();
+  });
+
+  it("throws on submitting FormData when it's not available", async () => {
+    if (global.FormData) {
+      // This is globally available in Node 18, this test is primarily for Node 16
+      // eslint-disable-next-line jest/no-conditional-expect
+      expect(true).toBe(true);
+      return;
+    }
+
+    let actionSpy = jest.fn();
+
+    let router = createRouter({
+      routes: [
+        {
+          path: "/",
+          action: actionSpy,
+        },
+      ],
+      history: createMemoryHistory(),
+    });
+
+    await expect(() =>
+      router.navigate("/", {
+        formMethod: "post",
+        body: { key: "value" },
+      })
+    ).rejects.toThrowErrorMatchingInlineSnapshot(
+      `"FormData is not available in this environment"`
+    );
+
+    router.dispose();
+  });
 });

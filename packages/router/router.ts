@@ -3222,6 +3222,11 @@ function normalizeNavigateOptions(
     return { path, submission };
   }
 
+  invariant(
+    typeof FormData === "function",
+    "FormData is not available in this environment"
+  );
+
   // Use FormData directly if it was passed in
   let formData: FormData | undefined =
     opts.body instanceof FormData ? opts.body : opts.formData;
@@ -3826,7 +3831,7 @@ function convertFormDataToSearchParams(formData: FormData): URLSearchParams {
 
   for (let [key, value] of formData.entries()) {
     // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#converting-an-entry-list-to-a-list-of-name-value-pairs
-    searchParams.append(key, value instanceof File ? value.name : value);
+    searchParams.append(key, typeof value === "string" ? value : value.name);
   }
 
   return searchParams;
