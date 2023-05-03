@@ -146,7 +146,7 @@ export interface Router {
   fetch(
     key: string,
     routeId: string,
-    href: string | null,
+    href: string | ActionFunction | LoaderFunction | null,
     opts?: RouterFetchOptions
   ): void;
 
@@ -460,17 +460,12 @@ export type RouterNavigateOptions =
 /**
  * Options for a fetch() load
  */
-type LoadFetchOptions = BaseNavigateOrFetchOptions & {
-  loader?: LoaderFunction;
-};
+type LoadFetchOptions = BaseNavigateOrFetchOptions;
 
 /**
  * Options for a fetch() submission
  */
-type SubmitFetchOptions = BaseNavigateOrFetchOptions &
-  BaseSubmissionOptions & {
-    action?: ActionFunction;
-  };
+type SubmitFetchOptions = BaseNavigateOrFetchOptions & BaseSubmissionOptions;
 
 /**
  * Options to pass to fetch()
@@ -1656,7 +1651,7 @@ export function createRouter(init: RouterInit): Router {
   function fetch(
     key: string,
     routeId: string,
-    href: string | null,
+    hrefOrHandler: string | LoaderFunction | ActionFunction | null,
     opts?: RouterFetchOptions
   ) {
     if (isServer) {
@@ -1669,20 +1664,9 @@ export function createRouter(init: RouterInit): Router {
 
     if (fetchControllers.has(key)) abortFetcher(key);
 
-    if (
-      href != null &&
-      opts &&
-      (("loader" in opts && typeof opts.loader === "function") ||
-        ("action" in opts && typeof opts.action === "function"))
-    ) {
-      href = null;
-      warning(
-        false,
-        "router.fetch() should not include an `href` when a custom `loader` or " +
-          "`action` is passed, the `href` will be ignored in favor of the " +
-          "current location."
-      );
-    }
+    let href = typeof hrefOrHandler === "function" ? null : hrefOrHandler;
+    let handlerOverride =
+      typeof hrefOrHandler === "function" ? hrefOrHandler : undefined;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(
@@ -1723,7 +1707,7 @@ export function createRouter(init: RouterInit): Router {
         match,
         matches,
         submission,
-        opts && "action" in opts ? opts.action : undefined
+        handlerOverride
       );
       return;
     }
@@ -1738,7 +1722,7 @@ export function createRouter(init: RouterInit): Router {
       match,
       matches,
       submission,
-      opts && "loader" in opts ? opts.loader : undefined
+      handlerOverride
     );
   }
 

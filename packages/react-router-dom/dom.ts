@@ -120,7 +120,7 @@ export type SubmitTarget =
   | NonNullable<unknown> // Raw payload submissions
   | null;
 
-export interface SubmitOptions {
+export interface SubmitOptions<AllowInlineAction = false> {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
    * Defaults to "GET".
@@ -131,7 +131,7 @@ export interface SubmitOptions {
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
    */
-  action?: string | ActionFunction;
+  action?: AllowInlineAction extends true ? string | ActionFunction : string;
 
   /**
    * The encoding used to submit the form. Overrides `<form encType>`.

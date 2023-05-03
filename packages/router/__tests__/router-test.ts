@@ -10702,9 +10702,7 @@ describe("a router", () => {
         let loaderDfd = createDeferred();
         let loaderSpy = jest.fn(() => loaderDfd.promise);
         let key = "key";
-        router.fetch(key, "root", null, {
-          loader: loaderSpy,
-        });
+        router.fetch(key, "root", loaderSpy);
 
         // @ts-expect-error
         let request = loaderSpy.mock.calls[0][0].request as Request;
@@ -10732,37 +10730,7 @@ describe("a router", () => {
         }).initialize();
 
         let key = "key";
-        router.fetch(key, "root", null, {
-          loader: () => "LOADER OVERRIDE",
-        });
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "loading",
-          data: undefined,
-        });
-
-        await tick();
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "idle",
-          data: "LOADER OVERRIDE",
-        });
-      });
-
-      it("falls back to current location if `href` provided alongside an inline loader", async () => {
-        let router = createRouter({
-          routes: [
-            { id: "root", path: "/" },
-            { id: "path", path: "/path", loader: () => "LOADER" },
-          ],
-          history: createMemoryHistory(),
-          future: { v7_normalizeFormMethod: true },
-        }).initialize();
-
-        let key = "key";
-        router.fetch(key, "root", "/path", {
-          loader: () => "LOADER OVERRIDE",
-        });
+        router.fetch(key, "root", () => "LOADER OVERRIDE");
 
         expect(router.state.fetchers.get(key)).toMatchObject({
           state: "loading",
@@ -10937,10 +10905,9 @@ describe("a router", () => {
         let actionDfd = createDeferred();
         let actionSpy = jest.fn(() => actionDfd.promise);
         let key = "key";
-        router.fetch(key, "root", null, {
+        router.fetch(key, "root", actionSpy, {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
-          action: actionSpy,
         });
 
         // @ts-expect-error
@@ -10978,10 +10945,9 @@ describe("a router", () => {
         }).initialize();
 
         let key = "key";
-        router.fetch(key, "root", "/", {
+        router.fetch(key, "root", () => "ACTION OVERRIDE", {
           formMethod: "post",
           formData: createFormData({}),
-          action: () => "ACTION OVERRIDE",
         });
 
         expect(router.state.fetchers.get(key)).toMatchObject({
@@ -10995,37 +10961,6 @@ describe("a router", () => {
         expect(router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
           formAction: undefined,
-          data: "ACTION OVERRIDE",
-        });
-      });
-
-      it("falls back to current location if `href` provided alongside an inline action", async () => {
-        let router = createRouter({
-          routes: [
-            { id: "root", path: "/" },
-            { id: "path", path: "/path", action: () => "ACTION" },
-          ],
-          history: createMemoryHistory(),
-          future: { v7_normalizeFormMethod: true },
-        }).initialize();
-
-        let key = "key";
-        router.fetch(key, "root", "/path", {
-          formMethod: "post",
-          formData: createFormData({}),
-          action: () => "ACTION OVERRIDE",
-        });
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "submitting",
-          formAction: "/",
-          data: undefined,
-        });
-
-        await tick();
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "idle",
           data: "ACTION OVERRIDE",
         });
       });
