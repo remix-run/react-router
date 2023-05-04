@@ -202,11 +202,7 @@ const createEsbuildConfig = (
     platform: "browser",
     format: "esm",
     external: getExternals(ctx.config),
-    loader: {
-      ...loaders,
-      // in development, use dataurls for svgs so that `<use href={mysvg} />` works across different origins
-      ".svg": ctx.options.mode === "development" ? "dataurl" : loaders[".svg"],
-    },
+    loader: loaders,
     bundle: true,
     logLevel: "silent",
     splitting: true,

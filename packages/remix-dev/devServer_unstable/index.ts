@@ -8,7 +8,7 @@ import express from "express";
 import * as Channel from "../channel";
 import { type Manifest } from "../manifest";
 import * as Compiler from "../compiler";
-import { readConfig, type RemixConfig } from "../config";
+import { type RemixConfig } from "../config";
 import { loadEnv } from "./env";
 import * as Socket from "./socket";
 import * as HMR from "./hmr";
@@ -22,19 +22,6 @@ type Origin = {
 };
 
 let stringifyOrigin = (o: Origin) => `${o.scheme}://${o.host}:${o.port}`;
-
-let patchPublicPath = (
-  config: RemixConfig,
-  devHttpOrigin: Origin
-): RemixConfig => {
-  // set public path to point to dev server
-  // so that browser asks the dev server for assets
-  return {
-    ...config,
-    // dev server has its own origin, to `/build/` path will not cause conflicts with app server routes
-    publicPath: stringifyOrigin(devHttpOrigin) + "/build/",
-  };
-};
 
 let detectBin = async (): Promise<string> => {
   let pkgManager = detectPackageManager() ?? "npm";
@@ -54,7 +41,6 @@ export let serve = async (
     httpScheme: string;
     httpHost: string;
     httpPort: number;
-    publicDirectory: string;
     websocketPort: number;
     restart: boolean;
   }
@@ -119,7 +105,7 @@ export let serve = async (
 
   let dispose = await Compiler.watch(
     {
-      config: patchPublicPath(initialConfig, httpOrigin),
+      config: initialConfig,
       options: {
         mode: "development",
         sourcemap: true,
@@ -129,10 +115,6 @@ export let serve = async (
       },
     },
     {
-      reloadConfig: async (root) => {
-        let config = await readConfig(root);
-        return patchPublicPath(config, httpOrigin);
-      },
       onBuildStart: (ctx) => {
         state.appReady?.err();
         clean(ctx.config);
@@ -191,20 +173,6 @@ export let serve = async (
   );
 
   let httpServer = express()
-    // statically serve built assets
-    .use((_, res, next) => {
-      res.header("Access-Control-Allow-Origin", "*");
-      next();
-    })
-    .use(
-      "/build",
-      express.static(initialConfig.assetsBuildDirectory, {
-        immutable: true,
-        maxAge: "1y",
-      })
-    )
-    .use(express.static(options.publicDirectory, { maxAge: "1h" }))
-
     // handle `broadcastDevReady` messages
     .use(express.json())
     .post("/ping", (req, res) => {
