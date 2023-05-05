@@ -12,7 +12,7 @@ import { processMDX } from "../../plugins/mdx";
 
 const serverOnlyExports = new Set(["action", "loader"]);
 
-let removeServerExports = (onLoader: (loader: string) => void) =>
+let removeServerExports = () =>
   Transform.create(({ types: t }) => {
     return {
       visitor: {
@@ -38,20 +38,12 @@ let removeServerExports = (onLoader: (loader: string) => void) =>
           if (t.isFunctionDeclaration(node.declaration)) {
             let name = node.declaration.id?.name;
             if (!name) return;
-            if (name === "loader") {
-              let { code } = generate(node);
-              onLoader(code);
-            }
             if (serverOnlyExports.has(name)) return path.remove();
           }
           if (t.isVariableDeclaration(node.declaration)) {
             let declarations = node.declaration.declarations.filter((d) => {
               let name = t.isIdentifier(d.id) ? d.id.name : undefined;
               if (!name) return false;
-              if (name === "loader") {
-                let { code } = generate(node);
-                onLoader(code);
-              }
               return !serverOnlyExports.has(name);
             });
             if (declarations.length === 0) return path.remove();
@@ -72,8 +64,7 @@ let removeServerExports = (onLoader: (loader: string) => void) =>
  */
 export function browserRouteModulesPlugin(
   { config, options }: Context,
-  routeModulePaths: Map<string, string>,
-  onLoader: (filename: string, code: string) => void
+  routeModulePaths: Map<string, string>
 ): esbuild.Plugin {
   return {
     name: "browser-route-modules",
@@ -119,9 +110,7 @@ export function browserRouteModulesPlugin(
               return mdxResult;
             }
 
-            let transform = removeServerExports((loader: string) =>
-              onLoader(routeFile, loader)
-            );
+            let transform = removeServerExports();
             mdxResult.contents = transform(
               mdxResult.contents,
               // Trick babel into allowing JSX syntax.
@@ -134,10 +123,7 @@ export function browserRouteModulesPlugin(
 
           let value = cache.get(file);
           if (!value || value.sourceCode !== sourceCode) {
-            let extractedLoader;
-            let transform = removeServerExports(
-              (loader: string) => (extractedLoader = loader)
-            );
+            let transform = removeServerExports();
             let contents = transform(sourceCode, routeFile);
 
             if (options.mode === "development" && config.future.unstable_dev) {
@@ -153,7 +139,6 @@ export function browserRouteModulesPlugin(
             }
             value = {
               sourceCode,
-              extractedLoader,
               output: {
                 contents,
                 loader: getLoaderForFile(routeFile),
@@ -161,10 +146,6 @@ export function browserRouteModulesPlugin(
               },
             };
             cache.set(file, value);
-          }
-
-          if (value.extractedLoader) {
-            onLoader(routeFile, value.extractedLoader);
           }
 
           return value.output;

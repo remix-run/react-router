@@ -57,7 +57,6 @@ export async function watch(
   onBuildFinish?.(ctx, Date.now() - start, manifest !== undefined);
 
   let restart = debounce(async () => {
-    onBuildStart?.(ctx);
     let start = Date.now();
     compiler.dispose();
 
@@ -67,6 +66,7 @@ export async function watch(
       logThrown(thrown);
       return;
     }
+    onBuildStart?.(ctx);
 
     compiler = await Compiler.create(ctx);
     let manifest = await compile();

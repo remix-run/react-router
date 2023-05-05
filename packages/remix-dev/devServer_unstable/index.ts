@@ -14,6 +14,7 @@ import * as Socket from "./socket";
 import * as HMR from "./hmr";
 import { warnOnce } from "../warnOnce";
 import { detectPackageManager } from "../cli/detectPackageManager";
+import * as HDR from "./hdr";
 
 type Origin = {
   scheme: string;
@@ -41,12 +42,12 @@ export let serve = async (
     httpScheme: string;
     httpHost: string;
     httpPort: number;
-    websocketPort: number;
+    webSocketPort: number;
     restart: boolean;
   }
 ) => {
   await loadEnv(initialConfig.rootDirectory);
-  let websocket = Socket.serve({ port: options.websocketPort });
+  let websocket = Socket.serve({ port: options.webSocketPort });
   let httpOrigin: Origin = {
     scheme: options.httpScheme,
     host: options.httpHost,
@@ -58,6 +59,8 @@ export let serve = async (
     manifest?: Manifest;
     prevManifest?: Manifest;
     appReady?: Channel.Type<void>;
+    hdr?: Promise<Record<string, string>>;
+    prevLoaderHashes?: Record<string, string>;
   } = {};
 
   let bin = await detectBin();
@@ -111,14 +114,16 @@ export let serve = async (
         sourcemap: true,
         onWarning: warnOnce,
         devHttpOrigin: httpOrigin,
-        devWebsocketPort: options.websocketPort,
+        devWebSocketPort: options.webSocketPort,
       },
     },
     {
-      onBuildStart: (ctx) => {
+      onBuildStart: async (ctx) => {
         state.appReady?.err();
         clean(ctx.config);
         websocket.log(state.prevManifest ? "Rebuilding..." : "Building...");
+
+        state.hdr = HDR.detectLoaderChanges(ctx);
       },
       onBuildManifest: (manifest: Manifest) => {
         state.manifest = manifest;
@@ -143,14 +148,16 @@ export let serve = async (
         }
         let { ok } = await state.appReady.result;
         // result not ok -> new build started before this one finished. do not process outdated manifest
+        let loaderHashes = await state.hdr;
         if (ok) {
           console.log(`App server took ${prettyMs(Date.now() - start)}`);
-
-          if (state.manifest?.hmr && state.prevManifest) {
+          if (state.manifest && loaderHashes && state.prevManifest) {
             let updates = HMR.updates(
               ctx.config,
               state.manifest,
-              state.prevManifest
+              state.prevManifest,
+              loaderHashes,
+              state.prevLoaderHashes
             );
             websocket.hmr(state.manifest, updates);
 
@@ -162,6 +169,7 @@ export let serve = async (
           }
         }
         state.prevManifest = state.manifest;
+        state.prevLoaderHashes = loaderHashes;
       },
       onFileCreated: (file) =>
         websocket.log(`File created: ${relativePath(file)}`),

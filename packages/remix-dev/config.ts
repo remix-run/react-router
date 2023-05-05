@@ -43,7 +43,7 @@ type Dev = {
   httpScheme?: string;
   httpHost?: string;
   httpPort?: number;
-  websocketPort?: number;
+  webSocketPort?: number;
   restart?: boolean;
   publicDirectory?: string;
 };

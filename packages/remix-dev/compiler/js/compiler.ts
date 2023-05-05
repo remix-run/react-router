@@ -72,7 +72,6 @@ const getExternals = (remixConfig: RemixConfig): string[] => {
 
 const createEsbuildConfig = (
   ctx: Context,
-  onLoader: (filename: string, code: string) => void,
   channels: { cssBundleHref: Channel.Type<string | undefined> }
 ): esbuild.BuildOptions => {
   let entryPoints: Record<string, string> = {
@@ -142,7 +141,7 @@ const createEsbuildConfig = (
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
     ctx.config.future.unstable_dev
-      ? browserRouteModulesPlugin_v2(ctx, routeModulePaths, onLoader)
+      ? browserRouteModulesPlugin_v2(ctx, routeModulePaths)
       : browserRouteModulesPlugin(ctx, /\?browser$/),
     mdxPlugin(ctx),
     emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
@@ -237,19 +236,12 @@ export const create = async (
   ctx: Context,
   channels: { cssBundleHref: Channel.Type<string | undefined> }
 ): Promise<Compiler> => {
-  let hmrRoutes: Record<string, { loaderHash: string }> = {};
-  let onLoader = (filename: string, code: string) => {
-    let key = path.relative(ctx.config.rootDirectory, filename);
-    hmrRoutes[key] = { loaderHash: code };
-  };
-
   let compiler = await esbuild.context({
-    ...createEsbuildConfig(ctx, onLoader, channels),
+    ...createEsbuildConfig(ctx, channels),
     metafile: true,
   });
 
   let compile = async () => {
-    hmrRoutes = {};
     let { metafile } = await compiler.rebuild();
 
     let hmr: Manifest["hmr"] | undefined = undefined;
@@ -266,7 +258,6 @@ export const create = async (
         );
       hmr = {
         runtime: hmrRuntime,
-        routes: hmrRoutes,
         timestamp: Date.now(),
       };
     }

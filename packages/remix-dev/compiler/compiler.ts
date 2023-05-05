@@ -93,7 +93,6 @@ export let create = async (ctx: Context): Promise<Compiler> => {
     }
 
     // js compilation (implicitly writes artifacts/js)
-    // TODO: js task should not return metafile, but rather js assets
     let js = await tasks.js;
     if (!js.ok) throw error ?? js.error;
     let { metafile, hmr } = js.value;

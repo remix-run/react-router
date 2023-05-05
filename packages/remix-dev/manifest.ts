@@ -24,6 +24,5 @@ export type Manifest = {
   hmr?: {
     timestamp: number;
     runtime: string;
-    routes: Record<string, { loaderHash: string }>;
   };
 };
