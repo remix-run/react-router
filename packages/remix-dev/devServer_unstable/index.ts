@@ -70,7 +70,8 @@ export let serve = async (
       stdio: "pipe",
       env: {
         NODE_ENV: "development",
-        PATH: `${bin}:${process.env.PATH}`,
+        PATH:
+          bin + (process.platform === "win32" ? ";" : ":") + process.env.PATH,
         REMIX_DEV_HTTP_ORIGIN: stringifyOrigin(httpOrigin),
       },
     });
