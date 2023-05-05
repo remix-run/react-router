@@ -29,7 +29,7 @@ let detectBin = async (): Promise<string> => {
   if (pkgManager === "npm") {
     // npm v9 removed the `bin` command, so have to use `prefix`
     let { stdout } = await execa(pkgManager, ["prefix"]);
-    return stdout.trim() + "/node_modules/.bin";
+    return path.join(stdout.trim(), "node_modules", ".bin");
   }
   let { stdout } = await execa(pkgManager, ["bin"]);
   return stdout.trim();
