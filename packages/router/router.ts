@@ -352,6 +352,7 @@ export interface RouterInit {
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
+  window?: Window;
 }
 
 /**
@@ -661,11 +662,7 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
-const isBrowser =
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined";
-const isServer = !isBrowser;
+const globalWindow = typeof window !== "undefined" ? window : undefined;
 
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
@@ -680,7 +677,16 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
 /**
  * Create a router and listen to history POP navigations
  */
-export function createRouter(init: RouterInit): Router {
+export function createRouter({
+  window = globalWindow,
+  ...init
+}: RouterInit): Router {
+  const isBrowser =
+    typeof window !== "undefined" &&
+    typeof window.document !== "undefined" &&
+    typeof window.document.createElement !== "undefined";
+  const isServer = !isBrowser;
+
   invariant(
     init.routes.length > 0,
     "You must provide a non-empty routes array to createRouter"
