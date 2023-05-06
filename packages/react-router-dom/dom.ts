@@ -241,13 +241,7 @@ export function getFormSubmissionInfo(
       getFormEncType(form.getAttribute("enctype")) ||
       defaultEncType;
 
-    formData = new FormData(form);
-
-    // Include name + value from a <button>, appending in case the button name
-    // matches an existing input name
-    if (target.name) {
-      formData.append(target.name, target.value);
-    }
+    formData = buildFormData(form, target);
   } else if (isHtmlElement(target)) {
     throw new Error(
       `Cannot submit element that is not <form>, <button>, or ` +
@@ -267,4 +261,38 @@ export function getFormSubmissionInfo(
   }
 
   return { action, method: method.toLowerCase(), encType, formData, body };
+}
+
+// one-time check for submitter support
+let formDataSupportsSubmitter = false;
+try {
+  // @ts-expect-error if FormData supports the submitter parameter, this will throw
+  new FormData(undefined, 0);
+} catch (e) {
+  formDataSupportsSubmitter = true;
+}
+
+/**
+ * Build a FormData object populated from a form and submitter
+ *
+ * Uses the constructor parameter if available, otherwise does some basic
+ * emulation; for complete support in older browsers, consider using the
+ * formdata-submitter-polyfill package
+ */
+function buildFormData(
+  form: HTMLFormElement,
+  submitter: HTMLButtonElement | HTMLInputElement
+) {
+  let formData = new FormData(form, submitter);
+  if (!formDataSupportsSubmitter) {
+    let { name, type, value } = submitter;
+    if (type === "image") {
+      let prefix = name ? `${name}.` : "";
+      formData.append(`${prefix}x`, "0");
+      formData.append(`${prefix}y`, "0");
+    } else if (name) {
+      formData.append(name, value);
+    }
+  }
+  return formData;
 }

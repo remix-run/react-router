@@ -2332,9 +2332,9 @@
     "@types/react" "*"
 
 "@types/react@*", "@types/react@^18.0.0", "@types/react@^18.0.15":
-  version "18.0.20"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.20.tgz#e4c36be3a55eb5b456ecf501bd4a00fd4fd0c9ab"
-  integrity sha512-MWul1teSPxujEHVwZl4a5HxQ9vVNsjTchVA+xRqv/VYGCuKGAU6UhfrTdF5aBefwD1BHUD8i/zq+O/vyCm/FrA==
+  version "18.2.5"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.5.tgz#f9403e1113b12b53f7edcdd9a900c10dd4b49a59"
+  integrity sha512-RuoMedzJ5AOh23Dvws13LU9jpZHIc/k90AgmK7CecAYeWmSr3553L4u5rk4sWAPBuQosfT7HmTfG4Rg5o4nGEA==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
@@ -2513,6 +2513,11 @@
   dependencies:
     "@typescript-eslint/types" "5.37.0"
     eslint-visitor-keys "^3.3.0"
+
+"@typescript/lib-dom@npm:@types/web":
+  version "0.0.99"
+  resolved "https://registry.yarnpkg.com/@types/web/-/web-0.0.99.tgz#a9c3a088e4634f6b08977f4fc733c916c2b0d50e"
+  integrity sha512-xMz3tOvtkZzc7RpQrDNiLe5sfMmP+fz8bOxHIZ/U8qXyvzDX4L4Ss1HCjor/O9DSelba+1iXK1VM7lruX28hiQ==
 
 "@ungap/url-search-params@^0.1.4":
   version "0.1.4"
@@ -4724,6 +4729,11 @@ form-data@^4.0.0:
     asynckit "^0.4.0"
     combined-stream "^1.0.8"
     mime-types "^2.1.12"
+
+formdata-submitter-polyfill@1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/formdata-submitter-polyfill/-/formdata-submitter-polyfill-1.0.2.tgz#5c048e999c6b537b3adb50916fabd06729e138c1"
+  integrity sha512-4F/1pOB/3VofhaUpBd/R8fNLWjBRHvIb5rotTAXeRC4zaf6GKX7FhqchK4EcyQzc3ugNSP+HXckRF7cGUb37eQ==
 
 fragment-cache@^0.2.1:
   version "0.2.1"

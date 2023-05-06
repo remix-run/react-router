@@ -70,6 +70,7 @@
     "@types/semver": "^7.3.8",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
     "@typescript-eslint/parser": "^4.28.3",
+    "@typescript/lib-dom": "npm:@types/web",
     "abort-controller": "^3.0.0",
     "babel-eslint": "^10.1.0",
     "babel-jest": "^29.0.3",
