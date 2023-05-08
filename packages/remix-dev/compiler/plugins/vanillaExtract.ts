@@ -60,6 +60,13 @@ export function vanillaExtractPlugin(
   return {
     name: pluginName,
     async setup(build) {
+      try {
+        require.resolve("@vanilla-extract/css");
+      } catch (_) {
+        // If Vanilla Extract isn't installed, skip this plugin.
+        return;
+      }
+
       let root = config.appDirectory;
 
       let postcssProcessor = await getPostcssProcessor({
