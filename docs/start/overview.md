@@ -704,7 +704,7 @@ When you get better at React Router, you get better at the web platform.
 <docs-info>TODO:</docs-info>
 
 Hello workshop
- 
+
 [path]: ../route/route#path
 [loader]: ../route/loader
 [action]: ../route/action
