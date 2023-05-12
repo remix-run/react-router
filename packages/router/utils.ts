@@ -712,9 +712,7 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } = {} as any
+  params: Partial<{ [key in PathParam<Path>]: string | null }> = {}
 ): string {
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
