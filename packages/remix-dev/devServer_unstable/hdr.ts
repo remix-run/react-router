@@ -8,6 +8,7 @@ import { getRouteModuleExports } from "../compiler/utils/routeExports";
 import { createMatchPath } from "../compiler/utils/tsconfig";
 import invariant from "../invariant";
 import { mdxPlugin } from "../compiler/plugins/mdx";
+import { loaders } from "../compiler/utils/loaders";
 
 function isBareModuleId(id: string): boolean {
   return !id.startsWith("node:") && !id.startsWith(".") && !path.isAbsolute(id);
@@ -28,6 +29,7 @@ export let detectLoaderChanges = async (ctx: Context) => {
     outdir: ".",
     write: false,
     entryNames: "[hash]",
+    loader: loaders,
     plugins: [
       {
         name: "hmr-loader",
