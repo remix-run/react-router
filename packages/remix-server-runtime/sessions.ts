@@ -174,28 +174,28 @@ export interface SessionStorage<Data = SessionData, FlashData = Data> {
    * Session. If there is no session associated with the cookie, this will
    * return a new Session with no data.
    */
-  getSession(
+  getSession: (
     cookieHeader?: string | null,
     options?: CookieParseOptions
-  ): Promise<Session<Data, FlashData>>;
+  ) => Promise<Session<Data, FlashData>>;
 
   /**
    * Stores all data in the Session and returns the Set-Cookie header to be
    * used in the HTTP response.
    */
-  commitSession(
+  commitSession: (
     session: Session<Data, FlashData>,
     options?: CookieSerializeOptions
-  ): Promise<string>;
+  ) => Promise<string>;
 
   /**
    * Deletes all data associated with the Session and returns the Set-Cookie
    * header to be used in the HTTP response.
    */
-  destroySession(
+  destroySession: (
     session: Session<Data, FlashData>,
     options?: CookieSerializeOptions
-  ): Promise<string>;
+  ) => Promise<string>;
 }
 
 /**
