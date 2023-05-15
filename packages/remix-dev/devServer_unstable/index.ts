@@ -74,6 +74,8 @@ export let serve = async (
           bin + (process.platform === "win32" ? ";" : ":") + process.env.PATH,
         REMIX_DEV_HTTP_ORIGIN: stringifyOrigin(httpOrigin),
       },
+      // https://github.com/sindresorhus/execa/issues/433
+      windowsHide: false,
     });
 
     if (newAppServer.stdin)
