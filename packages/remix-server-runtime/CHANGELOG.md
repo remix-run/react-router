@@ -1,5 +1,12 @@
 # `@remix-run/server-runtime`
 
+## 1.16.1-pre.0
+
+### Patch Changes
+
+- Expose methods in the `SessionStorage` interface as arrow functions so destructuring is correctly part of the contract. ([#6330](https://github.com/remix-run/remix/pull/6330))
+- Fix `data` parameter typing on `V2_MetaFunction` to include `undefined` for scenarios in which the `loader` threw to it's own boundary. ([#6231](https://github.com/remix-run/remix/pull/6231))
+
 ## 1.16.0
 
 ### Minor Changes
