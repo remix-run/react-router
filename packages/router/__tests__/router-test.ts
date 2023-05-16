@@ -1476,8 +1476,16 @@ describe("a router", () => {
       });
     });
 
-    it("does not run loaders on hash change only navigations", async () => {
+    it("does not run loaders on hash change only navigations (no hash -> hash)", async () => {
       let t = initializeTmTest();
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+      let A = await t.navigate("/#bar");
+      expect(A.loaders.root.stub.mock.calls.length).toBe(0);
+      expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
+    });
+
+    it("does not run loaders on hash change only navigations (hash -> new hash)", async () => {
+      let t = initializeTmTest({ url: "/#foo" });
       expect(t.router.state.loaderData).toMatchObject({ root: "ROOT" });
       let A = await t.navigate("/#bar");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
@@ -5239,6 +5247,47 @@ describe("a router", () => {
         },
         errors: {
           "0": "Kaboom!",
+        },
+      });
+
+      router.dispose();
+    });
+
+    it("kicks off initial data load when hash is present", async () => {
+      let loaderDfd = createDeferred();
+      let loaderSpy = jest.fn(() => loaderDfd.promise);
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/#hash"] }),
+        routes: [
+          {
+            path: "/",
+            loader: loaderSpy,
+          },
+        ],
+      });
+      router.initialize();
+
+      expect(console.warn).not.toHaveBeenCalled();
+      expect(loaderSpy.mock.calls.length).toBe(1);
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/", hash: "#hash" }),
+        initialized: false,
+        navigation: {
+          state: "loading",
+          location: { pathname: "/", hash: "#hash" },
+        },
+      });
+      expect(router.state.loaderData).toEqual({});
+
+      await loaderDfd.resolve("DATA");
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/", hash: "#hash" }),
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          "0": "DATA",
         },
       });
 
