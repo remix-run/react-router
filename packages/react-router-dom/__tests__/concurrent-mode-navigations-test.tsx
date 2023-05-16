@@ -21,7 +21,7 @@ import {
 import { JSDOM } from "jsdom";
 
 describe("Handles concurrent mode features during navigations", () => {
-  function getComponents(withBoundary: boolean) {
+  function getComponents() {
     function Home() {
       let navigate = useNavigate();
       return (
@@ -39,27 +39,16 @@ describe("Handles concurrent mode features during navigations", () => {
       return dfd.resolve();
     }
 
-    function AboutWithoutBoundary() {
+    function About() {
       if (!resolved) {
         throw dfd.promise;
       }
       return <h1>About</h1>;
     }
 
-    function AboutWithBoundary() {
-      if (!resolved) {
-        throw dfd.promise;
-      }
-      return (
-        <React.Suspense fallback={<p>Loading...</p>}>
-          <h1>About</h1>
-        </React.Suspense>
-      );
-    }
-
     return {
       Home,
-      About: withBoundary ? AboutWithBoundary : AboutWithoutBoundary,
+      About,
       resolve,
     };
   }
@@ -105,7 +94,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("MemoryRouter", async () => {
-      let { Home, About, resolve } = getComponents(true);
+      let { Home, About, resolve } = getComponents();
 
       let { container } = render(
         <MemoryRouter>
@@ -128,7 +117,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("BrowserRouter", async () => {
-      let { Home, About, resolve } = getComponents(true);
+      let { Home, About, resolve } = getComponents();
 
       let { container } = render(
         <BrowserRouter window={getWindowImpl("/", false)}>
@@ -151,7 +140,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("HashRouter", async () => {
-      let { Home, About, resolve } = getComponents(true);
+      let { Home, About, resolve } = getComponents();
 
       let { container } = render(
         <HashRouter window={getWindowImpl("/", true)}>
@@ -174,7 +163,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("RouterProvider", async () => {
-      let { Home, About, resolve } = getComponents(true);
+      let { Home, About, resolve } = getComponents();
 
       let router = createMemoryRouter(
         createRoutesFromElements(
@@ -241,7 +230,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("MemoryRouter", async () => {
-      let { Home, About, resolve } = getComponents(false);
+      let { Home, About, resolve } = getComponents();
 
       let { container } = render(
         <MemoryRouter>
@@ -257,7 +246,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("BrowserRouter", async () => {
-      let { Home, About, resolve } = getComponents(false);
+      let { Home, About, resolve } = getComponents();
 
       let { container } = render(
         <BrowserRouter window-={getWindowImpl("/", true)}>
@@ -273,7 +262,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("HashRouter", async () => {
-      let { Home, About, resolve } = getComponents(false);
+      let { Home, About, resolve } = getComponents();
 
       let { container } = render(
         <HashRouter window-={getWindowImpl("/", true)}>
@@ -289,7 +278,7 @@ describe("Handles concurrent mode features during navigations", () => {
 
     // eslint-disable-next-line jest/expect-expect
     it("RouterProvider", async () => {
-      let { Home, About, resolve } = getComponents(false);
+      let { Home, About, resolve } = getComponents();
 
       let router = createMemoryRouter(
         createRoutesFromElements(
