@@ -19,6 +19,7 @@
     "@remix-run/dev": "0.0.0-local-version",
     "@types/react": "0.0.0-local-version",
     "@types/react-dom": "0.0.0-local-version",
+    "@vanilla-extract/css": "^1.10.0",
     "typescript": "0.0.0-local-version"
   },
   "engines": {

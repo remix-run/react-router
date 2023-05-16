@@ -7,6 +7,7 @@ import type { Options } from "../options";
 import { loaders } from "../utils/loaders";
 import { getPostcssProcessor } from "../utils/postcss";
 import type { Context } from "../context";
+import { getAppDependencies } from "../../dependencies";
 
 const pluginName = "vanilla-extract-plugin";
 const namespace = `${pluginName}-ns`;
@@ -60,10 +61,8 @@ export function vanillaExtractPlugin(
   return {
     name: pluginName,
     async setup(build) {
-      try {
-        require.resolve("@vanilla-extract/css");
-      } catch (_) {
-        // If Vanilla Extract isn't installed, skip this plugin.
+      let appDependencies = getAppDependencies(config, true);
+      if (!appDependencies["@vanilla-extract/css"]) {
         return;
       }
 
