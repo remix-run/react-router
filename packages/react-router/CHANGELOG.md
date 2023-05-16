@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.11.2-pre.0
+
+### Patch Changes
+
+- Fix `basename` duplication in descenant `<Routes>` inside a `<RouterProvider>` ([#10492](https://github.com/remix-run/react-router/pull/10492))
+- Updated dependencies:
+  - `@remix-run/router@1.6.2-pre.0`
+
 ## 6.11.1
 
 ### Patch Changes
