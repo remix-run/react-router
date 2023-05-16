@@ -8,5 +8,10 @@
     "react-router-native": "6.11.1",
     "@remix-run/router": "1.6.1"
   },
-  "changesets": []
+  "changesets": [
+    "fix-basename-duplication",
+    "hmr-error-boundary",
+    "initialize-with-hash",
+    "set-search-params-type"
+  ]
 }
