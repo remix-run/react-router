@@ -203,6 +203,70 @@ And now your blog index route can participate in data loading.
 
 You can keep doing this one route at a time until you've eventually converted all of your routes to data routes and can no longer use any nested `<Routes>` to define your routing tree. To avoid bundle bloat, it's recommended to leverage the [route.lazy][route-lazy] prop to lazily load your routes.
 
+## FAQ
+
+### But I've got stuff between `<BrowserRouter>` and `<Routes>`
+
+Many folks render an app shell around their `<Routes>` via something like the following:
+
+```jsx
+export default function App() {
+  return (
+    <BrowserRouter>
+      <header>
+        <h1>My Super Cool App</h1>
+        <NavMenu />
+      </header>
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/blog/*" element={<BlogApp />} />
+          <Route path="/users/*" element={<UserApp />} />
+        </Routes>
+      </main>
+      <footer>©️ me 2023</footer>
+    </BrowserRouter>
+  );
+}
+```
+
+This is quite common but poses a problem in the next step where everything inside `<BrowserRouter>` must be a `<Route>`. Thankfully the solution is straightforward - that app shell is nothing more than a layout route with an `<Outlet>`! So just add this "app shell" into a pathless layout route around your routes as follows:
+
+```jsx lines=[6,25]
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* 1️⃣ Wrap your routes in a pathless layout route */}
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/blog/*" element={<BlogApp />} />
+          <Route path="/users/*" element={<UserApp />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function Layout() {
+  return (
+    <>
+      <header>
+        <h1>My Super Cool App</h1>
+        <NavMenu />
+      </header>
+      <main>
+        {/* 2️⃣ Render the app routes via the Layout Outlet */}
+        <Outlet />
+      </main>
+      <footer>©️ me 2023</footer>
+    </>
+  );
+}
+```
+
+Then when lifting routes into your `RouterProvider`, you likely want to lift the layout route first so all of the children can nest inside of it.
+
 [remixing-react-router]: https://remix.run/blog/remixing-react-router
 [when-to-fetch]: https://www.youtube.com/watch?v=95B8mnhzoCM
 [picking-a-router]: ../routers/picking-a-router
