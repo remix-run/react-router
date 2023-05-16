@@ -57,6 +57,7 @@ const defaultRuntimeExports: ExportNames = {
     "ErrorBoundaryComponent",
     "HandleDataRequestFunction",
     "HandleDocumentRequestFunction",
+    "HeadersArgs",
     "HeadersFunction",
     "HtmlLinkDescriptor",
     "HtmlMetaDescriptor",
