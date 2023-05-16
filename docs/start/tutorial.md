@@ -1784,7 +1784,7 @@ Alright, we're ready to click the star next to the user's name!
 
 <img class="tutorial" loading="lazy" src="/_docs/tutorial/24.webp" />
 
-Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like a the `<Form>` we've been using: it calls the action and then all data is revalidated automatically--even your errors will be caught the same way.
+Check that out, both stars automatically update. Our new `<fetcher.Form method="post">` works almost exactly like the `<Form>` we've been using: it calls the action and then all data is revalidated automatically--even your errors will be caught the same way.
 
 There is one key difference though, it's not a navigation--the URL doesn't change, the history stack is unaffected.
 
