@@ -1,12 +1,12 @@
 # `react-router-native`
 
-## 6.11.2-pre.0
+## 6.11.2
 
 ### Patch Changes
 
 - Export `SetURLSearchParams` type ([#10444](https://github.com/remix-run/react-router/pull/10444))
 - Updated dependencies:
-  - `react-router@6.11.2-pre.0`
+  - `react-router@6.11.2`
 
 ## 6.11.1
 
