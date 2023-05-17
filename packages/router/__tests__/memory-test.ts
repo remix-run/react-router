@@ -29,6 +29,10 @@ describe("a memory history", () => {
     expect(typeof history.index).toBe("number");
   });
 
+  it("has an entries property", () => {
+    expect(Array.isArray(history.entries)).toBe(true);
+  });
+
   it("knows how to create hrefs", () => {
     const href = history.createHref({
       pathname: "/the/path",
