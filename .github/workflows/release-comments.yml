@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0
 
       - name: 📝 Comment on related issues and pull requests
-        uses: mcansh/release-comment-action@v0.3.1
+        uses: remix-run/release-comment-action@v0.4.1
         with:
           DIRECTORY_TO_CHECK: "./packages"
           PACKAGE_NAME: "react-router"
