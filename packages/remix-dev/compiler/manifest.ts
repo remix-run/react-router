@@ -93,11 +93,24 @@ export async function create({
   invariant(entry, `Missing output for entry point`);
 
   optimizeRoutes(routes, entry.imports);
-  let version = getHash(
-    JSON.stringify({ entry, routes, hmrRoutes: hmr?.routes })
-  ).slice(0, 8);
 
-  return { version, entry, routes, cssBundleHref, hmr };
+  let fingerprintedValues = {
+    entry,
+    routes,
+    cssBundleHref,
+  };
+
+  let version = getHash(JSON.stringify(fingerprintedValues)).slice(0, 8);
+
+  let nonFingerprintedValues = {
+    version,
+    hmr,
+  };
+
+  return {
+    ...fingerprintedValues,
+    ...nonFingerprintedValues,
+  };
 }
 
 export const write = async (config: RemixConfig, assetsManifest: Manifest) => {

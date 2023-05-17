@@ -1,5 +1,7 @@
 import esbuild from "esbuild";
 
+import { CANCEL_PREFIX } from "../cancel";
+
 let toError = (thrown: unknown): Error => {
   if (thrown instanceof Error) return thrown;
   try {
@@ -21,10 +23,14 @@ let logEsbuildError = (error: esbuild.BuildFailure) => {
     color: true,
   });
   warnings.forEach((w) => console.warn(w));
-  let errors = esbuild.formatMessagesSync(error.errors, {
-    kind: "error",
-    color: true,
-  });
+  let errors = esbuild.formatMessagesSync(
+    // Filter out cancelation errors
+    error.errors.filter((e) => !e.text.startsWith(CANCEL_PREFIX)),
+    {
+      kind: "error",
+      color: true,
+    }
+  );
   errors.forEach((e) => console.error(e));
 };
 

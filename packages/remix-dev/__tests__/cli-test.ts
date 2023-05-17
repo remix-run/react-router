@@ -122,7 +122,7 @@ describe("remix CLI", () => {
             --http-host         HTTP(S) host for the dev server. Default: localhost
             --http-port         HTTP(S) port for the dev server. Default: any open port
             --no-restart        Do not restart the app server when rebuilds occur.
-            --websocket-port    Websocket port for the dev server. Default: any open port
+            --websocket-port    WebSocket port for the dev server. Default: any open port
           \`init\` Options:
             --no-delete         Skip deleting the \`remix.init\` script
           \`routes\` Options:

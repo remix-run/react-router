@@ -10,7 +10,9 @@ import { create as createManifest, write as writeManifest } from "./manifest";
 import { err, ok } from "../result";
 
 type Compiler = {
-  compile: () => Promise<Manifest>;
+  compile: (options?: {
+    onManifest?: (manifest: Manifest) => void;
+  }) => Promise<Manifest>;
   cancel: () => Promise<void>;
   dispose: () => Promise<void>;
 };
@@ -43,7 +45,9 @@ export let create = async (ctx: Context): Promise<Compiler> => {
     ]);
   };
 
-  let compile = async () => {
+  let compile = async (
+    options: { onManifest?: (manifest: Manifest) => void } = {}
+  ) => {
     let error: unknown | undefined = undefined;
     let errCancel = (thrown: unknown) => {
       if (error === undefined) {
@@ -89,7 +93,6 @@ export let create = async (ctx: Context): Promise<Compiler> => {
     }
 
     // js compilation (implicitly writes artifacts/js)
-    // TODO: js task should not return metafile, but rather js assets
     let js = await tasks.js;
     if (!js.ok) throw error ?? js.error;
     let { metafile, hmr } = js.value;
@@ -102,6 +105,7 @@ export let create = async (ctx: Context): Promise<Compiler> => {
       hmr,
     });
     channels.manifest.ok(manifest);
+    options.onManifest?.(manifest);
     writes.manifest = writeManifest(ctx.config, manifest);
 
     // server compilation

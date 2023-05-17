@@ -28,7 +28,7 @@ type Loader = "js" | "jsx" | "ts" | "tsx";
 type Extension = `.${typeof extensions[number]}`;
 
 const loaderForExtension: Record<Extension, Loader> = {
-  ".js": "js",
+  ".js": "jsx", // Remix supports JSX in JS files
   ".jsx": "jsx",
   ".ts": "ts",
   ".tsx": "tsx",
@@ -126,7 +126,7 @@ export const cssSideEffectImportsPlugin = ({
 const additionalLanguageFeatures: ParserOptions["plugins"] = ["decorators"];
 
 const babelPluginsForLoader: Record<Loader, ParserOptions["plugins"]> = {
-  js: [...additionalLanguageFeatures],
+  js: ["jsx", ...additionalLanguageFeatures], // Remix supports JSX in JS files
   jsx: ["jsx", ...additionalLanguageFeatures],
   ts: ["typescript", ...additionalLanguageFeatures],
   tsx: ["typescript", "jsx", ...additionalLanguageFeatures],

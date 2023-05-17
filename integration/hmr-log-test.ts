@@ -125,6 +125,11 @@ let fixture = (options: {
         ...cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : [],
       ];
 
+      // dummy loader to make sure that HDR is granular
+      export const loader = () => {
+        return null;
+      };
+
       export default function Root() {
         return (
           <html lang="en" className="h-full">
@@ -141,6 +146,7 @@ let fixture = (options: {
                   <ul>
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/about">About</Link></li>
+                    <li><Link to="/mdx">MDX</Link></li>
                   </ul>
                 </nav>
               </header>
@@ -156,7 +162,7 @@ let fixture = (options: {
     "app/routes/_index.tsx": js`
       import { useLoaderData } from "@remix-run/react";
       export function shouldRevalidate(args) {
-        return args.defaultShouldRevalidate;
+        return true;
       }
       export default function Index() {
         const t = useLoaderData();
@@ -179,6 +185,18 @@ let fixture = (options: {
         )
       }
     `,
+    "app/routes/mdx.mdx": `import { useLoaderData } from '@remix-run/react'
+export const loader = () => "crazy"
+export const Component = () => {
+  const data = useLoaderData()
+  return <h1 id={data}>{data}</h1>
+}
+
+# heyo
+whatsup
+
+<Component/>
+`,
 
     "app/components/counter.tsx": js`
       import * as React from "react";
@@ -230,7 +248,7 @@ test("HMR", async ({ page }) => {
     }
   });
 
-  let portRange = makeRange(3080, 3099);
+  let portRange = makeRange(4080, 4099);
   let appServerPort = await getPort({ port: portRange });
   let httpPort = await getPort({ port: portRange });
   let webSocketPort = await getPort({ port: portRange });
@@ -272,6 +290,8 @@ test("HMR", async ({ page }) => {
     let originalCounter = fs.readFileSync(counterPath, "utf8");
     let cssModulePath = path.join(projectDir, "app", "styles.module.css");
     let originalCssModule = fs.readFileSync(cssModulePath, "utf8");
+    let mdxPath = path.join(projectDir, "app", "routes", "mdx.mdx");
+    let originalMdx = fs.readFileSync(mdxPath, "utf8");
 
     // make content and style changed to index route
     let newCssModule = `
@@ -286,7 +306,7 @@ test("HMR", async ({ page }) => {
       import { useLoaderData } from "@remix-run/react";
       import styles from "~/styles.module.css";
       export function shouldRevalidate(args) {
-        return args.defaultShouldRevalidate;
+        return true;
       }
       export default function Index() {
         const t = useLoaderData();
@@ -329,7 +349,7 @@ test("HMR", async ({ page }) => {
       export let loader = () => json({ hello: "world" });
 
       export function shouldRevalidate(args) {
-        return args.defaultShouldRevalidate;
+        return true;
       }
       export default function Index() {
         let { hello } = useLoaderData<typeof loader>();
@@ -358,7 +378,7 @@ test("HMR", async ({ page }) => {
       }
 
       export function shouldRevalidate(args) {
-        return args.defaultShouldRevalidate;
+        return true;
       }
       export default function Index() {
         let { hello } = useLoaderData<typeof loader>();
@@ -419,9 +439,30 @@ test("HMR", async ({ page }) => {
       `#about-counter:has-text("inc 0")`
     );
 
-    // This should not have triggered any revalidation but our detection is
-    // failing for x-module changes for route module imports
-    // expect(dataRequests).toBe(2);
+    expect(dataRequests).toBe(2);
+
+    // mdx
+    await page.click(`a[href="/mdx"]`);
+    await page.waitForSelector(`#crazy`);
+    let mdx = `import { useLoaderData } from '@remix-run/react'
+export const loader = () => "hot"
+export const Component = () => {
+  const data = useLoaderData()
+  return <h1 id={data}>{data}</h1>
+}
+
+# heyo
+whatsup
+
+<Component/>
+`;
+    fs.writeFileSync(mdxPath, mdx);
+    await page.waitForSelector(`#hot`);
+    expect(dataRequests).toBe(4);
+
+    fs.writeFileSync(mdxPath, originalMdx);
+    await page.waitForSelector(`#crazy`);
+    expect(dataRequests).toBe(5);
   } catch (e) {
     console.log("stdout begin -----------------------");
     console.log(devStdout());

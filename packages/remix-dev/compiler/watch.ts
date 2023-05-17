@@ -4,10 +4,11 @@ import * as path from "path";
 
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
-import { type Manifest } from "../manifest";
 import * as Compiler from "./compiler";
 import type { Context } from "./context";
 import { logThrown } from "./utils/log";
+import { normalizeSlashes } from "../config/routes";
+import type { Manifest } from "../manifest";
 
 function isEntryPoint(config: RemixConfig, file: string): boolean {
   let appFile = path.relative(config.appDirectory, file);
@@ -16,13 +17,15 @@ function isEntryPoint(config: RemixConfig, file: string): boolean {
     config.entryServerFile,
     ...Object.values(config.routes).map((route) => route.file),
   ];
-  return entryPoints.includes(appFile);
+  let normalized = normalizeSlashes(appFile);
+  return entryPoints.includes(normalized);
 }
 
 export type WatchOptions = {
   reloadConfig?(root: string): Promise<RemixConfig>;
   onBuildStart?(ctx: Context): void;
-  onBuildFinish?(ctx: Context, durationMs: number, manifest?: Manifest): void;
+  onBuildManifest?(manifest: Manifest): void;
+  onBuildFinish?(ctx: Context, durationMs: number, ok: boolean): void;
   onFileCreated?(file: string): void;
   onFileChanged?(file: string): void;
   onFileDeleted?(file: string): void;
@@ -33,6 +36,7 @@ export async function watch(
   {
     reloadConfig = readConfig,
     onBuildStart,
+    onBuildManifest,
     onBuildFinish,
     onFileCreated,
     onFileChanged,
@@ -42,7 +46,7 @@ export async function watch(
   let start = Date.now();
   let compiler = await Compiler.create(ctx);
   let compile = () =>
-    compiler.compile().catch((thrown) => {
+    compiler.compile({ onManifest: onBuildManifest }).catch((thrown) => {
       logThrown(thrown);
       return undefined;
     });
@@ -50,10 +54,9 @@ export async function watch(
   // initial build
   onBuildStart?.(ctx);
   let manifest = await compile();
-  onBuildFinish?.(ctx, Date.now() - start, manifest);
+  onBuildFinish?.(ctx, Date.now() - start, manifest !== undefined);
 
   let restart = debounce(async () => {
-    onBuildStart?.(ctx);
     let start = Date.now();
     compiler.dispose();
 
@@ -63,17 +66,19 @@ export async function watch(
       logThrown(thrown);
       return;
     }
+    onBuildStart?.(ctx);
 
     compiler = await Compiler.create(ctx);
     let manifest = await compile();
-    onBuildFinish?.(ctx, Date.now() - start, manifest);
+    onBuildFinish?.(ctx, Date.now() - start, manifest !== undefined);
   }, 500);
 
   let rebuild = debounce(async () => {
+    await compiler.cancel();
     onBuildStart?.(ctx);
     let start = Date.now();
     let manifest = await compile();
-    onBuildFinish?.(ctx, Date.now() - start, manifest);
+    onBuildFinish?.(ctx, Date.now() - start, manifest !== undefined);
   }, 100);
 
   let toWatch = [ctx.config.appDirectory];
