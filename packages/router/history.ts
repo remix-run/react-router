@@ -215,6 +215,10 @@ export type MemoryHistoryOptions = {
  */
 export interface MemoryHistory extends History {
   /**
+   * The history stack entries.
+   */
+  readonly entries: Location[];
+  /**
    * The current index in the history stack.
    */
   readonly index: number;
@@ -273,6 +277,9 @@ export function createMemoryHistory(
   }
 
   let history: MemoryHistory = {
+    get entries() {
+      return entries.slice();
+    },
     get index() {
       return index;
     },
