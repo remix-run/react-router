@@ -8,14 +8,6 @@
   - `react-router@6.11.2`
   - `react-router-dom@6.11.2`
 
-## 6.11.2-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.11.2-pre.0`
-  - `react-router-dom@6.11.2-pre.0`
-
 ## 6.11.1
 
 ### Patch Changes
