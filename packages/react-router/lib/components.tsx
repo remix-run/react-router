@@ -413,21 +413,21 @@ export function Routes({
   return useRoutes(createRoutesFromChildren(children), location);
 }
 
-export interface AwaitResolveRenderFunction {
-  (data: Awaited<any>): React.ReactNode;
+export interface AwaitResolveRenderFunction<T = any> {
+  (data: Awaited<T>): React.ReactNode;
 }
 
-export interface AwaitProps {
-  children: React.ReactNode | AwaitResolveRenderFunction;
+export interface AwaitProps<T> {
+  children: React.ReactNode | AwaitResolveRenderFunction<T>;
   errorElement?: React.ReactNode;
-  resolve: TrackedPromise | any;
+  resolve: TrackedPromise<T> | any;
 }
 
 /**
  * Component to use for rendering lazily loaded data from returning defer()
  * in a loader function
  */
-export function Await({ children, errorElement, resolve }: AwaitProps) {
+export function Await<T>({ children, errorElement, resolve }: AwaitProps<T>) {
   return (
     <AwaitErrorBoundary resolve={resolve} errorElement={errorElement}>
       <ResolveAwait>{children}</ResolveAwait>

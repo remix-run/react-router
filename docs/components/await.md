@@ -37,18 +37,18 @@ function Book() {
 ## Type declaration
 
 ```tsx
-declare function Await(
-  props: AwaitProps
+declare function Await<T>(
+  props: AwaitProps<T>
 ): React.ReactElement;
 
-interface AwaitProps {
-  children: React.ReactNode | AwaitResolveRenderFunction;
+interface AwaitProps<T> {
+  children: React.ReactNode | AwaitResolveRenderFunction<T>;
   errorElement?: React.ReactNode;
-  resolve: TrackedPromise | any;
+  resolve: TrackedPromise<T> | any;
 }
 
-interface AwaitResolveRenderFunction {
-  (data: Awaited<any>): React.ReactElement;
+interface AwaitResolveRenderFunction<T = any> {
+  (data: Awaited<T>): React.ReactElement;
 }
 ```
 
