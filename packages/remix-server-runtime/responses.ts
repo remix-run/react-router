@@ -51,7 +51,7 @@ export const json: JsonFunction = (data, init = {}) => {
 /**
  * This is a shortcut for creating Remix deferred responses
  *
- * @see https://remix.run/docs/utils/defer
+ * @see https://remix.run/utils/defer
  */
 export const defer: DeferFunction = (data, init = {}) => {
   return routerDefer(data, init) as unknown as TypedDeferredData<typeof data>;

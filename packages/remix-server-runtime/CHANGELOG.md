@@ -1,5 +1,15 @@
 # `@remix-run/server-runtime`
 
+## 1.16.1
+
+### Patch Changes
+
+- Expose methods in the `SessionStorage` interface as arrow functions so destructuring is correctly part of the contract. ([#6330](https://github.com/remix-run/remix/pull/6330))
+- Fix `data` parameter typing on `V2_MetaFunction` to include `undefined` for scenarios in which the `loader` threw to it's own boundary. ([#6231](https://github.com/remix-run/remix/pull/6231))
+- Updated dependencies:
+  - [`react-router-dom@6.11.2`](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.2)
+  - [`@remix-run/router@1.6.2`](https://github.com/remix-run/react-router/blob/main/packages/router/CHANGELOG.md#162)
+
 ## 1.16.0
 
 ### Minor Changes
