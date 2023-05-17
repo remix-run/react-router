@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.16.1-pre.1
+
+### Patch Changes
+
+- Update to [`react-router-dom@6.11.2`](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.2) and [`@remix-run/router@1.6.2`](https://github.com/remix-run/react-router/blob/main/packages/router/CHANGELOG.md#162) ([#6411](https://github.com/remix-run/remix/pull/6411))
+
 ## 1.16.1-pre.0
 
 ### Patch Changes
