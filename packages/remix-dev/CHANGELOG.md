@@ -1,37 +1,25 @@
 # `@remix-run/dev`
 
-## 1.16.1-pre.1
+## 1.16.1
 
 ### Patch Changes
 
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.16.1-pre.1`
-
-## 1.16.1-pre.0
-
-### Patch Changes
-
-- cross-module loader change detection for hdr ([#6299](https://github.com/remix-run/remix/pull/6299))
-- normalize path for dev server PATH envvar ([#6310](https://github.com/remix-run/remix/pull/6310))
-  so that it works cross-platform (e.g. windows)
+- Cross-module `loader` change detection for HDR ([#6299](https://github.com/remix-run/remix/pull/6299))
+- Normalize path for dev server `PATH` envvar so that it works cross-platform (e.g. Windows) ([#6310](https://github.com/remix-run/remix/pull/6310))
 - Fix CSS imports in JS files that use JSX ([#6309](https://github.com/remix-run/remix/pull/6309))
-- kill app server when dev server exits ([#6395](https://github.com/remix-run/remix/pull/6395))
-- wait until app server is killed before starting a new app server ([#6289](https://github.com/remix-run/remix/pull/6289))
+- Kill app server when dev server exits ([#6395](https://github.com/remix-run/remix/pull/6395))
+- Wait until app server is killed before starting a new app server ([#6289](https://github.com/remix-run/remix/pull/6289))
 - Ensure CSS bundle changes result in a new manifest hash ([#6374](https://github.com/remix-run/remix/pull/6374))
-- normalize file paths before testing if a changed file is a route entry ([#6293](https://github.com/remix-run/remix/pull/6293))
-- fix race where app server responds with updated manifest version _before_ dev server is listening for it ([#6294](https://github.com/remix-run/remix/pull/6294))
-
-  dev server now listens for updated versions _before_ writing the server changes, guaranteeing that it is listening
-  before the app server gets a chance to send its 'ready' message
-
-- Only process .css.ts/js files with Vanilla Extract if `@vanilla-extract/css` is installed ([#6345](https://github.com/remix-run/remix/pull/6345))
-- stop modifying a user's tsconfig when running using `getConfig` (`remix dev`, `remix routes`, `remix build`, etc) ([#6156](https://github.com/remix-run/remix/pull/6156))
-- cancel previous build when rebuild is kicked off to prevent rebuilds from hanging ([#6295](https://github.com/remix-run/remix/pull/6295))
+- Normalize file paths before testing if a changed file is a route entry ([#6293](https://github.com/remix-run/remix/pull/6293))
+- Fix race where app server responds with updated manifest version _before_ dev server is listening for it ([#6294](https://github.com/remix-run/remix/pull/6294))
+  - dev server now listens for updated versions _before_ writing the server changes, guaranteeing that it is listening before the app server gets a chance to send its 'ready' message
+- Only process `.css.ts`/`.css.js` files with Vanilla Extract if `@vanilla-extract/css` is installed ([#6345](https://github.com/remix-run/remix/pull/6345))
+- Stop modifying a user's `tsconfig.json` when running using `getConfig` (`remix dev`, `remix routes`, `remix build`, etc) ([#6156](https://github.com/remix-run/remix/pull/6156))
+- Cancel previous build when rebuild is kicked off to prevent rebuilds from hanging ([#6295](https://github.com/remix-run/remix/pull/6295))
 - Update minimum version of Babel dependencies to avoid errors parsing decorators ([#6390](https://github.com/remix-run/remix/pull/6390))
-- support asset imports when detecting loader changes for HDR ([#6396](https://github.com/remix-run/remix/pull/6396))
+- Support asset imports when detecting loader changes for HDR ([#6396](https://github.com/remix-run/remix/pull/6396))
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.16.1-pre.0`
-  - `@remix-run/serve@1.16.1-pre.0`
+  - `@remix-run/server-runtime@1.16.1`
 
 ## 1.16.0
 
