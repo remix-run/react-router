@@ -70,6 +70,7 @@ export type HeadersArgs = {
   loaderHeaders: Headers;
   parentHeaders: Headers;
   actionHeaders: Headers;
+  errorHeaders: Headers | undefined;
 };
 
 /**

@@ -7,14 +7,32 @@ export function getDocumentHeadersRR(
   build: ServerBuild,
   context: StaticHandlerContext
 ): Headers {
-  let matches = context.errors
-    ? context.matches.slice(
-        0,
-        context.matches.findIndex((m) => context.errors![m.route.id]) + 1
-      )
-    : context.matches;
+  let boundaryIdx = context.errors
+    ? context.matches.findIndex((m) => context.errors![m.route.id])
+    : -1;
+  let matches =
+    boundaryIdx >= 0
+      ? context.matches.slice(0, boundaryIdx + 1)
+      : context.matches;
 
-  return matches.reduce((parentHeaders, match) => {
+  let errorHeaders: Headers | undefined;
+
+  if (boundaryIdx >= 0) {
+    // Look for any errorHeaders from the boundary route down, which can be
+    // identified by the presence of headers but no data
+    let { actionHeaders, actionData, loaderHeaders, loaderData } = context;
+    context.matches.slice(boundaryIdx).some((match) => {
+      let id = match.route.id;
+      if (actionHeaders[id] && (!actionData || actionData[id] === undefined)) {
+        errorHeaders = actionHeaders[id];
+      } else if (loaderHeaders[id] && loaderData[id] === undefined) {
+        errorHeaders = loaderHeaders[id];
+      }
+      return errorHeaders != null;
+    });
+  }
+
+  return matches.reduce((parentHeaders, match, idx) => {
     let { id } = match.route;
     let routeModule = build.routes[id].module;
     let loaderHeaders = context.loaderHeaders[id] || new Headers();
@@ -22,7 +40,15 @@ export function getDocumentHeadersRR(
     let headers = new Headers(
       routeModule.headers
         ? typeof routeModule.headers === "function"
-          ? routeModule.headers({ loaderHeaders, parentHeaders, actionHeaders })
+          ? routeModule.headers({
+              loaderHeaders,
+              parentHeaders,
+              actionHeaders,
+              // Only expose errorHeaders to the leaf headers() function to
+              // avoid duplication via parentHeaders
+              errorHeaders:
+                idx === matches.length - 1 ? errorHeaders : undefined,
+            })
           : routeModule.headers
         : undefined
     );
