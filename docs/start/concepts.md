@@ -631,7 +631,7 @@ If all the teams are in a list on the left then an empty outlet means you've got
 
 Another way to think of an index route is that it's the default child route when the parent matches but none of its children do.
 
-Depending on the user interface, you might not need an index route, but if there is any sort of persistent navigation in the parent route you'll most likely want index route to fill the space when the user hasn't clicked one of the items yet.
+Depending on the user interface, you might not need an index route, but if there is any sort of persistent navigation in the parent route you'll most likely want an index route to fill the space when the user hasn't clicked one of the items yet.
 
 ### Layout Routes
 
