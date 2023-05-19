@@ -1911,6 +1911,7 @@ And for our final trick, many folks prefer to configure their routes with JSX. Y
 import {
   createRoutesFromElements,
   createBrowserRouter,
+  Route,
 } from "react-router-dom";
 
 const router = createBrowserRouter(
