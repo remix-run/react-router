@@ -7,6 +7,7 @@ import {
   Route,
   useNavigate,
   useLocation,
+  useRoutes,
   createMemoryRouter,
   createRoutesFromElements,
   Outlet,
@@ -299,6 +300,178 @@ describe("useNavigate", () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `"Cannot include a '#' character in a manually specified \`to.search\` field [{"pathname":"/about/thing","search":"?search#hash"}].  Please separate it out to the \`to.hash\` field. Alternatively you may provide the full path as a string in <Link to="..."> and the router will parse it for you."`
     );
+  });
+
+  it("allows useNavigate usage in a mixed RouterProvider/<Routes> scenario", () => {
+    const router = createMemoryRouter([
+      {
+        path: "/*",
+        Component() {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          let navigate = useNavigate();
+          let location = useLocation();
+          return (
+            <>
+              <button
+                onClick={() =>
+                  navigate(location.pathname === "/" ? "/page" : "/")
+                }
+              >
+                Navigate from RouterProvider
+              </button>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/page" element={<Page />} />
+              </Routes>
+            </>
+          );
+        },
+      },
+    ]);
+
+    function Home() {
+      let navigate = useNavigate();
+      return (
+        <>
+          <h1>Home</h1>
+          <button onClick={() => navigate("/page")}>
+            Navigate /page from Routes
+          </button>
+        </>
+      );
+    }
+
+    function Page() {
+      let navigate = useNavigate();
+      return (
+        <>
+          <h1>Page</h1>
+          <button onClick={() => navigate("/")}>
+            Navigate /home from Routes
+          </button>
+        </>
+      );
+    }
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+
+    expect(router.state.location.pathname).toBe("/");
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      [
+        <button
+          onClick={[Function]}
+        >
+          Navigate from RouterProvider
+        </button>,
+        <h1>
+          Home
+        </h1>,
+        <button
+          onClick={[Function]}
+        >
+          Navigate /page from Routes
+        </button>,
+      ]
+    `);
+
+    let button = renderer.root.findByProps({
+      children: "Navigate from RouterProvider",
+    });
+    TestRenderer.act(() => button.props.onClick());
+
+    expect(router.state.location.pathname).toBe("/page");
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      [
+        <button
+          onClick={[Function]}
+        >
+          Navigate from RouterProvider
+        </button>,
+        <h1>
+          Page
+        </h1>,
+        <button
+          onClick={[Function]}
+        >
+          Navigate /home from Routes
+        </button>,
+      ]
+    `);
+
+    button = renderer.root.findByProps({
+      children: "Navigate from RouterProvider",
+    });
+    TestRenderer.act(() => button.props.onClick());
+
+    expect(router.state.location.pathname).toBe("/");
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      [
+        <button
+          onClick={[Function]}
+        >
+          Navigate from RouterProvider
+        </button>,
+        <h1>
+          Home
+        </h1>,
+        <button
+          onClick={[Function]}
+        >
+          Navigate /page from Routes
+        </button>,
+      ]
+    `);
+
+    button = renderer.root.findByProps({
+      children: "Navigate /page from Routes",
+    });
+    TestRenderer.act(() => button.props.onClick());
+
+    expect(router.state.location.pathname).toBe("/page");
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      [
+        <button
+          onClick={[Function]}
+        >
+          Navigate from RouterProvider
+        </button>,
+        <h1>
+          Page
+        </h1>,
+        <button
+          onClick={[Function]}
+        >
+          Navigate /home from Routes
+        </button>,
+      ]
+    `);
+
+    button = renderer.root.findByProps({
+      children: "Navigate /home from Routes",
+    });
+    TestRenderer.act(() => button.props.onClick());
+
+    expect(router.state.location.pathname).toBe("/");
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      [
+        <button
+          onClick={[Function]}
+        >
+          Navigate from RouterProvider
+        </button>,
+        <h1>
+          Home
+        </h1>,
+        <button
+          onClick={[Function]}
+        >
+          Navigate /page from Routes
+        </button>,
+      ]
+    `);
   });
 
   describe("navigating in effects versus render", () => {
@@ -1878,6 +2051,181 @@ describe("useNavigate", () => {
           </h1>,
         ]
       `);
+    });
+  });
+
+  describe("with a basename", () => {
+    describe("in a MemoryRouter", () => {
+      it("in a root route", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/base" initialEntries={["/base"]}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/path" element={<h1>Path</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Home() {
+          let navigate = useNavigate();
+          return <button onClick={() => navigate("/path")} />;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <button
+            onClick={[Function]}
+          />
+        `);
+
+        // @ts-expect-error
+        let button = renderer.root.findByType("button");
+        TestRenderer.act(() => button.props.onClick());
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Path
+          </h1>
+        `);
+      });
+
+      it("in a descendant route", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter basename="/base" initialEntries={["/base"]}>
+              <Routes>
+                <Route
+                  path="/*"
+                  element={
+                    <Routes>
+                      <Route index element={<Home />} />
+                    </Routes>
+                  }
+                />
+                <Route path="/path" element={<h1>Path</h1>} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Home() {
+          let navigate = useNavigate();
+          return <button onClick={() => navigate("/path")} />;
+        }
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <button
+            onClick={[Function]}
+          />
+        `);
+
+        // @ts-expect-error
+        let button = renderer.root.findByType("button");
+        TestRenderer.act(() => button.props.onClick());
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Path
+          </h1>
+        `);
+      });
+    });
+
+    describe("in a RouterProvider", () => {
+      it("in a root route", () => {
+        let router = createMemoryRouter(
+          [
+            {
+              path: "/",
+              Component: Home,
+            },
+            { path: "/path", Component: () => <h1>Path</h1> },
+          ],
+          { basename: "/base", initialEntries: ["/base"] }
+        );
+
+        function Home() {
+          let navigate = useNavigate();
+          return <button onClick={() => navigate("/path")} />;
+        }
+
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <button
+            onClick={[Function]}
+          />
+        `);
+
+        // @ts-expect-error
+        let button = renderer.root.findByType("button");
+        TestRenderer.act(() => button.props.onClick());
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Path
+          </h1>
+        `);
+      });
+
+      it("in a descendant route", () => {
+        let router = createMemoryRouter(
+          [
+            {
+              path: "/*",
+              Component() {
+                return (
+                  <Routes>
+                    <Route index element={<Home />} />
+                  </Routes>
+                );
+              },
+            },
+            { path: "/path", Component: () => <h1>Path</h1> },
+          ],
+          { basename: "/base", initialEntries: ["/base"] }
+        );
+
+        function Home() {
+          let navigate = useNavigate();
+          return <button onClick={() => navigate("/path")} />;
+        }
+
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(<RouterProvider router={router} />);
+        });
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <button
+            onClick={[Function]}
+          />
+        `);
+
+        // @ts-expect-error
+        let button = renderer.root.findByType("button");
+        TestRenderer.act(() => button.props.onClick());
+
+        // @ts-expect-error
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h1>
+            Path
+          </h1>
+        `);
+      });
     });
   });
 });

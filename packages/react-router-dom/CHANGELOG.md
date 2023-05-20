@@ -1,5 +1,22 @@
 # `react-router-dom`
 
+## 6.11.2
+
+### Patch Changes
+
+- Export `SetURLSearchParams` type ([#10444](https://github.com/remix-run/react-router/pull/10444))
+- Updated dependencies:
+  - `react-router@6.11.2`
+  - `@remix-run/router@1.6.2`
+
+## 6.11.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.11.1`
+  - `@remix-run/router@1.6.1`
+
 ## 6.11.0
 
 ### Minor Changes

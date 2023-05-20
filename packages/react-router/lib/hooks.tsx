@@ -174,10 +174,10 @@ function useIsomorphicLayoutEffect(
  * @see https://reactrouter.com/hooks/use-navigate
  */
 export function useNavigate(): NavigateFunction {
-  let isDataRouter = React.useContext(DataRouterContext) != null;
+  let { isDataRoute } = React.useContext(RouteContext);
   // Conditional usage is OK here because the usage of a data router is static
   // eslint-disable-next-line react-hooks/rules-of-hooks
-  return isDataRouter ? useNavigateStable() : useNavigateUnstable();
+  return isDataRoute ? useNavigateStable() : useNavigateUnstable();
 }
 
 function useNavigateUnstable(): NavigateFunction {
@@ -188,6 +188,7 @@ function useNavigateUnstable(): NavigateFunction {
     `useNavigate() may be used only in the context of a <Router> component.`
   );
 
+  let dataRouterContext = React.useContext(DataRouterContext);
   let { basename, navigator } = React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
@@ -222,10 +223,12 @@ function useNavigateUnstable(): NavigateFunction {
       );
 
       // If we're operating within a basename, prepend it to the pathname prior
-      // to handing off to history.  If this is a root navigation, then we
-      // navigate to the raw basename which allows the basename to have full
-      // control over the presence of a trailing slash on root links
-      if (basename !== "/") {
+      // to handing off to history (but only if we're not in a data router,
+      // otherwise it'll prepend the basename inside of the router).
+      // If this is a root navigation, then we navigate to the raw basename
+      // which allows the basename to have full control over the presence of a
+      // trailing slash on root links
+      if (dataRouterContext == null && basename !== "/") {
         path.pathname =
           path.pathname === "/"
             ? basename
@@ -238,7 +241,13 @@ function useNavigateUnstable(): NavigateFunction {
         options
       );
     },
-    [basename, navigator, routePathnamesJson, locationPathname]
+    [
+      basename,
+      navigator,
+      routePathnamesJson,
+      locationPathname,
+      dataRouterContext,
+    ]
   );
 
   return navigate;
@@ -689,6 +698,14 @@ export function _renderMatches(
       let children: React.ReactNode;
       if (error) {
         children = errorElement;
+      } else if (match.route.Component) {
+        // Note: This is a de-optimized path since React won't re-use the
+        // ReactElement since it's identity changes with each new
+        // React.createElement call.  We keep this so folks can use
+        // `<Route Component={...}>` in `<Routes>` but generally `Component`
+        // usage is only advised in `RouterProvider` when we can convert it to
+        // `element` ahead of time.
+        children = <match.route.Component />;
       } else if (match.route.element) {
         children = match.route.element;
       } else {
@@ -697,7 +714,11 @@ export function _renderMatches(
       return (
         <RenderedRoute
           match={match}
-          routeContext={{ outlet, matches }}
+          routeContext={{
+            outlet,
+            matches,
+            isDataRoute: dataRouterState != null,
+          }}
           children={children}
         />
       );
@@ -713,7 +734,7 @@ export function _renderMatches(
         component={errorElement}
         error={error}
         children={getChildren()}
-        routeContext={{ outlet: null, matches }}
+        routeContext={{ outlet: null, matches, isDataRoute: true }}
       />
     ) : (
       getChildren()
