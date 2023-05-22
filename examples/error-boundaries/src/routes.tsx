@@ -1,5 +1,3 @@
-import React from "react";
-
 import type { LoaderFunctionArgs } from "react-router-dom";
 import {
   isRouteErrorResponse,

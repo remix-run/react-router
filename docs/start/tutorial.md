@@ -68,8 +68,8 @@ The `main.jsx` file is the entry point. Open it up and we'll put React Router on
 👉 **Create and render a [browser router][createbrowserrouter] in `main.jsx`**
 
 ```jsx lines=[3-6,9-14,18] filename=src/main.jsx
-import React from "react";
-import ReactDOM from "react-dom/client";
+import * as React from "react";
+import * as ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
   RouterProvider,
