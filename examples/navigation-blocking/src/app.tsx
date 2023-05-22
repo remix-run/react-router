@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import type { unstable_Blocker as Blocker } from "react-router-dom";
 import {
   createBrowserRouter,
