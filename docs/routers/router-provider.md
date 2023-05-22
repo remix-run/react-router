@@ -5,7 +5,7 @@ new: true
 
 # `<RouterProvider>`
 
-All router objects are passed to this component to render your app and enable the rest of the APIs.
+All [data router][picking-a-router] objects are passed to this component to render your app and enable the rest of the data APIs.
 
 ```jsx lines=[24]
 import {
@@ -40,7 +40,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 ## `fallbackElement`
 
-If you are not server rendering your app, `DataBrowserRouter` will initiate all matching route loaders when it mounts. During this time, you can provide a `fallbackElement` to give the user some indication that the app is working. Make that static hosting TTFB count!
+If you are not server rendering your app, `createBrowserRouter` will initiate all matching route loaders when it mounts. During this time, you can provide a `fallbackElement` to give the user some indication that the app is working. Make that static hosting TTFB count!
 
 ```tsx
 <RouterProvider
@@ -48,3 +48,5 @@ If you are not server rendering your app, `DataBrowserRouter` will initiate all 
   fallbackElement={<SpinnerOfDoom />}
 />
 ```
+
+[picking-a-router]: ./picking-a-router

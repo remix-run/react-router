@@ -1,5 +1,41 @@
 # `@remix-run/router`
 
+## 1.6.2
+
+### Patch Changes
+
+- Fix HMR-driven error boundaries by properly reconstructing new routes and `manifest` in `\_internalSetRoutes` ([#10437](https://github.com/remix-run/react-router/pull/10437))
+- Fix bug where initial data load would not kick off when hash is present ([#10493](https://github.com/remix-run/react-router/pull/10493))
+
+## 1.6.1
+
+### Patch Changes
+
+- Fix `basename` handling when navigating without a path ([#10433](https://github.com/remix-run/react-router/pull/10433))
+- "Same hash" navigations no longer re-run loaders to match browser behavior (i.e. `/path#hash -> /path#hash`) ([#10408](https://github.com/remix-run/react-router/pull/10408))
+
+## 1.6.0
+
+### Minor Changes
+
+- Enable relative routing in the `@remix-run/router` when providing a source route ID from which the path is relative to: ([#10336](https://github.com/remix-run/react-router/pull/10336))
+
+  - Example: `router.navigate("../path", { fromRouteId: "some-route" })`.
+  - This also applies to `router.fetch` which already receives a source route ID
+
+- Introduce a new `@remix-run/router` `future.v7_prependBasename` flag to enable `basename` prefixing to all paths coming into `router.navigate` and `router.fetch`.
+
+  - Previously the `basename` was prepended in the React Router layer, but now that relative routing is being handled by the router we need prepend the `basename` _after_ resolving any relative paths
+  - This also enables `basename` support in `useFetcher` as well
+
+### Patch Changes
+
+- Enhance `LoaderFunction`/`ActionFunction` return type to prevent `undefined` from being a valid return value ([#10267](https://github.com/remix-run/react-router/pull/10267))
+- Ensure proper 404 error on `fetcher.load` call to a route without a `loader` ([#10345](https://github.com/remix-run/react-router/pull/10345))
+- Deprecate the `createRouter` `detectErrorBoundary` option in favor of the new `mapRouteProperties` option for converting a framework-agnostic route to a framework-aware route. This allows us to set more than just the `hasErrorBoundary` property during route pre-processing, and is now used for mapping `Component -> element` and `ErrorBoundary -> errorElement` in `react-router`. ([#10287](https://github.com/remix-run/react-router/pull/10287))
+- Fixed a bug where fetchers were incorrectly attempting to revalidate on search params changes or routing to the same URL (using the same logic for route `loader` revalidations). However, since fetchers have a static href, they should only revalidate on `action` submissions or `router.revalidate` calls. ([#10344](https://github.com/remix-run/react-router/pull/10344))
+- Decouple `AbortController` usage between revalidating fetchers and the thing that triggered them such that the unmount/deletion of a revalidating fetcher doesn't impact the ongoing triggering navigation/revalidation ([#10271](https://github.com/remix-run/react-router/pull/10271))
+
 ## 1.5.0
 
 ### Minor Changes

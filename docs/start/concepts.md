@@ -135,7 +135,7 @@ history.listen(({ location, action }) => {
 });
 ```
 
-Apps don't need to set up their own history objects--that's job of `<Router>`. It sets up one of these objects, subscribe to changes in the [history stack](#history-stack), and finally updates its state when the [URL](#url) changes. This causes the app to re-render and the correct UI to display. The only thing it needs to put on state is a `location`, everything else works from that single object.
+Apps don't need to set up their own history objects--that's the job of `<Router>`. It sets up one of these objects, subscribe to changes in the [history stack](#history-stack), and finally updates its state when the [URL](#url) changes. This causes the app to re-render and the correct UI to display. The only thing it needs to put on state is a `location`, everything else works from that single object.
 
 ### Locations
 
@@ -631,7 +631,7 @@ If all the teams are in a list on the left then an empty outlet means you've got
 
 Another way to think of an index route is that it's the default child route when the parent matches but none of its children do.
 
-Depending on the user interface, you might not need an index route, but if there is any sort of persistent navigation in the parent route you'll most likely want index route to fill the space when the user hasn't clicked one of the items yet.
+Depending on the user interface, you might not need an index route, but if there is any sort of persistent navigation in the parent route you'll most likely want an index route to fill the space when the user hasn't clicked one of the items yet.
 
 ### Layout Routes
 

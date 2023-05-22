@@ -1,5 +1,38 @@
 # `react-router`
 
+## 6.11.2
+
+### Patch Changes
+
+- Fix `basename` duplication in descendant `<Routes>` inside a `<RouterProvider>` ([#10492](https://github.com/remix-run/react-router/pull/10492))
+- Updated dependencies:
+  - `@remix-run/router@1.6.2`
+
+## 6.11.1
+
+### Patch Changes
+
+- Fix usage of `Component` API within descendant `<Routes>` ([#10434](https://github.com/remix-run/react-router/pull/10434))
+- Fix bug when calling `useNavigate` from `<Routes>` inside a `<RouterProvider>` ([#10432](https://github.com/remix-run/react-router/pull/10432))
+- Fix usage of `<Navigate>` in strict mode when using a data router ([#10435](https://github.com/remix-run/react-router/pull/10435))
+- Updated dependencies:
+  - `@remix-run/router@1.6.1`
+
+## 6.11.0
+
+### Patch Changes
+
+- Log loader/action errors to the console in dev for easier stack trace evaluation ([#10286](https://github.com/remix-run/react-router/pull/10286))
+- Fix bug preventing rendering of descendant `<Routes>` when `RouterProvider` errors existed ([#10374](https://github.com/remix-run/react-router/pull/10374))
+- Fix inadvertent re-renders when using `Component` instead of `element` on a route definition ([#10287](https://github.com/remix-run/react-router/pull/10287))
+- Fix detection of `useNavigate` in the render cycle by setting the `activeRef` in a layout effect, allowing the `navigate` function to be passed to child components and called in a `useEffect` there. ([#10394](https://github.com/remix-run/react-router/pull/10394))
+- Switched from `useSyncExternalStore` to `useState` for internal `@remix-run/router` router state syncing in `<RouterProvider>`. We found some [subtle bugs](https://codesandbox.io/s/use-sync-external-store-loop-9g7b81) where router state updates got propagated _before_ other normal `useState` updates, which could lead to footguns in `useEffect` calls. ([#10377](https://github.com/remix-run/react-router/pull/10377), [#10409](https://github.com/remix-run/react-router/pull/10409))
+- Allow `useRevalidator()` to resolve a loader-driven error boundary scenario ([#10369](https://github.com/remix-run/react-router/pull/10369))
+- Avoid unnecessary unsubscribe/resubscribes on router state changes ([#10409](https://github.com/remix-run/react-router/pull/10409))
+- When using a `RouterProvider`, `useNavigate`/`useSubmit`/`fetcher.submit` are now stable across location changes, since we can handle relative routing via the `@remix-run/router` instance and get rid of our dependence on `useLocation()`. When using `BrowserRouter`, these hooks remain unstable across location changes because they still rely on `useLocation()`. ([#10336](https://github.com/remix-run/react-router/pull/10336))
+- Updated dependencies:
+  - `@remix-run/router@1.6.0`
+
 ## 6.10.0
 
 ### Minor Changes

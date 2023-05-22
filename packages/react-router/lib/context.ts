@@ -144,11 +144,13 @@ if (__DEV__) {
 export interface RouteContextObject {
   outlet: React.ReactElement | null;
   matches: RouteMatch[];
+  isDataRoute: boolean;
 }
 
 export const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   matches: [],
+  isDataRoute: false,
 });
 
 if (__DEV__) {

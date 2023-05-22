@@ -1272,10 +1272,13 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // Short circuit if it's only a hash change and not a mutation submission
+    // Short circuit if it's only a hash change and not a mutation submission.
+    // Ignore on initial page loads because since the initial load will always
+    // be "same hash".
     // For example, on /page#hash and submit a <Form method="post"> which will
     // default to a navigation to /page
     if (
+      state.initialized &&
       isHashChangeOnly(state.location, location) &&
       !(opts && opts.submission && isMutationMethod(opts.submission.formMethod))
     ) {
@@ -2494,7 +2497,13 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
-    inFlightDataRoutes = newRoutes;
+    manifest = {};
+    inFlightDataRoutes = convertRoutesToDataRoutes(
+      newRoutes,
+      mapRouteProperties,
+      undefined,
+      manifest
+    );
   }
 
   router = {
@@ -3114,7 +3123,7 @@ function normalizeTo(
   let path = resolveTo(
     to ? to : ".",
     getPathContributingMatches(contextualMatches).map((m) => m.pathnameBase),
-    location.pathname,
+    stripBasename(location.pathname, basename) || location.pathname,
     relative === "path"
   );
 
@@ -4139,16 +4148,18 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   }
 
   if (a.hash === "") {
-    // No hash -> hash
+    // /page -> /page#hash
     return b.hash !== "";
   } else if (a.hash === b.hash) {
-    // current hash -> same hash
+    // /page#hash -> /page#hash
     return true;
   } else if (b.hash !== "") {
-    // current hash -> new hash
+    // /page#hash -> /page#other
     return true;
   }
 
+  // If the hash is removed the browser will re-perform a request to the server
+  // /page#hash -> /page
   return false;
 }
 

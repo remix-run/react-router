@@ -2,44 +2,20 @@ name: 📝 Comment on Release
 
 on:
   workflow_call:
-    inputs:
-      ref:
-        required: true
-        type: string
-      package_version_to_follow:
-        required: true
-        type: string
-      release_branch:
-        required: true
-        type: string
 
 jobs:
   comment:
-    name: Comment on Release
+    name: 📝 Comment on related issues and pull requests
     if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v3
         with:
-          node-version-file: ".nvmrc"
-          cache: "npm"
-          cache-dependency-path: scripts/release/package-lock.json
+          fetch-depth: 0
 
-      - name: 📥 Install deps
-        run: npm ci
-        working-directory: ./scripts/release
-
-      - name: 📝 Comment on issues
-        working-directory: ./scripts/release
-        run: node -r esbuild-register ./comment.ts
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.ref }}
-          DEFAULT_BRANCH: "main"
-          RELEASE_BRANCH: ${{ inputs.release_branch }}
-          PACKAGE_VERSION_TO_FOLLOW: ${{ inputs.package_version_to_follow }}
+      - name: 📝 Comment on related issues and pull requests
+        uses: remix-run/release-comment-action@v0.4.1
+        with:
+          DIRECTORY_TO_CHECK: "./packages"
+          PACKAGE_NAME: "react-router"
