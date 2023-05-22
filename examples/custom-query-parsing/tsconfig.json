@@ -17,5 +17,5 @@
     "jsx": "react-jsx",
     "importsNotUsedAsValues": "error"
   },
-  "include": ["./src", "./types"],
+  "include": ["./src", "./types"]
 }
