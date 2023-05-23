@@ -7456,6 +7456,49 @@ describe("a router", () => {
       expect(t.history.replace).not.toHaveBeenCalled();
     });
 
+    it("handles revalidation when a hash is present", async () => {
+      let t = setup({
+        routes: TASK_ROUTES,
+        initialEntries: ["/#hash"],
+        hydrationData: {
+          loaderData: {
+            root: "ROOT_DATA",
+            index: "INDEX_DATA",
+          },
+        },
+      });
+
+      let key = t.router.state.location.key;
+      let R = await t.revalidate();
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        navigation: IDLE_NAVIGATION,
+        revalidation: "loading",
+        loaderData: {
+          root: "ROOT_DATA",
+          index: "INDEX_DATA",
+        },
+      });
+
+      await R.loaders.root.resolve("ROOT_DATA*");
+      await R.loaders.index.resolve("INDEX_DATA*");
+      expect(t.router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        navigation: IDLE_NAVIGATION,
+        revalidation: "idle",
+        loaderData: {
+          root: "ROOT_DATA*",
+          index: "INDEX_DATA*",
+        },
+      });
+      expect(t.router.state.location.hash).toBe('#hash');
+      expect(t.router.state.location.key).toBe(key);
+      expect(t.history.push).not.toHaveBeenCalled();
+      expect(t.history.replace).not.toHaveBeenCalled();
+    });
+
     it("handles revalidation interrupted by a <Link> navigation", async () => {
       let t = setup({
         routes: TASK_ROUTES,
