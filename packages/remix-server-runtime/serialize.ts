@@ -46,7 +46,11 @@ type SerializeObject<T extends object> = {
 
 // prettier-ignore
 type SerializeDeferred<T extends Record<string, unknown>> = {
-  [k in keyof T as T[k] extends Promise<unknown> ? k : T[k] extends NonJsonPrimitive ? never : k]:
+  [k in keyof T as
+    T[k] extends Promise<unknown> ? k :
+    T[k] extends NonJsonPrimitive ? never :
+    k
+  ]:
     T[k] extends Promise<infer U>
     ? Promise<Serialize<U>> extends never ? "wtf" : Promise<Serialize<U>>
     : Serialize<T[k]>  extends never ? k : Serialize<T[k]>;
