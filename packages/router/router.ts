@@ -1480,14 +1480,23 @@ export function createRouter(init: RouterInit): Router {
         formMethod: loadingNavigation.formMethod,
         formAction: loadingNavigation.formAction,
         formEncType: loadingNavigation.formEncType,
+        // TODO: This is messy due to the typings and the need to throw :/
+        // But it feels wrong to have text typed with undefined.  Maybe we can
+        // snag these values off inside the if?
         get text() {
-          return loadingNavigation?.text as Submission["text"];
+          return loadingNavigation
+            ? (loadingNavigation.text as Submission["text"])
+            : undefined;
         },
         get formData() {
-          return loadingNavigation?.formData as Submission["formData"];
+          return loadingNavigation
+            ? (loadingNavigation.formData as Submission["formData"])
+            : undefined;
         },
         get json() {
-          return loadingNavigation?.json as Submission["json"];
+          return loadingNavigation
+            ? (loadingNavigation.json as Submission["json"])
+            : undefined;
         },
       };
     }
@@ -1716,8 +1725,26 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
-    // revalidations
-    fetchLoadMatches.set(key, { routeId, path });
+    // revalidations. Only applies to route-driven fetcher.load calls since we
+    // don't cache a reference to the inline loader to avoid capturing stale
+    // closed over values :/
+
+    // This type of API would allow us to better capture the handler function
+    // and update it on re-renders if it changed.
+    // It sets us up better for an RSC world where inline handlers would
+    // not be viable.  Inline handler support directly in useFetcher might
+    // pose issues in an RSC world.  Today's fetchers actions can still work
+    // without JS since they can submit to a URL on the server.  These direct
+    // handlers wouldn't ever have a URL so they'd not be able to work in a
+    // no-JS world.
+
+    // useInlineFetcher(({ request }) => { ... })
+    // useClientFetcher(({ request }))   // matches RSC "use client" directive
+
+    // TODO: Are we ok with this?
+    if (typeof hrefOrHandler !== "function") {
+      fetchLoadMatches.set(key, { routeId, path });
+    }
     handleFetcherLoader(
       key,
       routeId,
@@ -3191,44 +3218,44 @@ function normalizeNavigateOptions(
     : (rawFormMethod.toLowerCase() as FormMethod);
   let formAction = stripHashFromPath(path);
 
-  if (opts.body !== undefined && opts.formEncType === "text/plain") {
-    let body = opts.body;
-    submission = {
-      formMethod,
-      formAction,
-      formEncType: (opts && opts.formEncType) || null,
-      get text() {
-        return typeof body === "string" ? body : JSON.stringify(body);
-      },
-      get formData() {
-        return throwBodyEncTypeError<FormData>("formData");
-      },
-      get json() {
-        return throwBodyEncTypeError<object>("json");
-      },
-    };
+  if (opts.body) {
+    if (opts.formEncType === "text/plain") {
+      let body = opts.body;
+      submission = {
+        formMethod,
+        formAction,
+        formEncType: opts.formEncType,
+        get text() {
+          return typeof body === "string" ? body : JSON.stringify(body);
+        },
+        get formData() {
+          return throwBodyEncTypeError<FormData>("formData");
+        },
+        get json() {
+          return throwBodyEncTypeError<object>("json");
+        },
+      };
 
-    return { path, submission };
-  }
+      return { path, submission };
+    } else if (opts.formEncType === "application/json") {
+      let body = opts.body;
+      submission = {
+        formMethod,
+        formAction,
+        formEncType: opts.formEncType,
+        get text() {
+          return JSON.stringify(body);
+        },
+        get formData() {
+          return throwBodyEncTypeError<FormData>("formData");
+        },
+        get json() {
+          return body;
+        },
+      };
 
-  if (opts.body !== undefined && opts.formEncType === "application/json") {
-    let body = opts.body;
-    submission = {
-      formMethod,
-      formAction,
-      formEncType: (opts && opts.formEncType) || null,
-      get text() {
-        return JSON.stringify(body);
-      },
-      get formData() {
-        return throwBodyEncTypeError<FormData>("formData");
-      },
-      get json() {
-        return body;
-      },
-    };
-
-    return { path, submission };
+      return { path, submission };
+    }
   }
 
   invariant(
@@ -3266,7 +3293,6 @@ function normalizeNavigateOptions(
     formEncType:
       (opts && opts.formEncType) || "application/x-www-form-urlencoded",
     get text() {
-      // TODO: What to do about file inputs here?
       return searchParams.toString();
     },
     get formData() {
@@ -3367,18 +3393,20 @@ function getMatchesToLoad(
       currentParams: currentRouteMatch.params,
       nextUrl,
       nextParams: nextRouteMatch.params,
-      formMethod: submission?.formMethod,
-      formAction: submission?.formAction,
-      formEncType: submission?.formEncType,
-      text: submission?.text,
+      formMethod: submission ? submission.formMethod : undefined,
+      formAction: submission ? submission.formAction : undefined,
+      formEncType: submission ? submission.formEncType : undefined,
+      text: submission ? submission.text : undefined,
+      // TODO: This (and below) are messy due to the getter syntax :/
       formData:
-        submission?.text != null &&
-        (submission?.formEncType == null ||
-          submission?.formEncType === "application/x-www-form-urlencoded")
+        submission &&
+        submission.text != null &&
+        (submission.formEncType == null ||
+          submission.formEncType === "application/x-www-form-urlencoded")
           ? submission.formData
           : undefined,
       json:
-        submission?.formEncType === "application/json"
+        submission && submission.formEncType === "application/json"
           ? submission.json
           : undefined,
       actionResult,
@@ -3441,18 +3469,19 @@ function getMatchesToLoad(
       currentParams: state.matches[state.matches.length - 1].params,
       nextUrl,
       nextParams: matches[matches.length - 1].params,
-      formMethod: submission?.formMethod,
-      formAction: submission?.formAction,
-      formEncType: submission?.formEncType,
-      text: submission?.text,
+      formMethod: submission ? submission.formMethod : undefined,
+      formAction: submission ? submission.formAction : undefined,
+      formEncType: submission ? submission.formEncType : undefined,
+      text: submission ? submission.text : undefined,
       formData:
-        submission?.text != null &&
-        (submission?.formEncType == null ||
-          submission?.formEncType === "application/x-www-form-urlencoded")
+        submission &&
+        submission.text != null &&
+        (submission.formEncType == null ||
+          submission.formEncType === "application/x-www-form-urlencoded")
           ? submission.formData
           : undefined,
       json:
-        submission?.formEncType === "application/json"
+        submission && submission.formEncType === "application/json"
           ? submission.json
           : undefined,
       actionResult,
@@ -3823,9 +3852,8 @@ function createClientSideRequest(
       init.headers = new Headers({ "Content-Type": formEncType });
       init.body = submission.text;
     } else if (formEncType === "application/x-www-form-urlencoded") {
-      // TODO: Should be able to just use submission.text here?
       // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
-      init.body = convertFormDataToSearchParams(submission.formData);
+      init.body = new URLSearchParams(submission.text);
     } else {
       // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
       init.body = submission.formData;
