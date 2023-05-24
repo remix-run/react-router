@@ -462,6 +462,49 @@ whatsup
     fs.writeFileSync(mdxPath, originalMdx);
     await page.waitForSelector(`#crazy`);
     expect(dataRequests).toBe(5);
+
+    // dev server doesn't crash when rebuild fails
+    await page.click(`a[href="/"]`);
+    await page.getByText("Hello, planet").waitFor({ timeout: HMR_TIMEOUT_MS });
+    await page.waitForLoadState("networkidle");
+
+    expect(devStderr()).toBe("");
+    let withSyntaxError = `
+      import { useLoaderData } from "@remix-run/react";
+      export function shouldRevalidate(args) {
+        return true;
+      }
+      eport efault functio Index() {
+        const t = useLoaderData();
+        return (
+          <mai>
+            <h1>With Syntax Error</h1>
+          </main>
+        )
+      }
+    `;
+    fs.writeFileSync(indexPath, withSyntaxError);
+    await wait(() => devStderr().includes('Expected ";" but found "efault"'), {
+      timeoutMs: HMR_TIMEOUT_MS,
+    });
+
+    let withFix = `
+      import { useLoaderData } from "@remix-run/react";
+      export function shouldRevalidate(args) {
+        return true;
+      }
+      export default function Index() {
+        // const t = useLoaderData();
+        return (
+          <main>
+            <h1>With Fix</h1>
+          </main>
+        )
+      }
+    `;
+    fs.writeFileSync(indexPath, withFix);
+    await page.waitForLoadState("networkidle");
+    await page.getByText("With Fix").waitFor({ timeout: HMR_TIMEOUT_MS });
   } catch (e) {
     console.log("stdout begin -----------------------");
     console.log(devStdout());

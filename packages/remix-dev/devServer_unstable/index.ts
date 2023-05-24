@@ -15,6 +15,8 @@ import * as HMR from "./hmr";
 import { warnOnce } from "../warnOnce";
 import { detectPackageManager } from "../cli/detectPackageManager";
 import * as HDR from "./hdr";
+import type { Result } from "../result";
+import { err, ok } from "../result";
 
 type Origin = {
   scheme: string;
@@ -59,7 +61,7 @@ export let serve = async (
     manifest?: Manifest;
     prevManifest?: Manifest;
     appReady?: Channel.Type<void>;
-    hdr?: Promise<Record<string, string>>;
+    loaderChanges?: Promise<Result<Record<string, string>>>;
     prevLoaderHashes?: Record<string, string>;
   } = {};
 
@@ -122,57 +124,70 @@ export let serve = async (
     },
     {
       onBuildStart: async (ctx) => {
+        // stop listening for previous manifest
         state.appReady?.err();
+
         clean(ctx.config);
         websocket.log(state.prevManifest ? "Rebuilding..." : "Building...");
 
-        state.hdr = HDR.detectLoaderChanges(ctx);
+        state.loaderChanges = HDR.detectLoaderChanges(ctx).then(ok, err);
       },
       onBuildManifest: (manifest: Manifest) => {
         state.manifest = manifest;
+        state.appReady = Channel.create();
       },
       onBuildFinish: async (ctx, durationMs, succeeded) => {
         if (!succeeded) return;
-
         websocket.log(
           (state.prevManifest ? "Rebuilt" : "Built") +
             ` in ${prettyMs(durationMs)}`
         );
-        state.appReady = Channel.create();
 
-        let start = Date.now();
-        console.log(`Waiting for app server (${state.manifest?.version})`);
-        if (
-          options.command &&
-          (state.appServer === undefined || options.restart)
-        ) {
-          await kill(state.appServer);
-          state.appServer = startAppServer(options.command);
-        }
-        let { ok } = await state.appReady.result;
-        // result not ok -> new build started before this one finished. do not process outdated manifest
-        let loaderHashes = await state.hdr;
-        if (ok) {
+        // accumulate new state, but only update state after updates are processed
+        let newState: typeof state = { prevManifest: state.manifest };
+        try {
+          console.log(`Waiting for app server (${state.manifest?.version})`);
+          let start = Date.now();
+          if (
+            options.command &&
+            (state.appServer === undefined || options.restart)
+          ) {
+            await kill(state.appServer);
+            state.appServer = startAppServer(options.command);
+          }
+          let appReady = await state.appReady!.result;
+          if (!appReady.ok) return;
           console.log(`App server took ${prettyMs(Date.now() - start)}`);
-          if (state.manifest && loaderHashes && state.prevManifest) {
+
+          // HMR + HDR
+          let loaderChanges = await state.loaderChanges!;
+          if (loaderChanges.ok) {
+            newState.prevLoaderHashes = loaderChanges.value;
+          }
+          if (loaderChanges?.ok && state.manifest && state.prevManifest) {
             let updates = HMR.updates(
               ctx.config,
               state.manifest,
               state.prevManifest,
-              loaderHashes,
+              loaderChanges.value,
               state.prevLoaderHashes
             );
             websocket.hmr(state.manifest, updates);
 
             let hdr = updates.some((u) => u.revalidate);
             console.log("> HMR" + (hdr ? " + HDR" : ""));
-          } else if (state.prevManifest !== undefined) {
+            return;
+          }
+
+          // Live Reload
+          if (state.prevManifest !== undefined) {
             websocket.reload();
             console.log("> Live reload");
           }
+        } finally {
+          // commit accumulated state
+          Object.assign(state, newState);
         }
-        state.prevManifest = state.manifest;
-        state.prevLoaderHashes = loaderHashes;
       },
       onFileCreated: (file) =>
         websocket.log(`File created: ${relativePath(file)}`),
