@@ -55,6 +55,7 @@ interface FutureConfig {
   /** @deprecated Use the `tailwind` config option instead */
   unstable_tailwind: boolean;
   v2_errorBoundary: boolean;
+  v2_headers: boolean;
   v2_meta: boolean;
   v2_normalizeFormMethod: boolean;
   v2_routeConvention: boolean;
@@ -442,6 +443,10 @@ export async function readConfig(
     warnOnce(metaWarning, "v2_meta");
   }
 
+  if (!appConfig.future?.v2_headers) {
+    warnOnce(headersWarning, "v2_headers");
+  }
+
   let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
     appConfig.serverBuildTarget ?? ""
   );
@@ -738,6 +743,7 @@ export async function readConfig(
     unstable_postcss: appConfig.future?.unstable_postcss === true,
     unstable_tailwind: appConfig.future?.unstable_tailwind === true,
     v2_errorBoundary: appConfig.future?.v2_errorBoundary === true,
+    v2_headers: appConfig.future?.v2_headers === true,
     v2_meta: appConfig.future?.v2_meta === true,
     v2_normalizeFormMethod: appConfig.future?.v2_normalizeFormMethod === true,
     v2_routeConvention: appConfig.future?.v2_routeConvention === true,
@@ -928,3 +934,9 @@ export const metaWarning =
   "You can prepare for this change at your convenience with the `v2_meta` future flag. " +
   "For instructions on making this change see " +
   "https://remix.run/docs/en/v1.15.0/pages/v2#meta";
+
+export const headersWarning =
+  "⚠️ REMIX FUTURE CHANGE: The route `headers` export behavior is changing in v2. " +
+  "You can prepare for this change at your convenience with the `v2_headers` future flag. " +
+  "For instructions on making this change see " +
+  "https://remix.run/docs/en/v1.17.0/pages/v2#route-headers";

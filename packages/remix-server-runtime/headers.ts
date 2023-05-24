@@ -37,6 +37,16 @@ export function getDocumentHeadersRR(
     let routeModule = build.routes[id].module;
     let loaderHeaders = context.loaderHeaders[id] || new Headers();
     let actionHeaders = context.actionHeaders[id] || new Headers();
+
+    // When the future flag is enabled, use the parent headers for any route
+    // that doesn't have a `headers` export
+    if (routeModule.headers == null && build.future.v2_headers) {
+      let headers = parentHeaders;
+      prependCookies(actionHeaders, headers);
+      prependCookies(loaderHeaders, headers);
+      return headers;
+    }
+
     let headers = new Headers(
       routeModule.headers
         ? typeof routeModule.headers === "function"

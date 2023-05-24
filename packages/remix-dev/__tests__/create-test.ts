@@ -12,6 +12,7 @@ import {
   errorBoundaryWarning,
   flatRoutesWarning,
   formMethodWarning,
+  headersWarning,
   metaWarning,
   serverModuleFormatWarning,
 } from "../config";
@@ -359,6 +360,8 @@ describe("the create command", () => {
         formMethodWarning +
         "\n" +
         metaWarning +
+        "\n" +
+        headersWarning +
         "\n" +
         serverModuleFormatWarning +
         "\n" +
