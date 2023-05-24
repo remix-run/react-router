@@ -712,5 +712,155 @@ describe("flatRoutes", () => {
         getRoutePathConflictErrorMessage("/products/:pid", testFiles)
       );
     });
+
+    test("pathless layouts should not collide", () => {
+      let testFiles = [
+        path.join(APP_DIR, "routes", "_a.tsx"),
+        path.join(APP_DIR, "routes", "_a._index.tsx"),
+        path.join(APP_DIR, "routes", "_a.a.tsx"),
+        path.join(APP_DIR, "routes", "_b.tsx"),
+        path.join(APP_DIR, "routes", "_b.b.tsx"),
+      ];
+
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      let routes = Object.values(routeManifest);
+
+      expect(consoleError).not.toHaveBeenCalled();
+      expect(routes).toHaveLength(5);
+
+      // When using folders and route.tsx files
+      testFiles = [
+        path.join(APP_DIR, "routes", "_a", "route.tsx"),
+        path.join(APP_DIR, "routes", "_a._index", "route.tsx"),
+        path.join(APP_DIR, "routes", "_a.a", "route.tsx"),
+        path.join(APP_DIR, "routes", "_b", "route.tsx"),
+        path.join(APP_DIR, "routes", "_b.b", "route.tsx"),
+      ];
+
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      routes = Object.values(routeManifest);
+
+      expect(consoleError).not.toHaveBeenCalled();
+      expect(routes).toHaveLength(5);
+    });
+
+    test("nested pathless layouts should not collide", () => {
+      let testFiles = [
+        path.join(APP_DIR, "routes", "nested._a.tsx"),
+        path.join(APP_DIR, "routes", "nested._a._index.tsx"),
+        path.join(APP_DIR, "routes", "nested._a.a.tsx"),
+        path.join(APP_DIR, "routes", "nested._b.tsx"),
+        path.join(APP_DIR, "routes", "nested._b.b.tsx"),
+      ];
+
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      let routes = Object.values(routeManifest);
+
+      expect(consoleError).not.toHaveBeenCalled();
+      expect(routes).toHaveLength(5);
+
+      // When using folders and route.tsx files
+      testFiles = [
+        path.join(APP_DIR, "routes", "nested._a", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._a._index", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._a.a", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._b", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._b.b", "route.tsx"),
+      ];
+
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      routes = Object.values(routeManifest);
+
+      expect(consoleError).not.toHaveBeenCalled();
+      expect(routes).toHaveLength(5);
+    });
+
+    test("legit collisions without nested pathless layouts should collide (paths)", () => {
+      let testFiles = [
+        path.join(APP_DIR, "routes", "nested._a.tsx"),
+        path.join(APP_DIR, "routes", "nested._a.a.tsx"),
+        path.join(APP_DIR, "routes", "nested._b.tsx"),
+        path.join(APP_DIR, "routes", "nested._b.a.tsx"),
+      ];
+
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      let routes = Object.values(routeManifest);
+
+      expect(consoleError).toHaveBeenCalledWith(
+        getRoutePathConflictErrorMessage("/nested/a", [
+          "routes/nested._a.a.tsx",
+          "routes/nested._b.a.tsx",
+        ])
+      );
+      expect(routes).toHaveLength(3);
+
+      // When using folders and route.tsx files
+      consoleError.mockClear();
+      testFiles = [
+        path.join(APP_DIR, "routes", "nested._a", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._a.a", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._b", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._b.a", "route.tsx"),
+      ];
+
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      routes = Object.values(routeManifest);
+
+      expect(consoleError).toHaveBeenCalledWith(
+        getRoutePathConflictErrorMessage("/nested/a", [
+          "routes/nested._a.a/route.tsx",
+          "routes/nested._b.a/route.tsx",
+        ])
+      );
+      expect(routes).toHaveLength(3);
+    });
+
+    test("legit collisions without nested pathless layouts should collide (index routes)", () => {
+      let testFiles = [
+        path.join(APP_DIR, "routes", "nested._a.tsx"),
+        path.join(APP_DIR, "routes", "nested._a._index.tsx"),
+        path.join(APP_DIR, "routes", "nested._b.tsx"),
+        path.join(APP_DIR, "routes", "nested._b._index.tsx"),
+      ];
+
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      let routes = Object.values(routeManifest);
+
+      expect(consoleError).toHaveBeenCalledWith(
+        getRoutePathConflictErrorMessage("/nested", [
+          "routes/nested._a._index.tsx",
+          "routes/nested._b._index.tsx",
+        ])
+      );
+      expect(routes).toHaveLength(3);
+
+      // When using folders and route.tsx files
+      consoleError.mockClear();
+      testFiles = [
+        path.join(APP_DIR, "routes", "nested._a", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._a._index", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._b", "route.tsx"),
+        path.join(APP_DIR, "routes", "nested._b._index", "route.tsx"),
+      ];
+
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
+
+      routes = Object.values(routeManifest);
+
+      expect(consoleError).toHaveBeenCalledWith(
+        getRoutePathConflictErrorMessage("/nested", [
+          "routes/nested._a._index/route.tsx",
+          "routes/nested._b._index/route.tsx",
+        ])
+      );
+      expect(routes).toHaveLength(3);
+    });
   });
 });
