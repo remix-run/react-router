@@ -38,10 +38,25 @@ export function getDocumentHeadersRR(
     let loaderHeaders = context.loaderHeaders[id] || new Headers();
     let actionHeaders = context.actionHeaders[id] || new Headers();
 
+    // Only expose errorHeaders to the leaf headers() function to
+    // avoid duplication via parentHeaders
+    let includeErrorHeaders =
+      errorHeaders != undefined && idx === matches.length - 1;
+    // Only prepend cookies from errorHeaders at the leaf renderable route
+    // when it's not the same as loaderHeaders/actionHeaders to avoid
+    // duplicate cookies
+    let includeErrorCookies =
+      includeErrorHeaders &&
+      errorHeaders !== loaderHeaders &&
+      errorHeaders !== actionHeaders;
+
     // When the future flag is enabled, use the parent headers for any route
     // that doesn't have a `headers` export
     if (routeModule.headers == null && build.future.v2_headers) {
-      let headers = parentHeaders;
+      let headers = new Headers(parentHeaders);
+      if (includeErrorCookies) {
+        prependCookies(errorHeaders!, headers);
+      }
       prependCookies(actionHeaders, headers);
       prependCookies(loaderHeaders, headers);
       return headers;
@@ -54,17 +69,17 @@ export function getDocumentHeadersRR(
               loaderHeaders,
               parentHeaders,
               actionHeaders,
-              // Only expose errorHeaders to the leaf headers() function to
-              // avoid duplication via parentHeaders
-              errorHeaders:
-                idx === matches.length - 1 ? errorHeaders : undefined,
+              errorHeaders: includeErrorHeaders ? errorHeaders : undefined,
             })
           : routeModule.headers
         : undefined
     );
 
-    // Automatically preserve Set-Cookie headers that were set either by the
-    // loader or by a parent route.
+    // Automatically preserve Set-Cookie headers from bubbled responses,
+    // loaders, errors, and parent routes
+    if (includeErrorCookies) {
+      prependCookies(errorHeaders!, headers);
+    }
     prependCookies(actionHeaders, headers);
     prependCookies(loaderHeaders, headers);
     prependCookies(parentHeaders, headers);

@@ -160,6 +160,43 @@ test.describe("headers export", () => {
 
           export default function Component() { return <div/> }
         `,
+
+        "app/routes/cookie.jsx": js`
+          import { json } from "@remix-run/server-runtime";
+          import { Outlet } from "@remix-run/react";
+
+          export function loader({ request }) {
+            if (new URL(request.url).searchParams.has("parent-throw")) {
+              throw json(null, { headers: { "Set-Cookie": "parent-thrown-cookie=true" } });
+            }
+            return null
+          };
+
+          export default function Parent() {
+            return <Outlet />;
+          }
+
+          export function ErrorBoundary() {
+            return <h1>Caught!</h1>;
+          }
+        `,
+
+        "app/routes/cookie.child.jsx": js`
+          import { json } from "@remix-run/node";
+
+          export function loader({ request }) {
+            if (new URL(request.url).searchParams.has("throw")) {
+              throw json(null, { headers: { "Set-Cookie": "thrown-cookie=true" } });
+            }
+            return json(null, {
+              headers: { "Set-Cookie": "normal-cookie=true" },
+            });
+          };
+
+          export default function Child() {
+            return <p>Child</p>;
+          }
+        `,
       },
     });
   });
@@ -350,6 +387,36 @@ test.describe("headers export", () => {
       ])
     );
   });
+
+  test("automatically includes cookie headers from normal responses", async () => {
+    let response = await appFixture.requestDocument("/cookie/child");
+    expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
+      JSON.stringify([
+        ["content-type", "text/html"],
+        ["set-cookie", "normal-cookie=true"],
+      ])
+    );
+  });
+
+  test("automatically includes cookie headers from thrown responses", async () => {
+    let response = await appFixture.requestDocument("/cookie/child?throw");
+    expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
+      JSON.stringify([
+        ["content-type", "text/html"],
+        ["set-cookie", "thrown-cookie=true"],
+      ])
+    );
+  });
+
+  test("does not duplicate thrown cookie headers from boundary route", async () => {
+    let response = await appFixture.requestDocument("/cookie?parent-throw");
+    expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
+      JSON.stringify([
+        ["content-type", "text/html"],
+        ["set-cookie", "parent-thrown-cookie=true"],
+      ])
+    );
+  });
 });
 
 test.describe("v1 behavior (future.v2_headers=false)", () => {
@@ -411,6 +478,43 @@ test.describe("v1 behavior (future.v2_headers=false)", () => {
 
           export default function Component() { return <div/> }
         `,
+
+        "app/routes/cookie.jsx": js`
+          import { json } from "@remix-run/server-runtime";
+          import { Outlet } from "@remix-run/react";
+
+          export function loader({ request }) {
+            if (new URL(request.url).searchParams.has("parent-throw")) {
+              throw json(null, { headers: { "Set-Cookie": "parent-thrown-cookie=true" } });
+            }
+            return null
+          };
+
+          export default function Parent() {
+            return <Outlet />;
+          }
+
+          export function ErrorBoundary() {
+            return <h1>Caught!</h1>;
+          }
+        `,
+
+        "app/routes/cookie.child.jsx": js`
+          import { json } from "@remix-run/node";
+
+          export function loader({ request }) {
+            if (new URL(request.url).searchParams.has("throw")) {
+              throw json(null, { headers: { "Set-Cookie": "thrown-cookie=true" } });
+            }
+            return json(null, {
+              headers: { "Set-Cookie": "normal-cookie=true" },
+            });
+          };
+
+          export default function Child() {
+            return <p>Child</p>;
+          }
+        `,
       },
     });
   });
@@ -429,6 +533,36 @@ test.describe("v1 behavior (future.v2_headers=false)", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([["content-type", "text/html"]])
+    );
+  });
+
+  test("automatically includes cookie headers from normal responses", async () => {
+    let response = await appFixture.requestDocument("/cookie/child");
+    expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
+      JSON.stringify([
+        ["content-type", "text/html"],
+        ["set-cookie", "normal-cookie=true"],
+      ])
+    );
+  });
+
+  test("automatically includes cookie headers from thrown responses", async () => {
+    let response = await appFixture.requestDocument("/cookie/child?throw");
+    expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
+      JSON.stringify([
+        ["content-type", "text/html"],
+        ["set-cookie", "thrown-cookie=true"],
+      ])
+    );
+  });
+
+  test("does not duplicate thrown cookie headers from boundary route", async () => {
+    let response = await appFixture.requestDocument("/cookie?parent-throw");
+    expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
+      JSON.stringify([
+        ["content-type", "text/html"],
+        ["set-cookie", "parent-thrown-cookie=true"],
+      ])
     );
   });
 });
