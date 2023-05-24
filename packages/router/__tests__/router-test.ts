@@ -7493,7 +7493,7 @@ describe("a router", () => {
           index: "INDEX_DATA*",
         },
       });
-      expect(t.router.state.location.hash).toBe('#hash');
+      expect(t.router.state.location.hash).toBe("#hash");
       expect(t.router.state.location.key).toBe(key);
       expect(t.history.push).not.toHaveBeenCalled();
       expect(t.history.replace).not.toHaveBeenCalled();
