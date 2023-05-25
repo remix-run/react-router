@@ -25,7 +25,6 @@ import { TaskError } from "../codemod/utils/task";
 import { transpile as convertFileToJS } from "./useJavascript";
 import { warnOnce } from "../warnOnce";
 import type { Options } from "../compiler/options";
-import { getAppDependencies } from "../dependencies";
 
 export async function create({
   appTemplate,
@@ -502,7 +501,7 @@ let resolveDevOrigin = async (
 };
 
 type DevServeFlags = DevOrigin & {
-  command: string;
+  command?: string;
   restart: boolean;
 };
 let resolveDevServe = async (
@@ -518,25 +517,6 @@ let resolveDevServe = async (
   let command =
     flags.command ??
     (dev === true ? undefined : dev.command)
-  if (!command) {
-    command = `remix-serve ${path.relative(
-      process.cwd(),
-      config.serverBuildPath
-    )}`;
-
-    let usingRemixAppServer =
-      getAppDependencies(config, true)["@remix-run/serve"] !== undefined;
-    if (!usingRemixAppServer) {
-      console.error(
-        [
-          `Remix dev server command defaulted to '${command}', but @remix-run/serve is not installed.`,
-          "If you are using another server, specify how to run it with `-c` or `--command` flag.",
-          "For example, `remix dev -c 'node ./server.js'`",
-        ].join("\n")
-      );
-      process.exit(1);
-    }
-  }
 
   let restart =
     flags.restart ?? (dev === true ? undefined : dev.restart) ?? true;
