@@ -177,13 +177,8 @@ export async function build(
     onWarning: warnOnce,
   };
   if (mode === "development" && config.future.unstable_dev) {
-    let dev = await resolveDevBuild(config);
-    options.devHttpOrigin = {
-      scheme: dev.httpScheme,
-      host: dev.httpHost,
-      port: dev.httpPort,
-    };
-    options.devWebSocketPort = dev.webSocketPort;
+    let origin = await resolveDevOrigin(config);
+    options.devOrigin = origin;
   }
 
   fse.emptyDirSync(config.assetsBuildDirectory);
@@ -216,20 +211,20 @@ export async function dev(
   remixRoot: string,
   flags: {
     debug?: boolean;
-    port?: number; // TODO: remove for v2
 
     // unstable_dev
     command?: string;
-    httpScheme?: string;
-    httpHost?: string;
-    httpPort?: number;
+    scheme?: string;
+    host?: string;
+    port?: number;
     restart?: boolean;
-    websocketPort?: number;
   } = {}
 ) {
   if (process.env.NODE_ENV && process.env.NODE_ENV !== "development") {
     console.warn(
-      `Forcing NODE_ENV to be 'development'. Was: ${process.env.NODE_ENV}`
+      `Forcing NODE_ENV to be 'development'. Was: ${JSON.stringify(
+        process.env.NODE_ENV
+      )}`
     );
   }
   process.env.NODE_ENV = "development";
@@ -471,49 +466,42 @@ let parseMode = (
 
 let findPort = async () => getPort({ port: makeRange(3001, 3100) });
 
-type DevBuildFlags = {
-  httpScheme: string;
-  httpHost: string;
-  httpPort: number;
-  webSocketPort: number;
+type DevOrigin = {
+  scheme: string;
+  host: string;
+  port: number;
 };
-let resolveDevBuild = async (
+let resolveDevOrigin = async (
   config: RemixConfig,
-  flags: Partial<DevBuildFlags> = {}
-): Promise<DevBuildFlags> => {
+  flags: Partial<DevOrigin> = {}
+): Promise<DevOrigin> => {
   let dev = config.future.unstable_dev;
   if (dev === false) throw Error("This should never happen");
 
   // prettier-ignore
-  let httpScheme =
-    flags.httpScheme ??
-    (dev === true ? undefined : dev.httpScheme) ??
+  let scheme =
+    flags.scheme ??
+    (dev === true ? undefined : dev.scheme) ??
     "http";
   // prettier-ignore
-  let httpHost =
-    flags.httpHost ??
-    (dev === true ? undefined : dev.httpHost) ??
+  let host =
+    flags.host ??
+    (dev === true ? undefined : dev.host) ??
     "localhost";
   // prettier-ignore
-  let httpPort =
-    flags.httpPort ??
-    (dev === true ? undefined : dev.httpPort) ??
-    (await findPort());
-  // prettier-ignore
-  let webSocketPort =
-    flags.webSocketPort ??
-    (dev === true ? undefined : dev.webSocketPort) ??
+  let port =
+    flags.port ??
+    (dev === true ? undefined : dev.port) ??
     (await findPort());
 
   return {
-    httpScheme,
-    httpHost,
-    httpPort,
-    webSocketPort,
+    scheme,
+    host,
+    port,
   };
 };
 
-type DevServeFlags = DevBuildFlags & {
+type DevServeFlags = DevOrigin & {
   command: string;
   restart: boolean;
 };
@@ -524,10 +512,7 @@ let resolveDevServe = async (
   let dev = config.future.unstable_dev;
   if (dev === false) throw Error("Cannot resolve dev options");
 
-  let { httpScheme, httpHost, httpPort, webSocketPort } = await resolveDevBuild(
-    config,
-    flags
-  );
+  let origin = await resolveDevOrigin(config, flags);
 
   // prettier-ignore
   let command =
@@ -558,10 +543,7 @@ let resolveDevServe = async (
 
   return {
     command,
-    httpScheme,
-    httpHost,
-    httpPort,
-    webSocketPort,
+    ...origin,
     restart,
   };
 };

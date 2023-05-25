@@ -103,7 +103,7 @@ const createEsbuildConfig = (
         ctx.config.devServerPort
       ),
       "process.env.REMIX_DEV_HTTP_ORIGIN": JSON.stringify(
-        ctx.options.devHttpOrigin ?? "" // TODO: remove nullish check in v2
+        ctx.options.devOrigin ?? "" // TODO: remove nullish check in v2
       ),
     },
     jsx: "automatic",

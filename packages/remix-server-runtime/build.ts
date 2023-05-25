@@ -15,7 +15,7 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
-  dev?: { websocketPort: number };
+  dev?: { port: number };
 }
 
 export interface HandleDocumentRequestFunction {

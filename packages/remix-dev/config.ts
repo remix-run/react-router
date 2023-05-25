@@ -37,15 +37,11 @@ export type ServerModuleFormat = "esm" | "cjs";
 export type ServerPlatform = "node" | "neutral";
 
 type Dev = {
-  port?: number; // TODO: remove in v2
-
   command?: string;
-  httpScheme?: string;
-  httpHost?: string;
-  httpPort?: number;
-  webSocketPort?: number;
+  scheme?: string;
+  host?: string;
+  port?: number;
   restart?: boolean;
-  publicDirectory?: string;
 };
 
 interface FutureConfig {

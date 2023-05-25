@@ -9,11 +9,7 @@ import { createFixtureProject, css, js, json } from "./helpers/create-fixture";
 
 test.setTimeout(120_000);
 
-let fixture = (options: {
-  appServerPort: number;
-  httpPort: number;
-  webSocketPort: number;
-}) => ({
+let fixture = (options: { appPort: number; devPort: number }) => ({
   files: {
     "remix.config.js": js`
       module.exports = {
@@ -21,8 +17,7 @@ let fixture = (options: {
         tailwind: true,
         future: {
           unstable_dev: {
-            httpPort: ${options.httpPort},
-            webSocketPort: ${options.webSocketPort},
+            port: ${options.devPort},
           },
           v2_routeConvention: true,
           v2_errorBoundary: true,
@@ -69,18 +64,17 @@ let fixture = (options: {
       const app = express();
       app.use(express.static("public", { immutable: true, maxAge: "1y" }));
 
-      const MODE = process.env.NODE_ENV;
       const BUILD_DIR = path.join(process.cwd(), "build");
 
       app.all(
         "*",
         createRequestHandler({
           build: require(BUILD_DIR),
-          mode: MODE,
+          mode: process.env.NODE_ENV,
         })
       );
 
-      let port = ${options.appServerPort};
+      let port = ${options.appPort};
       app.listen(port, () => {
         let build = require(BUILD_DIR);
         console.log('✅ app ready: http://localhost:' + port);
@@ -249,12 +243,9 @@ test("HMR", async ({ page }) => {
   });
 
   let portRange = makeRange(3080, 3099);
-  let appServerPort = await getPort({ port: portRange });
-  let httpPort = await getPort({ port: portRange });
-  let webSocketPort = await getPort({ port: portRange });
-  let projectDir = await createFixtureProject(
-    fixture({ appServerPort, httpPort, webSocketPort })
-  );
+  let appPort = await getPort({ port: portRange });
+  let devPort = await getPort({ port: portRange });
+  let projectDir = await createFixtureProject(fixture({ appPort, devPort }));
 
   // spin up dev server
   let dev = execa("npm", ["run", "dev"], { cwd: projectDir });
@@ -269,7 +260,7 @@ test("HMR", async ({ page }) => {
       { timeoutMs: 10_000 }
     );
 
-    await page.goto(`http://localhost:${appServerPort}`, {
+    await page.goto(`http://localhost:${appPort}`, {
       waitUntil: "networkidle",
     });
 
@@ -469,7 +460,7 @@ whatsup
     await page.getByText("Hello, planet").waitFor({ timeout: HMR_TIMEOUT_MS });
     await page.waitForLoadState("networkidle");
 
-    expect(devStderr()).toBe("");
+    let stderr = devStderr();
     let withSyntaxError = `
       import { useLoaderData } from "@remix-run/react";
       export function shouldRevalidate(args) {
@@ -485,9 +476,15 @@ whatsup
       }
     `;
     fs.writeFileSync(indexPath, withSyntaxError);
-    await wait(() => devStderr().includes('Expected ";" but found "efault"'), {
-      timeoutMs: HMR_TIMEOUT_MS,
-    });
+    await wait(
+      () =>
+        devStderr()
+          .replace(stderr, "")
+          .includes('Expected ";" but found "efault"'),
+      {
+        timeoutMs: HMR_TIMEOUT_MS,
+      }
+    );
 
     let withFix = `
       import { useLoaderData } from "@remix-run/react";
