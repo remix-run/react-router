@@ -428,6 +428,18 @@ function setup({
     });
   }
 
+  // jsdom is making more and more properties non-configurable, so we inject
+  // our own jest-friendly window.
+  let testWindow = {
+    ...window,
+    location: {
+      ...window.location,
+      assign: jest.fn(),
+      replace: jest.fn(),
+    },
+  } as unknown as Window;
+  // ^ Spread makes TS sad - `window.NaN` conflicts with `[index: number]: Window`
+
   let history = createMemoryHistory({ initialEntries, initialIndex });
   jest.spyOn(history, "push");
   jest.spyOn(history, "replace");
@@ -437,6 +449,7 @@ function setup({
     routes: enhanceRoutes(routes),
     hydrationData,
     future,
+    window: testWindow,
   }).initialize();
 
   function getRouteHelpers(
@@ -843,6 +856,7 @@ function setup({
   }
 
   return {
+    window: testWindow,
     history,
     router: currentRouter,
     navigate,
@@ -6545,15 +6559,6 @@ describe("a router", () => {
       ];
 
       for (let url of urls) {
-        // This is gross, don't blame me, blame SO :)
-        // https://stackoverflow.com/a/60697570
-        let oldLocation = window.location;
-        const location = new URL(window.location.href) as unknown as Location;
-        location.assign = jest.fn();
-        location.replace = jest.fn();
-        delete (window as any).location;
-        window.location = location as unknown as Location;
-
         let t = setup({ routes: REDIRECT_ROUTES });
 
         let A = await t.navigate("/parent/child", {
@@ -6562,10 +6567,8 @@ describe("a router", () => {
         });
 
         await A.actions.child.redirectReturn(url);
-        expect(window.location.assign).toHaveBeenCalledWith(url);
-        expect(window.location.replace).not.toHaveBeenCalled();
-
-        window.location = oldLocation;
+        expect(t.window.location.assign).toHaveBeenCalledWith(url);
+        expect(t.window.location.replace).not.toHaveBeenCalled();
       }
     });
 
@@ -6578,15 +6581,6 @@ describe("a router", () => {
       ];
 
       for (let url of urls) {
-        // This is gross, don't blame me, blame SO :)
-        // https://stackoverflow.com/a/60697570
-        let oldLocation = window.location;
-        const location = new URL(window.location.href) as unknown as Location;
-        location.assign = jest.fn();
-        location.replace = jest.fn();
-        delete (window as any).location;
-        window.location = location as unknown as Location;
-
         let t = setup({ routes: REDIRECT_ROUTES });
 
         let A = await t.navigate("/parent/child", {
@@ -6596,10 +6590,8 @@ describe("a router", () => {
         });
 
         await A.actions.child.redirectReturn(url);
-        expect(window.location.replace).toHaveBeenCalledWith(url);
-        expect(window.location.assign).not.toHaveBeenCalled();
-
-        window.location = oldLocation;
+        expect(t.window.location.replace).toHaveBeenCalledWith(url);
+        expect(t.window.location.assign).not.toHaveBeenCalled();
       }
     });
 
@@ -6654,15 +6646,6 @@ describe("a router", () => {
     });
 
     it("treats same-origin absolute URLs as external if they don't match the basename", async () => {
-      // This is gross, don't blame me, blame SO :)
-      // https://stackoverflow.com/a/60697570
-      let oldLocation = window.location;
-      const location = new URL(window.location.href) as unknown as Location;
-      location.assign = jest.fn();
-      location.replace = jest.fn();
-      delete (window as any).location;
-      window.location = location as unknown as Location;
-
       let t = setup({ routes: REDIRECT_ROUTES, basename: "/base" });
 
       let A = await t.navigate("/base/parent/child", {
@@ -6672,10 +6655,8 @@ describe("a router", () => {
 
       let url = "http://localhost/not/the/same/basename";
       await A.actions.child.redirectReturn(url);
-      expect(window.location.assign).toHaveBeenCalledWith(url);
-      expect(window.location.replace).not.toHaveBeenCalled();
-
-      window.location = oldLocation;
+      expect(t.window.location.assign).toHaveBeenCalledWith(url);
+      expect(t.window.location.replace).not.toHaveBeenCalled();
     });
 
     describe("redirect status code handling", () => {
