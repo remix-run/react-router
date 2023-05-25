@@ -228,12 +228,28 @@ let bufferize = (stream: Readable): (() => string) => {
   return () => buffer;
 };
 
+let logConsoleError = (error: Error) => {
+  console.error(`[console] ${error.name}: ${error.message}`);
+};
+
+let expectConsoleError = (
+  isExpected: (error: Error) => boolean,
+  unexpected = logConsoleError
+) => {
+  return (error: Error) => {
+    if (isExpected(error)) {
+      return;
+    }
+    unexpected(error);
+  };
+};
+
 let HMR_TIMEOUT_MS = 10_000;
 
 test("HMR", async ({ page }) => {
   // uncomment for debugging
   // page.on("console", (msg) => console.log(msg.text()));
-  page.on("pageerror", (err) => console.log(err.message));
+  page.on("pageerror", logConsoleError);
   let dataRequests = 0;
   page.on("request", (request) => {
     let url = new URL(request.url());
@@ -486,6 +502,27 @@ whatsup
       }
     );
 
+    // React Router integration w/ React Refresh has a bug where sometimes rerenders happen with old UI and new data
+    // in this case causing `TypeError: Cannot destructure property`.
+    // Need to fix that bug, but it only shows a harmless console error in the browser in dev
+    page.removeListener("pageerror", logConsoleError);
+    let expectedErrorCount = 0;
+    let expectDestructureTypeError = expectConsoleError((error) => {
+      let expectedMessage = new Set([
+        // chrome, edge
+        "Cannot destructure property 'hello' of 'useLoaderData(...)' as it is null.",
+        // firefox
+        "(intermediate value)() is null",
+        // webkit
+        "Right side of assignment cannot be destructured"
+      ]);
+      let isExpected =
+        error.name === "TypeError" && expectedMessage.has(error.message);
+      if (isExpected) expectedErrorCount += 1;
+      return isExpected;
+    });
+    page.on("pageerror", expectDestructureTypeError);
+
     let withFix = `
       import { useLoaderData } from "@remix-run/react";
       export function shouldRevalidate(args) {
@@ -503,6 +540,11 @@ whatsup
     fs.writeFileSync(indexPath, withFix);
     await page.waitForLoadState("networkidle");
     await page.getByText("With Fix").waitFor({ timeout: HMR_TIMEOUT_MS });
+
+    // Restore normal console error handling
+    page.removeListener("pageerror", expectDestructureTypeError);
+    expect(expectedErrorCount).toBe(2);
+    page.addListener("pageerror", logConsoleError);
   } catch (e) {
     console.log("stdout begin -----------------------");
     console.log(devStdout());
