@@ -514,7 +514,7 @@ whatsup
         // firefox
         "(intermediate value)() is null",
         // webkit
-        "Right side of assignment cannot be destructured"
+        "Right side of assignment cannot be destructured",
       ]);
       let isExpected =
         error.name === "TypeError" && expectedMessage.has(error.message);
