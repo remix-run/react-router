@@ -662,8 +662,6 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
-const globalWindow = typeof window !== "undefined" ? window : undefined;
-
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
@@ -677,14 +675,16 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
 /**
  * Create a router and listen to history POP navigations
  */
-export function createRouter({
-  window = globalWindow,
-  ...init
-}: RouterInit): Router {
+export function createRouter(init: RouterInit): Router {
+  const routerWindow = init.window
+    ? init.window
+    : typeof window !== "undefined"
+    ? window
+    : undefined;
   const isBrowser =
-    typeof window !== "undefined" &&
-    typeof window.document !== "undefined" &&
-    typeof window.document.createElement !== "undefined";
+    typeof routerWindow !== "undefined" &&
+    typeof routerWindow.document !== "undefined" &&
+    typeof routerWindow.document.createElement !== "undefined";
   const isServer = !isBrowser;
 
   invariant(
@@ -2088,19 +2088,15 @@ export function createRouter({
       "Expected a location on the redirect navigation"
     );
     // Check if this an absolute external redirect that goes to a new origin
-    if (
-      ABSOLUTE_URL_REGEX.test(redirect.location) &&
-      isBrowser &&
-      typeof window?.location !== "undefined"
-    ) {
+    if (ABSOLUTE_URL_REGEX.test(redirect.location) && isBrowser) {
       let url = init.history.createURL(redirect.location);
       let isDifferentBasename = stripBasename(url.pathname, basename) == null;
 
-      if (window.location.origin !== url.origin || isDifferentBasename) {
+      if (routerWindow.location.origin !== url.origin || isDifferentBasename) {
         if (replace) {
-          window.location.replace(redirect.location);
+          routerWindow.location.replace(redirect.location);
         } else {
-          window.location.assign(redirect.location);
+          routerWindow.location.assign(redirect.location);
         }
         return;
       }

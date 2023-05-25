@@ -302,7 +302,6 @@ type SetupOpts = {
   future?: FutureConfig;
 };
 
-let globalWindow = window;
 function setup({
   routes,
   basename,
@@ -429,15 +428,18 @@ function setup({
     });
   }
 
-  // jsdom is making more and more properties non-configurable, so we inject our own jest-friendly window 😅
-  let window = {
-    ...globalWindow,
+  // jsdom is making more and more properties non-configurable, so we inject
+  // our own jest-friendly window.
+  let testWindow = {
+    ...window,
     location: {
-      ...globalWindow.location,
+      ...window.location,
       assign: jest.fn(),
       replace: jest.fn(),
     },
-  } as unknown as Window; // spread makes TS sad, since `window.NaN` conflicts with the `[index: number]: Window` index signature
+  } as unknown as Window;
+  // ^ Spread makes TS sad - `window.NaN` conflicts with `[index: number]: Window`
+
   let history = createMemoryHistory({ initialEntries, initialIndex });
   jest.spyOn(history, "push");
   jest.spyOn(history, "replace");
@@ -447,7 +449,7 @@ function setup({
     routes: enhanceRoutes(routes),
     hydrationData,
     future,
-    window,
+    window: testWindow,
   }).initialize();
 
   function getRouteHelpers(
@@ -854,7 +856,7 @@ function setup({
   }
 
   return {
-    window,
+    window: testWindow,
     history,
     router: currentRouter,
     navigate,
