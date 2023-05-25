@@ -1480,23 +1480,14 @@ export function createRouter(init: RouterInit): Router {
         formMethod: loadingNavigation.formMethod,
         formAction: loadingNavigation.formAction,
         formEncType: loadingNavigation.formEncType,
-        // TODO: This is messy due to the typings and the need to throw :/
-        // But it feels wrong to have text typed with undefined.  Maybe we can
-        // snag these values off inside the if?
         get text() {
-          return loadingNavigation
-            ? (loadingNavigation.text as Submission["text"])
-            : undefined;
+          return loadingNavigation.text as Submission["text"];
         },
         get formData() {
-          return loadingNavigation
-            ? (loadingNavigation.formData as Submission["formData"])
-            : undefined;
+          return loadingNavigation.formData as Submission["formData"];
         },
         get json() {
-          return loadingNavigation
-            ? (loadingNavigation.json as Submission["json"])
-            : undefined;
+          return loadingNavigation.json as Submission["json"];
         },
       };
     }
