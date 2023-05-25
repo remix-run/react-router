@@ -112,6 +112,7 @@ export let serve = async (
           PATH:
             bin + (process.platform === "win32" ? ";" : ":") + process.env.PATH,
           REMIX_DEV_HTTP_ORIGIN: stringifyOrigin(origin),
+          FORCE_COLOR: process.env.NO_COLOR === undefined ? "1" : "0",
         },
         // https://github.com/sindresorhus/execa/issues/433
         windowsHide: false,
