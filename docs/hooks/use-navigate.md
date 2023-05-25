@@ -4,7 +4,7 @@ title: useNavigate
 
 # `useNavigate`
 
-<docs-warning>It's usually better to use [`redirect`][redirect] in loaders and actions than this hook</docs-warning>
+<docs-warning>It's usually better to use [`redirect`][redirect] in [`loaders`][loaders] and [`actions`][actions] than this hook</docs-warning>
 
 The `useNavigate` hook returns a function that lets you navigate programmatically, for example in an effect:
 
@@ -50,3 +50,5 @@ The `navigate` function has two signatures:
 If using `replace: true`, the navigation will replace the current entry in the history stack instead of adding a new one.
 
 [redirect]: ../fetch/redirect
+[loaders]: ../route/loader
+[actions]: ../route/action
