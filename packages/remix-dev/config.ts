@@ -42,6 +42,8 @@ type Dev = {
   host?: string;
   port?: number;
   restart?: boolean;
+  tlsKey?: string;
+  tlsCert?: string;
 };
 
 interface FutureConfig {

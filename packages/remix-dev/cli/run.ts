@@ -48,6 +48,8 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     --host              Host for the dev server. Default: localhost
     --port              Port for the dev server. Default: any open port
     --no-restart        Do not restart the app server when rebuilds occur.
+    --tls-key           Path to TLS key (key.pem)
+    --tls-cert          Path to TLS certificate (cert.pem)
   \`init\` Options:
     --no-delete         Skip deleting the \`remix.init\` script
   \`routes\` Options:
@@ -186,6 +188,8 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--port": Number,
       "-p": "--port",
       "--no-restart": Boolean,
+      "--tls-key": String,
+      "--tls-cert": String,
     },
     {
       argv,
@@ -208,6 +212,15 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     let version = require("../package.json").version;
     console.log(version);
     return;
+  }
+
+  if (flags["tls-key"]) {
+    flags.tlsKey = flags["tls-key"];
+    delete flags["tls-key"];
+  }
+  if (flags["tls-cert"]) {
+    flags.tlsCert = flags["tls-cert"];
+    delete flags["tls-cert"];
   }
 
   if (args["--no-delete"]) {
