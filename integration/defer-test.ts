@@ -949,7 +949,7 @@ test.describe("aborted", () => {
       files: {
         "app/entry.server.tsx": js`
           import { PassThrough } from "stream";
-          import type { EntryContext } from "@remix-run/node";
+          import type { AppLoadContext, EntryContext } from "@remix-run/node";
           import { Response } from "@remix-run/node";
           import { RemixServer } from "@remix-run/react";
           import isbot from "isbot";
@@ -961,7 +961,8 @@ test.describe("aborted", () => {
             request: Request,
             responseStatusCode: number,
             responseHeaders: Headers,
-            remixContext: EntryContext
+            remixContext: EntryContext,
+            loadContext: AppLoadContext
           ) {
             return isbot(request.headers.get("user-agent"))
               ? handleBotRequest(
