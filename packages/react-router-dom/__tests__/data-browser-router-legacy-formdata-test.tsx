@@ -4,8 +4,8 @@ import { JSDOM } from "jsdom";
 // the following to emulate FormData behavior in older browsers.
 //
 // // Drop support for the submitter parameter, as in a legacy browser. This
-// // needs to be done before remix is required, since it does some FormData
-// // detection.
+// // needs to be done before react-router-dom is required, since it does some
+// // FormData detection.
 // window.FormData = class FormData extends window["FormData"] {
 //   constructor(form?: HTMLFormElement) {
 //     super(form, undefined);
