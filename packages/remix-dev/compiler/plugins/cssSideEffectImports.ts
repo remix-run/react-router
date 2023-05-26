@@ -66,7 +66,7 @@ export const cssSideEffectImportsPlugin = (
           let loader = loaderForExtension[path.extname(args.path) as Extension];
           let contents = addSuffixToCssSideEffectImports(loader, code);
 
-          if (hmr) {
+          if (args.path.startsWith(ctx.config.appDirectory) && hmr) {
             contents = await applyHMR(
               contents,
               args,
