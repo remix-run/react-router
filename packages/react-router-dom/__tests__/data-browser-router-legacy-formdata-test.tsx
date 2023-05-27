@@ -1,17 +1,8 @@
 import { JSDOM } from "jsdom";
-
-// TODO: once https://github.com/jsdom/jsdom/pull/3496 lands, uncomment
-// the following to emulate FormData behavior in older browsers.
-//
-// // Drop support for the submitter parameter, as in a legacy browser. This
-// // needs to be done before react-router-dom is required, since it does some
-// // FormData detection.
-// window.FormData = class FormData extends window["FormData"] {
-//   constructor(form?: HTMLFormElement) {
-//     super(form, undefined);
-//   }
-// };
-
+// Drop support for the submitter parameter, as in a legacy browser. This
+// needs to be done before react-router-dom is required, since it does some
+// FormData detection.
+import "./polyfills/drop-FormData-submitter";
 import * as React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";

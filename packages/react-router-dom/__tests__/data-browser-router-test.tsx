@@ -1,6 +1,4 @@
 import { JSDOM } from "jsdom";
-// TODO: remove this once https://github.com/jsdom/jsdom/pull/3496 lands and we upgrade jsdom
-import "formdata-submitter-polyfill";
 import * as React from "react";
 import {
   act,

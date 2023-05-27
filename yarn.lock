@@ -4730,11 +4730,6 @@ form-data@^4.0.0:
     combined-stream "^1.0.8"
     mime-types "^2.1.12"
 
-formdata-submitter-polyfill@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/formdata-submitter-polyfill/-/formdata-submitter-polyfill-1.0.2.tgz#5c048e999c6b537b3adb50916fabd06729e138c1"
-  integrity sha512-4F/1pOB/3VofhaUpBd/R8fNLWjBRHvIb5rotTAXeRC4zaf6GKX7FhqchK4EcyQzc3ugNSP+HXckRF7cGUb37eQ==
-
 fragment-cache@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/fragment-cache/-/fragment-cache-0.2.1.tgz#4290fad27f13e89be7f33799c6bc5a0abfff0d19"
@@ -6107,10 +6102,10 @@ jscodeshift@^0.13.1:
     temp "^0.8.4"
     write-file-atomic "^2.3.0"
 
-jsdom@22.0.0, jsdom@^20.0.0:
-  version "22.0.0"
-  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-22.0.0.tgz#3295c6992c70089c4b8f5cf060489fddf7ee9816"
-  integrity sha512-p5ZTEb5h+O+iU02t0GfEjAnkdYPrQSkfuTSMkMYyIoMvUNEHsbG0bHHbfXIcfTqD2UfvjQX7mmgiFsyRwGscVw==
+jsdom@22.1.0, jsdom@^20.0.0:
+  version "22.1.0"
+  resolved "https://registry.yarnpkg.com/jsdom/-/jsdom-22.1.0.tgz#0fca6d1a37fbeb7f4aac93d1090d782c56b611c8"
+  integrity sha512-/9AVW7xNbsBv6GfWho4TTNjEo9fe6Zhf9O7s0Fhhr3u+awPwAJMKwAMXnkk5vBxflqLW9hTHX/0cs+P3gW+cQw==
   dependencies:
     abab "^2.0.6"
     cssstyle "^3.0.0"
