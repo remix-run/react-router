@@ -978,7 +978,7 @@ export interface SubmitFunction {
      * Options that override the `<form>`'s own attributes. Required when
      * submitting arbitrary data without a backing `<form>`.
      */
-    options?: SubmitOptions<false>
+    options?: SubmitOptions
   ): void;
 }
 
@@ -989,7 +989,7 @@ export interface FetcherSubmitFunction {
   (
     target: SubmitTarget,
     // Fetchers cannot replace because they are not navigation events
-    options?: Omit<SubmitOptions<true>, "replace">
+    options?: Omit<SubmitOptions, "replace">
   ): void;
 }
 
@@ -1143,7 +1143,7 @@ let fetcherId = 0;
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
   submit: FetcherSubmitFunction;
-  load: (href: string | LoaderFunction) => void;
+  load: (href: string) => void;
 };
 
 /**
@@ -1167,7 +1167,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     invariant(routeId, `No routeId available for fetcher.Form()`);
     return createFetcherForm(fetcherKey, routeId);
   });
-  let [load] = React.useState(() => (href: string | LoaderFunction) => {
+  let [load] = React.useState(() => (href: string) => {
     invariant(router, "No router available for fetcher.load()");
     invariant(routeId, "No routeId available for fetcher.load()");
     router.fetch(fetcherKey, routeId, href);

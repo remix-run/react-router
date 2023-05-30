@@ -10740,61 +10740,6 @@ describe("a router", () => {
       });
     });
 
-    describe("fetcher loads", () => {
-      it("supports inline loaders", async () => {
-        let router = createRouter({
-          routes: [{ id: "root", path: "/" }],
-          history: createMemoryHistory(),
-          future: { v7_normalizeFormMethod: true },
-        }).initialize();
-
-        let loaderDfd = createDeferred();
-        let loaderSpy = jest.fn(() => loaderDfd.promise);
-        let key = "key";
-        router.fetch(key, "root", loaderSpy);
-
-        // @ts-expect-error
-        let request = loaderSpy.mock.calls[0][0].request as Request;
-        expect(request.url).toBe("http://localhost/");
-
-        expect(router.state.fetchers.get("key")).toMatchObject({
-          state: "loading",
-          data: undefined,
-        });
-
-        await loaderDfd.resolve("LOADER");
-
-        expect(router.state.fetchers.get("key")).toMatchObject({
-          state: "idle",
-          data: "LOADER",
-        });
-      });
-
-      it("inline loaders override the current route loader", async () => {
-        let router = createRouter({
-          routes: [{ id: "root", path: "/", loader: () => "LOADER" }],
-          history: createMemoryHistory(),
-          future: { v7_normalizeFormMethod: true },
-          hydrationData: { loaderData: { root: null } },
-        }).initialize();
-
-        let key = "key";
-        router.fetch(key, "root", () => "LOADER OVERRIDE");
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "loading",
-          data: undefined,
-        });
-
-        await tick();
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "idle",
-          data: "LOADER OVERRIDE",
-        });
-      });
-    });
-
     describe("fetcher submissions", () => {
       it("serializes body as application/x-www-form-urlencoded", async () => {
         let t = setup({
@@ -10942,76 +10887,6 @@ describe("a router", () => {
           "application/x-www-form-urlencoded;charset=UTF-8"
         );
         expect((await request.formData()).get("a")).toBe("1");
-      });
-
-      it("allows inline actions to be passed as a function", async () => {
-        let router = createRouter({
-          routes: [{ id: "root", path: "/" }],
-          history: createMemoryHistory(),
-          future: { v7_normalizeFormMethod: true },
-        }).initialize();
-
-        let actionDfd = createDeferred();
-        let actionSpy = jest.fn(() => actionDfd.promise);
-        let key = "key";
-        router.fetch(key, "root", actionSpy, {
-          formMethod: "post",
-          formData: createFormData({ key: "value" }),
-        });
-
-        // @ts-expect-error
-        let request = actionSpy.mock.calls[0][0].request as Request;
-        expect(request.url).toBe("http://localhost/");
-        expect((await request.formData()).get("key")).toBe("value");
-
-        let fetcher = router.state.fetchers.get("key");
-        expect(fetcher?.formAction).toEqual("/");
-        expect(fetcher?.text).toEqual("key=value");
-        expect(fetcher?.formData?.get("key")).toEqual("value");
-        expect(fetcher?.formEncType).toEqual(
-          "application/x-www-form-urlencoded"
-        );
-        expect(fetcher?.formMethod).toEqual("POST");
-        expect(fetcher?.data).toBe(undefined);
-
-        await actionDfd.resolve("ACTION");
-
-        fetcher = router.state.fetchers.get("key");
-        expect(fetcher?.state).toBe("idle");
-        expect(fetcher?.formAction).toBe(undefined);
-        expect(fetcher?.text).toBe(undefined);
-        expect(fetcher?.formData).toBe(undefined);
-        expect(fetcher?.formEncType).toBe(undefined);
-        expect(fetcher?.formMethod).toBe(undefined);
-        expect(fetcher?.data).toBe("ACTION");
-      });
-
-      it("allows inline actions to override the current route action", async () => {
-        let router = createRouter({
-          routes: [{ id: "root", path: "/", action: () => "ACTION" }],
-          history: createMemoryHistory(),
-          future: { v7_normalizeFormMethod: true },
-        }).initialize();
-
-        let key = "key";
-        router.fetch(key, "root", () => "ACTION OVERRIDE", {
-          formMethod: "post",
-          formData: createFormData({}),
-        });
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "submitting",
-          formAction: "/",
-          data: undefined,
-        });
-
-        await tick();
-
-        expect(router.state.fetchers.get(key)).toMatchObject({
-          state: "idle",
-          formAction: undefined,
-          data: "ACTION OVERRIDE",
-        });
       });
     });
   });

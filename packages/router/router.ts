@@ -146,7 +146,7 @@ export interface Router {
   fetch(
     key: string,
     routeId: string,
-    href: string | ActionFunction | LoaderFunction | null,
+    href: string | null,
     opts?: RouterFetchOptions
   ): void;
 
@@ -1654,7 +1654,7 @@ export function createRouter(init: RouterInit): Router {
   function fetch(
     key: string,
     routeId: string,
-    hrefOrHandler: string | LoaderFunction | ActionFunction | null,
+    href: string | null,
     opts?: RouterFetchOptions
   ) {
     if (isServer) {
@@ -1666,10 +1666,6 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (fetchControllers.has(key)) abortFetcher(key);
-
-    let href = typeof hrefOrHandler === "function" ? null : hrefOrHandler;
-    let handlerOverride =
-      typeof hrefOrHandler === "function" ? hrefOrHandler : undefined;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(
@@ -1703,48 +1699,14 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      handleFetcherAction(
-        key,
-        routeId,
-        path,
-        match,
-        matches,
-        submission,
-        handlerOverride
-      );
+      handleFetcherAction(key, routeId, path, match, matches, submission);
       return;
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
-    // revalidations. Only applies to route-driven fetcher.load calls since we
-    // don't cache a reference to the inline loader to avoid capturing stale
-    // closed over values :/
-
-    // This type of API would allow us to better capture the handler function
-    // and update it on re-renders if it changed.
-    // It sets us up better for an RSC world where inline handlers would
-    // not be viable.  Inline handler support directly in useFetcher might
-    // pose issues in an RSC world.  Today's fetchers actions can still work
-    // without JS since they can submit to a URL on the server.  These direct
-    // handlers wouldn't ever have a URL so they'd not be able to work in a
-    // no-JS world.
-
-    // useInlineFetcher(({ request }) => { ... })
-    // useClientFetcher(({ request }))   // matches RSC "use client" directive
-
-    // TODO: Are we ok with this?
-    if (typeof hrefOrHandler !== "function") {
-      fetchLoadMatches.set(key, { routeId, path });
-    }
-    handleFetcherLoader(
-      key,
-      routeId,
-      path,
-      match,
-      matches,
-      submission,
-      handlerOverride
-    );
+    // revalidations
+    fetchLoadMatches.set(key, { routeId, path });
+    handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1755,13 +1717,12 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
-    submission: Submission,
-    actionOverride: ActionFunction | undefined
+    submission: Submission
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
-    if (!match.route.action && !match.route.lazy && !actionOverride) {
+    if (!match.route.action && !match.route.lazy) {
       let error = getInternalRouterError(405, {
         method: submission.formMethod,
         pathname: path,
@@ -1794,8 +1755,7 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       manifest,
       mapRouteProperties,
-      basename,
-      { handlerOverride: actionOverride }
+      basename
     );
 
     if (fetchRequest.signal.aborted) {
@@ -1982,8 +1942,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
-    submission?: Submission,
-    loaderOverride?: LoaderFunction
+    submission?: Submission
   ) {
     let existingFetcher = state.fetchers.get(key);
     // Put this fetcher into it's loading state
@@ -2010,8 +1969,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      basename,
-      { handlerOverride: loaderOverride }
+      basename
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -3630,7 +3588,6 @@ async function callLoaderOrAction(
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
   opts: {
-    handlerOverride?: LoaderFunction | ActionFunction;
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
     requestContext?: unknown;
@@ -3657,7 +3614,7 @@ async function callLoaderOrAction(
   };
 
   try {
-    let handler = opts.handlerOverride || match.route[type];
+    let handler = match.route[type];
 
     if (match.route.lazy) {
       if (handler) {

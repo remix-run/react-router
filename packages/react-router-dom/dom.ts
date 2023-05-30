@@ -117,10 +117,10 @@ export type SubmitTarget =
   | FormData
   | URLSearchParams
   | { [name: string]: string }
-  | NonNullable<unknown> // Raw payload submissions
+  | NonNullable<unknown> // Raw submissions to be encoded into JSON or text
   | null;
 
-export interface SubmitOptions<AllowInlineAction = false> {
+export interface SubmitOptions {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
    * Defaults to "GET".
@@ -131,7 +131,7 @@ export interface SubmitOptions<AllowInlineAction = false> {
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
    */
-  action?: AllowInlineAction extends true ? string | ActionFunction : string;
+  action?: string;
 
   /**
    * The encoding used to submit the form. Overrides `<form encType>`.
