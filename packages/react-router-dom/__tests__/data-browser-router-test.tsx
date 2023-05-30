@@ -3563,16 +3563,16 @@ function testDomRouter(
           </p>"
         `);
 
-        // await waitFor(() => screen.getByText(/idle/));
-        // expect(getHtml(container.querySelector("#output")!))
-        //   .toMatchInlineSnapshot(`
-        //   "<p
-        //     id="output"
-        //   >
-        //     idle
-        //     {"count":16}
-        //   </p>"
-        // `);
+        await waitFor(() => screen.getByText(/idle/));
+        expect(getHtml(container.querySelector("#output")!))
+          .toMatchInlineSnapshot(`
+          "<p
+            id="output"
+          >
+            idle
+            {"count":16}
+          </p>"
+        `);
       });
 
       it("handles fetcher ?index params", async () => {
@@ -4122,7 +4122,7 @@ function testDomRouter(
         `);
       });
 
-      it("serializes fetcher.submit(object) as FromData", async () => {
+      it("serializes fetcher.submit(object) as FormData", async () => {
         let actionSpy = jest.fn();
         let body = { key: "value" };
         let fetcher: Fetcher;
