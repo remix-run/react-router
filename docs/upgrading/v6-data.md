@@ -11,7 +11,7 @@ This brought about an interesting conundrum. We've got tons of v6 [`BrowserRoute
 
 ## Differences
 
-The first thing to be aware of is the presence of a handful of new [Data APIs][data-apis] that only work on routes _defined_ via the new [data routers][picking-a-router] (i.e., `createBrowserRouter`). These include a few categories of APIs:
+The first thing to be aware of is the presence of a handful of new [Data APIs][data-apis] that only work on routes _defined_ via the new [data routers][picking-a-router] (i.e., []`createBrowserRouter`][createbrowserrouter]). These include a few categories of APIs:
 
 - Route-level data APIs such as `loader`, `action`, `shouldRevalidate`, `handle`, and `lazy`
 - In-component data hooks such as `useLoaderData`, `useActionData`, `useFetcher`, `useMatches`, `useNavigation`, etc.
@@ -230,7 +230,9 @@ export default function App() {
 }
 ```
 
-This is quite common but poses a problem in the next step where everything inside `<BrowserRouter>` must be a `<Route>`. Thankfully the solution is straightforward - that app shell is nothing more than a layout route with an `<Outlet>`! So just add this "app shell" into a pathless layout route around your routes as follows:
+If you find yourself in this situation, don't worry - there's a straightforward solution you can do _before_ starting the above migration.
+
+This is quite common but poses a problem in the above migration approach since we need to lift things to `RouterProvider` route-by-route, but this "app shell" stuff isn't part of a route...but it could be! That "app shell" is really nothing more than a layout route with an `<Outlet>`! So before starting the above migration, just move this "app shell" into a pathless layout route around your routes as follows:
 
 ```jsx lines=[6,25]
 export default function App() {
@@ -265,7 +267,7 @@ function Layout() {
 }
 ```
 
-Then when lifting routes into your `RouterProvider`, you likely want to lift the layout route first so all of the children can nest inside of it.
+Once you've done that, you can proceed with the above migration strategy and start lifting routes into your `RouterProvider` one-by-one. You'll likely want to lift the layout route first so all of the children can nest inside of it.
 
 [remixing-react-router]: https://remix.run/blog/remixing-react-router
 [when-to-fetch]: https://www.youtube.com/watch?v=95B8mnhzoCM
