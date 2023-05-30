@@ -11,7 +11,7 @@ This brought about an interesting conundrum. We've got tons of v6 [`BrowserRoute
 
 ## Differences
 
-The first thing to be aware of is the presence of a handful of new [Data APIs][data-apis] that only work on routes _defined_ via the new [data routers][picking-a-router] (i.e., []`createBrowserRouter`][createbrowserrouter]). These include a few categories of APIs:
+The first thing to be aware of is the presence of a handful of new [Data APIs][data-apis] that only work on routes _defined_ via the new [data routers][picking-a-router] (i.e., [`createBrowserRouter`][createbrowserrouter]). These include a few categories of APIs:
 
 - Route-level data APIs such as `loader`, `action`, `shouldRevalidate`, `handle`, and `lazy`
 - In-component data hooks such as `useLoaderData`, `useActionData`, `useFetcher`, `useMatches`, `useNavigation`, etc.
