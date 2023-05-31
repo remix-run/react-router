@@ -13,10 +13,12 @@ test.describe("headers export", () => {
 
   test.beforeAll(async () => {
     appFixture = await createFixture({
-      future: {
-        v2_routeConvention: true,
-        v2_errorBoundary: true,
-        v2_headers: true,
+      config: {
+        future: {
+          v2_routeConvention: true,
+          v2_errorBoundary: true,
+          v2_headers: true,
+        },
       },
       files: {
         "app/root.jsx": js`
@@ -219,7 +221,9 @@ test.describe("headers export", () => {
     let HEADER_VALUE = "SUCCESS";
 
     let fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files: {
         "app/root.jsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -424,10 +428,12 @@ test.describe("v1 behavior (future.v2_headers=false)", () => {
 
   test.beforeAll(async () => {
     appFixture = await createFixture({
-      future: {
-        v2_routeConvention: true,
-        v2_errorBoundary: true,
-        v2_headers: false,
+      config: {
+        future: {
+          v2_routeConvention: true,
+          v2_errorBoundary: true,
+          v2_headers: false,
+        },
       },
       files: {
         "app/root.jsx": js`

@@ -17,10 +17,12 @@ test.describe("actions", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        v2_routeConvention: true,
-        v2_errorBoundary: true,
-        v2_normalizeFormMethod: true,
+      config: {
+        future: {
+          v2_routeConvention: true,
+          v2_errorBoundary: true,
+          v2_normalizeFormMethod: true,
+        },
       },
       files: {
         "app/routes/urlencoded.jsx": js`

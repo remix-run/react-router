@@ -49,7 +49,9 @@ test.describe("build failures (v1 routes)", () => {
   test("detects path collisions inside pathless layout routes", async () => {
     try {
       await createFixture({
-        future: { v2_routeConvention: false },
+        config: {
+          future: { v2_routeConvention: false },
+        },
         files: {
           "app/root.tsx": ROOT_FILE_CONTENTS,
           "app/routes/foo.jsx": LEAF_FILE_CONTENTS,
@@ -69,7 +71,9 @@ test.describe("build failures (v1 routes)", () => {
   test("detects path collisions across pathless layout routes", async () => {
     try {
       await createFixture({
-        future: { v2_routeConvention: false },
+        config: {
+          future: { v2_routeConvention: false },
+        },
         files: {
           "app/root.tsx": ROOT_FILE_CONTENTS,
           "app/routes/__pathless.jsx": LAYOUT_FILE_CONTENTS,
@@ -90,7 +94,9 @@ test.describe("build failures (v1 routes)", () => {
   test("detects path collisions inside multiple pathless layout routes", async () => {
     try {
       await createFixture({
-        future: { v2_routeConvention: false },
+        config: {
+          future: { v2_routeConvention: false },
+        },
         files: {
           "app/root.tsx": ROOT_FILE_CONTENTS,
           "app/routes/foo.jsx": LEAF_FILE_CONTENTS,
@@ -111,7 +117,9 @@ test.describe("build failures (v1 routes)", () => {
   test("detects path collisions of index files inside pathless layouts", async () => {
     try {
       await createFixture({
-        future: { v2_routeConvention: false },
+        config: {
+          future: { v2_routeConvention: false },
+        },
         files: {
           "app/root.tsx": ROOT_FILE_CONTENTS,
           "app/routes/index.jsx": LEAF_FILE_CONTENTS,
@@ -131,7 +139,9 @@ test.describe("build failures (v1 routes)", () => {
   test("detects path collisions of index files across multiple pathless layouts", async () => {
     try {
       await createFixture({
-        future: { v2_routeConvention: false },
+        config: {
+          future: { v2_routeConvention: false },
+        },
         files: {
           "app/root.tsx": ROOT_FILE_CONTENTS,
           "app/routes/nested/__pathless.jsx": LAYOUT_FILE_CONTENTS,
@@ -152,7 +162,9 @@ test.describe("build failures (v1 routes)", () => {
   test("detects path collisions of param routes inside pathless layouts", async () => {
     try {
       await createFixture({
-        future: { v2_routeConvention: false },
+        config: {
+          future: { v2_routeConvention: false },
+        },
         files: {
           "app/root.tsx": ROOT_FILE_CONTENTS,
           "app/routes/$param.jsx": LEAF_FILE_CONTENTS,
@@ -192,7 +204,9 @@ test.describe("build failures (v2 routes)", () => {
     let buildOutput: string;
     await createFixture({
       buildStdio,
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files,
     });
     let chunks: Buffer[] = [];

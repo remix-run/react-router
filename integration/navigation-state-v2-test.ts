@@ -27,8 +27,10 @@ test.describe("navigation states", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        v2_normalizeFormMethod: true,
+      config: {
+        future: {
+          v2_normalizeFormMethod: true,
+        },
       },
       files: {
         "app/root.jsx": js`

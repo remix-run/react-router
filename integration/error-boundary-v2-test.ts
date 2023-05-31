@@ -13,9 +13,11 @@ test.describe("V2 Singular ErrorBoundary (future.v2_errorBoundary)", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        v2_errorBoundary: true,
-        v2_routeConvention: true,
+      config: {
+        future: {
+          v2_errorBoundary: true,
+          v2_routeConvention: true,
+        },
       },
       files: {
         "app/root.jsx": js`

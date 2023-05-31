@@ -18,15 +18,13 @@ test.describe("CSS side-effect imports", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      config: {
+        serverDependenciesToBundle: [/@test-package/],
+        future: {
+          v2_routeConvention: true,
+        },
+      },
       files: {
-        "remix.config.js": js`
-          module.exports = {
-            serverDependenciesToBundle: [/@test-package/],
-            future: {
-              v2_routeConvention: true,
-            },
-          };
-        `,
         "app/root.jsx": js`
           import { Links, Outlet } from "@remix-run/react";
           import { cssBundleHref } from "@remix-run/css-bundle";

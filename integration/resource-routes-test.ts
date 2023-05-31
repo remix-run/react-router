@@ -16,7 +16,9 @@ test.describe("loader in an app", async () => {
     _consoleError = console.error;
     console.error = () => {};
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files: {
         "app/routes/_index.jsx": js`
           import { Form, Link } from "@remix-run/react";
@@ -238,9 +240,11 @@ test.describe("Development server", async () => {
 
     fixture = await createFixture(
       {
-        future: {
-          v2_routeConvention: true,
-          v2_errorBoundary: true,
+        config: {
+          future: {
+            v2_routeConvention: true,
+            v2_errorBoundary: true,
+          },
         },
         files: {
           "app/routes/_index.jsx": js`

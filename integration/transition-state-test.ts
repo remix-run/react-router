@@ -25,7 +25,9 @@ test.describe("rendering", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files: {
         "app/root.jsx": js`
           import { useMemo, useRef } from "react";

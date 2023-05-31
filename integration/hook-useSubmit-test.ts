@@ -10,7 +10,9 @@ test.describe("`useSubmit()` returned function", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files: {
         "app/routes/_index.jsx": js`
         import { useLoaderData, useSubmit } from "@remix-run/react";

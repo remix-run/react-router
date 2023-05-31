@@ -5,28 +5,27 @@ import path from "node:path";
 import type { Readable } from "node:stream";
 import getPort, { makeRange } from "get-port";
 
+import type { FixtureInit } from "./helpers/create-fixture";
 import { createFixtureProject, css, js, json } from "./helpers/create-fixture";
 
 test.setTimeout(120_000);
 
-let fixture = (options: { appPort: number; devPort: number }) => ({
+let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
+  config: {
+    serverModuleFormat: "cjs",
+    tailwind: true,
+    future: {
+      unstable_dev: {
+        port: options.devPort,
+      },
+      v2_routeConvention: true,
+      v2_errorBoundary: true,
+      v2_normalizeFormMethod: true,
+      v2_meta: true,
+      v2_headers: true,
+    },
+  },
   files: {
-    "remix.config.js": js`
-      module.exports = {
-        serverModuleFormat: "cjs",
-        tailwind: true,
-        future: {
-          unstable_dev: {
-            port: ${options.devPort},
-          },
-          v2_routeConvention: true,
-          v2_errorBoundary: true,
-          v2_normalizeFormMethod: true,
-          v2_meta: true,
-          v2_headers: true,
-        },
-      };
-    `,
     "package.json": json({
       private: true,
       sideEffects: false,

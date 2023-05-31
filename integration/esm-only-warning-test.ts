@@ -10,7 +10,9 @@ test.beforeAll(async () => {
 
   await createFixtureProject({
     buildStdio,
-    future: { v2_routeConvention: true },
+    config: {
+      future: { v2_routeConvention: true },
+    },
     files: {
       "package.json": json({
         name: "remix-integration-9v4bpv66vd",

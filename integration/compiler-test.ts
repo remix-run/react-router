@@ -22,6 +22,8 @@ test.describe("compiler", () => {
     fixture = await createFixture({
       setup: "node",
       files: {
+        // We need a custom config file here to test usage of `getDependenciesToBundle`
+        // since this can't be serialized from the fixture object.
         "remix.config.js": js`
           let { getDependenciesToBundle } = require("@remix-run/dev");
           module.exports = {
@@ -386,7 +388,9 @@ test.describe("compiler", () => {
 
       await expect(() =>
         createFixtureProject({
-          future: { v2_routeConvention: true },
+          config: {
+            future: { v2_routeConvention: true },
+          },
           buildStdio,
           files: {
             "app/routes/_index.jsx": js`

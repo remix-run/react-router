@@ -8,8 +8,15 @@ let projectDir: string;
 
 test.beforeAll(async () => {
   projectDir = await createFixtureProject({
-    future: { v2_routeConvention: true },
     files: {
+      // Ensure the config is valid ESM
+      "remix.config.js": js`
+        export default {
+          serverModuleFormat: "esm",
+          serverBuildPath: "build/index.mjs",
+          future: { v2_routeConvention: true },
+        };
+      `,
       "package.json": js`
         {
           "name": "remix-template-remix",
@@ -39,15 +46,6 @@ test.beforeAll(async () => {
             "node": ">=14"
           }
         }      
-      `,
-      "remix.config.js": js`
-        export default {
-          serverModuleFormat: "esm",
-          serverBuildPath: "build/index.mjs",
-          future: {
-            v2_routeConvention: true,
-          },
-        };
       `,
       "app/routes/_index.jsx": js`
         import { json } from "@remix-run/node";

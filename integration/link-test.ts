@@ -32,9 +32,11 @@ test.describe("route module link export", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        v2_routeConvention: true,
-        v2_errorBoundary: true,
+      config: {
+        future: {
+          v2_routeConvention: true,
+          v2_errorBoundary: true,
+        },
       },
       files: {
         "app/favicon.ico": js``,

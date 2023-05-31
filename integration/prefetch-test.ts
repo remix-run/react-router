@@ -1,14 +1,20 @@
 import { test, expect } from "@playwright/test";
 
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import type {
+  Fixture,
+  FixtureInit,
+  AppFixture,
+} from "./helpers/create-fixture";
 import type { RemixLinkProps } from "../build/node_modules/@remix-run/react/dist/components";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 // Generate the test app using the given prefetch mode
-function fixtureFactory(mode: RemixLinkProps["prefetch"]) {
+function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
   return {
-    future: { v2_routeConvention: true },
+    config: {
+      future: { v2_routeConvention: true },
+    },
     files: {
       "app/root.jsx": js`
         import {
