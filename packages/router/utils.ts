@@ -101,9 +101,16 @@ export interface Submission {
   formMethod: FormMethod | V7_FormMethod;
   formAction: string;
   formEncType: FormEncType;
-  get text(): string;
-  get formData(): FormData;
-  get json(): Record<string, any> | Array<any> | number | string | boolean;
+  text: string;
+  formData: FormData | undefined;
+  json:
+    | Record<string, any>
+    | Array<any>
+    | string
+    | number
+    | boolean
+    | null
+    | undefined;
 }
 
 /**

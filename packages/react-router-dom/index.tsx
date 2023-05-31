@@ -1175,80 +1175,15 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
 
   let fetcher = router.getFetcher<TData>(fetcherKey);
 
-  let fetcherWithComponents = React.useMemo(() => {
-    if (fetcher.state === "submitting") {
-      let f: FetcherWithComponents<TData> = {
-        state: fetcher.state,
-        formMethod: fetcher.formMethod,
-        formAction: fetcher.formAction,
-        formEncType: fetcher.formEncType,
-        get text() {
-          return fetcher.text as string;
-        },
-        get formData() {
-          return fetcher.formData as FormData;
-        },
-        get json() {
-          return fetcher.json as
-            | Record<string, any>
-            | Array<any>
-            | number
-            | string
-            | boolean;
-        },
-        data: fetcher.data,
-        " _hasFetcherDoneAnything ": fetcher[" _hasFetcherDoneAnything "],
-        Form,
-        submit,
-        load,
-      };
-      return f;
-    } else if (fetcher.state === "loading") {
-      let f: FetcherWithComponents<TData> = {
-        state: "loading",
-        formMethod: fetcher.formMethod,
-        formAction: fetcher.formAction,
-        formEncType: fetcher.formEncType,
-        get text() {
-          return fetcher.text;
-        },
-        get formData() {
-          return fetcher.formData;
-        },
-        get json() {
-          return fetcher.json;
-        },
-        data: fetcher.data,
-        " _hasFetcherDoneAnything ": fetcher[" _hasFetcherDoneAnything "],
-        Form,
-        submit,
-        load,
-      };
-      return f;
-    } else {
-      let f: FetcherWithComponents<TData> = {
-        state: "idle",
-        formMethod: undefined,
-        formAction: undefined,
-        formEncType: undefined,
-        get text() {
-          return undefined;
-        },
-        get formData() {
-          return undefined;
-        },
-        get json() {
-          return undefined;
-        },
-        data: fetcher.data,
-        " _hasFetcherDoneAnything ": fetcher[" _hasFetcherDoneAnything "],
-        Form,
-        submit,
-        load,
-      };
-      return f;
-    }
-  }, [fetcher, Form, submit, load]);
+  let fetcherWithComponents = React.useMemo(
+    () => ({
+      Form,
+      submit,
+      load,
+      ...fetcher,
+    }),
+    [fetcher, Form, submit, load]
+  );
 
   React.useEffect(() => {
     // Is this busted when the React team gets real weird and calls effects

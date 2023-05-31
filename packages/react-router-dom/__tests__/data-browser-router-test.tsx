@@ -3161,9 +3161,7 @@ function testDomRouter(
         expect(navigation.formData?.get("a")).toBe("1");
         expect(navigation.formData?.get("b")).toBe("2");
         expect(navigation.text).toBe("a=1&b=2");
-        expect(() => navigation.json).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as json"`
-        );
+        expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
           `"application/x-www-form-urlencoded;charset=UTF-8"`
@@ -3211,9 +3209,7 @@ function testDomRouter(
         expect(navigation.formData?.get("a")).toBe("1");
         expect(navigation.formData?.get("b")).toBe("2");
         expect(navigation.text).toBe("a=1&b=2");
-        expect(() => navigation.json).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as json"`
-        );
+        expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
           `"application/x-www-form-urlencoded;charset=UTF-8"`
@@ -3260,9 +3256,7 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Submit"));
         expect(navigation.json).toBe(body);
         expect(navigation.text).toBe(JSON.stringify(body));
-        expect(() => navigation.formData).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as formData"`
-        );
+        expect(navigation.formData).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toBe("application/json");
         expect(await request.json()).toEqual({ a: "1", b: "2" });
@@ -3304,12 +3298,8 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Submit"));
         expect(navigation.text).toBe(body);
-        expect(() => navigation.formData).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as formData"`
-        );
-        expect(() => navigation.json).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as json"`
-        );
+        expect(navigation.formData).toBeUndefined();
+        expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toBe("text/plain");
         expect(await request.text()).toEqual(body);
@@ -4153,9 +4143,8 @@ function testDomRouter(
         expect(fetcher.formData?.get("key")).toBe("value");
         // @ts-expect-error
         expect(fetcher.text).toBe("key=value");
-        expect(() => fetcher?.json).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as json"`
-        );
+        // @ts-expect-error
+        expect(fetcher.json).toBeUndefined();
         let formData = await actionSpy.mock.calls[0][0].request.formData();
         expect(formData.get("key")).toBe("value");
       });
@@ -4198,9 +4187,8 @@ function testDomRouter(
         expect(fetcher.formData?.get("key")).toBe("value");
         // @ts-expect-error
         expect(fetcher.text).toBe("key=value");
-        expect(() => fetcher?.json).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as json"`
-        );
+        // @ts-expect-error
+        expect(fetcher.json).toBeUndefined();
         let formData = await actionSpy.mock.calls[0][0].request.formData();
         expect(formData.get("key")).toBe("value");
       });
@@ -4243,9 +4231,8 @@ function testDomRouter(
         expect(fetcher.json).toBe(body);
         // @ts-expect-error
         expect(fetcher.text).toBe(JSON.stringify(body));
-        expect(() => fetcher?.formData).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as formData"`
-        );
+        // @ts-expect-error
+        expect(fetcher.formData).toBeUndefined();
         let json = await actionSpy.mock.calls[0][0].request.json();
         expect(json).toEqual(body);
       });
@@ -4286,12 +4273,10 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Submit"));
         // @ts-expect-error
         expect(fetcher.text).toBe(body);
-        expect(() => fetcher?.formData).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as formData"`
-        );
-        expect(() => fetcher?.json).toThrowErrorMatchingInlineSnapshot(
-          `"Request is not encoded as json"`
-        );
+        // @ts-expect-error
+        expect(fetcher.formData).toBeUndefined();
+        // @ts-expect-error
+        expect(fetcher.json).toBeUndefined();
         let text = await actionSpy.mock.calls[0][0].request.text();
         expect(text).toEqual(body);
       });
