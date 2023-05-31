@@ -26,17 +26,6 @@ export interface FixtureInit {
   config?: Partial<AppConfig>;
 }
 
-type MyObject = {
-  [key: string]: any;
-};
-
-type MyObjectWithoutExcludedKey<T> = {
-  [K in keyof T]: K extends "keyToExclude" ? never : T[K];
-};
-
-const foo: MyObjectWithoutExcludedKey<MyObject> = { keyToExclude: 123 };
-console.log(foo);
-
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
 export type AppFixture = Awaited<ReturnType<typeof createAppFixture>>;
 
