@@ -1,5 +1,4 @@
 import type {
-  ActionFunction,
   FormEncType,
   HTMLFormMethod,
   RelativeRoutingType,

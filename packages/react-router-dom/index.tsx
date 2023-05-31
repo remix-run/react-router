@@ -39,7 +39,6 @@ import type {
   History,
   HTMLFormMethod,
   HydrationState,
-  LoaderFunction,
   Router as RemixRouter,
   V7_FormMethod,
 } from "@remix-run/router";
