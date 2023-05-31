@@ -6516,6 +6516,52 @@ describe("a router", () => {
         "application/x-www-form-urlencoded;charset=UTF-8"
       );
     });
+
+    it("throws on invalid URLSearchParams submissions", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        body: ["you", "cant", "do", "this"],
+      });
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": ErrorResponse {
+            "data": "Error: Unable to encode submission body",
+            "error": [Error: Unable to encode submission body],
+            "internal": true,
+            "status": 400,
+            "statusText": "Bad Request",
+          },
+        }
+      `);
+    });
+
+    it("throws on invalid JSON submissions", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        body: '{ not: "valid }',
+      });
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": ErrorResponse {
+            "data": "Error: Unable to encode submission body",
+            "error": [Error: Unable to encode submission body],
+            "internal": true,
+            "status": 400,
+            "statusText": "Bad Request",
+          },
+        }
+      `);
+    });
   });
 
   describe("redirects", () => {

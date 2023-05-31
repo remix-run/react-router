@@ -78,6 +78,24 @@ formData.append("cheese", "gouda");
 submit(formData);
 ```
 
+Or you can submit `URLSearchParams`:
+
+```tsx
+let searchParams = new URLSearchParams();
+searchParams.append("cheese", "gouda");
+submit(searchParams);
+```
+
+Or anything that the `URLSearchParams` constructor accepts:
+
+```tsx
+submit("cheese=gouda&toasted=yes");
+submit([
+  ["cheese", "gouda"],
+  ["toasted", "yes"],
+]);
+```
+
 The default behavior if you submit a JSON object is to encode the data into `FormData`:
 
 ```tsx
@@ -90,6 +108,9 @@ Or you can opt-into JSON encoding:
 ```tsx
 submit({ key: "value" }, { encType: "application/json" });
 // will serialize into request.json() in your action
+
+submit('{"key":"value"}', { encType: "application/json" });
+// will encode into request.json() in your action
 ```
 
 Or plain text:

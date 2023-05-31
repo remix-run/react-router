@@ -3150,27 +3150,33 @@ function normalizeNavigateOptions(
 
       return { path, submission };
     } else if (opts.formEncType === "application/json") {
-      if (typeof opts.body === "string") {
-        submission = {
-          formMethod,
-          formAction,
-          formEncType: opts.formEncType,
-          text: opts.body,
-          formData: undefined,
-          json: JSON.parse(opts.body),
-        };
-      } else {
-        submission = {
-          formMethod,
-          formAction,
-          formEncType: opts.formEncType,
-          text: JSON.stringify(opts.body),
-          formData: undefined,
-          json: opts.body,
+      try {
+        if (typeof opts.body === "string") {
+          submission = {
+            formMethod,
+            formAction,
+            formEncType: opts.formEncType,
+            text: opts.body,
+            formData: undefined,
+            json: JSON.parse(opts.body),
+          };
+        } else {
+          submission = {
+            formMethod,
+            formAction,
+            formEncType: opts.formEncType,
+            text: JSON.stringify(opts.body),
+            formData: undefined,
+            json: opts.body,
+          };
+        }
+        return { path, submission };
+      } catch (e) {
+        return {
+          path,
+          error: getInternalRouterError(400, { type: "invalid-body" }),
         };
       }
-
-      return { path, submission };
     }
   }
 
@@ -3195,8 +3201,15 @@ function normalizeNavigateOptions(
     searchParams = new URLSearchParams();
     formData = new FormData();
   } else {
-    searchParams = new URLSearchParams(opts.body);
-    formData = convertSearchParamsToFormData(searchParams);
+    try {
+      searchParams = new URLSearchParams(opts.body);
+      formData = convertSearchParamsToFormData(searchParams);
+    } catch (e) {
+      return {
+        path,
+        error: getInternalRouterError(400, { type: "invalid-body" }),
+      };
+    }
   }
 
   submission = {
@@ -4018,7 +4031,7 @@ function getInternalRouterError(
     pathname?: string;
     routeId?: string;
     method?: string;
-    type?: "defer-action";
+    type?: "defer-action" | "invalid-body";
   } = {}
 ) {
   let statusText = "Unknown Server Error";
@@ -4033,6 +4046,8 @@ function getInternalRouterError(
         `so there is no way to handle the request.`;
     } else if (type === "defer-action") {
       errorMessage = "defer() is not supported in actions";
+    } else if (type === "invalid-body") {
+      errorMessage = "Unable to encode submission body";
     }
   } else if (status === 403) {
     statusText = "Forbidden";
