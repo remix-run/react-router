@@ -166,17 +166,16 @@ const supportedFormEncTypes: Set<FormEncType> = new Set([
 ]);
 
 function getFormEncType(encType: string | null) {
-  let validEncType = encType || defaultEncType;
-  if (!supportedFormEncTypes.has(validEncType as FormEncType)) {
+  if (encType != null && !supportedFormEncTypes.has(encType as FormEncType)) {
     warning(
       false,
-      `"${encType}" is not a valid encType for \`<Form>\`/\`<fetcher.Form>\` ` +
-        `and will default to "application/x-www-form-urlencoded"`
+      `"${encType}" is not a valid \`encType\` for \`<Form>\`/\`<fetcher.Form>\` ` +
+        `and will default to "${defaultEncType}"`
     );
 
-    validEncType = defaultEncType;
+    return null;
   }
-  return validEncType;
+  return encType;
 }
 
 export function getFormSubmissionInfo(
@@ -185,15 +184,15 @@ export function getFormSubmissionInfo(
 ): {
   action: string | null;
   method: string;
-  encType: string | null;
+  encType: string;
   formData: FormData | undefined;
   body: any;
 } {
   let method: string;
   let action: string | null;
-  let encType: string | null;
-  let formData: FormData | undefined = undefined;
-  let body = undefined;
+  let encType: string;
+  let formData: FormData | undefined;
+  let body: any;
 
   if (isFormElement(target)) {
     // When grabbing the action from the element, it will have had the basename
@@ -202,7 +201,7 @@ export function getFormSubmissionInfo(
     let attr = target.getAttribute("action");
     action = attr ? stripBasename(attr, basename) : null;
     method = target.getAttribute("method") || defaultMethod;
-    encType = getFormEncType(target.getAttribute("enctype"));
+    encType = getFormEncType(target.getAttribute("enctype")) || defaultEncType;
 
     formData = new FormData(target);
   } else if (
@@ -230,9 +229,10 @@ export function getFormSubmissionInfo(
       target.getAttribute("formmethod") ||
       form.getAttribute("method") ||
       defaultMethod;
-    encType = getFormEncType(
-      target.getAttribute("formenctype") || form.getAttribute("enctype")
-    );
+    encType =
+      getFormEncType(target.getAttribute("formenctype")) ||
+      getFormEncType(form.getAttribute("enctype")) ||
+      defaultEncType;
 
     formData = new FormData(form);
 
