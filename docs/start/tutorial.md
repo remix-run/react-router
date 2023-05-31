@@ -1487,14 +1487,13 @@ You could certainly do this as a controlled component, but you'll end up with mo
 
 Notice how controlling the input requires three points of synchronization now instead of just one. The behavior is identical but the code is more complex.
 
-```jsx filename=src/routes/root.jsx lines=[1,6-7,16,19-21,35-38]
+```jsx filename=src/routes/root.jsx lines=[1,6,15,18-20,34-37]
 import { useEffect, useState } from "react";
 // existing code
 
  export async function loader({ request }) {
   const url = new URL(request.url);
-  let q = url.searchParams.get("q");
-  if (!q) { q = '' }
+  const q = url.searchParams.get("q") || "";
   const contacts = await getContacts(q);
   return { contacts, q };
 }
