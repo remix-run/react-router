@@ -1494,7 +1494,7 @@ import { useEffect, useState } from "react";
  export async function loader({ request }) {
   const url = new URL(request.url);
   let q = url.searchParams.get("q");
-  if (!q) { q = ''}
+  if (!q) { q = '' }
   const contacts = await getContacts(q);
   return { contacts, q };
 }
