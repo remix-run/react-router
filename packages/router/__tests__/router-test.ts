@@ -10317,6 +10317,66 @@ describe("a router", () => {
           data: "TASKS ACTION",
         });
       });
+
+      it("handles revalidating fetcher when the triggering fetcher is deleted", async () => {
+        let key = "key";
+        let actionKey = "actionKey";
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  id: "home",
+                  index: true,
+                  loader: true,
+                },
+                {
+                  id: "action",
+                  path: "action",
+                  action: true,
+                },
+                {
+                  id: "fetch",
+                  path: "fetch",
+                  loader: true,
+                },
+              ],
+            },
+          ],
+          hydrationData: { loaderData: { home: "HOME" } },
+        });
+
+        // Load a fetcher
+        let A = await t.fetch("/fetch", key);
+        await A.loaders.fetch.resolve("FETCH");
+
+        // Submit a different fetcher, which will trigger revalidation
+        let B = await t.fetch("/action", actionKey, {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        t.shimHelper(B.loaders, "fetch", "loader", "fetch");
+
+        // After action resolves, both fetchers go into a loading state
+        await B.actions.action.resolve("ACTION");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(t.router.state.fetchers.get(actionKey)?.state).toBe("loading");
+
+        // Remove the submitting fetcher (assume it's component unmounts)
+        t.router.deleteFetcher(actionKey);
+
+        await B.loaders.home.resolve("HOME*");
+        await B.loaders.fetch.resolve("FETCH*");
+
+        expect(t.router.state.loaderData).toEqual({ home: "HOME*" });
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "FETCH*",
+        });
+        expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
+      });
     });
 
     describe("fetcher ?index params", () => {
