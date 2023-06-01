@@ -32,6 +32,10 @@ export interface HandleDataRequestFunction {
   (response: Response, args: DataFunctionArgs): Promise<Response> | Response;
 }
 
+export interface OnUnhandledErrorFunction {
+  (error: unknown, args: DataFunctionArgs): void;
+}
+
 /**
  * A module that serves as the entry point for a Remix app during server
  * rendering.
@@ -39,4 +43,5 @@ export interface HandleDataRequestFunction {
 export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
+  onUnhandledError?: OnUnhandledErrorFunction;
 }
