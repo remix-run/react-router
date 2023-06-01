@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.12.0-pre.1
+
+### Patch Changes
+
+- [internal] use concurrent mode state ([#10553](https://github.com/remix-run/react-router/pull/10553))
+
 ## 6.12.0-pre.0
 
 ### Minor Changes
