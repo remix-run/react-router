@@ -1491,7 +1491,7 @@ Notice how controlling the input requires three points of synchronization now in
 import { useEffect, useState } from "react";
 // existing code
 
- export async function loader({ request }) {
+export async function loader({ request }) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q") || "";
   const contacts = await getContacts(q);
