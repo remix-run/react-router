@@ -1,4 +1,5 @@
 import { PassThrough } from "stream";
+import { ReadableStream } from "@remix-run/web-stream";
 
 import { Request } from "../fetch";
 
@@ -70,9 +71,15 @@ let test = {
 
 describe("Request", () => {
   it("clones", async () => {
-    let body = new PassThrough();
-    test.source.forEach((chunk) => body.write(chunk));
-    body.end();
+    let encoder = new TextEncoder();
+    let body = new ReadableStream({
+      start(controller) {
+        test.source.forEach((chunk) => {
+          controller.enqueue(encoder.encode(chunk));
+        });
+        controller.close();
+      },
+    });
 
     let req = new Request("http://test.com", {
       method: "post",
@@ -103,6 +110,8 @@ describe("Request", () => {
     file = clonedFormData.get("upload_file_1") as File;
     expect(file.name).toBe("1k_b.dat");
     expect(file.size).toBe(1023);
+
+    expect(cloned instanceof Request).toBeTruthy();
   });
 });
 
