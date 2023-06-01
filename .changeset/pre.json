@@ -8,5 +8,11 @@
     "react-router-native": "6.11.2",
     "@remix-run/router": "1.6.2"
   },
-  "changesets": []
+  "changesets": [
+    "delete-submit-fetcher",
+    "non-serializable-state",
+    "revalidate-with-hash",
+    "stale-birds-travel",
+    "start-transition-support"
+  ]
 }
