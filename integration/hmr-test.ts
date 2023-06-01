@@ -13,7 +13,7 @@ test.setTimeout(120_000);
 let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
   config: {
     serverModuleFormat: "cjs",
-    tailwind: true,
+    postcss: true,
     future: {
       unstable_dev: {
         port: options.devPort,
@@ -39,6 +39,7 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
         "cross-env": "0.0.0-local-version",
         express: "0.0.0-local-version",
         isbot: "0.0.0-local-version",
+        "postcss-import": "0.0.0-local-version",
         react: "0.0.0-local-version",
         "react-dom": "0.0.0-local-version",
         tailwindcss: "0.0.0-local-version",
@@ -83,6 +84,15 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       });
     `,
 
+    "postcss.config.js": js`
+      module.exports = {
+        plugins: {
+          "postcss-import": {}, // Testing PostCSS cache invalidation
+          tailwindcss: {},
+        }
+      };
+    `,
+
     "tailwind.config.js": js`
       /** @type {import('tailwindcss').Config} */
       module.exports = {
@@ -100,6 +110,16 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       @tailwind utilities;
     `,
 
+    "app/stylesWithImport.css": css`
+      @import "./importedStyle.css";
+    `,
+
+    "app/importedStyle.css": css`
+      .importedStyle {
+        font-weight: normal;
+      }
+    `,
+
     "app/styles.module.css": css`
       .test {
         color: initial;
@@ -112,10 +132,12 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       import { cssBundleHref } from "@remix-run/css-bundle";
 
       import Counter from "./components/counter";
-      import styles from "./tailwind.css";
+      import tailwindStyles from "./tailwind.css";
+      import stylesWithImport from "./stylesWithImport.css";
 
       export const links: LinksFunction = () => [
-        { rel: "stylesheet", href: styles },
+        { rel: "stylesheet", href: tailwindStyles },
+        { rel: "stylesheet", href: stylesWithImport },
         ...cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : [],
       ];
 
@@ -294,6 +316,8 @@ test("HMR", async ({ page }) => {
     let originalIndex = fs.readFileSync(indexPath, "utf8");
     let counterPath = path.join(projectDir, "app", "components", "counter.tsx");
     let originalCounter = fs.readFileSync(counterPath, "utf8");
+    let importedStylePath = path.join(projectDir, "app", "importedStyle.css");
+    let originalImportedStyle = fs.readFileSync(importedStylePath, "utf8");
     let cssModulePath = path.join(projectDir, "app", "styles.module.css");
     let originalCssModule = fs.readFileSync(cssModulePath, "utf8");
     let mdxPath = path.join(projectDir, "app", "routes", "mdx.mdx");
@@ -308,6 +332,15 @@ test("HMR", async ({ page }) => {
     `;
     fs.writeFileSync(cssModulePath, newCssModule);
 
+    // make changes to imported styles
+    let newImportedStyle = `
+      .importedStyle {
+        font-weight: 800;
+      }
+    `;
+    fs.writeFileSync(importedStylePath, newImportedStyle);
+
+    // change text, add updated styles, add new Tailwind class ("italic")
     let newIndex = `
       import { useLoaderData } from "@remix-run/react";
       import styles from "~/styles.module.css";
@@ -318,7 +351,7 @@ test("HMR", async ({ page }) => {
         const t = useLoaderData();
         return (
           <main>
-            <h1 className={styles.test}>Changed</h1>
+            <h1 className={styles.test + ' italic importedStyle'}>Changed</h1>
           </main>
         )
       }
@@ -332,6 +365,8 @@ test("HMR", async ({ page }) => {
     await h1.waitFor({ timeout: HMR_TIMEOUT_MS });
     expect(h1).toHaveCSS("color", "rgb(255, 255, 255)");
     expect(h1).toHaveCSS("background-color", "rgb(0, 0, 0)");
+    expect(h1).toHaveCSS("font-style", "italic");
+    expect(h1).toHaveCSS("font-weight", "800");
 
     // verify that `<input />` value was persisted (i.e. hmr, not full page refresh)
     expect(await page.getByLabel("Root Input").inputValue()).toBe("asdfasdf");
@@ -339,6 +374,7 @@ test("HMR", async ({ page }) => {
 
     // undo change
     fs.writeFileSync(indexPath, originalIndex);
+    fs.writeFileSync(importedStylePath, originalImportedStyle);
     fs.writeFileSync(cssModulePath, originalCssModule);
     await page.getByText("Index Title").waitFor({ timeout: HMR_TIMEOUT_MS });
     expect(await page.getByLabel("Root Input").inputValue()).toBe("asdfasdf");

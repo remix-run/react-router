@@ -82,12 +82,19 @@ export async function watch(
   }, 100);
 
   let toWatch = [ctx.config.appDirectory];
-  if (ctx.config.serverEntryPoint) {
-    toWatch.push(ctx.config.serverEntryPoint);
-  }
 
+  // WARNING: Chokidar returns different paths in change events depending on
+  // whether the path provided to the watcher is absolute or relative. If the
+  // path is absolute, change events will contain absolute paths, and the
+  // opposite for relative paths. We need to ensure that the paths we provide
+  // are always absolute to ensure consistency in change events.
+  if (ctx.config.serverEntryPoint) {
+    toWatch.push(
+      path.resolve(ctx.config.rootDirectory, ctx.config.serverEntryPoint)
+    );
+  }
   ctx.config.watchPaths?.forEach((watchPath) => {
-    toWatch.push(watchPath);
+    toWatch.push(path.resolve(ctx.config.rootDirectory, watchPath));
   });
 
   let watcher = chokidar
