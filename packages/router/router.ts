@@ -3095,7 +3095,6 @@ function normalizeNavigateOptions(
   }
 
   // Create a Submission on non-GET navigations
-  let submission: Submission;
   let rawFormMethod = opts.formMethod || "get";
   let formMethod = normalizeFormMethod
     ? (rawFormMethod.toUpperCase() as V7_FormMethod)
@@ -3104,39 +3103,45 @@ function normalizeNavigateOptions(
 
   if (opts.body) {
     if (opts.formEncType === "text/plain") {
-      submission = {
-        formMethod,
-        formAction,
-        formEncType: opts.formEncType,
-        text:
-          typeof opts.body === "string" ? opts.body : JSON.stringify(opts.body),
-        formData: undefined,
-        json: undefined,
-      };
+      let text =
+        typeof opts.body === "string"
+          ? opts.body
+          : opts.body instanceof FormData ||
+            opts.body instanceof URLSearchParams
+          ? // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#plain-text-form-data
+            Array.from(opts.body.entries()).reduce(
+              (acc, [name, value]) => `${acc}${name}=${value}\n`,
+              ""
+            )
+          : String(opts.body);
 
-      return { path, submission };
+      return {
+        path,
+        submission: {
+          formMethod,
+          formAction,
+          formEncType: opts.formEncType,
+          text,
+          formData: undefined,
+          json: undefined,
+        },
+      };
     } else if (opts.formEncType === "application/json") {
       try {
-        if (typeof opts.body === "string") {
-          submission = {
+        let json =
+          typeof opts.body === "string" ? JSON.parse(opts.body) : opts.body;
+
+        return {
+          path,
+          submission: {
             formMethod,
             formAction,
             formEncType: opts.formEncType,
             text: undefined,
             formData: undefined,
-            json: JSON.parse(opts.body),
-          };
-        } else {
-          submission = {
-            formMethod,
-            formAction,
-            formEncType: opts.formEncType,
-            text: undefined,
-            formData: undefined,
-            json: opts.body,
-          };
-        }
-        return { path, submission };
+            json,
+          },
+        };
       } catch (e) {
         return {
           path,
@@ -3178,7 +3183,7 @@ function normalizeNavigateOptions(
     }
   }
 
-  submission = {
+  let submission: Submission = {
     formMethod,
     formAction,
     formEncType:

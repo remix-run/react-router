@@ -666,10 +666,10 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * `<form encType>` - enhancing beyond the normal string type and limiting
    * to the built-in browser supported values
    */
-  encType?: Extract<
-    FormEncType,
-    "application/x-www-form-urlencoded" | "multipart/form-data"
-  >;
+  encType?:
+    | "application/x-www-form-urlencoded"
+    | "multipart/form-data"
+    | "text/plain";
 
   /**
    * Normal `<form action>` but supports React Router's relative paths.

@@ -3307,6 +3307,35 @@ function testDomRouter(
         expect(await request.text()).toEqual(body);
       });
 
+      it('serializes into text on <Form encType="text/plain" submissions', async () => {
+        let actionSpy = jest.fn();
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          ),
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        function FormPage() {
+          return (
+            <Form method="post" encType="text/plain">
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button type="submit">Submit</button>
+            </Form>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Submit"));
+        expect(await actionSpy.mock.calls[0][0].request.text())
+          .toMatchInlineSnapshot(`
+          "a=1
+          b=2
+          "
+        `);
+      });
+
       it("includes submit button name/value on form submission", async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(

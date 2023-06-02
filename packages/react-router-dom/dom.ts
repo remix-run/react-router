@@ -169,6 +169,7 @@ export interface SubmitOptions {
 const supportedFormEncTypes: Set<FormEncType> = new Set([
   "application/x-www-form-urlencoded",
   "multipart/form-data",
+  "text/plain",
 ]);
 
 function getFormEncType(encType: string | null) {
@@ -257,6 +258,12 @@ export function getFormSubmissionInfo(
     action = null;
     encType = defaultEncType;
     body = target;
+  }
+
+  // Send body for <Form encType="text/plain" so we encode it into text
+  if (formData && encType === "text/plain") {
+    body = formData;
+    formData = undefined;
   }
 
   return { action, method: method.toLowerCase(), encType, formData, body };

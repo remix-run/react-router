@@ -6486,6 +6486,47 @@ describe("a router", () => {
       expect(await request.text()).toEqual(body);
     });
 
+    it("serializes body as text/plain (FormData)", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = new FormData();
+      body.append("a", "1");
+      body.append("b", "2");
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "text/plain",
+        body,
+      });
+      expect(t.router.state.navigation.text).toMatchInlineSnapshot(`
+        "a=1
+        b=2
+        "
+      `);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "text/plain;charset=UTF-8"
+      );
+      expect(await request.text()).toMatchInlineSnapshot(`
+        "a=1
+        b=2
+        "
+      `);
+    });
+
     it("serializes body as FormData when encType=undefined", async () => {
       let t = setup({
         routes: [{ id: "root", path: "/", action: true }],
