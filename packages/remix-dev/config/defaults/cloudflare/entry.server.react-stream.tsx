@@ -1,4 +1,4 @@
-import type { EntryContext } from "@remix-run/cloudflare";
+import type { AppLoadContext, EntryContext } from "@remix-run/cloudflare";
 import { RemixServer } from "@remix-run/react";
 import isbot from "isbot";
 import { renderToReadableStream } from "react-dom/server";
@@ -7,7 +7,8 @@ export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext
+  remixContext: EntryContext,
+  loadContext: AppLoadContext
 ) {
   const body = await renderToReadableStream(
     <RemixServer context={remixContext} url={request.url} />,
