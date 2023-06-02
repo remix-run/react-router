@@ -1008,6 +1008,16 @@ export function createRouter(init: RouterInit): Router {
       inFlightDataRoutes = undefined;
     }
 
+    if (isUninterruptedRevalidation) {
+      // If this was an uninterrupted revalidation then do not touch history
+    } else if (pendingAction === HistoryAction.Pop) {
+      // Do nothing for POP - URL has already been updated
+    } else if (pendingAction === HistoryAction.Push) {
+      init.history.push(location, location.state);
+    } else if (pendingAction === HistoryAction.Replace) {
+      init.history.replace(location, location.state);
+    }
+
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
@@ -1024,16 +1034,6 @@ export function createRouter(init: RouterInit): Router {
       preventScrollReset,
       blockers: new Map(state.blockers),
     });
-
-    if (isUninterruptedRevalidation) {
-      // If this was an uninterrupted revalidation then do not touch history
-    } else if (pendingAction === HistoryAction.Pop) {
-      // Do nothing for POP - URL has already been updated
-    } else if (pendingAction === HistoryAction.Push) {
-      init.history.push(location, location.state);
-    } else if (pendingAction === HistoryAction.Replace) {
-      init.history.replace(location, location.state);
-    }
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
