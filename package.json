@@ -32,11 +32,15 @@
   "jest": {
     "projects": [
       "<rootDir>/packages/*"
+    ],
+    "reporters": [
+      "default"
     ]
   },
   "resolutions": {
     "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0"
+    "@types/react-dom": "^18.0.0",
+    "jsdom": "22.0.0"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
