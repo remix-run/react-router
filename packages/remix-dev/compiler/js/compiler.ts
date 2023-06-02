@@ -16,7 +16,10 @@ import { mdxPlugin } from "../plugins/mdx";
 import { externalPlugin } from "../plugins/external";
 import { cssBundleUpdatePlugin } from "./plugins/cssBundleUpdate";
 import { cssModulesPlugin } from "../plugins/cssModuleImports";
-import { cssSideEffectImportsPlugin } from "../plugins/cssSideEffectImports";
+import {
+  cssSideEffectImportsPlugin,
+  isCssSideEffectImportPath,
+} from "../plugins/cssSideEffectImports";
 import { vanillaExtractPlugin } from "../plugins/vanillaExtract";
 import invariant from "../../invariant";
 import { hmrPlugin } from "./plugins/hmr";
@@ -150,6 +153,8 @@ const createEsbuildConfig = (
             ctx.options.onWarning &&
             !isNodeBuiltIn(packageName) &&
             !/\bnode_modules\b/.test(args.importer) &&
+            !args.path.endsWith(".css") &&
+            !isCssSideEffectImportPath(args.path) &&
             // Silence spurious warnings when using Yarn PnP. Yarn PnP doesn’t use
             // a `node_modules` folder to keep its dependencies, so the above check
             // will always fail.
