@@ -109,14 +109,21 @@ export function getSearchParamsForLocation(
   return searchParams;
 }
 
+// Thanks https://github.com/sindresorhus/type-fest!
+type JsonObject = { [Key in string]: JsonValue } & {
+  [Key in string]?: JsonValue | undefined;
+};
+type JsonArray = JsonValue[] | readonly JsonValue[];
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+
 export type SubmitTarget =
   | HTMLFormElement
   | HTMLButtonElement
   | HTMLInputElement
   | FormData
   | URLSearchParams
-  | { [name: string]: string }
-  | NonNullable<unknown> // Raw submissions to be encoded into JSON or text
+  | JsonValue
   | null;
 
 export interface SubmitOptions {

@@ -1456,23 +1456,10 @@ export function createRouter(init: RouterInit): Router {
 
     // If this was a redirect from an action we don't have a "submission" but
     // we have it on the loading navigation so use that if available
-    let activeSubmission = submission || fetcherSubmission;
-    if (
-      !activeSubmission &&
-      loadingNavigation.formMethod &&
-      loadingNavigation.formAction &&
-      loadingNavigation.formEncType != null &&
-      loadingNavigation.text != null
-    ) {
-      activeSubmission = {
-        formMethod: loadingNavigation.formMethod,
-        formAction: loadingNavigation.formAction,
-        formEncType: loadingNavigation.formEncType,
-        text: loadingNavigation.text,
-        formData: loadingNavigation.formData,
-        json: loadingNavigation.json,
-      };
-    }
+    let activeSubmission =
+      submission ||
+      fetcherSubmission ||
+      getSubmissionFromNavigation(loadingNavigation);
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
@@ -2082,43 +2069,22 @@ export function createRouter(init: RouterInit): Router {
 
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
-    let { formMethod, formAction, formEncType, text, formData, json } =
-      state.navigation;
-    if (
-      !submission &&
-      formMethod &&
-      formAction &&
-      formEncType != null &&
-      text != null
-    ) {
-      submission = {
-        formMethod,
-        formAction,
-        formEncType,
-        text,
-        formData,
-        json,
-      };
-    }
+    let activeSubmission =
+      submission || getSubmissionFromNavigation(state.navigation);
 
     // If this was a 307/308 submission we want to preserve the HTTP method and
     // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
-      submission &&
-      isMutationMethod(submission.formMethod)
+      activeSubmission &&
+      isMutationMethod(activeSubmission.formMethod)
     ) {
-      let navigationSubmission: Submission = {
-        formMethod: submission.formMethod,
-        formAction: redirect.location,
-        formEncType: submission.formEncType,
-        text: submission.text,
-        formData: submission.formData,
-        json: submission.text,
-      };
       await startNavigation(redirectHistoryAction, redirectLocation, {
-        submission: navigationSubmission,
+        submission: {
+          ...activeSubmission,
+          formAction: redirect.location,
+        },
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
@@ -2127,7 +2093,7 @@ export function createRouter(init: RouterInit): Router {
       // without the fetcher submission, but we send it along for shouldRevalidate
       await startNavigation(redirectHistoryAction, redirectLocation, {
         overrideNavigation: getLoadingNavigation(redirectLocation),
-        fetcherSubmission: submission,
+        fetcherSubmission: activeSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
@@ -2135,7 +2101,7 @@ export function createRouter(init: RouterInit): Router {
       // If we have a submission, we will preserve it through the redirect navigation
       let overrideNavigation = getLoadingNavigation(
         redirectLocation,
-        submission
+        activeSubmission
       );
       await startNavigation(redirectHistoryAction, redirectLocation, {
         overrideNavigation,
@@ -3156,7 +3122,7 @@ function normalizeNavigateOptions(
             formMethod,
             formAction,
             formEncType: opts.formEncType,
-            text: opts.body,
+            text: undefined,
             formData: undefined,
             json: JSON.parse(opts.body),
           };
@@ -3165,7 +3131,7 @@ function normalizeNavigateOptions(
             formMethod,
             formAction,
             formEncType: opts.formEncType,
-            text: JSON.stringify(opts.body),
+            text: undefined,
             formData: undefined,
             json: opts.body,
           };
@@ -3217,8 +3183,8 @@ function normalizeNavigateOptions(
     formAction,
     formEncType:
       (opts && opts.formEncType) || "application/x-www-form-urlencoded",
-    text: searchParams.toString(),
-    formData: formData,
+    text: undefined,
+    formData,
     json: undefined,
   };
 
@@ -3312,12 +3278,7 @@ function getMatchesToLoad(
       currentParams: currentRouteMatch.params,
       nextUrl,
       nextParams: nextRouteMatch.params,
-      formMethod: submission ? submission.formMethod : undefined,
-      formAction: submission ? submission.formAction : undefined,
-      formEncType: submission ? submission.formEncType : undefined,
-      text: submission ? submission.text : undefined,
-      formData: submission ? submission.formData : undefined,
-      json: submission ? submission.json : undefined,
+      ...submission,
       actionResult,
       defaultShouldRevalidate:
         // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
@@ -3378,21 +3339,7 @@ function getMatchesToLoad(
       currentParams: state.matches[state.matches.length - 1].params,
       nextUrl,
       nextParams: matches[matches.length - 1].params,
-      formMethod: submission ? submission.formMethod : undefined,
-      formAction: submission ? submission.formAction : undefined,
-      formEncType: submission ? submission.formEncType : undefined,
-      text: submission ? submission.text : undefined,
-      formData:
-        submission &&
-        submission.text != null &&
-        (submission.formEncType == null ||
-          submission.formEncType === "application/x-www-form-urlencoded")
-          ? submission.formData
-          : undefined,
-      json:
-        submission && submission.formEncType === "application/json"
-          ? submission.json
-          : undefined,
+      ...submission,
       actionResult,
       // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
       defaultShouldRevalidate: isRevalidationRequired,
@@ -3756,12 +3703,18 @@ function createClientSideRequest(
     // See: https://fetch.spec.whatwg.org/#concept-method
     init.method = formMethod.toUpperCase();
 
-    if (formEncType === "text/plain" || formEncType === "application/json") {
+    if (formEncType === "application/json") {
       init.headers = new Headers({ "Content-Type": formEncType });
-      init.body = submission.text;
-    } else if (formEncType === "application/x-www-form-urlencoded") {
+      init.body = JSON.stringify(submission.json);
+    } else if (formEncType === "text/plain") {
       // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
-      init.body = new URLSearchParams(submission.text);
+      init.body = submission.text;
+    } else if (
+      formEncType === "application/x-www-form-urlencoded" &&
+      submission.formData
+    ) {
+      // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
+      init.body = convertFormDataToSearchParams(submission.formData);
     } else {
       // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
       init.body = submission.formData;
@@ -4285,6 +4238,45 @@ function getTargetMatch(
   // pathless layout routes)
   let pathMatches = getPathContributingMatches(matches);
   return pathMatches[pathMatches.length - 1];
+}
+
+function getSubmissionFromNavigation(
+  navigation: Navigation
+): Submission | undefined {
+  let { formMethod, formAction, formEncType, text, formData, json } =
+    navigation;
+  if (!formMethod || !formAction || !formEncType) {
+    return;
+  }
+
+  if (text != null) {
+    return {
+      formMethod,
+      formAction,
+      formEncType,
+      text,
+      formData: undefined,
+      json: undefined,
+    };
+  } else if (formData != null) {
+    return {
+      formMethod,
+      formAction,
+      formEncType,
+      text: undefined,
+      formData,
+      json: undefined,
+    };
+  } else if (json !== undefined) {
+    return {
+      formMethod,
+      formAction,
+      formEncType,
+      text: undefined,
+      formData: undefined,
+      json,
+    };
+  }
 }
 
 function getLoadingNavigation(

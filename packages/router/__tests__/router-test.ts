@@ -2035,7 +2035,7 @@ describe("a router", () => {
         formMethod: "post",
         formAction: "/",
         formEncType: "application/json",
-        text: JSON.stringify({ key: "value" }),
+        text: undefined,
         formData: undefined,
         json: { key: "value" },
         actionResult: "ACTION",
@@ -2343,7 +2343,7 @@ describe("a router", () => {
           "json": undefined,
           "nextParams": {},
           "nextUrl": "http://localhost/",
-          "text": "key=value",
+          "text": undefined,
         }
       `);
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
@@ -2406,7 +2406,7 @@ describe("a router", () => {
           "json": undefined,
           "nextParams": {},
           "nextUrl": "http://localhost/",
-          "text": "key=value",
+          "text": undefined,
         }
       `);
 
@@ -6298,10 +6298,10 @@ describe("a router", () => {
           : {}),
         body,
       });
-      expect(t.router.state.navigation.text).toBe("a=1&b=2");
+      expect(t.router.state.navigation.text).toBeUndefined();
       expect(t.router.state.navigation.formData?.get("a")).toBe("1");
       expect(t.router.state.navigation.formData?.get("b")).toBe("2");
-      expect(t.router.state.navigation.json).toBe(undefined);
+      expect(t.router.state.navigation.json).toBeUndefined();
 
       await nav.actions.root.resolve("ACTION");
 
@@ -6331,12 +6331,10 @@ describe("a router", () => {
         formEncType: "application/json",
         body,
       });
-      expect(t.router.state.navigation.text).toBe(
-        typeof body === "string" ? body : JSON.stringify(body)
-      );
+      expect(t.router.state.navigation.text).toBeUndefined();
       expect(t.router.state.navigation.json?.["a"]).toBe(1);
       expect(t.router.state.navigation.json?.["b"]).toBe(2);
-      expect(t.router.state.navigation.formData).toBe(undefined);
+      expect(t.router.state.navigation.formData).toBeUndefined();
 
       await nav.actions.root.resolve("ACTION");
 
@@ -6364,12 +6362,10 @@ describe("a router", () => {
         formEncType: "application/json",
         body,
       });
-      expect(t.router.state.navigation.text).toBe(
-        typeof body === "string" ? body : JSON.stringify(body)
-      );
+      expect(t.router.state.navigation.text).toBeUndefined();
       expect(t.router.state.navigation.json?.[0]).toBe(1);
       expect(t.router.state.navigation.json?.[1]).toBe(2);
-      expect(t.router.state.navigation.formData).toBe(undefined);
+      expect(t.router.state.navigation.formData).toBeUndefined();
 
       await nav.actions.root.resolve("ACTION");
 
@@ -6459,7 +6455,7 @@ describe("a router", () => {
       await validateJsonArraySubmission("[1,2]");
     });
 
-    it("serializes body as text/plain", async () => {
+    it("serializes body as text/plain (string)", async () => {
       let t = setup({
         routes: [{ id: "root", path: "/", action: true }],
       });
@@ -6484,7 +6480,9 @@ describe("a router", () => {
       let request = nav.actions.root.stub.mock.calls[0][0].request;
       expect(request.method).toBe("POST");
       expect(request.url).toBe("http://localhost/");
-      expect(request.headers.get("Content-Type")).toBe("text/plain");
+      expect(request.headers.get("Content-Type")).toBe(
+        "text/plain;charset=UTF-8"
+      );
       expect(await request.text()).toEqual(body);
     });
 
@@ -6498,7 +6496,7 @@ describe("a router", () => {
         formMethod: "post",
         body,
       });
-      expect(t.router.state.navigation.text).toBe("a=1");
+      expect(t.router.state.navigation.text).toBeUndefined();
       expect(t.router.state.navigation.formData?.get("a")).toBe("1");
       expect(t.router.state.navigation.json).toBeUndefined();
 
@@ -10198,7 +10196,7 @@ describe("a router", () => {
               "b": "three",
             },
             "nextUrl": "http://localhost/two/three",
-            "text": "",
+            "text": undefined,
           }
         `);
 
@@ -10893,7 +10891,6 @@ describe("a router", () => {
           formEncType: "application/x-www-form-urlencoded",
           body,
         });
-        expect(t.router.state.fetchers.get("key")?.text).toBe("a=1");
         expect(t.router.state.fetchers.get("key")?.formData?.get("a")).toBe(
           "1"
         );
@@ -10925,9 +10922,6 @@ describe("a router", () => {
           formEncType: "application/json",
           body,
         });
-        expect(t.router.state.fetchers.get("key")?.text).toBe(
-          JSON.stringify(body)
-        );
         expect(t.router.state.fetchers.get("key")?.json).toBe(body);
         await F.actions.root.resolve("ACTION");
 
@@ -10954,9 +10948,6 @@ describe("a router", () => {
           formEncType: "application/json",
           body,
         });
-        expect(t.router.state.fetchers.get("key")?.text).toBe(
-          JSON.stringify(body)
-        );
         expect(t.router.state.fetchers.get("key")?.json).toBe(body);
         await F.actions.root.resolve("ACTION");
 
@@ -10995,7 +10986,9 @@ describe("a router", () => {
         let request = F.actions.root.stub.mock.calls[0][0].request;
         expect(request.method).toBe("POST");
         expect(request.url).toBe("http://localhost/");
-        expect(request.headers.get("Content-Type")).toBe("text/plain");
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
         expect(await request.text()).toEqual(body);
       });
 
@@ -11009,7 +11002,6 @@ describe("a router", () => {
           formMethod: "post",
           body,
         });
-        expect(t.router.state.fetchers.get("key")?.text).toBe("a=1");
         expect(t.router.state.fetchers.get("key")?.formData?.get("a")).toBe(
           "1"
         );

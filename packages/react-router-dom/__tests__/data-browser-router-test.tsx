@@ -3160,7 +3160,7 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Submit"));
         expect(navigation.formData?.get("a")).toBe("1");
         expect(navigation.formData?.get("b")).toBe("2");
-        expect(navigation.text).toBe("a=1&b=2");
+        expect(navigation.text).toBeUndefined();
         expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
@@ -3208,7 +3208,7 @@ function testDomRouter(
         fireEvent.click(screen.getByText("Submit"));
         expect(navigation.formData?.get("a")).toBe("1");
         expect(navigation.formData?.get("b")).toBe("2");
-        expect(navigation.text).toBe("a=1&b=2");
+        expect(navigation.text).toBeUndefined();
         expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
@@ -3255,7 +3255,7 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Submit"));
         expect(navigation.json).toBe(body);
-        expect(navigation.text).toBe(JSON.stringify(body));
+        expect(navigation.text).toBeUndefined();
         expect(navigation.formData).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
         expect(request.headers.get("Content-Type")).toBe("application/json");
@@ -3301,7 +3301,9 @@ function testDomRouter(
         expect(navigation.formData).toBeUndefined();
         expect(navigation.json).toBeUndefined();
         let { request } = actionSpy.mock.calls[0][0];
-        expect(request.headers.get("Content-Type")).toBe("text/plain");
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
         expect(await request.text()).toEqual(body);
       });
 
@@ -4142,7 +4144,7 @@ function testDomRouter(
         // @ts-expect-error
         expect(fetcher.formData?.get("key")).toBe("value");
         // @ts-expect-error
-        expect(fetcher.text).toBe("key=value");
+        expect(fetcher.text).toBeUndefined();
         // @ts-expect-error
         expect(fetcher.json).toBeUndefined();
         let formData = await actionSpy.mock.calls[0][0].request.formData();
@@ -4186,7 +4188,7 @@ function testDomRouter(
         // @ts-expect-error
         expect(fetcher.formData?.get("key")).toBe("value");
         // @ts-expect-error
-        expect(fetcher.text).toBe("key=value");
+        expect(fetcher.text).toBeUndefined();
         // @ts-expect-error
         expect(fetcher.json).toBeUndefined();
         let formData = await actionSpy.mock.calls[0][0].request.formData();
@@ -4230,7 +4232,7 @@ function testDomRouter(
         // @ts-expect-error
         expect(fetcher.json).toBe(body);
         // @ts-expect-error
-        expect(fetcher.text).toBe(JSON.stringify(body));
+        expect(fetcher.text).toBeUndefined();
         // @ts-expect-error
         expect(fetcher.formData).toBeUndefined();
         let json = await actionSpy.mock.calls[0][0].request.json();

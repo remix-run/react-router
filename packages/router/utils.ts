@@ -92,26 +92,44 @@ export type FormEncType =
   | "application/json"
   | "text/plain";
 
+// Thanks https://github.com/sindresorhus/type-fest!
+type JsonObject = { [Key in string]: JsonValue } & {
+  [Key in string]?: JsonValue | undefined;
+};
+type JsonArray = JsonValue[] | readonly JsonValue[];
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+
 /**
  * @private
  * Internal interface to pass around for action submissions, not intended for
  * external consumption
  */
-export interface Submission {
-  formMethod: FormMethod | V7_FormMethod;
-  formAction: string;
-  formEncType: FormEncType;
-  text: string;
-  formData: FormData | undefined;
-  json:
-    | Record<string, any>
-    | Array<any>
-    | string
-    | number
-    | boolean
-    | null
-    | undefined;
-}
+export type Submission =
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      text: string;
+      formData: undefined;
+      json: undefined;
+    }
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      text: undefined;
+      formData: FormData;
+      json: undefined;
+    }
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      text: undefined;
+      formData: undefined;
+      json: JsonValue;
+    };
 
 /**
  * @private
