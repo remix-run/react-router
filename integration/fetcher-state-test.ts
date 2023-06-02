@@ -35,26 +35,31 @@ test.describe("fetcher states", () => {
             const states = useMemo(() => {
               if (!fetcher) return
               const savedStates = fetcherRef.current || [];
-              savedStates.push({
-                state: fetcher.state,
-                type: fetcher.type,
-                formMethod: fetcher.formMethod,
-                formAction: fetcher.formAction,
-                formData:fetcher.formData ? Object.fromEntries(fetcher.formData.entries()) : undefined,
-                formEncType: fetcher.formEncType,
-                submission: fetcher.submission ? {
-                  ...fetcher.submission,
-                  formData: Object.fromEntries(fetcher.submission.formData.entries()),
-                  key: undefined
-                }: undefined,
-                data: fetcher.data,
-              });
+              // Concurrent mode can cause multiple re-renders here on transitions
+              // here so only re-capture when our tested fetcher changes states
+              if (savedStates[savedStates.length - 1]?.state !== fetcher.state) {
+                savedStates.push({
+                  state: fetcher.state,
+                  type: fetcher.type,
+                  formMethod: fetcher.formMethod,
+                  formAction: fetcher.formAction,
+                  formData:fetcher.formData ? Object.fromEntries(fetcher.formData.entries()) : undefined,
+                  formEncType: fetcher.formEncType,
+                  submission: fetcher.submission ? {
+                    ...fetcher.submission,
+                    formData: Object.fromEntries(fetcher.submission.formData.entries()),
+                    key: undefined
+                  }: undefined,
+                  data: fetcher.data,
+                });
+              }
               fetcherRef.current = savedStates;
               return savedStates;
             }, [fetcher]);
 
             return (
               <html lang="en">
+                <head><title>Test</title></head>
                 <body>
                   <Outlet />
                     {fetcher && fetcher.state != "idle" && (
@@ -130,7 +135,6 @@ test.describe("fetcher states", () => {
           }
         `,
         "app/routes/redirect.jsx": js`
-          import { useFetcher } from "@remix-run/react";
           export function loader() {
             return { from: 'redirect loader' }
           }
