@@ -1208,6 +1208,7 @@ function useScrollRestoration({
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
     DataRouterStateHook.UseScrollRestoration
   );
+  let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
   let matches = useMatches();
   let navigation = useNavigation();
@@ -1258,9 +1259,20 @@ function useScrollRestoration({
         savedScrollPositions,
         () => window.scrollY,
         getKey
+          ? (location, matches) =>
+              getKey(
+                {
+                  ...location,
+                  pathname:
+                    stripBasename(location.pathname, basename) ||
+                    location.pathname,
+                },
+                matches
+              )
+          : undefined
       );
       return () => disableScrollRestoration && disableScrollRestoration();
-    }, [router, getKey]);
+    }, [router, basename, getKey]);
 
     // Restore scrolling when state.restoreScrollPosition changes
     // eslint-disable-next-line react-hooks/rules-of-hooks

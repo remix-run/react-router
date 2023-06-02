@@ -2452,15 +2452,11 @@ export function createRouter(init: RouterInit): Router {
 
   function getScrollKey(location: Location, matches: AgnosticDataRouteMatch[]) {
     if (getScrollRestorationKey) {
-      let loc = {
-        ...location,
-        pathname:
-          stripBasename(location.pathname, basename) || location.pathname,
-      };
-      let userMatches = matches.map((m) =>
-        createUseMatchesMatch(m, state.loaderData)
+      let key = getScrollRestorationKey(
+        location,
+        matches.map((m) => createUseMatchesMatch(m, state.loaderData))
       );
-      return getScrollRestorationKey(loc, userMatches) || location.key;
+      return key || location.key;
     }
     return location.key;
   }
