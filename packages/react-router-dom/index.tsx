@@ -1261,6 +1261,7 @@ function useScrollRestoration({
         getKey
           ? (location, matches) =>
               getKey(
+                // Strip the basename to match useLocation
                 {
                   ...location,
                   pathname:
