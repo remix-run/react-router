@@ -32,7 +32,7 @@ export interface HandleDataRequestFunction {
   (response: Response, args: DataFunctionArgs): Promise<Response> | Response;
 }
 
-export interface OnUnhandledErrorFunction {
+export interface HandleErrorFunction {
   (error: unknown, args: DataFunctionArgs): void;
 }
 
@@ -43,5 +43,5 @@ export interface OnUnhandledErrorFunction {
 export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
-  onUnhandledError?: OnUnhandledErrorFunction;
+  handleError?: HandleErrorFunction;
 }

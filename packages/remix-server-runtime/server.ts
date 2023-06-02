@@ -50,7 +50,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   let staticHandler = createStaticHandler(dataRoutes);
 
   let errorHandler =
-    build.entry.module.onUnhandledError ||
+    build.entry.module.handleError ||
     ((error, { request }) => {
       if (serverMode !== ServerMode.Test && !request.signal.aborted) {
         console.error(error);

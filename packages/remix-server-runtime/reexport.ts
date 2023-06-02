@@ -1,7 +1,7 @@
 export type {
   HandleDataRequestFunction,
   HandleDocumentRequestFunction,
-  OnUnhandledErrorFunction,
+  HandleErrorFunction,
   ServerBuild,
   ServerEntryModule,
 } from "./build";

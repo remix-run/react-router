@@ -430,7 +430,7 @@ test.describe("Error Sanitization", () => {
     });
   });
 
-  test.describe("serverMode=production (user-provided onUnhandledError)", () => {
+  test.describe("serverMode=production (user-provided handleError)", () => {
     test.beforeAll(async () => {
       fixture = await createFixture(
         {
@@ -463,7 +463,7 @@ test.describe("Error Sanitization", () => {
                 });
               }
 
-              export function onUnhandledError(
+              export function handleError(
                 error: unknown,
                 { request }: { request: Request },
               ) {

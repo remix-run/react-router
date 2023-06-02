@@ -68,7 +68,7 @@ const defaultRuntimeExports: ExportNames = {
     "MemoryUploadHandlerOptions",
     "MetaDescriptor",
     "MetaFunction",
-    "OnUnhandledErrorFunction",
+    "HandleErrorFunction",
     "PageLinkDescriptor",
     "RequestHandler",
     "RouteComponent",
