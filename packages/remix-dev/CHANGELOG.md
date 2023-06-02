@@ -1,5 +1,151 @@
 # `@remix-run/dev`
 
+## 1.17.0-pre.0
+
+### Minor Changes
+
+- built-in tls support ([#6483](https://github.com/remix-run/remix/pull/6483))
+
+  New options:
+
+  - `--tls-key` / `tlsKey`: TLS key
+  - `--tls-cert` / `tlsCert`: TLS Certificate
+
+  If both TLS options are set, `scheme` defaults to `https`
+
+  ## Example
+
+  Install [mkcert](https://github.com/FiloSottile/mkcert) and create a local CA:
+
+  ```sh
+  brew install mkcert
+  mkcert -install
+  ```
+
+  Then make sure you inform `node` about your CA certs:
+
+  ```sh
+  export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
+  ```
+
+  👆 You'll probably want to put that env var in your scripts or `.bashrc`/`.zshrc`
+
+  Now create `key.pem` and `cert.pem`:
+
+  ```sh
+  mkcert -key-file key.pem -cert-file cert.pem localhost
+  ```
+
+  See `mkcert` docs for more details.
+
+  Finally, pass in the paths to the key and cert via flags:
+
+  ```sh
+  remix dev --tls-key=key.pem --tls-cert=cert.pem
+  ```
+
+  or via config:
+
+  ```js
+  module.exports = {
+    future: {
+      unstable_dev: {
+        tlsKey: "key.pem",
+        tlsCert: "cert.pem",
+      },
+    },
+  };
+  ```
+
+  That's all that's needed to set up the Remix Dev Server with TLS.
+
+  🚨 Make sure to update your app server for TLS as well.
+
+  For example, with `express`:
+
+  ```ts
+  import express from "express";
+  import https from "node:https";
+  import fs from "node:fs";
+
+  let app = express();
+
+  // ...code setting up your express app...
+
+  let appServer = https.createServer(
+    {
+      key: fs.readFileSync("key.pem"),
+      cert: fs.readFileSync("cert.pem"),
+    },
+    app
+  );
+
+  appServer.listen(3000, () => {
+    console.log("Ready on https://localhost:3000");
+  });
+  ```
+
+  ## Known limitations
+
+  `remix-serve` does not yet support TLS.
+  That means this only works for custom app server using the `-c` flag for now.
+
+- Add caching to PostCSS for regular stylesheets ([#6505](https://github.com/remix-run/remix/pull/6505))
+- Reuse dev server port for WebSocket (Live Reload,HMR,HDR) ([#6476](https://github.com/remix-run/remix/pull/6476))
+
+  As a result the `webSocketPort`/`--websocket-port` option has been obsoleted.
+  Additionally, scheme/host/port options for the dev server have been renamed.
+
+  Available options are:
+
+  | Option     | flag               | config           | default                           |
+  | ---------- | ------------------ | ---------------- | --------------------------------- |
+  | Command    | `-c` / `--command` | `command`        | `remix-serve <server build path>` |
+  | Scheme     | `--scheme`         | `scheme`         | `http`                            |
+  | Host       | `--host`           | `host`           | `localhost`                       |
+  | Port       | `--port`           | `port`           | Dynamically chosen open port      |
+  | No restart | `--no-restart`     | `restart: false` | `restart: true`                   |
+
+  Note that scheme/host/port options are for the _dev server_, not your app server.
+  You probably don't need to use scheme/host/port option if you aren't configuring networking (e.g. for Docker or SSL).
+
+### Patch Changes
+
+- Fix warnings when importing CSS files with `future.unstable_dev` enabled ([#6506](https://github.com/remix-run/remix/pull/6506))
+- Fix Tailwind performance issue when `postcss.config.js` contains `plugins: { tailwindcss: {} }` and `remix.config.js` contains both `tailwind: true` and `postcss: true`. ([#6468](https://github.com/remix-run/remix/pull/6468))
+
+  Note that this was _not_ an issue when the plugin function had been explicitly called, i.e. `plugins: [tailwindcss()]`. Remix avoids adding the Tailwind plugin to PostCSS if it's already present but we were failing to detect when the plugin function hadn't been called — either because the plugin function itself had been passed, i.e. `plugins: [require('tailwindcss')]`, or the plugin config object syntax had been used, i.e. `plugins: { tailwindcss: {} }`.
+
+- Faster server export removal for routes when `unstable_dev` is enabled. ([#6455](https://github.com/remix-run/remix/pull/6455))
+
+  Also, only render modulepreloads on SSR.
+  Do not render modulepreloads when hydrated.
+
+- Add `HeadersArgs` type to be consistent with loaders/actions/meta and allows for using a `function` declaration in addition to an arrow function expression ([#6247](https://github.com/remix-run/remix/pull/6247))
+
+  ```tsx
+  import type { HeadersArgs } from "@remix-run/node"; // or cloudflare/deno
+
+  export function headers({ loaderHeaders }: HeadersArgs) {
+    return {
+      "x-my-custom-thing": loaderHeaders.get("x-my-custom-thing") || "fallback",
+    };
+  }
+  ```
+
+- better error message when `remix-serve` is not found ([#6477](https://github.com/remix-run/remix/pull/6477))
+- restore color for app server output ([#6485](https://github.com/remix-run/remix/pull/6485))
+- - Fix route ranking bug with pathless layout route next to a sibling index route ([#4421](https://github.com/remix-run/remix/pull/4421))
+
+    - Under the hood this is done by removing the trailing slash from all generated `path` values since the number of slash-delimited segments counts towards route ranking so the trailing slash incorrectly increases the score for routes
+
+  - Support sibling pathless layout routes by removing pathless layout routes from the unique route path checks in conventional route generation since they inherently trigger duplicate paths
+
+- fix dev server crashes caused by ungraceful hdr error handling ([#6467](https://github.com/remix-run/remix/pull/6467))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.17.0-pre.0`
+  - `@remix-run/serve@1.17.0-pre.0`
+
 ## 1.16.1
 
 ### Patch Changes
