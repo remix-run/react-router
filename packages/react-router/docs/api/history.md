@@ -22,7 +22,7 @@ The following terms are also used:
 - `go(n)` - (function) Moves the pointer in the history stack by `n` entries
 - `goBack()` - (function) Equivalent to `go(-1)`
 - `goForward()` - (function) Equivalent to `go(1)`
-- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/remix-run/history/blob/main/docs/blocking-transitions.md)
+- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/remix-run/history/blob/v4/docs/Blocking.md)
 
 ## history is mutable
 
