@@ -12,6 +12,7 @@
     "react-router-dom": "^6.8.0"
   },
   "devDependencies": {
+    "@esbuild/linux-x64": "^0.17.19",
     "@rollup/plugin-replace": "^5.0.2",
     "@types/node": "^18.11.18",
     "@types/react": "^18.0.27",
