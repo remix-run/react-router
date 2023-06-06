@@ -18,7 +18,7 @@
       sendErrorToBugReportingService(error);
       console.error(formatError(error));
     } else {
-      let unknownError = new Error("Unknown Server Error");
+      const unknownError = new Error("Unknown Server Error");
       sendErrorToBugReportingService(unknownError);
       console.error(unknownError);
     }

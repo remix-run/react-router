@@ -64,15 +64,16 @@
   For example, with `express`:
 
   ```ts
-  import express from "express";
-  import https from "node:https";
   import fs from "node:fs";
-
-  let app = express();
+  import https from "node:https";
+  
+  import express from "express";
+  
+  const app = express();
 
   // ...code setting up your express app...
 
-  let appServer = https.createServer(
+  const appServer = https.createServer(
     {
       key: fs.readFileSync("key.pem"),
       cert: fs.readFileSync("cert.pem"),
