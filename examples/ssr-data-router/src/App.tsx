@@ -1,4 +1,3 @@
-import * as React from "react";
 import type { RouteObject } from "react-router-dom";
 import { Outlet, Link, useLoaderData, redirect } from "react-router-dom";
 
