@@ -1,13 +1,6 @@
 # `@remix-run/dev`
 
-## 1.17.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.17.0-pre.1`
-
-## 1.17.0-pre.0
+## 1.17.0
 
 ### Minor Changes
 
@@ -97,7 +90,6 @@
   `remix-serve` does not yet support TLS.
   That means this only works for custom app server using the `-c` flag for now.
 
-- Add caching to PostCSS for regular stylesheets ([#6505](https://github.com/remix-run/remix/pull/6505))
 - Reuse dev server port for WebSocket (Live Reload,HMR,HDR) ([#6476](https://github.com/remix-run/remix/pull/6476))
 
   As a result the `webSocketPort`/`--websocket-port` option has been obsoleted.
@@ -118,7 +110,10 @@
 
 ### Patch Changes
 
+- Add caching to PostCSS for regular stylesheets ([#6505](https://github.com/remix-run/remix/pull/6505))
+
 - Fix warnings when importing CSS files with `future.unstable_dev` enabled ([#6506](https://github.com/remix-run/remix/pull/6506))
+
 - Fix Tailwind performance issue when `postcss.config.js` contains `plugins: { tailwindcss: {} }` and `remix.config.js` contains both `tailwind: true` and `postcss: true`. ([#6468](https://github.com/remix-run/remix/pull/6468))
 
   Note that this was _not_ an issue when the plugin function had been explicitly called, i.e. `plugins: [tailwindcss()]`. Remix avoids adding the Tailwind plugin to PostCSS if it's already present but we were failing to detect when the plugin function hadn't been called — either because the plugin function itself had been passed, i.e. `plugins: [require('tailwindcss')]`, or the plugin config object syntax had been used, i.e. `plugins: { tailwindcss: {} }`.
@@ -141,17 +136,19 @@
   ```
 
 - better error message when `remix-serve` is not found ([#6477](https://github.com/remix-run/remix/pull/6477))
+
 - restore color for app server output ([#6485](https://github.com/remix-run/remix/pull/6485))
-- - Fix route ranking bug with pathless layout route next to a sibling index route ([#4421](https://github.com/remix-run/remix/pull/4421))
 
-    - Under the hood this is done by removing the trailing slash from all generated `path` values since the number of slash-delimited segments counts towards route ranking so the trailing slash incorrectly increases the score for routes
+- Fix route ranking bug with pathless layout route next to a sibling index route ([#4421](https://github.com/remix-run/remix/pull/4421))
 
-  - Support sibling pathless layout routes by removing pathless layout routes from the unique route path checks in conventional route generation since they inherently trigger duplicate paths
+  - Under the hood this is done by removing the trailing slash from all generated `path` values since the number of slash-delimited segments counts towards route ranking so the trailing slash incorrectly increases the score for routes
+
+- Support sibling pathless layout routes by removing pathless layout routes from the unique route path checks in conventional route generation since they inherently trigger duplicate paths ([#4421](https://github.com/remix-run/remix/pull/4421))
 
 - fix dev server crashes caused by ungraceful hdr error handling ([#6467](https://github.com/remix-run/remix/pull/6467))
+
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.17.0-pre.0`
-  - `@remix-run/serve@1.17.0-pre.0`
+  - `@remix-run/server-runtime@1.17.0`
 
 ## 1.16.1
 

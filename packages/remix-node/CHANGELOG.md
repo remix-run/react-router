@@ -1,13 +1,6 @@
 # `@remix-run/node`
 
-## 1.17.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.17.0-pre.1`
-
-## 1.17.0-pre.0
+## 1.17.0
 
 ### Patch Changes
 
@@ -24,8 +17,9 @@
   ```
 
 - Fix `request.clone() instanceof Request` returning false. ([#6512](https://github.com/remix-run/remix/pull/6512))
+
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.17.0-pre.0`
+  - `@remix-run/server-runtime@1.17.0`
 
 ## 1.16.1
 
