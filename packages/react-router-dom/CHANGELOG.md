@@ -1,13 +1,6 @@
 # `react-router-dom`
 
-## 6.12.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.12.0-pre.1`
-
-## 6.12.0-pre.0
+## 6.12.0
 
 ### Minor Changes
 
@@ -17,8 +10,8 @@
 
 - Re-throw `DOMException` (`DataCloneError`) when attempting to perform a `PUSH` navigation with non-serializable state. ([#10427](https://github.com/remix-run/react-router/pull/10427))
 - Updated dependencies:
-  - `@remix-run/router@1.6.3-pre.0`
-  - `react-router@6.12.0-pre.0`
+  - `@remix-run/router@1.6.3`
+  - `react-router@6.12.0`
 
 ## 6.11.2
 
