@@ -1,5 +1,17 @@
 # `react-router`
 
+## 6.12.0
+
+### Minor Changes
+
+- Wrap internal router state updates with `React.startTransition` if it exists ([#10438](https://github.com/remix-run/react-router/pull/10438))
+
+### Patch Changes
+
+- [internal] use concurrent mode state ([#10553](https://github.com/remix-run/react-router/pull/10553))
+- Updated dependencies:
+  - `@remix-run/router@1.6.3`
+
 ## 6.12.0-pre.1
 
 ### Patch Changes
