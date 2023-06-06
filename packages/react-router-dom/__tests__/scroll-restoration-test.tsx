@@ -11,7 +11,7 @@ import {
 } from "react-router-dom";
 
 describe(`ScrollRestoration`, () => {
-  it("renders the first route that matches the URL", () => {
+  it("removes the basename from the location provided to getKey", () => {
     let getKey = jest.fn(() => "mykey");
     let testWindow = getWindowImpl("/base");
     window.scrollTo = () => {};
