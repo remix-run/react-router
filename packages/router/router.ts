@@ -352,6 +352,7 @@ export interface RouterInit {
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
+  window?: Window;
 }
 
 /**
@@ -661,12 +662,6 @@ export const IDLE_BLOCKER: BlockerUnblocked = {
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
-const isBrowser =
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined";
-const isServer = !isBrowser;
-
 const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
@@ -681,6 +676,17 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
  * Create a router and listen to history POP navigations
  */
 export function createRouter(init: RouterInit): Router {
+  const routerWindow = init.window
+    ? init.window
+    : typeof window !== "undefined"
+    ? window
+    : undefined;
+  const isBrowser =
+    typeof routerWindow !== "undefined" &&
+    typeof routerWindow.document !== "undefined" &&
+    typeof routerWindow.document.createElement !== "undefined";
+  const isServer = !isBrowser;
+
   invariant(
     init.routes.length > 0,
     "You must provide a non-empty routes array to createRouter"
@@ -1225,13 +1231,15 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // Short circuit if it's only a hash change and not a mutation submission.
+    // Short circuit if it's only a hash change and not a revalidation or
+    // mutation submission.
+    //
     // Ignore on initial page loads because since the initial load will always
-    // be "same hash".
-    // For example, on /page#hash and submit a <Form method="post"> which will
-    // default to a navigation to /page
+    // be "same hash".  For example, on /page#hash and submit a <Form method="post">
+    // which will default to a navigation to /page
     if (
       state.initialized &&
+      !isRevalidationRequired &&
       isHashChangeOnly(state.location, location) &&
       !(opts && opts.submission && isMutationMethod(opts.submission.formMethod))
     ) {
@@ -1775,7 +1783,6 @@ export function createRouter(init: RouterInit): Router {
     let nextLocation = state.navigation.location || state.location;
     let revalidationRequest = createClientSideRequest(
       init.history,
-
       nextLocation,
       abortController.signal
     );
@@ -1886,16 +1893,20 @@ export function createRouter(init: RouterInit): Router {
       activeDeferreds
     );
 
-    let doneFetcher: FetcherStates["Idle"] = {
-      state: "idle",
-      data: actionResult.data,
-      formMethod: undefined,
-      formAction: undefined,
-      formEncType: undefined,
-      formData: undefined,
-      " _hasFetcherDoneAnything ": true,
-    };
-    state.fetchers.set(key, doneFetcher);
+    // Since we let revalidations complete even if the submitting fetcher was
+    // deleted, only put it back to idle if it hasn't been deleted
+    if (state.fetchers.has(key)) {
+      let doneFetcher: FetcherStates["Idle"] = {
+        state: "idle",
+        data: actionResult.data,
+        formMethod: undefined,
+        formAction: undefined,
+        formEncType: undefined,
+        formData: undefined,
+        " _hasFetcherDoneAnything ": true,
+      };
+      state.fetchers.set(key, doneFetcher);
+    }
 
     let didAbortFetchLoads = abortStaleFetchLoads(loadId);
 
@@ -1927,7 +1938,9 @@ export function createRouter(init: RouterInit): Router {
           matches,
           errors
         ),
-        ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
+        ...(didAbortFetchLoads || revalidatingFetchers.length > 0
+          ? { fetchers: new Map(state.fetchers) }
+          : {}),
       });
       isRevalidationRequired = false;
     }
@@ -2085,19 +2098,15 @@ export function createRouter(init: RouterInit): Router {
       "Expected a location on the redirect navigation"
     );
     // Check if this an absolute external redirect that goes to a new origin
-    if (
-      ABSOLUTE_URL_REGEX.test(redirect.location) &&
-      isBrowser &&
-      typeof window?.location !== "undefined"
-    ) {
+    if (ABSOLUTE_URL_REGEX.test(redirect.location) && isBrowser) {
       let url = init.history.createURL(redirect.location);
       let isDifferentBasename = stripBasename(url.pathname, basename) == null;
 
-      if (window.location.origin !== url.origin || isDifferentBasename) {
+      if (routerWindow.location.origin !== url.origin || isDifferentBasename) {
         if (replace) {
-          window.location.replace(redirect.location);
+          routerWindow.location.replace(redirect.location);
         } else {
-          window.location.assign(redirect.location);
+          routerWindow.location.assign(redirect.location);
         }
         return;
       }
@@ -2267,7 +2276,16 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function deleteFetcher(key: string): void {
-    if (fetchControllers.has(key)) abortFetcher(key);
+    let fetcher = state.fetchers.get(key);
+    // Don't abort the controller if this is a deletion of a fetcher.submit()
+    // in it's loading phase since - we don't want to abort the corresponding
+    // revalidation and want them to complete and land
+    if (
+      fetchControllers.has(key) &&
+      !(fetcher && fetcher.state === "loading" && fetchReloadIds.has(key))
+    ) {
+      abortFetcher(key);
+    }
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
