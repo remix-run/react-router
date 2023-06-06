@@ -1,5 +1,14 @@
 # `@remix-run/router`
 
+## 1.6.3
+
+### Patch Changes
+
+- Allow fetcher revalidations to complete if submitting fetcher is deleted ([#10535](https://github.com/remix-run/react-router/pull/10535))
+- Re-throw `DOMException` (`DataCloneError`) when attempting to perform a `PUSH` navigation with non-serializable state. ([#10427](https://github.com/remix-run/react-router/pull/10427))
+- Ensure revalidations happen when hash is present ([#10516](https://github.com/remix-run/react-router/pull/10516))
+- upgrade jest and jsdom ([#10453](https://github.com/remix-run/react-router/pull/10453))
+
 ## 1.6.2
 
 ### Patch Changes

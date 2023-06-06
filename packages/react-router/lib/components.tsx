@@ -116,12 +116,12 @@ export function RouterProvider({
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
           <Router
-            basename={router.basename}
-            location={router.state.location}
-            navigationType={router.state.historyAction}
+            basename={basename}
+            location={state.location}
+            navigationType={state.historyAction}
             navigator={navigator}
           >
-            {router.state.initialized ? (
+            {state.initialized ? (
               <DataRoutes routes={router.routes} state={state} />
             ) : (
               fallbackElement

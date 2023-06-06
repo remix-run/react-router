@@ -68,8 +68,8 @@ The `main.jsx` file is the entry point. Open it up and we'll put React Router on
 👉 **Create and render a [browser router][createbrowserrouter] in `main.jsx`**
 
 ```jsx lines=[3-6,9-14,18] filename=src/main.jsx
-import React from "react";
-import ReactDOM from "react-dom/client";
+import * as React from "react";
+import * as ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -1487,8 +1487,17 @@ You could certainly do this as a controlled component, but you'll end up with mo
 
 Notice how controlling the input requires three points of synchronization now instead of just one. The behavior is identical but the code is more complex.
 
-```jsx filename=src/routes/root.jsx lines=[1,6,9-11,25-28]
+```jsx filename=src/routes/root.jsx lines=[1,6,15,18-20,34-37]
 import { useEffect, useState } from "react";
+// existing code
+
+export async function loader({ request }) {
+  const url = new URL(request.url);
+  const q = url.searchParams.get("q") || "";
+  const contacts = await getContacts(q);
+  return { contacts, q };
+}
+
 // existing code
 
 export default function Root() {
@@ -1911,6 +1920,7 @@ And for our final trick, many folks prefer to configure their routes with JSX. Y
 import {
   createRoutesFromElements,
   createBrowserRouter,
+  Route,
 } from "react-router-dom";
 
 const router = createBrowserRouter(

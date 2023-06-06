@@ -1008,6 +1008,16 @@ export function createRouter(init: RouterInit): Router {
       inFlightDataRoutes = undefined;
     }
 
+    if (isUninterruptedRevalidation) {
+      // If this was an uninterrupted revalidation then do not touch history
+    } else if (pendingAction === HistoryAction.Pop) {
+      // Do nothing for POP - URL has already been updated
+    } else if (pendingAction === HistoryAction.Push) {
+      init.history.push(location, location.state);
+    } else if (pendingAction === HistoryAction.Replace) {
+      init.history.replace(location, location.state);
+    }
+
     updateState({
       ...newState, // matches, errors, fetchers go through as-is
       actionData,
@@ -1024,16 +1034,6 @@ export function createRouter(init: RouterInit): Router {
       preventScrollReset,
       blockers: new Map(state.blockers),
     });
-
-    if (isUninterruptedRevalidation) {
-      // If this was an uninterrupted revalidation then do not touch history
-    } else if (pendingAction === HistoryAction.Pop) {
-      // Do nothing for POP - URL has already been updated
-    } else if (pendingAction === HistoryAction.Push) {
-      init.history.push(location, location.state);
-    } else if (pendingAction === HistoryAction.Replace) {
-      init.history.replace(location, location.state);
-    }
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
@@ -1783,7 +1783,6 @@ export function createRouter(init: RouterInit): Router {
     let nextLocation = state.navigation.location || state.location;
     let revalidationRequest = createClientSideRequest(
       init.history,
-
       nextLocation,
       abortController.signal
     );
@@ -1894,16 +1893,20 @@ export function createRouter(init: RouterInit): Router {
       activeDeferreds
     );
 
-    let doneFetcher: FetcherStates["Idle"] = {
-      state: "idle",
-      data: actionResult.data,
-      formMethod: undefined,
-      formAction: undefined,
-      formEncType: undefined,
-      formData: undefined,
-      " _hasFetcherDoneAnything ": true,
-    };
-    state.fetchers.set(key, doneFetcher);
+    // Since we let revalidations complete even if the submitting fetcher was
+    // deleted, only put it back to idle if it hasn't been deleted
+    if (state.fetchers.has(key)) {
+      let doneFetcher: FetcherStates["Idle"] = {
+        state: "idle",
+        data: actionResult.data,
+        formMethod: undefined,
+        formAction: undefined,
+        formEncType: undefined,
+        formData: undefined,
+        " _hasFetcherDoneAnything ": true,
+      };
+      state.fetchers.set(key, doneFetcher);
+    }
 
     let didAbortFetchLoads = abortStaleFetchLoads(loadId);
 
@@ -1935,7 +1938,9 @@ export function createRouter(init: RouterInit): Router {
           matches,
           errors
         ),
-        ...(didAbortFetchLoads ? { fetchers: new Map(state.fetchers) } : {}),
+        ...(didAbortFetchLoads || revalidatingFetchers.length > 0
+          ? { fetchers: new Map(state.fetchers) }
+          : {}),
       });
       isRevalidationRequired = false;
     }
@@ -2271,7 +2276,16 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function deleteFetcher(key: string): void {
-    if (fetchControllers.has(key)) abortFetcher(key);
+    let fetcher = state.fetchers.get(key);
+    // Don't abort the controller if this is a deletion of a fetcher.submit()
+    // in it's loading phase since - we don't want to abort the corresponding
+    // revalidation and want them to complete and land
+    if (
+      fetchControllers.has(key) &&
+      !(fetcher && fetcher.state === "loading" && fetchReloadIds.has(key))
+    ) {
+      abortFetcher(key);
+    }
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);

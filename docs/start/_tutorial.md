@@ -74,7 +74,7 @@ Actually, that "!" doesn't look boring at all. This is pretty exciting. We sat o
 Finally, go make sure `index.js` or `main.jsx` (depending on the bundler you used) is actually boring:
 
 ```tsx filename=src/main.jsx
-import ReactDOM from "react-dom/client";
+import * as ReactDOM from "react-dom/client";
 import App from "./App";
 
 const root = ReactDOM.createRoot(
@@ -98,7 +98,7 @@ npm run dev
 First things first, we want to connect your app to the browser's URL: import `BrowserRouter` and render it around your whole app.
 
 ```tsx lines=[2,9-11] filename=src/main.jsx
-import ReactDOM from "react-dom/client";
+import * as ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 
@@ -177,7 +177,7 @@ export default function Invoices() {
 Finally, let's teach React Router how to render our app at different URLs by creating our first "Route Config" inside of `main.jsx` or `index.js`.
 
 ```tsx lines=[2,4-5,8-9,15-21] filename=src/main.jsx
-import ReactDOM from "react-dom/client";
+import * as ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
@@ -217,7 +217,7 @@ Let's get some automatic, persistent layout handling by doing just two things:
 First let's nest the routes. Right now the expenses and invoices routes are siblings to the app, we want to make them _children_ of the app route:
 
 ```jsx lines=[17-20] filename=src/main.jsx
-import ReactDOM from "react-dom/client";
+import * as ReactDOM from "react-dom/client";
 import {
   BrowserRouter,
   Routes,
