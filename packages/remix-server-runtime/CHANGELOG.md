@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.17.0-pre.1
+
+### Patch Changes
+
+- Lock into react router 6.12.0 version ([#6548](https://github.com/remix-run/remix/pull/6548))
+
 ## 1.17.0-pre.0
 
 ### Minor Changes
