@@ -1,4 +1,5 @@
 import WebSocket from "ws";
+import type { Server as HTTPServer } from "http";
 
 import { type Manifest } from "../manifest";
 import type * as HMR from "./hmr";
@@ -14,8 +15,8 @@ type Message =
 
 type Broadcast = (message: Message) => void;
 
-export let serve = (options: { port: number }) => {
-  let wss = new WebSocket.Server({ port: options.port });
+export let serve = (server: HTTPServer) => {
+  let wss = new WebSocket.Server({ server });
 
   let broadcast: Broadcast = (message) => {
     wss.clients.forEach((client) => {

@@ -37,6 +37,7 @@ function handleBotRequest(
   remixContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
+    let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
       <RemixServer
         context={remixContext}
@@ -45,6 +46,7 @@ function handleBotRequest(
       />,
       {
         onAllReady() {
+          shellRendered = true;
           const body = new PassThrough();
 
           responseHeaders.set("Content-Type", "text/html");
@@ -63,7 +65,12 @@ function handleBotRequest(
         },
         onError(error: unknown) {
           responseStatusCode = 500;
-          console.error(error);
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error);
+          }
         },
       }
     );
@@ -79,6 +86,7 @@ function handleBrowserRequest(
   remixContext: EntryContext
 ) {
   return new Promise((resolve, reject) => {
+    let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
       <RemixServer
         context={remixContext}
@@ -87,6 +95,7 @@ function handleBrowserRequest(
       />,
       {
         onShellReady() {
+          shellRendered = true;
           const body = new PassThrough();
 
           responseHeaders.set("Content-Type", "text/html");
@@ -104,8 +113,13 @@ function handleBrowserRequest(
           reject(error);
         },
         onError(error: unknown) {
-          console.error(error);
           responseStatusCode = 500;
+          // Log streaming rendering errors from inside the shell.  Don't log
+          // errors encountered during initial shell rendering since they'll
+          // reject and get logged in handleDocumentRequest.
+          if (shellRendered) {
+            console.error(error);
+          }
         },
       }
     );

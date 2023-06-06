@@ -43,16 +43,13 @@ function runTests(ext: typeof extensions[number]) {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      config: {
+        tailwind: true,
+        future: {
+          v2_routeConvention: true,
+        },
+      },
       files: {
-        "remix.config.js": js`
-          module.exports = {
-            tailwind: true,
-            future: {
-              v2_routeConvention: true,
-            },
-          };
-        `,
-
         [tailwindConfigName]: tailwindConfig,
 
         "app/tailwind.css": css`
@@ -338,8 +335,10 @@ test.describe("Tailwind enabled via unstable future flag", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        unstable_tailwind: true,
+      config: {
+        future: {
+          unstable_tailwind: true,
+        },
       },
       files: {
         "tailwind.config.js": js`
@@ -413,13 +412,10 @@ test.describe("Tailwind disabled", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      config: {
+        tailwind: false,
+      },
       files: {
-        "remix.config.js": js`
-          module.exports = {
-            tailwind: false,
-          };
-        `,
-
         "tailwind.config.js": js`
           module.exports = {
             content: ["./app/**/*.{ts,tsx,jsx,js}"],

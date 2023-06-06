@@ -6,9 +6,9 @@ import { parse, type ParserOptions } from "@babel/parser";
 import traverse from "@babel/traverse";
 import generate from "@babel/generator";
 
-import type { RemixConfig } from "../../config";
-import type { Options } from "../options";
 import { getPostcssProcessor } from "../utils/postcss";
+import { applyHMR } from "../js/plugins/hmr";
+import type { Context } from "../context";
 
 const pluginName = "css-side-effects-plugin";
 const namespace = `${pluginName}-ns`;
@@ -44,17 +44,14 @@ const loaderForExtension: Record<Extension, Loader> = {
  * to the CSS bundle. This is primarily designed to support packages that
  * import plain CSS files directly within JS files.
  */
-export const cssSideEffectImportsPlugin = ({
-  config,
-  options,
-}: {
-  config: RemixConfig;
-  options: Options;
-}): Plugin => {
+export const cssSideEffectImportsPlugin = (
+  ctx: Context,
+  { hmr = false } = {}
+): Plugin => {
   return {
     name: pluginName,
     setup: async (build) => {
-      let postcssProcessor = await getPostcssProcessor({ config });
+      let postcssProcessor = await getPostcssProcessor(ctx);
 
       build.onLoad(
         { filter: allJsFilesFilter, namespace: "file" },
@@ -68,6 +65,15 @@ export const cssSideEffectImportsPlugin = ({
 
           let loader = loaderForExtension[path.extname(args.path) as Extension];
           let contents = addSuffixToCssSideEffectImports(loader, code);
+
+          if (args.path.startsWith(ctx.config.appDirectory) && hmr) {
+            contents = await applyHMR(
+              contents,
+              args,
+              ctx.config,
+              !!build.initialOptions.sourcemap
+            );
+          }
 
           return {
             contents,
@@ -94,7 +100,7 @@ export const cssSideEffectImportsPlugin = ({
           }
 
           return {
-            path: path.relative(config.rootDirectory, resolvedPath),
+            path: path.relative(ctx.config.rootDirectory, resolvedPath),
             namespace,
           };
         }
@@ -108,7 +114,7 @@ export const cssSideEffectImportsPlugin = ({
             await postcssProcessor.process(contents, {
               from: args.path,
               to: args.path,
-              map: options.sourcemap,
+              map: ctx.options.sourcemap,
             })
           ).css;
         }

@@ -11,7 +11,9 @@ let BANNER_MESSAGE = "you do not have permission to view /protected";
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    future: { v2_routeConvention: true },
+    config: {
+      future: { v2_routeConvention: true },
+    },
     files: {
       "app/session.server.js": js`
         import { createCookieSessionStorage } from "@remix-run/node";

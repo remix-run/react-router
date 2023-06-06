@@ -8,12 +8,17 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture";
 test.describe("loader in an app", async () => {
   let appFixture: AppFixture;
   let fixture: Fixture;
+  let _consoleError: typeof console.error;
 
   let SVG_CONTENTS = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="#000" stroke-width="4" aria-label="Chicken"><path d="M48.1 34C22.1 32 1.4 51 2.5 67.2c1.2 16.1 19.8 17 29 17.8H89c15.7-6.6 6.3-18.9.3-20.5A28 28 0 0073 41.7c-.5-7.2 3.4-11.6 6.9-15.3 8.5 2.6 8-8 .8-7.2.6-6.5-12.3-5.9-6.7 2.7l-3.7 5c-6.9 5.4-10.9 5.1-22.2 7zM48.1 34c-38 31.9 29.8 58.4 25 7.7M70.3 26.9l5.4 4.2"/></svg>`;
 
   test.beforeAll(async () => {
+    _consoleError = console.error;
+    console.error = () => {};
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files: {
         "app/routes/_index.jsx": js`
           import { Form, Link } from "@remix-run/react";
@@ -24,6 +29,9 @@ test.describe("loader in an app", async () => {
               <Form action="/redirect-to" method="post">
                 <input name="destination" defaultValue="/redirect-destination" />
                 <button type="submit">Redirect</button>
+              </Form>
+              <Form action="/no-action" method="post">
+                <button type="submit">Submit to no action route</button>
               </Form>
             </>
           )
@@ -94,6 +102,12 @@ test.describe("loader in an app", async () => {
             throw { but: 'why' };
           }
         `,
+        "app/routes/no-action.jsx": js`
+          import { json } from "@remix-run/node";
+          export let loader = () => {
+            return json({ ok: true });
+          }
+        `,
       },
     });
     appFixture = await createAppFixture(fixture, ServerMode.Test);
@@ -101,6 +115,7 @@ test.describe("loader in an app", async () => {
 
   test.afterAll(() => {
     appFixture.close();
+    console.error = _consoleError;
   });
 
   test.describe("with JavaScript", () => {
@@ -190,6 +205,28 @@ test.describe("loader in an app", async () => {
       "Unexpected Server Error\n\n[object Object]"
     );
   });
+
+  test("should handle ErrorResponses thrown from resource routes on document requests", async () => {
+    let res = await fixture.postDocument("/no-action", new FormData());
+    expect(res.status).toBe(405);
+    expect(res.statusText).toBe("Method Not Allowed");
+    expect(await res.text()).toBe('{"message":"Unexpected Server Error"}');
+  });
+
+  test("should handle ErrorResponses thrown from resource routes on client submissions", async ({
+    page,
+  }) => {
+    let logs: string[] = [];
+    page.on("console", (msg) => logs.push(msg.text()));
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/no-action");
+    let html = await app.getHtml();
+    expect(html).toMatch("Application Error");
+    expect(logs[0]).toContain(
+      'Route "routes/no-action" does not have an action'
+    );
+  });
 });
 
 test.describe("Development server", async () => {
@@ -203,9 +240,11 @@ test.describe("Development server", async () => {
 
     fixture = await createFixture(
       {
-        future: {
-          v2_routeConvention: true,
-          v2_errorBoundary: true,
+        config: {
+          future: {
+            v2_routeConvention: true,
+            v2_errorBoundary: true,
+          },
         },
         files: {
           "app/routes/_index.jsx": js`

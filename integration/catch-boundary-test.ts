@@ -24,7 +24,9 @@ test.describe("CatchBoundary", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files: {
         "app/root.jsx": js`
           import { json } from "@remix-run/node";
@@ -382,9 +384,11 @@ test.describe("v2_errorBoundary", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        future: {
-          v2_routeConvention: true,
-          v2_errorBoundary: true,
+        config: {
+          future: {
+            v2_routeConvention: true,
+            v2_errorBoundary: true,
+          },
         },
         files: {
           "app/root.jsx": js`

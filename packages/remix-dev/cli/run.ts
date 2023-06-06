@@ -44,11 +44,12 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
 
     [unstable_dev]
     --command, -c       Command used to run your app server
-    --http-scheme       HTTP(S) scheme for the dev server. Default: http
-    --http-host         HTTP(S) host for the dev server. Default: localhost
-    --http-port         HTTP(S) port for the dev server. Default: any open port
+    --scheme            Scheme for the dev server. Default: http
+    --host              Host for the dev server. Default: localhost
+    --port              Port for the dev server. Default: any open port
     --no-restart        Do not restart the app server when rebuilds occur.
-    --websocket-port    WebSocket port for the dev server. Default: any open port
+    --tls-key           Path to TLS key (key.pem)
+    --tls-cert          Path to TLS certificate (cert.pem)
   \`init\` Options:
     --no-delete         Skip deleting the \`remix.init\` script
   \`routes\` Options:
@@ -170,8 +171,6 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--interactive": Boolean,
       "--no-interactive": Boolean,
       "--json": Boolean,
-      "--port": Number,
-      "-p": "--port",
       "--remix-version": String,
       "--sourcemap": Boolean,
       "--template": String,
@@ -184,11 +183,13 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       // dev server
       "--command": String,
       "-c": "--command",
-      "--http-scheme": String,
-      "--http-host": String,
-      "--http-port": Number,
+      "--scheme": String,
+      "--host": String,
+      "--port": Number,
+      "-p": "--port",
       "--no-restart": Boolean,
-      "--websocket-port": Number,
+      "--tls-key": String,
+      "--tls-cert": String,
     },
     {
       argv,
@@ -213,21 +214,13 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     return;
   }
 
-  if (flags["http-scheme"]) {
-    flags.httpScheme = flags["http-scheme"];
-    delete flags["http-scheme"];
+  if (flags["tls-key"]) {
+    flags.tlsKey = flags["tls-key"];
+    delete flags["tls-key"];
   }
-  if (flags["http-host"]) {
-    flags.httpHost = flags["http-host"];
-    delete flags["http-host"];
-  }
-  if (flags["http-port"]) {
-    flags.httpPort = flags["http-port"];
-    delete flags["http-port"];
-  }
-  if (flags["websocket-port"]) {
-    flags.webSocketPort = flags["websocket-port"];
-    delete flags["websocket-port"];
+  if (flags["tls-cert"]) {
+    flags.tlsCert = flags["tls-cert"];
+    delete flags["tls-cert"];
   }
 
   if (args["--no-delete"]) {

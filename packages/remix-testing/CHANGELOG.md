@@ -1,5 +1,15 @@
 # `@remix-run/testing`
 
+## 1.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/react@1.17.0`
+  - `@remix-run/node@1.17.0`
+  - [`react-router-dom@6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0)
+  - [`@remix-run/router@1.6.3`](https://github.com/remix-run/react-router/blob/main/packages/router/CHANGELOG.md#163)
+
 ## 1.16.1
 
 ### Patch Changes

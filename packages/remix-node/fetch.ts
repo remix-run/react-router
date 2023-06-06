@@ -41,7 +41,7 @@ class NodeRequest extends WebRequest {
   }
 
   public clone(): NodeRequest {
-    return super.clone() as NodeRequest;
+    return new NodeRequest(this);
   }
 }
 

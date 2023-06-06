@@ -63,7 +63,7 @@ export async function loadPostcssPlugins({
 
   if (config.tailwind) {
     let tailwindPlugin = await loadTailwindPlugin(config);
-    if (tailwindPlugin && !hasTailwindPlugin(plugins)) {
+    if (tailwindPlugin && !hasTailwindPlugin(plugins, tailwindPlugin)) {
       plugins.push(tailwindPlugin);
     }
   }
@@ -94,10 +94,15 @@ export async function getPostcssProcessor({
   return processor;
 }
 
-function hasTailwindPlugin(plugins: Array<AcceptedPlugin>) {
+function hasTailwindPlugin(
+  plugins: Array<AcceptedPlugin>,
+  tailwindPlugin: AcceptedPlugin
+) {
   return plugins.some(
     (plugin) =>
-      "postcssPlugin" in plugin && plugin.postcssPlugin === "tailwindcss"
+      plugin === tailwindPlugin ||
+      (typeof plugin === "function" && plugin.name === "tailwindcss") ||
+      ("postcssPlugin" in plugin && plugin.postcssPlugin === "tailwindcss")
   );
 }
 

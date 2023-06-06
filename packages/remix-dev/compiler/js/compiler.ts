@@ -8,7 +8,6 @@ import { type Manifest } from "../../manifest";
 import { getAppDependencies } from "../../dependencies";
 import { loaders } from "../utils/loaders";
 import { browserRouteModulesPlugin } from "./plugins/routes";
-import { browserRouteModulesPlugin as browserRouteModulesPlugin_v2 } from "./plugins/routes_unstable";
 import { cssFilePlugin } from "../plugins/cssImports";
 import { absoluteCssUrlsPlugin } from "../plugins/absoluteCssUrlsPlugin";
 import { deprecatedRemixPackagePlugin } from "../plugins/deprecatedRemixPackage";
@@ -17,7 +16,10 @@ import { mdxPlugin } from "../plugins/mdx";
 import { externalPlugin } from "../plugins/external";
 import { cssBundleUpdatePlugin } from "./plugins/cssBundleUpdate";
 import { cssModulesPlugin } from "../plugins/cssModuleImports";
-import { cssSideEffectImportsPlugin } from "../plugins/cssSideEffectImports";
+import {
+  cssSideEffectImportsPlugin,
+  isCssSideEffectImportPath,
+} from "../plugins/cssSideEffectImports";
 import { vanillaExtractPlugin } from "../plugins/vanillaExtract";
 import invariant from "../../invariant";
 import { hmrPlugin } from "./plugins/hmr";
@@ -78,29 +80,12 @@ const createEsbuildConfig = (
     "entry.client": ctx.config.entryClientFilePath,
   };
 
-  let routeModulePaths = new Map<string, string>();
   for (let id of Object.keys(ctx.config.routes)) {
     entryPoints[id] = ctx.config.routes[id].file;
-    if (ctx.config.future.unstable_dev) {
-      // In V2 we are doing AST transforms to remove server code, this means we
-      // have to re-map all route modules back to the same module in the graph
-      // otherwise we will have duplicate modules in the graph. We have to resolve
-      // the path as we get the relative for the entrypoint and absolute for imports
-      // from other modules.
-      routeModulePaths.set(
-        ctx.config.routes[id].file,
-        ctx.config.routes[id].file
-      );
-      routeModulePaths.set(
-        path.resolve(ctx.config.appDirectory, ctx.config.routes[id].file),
-        ctx.config.routes[id].file
-      );
-    } else {
-      // All route entry points are virtual modules that will be loaded by the
-      // browserEntryPointsPlugin. This allows us to tree-shake server-only code
-      // that we don't want to run in the browser (i.e. action & loader).
-      entryPoints[id] += "?browser";
-    }
+    // All route entry points are virtual modules that will be loaded by the
+    // browserEntryPointsPlugin. This allows us to tree-shake server-only code
+    // that we don't want to run in the browser (i.e. action & loader).
+    entryPoints[id] += "?browser";
   }
 
   if (
@@ -133,16 +118,18 @@ const createEsbuildConfig = (
   }
 
   let plugins: esbuild.Plugin[] = [
+    browserRouteModulesPlugin(ctx, /\?browser$/),
     deprecatedRemixPackagePlugin(ctx),
     cssModulesPlugin(ctx, { outputCss: false }),
     vanillaExtractPlugin(ctx, { outputCss: false }),
-    cssSideEffectImportsPlugin(ctx),
+    cssSideEffectImportsPlugin(ctx, {
+      hmr:
+        ctx.options.mode === "development" &&
+        ctx.config.future.unstable_dev !== false,
+    }),
     cssFilePlugin(ctx),
     absoluteCssUrlsPlugin(),
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
-    ctx.config.future.unstable_dev
-      ? browserRouteModulesPlugin_v2(ctx, routeModulePaths)
-      : browserRouteModulesPlugin(ctx, /\?browser$/),
     mdxPlugin(ctx),
     emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
     NodeModulesPolyfillPlugin(),
@@ -166,6 +153,8 @@ const createEsbuildConfig = (
             ctx.options.onWarning &&
             !isNodeBuiltIn(packageName) &&
             !/\bnode_modules\b/.test(args.importer) &&
+            !args.path.endsWith(".css") &&
+            !isCssSideEffectImportPath(args.path) &&
             // Silence spurious warnings when using Yarn PnP. Yarn PnP doesn’t use
             // a `node_modules` folder to keep its dependencies, so the above check
             // will always fail.

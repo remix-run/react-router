@@ -118,11 +118,12 @@ describe("remix CLI", () => {
 
             [unstable_dev]
             --command, -c       Command used to run your app server
-            --http-scheme       HTTP(S) scheme for the dev server. Default: http
-            --http-host         HTTP(S) host for the dev server. Default: localhost
-            --http-port         HTTP(S) port for the dev server. Default: any open port
+            --scheme            Scheme for the dev server. Default: http
+            --host              Host for the dev server. Default: localhost
+            --port              Port for the dev server. Default: any open port
             --no-restart        Do not restart the app server when rebuilds occur.
-            --websocket-port    WebSocket port for the dev server. Default: any open port
+            --tls-key           Path to TLS key (key.pem)
+            --tls-cert          Path to TLS certificate (cert.pem)
           \`init\` Options:
             --no-delete         Skip deleting the \`remix.init\` script
           \`routes\` Options:

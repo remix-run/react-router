@@ -33,16 +33,14 @@ test.describe("PostCSS enabled", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      config: {
+        postcss: true,
+        tailwind: true,
+        future: {
+          v2_routeConvention: true,
+        },
+      },
       files: {
-        "remix.config.js": js`
-          module.exports = {
-            postcss: true,
-            tailwind: true,
-            future: {
-              v2_routeConvention: true,
-            },
-          };
-        `,
         // We provide a test plugin that replaces the strings
         // "TEST_PADDING_VALUE" and "TEST_POSTCSS_CONTEXT".
         // This lets us assert that the plugin is being run
@@ -358,8 +356,10 @@ test.describe("PostCSS enabled via unstable future flag", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: {
-        unstable_postcss: true,
+      config: {
+        future: {
+          unstable_postcss: true,
+        },
       },
       files: {
         "postcss.config.js": js`
@@ -442,12 +442,10 @@ test.describe("PostCSS disabled", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      config: {
+        postcss: false,
+      },
       files: {
-        "remix.config.js": js`
-          module.exports = {
-            postcss: false,
-          };
-        `,
         "postcss.config.js": js`
           module.exports = (ctx) => ({
             plugins: [

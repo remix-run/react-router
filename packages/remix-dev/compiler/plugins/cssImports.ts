@@ -4,8 +4,7 @@ import esbuild from "esbuild";
 import type { Processor } from "postcss";
 
 import invariant from "../../invariant";
-import type { RemixConfig } from "../../config";
-import type { Options } from "../options";
+import type { Context } from "../context";
 import { getPostcssProcessor } from "../utils/postcss";
 import { absoluteCssUrlsPlugin } from "./absoluteCssUrlsPlugin";
 
@@ -22,10 +21,8 @@ function normalizePathSlashes(p: string) {
 export function cssFilePlugin({
   config,
   options,
-}: {
-  config: RemixConfig;
-  options: Options;
-}): esbuild.Plugin {
+  fileWatchCache,
+}: Context): esbuild.Plugin {
   return {
     name: "css-file",
 
@@ -85,7 +82,13 @@ export function cssFilePlugin({
           plugins: [
             absoluteCssUrlsPlugin(),
             ...(postcssProcessor
-              ? [postcssPlugin({ postcssProcessor, options })]
+              ? [
+                  postcssPlugin({
+                    fileWatchCache,
+                    postcssProcessor,
+                    options,
+                  }),
+                ]
               : []),
           ],
         });
@@ -147,28 +150,76 @@ export function cssFilePlugin({
 }
 
 function postcssPlugin({
+  fileWatchCache,
   postcssProcessor,
   options,
 }: {
+  fileWatchCache: Context["fileWatchCache"];
   postcssProcessor: Processor;
-  options: Options;
+  options: Context["options"];
 }): esbuild.Plugin {
   return {
     name: "postcss-plugin",
     async setup(build) {
       build.onLoad({ filter: /\.css$/, namespace: "file" }, async (args) => {
-        let contents = await fse.readFile(args.path, "utf-8");
+        let cacheKey = `postcss-plugin?sourcemap=${options.sourcemap}&path=${args.path}`;
 
-        contents = (
-          await postcssProcessor.process(contents, {
-            from: args.path,
-            to: args.path,
-            map: options.sourcemap,
-          })
-        ).css;
+        let { cacheValue } = await fileWatchCache.getOrSet(
+          cacheKey,
+          async () => {
+            let contents = await fse.readFile(args.path, "utf-8");
+
+            let { css, messages } = await postcssProcessor.process(contents, {
+              from: args.path,
+              to: args.path,
+              map: options.sourcemap,
+            });
+
+            let fileDependencies = new Set<string>();
+            let globDependencies = new Set<string>();
+
+            // Ensure the CSS file being passed to PostCSS is tracked as a
+            // dependency of this cache key since a change to this file should
+            // invalidate the cache, not just its sub-dependencies.
+            fileDependencies.add(args.path);
+
+            // PostCSS plugin result objects can contain arbitrary messages returned
+            // from plugins. Here we look for messages that indicate a dependency
+            // on another file or glob. Here we target the generic dependency messages
+            // returned from 'postcss-import' and 'tailwindcss' plugins, but we may
+            // need to add more in the future depending on what other plugins do.
+            // More info:
+            // - https://postcss.org/api/#result
+            // - https://postcss.org/api/#message
+            for (let message of messages) {
+              if (
+                message.type === "dependency" &&
+                typeof message.file === "string"
+              ) {
+                fileDependencies.add(message.file);
+                continue;
+              }
+
+              if (
+                message.type === "dir-dependency" &&
+                typeof message.dir === "string" &&
+                typeof message.glob === "string"
+              ) {
+                globDependencies.add(path.join(message.dir, message.glob));
+                continue;
+              }
+            }
+
+            return {
+              cacheValue: css,
+              fileDependencies,
+              globDependencies,
+            };
+          }
+        );
 
         return {
-          contents,
+          contents: cacheValue,
           loader: "css",
         };
       });

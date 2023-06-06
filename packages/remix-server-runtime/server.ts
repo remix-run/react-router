@@ -1,5 +1,6 @@
 import type {
   UNSAFE_DeferredData as DeferredData,
+  ErrorResponse,
   StaticHandler,
   StaticHandlerContext,
 } from "@remix-run/router";
@@ -8,6 +9,7 @@ import {
   getStaticContextFromError,
   isRouteErrorResponse,
   createStaticHandler,
+  json as routerJson,
 } from "@remix-run/router";
 
 import type { AppLoadContext } from "./data";
@@ -23,7 +25,6 @@ import type { ServerRouteManifest } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
 import {
   createDeferredReadableStream,
-  json,
   isRedirectResponse,
   isResponse,
 } from "./responses";
@@ -48,10 +49,24 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes);
 
+  let errorHandler =
+    build.entry.module.handleError ||
+    ((error, { request }) => {
+      if (serverMode !== ServerMode.Test && !request.signal.aborted) {
+        console.error(error);
+      }
+    });
+
   return async function requestHandler(request, loadContext = {}) {
     let url = new URL(request.url);
 
     let matches = matchServerRoutes(routes, url.pathname);
+    let handleError = (error: unknown) =>
+      errorHandler(error, {
+        context: loadContext,
+        params: matches && matches.length > 0 ? matches[0].params : {},
+        request,
+      });
 
     let response: Response;
     if (url.searchParams.has("_data")) {
@@ -62,7 +77,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         staticHandler,
         routeId,
         request,
-        loadContext
+        loadContext,
+        handleError
       );
 
       if (build.entry.module.handleDataRequest) {
@@ -82,7 +98,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
-        loadContext
+        loadContext,
+        handleError
       );
     } else {
       response = await handleDocumentRequestRR(
@@ -90,7 +107,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         build,
         staticHandler,
         request,
-        loadContext
+        loadContext,
+        handleError
       );
     }
 
@@ -111,7 +129,8 @@ async function handleDataRequestRR(
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
-  loadContext: AppLoadContext
+  loadContext: AppLoadContext,
+  handleError: (err: unknown) => void
 ) {
   try {
     let response = await staticHandler.queryRoute(request, {
@@ -158,18 +177,18 @@ async function handleDataRequestRR(
       return error;
     }
 
-    let status = isRouteErrorResponse(error) ? error.status : 500;
+    if (isRouteErrorResponse(error)) {
+      if (error.error) {
+        handleError(error.error);
+      }
+      return errorResponseToJson(error, serverMode);
+    }
+
     let errorInstance =
-      isRouteErrorResponse(error) && error.error
-        ? error.error
-        : error instanceof Error
-        ? error
-        : new Error("Unexpected Server Error");
-
-    logServerErrorIfNotAborted(errorInstance, request, serverMode);
-
-    return json(serializeError(errorInstance, serverMode), {
-      status,
+      error instanceof Error ? error : new Error("Unexpected Server Error");
+    handleError(errorInstance);
+    return routerJson(serializeError(errorInstance, serverMode), {
+      status: 500,
       headers: {
         "X-Remix-Error": "yes",
       },
@@ -231,7 +250,8 @@ async function handleDocumentRequestRR(
   build: ServerBuild,
   staticHandler: StaticHandler,
   request: Request,
-  loadContext: AppLoadContext
+  loadContext: AppLoadContext,
+  handleError: (err: unknown) => void
 ) {
   let context;
   try {
@@ -239,7 +259,7 @@ async function handleDocumentRequestRR(
       requestContext: loadContext,
     });
   } catch (error: unknown) {
-    logServerErrorIfNotAborted(error, request, serverMode);
+    handleError(error);
     return new Response(null, { status: 500 });
   }
 
@@ -249,6 +269,11 @@ async function handleDocumentRequestRR(
 
   // Sanitize errors outside of development environments
   if (context.errors) {
+    Object.values(context.errors).forEach((err) => {
+      if (!isRouteErrorResponse(err) || err.error) {
+        handleError(err);
+      }
+    });
     context.errors = sanitizeErrors(context.errors, serverMode);
   }
 
@@ -285,6 +310,8 @@ async function handleDocumentRequestRR(
       loadContext
     );
   } catch (error: unknown) {
+    handleError(error);
+
     // Get a new StaticHandlerContext that contains the error at the right boundary
     context = getStaticContextFromError(
       staticHandler.dataRoutes,
@@ -325,7 +352,7 @@ async function handleDocumentRequestRR(
         loadContext
       );
     } catch (error: any) {
-      logServerErrorIfNotAborted(error, request, serverMode);
+      handleError(error);
       return returnLastResortErrorResponse(error, serverMode);
     }
   }
@@ -336,7 +363,8 @@ async function handleResourceRequestRR(
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
-  loadContext: AppLoadContext
+  loadContext: AppLoadContext,
+  handleError: (err: unknown) => void
 ) {
   try {
     // Note we keep the routeId here to align with the Remix handling of
@@ -359,19 +387,36 @@ async function handleResourceRequestRR(
       error.headers.set("X-Remix-Catch", "yes");
       return error;
     }
-    logServerErrorIfNotAborted(error, request, serverMode);
+
+    if (isRouteErrorResponse(error)) {
+      if (error.error) {
+        handleError(error.error);
+      }
+      return errorResponseToJson(error, serverMode);
+    }
+
+    handleError(error);
     return returnLastResortErrorResponse(error, serverMode);
   }
 }
 
-function logServerErrorIfNotAborted(
-  error: unknown,
-  request: Request,
+function errorResponseToJson(
+  errorResponse: ErrorResponse,
   serverMode: ServerMode
-) {
-  if (serverMode !== ServerMode.Test && !request.signal.aborted) {
-    console.error(error);
-  }
+): Response {
+  return routerJson(
+    serializeError(
+      errorResponse.error || new Error("Unexpected Server Error"),
+      serverMode
+    ),
+    {
+      status: errorResponse.status,
+      statusText: errorResponse.statusText,
+      headers: {
+        "X-Remix-Error": "yes",
+      },
+    }
+  );
 }
 
 function returnLastResortErrorResponse(error: any, serverMode?: ServerMode) {

@@ -7,6 +7,7 @@ import WebSocket from "ws";
 import { watch } from "../compiler";
 import type { RemixConfig } from "../config";
 import { warnOnce } from "../warnOnce";
+import { createFileWatchCache } from "../compiler/fileWatchCache";
 
 const relativePath = (file: string) => path.relative(process.cwd(), file);
 
@@ -37,6 +38,8 @@ export async function liveReload(config: RemixConfig) {
     broadcast({ type: "LOG", message: _message });
   }
 
+  let fileWatchCache = createFileWatchCache();
+
   let hasBuilt = false;
   let dispose = await watch(
     {
@@ -46,6 +49,7 @@ export async function liveReload(config: RemixConfig) {
         sourcemap: true,
         onWarning: warnOnce,
       },
+      fileWatchCache,
     },
     {
       onBuildStart() {
@@ -63,9 +67,11 @@ export async function liveReload(config: RemixConfig) {
       },
       onFileChanged(file) {
         log(`File changed: ${relativePath(file)}`);
+        fileWatchCache.invalidateFile(file);
       },
       onFileDeleted(file) {
         log(`File deleted: ${relativePath(file)}`);
+        fileWatchCache.invalidateFile(file);
       },
     }
   );

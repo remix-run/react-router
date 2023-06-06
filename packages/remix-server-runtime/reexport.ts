@@ -1,6 +1,7 @@
 export type {
   HandleDataRequestFunction,
   HandleDocumentRequestFunction,
+  HandleErrorFunction,
   ServerBuild,
   ServerEntryModule,
 } from "./build";
@@ -38,6 +39,7 @@ export type {
   ActionFunction,
   DataFunctionArgs,
   ErrorBoundaryComponent,
+  HeadersArgs,
   HeadersFunction,
   HtmlMetaDescriptor,
   LinksFunction,

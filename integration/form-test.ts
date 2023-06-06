@@ -49,7 +49,9 @@ test.describe("Forms", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      future: { v2_routeConvention: true },
+      config: {
+        future: { v2_routeConvention: true },
+      },
       files: {
         "app/routes/get-submission.jsx": js`
           import { useLoaderData, Form } from "@remix-run/react";

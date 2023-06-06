@@ -73,11 +73,52 @@ export function defineConventionalRoutes(
       let isIndexRoute = routeId.endsWith("/index");
       let fullPath = createRoutePath(routeId.slice("routes".length + 1));
       let uniqueRouteId = (fullPath || "") + (isIndexRoute ? "?index" : "");
+      let isPathlessLayoutRoute =
+        routeId.split("/").pop()?.startsWith("__") === true;
 
-      if (uniqueRouteId) {
+      /**
+       * We do not try to detect path collisions for pathless layout route
+       * files because, by definition, they create the potential for route
+       * collisions _at that level in the tree_.
+       *
+       * Consider example where a user may want multiple pathless layout routes
+       * for different subfolders
+       *
+       *   routes/
+       *     account.tsx
+       *     account/
+       *       __public/
+       *         login.tsx
+       *         perks.tsx
+       *       __private/
+       *         orders.tsx
+       *         profile.tsx
+       *       __public.tsx
+       *       __private.tsx
+       *
+       * In order to support both a public and private layout for `/account/*`
+       * URLs, we are creating a mutually exclusive set of URLs beneath 2
+       * separate pathless layout routes.  In this case, the route paths for
+       * both account/__public.tsx and account/__private.tsx is the same
+       * (/account), but we're again not expecting to match at that level.
+       *
+       * By only ignoring this check when the final portion of the filename is
+       * pathless, we will still detect path collisions such as:
+       *
+       *   routes/parent/__pathless/foo.tsx
+       *   routes/parent/__pathless2/foo.tsx
+       *
+       * and
+       *
+       *   routes/parent/__pathless/index.tsx
+       *   routes/parent/__pathless2/index.tsx
+       */
+      if (uniqueRouteId && !isPathlessLayoutRoute) {
         if (uniqueRoutes.has(uniqueRouteId)) {
           throw new Error(
-            `Path ${JSON.stringify(fullPath)} defined by route ${JSON.stringify(
+            `Path ${JSON.stringify(
+              fullPath || "/"
+            )} defined by route ${JSON.stringify(
               routeId
             )} conflicts with route ${JSON.stringify(
               uniqueRoutes.get(uniqueRouteId)
@@ -245,6 +286,8 @@ export function createRoutePath(partialRouteId: string): string | undefined {
 
   if (rawSegmentBuffer === "index" && result.endsWith("index")) {
     result = result.replace(/\/?index$/, "");
+  } else {
+    result = result.replace(/\/$/, "");
   }
 
   if (rawSegmentBuffer === "index" && result.endsWith("index?")) {
