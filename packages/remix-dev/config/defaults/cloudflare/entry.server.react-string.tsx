@@ -1,4 +1,4 @@
-import type { EntryContext } from "@remix-run/cloudflare";
+import type { AppLoadContext, EntryContext } from "@remix-run/cloudflare";
 import { RemixServer } from "@remix-run/react";
 import { renderToString } from "react-dom/server";
 
@@ -6,7 +6,8 @@ export default function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext
+  remixContext: EntryContext,
+  loadContext: AppLoadContext
 ) {
   let markup = renderToString(
     <RemixServer context={remixContext} url={request.url} />
