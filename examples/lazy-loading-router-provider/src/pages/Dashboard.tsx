@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Outlet, Link, useLoaderData } from "react-router-dom";
 
 export function DashboardLayout() {
