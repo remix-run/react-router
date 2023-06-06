@@ -6959,6 +6959,37 @@ describe("a router", () => {
         expect(t.router.state.preventScrollReset).toBe(false);
       });
 
+      it("does not strip the basename from the location provided to getKey", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          basename: "/base",
+          initialEntries: ["/base"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        let positions = { "/base/tasks": 100 };
+        let activeScrollPosition = 0;
+        let pathname;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => {
+            pathname = l.pathname;
+            return l.pathname;
+          }
+        );
+
+        let nav1 = await t.navigate("/base/tasks");
+        await nav1.loaders.tasks.resolve("TASKS");
+        expect(pathname).toBe("/base/tasks");
+        expect(t.router.state.restoreScrollPosition).toBe(100);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
       it("restores scroll on GET submissions", async () => {
         let t = setup({
           routes: SCROLL_ROUTES,
