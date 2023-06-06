@@ -1255,13 +1255,11 @@ function useScrollRestoration({
     // Enable scroll restoration in the router
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(() => {
-      let disableScrollRestoration = router?.enableScrollRestoration(
-        savedScrollPositions,
-        () => window.scrollY,
-        getKey
+      let getKeyWithoutBasename: GetScrollRestorationKeyFunction | undefined =
+        getKey && basename !== "/"
           ? (location, matches) =>
               getKey(
-                // Strip the basename to match useLocation
+                // Strip the basename to match useLocation()
                 {
                   ...location,
                   pathname:
@@ -1270,7 +1268,11 @@ function useScrollRestoration({
                 },
                 matches
               )
-          : undefined
+          : getKey;
+      let disableScrollRestoration = router?.enableScrollRestoration(
+        savedScrollPositions,
+        () => window.scrollY,
+        getKeyWithoutBasename
       );
       return () => disableScrollRestoration && disableScrollRestoration();
     }, [router, basename, getKey]);
