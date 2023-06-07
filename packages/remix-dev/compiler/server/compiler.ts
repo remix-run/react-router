@@ -18,6 +18,8 @@ import { serverRouteModulesPlugin } from "./plugins/routes";
 import { externalPlugin } from "../plugins/external";
 import type * as Channel from "../../channel";
 import type { Context } from "../context";
+import type { LazyValue } from "../lazyValue";
+import { cssBundlePlugin } from "../plugins/cssBundlePlugin";
 
 type Compiler = {
   // produce ./build/index.js
@@ -28,7 +30,10 @@ type Compiler = {
 
 const createEsbuildConfig = (
   ctx: Context,
-  channels: { manifest: Channel.Type<Manifest> }
+  refs: {
+    manifestChannel: Channel.Type<Manifest>;
+    lazyCssBundleHref: LazyValue<string | undefined>;
+  }
 ): esbuild.BuildOptions => {
   let stdin: esbuild.StdinOptions | undefined;
   let entryPoints: string[] | undefined;
@@ -45,6 +50,7 @@ const createEsbuildConfig = (
 
   let plugins: esbuild.Plugin[] = [
     deprecatedRemixPackagePlugin(ctx),
+    cssBundlePlugin(refs),
     cssModulesPlugin(ctx, { outputCss: false }),
     vanillaExtractPlugin(ctx, { outputCss: false }),
     cssSideEffectImportsPlugin(ctx),
@@ -55,7 +61,7 @@ const createEsbuildConfig = (
     emptyModulesPlugin(ctx, /\.client(\.[jt]sx?)?$/),
     serverRouteModulesPlugin(ctx),
     serverEntryModulePlugin(ctx),
-    serverAssetsManifestPlugin(channels),
+    serverAssetsManifestPlugin(refs),
     serverBareModulesPlugin(ctx),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
@@ -114,10 +120,13 @@ const createEsbuildConfig = (
 
 export const create = async (
   ctx: Context,
-  channels: { manifest: Channel.Type<Manifest> }
+  refs: {
+    manifestChannel: Channel.Type<Manifest>;
+    lazyCssBundleHref: LazyValue<string | undefined>;
+  }
 ): Promise<Compiler> => {
   let compiler = await esbuild.context({
-    ...createEsbuildConfig(ctx, channels),
+    ...createEsbuildConfig(ctx, refs),
     write: false,
   });
   let compile = async () => {

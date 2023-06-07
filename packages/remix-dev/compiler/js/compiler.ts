@@ -14,7 +14,7 @@ import { deprecatedRemixPackagePlugin } from "../plugins/deprecatedRemixPackage"
 import { emptyModulesPlugin } from "../plugins/emptyModules";
 import { mdxPlugin } from "../plugins/mdx";
 import { externalPlugin } from "../plugins/external";
-import { cssBundleUpdatePlugin } from "./plugins/cssBundleUpdate";
+import { cssBundlePlugin } from "../plugins/cssBundlePlugin";
 import { cssModulesPlugin } from "../plugins/cssModuleImports";
 import {
   cssSideEffectImportsPlugin,
@@ -25,7 +25,7 @@ import invariant from "../../invariant";
 import { hmrPlugin } from "./plugins/hmr";
 import { createMatchPath } from "../utils/tsconfig";
 import { detectPackageManager } from "../../cli/detectPackageManager";
-import type * as Channel from "../../channel";
+import type { LazyValue } from "../lazyValue";
 import type { Context } from "../context";
 
 type Compiler = {
@@ -74,7 +74,7 @@ const getExternals = (remixConfig: RemixConfig): string[] => {
 
 const createEsbuildConfig = (
   ctx: Context,
-  channels: { cssBundleHref: Channel.Type<string | undefined> }
+  refs: { lazyCssBundleHref: LazyValue<string | undefined> }
 ): esbuild.BuildOptions => {
   let entryPoints: Record<string, string> = {
     "entry.client": ctx.config.entryClientFilePath,
@@ -120,6 +120,7 @@ const createEsbuildConfig = (
   let plugins: esbuild.Plugin[] = [
     browserRouteModulesPlugin(ctx, /\?browser$/),
     deprecatedRemixPackagePlugin(ctx),
+    cssBundlePlugin(refs),
     cssModulesPlugin(ctx, { outputCss: false }),
     vanillaExtractPlugin(ctx, { outputCss: false }),
     cssSideEffectImportsPlugin(ctx, {
@@ -181,7 +182,6 @@ const createEsbuildConfig = (
 
   if (ctx.options.mode === "development" && ctx.config.future.unstable_dev) {
     plugins.push(hmrPlugin(ctx));
-    plugins.push(cssBundleUpdatePlugin(channels));
   }
 
   return {
@@ -223,10 +223,10 @@ const createEsbuildConfig = (
 
 export const create = async (
   ctx: Context,
-  channels: { cssBundleHref: Channel.Type<string | undefined> }
+  refs: { lazyCssBundleHref: LazyValue<string | undefined> }
 ): Promise<Compiler> => {
   let compiler = await esbuild.context({
-    ...createEsbuildConfig(ctx, channels),
+    ...createEsbuildConfig(ctx, refs),
     metafile: true,
   });
 

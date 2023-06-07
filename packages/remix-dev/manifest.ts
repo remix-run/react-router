@@ -20,7 +20,6 @@ export type Manifest = {
       hasErrorBoundary: boolean;
     };
   };
-  cssBundleHref?: string;
   hmr?: {
     timestamp: number;
     runtime: string;

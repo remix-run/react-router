@@ -97,10 +97,10 @@ export let create = async (ctx: Context) => {
   });
   let compile = async () => {
     let { outputFiles } = await compiler.rebuild();
-    let bundle = outputFiles.find((outputFile) =>
+    let bundleOutputFile = outputFiles.find((outputFile) =>
       isBundle(ctx, outputFile, ".css")
     );
-    return { bundle, outputFiles };
+    return { bundleOutputFile, outputFiles };
   };
   return {
     compile,

@@ -13,12 +13,10 @@ type Route = RemixConfig["routes"][string];
 export async function create({
   config,
   metafile,
-  cssBundleHref,
   hmr,
 }: {
   config: RemixConfig;
   metafile: esbuild.Metafile;
-  cssBundleHref?: string;
   hmr?: Manifest["hmr"];
 }): Promise<Manifest> {
   function resolveUrl(outputPath: string): string {
@@ -97,7 +95,6 @@ export async function create({
   let fingerprintedValues = {
     entry,
     routes,
-    cssBundleHref,
   };
 
   let version = getHash(JSON.stringify(fingerprintedValues)).slice(0, 8);

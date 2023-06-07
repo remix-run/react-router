@@ -11,8 +11,8 @@ import { Cancel } from "../../cancel";
  * the assets manifest. This is used in the server entry module to access the
  * assets manifest in the server build.
  */
-export function serverAssetsManifestPlugin(channels: {
-  manifest: Channel.Type<Manifest>;
+export function serverAssetsManifestPlugin(refs: {
+  manifestChannel: Channel.Type<Manifest>;
 }): Plugin {
   let filter = assetsManifestVirtualModule.filter;
 
@@ -27,7 +27,7 @@ export function serverAssetsManifestPlugin(channels: {
       });
 
       build.onLoad({ filter }, async () => {
-        let manifest = await channels.manifest.result;
+        let manifest = await refs.manifestChannel.result;
         if (!manifest.ok) throw new Cancel("server");
         return {
           contents: `export default ${jsesc(manifest.value, {
