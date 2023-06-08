@@ -992,6 +992,7 @@ export function createRouter(init: RouterInit): Router {
 
     // On a successful navigation we can assume we got through all blockers
     // so we can start fresh
+    let blockers = new Map();
     blockerFunctions.clear();
 
     // Always respect the user flag.  Otherwise don't reset on mutation
@@ -1031,7 +1032,7 @@ export function createRouter(init: RouterInit): Router {
         newState.matches || state.matches
       ),
       preventScrollReset,
-      blockers: new Map(),
+      blockers,
     });
 
     // Reset stateful navigation vars
