@@ -3117,6 +3117,11 @@ function normalizeNavigateOptions(
     };
   }
 
+  let getInvalidBodyError = () => ({
+    path,
+    error: getInternalRouterError(400, { type: "invalid-body" }),
+  });
+
   // Create a Submission on non-GET navigations
   let rawFormMethod = opts.formMethod || "get";
   let formMethod = normalizeFormMethod
@@ -3126,6 +3131,11 @@ function normalizeNavigateOptions(
 
   if (opts.body) {
     if (opts.formEncType === "text/plain") {
+      // text only support POST/PUT/PATCH/DELETE submissions
+      if (!isMutationMethod(formMethod)) {
+        return getInvalidBodyError();
+      }
+
       let text =
         typeof opts.body === "string"
           ? opts.body
@@ -3150,6 +3160,11 @@ function normalizeNavigateOptions(
         },
       };
     } else if (opts.formEncType === "application/json") {
+      // json only supports POST/PUT/PATCH/DELETE submissions
+      if (!isMutationMethod(formMethod)) {
+        return getInvalidBodyError();
+      }
+
       try {
         let json =
           typeof opts.body === "string" ? JSON.parse(opts.body) : opts.body;
@@ -3166,10 +3181,7 @@ function normalizeNavigateOptions(
           },
         };
       } catch (e) {
-        return {
-          path,
-          error: getInternalRouterError(400, { type: "invalid-body" }),
-        };
+        return getInvalidBodyError();
       }
     }
   }
@@ -3199,10 +3211,7 @@ function normalizeNavigateOptions(
       searchParams = new URLSearchParams(opts.body);
       formData = convertSearchParamsToFormData(searchParams);
     } catch (e) {
-      return {
-        path,
-        error: getInternalRouterError(400, { type: "invalid-body" }),
-      };
+      return getInvalidBodyError();
     }
   }
 
