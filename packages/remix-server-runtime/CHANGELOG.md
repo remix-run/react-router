@@ -6,7 +6,7 @@
 
 - Add `errorHeaders` parameter to the leaf `headers()` function to expose headers from thrown responses that bubble up to ancestor route boundaries. If the throwing route contains the boundary, then `errorHeaders` will be the same object as `loaderHeaders`/`actionHeaders` for that route. ([#6425](https://github.com/remix-run/remix/pull/6425), [#6475](https://github.com/remix-run/remix/pull/6475))
 
-- Add optional `handleError` export for custom server-side error processing. This is a new optional export from your `entry.server.tsx` that will be called with any encountered error on the Remix server (loader, action, or render error) ([#6495](https://github.com/remix-run/remix/pull/6495]), [#6524](https://github.com/remix-run/remix/pull/6524)):
+- Add optional `handleError` export for custom server-side error processing. This is a new optional export from your `entry.server.tsx` that will be called with any encountered error on the Remix server (loader, action, or render error) ([#6495](https://github.com/remix-run/remix/pull/6495), [#6524](https://github.com/remix-run/remix/pull/6524)):
 
   ```ts
   // entry.server.tsx
