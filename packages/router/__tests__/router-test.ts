@@ -9034,6 +9034,32 @@ describe("a router", () => {
         });
       });
 
+      it("action fetch with invalid body (json)", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              hasErrorBoundary: true,
+            },
+          ],
+        });
+        let A = await t.fetch("/", {
+          formMethod: "post",
+          body: "not json",
+          formEncType: "application/json",
+        });
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          index: new ErrorResponse(
+            400,
+            "Bad Request",
+            new Error("Unable to encode submission body"),
+            true
+          ),
+        });
+      });
+
       it("handles fetcher errors at contextual route boundaries", async () => {
         let t = setup({
           routes: [

@@ -1665,12 +1665,18 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    let { path, submission } = normalizeNavigateOptions(
+    let { path, submission, error } = normalizeNavigateOptions(
       future.v7_normalizeFormMethod,
       true,
       normalizedPath,
       opts
     );
+
+    if (error) {
+      setFetcherError(key, routeId, error);
+      return;
+    }
+
     let match = getTargetMatch(matches, path);
 
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
