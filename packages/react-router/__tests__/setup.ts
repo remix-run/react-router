@@ -15,4 +15,5 @@ if (!globalThis.fetch) {
   // web-std/fetch Response does not currently implement Response.error()
   // @ts-expect-error
   globalThis.Response = Response;
+  globalThis.Headers = Headers;
 }

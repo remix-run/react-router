@@ -19,7 +19,6 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
-import LazyComponent from "./components//LazyComponent";
 
 describe("Handles concurrent mode features during navigations", () => {
   function getComponents() {

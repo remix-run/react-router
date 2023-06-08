@@ -57,6 +57,7 @@ import type {
   SubmitOptions,
   ParamKeyValuePair,
   URLSearchParamsInit,
+  SubmitTarget,
 } from "./dom";
 import {
   createSearchParams,
@@ -662,6 +663,15 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   method?: HTMLFormMethod;
 
   /**
+   * `<form encType>` - enhancing beyond the normal string type and limiting
+   * to the built-in browser supported values
+   */
+  encType?:
+    | "application/x-www-form-urlencoded"
+    | "multipart/form-data"
+    | "text/plain";
+
+  /**
    * Normal `<form action>` but supports React Router's relative paths.
    */
   action?: string;
@@ -706,7 +716,8 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (props, ref) => {
-    return <FormImpl {...props} ref={ref} />;
+    let submit = useSubmit();
+    return <FormImpl {...props} submit={submit} ref={ref} />;
   }
 );
 
@@ -723,8 +734,7 @@ type HTMLSubmitEvent = React.BaseSyntheticEvent<
 type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
 interface FormImplProps extends FormProps {
-  fetcherKey?: string;
-  routeId?: string;
+  submit: SubmitFunction | FetcherSubmitFunction;
 }
 
 const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
@@ -735,15 +745,13 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       method = defaultMethod,
       action,
       onSubmit,
-      fetcherKey,
-      routeId,
+      submit,
       relative,
       preventScrollReset,
       ...props
     },
     forwardedRef
   ) => {
-    let submit = useSubmitImpl(fetcherKey, routeId);
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
     let formAction = useFormAction(action, { relative });
@@ -811,7 +819,8 @@ if (__DEV__) {
 
 enum DataRouterHook {
   UseScrollRestoration = "useScrollRestoration",
-  UseSubmitImpl = "useSubmitImpl",
+  UseSubmit = "useSubmit",
+  UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
 }
 
@@ -949,15 +958,6 @@ export type SetURLSearchParams = (
   navigateOpts?: NavigateOptions
 ) => void;
 
-type SubmitTarget =
-  | HTMLFormElement
-  | HTMLButtonElement
-  | HTMLInputElement
-  | FormData
-  | URLSearchParams
-  | { [name: string]: string }
-  | null;
-
 /**
  * Submits a HTML `<form>` to the server without reloading the page.
  */
@@ -982,59 +982,89 @@ export interface SubmitFunction {
 }
 
 /**
+ * Submits a fetcher `<form>` to the server without reloading the page.
+ */
+export interface FetcherSubmitFunction {
+  (
+    target: SubmitTarget,
+    // Fetchers cannot replace because they are not navigation events
+    options?: Omit<SubmitOptions, "replace">
+  ): void;
+}
+
+function validateClientSideSubmission() {
+  if (typeof document === "undefined") {
+    throw new Error(
+      "You are calling submit during the server render. " +
+        "Try calling submit within a `useEffect` or callback instead."
+    );
+  }
+}
+
+/**
  * Returns a function that may be used to programmatically submit a form (or
  * some arbitrary data) to the server.
  */
 export function useSubmit(): SubmitFunction {
-  return useSubmitImpl();
-}
-
-function useSubmitImpl(
-  fetcherKey?: string,
-  fetcherRouteId?: string
-): SubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmitImpl);
+  let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
   let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
-  return React.useCallback(
+  return React.useCallback<SubmitFunction>(
     (target, options = {}) => {
-      if (typeof document === "undefined") {
-        throw new Error(
-          "You are calling submit during the server render. " +
-            "Try calling submit within a `useEffect` or callback instead."
-        );
-      }
+      validateClientSideSubmission();
 
-      let { action, method, encType, formData } = getFormSubmissionInfo(
+      let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
-        options,
         basename
       );
 
-      // Base options shared between fetch() and navigate()
-      let opts = {
+      router.navigate(options.action || action, {
         preventScrollReset: options.preventScrollReset,
         formData,
-        formMethod: method as HTMLFormMethod,
-        formEncType: encType as FormEncType,
-      };
-
-      if (fetcherKey) {
-        invariant(
-          fetcherRouteId != null,
-          "No routeId available for useFetcher()"
-        );
-        router.fetch(fetcherKey, fetcherRouteId, action, opts);
-      } else {
-        router.navigate(action, {
-          ...opts,
-          replace: options.replace,
-          fromRouteId: currentRouteId,
-        });
-      }
+        body,
+        formMethod: options.method || (method as HTMLFormMethod),
+        formEncType: options.encType || (encType as FormEncType),
+        replace: options.replace,
+        fromRouteId: currentRouteId,
+      });
     },
-    [router, basename, fetcherKey, fetcherRouteId, currentRouteId]
+    [router, basename, currentRouteId]
+  );
+}
+
+/**
+ * Returns the implementation for fetcher.submit
+ */
+function useSubmitFetcher(
+  fetcherKey: string,
+  fetcherRouteId: string
+): FetcherSubmitFunction {
+  let { router } = useDataRouterContext(DataRouterHook.UseSubmitFetcher);
+  let { basename } = React.useContext(NavigationContext);
+
+  return React.useCallback<FetcherSubmitFunction>(
+    (target, options = {}) => {
+      validateClientSideSubmission();
+
+      let { action, method, encType, formData, body } = getFormSubmissionInfo(
+        target,
+        basename
+      );
+
+      invariant(
+        fetcherRouteId != null,
+        "No routeId available for useFetcher()"
+      );
+      router.fetch(fetcherKey, fetcherRouteId, options.action || action, {
+        preventScrollReset: options.preventScrollReset,
+        formData,
+        body,
+        formMethod: options.method || (method as HTMLFormMethod),
+        formEncType: options.encType || (encType as FormEncType),
+      });
+    },
+    [router, basename, fetcherKey, fetcherRouteId]
   );
 }
 
@@ -1097,14 +1127,8 @@ export function useFormAction(
 function createFetcherForm(fetcherKey: string, routeId: string) {
   let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(
     (props, ref) => {
-      return (
-        <FormImpl
-          {...props}
-          ref={ref}
-          fetcherKey={fetcherKey}
-          routeId={routeId}
-        />
-      );
+      let submit = useSubmitFetcher(fetcherKey, routeId);
+      return <FormImpl {...props} ref={ref} submit={submit} />;
     }
   );
   if (__DEV__) {
@@ -1117,12 +1141,7 @@ let fetcherId = 0;
 
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
-  submit: (
-    target: SubmitTarget,
-    // Fetchers cannot replace/preventScrollReset because they are not
-    // navigation events
-    options?: Omit<SubmitOptions, "replace" | "preventScrollReset">
-  ) => void;
+  submit: FetcherSubmitFunction;
   load: (href: string) => void;
 };
 
@@ -1152,7 +1171,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     invariant(routeId, "No routeId available for fetcher.load()");
     router.fetch(fetcherKey, routeId, href);
   });
-  let submit = useSubmitImpl(fetcherKey, routeId);
+  let submit = useSubmitFetcher(fetcherKey, routeId);
 
   let fetcher = router.getFetcher<TData>(fetcherKey);
 

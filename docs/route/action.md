@@ -101,6 +101,10 @@ formData.get("lyrics");
 
 For more information on `formData` see [Working with FormData][workingwithformdata].
 
+### Opt-in serialization types
+
+Note that when using [`useSubmit`][usesubmit] you may also pass `encType: "application/json"` or `encType: "text/plain"` to instead serialize your payload into `request.json()` or `request.text()`.
+
 ## Returning Responses
 
 While you can return anything you want from an action and get access to it from [`useActionData`][useactiondata], you can also return a web [Response][response].
@@ -200,6 +204,7 @@ If a button name/value isn't right for your use case, you could also use a hidde
 [form]: ../components/form
 [workingwithformdata]: ../guides/form-data
 [useactiondata]: ../hooks/use-action-data
+[usesubmit]: ../hooks/use-submit
 [returningresponses]: ./loader#returning-responses
 [createbrowserrouter]: ../routers/create-browser-router
 [button]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button

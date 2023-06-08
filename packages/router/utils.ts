@@ -88,19 +88,48 @@ export type V7_MutationFormMethod = Exclude<V7_FormMethod, "GET">;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
-  | "multipart/form-data";
+  | "multipart/form-data"
+  | "application/json"
+  | "text/plain";
+
+// Thanks https://github.com/sindresorhus/type-fest!
+type JsonObject = { [Key in string]: JsonValue } & {
+  [Key in string]?: JsonValue | undefined;
+};
+type JsonArray = JsonValue[] | readonly JsonValue[];
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 
 /**
  * @private
  * Internal interface to pass around for action submissions, not intended for
  * external consumption
  */
-export interface Submission {
-  formMethod: FormMethod | V7_FormMethod;
-  formAction: string;
-  formEncType: FormEncType;
-  formData: FormData;
-}
+export type Submission =
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: FormData;
+      json: undefined;
+      text: undefined;
+    }
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: undefined;
+      json: JsonValue;
+      text: undefined;
+    }
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: undefined;
+      json: undefined;
+      text: string;
+    };
 
 /**
  * @private
@@ -160,7 +189,9 @@ export interface ShouldRevalidateFunction {
     formMethod?: Submission["formMethod"];
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
+    text?: Submission["text"];
     formData?: Submission["formData"];
+    json?: Submission["json"];
     actionResult?: DataResult;
     defaultShouldRevalidate: boolean;
   }): boolean;
