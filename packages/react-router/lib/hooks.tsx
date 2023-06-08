@@ -955,6 +955,8 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     return () => router.deleteBlocker(key);
   }, [router, setBlocker, setBlockerKey, blockerFunction]);
 
+  // Prefer the blocker from state since DataRouterContext is memoized so this
+  // ensures we update on blocker state updates
   return blockerKey && state.blockers.has(blockerKey)
     ? state.blockers.get(blockerKey)!
     : blocker;
