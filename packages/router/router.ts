@@ -483,9 +483,9 @@ export type NavigationStates = {
     formMethod: undefined;
     formAction: undefined;
     formEncType: undefined;
-    text: undefined;
     formData: undefined;
     json: undefined;
+    text: undefined;
   };
   Loading: {
     state: "loading";
@@ -493,9 +493,9 @@ export type NavigationStates = {
     formMethod: Submission["formMethod"] | undefined;
     formAction: Submission["formAction"] | undefined;
     formEncType: Submission["formEncType"] | undefined;
-    text: Submission["text"] | undefined;
     formData: Submission["formData"] | undefined;
     json: Submission["json"] | undefined;
+    text: Submission["text"] | undefined;
   };
   Submitting: {
     state: "submitting";
@@ -503,9 +503,9 @@ export type NavigationStates = {
     formMethod: Submission["formMethod"];
     formAction: Submission["formAction"];
     formEncType: Submission["formEncType"];
-    text: Submission["text"];
     formData: Submission["formData"];
     json: Submission["json"];
+    text: Submission["text"];
   };
 };
 
@@ -671,9 +671,9 @@ export const IDLE_NAVIGATION: NavigationStates["Idle"] = {
   formMethod: undefined,
   formAction: undefined,
   formEncType: undefined,
-  text: undefined,
   formData: undefined,
   json: undefined,
+  text: undefined,
 };
 
 export const IDLE_FETCHER: FetcherStates["Idle"] = {
@@ -682,9 +682,9 @@ export const IDLE_FETCHER: FetcherStates["Idle"] = {
   formMethod: undefined,
   formAction: undefined,
   formEncType: undefined,
-  text: undefined,
   formData: undefined,
   json: undefined,
+  text: undefined,
 };
 
 export const IDLE_BLOCKER: BlockerUnblocked = {
@@ -3144,9 +3144,9 @@ function normalizeNavigateOptions(
           formMethod,
           formAction,
           formEncType: opts.formEncType,
-          text,
           formData: undefined,
           json: undefined,
+          text,
         },
       };
     } else if (opts.formEncType === "application/json") {
@@ -3160,9 +3160,9 @@ function normalizeNavigateOptions(
             formMethod,
             formAction,
             formEncType: opts.formEncType,
-            text: undefined,
             formData: undefined,
             json,
+            text: undefined,
           },
         };
       } catch (e) {
@@ -3211,9 +3211,9 @@ function normalizeNavigateOptions(
     formAction,
     formEncType:
       (opts && opts.formEncType) || "application/x-www-form-urlencoded",
-    text: undefined,
     formData,
     json: undefined,
+    text: undefined,
   };
 
   if (isMutationMethod(submission.formMethod)) {
@@ -4282,27 +4282,27 @@ function getSubmissionFromNavigation(
       formMethod,
       formAction,
       formEncType,
-      text,
       formData: undefined,
       json: undefined,
+      text,
     };
   } else if (formData != null) {
     return {
       formMethod,
       formAction,
       formEncType,
-      text: undefined,
       formData,
       json: undefined,
+      text: undefined,
     };
   } else if (json !== undefined) {
     return {
       formMethod,
       formAction,
       formEncType,
-      text: undefined,
       formData: undefined,
       json,
+      text: undefined,
     };
   }
 }
@@ -4318,9 +4318,9 @@ function getLoadingNavigation(
       formMethod: submission.formMethod,
       formAction: submission.formAction,
       formEncType: submission.formEncType,
-      text: submission.text,
       formData: submission.formData,
       json: submission.json,
+      text: submission.text,
     };
     return navigation;
   } else {
@@ -4330,9 +4330,9 @@ function getLoadingNavigation(
       formMethod: undefined,
       formAction: undefined,
       formEncType: undefined,
-      text: undefined,
       formData: undefined,
       json: undefined,
+      text: undefined,
     };
     return navigation;
   }
@@ -4348,9 +4348,9 @@ function getSubmittingNavigation(
     formMethod: submission.formMethod,
     formAction: submission.formAction,
     formEncType: submission.formEncType,
-    text: submission.text,
     formData: submission.formData,
     json: submission.json,
+    text: submission.text,
   };
   return navigation;
 }
@@ -4365,9 +4365,9 @@ function getLoadingFetcher(
       formMethod: submission.formMethod,
       formAction: submission.formAction,
       formEncType: submission.formEncType,
-      text: submission.text,
       formData: submission.formData,
       json: submission.json,
+      text: submission.text,
       data,
       " _hasFetcherDoneAnything ": true,
     };
@@ -4378,9 +4378,9 @@ function getLoadingFetcher(
       formMethod: undefined,
       formAction: undefined,
       formEncType: undefined,
-      text: undefined,
       formData: undefined,
       json: undefined,
+      text: undefined,
       data,
       " _hasFetcherDoneAnything ": true,
     };
@@ -4397,9 +4397,9 @@ function getSubmittingFetcher(
     formMethod: submission.formMethod,
     formAction: submission.formAction,
     formEncType: submission.formEncType,
-    text: submission.text,
     formData: submission.formData,
     json: submission.json,
+    text: submission.text,
     data: existingFetcher ? existingFetcher.data : undefined,
     " _hasFetcherDoneAnything ": true,
   };
@@ -4412,9 +4412,9 @@ function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
     formMethod: undefined,
     formAction: undefined,
     formEncType: undefined,
-    text: undefined,
     formData: undefined,
     json: undefined,
+    text: undefined,
     data,
     " _hasFetcherDoneAnything ": true,
   };

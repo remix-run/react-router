@@ -110,25 +110,25 @@ export type Submission =
       formMethod: FormMethod | V7_FormMethod;
       formAction: string;
       formEncType: FormEncType;
-      text: string;
       formData: undefined;
       json: undefined;
+      text: string;
     }
   | {
       formMethod: FormMethod | V7_FormMethod;
       formAction: string;
       formEncType: FormEncType;
-      text: undefined;
       formData: FormData;
       json: undefined;
+      text: undefined;
     }
   | {
       formMethod: FormMethod | V7_FormMethod;
       formAction: string;
       formEncType: FormEncType;
-      text: undefined;
       formData: undefined;
       json: JsonValue;
+      text: undefined;
     };
 
 /**
