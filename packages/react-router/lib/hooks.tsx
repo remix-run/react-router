@@ -1,5 +1,5 @@
 import * as React from "react";
-import type {
+import {
   Blocker,
   BlockerFunction,
   Location,
@@ -12,6 +12,7 @@ import type {
   Router as RemixRouter,
   RevalidationState,
   To,
+  stripBasename,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -934,18 +935,41 @@ let blockerId = 0;
  * cross-origin navigations.
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
-  let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+  let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);
   let state = useDataRouterState(DataRouterStateHook.UseBlocker);
 
   let [blockerKey, setBlockerKey] = React.useState("");
   let [blocker, setBlocker] = React.useState<Blocker>(IDLE_BLOCKER);
   let blockerFunction = React.useCallback<BlockerFunction>(
-    (args) => {
-      return typeof shouldBlock === "function"
-        ? !!shouldBlock(args)
-        : !!shouldBlock;
+    (arg) => {
+      if (typeof shouldBlock !== "function") {
+        return !!shouldBlock;
+      }
+      if (basename === "/") {
+        return shouldBlock(arg);
+      }
+
+      // If they provided us a function and we've got an active basename, strip
+      // it from the locations we expose to the user to match the behavior of
+      // useLocation
+      let { currentLocation, nextLocation, historyAction } = arg;
+      return shouldBlock({
+        currentLocation: {
+          ...currentLocation,
+          pathname:
+            stripBasename(currentLocation.pathname, basename) ||
+            currentLocation.pathname,
+        },
+        nextLocation: {
+          ...nextLocation,
+          pathname:
+            stripBasename(nextLocation.pathname, basename) ||
+            nextLocation.pathname,
+        },
+        historyAction,
+      });
     },
-    [shouldBlock]
+    [basename, shouldBlock]
   );
 
   React.useEffect(() => {
