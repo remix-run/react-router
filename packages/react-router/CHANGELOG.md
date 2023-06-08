@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.12.1
+
+### Patch Changes
+
+- Adjust feature detection of `React.startTransition` to fix webpack + react 17 compilation error ([#10569](https://github.com/remix-run/react-router/pull/10569))
+
 ## 6.12.0
 
 ### Minor Changes
