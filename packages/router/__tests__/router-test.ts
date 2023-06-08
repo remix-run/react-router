@@ -9051,7 +9051,7 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          index: new ErrorResponse(
+          root: new ErrorResponse(
             400,
             "Bad Request",
             new Error("Unable to encode submission body"),
