@@ -22,6 +22,7 @@ import {
   matchRoutes,
   parsePath,
   resolveTo,
+  IDLE_BLOCKER,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
@@ -935,8 +936,9 @@ let blockerId = 0;
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
   let state = useDataRouterState(DataRouterStateHook.UseBlocker);
-  let [blockerKey] = React.useState(() => String(++blockerId));
 
+  let [blockerKey, setBlockerKey] = React.useState("");
+  let [blocker, setBlocker] = React.useState<Blocker>(IDLE_BLOCKER);
   let blockerFunction = React.useCallback<BlockerFunction>(
     (args) => {
       return typeof shouldBlock === "function"
@@ -946,17 +948,16 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [shouldBlock]
   );
 
-  let blocker = router.getBlocker(blockerKey, blockerFunction);
+  React.useEffect(() => {
+    let key = String(++blockerId);
+    setBlocker(router.getBlocker(key, blockerFunction));
+    setBlockerKey(key);
+    return () => router.deleteBlocker(key);
+  }, [router, setBlocker, setBlockerKey, blockerFunction]);
 
-  // Cleanup on unmount
-  React.useEffect(
-    () => () => router.deleteBlocker(blockerKey),
-    [router, blockerKey]
-  );
-
-  // Prefer the blocker from state since DataRouterContext is memoized so this
-  // ensures we update on blocker state updates
-  return state.blockers.get(blockerKey) || blocker;
+  return blockerKey && state.blockers.has(blockerKey)
+    ? state.blockers.get(blockerKey)!
+    : blocker;
 }
 
 /**

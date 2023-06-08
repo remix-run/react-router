@@ -893,8 +893,9 @@ export function createRouter(init: RouterInit): Router {
               init.history.go(delta);
             },
             reset() {
-              deleteBlocker(blockerKey!);
-              updateState({ blockers: new Map(router.state.blockers) });
+              let blockers = new Map(state.blockers);
+              blockers.set(blockerKey!, IDLE_BLOCKER);
+              updateState({ blockers });
             },
           });
           return;
@@ -991,9 +992,7 @@ export function createRouter(init: RouterInit): Router {
 
     // On a successful navigation we can assume we got through all blockers
     // so we can start fresh
-    for (let [key] of blockerFunctions) {
-      deleteBlocker(key);
-    }
+    blockerFunctions.clear();
 
     // Always respect the user flag.  Otherwise don't reset on mutation
     // submission navigations unless they redirect
@@ -1032,7 +1031,7 @@ export function createRouter(init: RouterInit): Router {
         newState.matches || state.matches
       ),
       preventScrollReset,
-      blockers: new Map(state.blockers),
+      blockers: new Map(),
     });
 
     // Reset stateful navigation vars
@@ -1130,8 +1129,10 @@ export function createRouter(init: RouterInit): Router {
           navigate(to, opts);
         },
         reset() {
-          deleteBlocker(blockerKey!);
-          updateState({ blockers: new Map(state.blockers) });
+          // TODO: Crate new map before mutating - same for fetchers if possible
+          let blockers = new Map(state.blockers);
+          blockers.set(blockerKey!, IDLE_BLOCKER);
+          updateState({ blockers });
         },
       });
       return;
@@ -2378,8 +2379,9 @@ export function createRouter(init: RouterInit): Router {
       `Invalid blocker state transition: ${blocker.state} -> ${newBlocker.state}`
     );
 
-    state.blockers.set(key, newBlocker);
-    updateState({ blockers: new Map(state.blockers) });
+    let blockers = new Map(state.blockers);
+    blockers.set(key, newBlocker);
+    updateState({ blockers });
   }
 
   function shouldBlockNavigation({
