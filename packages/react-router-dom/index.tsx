@@ -300,6 +300,11 @@ export interface BrowserRouterProps {
   window?: Window;
 }
 
+// Webpack + React 17 fails to compile on the usage of `React.startTransition` or
+// `React["startTransition"]` even if it's behind a feature detection of
+// `"startTransition" in React`. Moving this to a constant avoids the issue :/
+const START_TRANSITION = "startTransition";
+
 /**
  * A `<Router>` for use in web browsers. Provides the cleanest URLs.
  */
@@ -320,8 +325,8 @@ export function BrowserRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      START_TRANSITION in React
+        ? React[START_TRANSITION](() => setStateImpl(newState))
         : setStateImpl(newState);
     },
     [setStateImpl]
@@ -363,8 +368,8 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      START_TRANSITION in React
+        ? React[START_TRANSITION](() => setStateImpl(newState))
         : setStateImpl(newState);
     },
     [setStateImpl]
@@ -402,8 +407,8 @@ function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      START_TRANSITION in React
+        ? React[START_TRANSITION](() => setStateImpl(newState))
         : setStateImpl(newState);
     },
     [setStateImpl]
