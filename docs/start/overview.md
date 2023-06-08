@@ -18,7 +18,7 @@ This enables faster user experiences because the browser doesn't need to request
 Client side routing is enabled by creating a `Router` and linking/submitting to pages with `Link` and `<Form>`:
 
 ```jsx [10,16,27]
-import React from "react";
+import * as React from "react";
 import { createRoot } from "react-dom/client";
 import {
   createBrowserRouter,
@@ -78,7 +78,7 @@ createBrowserRouter(
           element={<Login />}
           loader={redirectIfUser}
         />
-        <Route path="logout" />
+        <Route path="logout" action={logoutUser} />
       </Route>
     </Route>
   )

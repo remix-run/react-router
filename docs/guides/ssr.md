@@ -143,7 +143,7 @@ Once we've sent the HTML back to the browser, we'll need to "hydrate" the applic
 
 ```jsx filename=entry-client.jsx lines=[10-15]
 import * as React from "react";
-import ReactDOM from "react-dom/client";
+import * as ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -275,7 +275,7 @@ app.listen(3000);
 And finally, you'll need a similar file to "hydrate" the app with your JavaScript bundle that includes the very same `App` component. Note the use of `BrowserRouter` instead of `StaticRouter`.
 
 ```js filename=client.entry.js
-import ReactDOM from "react-dom";
+import * as ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 
