@@ -36,7 +36,7 @@
     "chokidar": "^3.5.1",
     "dotenv": "^16.0.0",
     "esbuild": "0.17.6",
-    "esbuild-plugin-polyfill-node": "^0.2.0",
+    "esbuild-plugins-node-modules-polyfill": "^1.0.13",
     "execa": "5.1.1",
     "exit-hook": "2.2.1",
     "express": "^4.17.1",

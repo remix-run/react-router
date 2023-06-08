@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import { polyfillNode as NodeModulesPolyfillPlugin } from "esbuild-plugin-polyfill-node";
+import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
 import { type Manifest } from "../../manifest";
 import { loaders } from "../utils/loaders";
@@ -67,7 +67,7 @@ const createEsbuildConfig = (
   ];
 
   if (ctx.config.serverPlatform !== "node") {
-    plugins.unshift(NodeModulesPolyfillPlugin());
+    plugins.unshift(nodeModulesPolyfillPlugin());
   }
 
   return {
