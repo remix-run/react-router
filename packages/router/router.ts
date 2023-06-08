@@ -2375,7 +2375,7 @@ export function createRouter(init: RouterInit): Router {
   ) {
     savedScrollPositions = positions;
     getScrollPosition = getPosition;
-    getScrollRestorationKey = getKey || ((location) => location.key);
+    getScrollRestorationKey = getKey || null;
 
     // Perform initial hydration scroll restoration, since we miss the boat on
     // the initial updateState() because we've not yet rendered <ScrollRestoration/>
@@ -2395,15 +2395,23 @@ export function createRouter(init: RouterInit): Router {
     };
   }
 
+  function getScrollKey(location: Location, matches: AgnosticDataRouteMatch[]) {
+    if (getScrollRestorationKey) {
+      let key = getScrollRestorationKey(
+        location,
+        matches.map((m) => createUseMatchesMatch(m, state.loaderData))
+      );
+      return key || location.key;
+    }
+    return location.key;
+  }
+
   function saveScrollPosition(
     location: Location,
     matches: AgnosticDataRouteMatch[]
   ): void {
-    if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
-      let userMatches = matches.map((m) =>
-        createUseMatchesMatch(m, state.loaderData)
-      );
-      let key = getScrollRestorationKey(location, userMatches) || location.key;
+    if (savedScrollPositions && getScrollPosition) {
+      let key = getScrollKey(location, matches);
       savedScrollPositions[key] = getScrollPosition();
     }
   }
@@ -2412,11 +2420,8 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     matches: AgnosticDataRouteMatch[]
   ): number | null {
-    if (savedScrollPositions && getScrollRestorationKey && getScrollPosition) {
-      let userMatches = matches.map((m) =>
-        createUseMatchesMatch(m, state.loaderData)
-      );
-      let key = getScrollRestorationKey(location, userMatches) || location.key;
+    if (savedScrollPositions) {
+      let key = getScrollKey(location, matches);
       let y = savedScrollPositions[key];
       if (typeof y === "number") {
         return y;
