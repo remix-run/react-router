@@ -8,5 +8,7 @@
     "react-router-native": "6.12.0",
     "@remix-run/router": "1.6.3"
   },
-  "changesets": []
+  "changesets": [
+    "silly-eagles-divide"
+  ]
 }
