@@ -1129,7 +1129,6 @@ export function createRouter(init: RouterInit): Router {
           navigate(to, opts);
         },
         reset() {
-          // TODO: Crate new map before mutating - same for fetchers if possible
           let blockers = new Map(state.blockers);
           blockers.set(blockerKey!, IDLE_BLOCKER);
           updateState({ blockers });
