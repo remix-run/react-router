@@ -54,6 +54,11 @@ export interface RouterProviderProps {
   router: RemixRouter;
 }
 
+// Webpack + React 17 fails to compile on the usage of `React.startTransition` or
+// `React["startTransition"]` even if it's behind a feature detection of
+// `"startTransition" in React`. Moving this to a constant avoids the issue :/
+const START_TRANSITION = "startTransition";
+
 /**
  * Given a Remix Router instance, render the appropriate UI
  */
@@ -66,8 +71,8 @@ export function RouterProvider({
   let [state, setStateImpl] = React.useState(router.state);
   let setState = React.useCallback(
     (newState: RouterState) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      START_TRANSITION in React
+        ? React[START_TRANSITION](() => setStateImpl(newState))
         : setStateImpl(newState);
     },
     [setStateImpl]
@@ -178,8 +183,8 @@ export function MemoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      START_TRANSITION in React
+        ? React[START_TRANSITION](() => setStateImpl(newState))
         : setStateImpl(newState);
     },
     [setStateImpl]
