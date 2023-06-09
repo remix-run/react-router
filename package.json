@@ -112,10 +112,10 @@
       "none": "45 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
-      "none": "13.5 kB"
+      "none": "13.7 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
-      "none": "15.9 kB"
+      "none": "16.1 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
       "none": "12.1 kB"
