@@ -5,6 +5,7 @@ import type { unstable_Blocker as Blocker, RouteObject } from "../index";
 import {
   createMemoryRouter,
   json,
+  Link,
   NavLink,
   Outlet,
   RouterProvider,
@@ -62,6 +63,55 @@ describe("navigation blocking with useBlocker", () => {
     act(() => {
       root.unmount();
     });
+  });
+
+  it("strips basename from location provided to blocker function", async () => {
+    let shouldBlock = jest.fn();
+    router = createMemoryRouter(
+      [
+        {
+          Component() {
+            useBlocker(shouldBlock);
+            return (
+              <div>
+                <Link to="/about">About</Link>
+                <Outlet />
+              </div>
+            );
+          },
+          children: [
+            {
+              path: "/",
+              element: <h1>Home</h1>,
+            },
+            {
+              path: "/about",
+              element: <h1>About</h1>,
+            },
+          ],
+        },
+      ],
+      {
+        basename: "/base",
+        initialEntries: ["/base"],
+      }
+    );
+
+    act(() => {
+      root = ReactDOM.createRoot(node);
+      root.render(<RouterProvider router={router} />);
+    });
+
+    act(() => click(node.querySelector("a[href='/base/about']")));
+
+    expect(router.state.location.pathname).toBe("/base/about");
+    expect(shouldBlock).toHaveBeenCalledWith({
+      currentLocation: expect.objectContaining({ pathname: "/" }),
+      nextLocation: expect.objectContaining({ pathname: "/about" }),
+      historyAction: "PUSH",
+    });
+
+    act(() => root.unmount());
   });
 
   describe("on <Link> navigation", () => {

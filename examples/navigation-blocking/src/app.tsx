@@ -1,5 +1,9 @@
 import * as React from "react";
-import type { unstable_Blocker as Blocker } from "react-router-dom";
+import type {
+  unstable_Blocker as Blocker,
+  unstable_BlockerFunction as BlockerFunction,
+} from "react-router-dom";
+import { useActionData } from "react-router-dom";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -79,22 +83,35 @@ function Layout() {
 }
 
 function ImportantForm() {
+  let actionData = useActionData() as { ok: boolean } | undefined;
   let [value, setValue] = React.useState("");
-  let isBlocked = value !== "";
-  let blocker = useBlocker(isBlocked);
+  // Allow the submission navigation to the same route to go through
+  let shouldBlock = React.useCallback<BlockerFunction>(
+    ({ currentLocation, nextLocation }) =>
+      value !== "" && currentLocation.pathname !== nextLocation.pathname,
+    [value]
+  );
+  let blocker = useBlocker(shouldBlock);
+
+  // Clean the input after a successful submission
+  React.useEffect(() => {
+    if (actionData?.ok) {
+      setValue("");
+    }
+  }, [actionData]);
 
   // Reset the blocker if the user cleans the form
   React.useEffect(() => {
-    if (blocker.state === "blocked" && !isBlocked) {
+    if (blocker.state === "blocked" && value === "") {
       blocker.reset();
     }
-  }, [blocker, isBlocked]);
+  }, [blocker, value]);
 
   return (
     <>
       <p>
         Is the form dirty?{" "}
-        {isBlocked ? (
+        {value !== "" ? (
           <span style={{ color: "red" }}>Yes</span>
         ) : (
           <span style={{ color: "green" }}>No</span>
