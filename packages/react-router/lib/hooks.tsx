@@ -1,5 +1,5 @@
 import * as React from "react";
-import {
+import type {
   Blocker,
   BlockerFunction,
   Location,
@@ -12,7 +12,6 @@ import {
   Router as RemixRouter,
   RevalidationState,
   To,
-  stripBasename,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -23,6 +22,7 @@ import {
   matchRoutes,
   parsePath,
   resolveTo,
+  stripBasename,
   IDLE_BLOCKER,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_warning as warning,
