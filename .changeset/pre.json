@@ -8,5 +8,7 @@
     "react-router-native": "6.12.1",
     "@remix-run/router": "1.6.3"
   },
-  "changesets": []
+  "changesets": [
+    "start-transition-minification"
+  ]
 }
