@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.12.2-pre.0
+
+### Patch Changes
+
+- Work around webpack/terser `React.startTransition` minification bug in production mode ([`2f79bcef`](https://github.com/remix-run/react-router/commit/2f79bcef5f396943cf95d0d23fbd67df9b8e17a6))
+
 ## 6.12.1
 
 ### Patch Changes
