@@ -102,7 +102,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.3.5",
     "type-fest": "^2.13.0",
-    "typescript": "^4.7.3"
+    "typescript": "^5.1.3"
   },
   "engines": {
     "node": ">=14"
