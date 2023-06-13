@@ -9,6 +9,7 @@
     "@remix-run/router": "1.6.3"
   },
   "changesets": [
-    "start-transition-minification"
+    "start-transition-minification",
+    "v7-start-transition"
   ]
 }

@@ -1,5 +1,31 @@
 # `react-router`
 
+## 6.13.0-pre.1
+
+### Minor Changes
+
+- Move [`React.startTransition`](https://react.dev/reference/react/startTransition) behind a [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) to avoid issues with existing incompatible `Suspense` usages. We recommend folks adopting this flag to be better compatible with React concurrent mode, but if you run into issues you can continue without the use of `startTransition` until v7. Issues usually boils down to creating net-new promises during the render cycle, so if you run into issues you should either lift your promise creation out of the render cycle or put it behind a `useMemo`. ([#10596](https://github.com/remix-run/react-router/pull/10596))
+
+  Existing behavior will no longer include `React.startTransition`:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>{/*...*/}</Routes>
+  </BrowserRouter>
+
+  <RouterProvider router={router} />
+  ```
+
+  If you wish to enable `React.startTransition`, pass the future flag to your component:
+
+  ```jsx
+  <BrowserRouter future={{ v7_startTransition: true }}>
+    <Routes>{/*...*/}</Routes>
+  </BrowserRouter>
+
+  <RouterProvider router={router} future={{ v7_startTransition: true }}/>
+  ```
+
 ## 6.12.2-pre.0
 
 ### Patch Changes
