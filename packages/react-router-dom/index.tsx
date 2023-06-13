@@ -340,17 +340,13 @@ export function BrowserRouter({
     action: history.action,
     location: history.location,
   });
-  let startTransition =
-    future && future.v7_startTransition && startTransitionImpl != null
-      ? startTransitionImpl
-      : null;
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      startTransition
-        ? startTransition(() => setStateImpl(newState))
+      future && future.v7_startTransition && startTransitionImpl != null
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, startTransition]
+    [setStateImpl, future]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -393,17 +389,13 @@ export function HashRouter({
     action: history.action,
     location: history.location,
   });
-  let startTransition =
-    future && future.v7_startTransition && startTransitionImpl != null
-      ? startTransitionImpl
-      : null;
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      startTransition
-        ? startTransition(() => setStateImpl(newState))
+      future && future.v7_startTransition && startTransitionImpl != null
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, startTransition]
+    [setStateImpl, future]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -442,17 +434,13 @@ function HistoryRouter({
     action: history.action,
     location: history.location,
   });
-  let startTransition =
-    future && future.v7_startTransition && startTransitionImpl != null
-      ? startTransitionImpl
-      : null;
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      startTransition
-        ? startTransition(() => setStateImpl(newState))
+      future && future.v7_startTransition && startTransitionImpl != null
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, startTransition]
+    [setStateImpl, future]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
