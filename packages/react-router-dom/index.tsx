@@ -322,13 +322,14 @@ export function BrowserRouter({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      future && future.v7_startTransition && startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, future]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -371,13 +372,14 @@ export function HashRouter({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      future && future.v7_startTransition && startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, future]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -416,13 +418,14 @@ function HistoryRouter({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      future && future.v7_startTransition && startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, future]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);

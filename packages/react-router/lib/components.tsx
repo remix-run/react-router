@@ -71,13 +71,14 @@ export function RouterProvider({
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: RouterState) => {
-      future && future.v7_startTransition && startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, future]
+    [setStateImpl, v7_startTransition]
   );
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
@@ -185,13 +186,14 @@ export function MemoryRouter({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      future && future.v7_startTransition && startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl, future]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
