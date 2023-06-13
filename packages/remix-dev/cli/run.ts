@@ -130,7 +130,7 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
 const templateChoices = [
   { name: "Remix App Server", value: "remix" },
   { name: "Express Server", value: "express" },
-  { name: "Architect (AWS Lambda)", value: "arc" },
+  { name: "Architect", value: "arc" },
   { name: "Fly.io", value: "fly" },
   { name: "Netlify", value: "netlify" },
   { name: "Vercel", value: "vercel" },
