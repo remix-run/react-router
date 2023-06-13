@@ -4,6 +4,7 @@
  */
 import * as React from "react";
 import type {
+  FutureConfig,
   Location,
   NavigateOptions,
   NavigationType,
@@ -26,6 +27,7 @@ import {
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_startTransitionImpl as startTransitionImpl,
   UNSAFE_useRouteId as useRouteId,
 } from "react-router";
 import type {
@@ -33,7 +35,7 @@ import type {
   Fetcher,
   FormEncType,
   FormMethod,
-  FutureConfig,
+  FutureConfig as RouterFutureConfig,
   GetScrollRestorationKeyFunction,
   HashHistory,
   History,
@@ -209,7 +211,7 @@ declare global {
 
 interface DOMRouterOpts {
   basename?: string;
-  future?: Partial<Omit<FutureConfig, "v7_prependBasename">>;
+  future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
 }
@@ -297,27 +299,9 @@ function deserializeErrors(
 export interface BrowserRouterProps {
   basename?: string;
   children?: React.ReactNode;
+  future?: FutureConfig;
   window?: Window;
 }
-
-// Webpack + React 17 fails to compile on any of the following:
-// * import { startTransition } from "react"
-// * import * as React from from "react";
-//   "startTransition" in React ? React.startTransition(() => setState()) : setState()
-// * import * as React from from "react";
-//   "startTransition" in React ? React["startTransition"](() => setState()) : setState()
-//
-// Moving it to a constant such as the following solves the Webpack/React 17 issue:
-// * import * as React from from "react";
-//   const START_TRANSITION = "startTransition";
-//   START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
-//
-// However, that introduces webpack/terser minification issues in production builds
-// in React 18 where minification/obfuscation ends up removing the call of
-// React.startTransition entirely from the first half of the ternary.  Grabbing
-// this reference once up front resolves that issue.
-const START_TRANSITION = "startTransition";
-const startTransitionImpl = React[START_TRANSITION];
 
 /**
  * A `<Router>` for use in web browsers. Provides the cleanest URLs.
@@ -325,6 +309,7 @@ const startTransitionImpl = React[START_TRANSITION];
 export function BrowserRouter({
   basename,
   children,
+  future,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -337,13 +322,14 @@ export function BrowserRouter({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -362,6 +348,7 @@ export function BrowserRouter({
 export interface HashRouterProps {
   basename?: string;
   children?: React.ReactNode;
+  future?: FutureConfig;
   window?: Window;
 }
 
@@ -369,7 +356,12 @@ export interface HashRouterProps {
  * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({
+  basename,
+  children,
+  future,
+  window,
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
@@ -380,13 +372,14 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -405,6 +398,7 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
 export interface HistoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
+  future?: FutureConfig;
   history: History;
 }
 
@@ -414,18 +408,24 @@ export interface HistoryRouterProps {
  * two versions of the history library to your bundles unless you use the same
  * version of the history library that React Router uses internally.
  */
-function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
+function HistoryRouter({
+  basename,
+  children,
+  future,
+  history,
+}: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      startTransitionImpl
+      v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
