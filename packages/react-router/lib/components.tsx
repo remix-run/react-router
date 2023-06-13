@@ -49,9 +49,14 @@ import {
   useLocation,
 } from "./hooks";
 
+export interface FutureConfig {
+  v7_startTransition: boolean;
+}
+
 export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
+  future?: FutureConfig;
 }
 
 // Webpack + React 17 fails to compile on any of the following:
@@ -79,17 +84,22 @@ const startTransitionImpl = React[START_TRANSITION];
 export function RouterProvider({
   fallbackElement,
   router,
+  future,
 }: RouterProviderProps): React.ReactElement {
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
+  let startTransition =
+    future && future.v7_startTransition && startTransitionImpl != null
+      ? startTransitionImpl
+      : null;
   let setState = React.useCallback(
     (newState: RouterState) => {
-      startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
+      startTransition
+        ? startTransition(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, startTransition]
   );
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
@@ -168,6 +178,7 @@ export interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  future?: FutureConfig;
 }
 
 /**
@@ -180,6 +191,7 @@ export function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
+  future,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -195,13 +207,17 @@ export function MemoryRouter({
     action: history.action,
     location: history.location,
   });
+  let startTransition =
+    future && future.v7_startTransition && startTransitionImpl != null
+      ? startTransitionImpl
+      : null;
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
+      startTransition
+        ? startTransition(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);

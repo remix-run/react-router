@@ -23,7 +23,7 @@ import type {
   To,
   InitialEntry,
   LazyRouteFunction,
-  FutureConfig,
+  FutureConfig as RouterFutureConfig,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -55,6 +55,7 @@ import type {
   RouterProps,
   RoutesProps,
   RouterProviderProps,
+  FutureConfig,
 } from "./lib/components";
 import {
   createRoutesFromChildren,
@@ -127,6 +128,7 @@ export type {
   DataRouteMatch,
   DataRouteObject,
   Fetcher,
+  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
@@ -256,7 +258,7 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
-    future?: Partial<Omit<FutureConfig, "v7_prependBasename">>;
+    future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
