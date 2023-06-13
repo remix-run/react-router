@@ -91,7 +91,7 @@ export function RouterProvider({
   let [state, setStateImpl] = React.useState(router.state);
   let setState = React.useCallback(
     (newState: RouterState) => {
-      future && future.v7_startTransition && startTransitionImpl != null
+      future && future.v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
@@ -205,7 +205,7 @@ export function MemoryRouter({
   });
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      future && future.v7_startTransition && startTransitionImpl != null
+      future && future.v7_startTransition && startTransitionImpl
         ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
