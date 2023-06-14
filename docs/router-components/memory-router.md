@@ -17,6 +17,7 @@ interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  future?: FutureConfig;
 }
 ```
 
@@ -59,4 +60,36 @@ describe("My app", () => {
 });
 ```
 
+## `basename`
+
+Configure your application to run underneath a specific basename in the URL:
+
+```jsx
+function App() {
+  return (
+    <MemoryRouter basename="/app">
+      <Routes>
+        <Route path="/" /> {/* 👈 Renders at /app/ */}
+      </Routes>
+    </MemoryRouter>
+  );
+}
+```
+
+## `future`
+
+An optional set of [Future Flags][api-development-strategy] to enable. We recommend opting into newly released future flags sooner rather than later to ease your eventual migration to v7.
+
+```jsx
+function App() {
+  return (
+    <MemoryRouter future={{ v7_startTransition: true }}>
+      <Routes>{/*...*/}</Routes>
+    </MemoryRouter>
+  );
+}
+```
+
+[defaultview]: https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView
+[api-development-strategy]: ../guides/api-development-strategy
 [tests]: https://github.com/remix-run/react-router/tree/main/packages/react-router/__tests__
