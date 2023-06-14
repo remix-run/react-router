@@ -1,5 +1,14 @@
 # `@remix-run/testing`
 
+## 1.17.1-pre.1
+
+### Patch Changes
+
+- Bump to `react-router-dom@6.13.0` and opt-into `React.startTransition` usage ([#6609](https://github.com/remix-run/remix/pull/6609))
+- Updated dependencies:
+  - `@remix-run/react@1.17.1-pre.1`
+  - `@remix-run/node@1.17.1-pre.1`
+
 ## 1.17.1-pre.0
 
 ### Patch Changes
