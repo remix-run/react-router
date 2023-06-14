@@ -22,6 +22,13 @@ test.describe("CatchBoundary", () => {
 
   let NOT_FOUND_HREF = "/not/found";
 
+  test.beforeEach(async ({ context }) => {
+    await context.route(/_data/, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      route.continue();
+    });
+  });
+
   test.beforeAll(async () => {
     fixture = await createFixture({
       config: {

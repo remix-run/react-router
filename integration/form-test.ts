@@ -47,6 +47,13 @@ test.describe("Forms", () => {
   let SPLAT_ROUTE_PARENT_ACTION = "splat-route-parent";
   let SPLAT_ROUTE_TOO_MANY_DOTS_ACTION = "splat-route-too-many-dots";
 
+  test.beforeEach(async ({ context }) => {
+    await context.route(/_data/, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      route.continue();
+    });
+  });
+
   test.beforeAll(async () => {
     fixture = await createFixture({
       config: {

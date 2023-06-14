@@ -37,6 +37,13 @@ test.describe("ErrorBoundary", () => {
   // packages/remix-react/errorBoundaries.tsx
   let INTERNAL_ERROR_BOUNDARY_HEADING = "Application Error";
 
+  test.beforeEach(async ({ context }) => {
+    await context.route(/_data/, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      route.continue();
+    });
+  });
+
   test.beforeAll(async () => {
     _consoleError = console.error;
     console.error = () => {};
