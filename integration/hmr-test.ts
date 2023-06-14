@@ -8,7 +8,7 @@ import getPort, { makeRange } from "get-port";
 import type { FixtureInit } from "./helpers/create-fixture";
 import { createFixtureProject, css, js, json } from "./helpers/create-fixture";
 
-test.setTimeout(120_000);
+test.setTimeout(150_000);
 
 let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
   config: {
@@ -120,6 +120,16 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       }
     `,
 
+    "app/sideEffectStylesWithImport.css": css`
+      @import "./importedSideEffectStyle.css";
+    `,
+
+    "app/importedSideEffectStyle.css": css`
+      .importedSideEffectStyle {
+        font-size: initial;
+      }
+    `,
+
     "app/styles.module.css": css`
       .test {
         color: initial;
@@ -134,6 +144,7 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       import Counter from "./components/counter";
       import tailwindStyles from "./tailwind.css";
       import stylesWithImport from "./stylesWithImport.css";
+      import "./sideEffectStylesWithImport.css";
 
       export const links: LinksFunction = () => [
         { rel: "stylesheet", href: tailwindStyles },
@@ -322,6 +333,15 @@ test("HMR", async ({ page, browserName }) => {
     let originalCssModule = fs.readFileSync(cssModulePath, "utf8");
     let mdxPath = path.join(projectDir, "app", "routes", "mdx.mdx");
     let originalMdx = fs.readFileSync(mdxPath, "utf8");
+    let importedSideEffectStylePath = path.join(
+      projectDir,
+      "app",
+      "importedSideEffectStyle.css"
+    );
+    let originalImportedSideEffectStyle = fs.readFileSync(
+      importedSideEffectStylePath,
+      "utf8"
+    );
 
     // make content and style changed to index route
     let newCssModule = `
@@ -340,6 +360,14 @@ test("HMR", async ({ page, browserName }) => {
     `;
     fs.writeFileSync(importedStylePath, newImportedStyle);
 
+    // // make changes to imported side-effect styles
+    let newImportedSideEffectStyle = `
+      .importedSideEffectStyle {
+        font-size: 32px;
+      }
+    `;
+    fs.writeFileSync(importedSideEffectStylePath, newImportedSideEffectStyle);
+
     // change text, add updated styles, add new Tailwind class ("italic")
     let newIndex = `
       import { useLoaderData } from "@remix-run/react";
@@ -351,7 +379,7 @@ test("HMR", async ({ page, browserName }) => {
         const t = useLoaderData();
         return (
           <main>
-            <h1 className={styles.test + ' italic importedStyle'}>Changed</h1>
+            <h1 className={styles.test + ' italic importedStyle importedSideEffectStyle'}>Changed</h1>
           </main>
         )
       }
@@ -367,6 +395,7 @@ test("HMR", async ({ page, browserName }) => {
     expect(h1).toHaveCSS("background-color", "rgb(0, 0, 0)");
     expect(h1).toHaveCSS("font-style", "italic");
     expect(h1).toHaveCSS("font-weight", "800");
+    expect(h1).toHaveCSS("font-size", "32px");
 
     // verify that `<input />` value was persisted (i.e. hmr, not full page refresh)
     expect(await page.getByLabel("Root Input").inputValue()).toBe("asdfasdf");
@@ -376,6 +405,10 @@ test("HMR", async ({ page, browserName }) => {
     fs.writeFileSync(indexPath, originalIndex);
     fs.writeFileSync(importedStylePath, originalImportedStyle);
     fs.writeFileSync(cssModulePath, originalCssModule);
+    fs.writeFileSync(
+      importedSideEffectStylePath,
+      originalImportedSideEffectStyle
+    );
     await page.getByText("Index Title").waitFor({ timeout: HMR_TIMEOUT_MS });
     expect(await page.getByLabel("Root Input").inputValue()).toBe("asdfasdf");
     await page.waitForSelector(`#root-counter:has-text("inc 1")`);

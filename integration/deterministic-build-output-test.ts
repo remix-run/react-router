@@ -27,11 +27,19 @@ test("builds deterministically under different paths", async () => {
   //  * vanillaExtractPlugin (via app/routes/foo.tsx' .css.ts file import)
   let init: FixtureInit = {
     config: {
+      postcss: true,
       future: {
         v2_routeConvention: true,
       },
     },
     files: {
+      "postcss.config.js": js`
+        module.exports = {
+          plugins: {
+            "postcss-import": {},
+          },
+        };
+      `,
       "app/routes/_index.mdx": "# hello world",
       "app/routes/foo.tsx": js`
         export * from "~/foo/bar.server";

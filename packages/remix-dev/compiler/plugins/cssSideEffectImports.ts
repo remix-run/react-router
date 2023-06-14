@@ -6,7 +6,7 @@ import { parse, type ParserOptions } from "@babel/parser";
 import traverse from "@babel/traverse";
 import generate from "@babel/generator";
 
-import { getPostcssProcessor } from "../utils/postcss";
+import { getCachedPostcssProcessor } from "../utils/postcss";
 import { applyHMR } from "../js/plugins/hmr";
 import type { Context } from "../context";
 
@@ -51,7 +51,7 @@ export const cssSideEffectImportsPlugin = (
   return {
     name: pluginName,
     setup: async (build) => {
-      let postcssProcessor = await getPostcssProcessor(ctx);
+      let postcssProcessor = await getCachedPostcssProcessor(ctx);
 
       build.onLoad(
         { filter: allJsFilesFilter, namespace: "file" },
@@ -107,21 +107,12 @@ export const cssSideEffectImportsPlugin = (
       );
 
       build.onLoad({ filter: /\.css$/, namespace }, async (args) => {
-        let contents = await fse.readFile(args.path, "utf8");
-
-        if (postcssProcessor) {
-          contents = (
-            await postcssProcessor.process(contents, {
-              from: args.path,
-              to: args.path,
-              map: ctx.options.sourcemap,
-            })
-          ).css;
-        }
-
+        let absolutePath = path.resolve(ctx.config.rootDirectory, args.path);
         return {
-          contents,
-          resolveDir: path.dirname(args.path),
+          contents: postcssProcessor
+            ? await postcssProcessor({ path: absolutePath })
+            : await fse.readFile(absolutePath, "utf8"),
+          resolveDir: path.dirname(absolutePath),
           loader: "css",
         };
       });

@@ -70,9 +70,7 @@ export function vanillaExtractPlugin(
 
       let postcssProcessor = await getPostcssProcessor({
         config,
-        context: {
-          vanillaExtract: true,
-        },
+        postcssContext: { vanillaExtract: true },
       });
 
       // Resolve virtual CSS files first to avoid resolving the same
