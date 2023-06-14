@@ -27,6 +27,13 @@ declare global {
   };
 }
 
+test.beforeEach(async ({ context }) => {
+  await context.route(/_data/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    route.continue();
+  });
+});
+
 test.describe("non-aborted", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;

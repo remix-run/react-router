@@ -24,6 +24,13 @@ let HAS_BOUNDARY_NESTED_LOADER = "/yes/loader-self-boundary" as const;
 let ROOT_DATA = "root data";
 let LAYOUT_DATA = "root data";
 
+test.beforeEach(async ({ context }) => {
+  await context.route(/_data/, async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    route.continue();
+  });
+});
+
 test.beforeAll(async () => {
   fixture = await createFixture({
     config: {
