@@ -27,7 +27,7 @@
     "express": "^4.17.1"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=14.0.0"
   },
   "files": [
     "dist/",

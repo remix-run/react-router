@@ -61,7 +61,7 @@
     "vitest": "^0.7.4"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=14.0.0"
   },
   "prisma": {
     "seed": "node --require esbuild-register prisma/seed.ts"
