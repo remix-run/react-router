@@ -23,7 +23,7 @@ import type {
   To,
   InitialEntry,
   LazyRouteFunction,
-  FutureConfig,
+  FutureConfig as RouterFutureConfig,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -43,6 +43,7 @@ import {
   UNSAFE_warning as warning,
 } from "@remix-run/router";
 
+import startTransitionImpl from "./lib/polyfills/start-transition";
 import type {
   AwaitProps,
   MemoryRouterProps,
@@ -55,6 +56,7 @@ import type {
   RouterProps,
   RoutesProps,
   RouterProviderProps,
+  FutureConfig,
 } from "./lib/components";
 import {
   createRoutesFromChildren,
@@ -127,6 +129,7 @@ export type {
   DataRouteMatch,
   DataRouteObject,
   Fetcher,
+  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
@@ -256,7 +259,7 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
-    future?: Partial<Omit<FutureConfig, "v7_prependBasename">>;
+    future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
@@ -301,4 +304,5 @@ export {
   mapRouteProperties as UNSAFE_mapRouteProperties,
   useRouteId as UNSAFE_useRouteId,
   useRoutesImpl as UNSAFE_useRoutesImpl,
+  startTransitionImpl as UNSAFE_startTransitionImpl,
 };

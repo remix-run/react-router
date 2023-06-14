@@ -22,6 +22,7 @@ import {
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
 
+import startTransitionImpl from "./polyfills/start-transition";
 import type {
   DataRouteObject,
   IndexRouteObject,
@@ -49,15 +50,15 @@ import {
   useLocation,
 } from "./hooks";
 
+export interface FutureConfig {
+  v7_startTransition: boolean;
+}
+
 export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
+  future?: FutureConfig;
 }
-
-// Webpack + React 17 fails to compile on the usage of `React.startTransition` or
-// `React["startTransition"]` even if it's behind a feature detection of
-// `"startTransition" in React`. Moving this to a constant avoids the issue :/
-const START_TRANSITION = "startTransition";
 
 /**
  * Given a Remix Router instance, render the appropriate UI
@@ -65,17 +66,19 @@ const START_TRANSITION = "startTransition";
 export function RouterProvider({
   fallbackElement,
   router,
+  future,
 }: RouterProviderProps): React.ReactElement {
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: RouterState) => {
-      START_TRANSITION in React
-        ? React[START_TRANSITION](() => setStateImpl(newState))
+      v7_startTransition && startTransitionImpl
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
@@ -154,6 +157,7 @@ export interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  future?: FutureConfig;
 }
 
 /**
@@ -166,6 +170,7 @@ export function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
+  future,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -181,13 +186,14 @@ export function MemoryRouter({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      START_TRANSITION in React
-        ? React[START_TRANSITION](() => setStateImpl(newState))
+      v7_startTransition && startTransitionImpl
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
