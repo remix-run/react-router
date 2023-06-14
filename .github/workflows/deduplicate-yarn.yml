@@ -3,7 +3,6 @@ name: ⚙️ Deduplicate yarn.lock
 on:
   push:
     branches:
-      - main
       - dev
     paths:
       - ./yarn.lock
