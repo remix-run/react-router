@@ -72,7 +72,7 @@ const router = createBrowserRouter(routes, {
 These flags apply to both Data and non-Data Routers and are passed to the rendered React component:
 
 ```jsx
-<BrowserRouter future={{ v7_normalizeFormMethod: true }}>
+<BrowserRouter future={{ v7_startTransition: true }}>
   <Routes>{/*...*/}</Routes>
 </BrowserRouter>
 ```
@@ -80,7 +80,7 @@ These flags apply to both Data and non-Data Routers and are passed to the render
 ```jsx
 <RouterProvider
   router={router}
-  future={{ v7_normalizeFormMethod: true }}
+  future={{ v7_startTransition: true }}
 />
 ```
 
