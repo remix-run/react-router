@@ -253,7 +253,7 @@ export let serve = async (
         } finally {
           // commit accumulated state
           Object.assign(state, newState);
-          // process.stdout.write("\n");
+          process.stdout.write("\n");
         }
       },
       onFileCreated: (file) => {
