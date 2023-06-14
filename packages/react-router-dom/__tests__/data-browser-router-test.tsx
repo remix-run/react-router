@@ -3465,6 +3465,79 @@ function testDomRouter(
         expect(formData.get("a")).toBe("1");
         expect(formData.getAll("b")).toEqual(["2", "3"]);
       });
+
+      it("includes the correct submitter value(s) in tree order", async () => {
+        let actionSpy = jest.fn();
+        actionSpy.mockReturnValue({});
+        async function getPayload() {
+          let formData = await actionSpy.mock.calls[
+            actionSpy.mock.calls.length - 1
+          ][0].request.formData();
+          return new URLSearchParams(formData.entries()).toString();
+        }
+
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          ),
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        function FormPage() {
+          return (
+            <>
+              <button name="tasks" value="outside" form="myform">
+                Outside
+              </button>
+              <Form id="myform" method="post">
+                <input type="text" name="tasks" defaultValue="first" />
+                <input type="text" name="tasks" defaultValue="second" />
+
+                <button name="tasks" value="">
+                  Add Task
+                </button>
+                <button value="">No Name</button>
+                <input type="image" name="tasks" alt="Add Task" />
+                <input type="image" alt="No Name" />
+
+                <input type="text" name="tasks" defaultValue="last" />
+              </Form>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Add Task"));
+        expect(await getPayload()).toEqual(
+          "tasks=first&tasks=second&tasks=&tasks=last"
+        );
+
+        fireEvent.click(screen.getByText("No Name"));
+        expect(await getPayload()).toEqual(
+          "tasks=first&tasks=second&tasks=last"
+        );
+
+        fireEvent.click(screen.getByAltText("Add Task"), {
+          clientX: 1,
+          clientY: 2,
+        });
+        expect(await getPayload()).toMatch(
+          "tasks=first&tasks=second&tasks.x=1&tasks.y=2&tasks=last"
+        );
+
+        fireEvent.click(screen.getByAltText("No Name"), {
+          clientX: 1,
+          clientY: 2,
+        });
+        expect(await getPayload()).toMatch(
+          "tasks=first&tasks=second&x=1&y=2&tasks=last"
+        );
+
+        fireEvent.click(screen.getByText("Outside"));
+        expect(await getPayload()).toEqual(
+          "tasks=outside&tasks=first&tasks=second&tasks=last"
+        );
+      });
     });
 
     describe("useFetcher(s)", () => {

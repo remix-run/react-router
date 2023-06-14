@@ -126,6 +126,15 @@ export type SubmitTarget =
   | JsonValue
   | null;
 
+// One-time check for submitter support
+let formDataSupportsSubmitter = false;
+try {
+  // @ts-expect-error if FormData supports the submitter parameter, this will throw
+  new FormData(undefined, 0);
+} catch (e) {
+  formDataSupportsSubmitter = true;
+}
+
 export interface SubmitOptions {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
@@ -241,12 +250,22 @@ export function getFormSubmissionInfo(
       getFormEncType(form.getAttribute("enctype")) ||
       defaultEncType;
 
-    formData = new FormData(form);
+    // Build a FormData object populated from a form and submitter
+    formData = new FormData(form, target);
 
-    // Include name + value from a <button>, appending in case the button name
-    // matches an existing input name
-    if (target.name) {
-      formData.append(target.name, target.value);
+    // If this browser doesn't support the `FormData(el, submitter)` format,
+    // then tack on the submitter value at the end.  This is a lightweight
+    // solution that is not 100% spec compliant.  For complete support in older
+    // browsers, consider using the `formdata-submitter-polyfill` package
+    if (!formDataSupportsSubmitter) {
+      let { name, type, value } = target;
+      if (type === "image") {
+        let prefix = name ? `${name}.` : "";
+        formData.append(`${prefix}x`, "0");
+        formData.append(`${prefix}y`, "0");
+      } else if (name) {
+        formData.append(name, value);
+      }
     }
   } else if (isHtmlElement(target)) {
     throw new Error(

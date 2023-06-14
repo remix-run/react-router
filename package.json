@@ -40,7 +40,7 @@
   "resolutions": {
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "jsdom": "22.0.0"
+    "jsdom": "22.1.0"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
@@ -118,10 +118,10 @@
       "none": "16.2 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
-      "none": "12.4 kB"
+      "none": "12.5 kB"
     },
     "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
-      "none": "18.5 kB"
+      "none": "18.6 kB"
     }
   }
 }
