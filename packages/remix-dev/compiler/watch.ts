@@ -106,7 +106,7 @@ export async function watch(
         pollInterval: 100,
       },
     })
-    .on("error", (error) => console.error(error))
+    .on("error", (error) => ctx.logger.error(String(error)))
     .on("change", async (file) => {
       onFileChanged?.(file);
       await rebuild();

@@ -53,6 +53,7 @@
     "minimatch": "^9.0.0",
     "node-fetch": "^2.6.9",
     "ora": "^5.4.1",
+    "picocolors": "^1.0.0",
     "picomatch": "^2.3.1",
     "postcss": "^8.4.19",
     "postcss-discard-duplicates": "^5.1.0",

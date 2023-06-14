@@ -13,7 +13,7 @@ import { ServerMode, isValidServerMode } from "./config/serverModes";
 import { serverBuildVirtualModule } from "./compiler/server/virtualModules";
 import { flatRoutes } from "./config/flat-routes";
 import { detectPackageManager } from "./cli/detectPackageManager";
-import { warnOnce } from "./warnOnce";
+import { logger } from "./tux";
 
 export interface RemixMdxConfig {
   rehypePlugins?: any[];
@@ -426,23 +426,23 @@ export async function readConfig(
   }
 
   if (appConfig.serverBuildTarget) {
-    warnOnce(serverBuildTargetWarning, "v2_serverBuildTarget");
+    serverBuildTargetWarning();
   }
 
   if (!appConfig.future?.v2_errorBoundary) {
-    warnOnce(errorBoundaryWarning, "v2_errorBoundary");
+    errorBoundaryWarning();
   }
 
   if (!appConfig.future?.v2_normalizeFormMethod) {
-    warnOnce(formMethodWarning, "v2_normalizeFormMethod");
+    formMethodWarning();
   }
 
   if (!appConfig.future?.v2_meta) {
-    warnOnce(metaWarning, "v2_meta");
+    metaWarning();
   }
 
   if (!appConfig.future?.v2_headers) {
-    warnOnce(headersWarning, "v2_headers");
+    headersWarning();
   }
 
   let isCloudflareRuntime = ["cloudflare-pages", "cloudflare-workers"].includes(
@@ -462,7 +462,7 @@ export async function readConfig(
   let serverMinify = appConfig.serverMinify;
 
   if (!appConfig.serverModuleFormat) {
-    warnOnce(serverModuleFormatWarning, "serverModuleFormatWarning");
+    serverModuleFormatWarning();
   }
 
   let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
@@ -488,32 +488,67 @@ export async function readConfig(
 
   if (appConfig.future) {
     if ("unstable_cssModules" in appConfig.future) {
-      warnOnce(
-        'The "future.unstable_cssModules" config option has been removed as this feature is now enabled automatically.'
+      logger.warn(
+        'The "future.unstable_cssModules" config option has been removed',
+        {
+          details: [
+            "CSS Modules are now enabled automatically.",
+            "You should remove the `unstable_cssModules` option from your Remix config.",
+          ],
+          key: "unstable_cssModules",
+        }
       );
     }
 
     if ("unstable_cssSideEffectImports" in appConfig.future) {
-      warnOnce(
-        'The "future.unstable_cssSideEffectImports" config option has been removed as this feature is now enabled automatically.'
+      logger.warn(
+        'The "future.unstable_cssSideEffectImports" config option has been removed',
+        {
+          details: [
+            "CSS side-effect imports are now enabled automatically.",
+            "You should remove the `unstable_cssSideEffectImports` option from your Remix config",
+          ],
+          key: "unstable_cssSideEffectImports",
+        }
       );
     }
 
     if ("unstable_vanillaExtract" in appConfig.future) {
-      warnOnce(
-        'The "future.unstable_vanillaExtract" config option has been removed as this feature is now enabled automatically.'
+      logger.warn(
+        'The "future.unstable_vanillaExtract" config option has been removed.',
+        {
+          details: [
+            "Vanilla Extract is now enabled automatically.",
+            "You should remove the `unstable_vanillaExtract` option from your Remix config",
+          ],
+          key: "unstable_vanillaExtract",
+        }
       );
     }
 
     if (appConfig.future.unstable_postcss !== undefined) {
-      warnOnce(
-        'The "future.unstable_postcss" config option has been deprecated as this feature is now considered stable. Use the "postcss" config option instead.'
+      logger.warn(
+        'The "future.unstable_postcss" config option has been deprecated.',
+        {
+          details: [
+            "PostCSS support is now stable.",
+            "Use the `postcss` config option instead.",
+          ],
+          key: "unstable_postcss",
+        }
       );
     }
 
     if (appConfig.future.unstable_tailwind !== undefined) {
-      warnOnce(
-        'The "future.unstable_tailwind" config option has been deprecated as this feature is now considered stable. Use the "tailwind" config option instead.'
+      logger.warn(
+        'The "future.unstable_tailwind" config option has been deprecated.',
+        {
+          details: [
+            "Tailwind support is now stable.",
+            "Use the `tailwind` config option instead.",
+          ],
+          key: "unstable_tailwind",
+        }
       );
     }
   }
@@ -652,7 +687,7 @@ export async function readConfig(
     : path.resolve(defaultsDirectory, entryServerFile);
 
   if (appConfig.browserBuildDirectory) {
-    warnOnce(browserBuildDirectoryWarning, "browserBuildDirectory");
+    browserBuildDirectoryWarning();
   }
 
   let assetsBuildDirectory =
@@ -690,7 +725,7 @@ export async function readConfig(
   if (appConfig.future?.v2_routeConvention) {
     routesConvention = flatRoutes;
   } else {
-    warnOnce(flatRoutesWarning, "v2_routeConvention");
+    flatRoutesWarning();
     routesConvention = defineConventionalRoutes;
   }
 
@@ -835,7 +870,7 @@ const resolveServerBuildPath = (
 
   // retain deprecated behavior for now
   if (appConfig.serverBuildDirectory) {
-    warnOnce(serverBuildDirectoryWarning, "serverBuildDirectory");
+    serverBuildDirectoryWarning();
 
     serverBuildPath = path.join(appConfig.serverBuildDirectory, "index.js");
   }
@@ -884,57 +919,87 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
   type: "disjunction",
 });
 
-export let browserBuildDirectoryWarning =
-  "⚠️ REMIX FUTURE CHANGE: The `browserBuildDirectory` config option will be removed in v2. " +
-  "Use `assetsBuildDirectory` instead. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.15.0/pages/v2#browserbuilddirectory";
+let browserBuildDirectoryWarning = () =>
+  logger.warn(
+    "The `browserBuildDirectory` config option will be removed in v2",
+    {
+      details: [
+        "You can use the `assetsBuildDirectory` config option instead.",
+        "-> https://remix.run/docs/en/v1.15.0/pages/v2#browserbuilddirectory",
+      ],
+      key: "browserBuildDirectoryWarning",
+    }
+  );
 
-export let serverBuildDirectoryWarning =
-  "⚠️ REMIX FUTURE CHANGE: The `serverBuildDirectory` config option will be removed in v2. " +
-  "Use `serverBuildPath` instead. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.15.0/pages/v2#serverbuilddirectory";
+let serverBuildDirectoryWarning = () =>
+  logger.warn(
+    "The `serverBuildDirectory` config option will be removed in v2",
+    {
+      details: [
+        "You can use the `serverBuildPath` config option instead.",
+        "-> https://remix.run/docs/en/v1.15.0/pages/v2#serverbuilddirectory",
+      ],
+      key: "serverBuildDirectoryWarning",
+    }
+  );
 
-export let serverBuildTargetWarning =
-  "⚠️ REMIX FUTURE CHANGE: The `serverBuildTarget` config option will be removed in v2. " +
-  "Use a combination of server module config values to achieve the same build output. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.15.0/pages/v2#serverbuildtarget";
+let serverBuildTargetWarning = () =>
+  logger.warn("The `serverBuildTarget` config option will be removed in v2", {
+    details: [
+      "You can specify multiple server module config options instead to achieve the same result.",
+      "-> https://remix.run/docs/en/v1.15.0/pages/v2#serverbuildtarget",
+    ],
+    key: "serverBuildTargetWarning",
+  });
 
-export const serverModuleFormatWarning =
-  "⚠️ REMIX FUTURE CHANGE: The `serverModuleFormat` config default option will be changing in v2 " +
-  "from `cjs` to `esm`. You can prepare for this change by explicitly specifying `serverModuleFormat: 'cjs'`. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.16.0/pages/v2#servermoduleformat";
+let serverModuleFormatWarning = () =>
+  logger.warn("The default server module format is changing in v2", {
+    details: [
+      "The default format will change from `cjs` to `esm`.",
+      "You can keep using `cjs` by explicitly specifying `serverModuleFormat: 'cjs'`.",
+      "You can opt-in early to this change by explicitly specifying `serverModuleFormat: 'esm'`",
+      "-> https://remix.run/docs/en/v1.16.0/pages/v2#servermoduleformat",
+    ],
+    key: "serverModuleFormatWarning",
+  });
 
-export let flatRoutesWarning =
-  "⚠️ REMIX FUTURE CHANGE: The route file convention is changing in v2. " +
-  "You can prepare for this change at your convenience with the `v2_routeConvention` future flag. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.15.0/pages/v2#file-system-route-convention";
+let futureFlagWarning =
+  (args: { message: string; flag: string; link: string }) => () => {
+    logger.warn(args.message, {
+      key: args.flag,
+      details: [
+        `You can use the \`${args.flag}\` future flag to opt-in early.`,
+        `-> ${args.link}`,
+      ],
+    });
+  };
 
-export const errorBoundaryWarning =
-  "⚠️ REMIX FUTURE CHANGE: The behaviors of `CatchBoundary` and `ErrorBoundary` are changing in v2. " +
-  "You can prepare for this change at your convenience with the `v2_errorBoundary` future flag. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.15.0/pages/v2#catchboundary-and-errorboundary";
+let flatRoutesWarning = futureFlagWarning({
+  message: "The route file convention is changing in v2",
+  flag: "v2_routeConvention",
+  link: "https://remix.run/docs/en/v1.15.0/pages/v2#file-system-route-convention",
+});
 
-export const formMethodWarning =
-  "⚠️ REMIX FUTURE CHANGE: APIs that provide `formMethod` will be changing in v2. " +
-  "All values will be uppercase (GET, POST, etc.) instead of lowercase (get, post, etc.) " +
-  "You can prepare for this change at your convenience with the `v2_normalizeFormMethod` future flag. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.15.0/pages/v2#formMethod";
+let errorBoundaryWarning = futureFlagWarning({
+  message: "The `CatchBoundary` and `ErrorBoundary` API is changing in v2",
+  flag: "v2_errorBoundary",
+  link: "https://remix.run/docs/en/v1.15.0/pages/v2#catchboundary-and-errorboundary",
+});
 
-export const metaWarning =
-  "⚠️ REMIX FUTURE CHANGE: The route `meta` export signature is changing in v2. " +
-  "You can prepare for this change at your convenience with the `v2_meta` future flag. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.15.0/pages/v2#meta";
+let formMethodWarning = futureFlagWarning({
+  message: "The `formMethod` API is changing in v2",
+  flag: "v2_normalizeFormMethod",
+  link: "https://remix.run/docs/en/v1.15.0/pages/v2#formMethod",
+});
 
-export const headersWarning =
-  "⚠️ REMIX FUTURE CHANGE: The route `headers` export behavior is changing in v2. " +
-  "You can prepare for this change at your convenience with the `v2_headers` future flag. " +
-  "For instructions on making this change see " +
-  "https://remix.run/docs/en/v1.17.0/pages/v2#route-headers";
+let metaWarning = futureFlagWarning({
+  message: "The route `meta` API is changing in v2",
+  flag: "v2_meta",
+  link: "https://remix.run/docs/en/v1.15.0/pages/v2#meta",
+});
+
+let headersWarning = futureFlagWarning({
+  message: "The route `headers` API is changing in v2",
+  flag: "v2_headers",
+  link: "https://remix.run/docs/en/v1.17.0/pages/v2#route-headers",
+});

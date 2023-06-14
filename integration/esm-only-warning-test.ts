@@ -179,25 +179,11 @@ test.beforeAll(async () => {
 });
 
 test("logs warnings for ESM only packages", async () => {
-  expect(buildOutput).toContain(
-    "esm-only-no-exports is possibly an ESM only package"
-  );
-  expect(buildOutput).toContain(
-    "esm-only-exports is possibly an ESM only package"
-  );
-  expect(buildOutput).not.toContain(
-    "esm-only-exports-b is possibly an ESM only package"
-  );
-  expect(buildOutput).not.toContain(
-    "esm-only-exports-c is possibly an ESM only package"
-  );
-  expect(buildOutput).not.toContain(
-    "cjs-dynamic-import is possibly an ESM only package"
-  );
-  expect(buildOutput).toContain(
-    "esm-only-sub-exports is possibly an ESM only package"
-  );
-  expect(buildOutput).not.toContain(
-    "esm-cjs-exports is possibly an ESM only package"
-  );
+  expect(buildOutput).toContain("esm-only package: esm-only-no-exports");
+  expect(buildOutput).toContain("esm-only package: esm-only-exports");
+  expect(buildOutput).not.toContain("esm-only package: esm-only-exports-b");
+  expect(buildOutput).not.toContain("esm-only package: esm-only-exports-c");
+  expect(buildOutput).not.toContain("esm-only package: cjs-dynamic-import");
+  expect(buildOutput).toContain("esm-only package: esm-only-sub-exports");
+  expect(buildOutput).not.toContain("esm-only package: esm-cjs-exports");
 });

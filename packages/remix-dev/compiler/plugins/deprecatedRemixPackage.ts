@@ -14,13 +14,15 @@ export function deprecatedRemixPackagePlugin(ctx: Context): Plugin {
         // Warn on deprecated imports from the remix package
         if (filePath === "remix") {
           let relativePath = path.relative(process.cwd(), importer);
-          let warningMessage =
-            `WARNING: All \`remix\` exports are considered deprecated as of v1.3.3. ` +
-            `Please change your import in "${relativePath}" to come from the respective ` +
-            `underlying \`@remix-run/*\` package. ` +
-            `Run \`npx @remix-run/dev@latest codemod replace-remix-magic-imports\` ` +
-            `to automatically migrate your code.`;
-          ctx.options.onWarning?.(warningMessage, importer);
+          ctx.logger.warn(`deprecated \`remix\` import in ${relativePath}`, {
+            details: [
+              "Imports from the `remix` package were deprecated in v1.3.3.",
+              "Change your code to import from the appropriate `@remix-run/*` package instead.",
+              "You can run the following codemod to autofix this issue:",
+              "-> `npx @remix-run/dev@latest codemod replace-remix-magic-imports`",
+            ],
+            key: importer,
+          });
         }
         return undefined;
       });

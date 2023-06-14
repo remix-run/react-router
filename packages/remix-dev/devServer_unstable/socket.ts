@@ -27,8 +27,7 @@ export let serve = (server: HTTPServer) => {
   };
 
   let log = (messageText: string) => {
-    let _message = `💿 ${messageText}`;
-    console.log(_message);
+    let _message = `[remix] ${messageText}`;
     broadcast({ type: "LOG", message: _message });
   };
 

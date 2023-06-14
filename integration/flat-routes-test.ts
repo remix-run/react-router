@@ -5,7 +5,6 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 import { createFixtureProject } from "./helpers/create-fixture";
 import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
-import { flatRoutesWarning } from "../packages/remix-dev/config";
 
 let fixture: Fixture;
 let appFixture: AppFixture;
@@ -159,7 +158,7 @@ test.describe("flat routes", () => {
     });
   }
 
-  test("allows ignoredRouteFiles to be configured", async ({ page }) => {
+  test("allows ignoredRouteFiles to be configured", async () => {
     let routeIds = Object.keys(fixture.build.routes);
 
     expect(routeIds).not.toContain(IGNORED_ROUTE);
@@ -210,7 +209,9 @@ test.describe("warns when v1 routesConvention is used", () => {
 
   test("v2_routeConvention is not enabled", () => {
     console.log(buildOutput);
-    expect(buildOutput).toContain(flatRoutesWarning);
+    expect(buildOutput).toContain(
+      "The route file convention is changing in v2"
+    );
   });
 });
 
