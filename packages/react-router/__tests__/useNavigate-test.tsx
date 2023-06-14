@@ -7,7 +7,6 @@ import {
   Route,
   useNavigate,
   useLocation,
-  useRoutes,
   createMemoryRouter,
   createRoutesFromElements,
   Outlet,

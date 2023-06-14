@@ -19,7 +19,6 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
-import LazyComponent from "./components//LazyComponent";
 
 describe("Handles concurrent mode features during navigations", () => {
   function getComponents() {
@@ -117,7 +116,7 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <MemoryRouter>
+        <MemoryRouter future={{ v7_startTransition: true }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -149,7 +148,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <BrowserRouter window={getWindowImpl("/", false)}>
+        <BrowserRouter
+          window={getWindowImpl("/", false)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -181,7 +183,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <HashRouter window={getWindowImpl("/", true)}>
+        <HashRouter
+          window={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -235,7 +240,9 @@ describe("Handles concurrent mode features during navigations", () => {
           </>
         )
       );
-      let { container } = render(<RouterProvider router={router} />);
+      let { container } = render(
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      );
 
       await assertNavigation(container, resolve, resolveLazy);
     });
@@ -288,7 +295,7 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <MemoryRouter>
+        <MemoryRouter future={{ v7_startTransition: true }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -306,7 +313,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <BrowserRouter window-={getWindowImpl("/", true)}>
+        <BrowserRouter
+          window-={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -324,7 +334,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <HashRouter window-={getWindowImpl("/", true)}>
+        <HashRouter
+          window-={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -350,7 +363,9 @@ describe("Handles concurrent mode features during navigations", () => {
           </>
         )
       );
-      let { container } = render(<RouterProvider router={router} />);
+      let { container } = render(
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      );
 
       await assertNavigation(container, resolve, resolveLazy);
     });

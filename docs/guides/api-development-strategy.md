@@ -49,12 +49,46 @@ The lifecycle is thus either:
 
 ## Current Future Flags
 
-Here's the current future flags in React Router v6 today:
+Here's the current future flags in React Router v6 today.
+
+### `@remix-run/router` Future Flags
+
+These flags are only applicable when using a [Data Router][picking-a-router] and are passed when creating the `router` instance:
+
+```js
+const router = createBrowserRouter(routes, {
+  future: {
+    v7_normalizeFormMethod: true,
+  },
+});
+```
 
 | Flag                     | Description                                                           |
 | ------------------------ | --------------------------------------------------------------------- |
 | `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
 
+### React Router Future Flags
+
+These flags apply to both Data and non-Data Routers and are passed to the rendered React component:
+
+```jsx
+<BrowserRouter future={{ v7_startTransition: true }}>
+  <Routes>{/*...*/}</Routes>
+</BrowserRouter>
+```
+
+```jsx
+<RouterProvider
+  router={router}
+  future={{ v7_startTransition: true }}
+/>
+```
+
+| Flag                 | Description                                                                 |
+| -------------------- | --------------------------------------------------------------------------- |
+| `v7_startTransition` | Wrap all router state updates in [`React.startTransition`][starttransition] |
+
 [future-flags-blog-post]: https://remix.run/blog/future-flags
 [feature-flowchart]: https://remix.run/docs-images/feature-flowchart.png
 [picking-a-router]: ../routers/picking-a-router
+[starttransition]: https://react.dev/reference/react/startTransition
