@@ -130,8 +130,14 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       }
     `,
 
-    "app/styles.module.css": css`
+    "app/style.module.css": css`
       .test {
+        composes: color from "./composedStyle.module.css";
+      }
+    `,
+
+    "app/composedStyle.module.css": css`
+      .color {
         color: initial;
       }
     `,
@@ -329,8 +335,15 @@ test("HMR", async ({ page, browserName }) => {
     let originalCounter = fs.readFileSync(counterPath, "utf8");
     let importedStylePath = path.join(projectDir, "app", "importedStyle.css");
     let originalImportedStyle = fs.readFileSync(importedStylePath, "utf8");
-    let cssModulePath = path.join(projectDir, "app", "styles.module.css");
-    let originalCssModule = fs.readFileSync(cssModulePath, "utf8");
+    let composedCssModulePath = path.join(
+      projectDir,
+      "app",
+      "composedStyle.module.css"
+    );
+    let originalComposedCssModule = fs.readFileSync(
+      composedCssModulePath,
+      "utf8"
+    );
     let mdxPath = path.join(projectDir, "app", "routes", "mdx.mdx");
     let originalMdx = fs.readFileSync(mdxPath, "utf8");
     let importedSideEffectStylePath = path.join(
@@ -344,13 +357,13 @@ test("HMR", async ({ page, browserName }) => {
     );
 
     // make content and style changed to index route
-    let newCssModule = `
-      .test {
+    let newComposedCssModule = `
+      .color {
         background: black;
         color: white;
       }
     `;
-    fs.writeFileSync(cssModulePath, newCssModule);
+    fs.writeFileSync(composedCssModulePath, newComposedCssModule);
 
     // make changes to imported styles
     let newImportedStyle = `
@@ -371,7 +384,7 @@ test("HMR", async ({ page, browserName }) => {
     // change text, add updated styles, add new Tailwind class ("italic")
     let newIndex = `
       import { useLoaderData } from "@remix-run/react";
-      import styles from "~/styles.module.css";
+      import styles from "~/style.module.css";
       export function shouldRevalidate(args) {
         return true;
       }
@@ -404,7 +417,7 @@ test("HMR", async ({ page, browserName }) => {
     // undo change
     fs.writeFileSync(indexPath, originalIndex);
     fs.writeFileSync(importedStylePath, originalImportedStyle);
-    fs.writeFileSync(cssModulePath, originalCssModule);
+    fs.writeFileSync(composedCssModulePath, originalComposedCssModule);
     fs.writeFileSync(
       importedSideEffectStylePath,
       originalImportedSideEffectStyle

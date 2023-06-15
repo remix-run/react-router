@@ -2,7 +2,7 @@ import path from "path";
 import { pathToFileURL } from "url";
 import * as fse from "fs-extra";
 import loadConfig from "postcss-load-config";
-import type { AcceptedPlugin, Processor } from "postcss";
+import type { AcceptedPlugin, Message, Processor } from "postcss";
 import postcss from "postcss";
 
 import type { RemixConfig } from "../../config";
@@ -164,6 +164,41 @@ async function loadTailwindPlugin(
   return tailwindPlugin;
 }
 
+// PostCSS plugin result objects can contain arbitrary messages returned
+// from plugins. Here we look for messages that indicate a dependency
+// on another file or glob. Here we target the generic dependency messages
+// returned from 'postcss-import' and 'tailwindcss' plugins, but we may
+// need to add more in the future depending on what other plugins do.
+// More info:
+// - https://postcss.org/docs/postcss-runner-guidelines
+// - https://postcss.org/api/#result
+// - https://postcss.org/api/#message
+export function populateDependenciesFromMessages({
+  messages,
+  fileDependencies,
+  globDependencies,
+}: {
+  messages: Array<Message>;
+  fileDependencies: Set<string>;
+  globDependencies: Set<string>;
+}): void {
+  for (let message of messages) {
+    if (message.type === "dependency" && typeof message.file === "string") {
+      fileDependencies.add(message.file);
+      continue;
+    }
+
+    if (
+      message.type === "dir-dependency" &&
+      typeof message.dir === "string" &&
+      typeof message.glob === "string"
+    ) {
+      globDependencies.add(path.join(message.dir, message.glob));
+      continue;
+    }
+  }
+}
+
 export async function getCachedPostcssProcessor({
   config,
   options,
@@ -200,29 +235,11 @@ export async function getCachedPostcssProcessor({
       // invalidate the cache, not just its sub-dependencies.
       fileDependencies.add(args.path);
 
-      // PostCSS plugin result objects can contain arbitrary messages returned
-      // from plugins. Here we look for messages that indicate a dependency
-      // on another file or glob. Here we target the generic dependency messages
-      // returned from 'postcss-import' and 'tailwindcss' plugins, but we may
-      // need to add more in the future depending on what other plugins do.
-      // More info:
-      // - https://postcss.org/api/#result
-      // - https://postcss.org/api/#message
-      for (let message of messages) {
-        if (message.type === "dependency" && typeof message.file === "string") {
-          fileDependencies.add(message.file);
-          continue;
-        }
-
-        if (
-          message.type === "dir-dependency" &&
-          typeof message.dir === "string" &&
-          typeof message.glob === "string"
-        ) {
-          globDependencies.add(path.join(message.dir, message.glob));
-          continue;
-        }
-      }
+      populateDependenciesFromMessages({
+        messages,
+        fileDependencies,
+        globDependencies,
+      });
 
       return {
         cacheValue: css,

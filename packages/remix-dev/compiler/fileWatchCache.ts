@@ -1,25 +1,25 @@
 import picomatch from "picomatch";
 import path from "path";
 
-type CacheValue = {
-  cacheValue: string;
+type CacheValue<T> = {
+  cacheValue: T;
 } & (
   | { fileDependencies?: Set<string>; globDependencies: Set<string> }
   | { fileDependencies: Set<string>; globDependencies?: Set<string> }
 );
 
 export interface FileWatchCache {
-  get(key: string): Promise<CacheValue> | undefined;
-  set(key: string, promise: Promise<CacheValue>): Promise<CacheValue>;
+  get(key: string): Promise<CacheValue<unknown>> | undefined;
+  set<T>(key: string, promise: Promise<CacheValue<T>>): Promise<CacheValue<T>>;
   /**
    * #description Get a cache value, or lazily set the value if it doesn't exist
    * and then return the new cache value. This lets you interact with the cache
    * in a single expression.
    */
-  getOrSet(
+  getOrSet<T>(
     key: string,
-    lazySetter: () => Promise<CacheValue>
-  ): Promise<CacheValue>;
+    lazySetter: () => Promise<CacheValue<T>>
+  ): Promise<CacheValue<T>>;
   invalidateFile(path: string): void;
 }
 
@@ -36,7 +36,7 @@ function getGlobMatcher(glob: string) {
 }
 
 export function createFileWatchCache(): FileWatchCache {
-  let promiseForCacheKey = new Map<string, Promise<CacheValue>>();
+  let promiseForCacheKey = new Map<string, Promise<CacheValue<any>>>();
 
   let fileDepsForCacheKey = new Map<string, Set<string>>();
   let cacheKeysForFileDep = new Map<string, Set<string>>();
@@ -101,11 +101,14 @@ export function createFileWatchCache(): FileWatchCache {
     }
   }
 
-  function get(key: string): Promise<CacheValue> | undefined {
+  function get<T>(key: string): Promise<CacheValue<T>> | undefined {
     return promiseForCacheKey.get(key);
   }
 
-  function set(key: string, promise: Promise<CacheValue>): Promise<CacheValue> {
+  function set<T>(
+    key: string,
+    promise: Promise<CacheValue<T>>
+  ): Promise<CacheValue<T>> {
     promiseForCacheKey.set(key, promise);
 
     promise
@@ -176,10 +179,10 @@ export function createFileWatchCache(): FileWatchCache {
     return promise;
   }
 
-  function getOrSet(
+  function getOrSet<T>(
     key: string,
-    lazySetter: () => Promise<CacheValue>
-  ): Promise<CacheValue> {
+    lazySetter: () => Promise<CacheValue<T>>
+  ): Promise<CacheValue<T>> {
     return promiseForCacheKey.get(key) || set(key, lazySetter());
   }
 
