@@ -1,21 +1,13 @@
 # `@remix-run/dev`
 
-## 1.17.1-pre.1
+## 1.17.1
 
 ### Patch Changes
 
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.17.1-pre.1`
-
-## 1.17.1-pre.0
-
-### Patch Changes
-
+- Replace `esbuild-plugin-polyfill-node` with `esbuild-plugins-node-modules-polyfill` ([#6562](https://github.com/remix-run/remix/pull/6562))
 - Lazily generate CSS bundle when import of `@remix-run/css-bundle` is detected ([#6535](https://github.com/remix-run/remix/pull/6535))
-- replace esbuild-plugin-polyfill-node with esbuild-plugins-node-modules-polyfill ([#6562](https://github.com/remix-run/remix/pull/6562))
 - Updated dependencies:
-  - `@remix-run/serve@1.17.1-pre.0`
-  - `@remix-run/server-runtime@1.17.1-pre.0`
+  - `@remix-run/server-runtime@1.17.1`
 
 ## 1.17.0
 
