@@ -24,17 +24,14 @@ export type DeferFunction = <Data extends Record<string, unknown>>(
   init?: number | ResponseInit
 ) => TypedDeferredData<Data>;
 
-export type JsonFunction = <Data extends unknown>(
+export type JsonFunction = <Data>(
   data: Data,
   init?: number | ResponseInit
 ) => TypedResponse<Data>;
 
 // must be a type since this is a subtype of response
 // interfaces must conform to the types they extend
-export type TypedResponse<T extends unknown = unknown> = Omit<
-  Response,
-  "json"
-> & {
+export type TypedResponse<T = unknown> = Omit<Response, "json"> & {
   json(): Promise<T>;
 };
 

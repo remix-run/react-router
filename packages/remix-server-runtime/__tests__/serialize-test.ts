@@ -1,6 +1,5 @@
 import type { SerializeFrom } from "../index";
-import { defer } from "../index";
-import { json } from "../index";
+import { defer, json } from "../index";
 import type { IsNever } from "./utils";
 import { isEqual } from "./utils";
 

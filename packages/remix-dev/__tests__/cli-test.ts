@@ -289,7 +289,7 @@ function defer() {
 async function interactWithShell(
   proc: childProcess.ChildProcessWithoutNullStreams,
   qAndA: Array<
-    | { question: RegExp; type: Array<String>; answer?: never }
+    | { question: RegExp; type: Array<string>; answer?: never }
     | { question: RegExp; answer: RegExp; type?: never }
   >
 ) {

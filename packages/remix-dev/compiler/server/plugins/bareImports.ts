@@ -1,7 +1,6 @@
-import path from "path";
+import path, { isAbsolute, relative } from "path";
 import fs from "fs";
 import { builtinModules } from "module";
-import { isAbsolute, relative } from "path";
 import type { Plugin } from "esbuild";
 
 import {
