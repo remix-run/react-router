@@ -15,7 +15,7 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
     serverModuleFormat: "cjs",
     tailwind: true,
     future: {
-      unstable_dev: {
+      v2_dev: {
         port: options.devPort,
       },
       v2_routeConvention: true,

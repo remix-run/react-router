@@ -42,7 +42,7 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     --debug             Attach Node.js inspector
     --port, -p          Choose the port from which to run your app
 
-    [unstable_dev]
+    [v2_dev]
     --command, -c       Command used to run your app server
     --scheme            Scheme for the dev server. Default: http
     --host              Host for the dev server. Default: localhost

@@ -47,7 +47,7 @@ type Dev = {
 };
 
 interface FutureConfig {
-  unstable_dev: boolean | Dev;
+  v2_dev: boolean | Dev;
   /** @deprecated Use the `postcss` config option instead */
   unstable_postcss: boolean;
   /** @deprecated Use the `tailwind` config option instead */
@@ -489,7 +489,7 @@ export async function readConfig(
   if (appConfig.future) {
     if ("unstable_cssModules" in appConfig.future) {
       logger.warn(
-        'The "future.unstable_cssModules" config option has been removed',
+        "The `future.unstable_cssModules` config option has been removed",
         {
           details: [
             "CSS Modules are now enabled automatically.",
@@ -502,7 +502,7 @@ export async function readConfig(
 
     if ("unstable_cssSideEffectImports" in appConfig.future) {
       logger.warn(
-        'The "future.unstable_cssSideEffectImports" config option has been removed',
+        "The `future.unstable_cssSideEffectImports` config option has been removed",
         {
           details: [
             "CSS side-effect imports are now enabled automatically.",
@@ -515,7 +515,7 @@ export async function readConfig(
 
     if ("unstable_vanillaExtract" in appConfig.future) {
       logger.warn(
-        'The "future.unstable_vanillaExtract" config option has been removed.',
+        "The `future.unstable_vanillaExtract` config option has been removed.",
         {
           details: [
             "Vanilla Extract is now enabled automatically.",
@@ -528,7 +528,7 @@ export async function readConfig(
 
     if (appConfig.future.unstable_postcss !== undefined) {
       logger.warn(
-        'The "future.unstable_postcss" config option has been deprecated.',
+        "The `future.unstable_postcss` config option has been deprecated.",
         {
           details: [
             "PostCSS support is now stable.",
@@ -541,7 +541,7 @@ export async function readConfig(
 
     if (appConfig.future.unstable_tailwind !== undefined) {
       logger.warn(
-        'The "future.unstable_tailwind" config option has been deprecated.',
+        "The `future.unstable_tailwind` config option has been deprecated.",
         {
           details: [
             "Tailwind support is now stable.",
@@ -550,6 +550,17 @@ export async function readConfig(
           key: "unstable_tailwind",
         }
       );
+    }
+
+    if ("unstable_dev" in appConfig.future) {
+      logger.warn("The `future.unstable_dev` config option has been removed", {
+        details: [
+          "The v2 dev server is now stable.",
+          "Use the `future.v2_dev` config option instead.",
+          "-> https://remix.run/docs/en/main/pages/v2#dev-server",
+        ],
+        key: "unstable_dev",
+      });
     }
   }
 
@@ -772,7 +783,7 @@ export async function readConfig(
   }
 
   let future: FutureConfig = {
-    unstable_dev: appConfig.future?.unstable_dev ?? false,
+    v2_dev: appConfig.future?.v2_dev ?? false,
     unstable_postcss: appConfig.future?.unstable_postcss === true,
     unstable_tailwind: appConfig.future?.unstable_tailwind === true,
     v2_errorBoundary: appConfig.future?.v2_errorBoundary === true,

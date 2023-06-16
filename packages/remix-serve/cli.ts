@@ -34,7 +34,7 @@ let onListen = () => {
     );
   }
   if (
-    build.future?.unstable_dev !== false &&
+    build.future?.v2_dev !== false &&
     process.env.NODE_ENV === "development"
   ) {
     broadcastDevReady(build);

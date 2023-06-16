@@ -46,9 +46,9 @@ describe("readConfig", () => {
         "entryServerFile": "entry.server.tsx",
         "entryServerFilePath": Any<String>,
         "future": Object {
-          "unstable_dev": false,
           "unstable_postcss": Any<Boolean>,
           "unstable_tailwind": Any<Boolean>,
+          "v2_dev": false,
           "v2_errorBoundary": Any<Boolean>,
           "v2_headers": Any<Boolean>,
           "v2_meta": Any<Boolean>,

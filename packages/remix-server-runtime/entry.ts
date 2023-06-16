@@ -19,7 +19,7 @@ type Dev = {
 };
 
 export interface FutureConfig {
-  unstable_dev: boolean | Dev;
+  v2_dev: boolean | Dev;
   /** @deprecated Use the `postcss` config option instead */
   unstable_postcss: boolean;
   /** @deprecated Use the `tailwind` config option instead */

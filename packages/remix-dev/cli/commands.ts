@@ -173,7 +173,7 @@ export async function build(
     mode,
     sourcemap,
   };
-  if (mode === "development" && config.future.unstable_dev) {
+  if (mode === "development" && config.future.v2_dev) {
     let origin = await resolveDevOrigin(config);
     options.devOrigin = origin;
   }
@@ -213,7 +213,7 @@ export async function dev(
   flags: {
     debug?: boolean;
 
-    // unstable_dev
+    // v2_dev
     command?: string;
     scheme?: string;
     host?: string;
@@ -235,7 +235,7 @@ export async function dev(
 
   let config = await readConfig(remixRoot);
 
-  if (config.future.unstable_dev === false) {
+  if (config.future.v2_dev === false) {
     await devServer.serve(config, flags.port);
     return await new Promise(() => {});
   }
@@ -481,7 +481,7 @@ let resolveDevOrigin = async (
     tlsCert?: string;
   } = {}
 ): Promise<DevOrigin> => {
-  let dev = config.future.unstable_dev;
+  let dev = config.future.v2_dev;
   if (dev === false) throw Error("This should never happen");
 
   // prettier-ignore
@@ -517,7 +517,7 @@ let resolveDevServe = async (
   config: RemixConfig,
   flags: Partial<DevServeFlags> = {}
 ): Promise<DevServeFlags> => {
-  let dev = config.future.unstable_dev;
+  let dev = config.future.v2_dev;
   if (dev === false) throw Error("Cannot resolve dev options");
 
   let origin = await resolveDevOrigin(config, flags);
