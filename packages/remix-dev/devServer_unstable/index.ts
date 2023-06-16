@@ -298,7 +298,14 @@ let kill = async (p?: execa.ExecaChildProcess) => {
 
   // https://github.com/nodejs/node/issues/12378
   if (process.platform === "win32") {
-    await execa("taskkill", ["/pid", String(p.pid), "/f", "/t"]);
+    try {
+      await execa("taskkill", ["/pid", String(p.pid), "/f", "/t"]);
+    } catch (error) {
+      // if exit code is 128, app server process is already dead
+      if (!(error instanceof Error)) throw error;
+      if (!("exitCode" in error)) throw error;
+      if (error.exitCode !== 128) throw error;
+    }
   } else {
     p.kill("SIGTERM", { forceKillAfterTimeout: 1_000 });
   }
