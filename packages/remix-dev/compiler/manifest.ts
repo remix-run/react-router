@@ -7,6 +7,7 @@ import invariant from "../invariant";
 import { type Manifest } from "../manifest";
 import { getRouteModuleExports } from "./utils/routeExports";
 import { getHash } from "./utils/crypto";
+import { type FileWatchCache } from "./fileWatchCache";
 
 type Route = RemixConfig["routes"][string];
 
@@ -14,10 +15,12 @@ export async function create({
   config,
   metafile,
   hmr,
+  fileWatchCache,
 }: {
   config: RemixConfig;
   metafile: esbuild.Metafile;
   hmr?: Manifest["hmr"];
+  fileWatchCache: FileWatchCache;
 }): Promise<Manifest> {
   function resolveUrl(outputPath: string): string {
     return createUrl(
@@ -70,7 +73,21 @@ export async function create({
         `Cannot get route(s) for entry point ${output.entryPoint}`
       );
       for (let route of groupedRoute) {
-        let sourceExports = await getRouteModuleExports(config, route.id);
+        let cacheKey = `module-exports:${route.id}`;
+        let { cacheValue: sourceExports } = await fileWatchCache.getOrSet(
+          cacheKey,
+          async () => {
+            let file = path.resolve(
+              config.appDirectory,
+              config.routes[route.id].file
+            );
+            return {
+              cacheValue: await getRouteModuleExports(config, route.id),
+              fileDependencies: new Set([file]),
+            };
+          }
+        );
+
         routes[route.id] = {
           id: route.id,
           parentId: route.parentId,

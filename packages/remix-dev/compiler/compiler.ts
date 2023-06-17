@@ -107,6 +107,7 @@ export let create = async (ctx: Context): Promise<Compiler> => {
       config: ctx.config,
       metafile,
       hmr,
+      fileWatchCache: ctx.fileWatchCache,
     });
     refs.manifestChannel.ok(manifest);
     options.onManifest?.(manifest);

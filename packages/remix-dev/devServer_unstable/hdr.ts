@@ -52,7 +52,24 @@ export let detectLoaderChanges = async (
             let file = args.path.replace(filter, "");
             let route = routesByFile.get(file);
             invariant(route, `Cannot get route by path: ${args.path}`);
-            let theExports = await getRouteModuleExports(ctx.config, route.id);
+            let cacheKey = `module-exports:${route.id}`;
+            let { cacheValue: theExports } = await ctx.fileWatchCache.getOrSet(
+              cacheKey,
+              async () => {
+                let file = path.resolve(
+                  ctx.config.appDirectory,
+                  ctx.config.routes[route!.id].file
+                );
+                return {
+                  cacheValue: await getRouteModuleExports(
+                    ctx.config,
+                    route!.id
+                  ),
+                  fileDependencies: new Set([file]),
+                };
+              }
+            );
+
             let contents = "module.exports = {};";
             if (theExports.includes("loader")) {
               contents = `export { loader } from ${JSON.stringify(

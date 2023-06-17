@@ -1,3 +1,4 @@
+import * as path from "node:path";
 import type esbuild from "esbuild";
 
 import type { RemixConfig } from "../../../config";
@@ -22,7 +23,7 @@ const browserSafeRouteExports: { [name: string]: boolean } = {
  * that re-export only the route module exports that are safe for the browser.
  */
 export function browserRouteModulesPlugin(
-  { config }: Context,
+  { config, fileWatchCache }: Context,
   suffixMatcher: RegExp
 ): esbuild.Plugin {
   return {
@@ -54,7 +55,22 @@ export function browserRouteModulesPlugin(
           try {
             invariant(route, `Cannot get route by path: ${args.path}`);
 
-            theExports = (await getRouteModuleExports(config, route.id)).filter(
+            let cacheKey = `module-exports:${route.id}`;
+            let { cacheValue: sourceExports } = await fileWatchCache.getOrSet(
+              cacheKey,
+              async () => {
+                let file = path.resolve(
+                  config.appDirectory,
+                  config.routes[route!.id].file
+                );
+                return {
+                  cacheValue: await getRouteModuleExports(config, route!.id),
+                  fileDependencies: new Set([file]),
+                };
+              }
+            );
+
+            theExports = sourceExports.filter(
               (ex) => !!browserSafeRouteExports[ex]
             );
           } catch (error: any) {
