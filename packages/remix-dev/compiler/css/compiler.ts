@@ -1,6 +1,5 @@
 import { builtinModules as nodeBuiltins } from "module";
 import * as esbuild from "esbuild";
-import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
 import type { RemixConfig } from "../../config";
 import { getAppDependencies } from "../../dependencies";
@@ -81,7 +80,6 @@ const createEsbuildConfig = (ctx: Context): esbuild.BuildOptions => {
       externalPlugin(/^https?:\/\//, { sideEffects: false }),
       mdxPlugin(ctx),
       emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
-      nodeModulesPolyfillPlugin(),
       externalPlugin(/^node:.*/, { sideEffects: false }),
     ],
     supported: {
