@@ -49,7 +49,6 @@
     "json5": "^2.2.2",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
-    "lru-cache": "^7.14.1",
     "minimatch": "^9.0.0",
     "node-fetch": "^2.6.9",
     "ora": "^5.4.1",

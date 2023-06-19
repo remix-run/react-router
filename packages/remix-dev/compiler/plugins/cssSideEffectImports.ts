@@ -1,7 +1,6 @@
 import path from "path";
 import type { Plugin } from "esbuild";
 import fse from "fs-extra";
-import LRUCache from "lru-cache";
 import { parse, type ParserOptions } from "@babel/parser";
 import traverse from "@babel/traverse";
 import generate from "@babel/generator";
@@ -56,28 +55,52 @@ export const cssSideEffectImportsPlugin = (
       build.onLoad(
         { filter: allJsFilesFilter, namespace: "file" },
         async (args) => {
-          let code = await fse.readFile(args.path, "utf8");
+          let cacheKey = `css-side-effect-imports-plugin:${args.path}&hmr=${hmr}`;
+          let { cacheValue } = await ctx.fileWatchCache.getOrSet(
+            cacheKey,
+            async () => {
+              let fileDependencies = new Set([args.path]);
 
-          // Don't process file if it doesn't contain any references to CSS files
-          if (!code.includes(".css")) {
+              let code = await fse.readFile(args.path, "utf8");
+
+              // Don't process file if it doesn't contain any references to CSS files
+              if (!code.includes(".css")) {
+                return {
+                  fileDependencies,
+                  cacheValue: null,
+                };
+              }
+
+              let loader =
+                loaderForExtension[path.extname(args.path) as Extension];
+              let contents = addSuffixToCssSideEffectImports(loader, code);
+
+              if (args.path.startsWith(ctx.config.appDirectory) && hmr) {
+                contents = await applyHMR(
+                  contents,
+                  args,
+                  ctx.config,
+                  !!build.initialOptions.sourcemap
+                );
+              }
+
+              return {
+                fileDependencies,
+                cacheValue: {
+                  contents,
+                  loader,
+                },
+              };
+            }
+          );
+
+          if (!cacheValue) {
             return null;
           }
 
-          let loader = loaderForExtension[path.extname(args.path) as Extension];
-          let contents = addSuffixToCssSideEffectImports(loader, code);
-
-          if (args.path.startsWith(ctx.config.appDirectory) && hmr) {
-            contents = await applyHMR(
-              contents,
-              args,
-              ctx.config,
-              !!build.initialOptions.sourcemap
-            );
-          }
-
           return {
-            contents,
-            loader,
+            contents: cacheValue.contents,
+            loader: cacheValue.loader,
           };
         }
       );
@@ -129,20 +152,10 @@ const babelPluginsForLoader: Record<Loader, ParserOptions["plugins"]> = {
   tsx: ["typescript", "jsx", ...additionalLanguageFeatures],
 };
 
-const cache = new LRUCache<string, string>({ max: 1000 });
-const getCacheKey = (loader: Loader, code: string) => `${loader}:${code}`;
-
 export function addSuffixToCssSideEffectImports(
   loader: Loader,
   code: string
 ): string {
-  let cacheKey = getCacheKey(loader, code);
-  let cachedResult = cache.get(cacheKey);
-
-  if (cachedResult) {
-    return cachedResult;
-  }
-
   let ast = parse(code, {
     sourceType: "module",
     plugins: babelPluginsForLoader[loader],
@@ -191,8 +204,6 @@ export function addSuffixToCssSideEffectImports(
     retainLines: true,
     compact: false,
   }).code;
-
-  cache.set(cacheKey, result);
 
   return result;
 }
