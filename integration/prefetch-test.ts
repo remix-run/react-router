@@ -271,3 +271,74 @@ test.describe("prefetch=intent (focus)", () => {
     expect(await page.locator("#nav link").count()).toBe(1);
   });
 });
+
+test.describe("prefetch=viewport", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.beforeAll(async () => {
+    fixture = await createFixture({
+      config: {
+        future: { v2_routeConvention: true },
+      },
+      files: {
+        "app/routes/_index.jsx": js`
+          import { Link } from "@remix-run/react";
+
+          export default function Component() {
+            return (
+              <>
+                <h1>Index Page - Scroll Down</h1>
+                <div style={{ marginTop: "150vh" }}>
+                  <Link to="/test" prefetch="viewport">Click me!</Link>
+                </div>
+              </>
+            );
+          }
+        `,
+
+        "app/routes/test.jsx": js`
+          export function loader() {
+            return null;
+          }
+          export default function Component() {
+            return <h1>Test Page</h1>;
+          }
+        `,
+      },
+    });
+
+    // This creates an interactive app using puppeteer.
+    appFixture = await createAppFixture(fixture);
+  });
+
+  test.afterAll(() => {
+    appFixture.close();
+  });
+
+  test("should prefetch when the link enters the viewport", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+
+    // No preloads to start
+    await expect(page.locator("div link")).toHaveCount(0);
+
+    // Preloads render on scroll down
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    await page.waitForSelector(
+      "div link[rel='prefetch'][as='fetch'][href='/test?_data=routes%2Ftest']",
+      { state: "attached" }
+    );
+    await page.waitForSelector(
+      "div link[rel='modulepreload'][href^='/build/routes/test-']",
+      { state: "attached" }
+    );
+
+    // Preloads removed on scroll up
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(page.locator("div link")).toHaveCount(0);
+  });
+});
