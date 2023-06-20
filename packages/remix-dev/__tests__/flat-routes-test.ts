@@ -273,6 +273,31 @@ describe("flatRoutes", () => {
         },
       ],
       [
+        "routes/app._pathless.tsx",
+        {
+          id: "routes/app._pathless",
+          parentId: "routes/app",
+          path: undefined,
+        },
+      ],
+      [
+        "routes/app._pathless._index.tsx",
+        {
+          id: "routes/app._pathless._index",
+          parentId: "routes/app._pathless",
+          index: true,
+          path: undefined,
+        },
+      ],
+      [
+        "routes/app._pathless.child.tsx",
+        {
+          id: "routes/app._pathless.child",
+          parentId: "routes/app._pathless",
+          path: "child",
+        },
+      ],
+      [
         "routes/folder/route.tsx",
         {
           id: "routes/folder",

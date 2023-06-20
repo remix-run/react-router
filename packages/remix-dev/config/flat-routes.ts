@@ -215,6 +215,7 @@ export function flatRoutesUniversal(
     }
 
     if (!config.parentId) config.parentId = "root";
+    config.path = pathname || undefined;
 
     /**
      * We do not try to detect path collisions for pathless layout route
@@ -264,8 +265,6 @@ export function flatRoutesUniversal(
 
     let conflictRouteId = originalPathname + (config.index ? "?index" : "");
     let conflict = uniqueRoutes.get(conflictRouteId);
-
-    config.path = pathname || undefined;
     uniqueRoutes.set(conflictRouteId, config);
 
     if (conflict && (originalPathname || config.index)) {
