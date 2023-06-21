@@ -8,5 +8,17 @@
     "react-router-native": "6.13.0",
     "@remix-run/router": "1.6.3"
   },
-  "changesets": []
+  "changesets": [
+    "blocker-key-strict-mode",
+    "formdata-submitter",
+    "purple-islands-cough",
+    "raw-payload-submission-router",
+    "raw-payload-submission",
+    "skip-fetcher-revalidate",
+    "smart-pots-repair",
+    "strip-basename-getkey",
+    "strip-blocker-basename",
+    "sync-window-location",
+    "tsc-skiplibcheck-react17"
+  ]
 }
