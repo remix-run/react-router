@@ -1006,12 +1006,7 @@ test.describe("Forms", () => {
 
     test("submits the submitter's value(s) in tree order in the form data", async ({
       page,
-      javaScriptEnabled,
     }) => {
-      test.fail(
-        Boolean(javaScriptEnabled),
-        "<Form> doesn't serialize submit buttons correctly #4342"
-      );
       let app = new PlaywrightFixture(appFixture, page);
 
       await app.goto("/submitter");
