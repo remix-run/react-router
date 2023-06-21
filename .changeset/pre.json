@@ -10,6 +10,7 @@
   },
   "changesets": [
     "blocker-key-strict-mode",
+    "brave-mails-relate",
     "formdata-submitter",
     "purple-islands-cough",
     "raw-payload-submission-router",
