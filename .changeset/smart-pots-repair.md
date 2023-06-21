@@ -6,4 +6,4 @@
 "@remix-run/router": patch
 ---
 
-upgrade typescript to 5.1
+Upgrade `typescript` to 5.1

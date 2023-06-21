@@ -11,9 +11,8 @@ router.navigate("/", {
   body: { key: "value" },
 });
 
-function action({ request }) {
-  // request.formData => FormData instance with entry [key=value]
-  // request.text => "key=value"
+async function action({ request }) {
+  // await request.formData() => FormData instance with entry [key=value]
 }
 ```
 
@@ -25,9 +24,8 @@ router.navigate("/", {
   body: { key: "value" },
 });
 
-function action({ request }) {
-  // request.json => { key: "value" }
-  // request.text => '{ "key":"value" }'
+async function action({ request }) {
+  // await request.json() => { key: "value" }
 }
 ```
 
@@ -38,7 +36,7 @@ router.navigate("/", {
   body: "Text submission",
 });
 
-function action({ request }) {
-  // request.text => "Text submission"
+async function action({ request }) {
+  // await request.text() => "Text submission"
 }
 ```

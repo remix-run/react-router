@@ -2,7 +2,7 @@
 "react-router-dom": minor
 ---
 
-Add support for `application/json` and `text/plain` encodings for `useSubmit`/`fetcher.submit`. To reflect these additional types, `useNavigation`/`useFetcher` now also contain `navigation.json`/`navigation.text` and `fetcher.json`/`fetcher.text` which are getter functions mimicking `request.json` and `request.text`. Just as a `Request` does, if you access one of these methods for the incorrect encoding type, it will throw an Error (i.e. accessing `navigation.formData` when `navigation.formEncType` is `application/json`).
+Add support for `application/json` and `text/plain` encodings for `useSubmit`/`fetcher.submit`. To reflect these additional types, `useNavigation`/`useFetcher` now also contain `navigation.json`/`navigation.text` and `fetcher.json`/`fetcher.text` which include the json/text submission if applicable.
 
 ```jsx
 // The default behavior will still serialize as FormData
@@ -12,13 +12,11 @@ function Component() {
   submit({ key: "value" });
   // navigation.formEncType => "application/x-www-form-urlencoded"
   // navigation.formData    => FormData instance
-  // navigation.text        => "key=value"
 }
 
-function action({ request }) {
+async function action({ request }) {
   // request.headers.get("Content-Type") => "application/x-www-form-urlencoded"
-  // request.formData                    => FormData instance
-  // request.text                        => "key=value"
+  // await request.formData()            => FormData instance
 }
 ```
 
@@ -29,13 +27,11 @@ function Component() {
   submit({ key: "value" }, { encType: "application/json" });
   // navigation.formEncType => "application/json"
   // navigation.json        => { key: "value" }
-  // navigation.text        => '{"key":"value"}'
 }
 
-function action({ request }) {
+async function action({ request }) {
   // request.headers.get("Content-Type") => "application/json"
-  // request.json                        => { key: "value" }
-  // request.text                        => '{"key":"value"}'
+  // await request.json                  => { key: "value" }
 }
 ```
 
@@ -48,8 +44,8 @@ function Component() {
   // navigation.text        => "Text submission"
 }
 
-function action({ request }) {
+async function action({ request }) {
   // request.headers.get("Content-Type") => "text/plain"
-  // request.text                        => "Text submission"
+  // await request.text()                => "Text submission"
 }
 ```
