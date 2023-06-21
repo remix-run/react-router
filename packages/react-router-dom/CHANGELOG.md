@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.14.0-pre.1
+
+### Patch Changes
+
+- (Remove) Fix FormData submitter feature detection check ([#10627](https://github.com/remix-run/react-router/pull/10627))
+- Updated dependencies:
+  - `react-router@6.14.0-pre.1`
+
 ## 6.14.0-pre.0
 
 ### Minor Changes
