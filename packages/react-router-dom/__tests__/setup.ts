@@ -21,7 +21,6 @@ if (!globalThis.fetch) {
   // @ts-expect-error
   globalThis.Response = Response;
   globalThis.Headers = Headers;
-  globalThis.Headers = Headers;
 }
 
 if (!globalThis.AbortController) {

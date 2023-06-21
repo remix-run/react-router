@@ -127,12 +127,22 @@ export type SubmitTarget =
   | null;
 
 // One-time check for submitter support
-let formDataSupportsSubmitter = false;
-try {
-  // @ts-expect-error if FormData supports the submitter parameter, this will throw
-  new FormData(undefined, 0);
-} catch (e) {
-  formDataSupportsSubmitter = true;
+let _formDataSupportsSubmitter: boolean | null = null;
+
+function isFormDataSubmitterSupported() {
+  if (_formDataSupportsSubmitter === null) {
+    try {
+      new FormData(
+        document.createElement("form"),
+        // @ts-expect-error if FormData supports the submitter parameter, this will throw
+        0
+      );
+      _formDataSupportsSubmitter = false;
+    } catch (e) {
+      _formDataSupportsSubmitter = true;
+    }
+  }
+  return _formDataSupportsSubmitter;
 }
 
 export interface SubmitOptions {
@@ -257,7 +267,7 @@ export function getFormSubmissionInfo(
     // then tack on the submitter value at the end.  This is a lightweight
     // solution that is not 100% spec compliant.  For complete support in older
     // browsers, consider using the `formdata-submitter-polyfill` package
-    if (!formDataSupportsSubmitter) {
+    if (!isFormDataSubmitterSupported()) {
       let { name, type, value } = target;
       if (type === "image") {
         let prefix = name ? `${name}.` : "";
