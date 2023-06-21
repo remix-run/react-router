@@ -3145,7 +3145,7 @@ function normalizeNavigateOptions(
     : (rawFormMethod.toLowerCase() as FormMethod);
   let formAction = stripHashFromPath(path);
 
-  if (opts.body) {
+  if (opts.body !== undefined) {
     if (opts.formEncType === "text/plain") {
       // text only support POST/PUT/PATCH/DELETE submissions
       if (!isMutationMethod(formMethod)) {

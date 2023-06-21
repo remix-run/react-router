@@ -11201,12 +11201,67 @@ describe("a router", () => {
         expect(await request.json()).toEqual(body);
       });
 
+      it("serializes body as application/json if specified (null)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = null;
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/json",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.json).toBe(body);
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual(body);
+      });
+
       it("serializes body as text/plain if specified", async () => {
         let t = setup({
           routes: [{ id: "root", path: "/", action: true }],
         });
 
         let body = "plain text";
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "text/plain",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.text).toBe(body);
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
+        expect(await request.text()).toEqual(body);
+      });
+
+      it("serializes body as text/plain if specified (empty string)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = "";
         let F = await t.fetch("/", "key", {
           formMethod: "post",
           formEncType: "text/plain",
