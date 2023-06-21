@@ -9,18 +9,21 @@ import type { Context } from "../context";
  */
 export function emptyModulesPlugin(
   { config }: Context,
-  filter: RegExp
+  filter: RegExp,
+  { includeNodeModules = false } = {}
 ): esbuild.Plugin {
   return {
     name: "empty-modules",
     setup(build) {
       build.onResolve({ filter }, (args) => {
-        let resolved = path.resolve(args.resolveDir, args.path);
         if (
+          includeNodeModules ||
           // Limit this behavior to modules found in only the `app` directory.
           // This allows node_modules to use the `.server.js` and `.client.js`
           // naming conventions with different semantics.
-          resolved.startsWith(config.appDirectory)
+          path
+            .resolve(args.resolveDir, args.path)
+            .startsWith(config.appDirectory)
         ) {
           return { path: args.path, namespace: "empty-module" };
         }
