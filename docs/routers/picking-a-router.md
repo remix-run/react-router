@@ -57,7 +57,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 We recommend all web projects use [`createBrowserRouter`][createbrowserrouter].
 
-It uses the full URL instead of the hash urls (`#this/stuff`) common in web apps before `window.pushState` was standardized. Full URLs are better for SEO, better for server rendering, and are just more compatible with the rest of the web platform.
+It uses the full URL instead of the hash urls (`#this/stuff`) common in web apps before `history.pushState` was standardized. Full URLs are better for SEO, better for server rendering, and are just more compatible with the rest of the web platform.
 
 If you're hosting your app on a static file server, you'll need to configure it to send all requests to your `index.html` to avoid getting 404s.
 
