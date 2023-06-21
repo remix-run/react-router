@@ -9,7 +9,7 @@ Add support for `application/json` and `text/plain` encodings for `useSubmit`/`f
 function Component() {
   let navigation = useNavigation();
   let submit = useSubmit();
-  submit({ key: "value" });
+  submit({ key: "value" }, { method: "post" });
   // navigation.formEncType => "application/x-www-form-urlencoded"
   // navigation.formData    => FormData instance
 }
@@ -25,7 +25,7 @@ async function action({ request }) {
 function Component() {
   let navigation = useNavigation();
   let submit = useSubmit();
-  submit({ key: "value" }, { encType: "application/json" });
+  submit({ key: "value" }, { method: "post", encType: "application/json" });
   // navigation.formEncType => "application/json"
   // navigation.json        => { key: "value" }
 }
@@ -41,7 +41,7 @@ async function action({ request }) {
 function Component() {
   let navigation = useNavigation();
   let submit = useSubmit();
-  submit("Text submission", { encType: "text/plain" });
+  submit("Text submission", { method: "post", encType: "text/plain" });
   // navigation.formEncType => "text/plain"
   // navigation.text        => "Text submission"
 }

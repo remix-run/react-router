@@ -96,28 +96,38 @@ submit([
 ]);
 ```
 
-The default behavior if you submit a JSON object is to encode the data into `FormData`:
+The default behavior if you submit a JSON object for a POST submission is to encode the data into `FormData`:
 
 ```tsx
-submit({ key: "value" });
+submit({ key: "value" }, { method: "post" });
 // will serialize into request.formData() in your action
+// and will show up on useNavigation().formData during the navigation
 ```
 
 Or you can opt-into JSON encoding:
 
 ```tsx
-submit({ key: "value" }, { encType: "application/json" });
+submit(
+  { key: "value" },
+  { method: "post", encType: "application/json" }
+);
 // will serialize into request.json() in your action
+// and will show up on useNavigation().json during the navigation
 
-submit('{"key":"value"}', { encType: "application/json" });
+submit('{"key":"value"}', {
+  method: "post",
+  encType: "application/json",
+});
 // will encode into request.json() in your action
+// and will show up on useNavigation().json during the navigation
 ```
 
 Or plain text:
 
 ```tsx
-submit("value", { encType: "text/plain" });
+submit("value", { method: "post", encType: "text/plain" });
 // will serialize into request.text() in your action
+// and will show up on useNavigation().text during the navigation
 ```
 
 ## Submit options
@@ -126,8 +136,8 @@ The second argument is a set of options that map (mostly) directly to form submi
 
 ```tsx
 submit(null, {
-  action: "/logout",
   method: "post",
+  action: "/logout",
 });
 
 // same as
