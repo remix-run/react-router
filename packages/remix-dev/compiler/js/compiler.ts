@@ -101,6 +101,7 @@ const createEsbuildConfig = (
     externalPlugin(/^https?:\/\//, { sideEffects: false }),
     mdxPlugin(ctx),
     emptyModulesPlugin(ctx, /\.server(\.[jt]sx?)?$/),
+    emptyModulesPlugin(ctx, /^@remix-run\/(deno|cloudflare|node)(\/.*)?$/),
     nodeModulesPolyfillPlugin(),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
