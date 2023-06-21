@@ -1481,6 +1481,7 @@ export function createRouter(init: RouterInit): Router {
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
       fetchLoadMatches,
+      fetchRedirectIds,
       routesToUse,
       basename,
       pendingActionData,
@@ -1539,6 +1540,9 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
     revalidatingFetchers.forEach((rf) => {
+      if (fetchControllers.has(rf.key)) {
+        abortFetcher(rf.key);
+      }
       if (rf.controller) {
         // Fetchers use an independent AbortController so that aborting a fetcher
         // (via deleteFetcher) does not abort the triggering navigation that
@@ -1806,6 +1810,7 @@ export function createRouter(init: RouterInit): Router {
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
       fetchLoadMatches,
+      fetchRedirectIds,
       routesToUse,
       basename,
       { [match.route.id]: actionResult.data },
@@ -1825,6 +1830,9 @@ export function createRouter(init: RouterInit): Router {
           existingFetcher ? existingFetcher.data : undefined
         );
         state.fetchers.set(staleKey, revalidatingFetcher);
+        if (fetchControllers.has(staleKey)) {
+          abortFetcher(staleKey);
+        }
         if (rf.controller) {
           fetchControllers.set(staleKey, rf.controller);
         }
@@ -3276,6 +3284,7 @@ function getMatchesToLoad(
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
   fetchLoadMatches: Map<string, FetchLoadMatch>,
+  fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
   pendingActionData?: RouteData,
@@ -3361,34 +3370,38 @@ function getMatchesToLoad(
       return;
     }
 
-    let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
-
-    if (cancelledFetcherLoads.includes(key)) {
-      revalidatingFetchers.push({
-        key,
-        routeId: f.routeId,
-        path: f.path,
-        matches: fetcherMatches,
-        match: fetcherMatch,
-        controller: new AbortController(),
-      });
-      return;
-    }
-
     // Revalidating fetchers are decoupled from the route matches since they
-    // hit a static href, so they _always_ check shouldRevalidate and the
-    // default is strictly if a revalidation is explicitly required (action
-    // submissions, useRevalidator, X-Remix-Revalidate).
-    let shouldRevalidate = shouldRevalidateLoader(fetcherMatch, {
-      currentUrl,
-      currentParams: state.matches[state.matches.length - 1].params,
-      nextUrl,
-      nextParams: matches[matches.length - 1].params,
-      ...submission,
-      actionResult,
-      // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-      defaultShouldRevalidate: isRevalidationRequired,
-    });
+    // load from a static href.  They only set `defaultShouldRevalidate` on
+    // explicit revalidation due to submission, useRevalidator, or X-Remix-Revalidate
+    //
+    // They automatically revalidate without even calling shouldRevalidate if:
+    // - They were cancelled
+    // - They're in the middle of their first load and therefore this is still
+    //   an initial load and not a revalidation
+    //
+    // If neither of those is true, then they _always_ check shouldRevalidate
+    let fetcher = state.fetchers.get(key);
+    let isPerformingInitialLoad =
+      fetcher &&
+      fetcher.state !== "idle" &&
+      fetcher.data === undefined &&
+      // If a fetcher.load redirected then it'll be "loading" without any data
+      // so ensure we're not processing the redirect from this fetcher
+      !fetchRedirectIds.has(key);
+    let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
+    let shouldRevalidate =
+      cancelledFetcherLoads.includes(key) ||
+      isPerformingInitialLoad ||
+      shouldRevalidateLoader(fetcherMatch, {
+        currentUrl,
+        currentParams: state.matches[state.matches.length - 1].params,
+        nextUrl,
+        nextParams: matches[matches.length - 1].params,
+        ...submission,
+        actionResult,
+        defaultShouldRevalidate: isRevalidationRequired,
+      });
+
     if (shouldRevalidate) {
       revalidatingFetchers.push({
         key,

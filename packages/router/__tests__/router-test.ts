@@ -10845,6 +10845,62 @@ describe("a router", () => {
         });
         expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
       });
+
+      it("does not call shouldRevalidate if fetcher has no data (called 2x rapidly)", async () => {
+        // This is specifically for a Remix use case where the initial fetcher.load
+        // call hasn't completed (and hasn't even loaded the route module yet), so
+        // there isn't even a shouldRevalidate implementation to access yet.  If
+        // there's no data it should just interrupt the existing load and load again,
+        // it's not a "revalidation"
+        let spy = jest.fn(() => true);
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  index: true,
+                },
+                {
+                  path: "page",
+                },
+              ],
+            },
+            {
+              id: "fetch",
+              path: "/fetch",
+              loader: true,
+              shouldRevalidate: spy,
+            },
+          ],
+        });
+
+        let key = "key";
+        let A = await t.fetch("/fetch", key, "root");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(A.loaders.fetch.signal.aborted).toBe(false);
+
+        // This should trigger an automatic revalidation of the fetcher since it
+        // hasn't loaded yet
+        let B = await t.navigate("/page", undefined, ["fetch"]);
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(A.loaders.fetch.signal.aborted).toBe(true);
+        expect(B.loaders.fetch.signal.aborted).toBe(false);
+
+        // No-op since the original call was aborted
+        await A.loaders.fetch.resolve("A");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+        // Complete the navigation
+        await B.loaders.fetch.resolve("B");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "B",
+        });
+        expect(spy).not.toHaveBeenCalled();
+      });
     });
 
     describe("fetcher ?index params", () => {
