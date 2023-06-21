@@ -23,6 +23,7 @@ async function action({ request }) {
 ```js
 // Opt-into JSON encoding with `encType: "application/json"`
 function Component() {
+  let navigation = useNavigation();
   let submit = useSubmit();
   submit({ key: "value" }, { encType: "application/json" });
   // navigation.formEncType => "application/json"
@@ -31,13 +32,14 @@ function Component() {
 
 async function action({ request }) {
   // request.headers.get("Content-Type") => "application/json"
-  // await request.json                  => { key: "value" }
+  // await request.json()                => { key: "value" }
 }
 ```
 
 ```js
-// Opt-into JSON encoding with `encType: "application/json"`
+// Opt-into text encoding with `encType: "text/plain"`
 function Component() {
+  let navigation = useNavigation();
   let submit = useSubmit();
   submit("Text submission", { encType: "text/plain" });
   // navigation.formEncType => "text/plain"
