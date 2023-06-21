@@ -102,7 +102,7 @@ export function getSearchParamsForLocation(
     // web extensions. Relevant Bugzilla tickets:
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1414602
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1023984
-    defaultSearchParams.forEach((key) => {
+    defaultSearchParams.forEach((_, key) => {
       if (!searchParams.has(key)) {
         defaultSearchParams.getAll(key).forEach((value) => {
           searchParams.append(key, value);
