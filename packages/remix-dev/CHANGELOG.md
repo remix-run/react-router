@@ -1,5 +1,29 @@
 # `@remix-run/dev`
 
+## 1.18.0-pre.0
+
+### Minor Changes
+
+- stabilize v2 dev server ([#6615](https://github.com/remix-run/remix/pull/6615))
+- improved logging for `remix build` and `remix dev` ([#6596](https://github.com/remix-run/remix/pull/6596))
+
+### Patch Changes
+
+- Add caching to regular stylesheet compilation ([#6638](https://github.com/remix-run/remix/pull/6638))
+- Rename `Architect (AWS Lambda)` -> `Architect` in the `create-remix` CLI to avoid confusion for other methods of deploying to AWS (i.e., SST) ([#6484](https://github.com/remix-run/remix/pull/6484))
+- Improve CSS bundle build performance by skipping unused Node polyfills ([#6639](https://github.com/remix-run/remix/pull/6639))
+- Improve performance of CSS bundle build by skipping compilation of Remix/React packages that are known not to contain CSS imports ([#6654](https://github.com/remix-run/remix/pull/6654))
+- Cache CSS side-effect imports transform when using HMR ([#6622](https://github.com/remix-run/remix/pull/6622))
+- Fix bug with pathless layout routes beneath nested path segments ([#6649](https://github.com/remix-run/remix/pull/6649))
+- Add caching to PostCSS for CSS Modules ([#6604](https://github.com/remix-run/remix/pull/6604))
+- Add caching to PostCSS for side-effect imports ([#6554](https://github.com/remix-run/remix/pull/6554))
+- cache getRouteModuleExports calls to significantly speed up build and HMR rebuild times ([#6629](https://github.com/remix-run/remix/pull/6629))
+- group rebuild logs with surrounding whitespace ([#6607](https://github.com/remix-run/remix/pull/6607))
+- Update minimum version of `esbuild-plugins-node-modules-polyfill` to 1.0.16 to ensure that the plugin is cached ([#6652](https://github.com/remix-run/remix/pull/6652))
+- Updated dependencies:
+  - `@remix-run/serve@1.18.0-pre.0`
+  - `@remix-run/server-runtime@1.18.0-pre.0`
+
 ## 1.17.1
 
 ### Patch Changes

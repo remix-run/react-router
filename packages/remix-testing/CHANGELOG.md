@@ -1,5 +1,17 @@
 # `@remix-run/testing`
 
+## 1.18.0-pre.0
+
+### Minor Changes
+
+- stabilize v2 dev server ([#6615](https://github.com/remix-run/remix/pull/6615))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/react@1.18.0-pre.0`
+  - `@remix-run/node@1.18.0-pre.0`
+
 ## 1.17.1
 
 ### Patch Changes

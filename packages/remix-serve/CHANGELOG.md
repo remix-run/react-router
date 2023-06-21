@@ -1,5 +1,18 @@
 # `@remix-run/serve`
 
+## 1.18.0-pre.0
+
+### Minor Changes
+
+- stabilize v2 dev server ([#6615](https://github.com/remix-run/remix/pull/6615))
+
+### Patch Changes
+
+- fix(types): better tuple serialization types ([#6616](https://github.com/remix-run/remix/pull/6616))
+- Updated dependencies:
+  - `@remix-run/node@1.18.0-pre.0`
+  - `@remix-run/express@1.18.0-pre.0`
+
 ## 1.17.1
 
 ### Patch Changes
