@@ -22,6 +22,7 @@ import type { Result } from "../result";
 import { err, ok } from "../result";
 import invariant from "../invariant";
 import { logger } from "../tux";
+import { kill, killtree } from "./proc";
 
 type Origin = {
   scheme: string;
@@ -214,7 +215,9 @@ export let serve = async (
         try {
           let start = Date.now();
           if (state.appServer === undefined || options.restart) {
-            await kill(state.appServer);
+            if (state.appServer?.pid) {
+              await killtree(state.appServer.pid);
+            }
             state.appServer = startAppServer(options.command);
           }
           let appReady = await state.appReady!.result;
@@ -276,7 +279,7 @@ export let serve = async (
   server.listen(origin.port);
 
   return new Promise(() => {}).finally(async () => {
-    await kill(state.appServer);
+    state.appServer?.pid && (await kill(state.appServer.pid));
     websocket.close();
     server.close();
     await dispose();
@@ -290,25 +293,3 @@ let clean = (config: RemixConfig) => {
 };
 
 let relativePath = (file: string) => path.relative(process.cwd(), file);
-
-let kill = async (p?: execa.ExecaChildProcess) => {
-  if (p === undefined) return;
-  let channel = Channel.create<void>();
-  p.on("exit", channel.ok);
-
-  // https://github.com/nodejs/node/issues/12378
-  if (process.platform === "win32") {
-    try {
-      await execa("taskkill", ["/pid", String(p.pid), "/f", "/t"]);
-    } catch (error) {
-      // if exit code is 128, app server process is already dead
-      if (!(error instanceof Error)) throw error;
-      if (!("exitCode" in error)) throw error;
-      if (error.exitCode !== 128) throw error;
-    }
-  } else {
-    p.kill("SIGTERM", { forceKillAfterTimeout: 1_000 });
-  }
-
-  await channel.result;
-};
