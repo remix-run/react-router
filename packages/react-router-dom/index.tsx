@@ -731,6 +731,11 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   replace?: boolean;
 
   /**
+   * State object to add to the history stack entry for this navigation
+   */
+  state?: any;
+
+  /**
    * Determines whether the form action is relative to the route hierarchy or
    * the pathname.  Use this if you want to opt out of navigating the route
    * hierarchy and want to instead route based on /-delimited URL segments
@@ -784,6 +789,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     {
       reloadDocument,
       replace,
+      state,
       method = defaultMethod,
       action,
       onSubmit,
@@ -812,6 +818,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit(submitter || event.currentTarget, {
         method: submitMethod,
         replace,
+        state,
         relative,
         preventScrollReset,
       });
@@ -1068,6 +1075,7 @@ export function useSubmit(): SubmitFunction {
         formMethod: options.method || (method as HTMLFormMethod),
         formEncType: options.encType || (encType as FormEncType),
         replace: options.replace,
+        state: options.state,
         fromRouteId: currentRouteId,
       });
     },
