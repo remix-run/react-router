@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.18.0-pre.1
+
+### Patch Changes
+
+- fix `remix dev -c`: kill all descendant processes of specified command when restarting ([#6663](https://github.com/remix-run/remix/pull/6663))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.18.0-pre.1`
+
 ## 1.18.0-pre.0
 
 ### Minor Changes
