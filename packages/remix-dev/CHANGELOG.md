@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 1.18.0-pre.2
+
+### Patch Changes
+
+- fix docs links for msw and mkcert ([#6672](https://github.com/remix-run/remix/pull/6672))
+- instructions for integrating with msw ([#6669](https://github.com/remix-run/remix/pull/6669))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.18.0-pre.2`
+
 ## 1.18.0-pre.1
 
 ### Patch Changes
