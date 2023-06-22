@@ -1459,7 +1459,31 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
 
-  return new Response(null, {
+  // Per the spec, all responses except 1xx/204/304 have a body, even if it's
+  // length is 0 and all Responses with a body must specify a Content-Length.
+  //
+  // Furthermore, the spec has changed a bit over time but does seem to indicate
+  // that it's best-practice to include a short HTML note in the body of a
+  // redirect indicating the new location.
+  //
+  // For more detail, see:
+  // - https://datatracker.ietf.org/doc/html/rfc1945#section-9.3
+  // - https://datatracker.ietf.org/doc/html/rfc7230#section-3.3
+  // - https://datatracker.ietf.org/doc/html/rfc7231#section-6.4.3
+  // - https://github.com/traefik/traefik/issues/4456
+  // - https://github.com/remix-run/remix/issues/5595
+  //
+  // We borrow the HTML response Google uses (curl https://google.com)
+  let body =
+    `<html><head><meta http-equiv="content-type" content="text/html;charset=utf-8">` +
+    `<title>${responseInit.status} Moved</title></head><body>` +
+    `<h1>${responseInit.status} Moved</h1>` +
+    `The document has moved <a href="${url}">here</a>.` +
+    `</body></html>`;
+  headers.set("Content-Type", "text/html; charset=UTF-8");
+  headers.set("Content-Length", String(body.length));
+
+  return new Response(body, {
     ...responseInit,
     headers,
   });
