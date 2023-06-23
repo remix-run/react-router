@@ -19,7 +19,7 @@
   ```
 
   ```js
-  // Pass `formEncType` to opt-into a different encoding
+  // Pass `formEncType` to opt-into a different encoding (json)
   router.navigate("/", {
     formMethod: "post",
     formEncType: "application/json",
@@ -32,6 +32,7 @@
   ```
 
   ```js
+  // Pass `formEncType` to opt-into a different encoding (text)
   router.navigate("/", {
     formMethod: "post",
     formEncType: "text/plain",
@@ -45,63 +46,10 @@
 
 ### Patch Changes
 
-- Fix `unstable_useBlocker` key issues in `StrictMode` ([#10573](https://github.com/remix-run/react-router/pull/10573))
-- Avoid calling `shouldRevalidate` for fetchers that have not yet completed a data load ([#10623](https://github.com/remix-run/react-router/pull/10623))
-- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
+- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering ([#10448](https://github.com/remix-run/react-router/pull/10448))
+  - ⚠️ However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.)
 - Strip `basename` from the `location` provided to `<ScrollRestoration getKey>` to match the `useLocation` behavior ([#10550](https://github.com/remix-run/react-router/pull/10550))
-- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering. However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.) ([#10448](https://github.com/remix-run/react-router/pull/10448)) ([#10211](https://github.com/remix-run/react-router/pull/10211))
-
-## 1.7.0-pre.0
-
-### Minor Changes
-
-- Add support for `application/json` and `text/plain` encodings for `router.navigate`/`router.fetch` submissions. To leverage these encodings, pass your data in a `body` parameter and specify the desired `formEncType`: ([#10413](https://github.com/remix-run/react-router/pull/10413))
-
-  ```js
-  // By default, the encoding is "application/x-www-form-urlencoded"
-  router.navigate("/", {
-    formMethod: "post",
-    body: { key: "value" },
-  });
-
-  async function action({ request }) {
-    let formData = await request.formData();
-    // formData => FormData instance with entry [key=value]
-  }
-  ```
-
-  ```js
-  // Pass `formEncType` to opt-into a different encoding
-  router.navigate("/", {
-    formMethod: "post",
-    formEncType: "application/json",
-    body: { key: "value" },
-  });
-
-  async function action({ request }) {
-    let json = await request.json();
-    // json => { key: "value" }
-  }
-  ```
-
-  ```js
-  router.navigate("/", {
-    formMethod: "post",
-    formEncType: "text/plain",
-    body: "Text submission",
-  });
-
-  async function action({ request }) {
-    let text = await request.text();
-    // text => "Text submission"
-  }
-  ```
-
-### Patch Changes
-
-- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering. However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.) ([#10448](https://github.com/remix-run/react-router/pull/10448))
 - Avoid calling `shouldRevalidate` for fetchers that have not yet completed a data load ([#10623](https://github.com/remix-run/react-router/pull/10623))
-- Strip `basename` from the `location` provided to `<ScrollRestoration getKey>` to match the `useLocation` behavior ([#10550](https://github.com/remix-run/react-router/pull/10550))
 - Fix `unstable_useBlocker` key issues in `StrictMode` ([#10573](https://github.com/remix-run/react-router/pull/10573))
 - Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
 

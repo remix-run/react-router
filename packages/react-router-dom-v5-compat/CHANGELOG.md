@@ -9,23 +9,6 @@
   - `react-router@6.14.0`
   - `react-router-dom@6.14.0`
 
-## 6.14.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router-dom@6.14.0-pre.1`
-  - `react-router@6.14.0-pre.1`
-
-## 6.14.0-pre.0
-
-### Patch Changes
-
-- upgrade typescript to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
-- Updated dependencies:
-  - `react-router@6.14.0-pre.0`
-  - `react-router-dom@6.14.0-pre.0`
-
 ## 6.13.0
 
 ### Patch Changes
