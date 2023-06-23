@@ -1,25 +1,17 @@
 # `react-router-dom`
 
-## 6.14.0-pre.1
-
-### Patch Changes
-
-- (Remove) Fix FormData submitter feature detection check ([#10627](https://github.com/remix-run/react-router/pull/10627))
-- Updated dependencies:
-  - `react-router@6.14.0-pre.1`
-
-## 6.14.0-pre.0
+## 6.14.0
 
 ### Minor Changes
 
-- Add support for `application/json` and `text/plain` encodings for `useSubmit`/`fetcher.submit`. To reflect these additional types, `useNavigation`/`useFetcher` now also contain `navigation.json`/`navigation.text` and `fetcher.json`/`fetcher.text` which include the json/text submission if applicable. ([#10413](https://github.com/remix-run/react-router/pull/10413))
+- Add support for `application/json` and `text/plain` encodings for `useSubmit`/`fetcher.submit`. To reflect these additional types, `useNavigation`/`useFetcher` now also contain `navigation.json`/`navigation.text` and `fetcher.json`/`fetcher.text` which include the json/text submission if applicable ([#10413](https://github.com/remix-run/react-router/pull/10413))
 
   ```jsx
   // The default behavior will still serialize as FormData
   function Component() {
     let navigation = useNavigation();
     let submit = useSubmit();
-    submit({ key: "value" });
+    submit({ key: "value" }, { method: "post" });
     // navigation.formEncType => "application/x-www-form-urlencoded"
     // navigation.formData    => FormData instance
   }
@@ -33,8 +25,9 @@
   ```js
   // Opt-into JSON encoding with `encType: "application/json"`
   function Component() {
+    let navigation = useNavigation();
     let submit = useSubmit();
-    submit({ key: "value" }, { encType: "application/json" });
+    submit({ key: "value" }, { method: "post", encType: "application/json" });
     // navigation.formEncType => "application/json"
     // navigation.json        => { key: "value" }
   }
@@ -48,8 +41,9 @@
   ```js
   // Opt-into text encoding with `encType: "text/plain"`
   function Component() {
+    let navigation = useNavigation();
     let submit = useSubmit();
-    submit("Text submission", { encType: "text/plain" });
+    submit("Text submission", { method: "post", encType: "text/plain" });
     // navigation.formEncType => "text/plain"
     // navigation.text        => "Text submission"
   }
@@ -62,13 +56,16 @@
 
 ### Patch Changes
 
-- When submitting a form from a `submitter` element, prefer the built-in `new FormData(form, submitter)` instead of the previous manual approach in modern browsers (those that support the new `submitter` parameter). For browsers that don't support it, we continue to just append the submit button's entry to the end, and we also add rudimentary support for `type="image"` buttons. If developers want full spec-compliant support for legacy browsers, they can use the `formdata-submitter-polyfill`. ([#9865](https://github.com/remix-run/react-router/pull/9865))
-- upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
-- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering. However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.) ([#10448](https://github.com/remix-run/react-router/pull/10448))
+- When submitting a form from a `submitter` element, prefer the built-in `new FormData(form, submitter)` instead of the previous manual approach in modern browsers (those that support the new `submitter` parameter) ([#9865](https://github.com/remix-run/react-router/pull/9865), [#10627](https://github.com/remix-run/react-router/pull/10627))
+  - For browsers that don't support it, we continue to just append the submit button's entry to the end, and we also add rudimentary support for `type="image"` buttons
+  - If developers want full spec-compliant support for legacy browsers, they can use the `formdata-submitter-polyfill`
+- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering ([#10448](https://github.com/remix-run/react-router/pull/10448))
+  - ⚠️ However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.)
 - Fix `tsc --skipLibCheck:false` issues on React 17 ([#10622](https://github.com/remix-run/react-router/pull/10622))
+- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
 - Updated dependencies:
-  - `react-router@6.14.0-pre.0`
-  - `@remix-run/router@1.7.0-pre.0`
+  - `react-router@6.14.0`
+  - `@remix-run/router@1.7.0`
 
 ## 6.13.0
 

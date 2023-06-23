@@ -1,6 +1,6 @@
 # `@remix-run/router`
 
-## 1.7.0-pre.0
+## 1.7.0
 
 ### Minor Changes
 
@@ -14,13 +14,12 @@
   });
 
   async function action({ request }) {
-    let formData = await request.formData();
-    // formData => FormData instance with entry [key=value]
+    // await request.formData() => FormData instance with entry [key=value]
   }
   ```
 
   ```js
-  // Pass `formEncType` to opt-into a different encoding
+  // Pass `formEncType` to opt-into a different encoding (json)
   router.navigate("/", {
     formMethod: "post",
     formEncType: "application/json",
@@ -28,12 +27,12 @@
   });
 
   async function action({ request }) {
-    let json = await request.json();
-    // json => { key: "value" }
+    // await request.json() => { key: "value" }
   }
   ```
 
   ```js
+  // Pass `formEncType` to opt-into a different encoding (text)
   router.navigate("/", {
     formMethod: "post",
     formEncType: "text/plain",
@@ -41,16 +40,16 @@
   });
 
   async function action({ request }) {
-    let text = await request.text();
-    // text => "Text submission"
+    // await request.text() => "Text submission"
   }
   ```
 
 ### Patch Changes
 
-- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering. However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.) ([#10448](https://github.com/remix-run/react-router/pull/10448))
-- Avoid calling `shouldRevalidate` for fetchers that have not yet completed a data load ([#10623](https://github.com/remix-run/react-router/pull/10623))
+- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering ([#10448](https://github.com/remix-run/react-router/pull/10448))
+  - ⚠️ However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.)
 - Strip `basename` from the `location` provided to `<ScrollRestoration getKey>` to match the `useLocation` behavior ([#10550](https://github.com/remix-run/react-router/pull/10550))
+- Avoid calling `shouldRevalidate` for fetchers that have not yet completed a data load ([#10623](https://github.com/remix-run/react-router/pull/10623))
 - Fix `unstable_useBlocker` key issues in `StrictMode` ([#10573](https://github.com/remix-run/react-router/pull/10573))
 - Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
 
