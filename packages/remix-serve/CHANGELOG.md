@@ -1,38 +1,6 @@
 # `@remix-run/serve`
 
-## 1.18.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.18.0-pre.4`
-  - `@remix-run/node@1.18.0-pre.4`
-
-## 1.18.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.18.0-pre.3`
-  - `@remix-run/node@1.18.0-pre.3`
-
-## 1.18.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.18.0-pre.2`
-  - `@remix-run/node@1.18.0-pre.2`
-
-## 1.18.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.18.0-pre.1`
-  - `@remix-run/node@1.18.0-pre.1`
-
-## 1.18.0-pre.0
+## 1.18.0
 
 ### Minor Changes
 
@@ -42,8 +10,8 @@
 
 - fix(types): better tuple serialization types ([#6616](https://github.com/remix-run/remix/pull/6616))
 - Updated dependencies:
-  - `@remix-run/node@1.18.0-pre.0`
-  - `@remix-run/express@1.18.0-pre.0`
+  - `@remix-run/node@1.18.0`
+  - `@remix-run/express@1.18.0`
 
 ## 1.17.1
 

@@ -1,37 +1,6 @@
 # `@remix-run/dev`
 
-## 1.18.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.18.0-pre.4`
-
-## 1.18.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.18.0-pre.3`
-
-## 1.18.0-pre.2
-
-### Patch Changes
-
-- fix docs links for msw and mkcert ([#6672](https://github.com/remix-run/remix/pull/6672))
-- instructions for integrating with msw ([#6669](https://github.com/remix-run/remix/pull/6669))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.18.0-pre.2`
-
-## 1.18.0-pre.1
-
-### Patch Changes
-
-- fix `remix dev -c`: kill all descendant processes of specified command when restarting ([#6663](https://github.com/remix-run/remix/pull/6663))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.18.0-pre.1`
-
-## 1.18.0-pre.0
+## 1.18.0
 
 ### Minor Changes
 
@@ -40,6 +9,8 @@
 
 ### Patch Changes
 
+- fix docs links for msw and mkcert ([#6672](https://github.com/remix-run/remix/pull/6672))
+- fix `remix dev -c`: kill all descendant processes of specified command when restarting ([#6663](https://github.com/remix-run/remix/pull/6663))
 - Add caching to regular stylesheet compilation ([#6638](https://github.com/remix-run/remix/pull/6638))
 - Rename `Architect (AWS Lambda)` -> `Architect` in the `create-remix` CLI to avoid confusion for other methods of deploying to AWS (i.e., SST) ([#6484](https://github.com/remix-run/remix/pull/6484))
 - Improve CSS bundle build performance by skipping unused Node polyfills ([#6639](https://github.com/remix-run/remix/pull/6639))
@@ -50,10 +21,10 @@
 - Add caching to PostCSS for side-effect imports ([#6554](https://github.com/remix-run/remix/pull/6554))
 - cache getRouteModuleExports calls to significantly speed up build and HMR rebuild times ([#6629](https://github.com/remix-run/remix/pull/6629))
 - group rebuild logs with surrounding whitespace ([#6607](https://github.com/remix-run/remix/pull/6607))
+- instructions for integrating with msw ([#6669](https://github.com/remix-run/remix/pull/6669))
 - Update minimum version of `esbuild-plugins-node-modules-polyfill` to 1.0.16 to ensure that the plugin is cached ([#6652](https://github.com/remix-run/remix/pull/6652))
 - Updated dependencies:
-  - `@remix-run/serve@1.18.0-pre.0`
-  - `@remix-run/server-runtime@1.18.0-pre.0`
+  - `@remix-run/server-runtime@1.18.0`
 
 ## 1.17.1
 

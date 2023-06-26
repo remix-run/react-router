@@ -1,14 +1,6 @@
 # `@remix-run/server-runtime`
 
-## 1.18.0-pre.4
-
-## 1.18.0-pre.3
-
-## 1.18.0-pre.2
-
-## 1.18.0-pre.1
-
-## 1.18.0-pre.0
+## 1.18.0
 
 ### Minor Changes
 
