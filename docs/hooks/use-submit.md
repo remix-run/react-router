@@ -99,7 +99,7 @@ submit([
 The default behavior if you submit a JSON object is to encode the data into `FormData`:
 
 ```tsx
-submit({ key: "value" });
+submit({ key: "value", { encType: "application/x-www-form-urlencoded" });
 // will serialize into request.formData() in your action
 ```
 
