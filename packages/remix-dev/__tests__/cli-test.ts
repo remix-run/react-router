@@ -230,7 +230,7 @@ describe("remix CLI", () => {
       await interactWithShell(proc, [
         { question: /Where.*create.*app/i, type: [projectDir, ENTER] },
         { question: /What type of app/i, answer: /basics/i },
-        { question: /Where.*deploy/i, answer: /express/i },
+        { question: /Where.*deploy/i, answer: /remix/i },
         { question: /typescript or javascript/i, answer: /typescript/i },
         { question: /install/i, type: ["n", ENTER] },
       ]);
@@ -255,7 +255,7 @@ describe("remix CLI", () => {
       await interactWithShell(proc, [
         { question: /Where.*create.*app/i, type: [projectDir, ENTER] },
         { question: /What type of app/i, answer: /basics/i },
-        { question: /Where.*deploy/i, answer: /express/i },
+        { question: /Where.*deploy/i, answer: /remix/i },
         { question: /typescript or javascript/i, answer: /javascript/i },
         { question: /install/i, type: ["n", ENTER] },
       ]);
