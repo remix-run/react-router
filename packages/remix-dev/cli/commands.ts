@@ -223,8 +223,6 @@ export async function dev(
     tlsCert?: string;
   } = {}
 ) {
-  // clear screen
-  process.stdout.write("\x1Bc");
   console.log(`\n 💿  remix dev\n`);
 
   if (process.env.NODE_ENV && process.env.NODE_ENV !== "development") {
