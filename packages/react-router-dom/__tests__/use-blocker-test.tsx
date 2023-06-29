@@ -115,12 +115,16 @@ describe("navigation blocking with useBlocker", () => {
   });
 
   it("handles unstable blocker function identities", async () => {
+    let count = 0;
     router = createMemoryRouter([
       {
         element: React.createElement(() => {
           // New function identity on each render
           let b = useBlocker(() => false);
           blocker = b;
+          if (++count > 50) {
+            throw new Error("useBlocker caused a re-render loop!");
+          }
           return (
             <div>
               <Link to="/about">/about</Link>
@@ -143,8 +147,6 @@ describe("navigation blocking with useBlocker", () => {
 
     act(() => {
       root = ReactDOM.createRoot(node);
-      // TODO: Unsure if there's any way to detect the infinite render loop
-      // here?  Right now without the fix the this test just hangs...
       root.render(<RouterProvider router={router} />);
     });
 
