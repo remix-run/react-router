@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.14.1-pre.0
+
+### Patch Changes
+
+- Fix loop in `unstable_useBlocker` when used with an unstable blocker function ([#10652](https://github.com/remix-run/react-router/pull/10652))
+
 ## 6.14.0
 
 ### Patch Changes
