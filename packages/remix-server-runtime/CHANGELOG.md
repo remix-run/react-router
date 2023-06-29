@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.18.1-pre.0
+
+### Patch Changes
+
+- Fix reload loops in scenarios where CDNs ignore search params ([#6707](https://github.com/remix-run/remix/pull/6707))
+
 ## 1.18.0
 
 ### Minor Changes

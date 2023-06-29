@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 1.18.1-pre.0
+
+### Patch Changes
+
+- ignore missing react-dom/client for react 17 ([#6726](https://github.com/remix-run/remix/pull/6726))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.18.1-pre.0`
+  - `@remix-run/serve@1.18.1-pre.0`
+
 ## 1.18.0
 
 ### Minor Changes
