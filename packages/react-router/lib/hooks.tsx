@@ -926,8 +926,6 @@ export function useAsyncError(): unknown {
   return value?._error;
 }
 
-let blockerId = 0;
-
 /**
  * Allow the application to block navigations within the SPA and present the
  * user a confirmation dialog to confirm the navigation.  Mostly used to avoid
@@ -935,11 +933,10 @@ let blockerId = 0;
  * cross-origin navigations.
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
+  let blockerId = React.useId();
   let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);
   let state = useDataRouterState(DataRouterStateHook.UseBlocker);
 
-  let [blockerKey, setBlockerKey] = React.useState("");
-  let [blocker, setBlocker] = React.useState<Blocker>(IDLE_BLOCKER);
   let blockerFunction = React.useCallback<BlockerFunction>(
     (arg) => {
       if (typeof shouldBlock !== "function") {
@@ -973,17 +970,13 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   );
 
   React.useEffect(() => {
-    let key = String(++blockerId);
-    setBlocker(router.getBlocker(key, blockerFunction));
-    setBlockerKey(key);
-    return () => router.deleteBlocker(key);
-  }, [router, setBlocker, setBlockerKey, blockerFunction]);
+    router.getBlocker(blockerId, blockerFunction);
+    return () => router.deleteBlocker(blockerId);
+  }, [router, blockerId, blockerFunction]);
 
   // Prefer the blocker from state since DataRouterContext is memoized so this
   // ensures we update on blocker state updates
-  return blockerKey && state.blockers.has(blockerKey)
-    ? state.blockers.get(blockerKey)!
-    : blocker;
+  return state.blockers.get(blockerId) || IDLE_BLOCKER;
 }
 
 /**
