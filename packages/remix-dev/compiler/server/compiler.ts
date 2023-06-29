@@ -1,5 +1,4 @@
 import * as esbuild from "esbuild";
-import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
 import { type Manifest } from "../../manifest";
 import { loaders } from "../utils/loaders";
@@ -10,6 +9,7 @@ import { cssFilePlugin } from "../plugins/cssImports";
 import { absoluteCssUrlsPlugin } from "../plugins/absoluteCssUrlsPlugin";
 import { deprecatedRemixPackagePlugin } from "../plugins/deprecatedRemixPackage";
 import { emptyModulesPlugin } from "../plugins/emptyModules";
+import { nodePolyfillsPlugin } from "../plugins/nodePolyfillsPlugin";
 import { mdxPlugin } from "../plugins/mdx";
 import { serverAssetsManifestPlugin } from "./plugins/manifest";
 import { serverBareModulesPlugin } from "./plugins/bareImports";
@@ -67,7 +67,7 @@ const createEsbuildConfig = (
   ];
 
   if (ctx.config.serverPlatform !== "node") {
-    plugins.unshift(nodeModulesPolyfillPlugin());
+    plugins.unshift(nodePolyfillsPlugin());
   }
 
   return {
