@@ -1,5 +1,17 @@
 # `react-router`
 
+## 6.14.0
+
+### Patch Changes
+
+- Strip `basename` from locations provided to `unstable_useBlocker` functions to match `useLocation` ([#10573](https://github.com/remix-run/react-router/pull/10573))
+- Fix `generatePath` when passed a numeric `0` value parameter ([#10612](https://github.com/remix-run/react-router/pull/10612))
+- Fix `unstable_useBlocker` key issues in `StrictMode` ([#10573](https://github.com/remix-run/react-router/pull/10573))
+- Fix `tsc --skipLibCheck:false` issues on React 17 ([#10622](https://github.com/remix-run/react-router/pull/10622))
+- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
+- Updated dependencies:
+  - `@remix-run/router@1.7.0`
+
 ## 6.13.0
 
 ### Minor Changes
