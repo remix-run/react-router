@@ -9,7 +9,7 @@ import {
   prettyDOM,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import type { ErrorResponse } from "@remix-run/router";
+import type { ErrorResponse, Fetcher } from "@remix-run/router";
 import type { RouteObject } from "react-router-dom";
 import {
   Form,
@@ -3130,7 +3130,184 @@ function testDomRouter(
         expect(formData.get("b")).toBe("2");
       });
 
-      it("gathers form data on submit(object) submissions", async () => {
+      it("serializes formData on submit(object) submissions", async () => {
+        let actionSpy = jest.fn();
+        let body = { a: "1", b: "2" };
+        let navigation;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                let n = useNavigation();
+                if (n.state === "submitting") {
+                  navigation = n;
+                }
+                return (
+                  <button onClick={() => submit(body, { method: "post" })}>
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        expect(navigation.formData?.get("a")).toBe("1");
+        expect(navigation.formData?.get("b")).toBe("2");
+        expect(navigation.text).toBeUndefined();
+        expect(navigation.json).toBeUndefined();
+        let { request } = actionSpy.mock.calls[0][0];
+        expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
+          `"application/x-www-form-urlencoded;charset=UTF-8"`
+        );
+        let actionFormData = await request.formData();
+        expect(actionFormData.get("a")).toBe("1");
+        expect(actionFormData.get("b")).toBe("2");
+      });
+
+      it("serializes formData on submit(object)/encType:application/x-www-form-urlencoded submissions", async () => {
+        let actionSpy = jest.fn();
+        let body = { a: "1", b: "2" };
+        let navigation;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                let n = useNavigation();
+                if (n.state === "submitting") {
+                  navigation = n;
+                }
+                return (
+                  <button
+                    onClick={() =>
+                      submit(body, {
+                        method: "post",
+                        encType: "application/x-www-form-urlencoded",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        expect(navigation.formData?.get("a")).toBe("1");
+        expect(navigation.formData?.get("b")).toBe("2");
+        expect(navigation.text).toBeUndefined();
+        expect(navigation.json).toBeUndefined();
+        let { request } = actionSpy.mock.calls[0][0];
+        expect(request.headers.get("Content-Type")).toMatchInlineSnapshot(
+          `"application/x-www-form-urlencoded;charset=UTF-8"`
+        );
+        let actionFormData = await request.formData();
+        expect(actionFormData.get("a")).toBe("1");
+        expect(actionFormData.get("b")).toBe("2");
+      });
+
+      it("serializes JSON on submit(object)/encType:application/json submissions", async () => {
+        let actionSpy = jest.fn();
+        let body = { a: "1", b: "2" };
+        let navigation;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                let n = useNavigation();
+                if (n.state === "submitting") {
+                  navigation = n;
+                }
+                return (
+                  <button
+                    onClick={() =>
+                      submit(body, {
+                        method: "post",
+                        encType: "application/json",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        expect(navigation.json).toBe(body);
+        expect(navigation.text).toBeUndefined();
+        expect(navigation.formData).toBeUndefined();
+        let { request } = actionSpy.mock.calls[0][0];
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual({ a: "1", b: "2" });
+      });
+
+      it("serializes text on submit(object)/encType:text/plain submissions", async () => {
+        let actionSpy = jest.fn();
+        let body = "look ma, no formData!";
+        let navigation;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let submit = useSubmit();
+                let n = useNavigation();
+                if (n.state === "submitting") {
+                  navigation = n;
+                }
+                return (
+                  <button
+                    onClick={() =>
+                      submit(body, {
+                        method: "post",
+                        encType: "text/plain",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        fireEvent.click(screen.getByText("Submit"));
+        expect(navigation.text).toBe(body);
+        expect(navigation.formData).toBeUndefined();
+        expect(navigation.json).toBeUndefined();
+        let { request } = actionSpy.mock.calls[0][0];
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
+        expect(await request.text()).toEqual(body);
+      });
+
+      it('serializes into text on <Form encType="text/plain" submissions', async () => {
         let actionSpy = jest.fn();
         let router = createTestRouter(
           createRoutesFromElements(
@@ -3141,20 +3318,22 @@ function testDomRouter(
         render(<RouterProvider router={router} />);
 
         function FormPage() {
-          let submit = useSubmit();
           return (
-            <button
-              onClick={() => submit({ a: "1", b: "2" }, { method: "post" })}
-            >
-              Submit
-            </button>
+            <Form method="post" encType="text/plain">
+              <input name="a" defaultValue="1" />
+              <input name="b" defaultValue="2" />
+              <button type="submit">Submit</button>
+            </Form>
           );
         }
 
         fireEvent.click(screen.getByText("Submit"));
-        let formData = await actionSpy.mock.calls[0][0].request.formData();
-        expect(formData.get("a")).toBe("1");
-        expect(formData.get("b")).toBe("2");
+        expect(await actionSpy.mock.calls[0][0].request.text())
+          .toMatchInlineSnapshot(`
+          "a=1
+          b=2
+          "
+        `);
       });
 
       it("includes submit button name/value on form submission", async () => {
@@ -3285,6 +3464,79 @@ function testDomRouter(
         let formData = await actionSpy.mock.calls[0][0].request.formData();
         expect(formData.get("a")).toBe("1");
         expect(formData.getAll("b")).toEqual(["2", "3"]);
+      });
+
+      it("includes the correct submitter value(s) in tree order", async () => {
+        let actionSpy = jest.fn();
+        actionSpy.mockReturnValue({});
+        async function getPayload() {
+          let formData = await actionSpy.mock.calls[
+            actionSpy.mock.calls.length - 1
+          ][0].request.formData();
+          return new URLSearchParams(formData.entries()).toString();
+        }
+
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/" action={actionSpy} element={<FormPage />} />
+          ),
+          { window: getWindow("/") }
+        );
+        render(<RouterProvider router={router} />);
+
+        function FormPage() {
+          return (
+            <>
+              <button name="tasks" value="outside" form="myform">
+                Outside
+              </button>
+              <Form id="myform" method="post">
+                <input type="text" name="tasks" defaultValue="first" />
+                <input type="text" name="tasks" defaultValue="second" />
+
+                <button name="tasks" value="">
+                  Add Task
+                </button>
+                <button value="">No Name</button>
+                <input type="image" name="tasks" alt="Add Task" />
+                <input type="image" alt="No Name" />
+
+                <input type="text" name="tasks" defaultValue="last" />
+              </Form>
+            </>
+          );
+        }
+
+        fireEvent.click(screen.getByText("Add Task"));
+        expect(await getPayload()).toEqual(
+          "tasks=first&tasks=second&tasks=&tasks=last"
+        );
+
+        fireEvent.click(screen.getByText("No Name"));
+        expect(await getPayload()).toEqual(
+          "tasks=first&tasks=second&tasks=last"
+        );
+
+        fireEvent.click(screen.getByAltText("Add Task"), {
+          clientX: 1,
+          clientY: 2,
+        });
+        expect(await getPayload()).toMatch(
+          "tasks=first&tasks=second&tasks.x=1&tasks.y=2&tasks=last"
+        );
+
+        fireEvent.click(screen.getByAltText("No Name"), {
+          clientX: 1,
+          clientY: 2,
+        });
+        expect(await getPayload()).toMatch(
+          "tasks=first&tasks=second&x=1&y=2&tasks=last"
+        );
+
+        fireEvent.click(screen.getByText("Outside"));
+        expect(await getPayload()).toEqual(
+          "tasks=outside&tasks=first&tasks=second&tasks=last"
+        );
       });
     });
 
@@ -3962,6 +4214,175 @@ function testDomRouter(
             </p>
           </div>"
         `);
+      });
+
+      it("serializes fetcher.submit(object) as FormData", async () => {
+        let actionSpy = jest.fn();
+        let body = { key: "value" };
+        let fetcher: Fetcher;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let f = useFetcher();
+                fetcher = f;
+                return (
+                  <button onClick={() => f.submit(body, { method: "post" })}>
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Submit"));
+        // @ts-expect-error
+        expect(fetcher.formData?.get("key")).toBe("value");
+        // @ts-expect-error
+        expect(fetcher.text).toBeUndefined();
+        // @ts-expect-error
+        expect(fetcher.json).toBeUndefined();
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("key")).toBe("value");
+      });
+
+      it("serializes fetcher.submit(object, { encType:application/x-www-form-urlencoded }) as FormData", async () => {
+        let actionSpy = jest.fn();
+        let body = { key: "value" };
+        let fetcher: Fetcher;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let f = useFetcher();
+                fetcher = f;
+                return (
+                  <button
+                    onClick={() =>
+                      f.submit(body, {
+                        method: "post",
+                        encType: "application/x-www-form-urlencoded",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Submit"));
+        // @ts-expect-error
+        expect(fetcher.formData?.get("key")).toBe("value");
+        // @ts-expect-error
+        expect(fetcher.text).toBeUndefined();
+        // @ts-expect-error
+        expect(fetcher.json).toBeUndefined();
+        let formData = await actionSpy.mock.calls[0][0].request.formData();
+        expect(formData.get("key")).toBe("value");
+      });
+
+      it("serializes fetcher.submit(object, { encType:application/json }) as FormData", async () => {
+        let actionSpy = jest.fn();
+        let body = { key: "value" };
+        let fetcher: Fetcher;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let f = useFetcher();
+                fetcher = f;
+                return (
+                  <button
+                    onClick={() =>
+                      f.submit(body, {
+                        method: "post",
+                        encType: "application/json",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Submit"));
+        // @ts-expect-error
+        expect(fetcher.json).toBe(body);
+        // @ts-expect-error
+        expect(fetcher.text).toBeUndefined();
+        // @ts-expect-error
+        expect(fetcher.formData).toBeUndefined();
+        let json = await actionSpy.mock.calls[0][0].request.json();
+        expect(json).toEqual(body);
+      });
+
+      it("serializes fetcher.submit(object, { encType:text/plain }) as text", async () => {
+        let actionSpy = jest.fn();
+        let body = "Look ma, no FormData!";
+        let fetcher: Fetcher;
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              action: actionSpy,
+              Component() {
+                let f = useFetcher();
+                fetcher = f;
+                return (
+                  <button
+                    onClick={() =>
+                      f.submit(body, {
+                        method: "post",
+                        encType: "text/plain",
+                      })
+                    }
+                  >
+                    Submit
+                  </button>
+                );
+              },
+            },
+          ],
+          {
+            window: getWindow("/"),
+          }
+        );
+
+        render(<RouterProvider router={router} />);
+        fireEvent.click(screen.getByText("Submit"));
+        // @ts-expect-error
+        expect(fetcher.text).toBe(body);
+        // @ts-expect-error
+        expect(fetcher.formData).toBeUndefined();
+        // @ts-expect-error
+        expect(fetcher.json).toBeUndefined();
+        let text = await actionSpy.mock.calls[0][0].request.text();
+        expect(text).toEqual(body);
       });
 
       it("show all fetchers via useFetchers and cleans up fetchers on unmount", async () => {

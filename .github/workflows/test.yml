@@ -21,7 +21,14 @@ concurrency:
 
 jobs:
   test:
-    name: 🧪 Test
+    name: "🧪 Test: (Node: ${{ matrix.node }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 16
+          - 18
+
     runs-on: ubuntu-latest
 
     steps:
@@ -33,7 +40,7 @@ jobs:
         with:
           cache: yarn
           check-latest: true
-          node-version-file: ".nvmrc"
+          node-version: ${{ matrix.node }}
 
       - name: Disable GitHub Actions Annotations
         run: |

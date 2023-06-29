@@ -1,0 +1,43 @@
+name: ⚙️ Deduplicate yarn.lock
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - ./yarn.lock
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "yarn"
+
+      - name: ⚙️ Dedupe yarn.lock
+        run: npx yarn-deduplicate && rm -rf ./node_modules && yarn
+
+      - name: 💪 Commit
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "💿 no deduplication needed"
+            exit 0
+          fi
+          git commit -m "chore: deduplicate `yarn.lock`"
+          git push
+          echo "💿 https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"

@@ -40,7 +40,7 @@
   "resolutions": {
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "jsdom": "22.0.0"
+    "jsdom": "22.1.0"
   },
   "dependencies": {
     "@ampproject/filesize": "^4.3.0",
@@ -102,26 +102,26 @@
     "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.3.5",
     "type-fest": "^2.13.0",
-    "typescript": "^4.7.3"
+    "typescript": "^5.1.3"
   },
   "engines": {
     "node": ">=14"
   },
   "filesize": {
     "packages/router/dist/router.umd.min.js": {
-      "none": "45 kB"
+      "none": "46.5 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
-      "none": "13.5 kB"
+      "none": "13.8 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
-      "none": "15.8 kB"
+      "none": "16.2 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
-      "none": "12.1 kB"
+      "none": "12.6 kB"
     },
     "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
-      "none": "18.1 kB"
+      "none": "18.6 kB"
     }
   }
 }

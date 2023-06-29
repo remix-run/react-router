@@ -1911,7 +1911,7 @@ describe("a router", () => {
       router.dispose();
     });
 
-    it("includes submission on actions that return data", async () => {
+    it("includes submissions on actions that return data", async () => {
       let shouldRevalidate = jest.fn(() => true);
 
       let history = createMemoryHistory({ initialEntries: ["/child"] });
@@ -2013,6 +2013,88 @@ describe("a router", () => {
       });
       // @ts-expect-error
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
+
+      router.dispose();
+    });
+
+    it("includes json submissions", async () => {
+      let shouldRevalidate = jest.fn(() => true);
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => "ROOT*",
+            action: () => "ACTION",
+            shouldRevalidate,
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      await tick();
+      router.navigate(null, {
+        formMethod: "post",
+        formEncType: "application/json",
+        body: { key: "value" },
+      });
+      await tick();
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      // @ts-expect-error
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchObject({
+        formMethod: "post",
+        formAction: "/",
+        formEncType: "application/json",
+        text: undefined,
+        formData: undefined,
+        json: { key: "value" },
+        actionResult: "ACTION",
+      });
+
+      router.dispose();
+    });
+
+    it("includes text submissions", async () => {
+      let shouldRevalidate = jest.fn(() => true);
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => "ROOT*",
+            action: () => "ACTION",
+            shouldRevalidate,
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      await tick();
+      router.navigate(null, {
+        formMethod: "post",
+        formEncType: "text/plain",
+        body: "hello world",
+      });
+      await tick();
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      // @ts-expect-error
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchObject({
+        formMethod: "post",
+        formAction: "/",
+        formEncType: "text/plain",
+        text: "hello world",
+        formData: undefined,
+        json: undefined,
+        actionResult: "ACTION",
+      });
 
       router.dispose();
     });
@@ -2272,8 +2354,10 @@ describe("a router", () => {
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
+          "json": undefined,
           "nextParams": {},
           "nextUrl": "http://localhost/",
+          "text": undefined,
         }
       `);
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
@@ -2333,8 +2417,10 @@ describe("a router", () => {
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
+          "json": undefined,
           "nextParams": {},
           "nextUrl": "http://localhost/",
+          "text": undefined,
         }
       `);
 
@@ -4886,6 +4972,7 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "head",
+        // @ts-expect-error
         formData: formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
@@ -4926,6 +5013,7 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "options",
+        // @ts-expect-error
         formData: formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
@@ -6208,6 +6296,327 @@ describe("a router", () => {
     });
   });
 
+  describe("submission encTypes", () => {
+    async function validateFormDataSubmission(
+      body: any,
+      includeFormEncType: boolean
+    ) {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        ...(includeFormEncType
+          ? { formEncType: "application/x-www-form-urlencoded" }
+          : {}),
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.formData?.get("a")).toBe("1");
+      expect(t.router.state.navigation.formData?.get("b")).toBe("2");
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+      let fd = await request.formData();
+      expect(fd.get("a")).toBe("1");
+      expect(fd.get("b")).toBe("2");
+    }
+
+    async function validateJsonObjectSubmission(body: any) {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.json?.["a"]).toBe(1);
+      expect(t.router.state.navigation.json?.["b"]).toBe(2);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      let json = await request.json();
+      expect(json["a"]).toBe(1);
+      expect(json["b"]).toBe(2);
+    }
+
+    async function validateJsonArraySubmission(body: any) {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.json?.[0]).toBe(1);
+      expect(t.router.state.navigation.json?.[1]).toBe(2);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      let json = await request.json();
+      expect(json[0]).toBe(1);
+      expect(json[1]).toBe(2);
+    }
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (object)", async () => {
+      await validateFormDataSubmission({ a: "1", b: "2" }, false);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (string)", async () => {
+      await validateFormDataSubmission("a=1&b=2", false);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (string with leading ?)", async () => {
+      await validateFormDataSubmission("?a=1&b=2", false);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (entries array)", async () => {
+      await validateFormDataSubmission(
+        [
+          ["a", "1"],
+          ["b", "2"],
+        ],
+        false
+      );
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (object)", async () => {
+      await validateFormDataSubmission({ a: "1", b: "2" }, true);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (string)", async () => {
+      await validateFormDataSubmission("a=1&b=2", true);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (string with leading ?)", async () => {
+      await validateFormDataSubmission("?a=1&b=2", true);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (entries array)", async () => {
+      await validateFormDataSubmission(
+        [
+          ["a", "1"],
+          ["b", "2"],
+        ],
+        true
+      );
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (object)", async () => {
+      await validateJsonObjectSubmission({ a: 1, b: 2 });
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (object string)", async () => {
+      await validateJsonObjectSubmission('{"a":1,"b":2}');
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (array)", async () => {
+      await validateJsonArraySubmission([1, 2]);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (array string)", async () => {
+      await validateJsonArraySubmission("[1,2]");
+    });
+
+    it("serializes body as text/plain (string)", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = "plain text";
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "text/plain",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBe(body);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "text/plain;charset=UTF-8"
+      );
+      expect(await request.text()).toEqual(body);
+    });
+
+    it("serializes body as text/plain (FormData)", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = new FormData();
+      body.append("a", "1");
+      body.append("b", "2");
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "text/plain",
+        body,
+      });
+      expect(t.router.state.navigation.text).toMatchInlineSnapshot(`
+        "a=1
+        b=2
+        "
+      `);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "text/plain;charset=UTF-8"
+      );
+      expect(await request.text()).toMatchInlineSnapshot(`
+        "a=1
+        b=2
+        "
+      `);
+    });
+
+    it("serializes body as FormData when encType=undefined", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = { a: "1" };
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.formData?.get("a")).toBe("1");
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect((await request.formData()).get("a")).toBe("1");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+    });
+
+    it("throws on invalid URLSearchParams submissions", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        body: ["you", "cant", "do", "this"],
+      });
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": ErrorResponse {
+            "data": "Error: Unable to encode submission body",
+            "error": [Error: Unable to encode submission body],
+            "internal": true,
+            "status": 400,
+            "statusText": "Bad Request",
+          },
+        }
+      `);
+    });
+
+    it("throws on invalid JSON submissions", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        body: '{ not: "valid }',
+      });
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": ErrorResponse {
+            "data": "Error: Unable to encode submission body",
+            "error": [Error: Unable to encode submission body],
+            "internal": true,
+            "status": 400,
+            "statusText": "Bad Request",
+          },
+        }
+      `);
+    });
+  });
+
   describe("redirects", () => {
     let REDIRECT_ROUTES: TestRouteObject[] = [
       {
@@ -6955,6 +7364,37 @@ describe("a router", () => {
 
         let nav1 = await t.navigate("/tasks");
         await nav1.loaders.tasks.resolve("TASKS");
+        expect(t.router.state.restoreScrollPosition).toBe(100);
+        expect(t.router.state.preventScrollReset).toBe(false);
+      });
+
+      it("does not strip the basename from the location provided to getKey", async () => {
+        let t = setup({
+          routes: SCROLL_ROUTES,
+          basename: "/base",
+          initialEntries: ["/base"],
+          hydrationData: {
+            loaderData: {
+              index: "INDEX_DATA",
+            },
+          },
+        });
+
+        let positions = { "/base/tasks": 100 };
+        let activeScrollPosition = 0;
+        let pathname;
+        t.router.enableScrollRestoration(
+          positions,
+          () => activeScrollPosition,
+          (l) => {
+            pathname = l.pathname;
+            return l.pathname;
+          }
+        );
+
+        let nav1 = await t.navigate("/base/tasks");
+        await nav1.loaders.tasks.resolve("TASKS");
+        expect(pathname).toBe("/base/tasks");
         expect(t.router.state.restoreScrollPosition).toBe(100);
         expect(t.router.state.preventScrollReset).toBe(false);
       });
@@ -8594,6 +9034,32 @@ describe("a router", () => {
         });
       });
 
+      it("action fetch with invalid body (json)", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              hasErrorBoundary: true,
+            },
+          ],
+        });
+        let A = await t.fetch("/", {
+          formMethod: "post",
+          body: "not json",
+          formEncType: "application/json",
+        });
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          root: new ErrorResponse(
+            400,
+            "Bad Request",
+            new Error("Unable to encode submission body"),
+            true
+          ),
+        });
+      });
+
       it("handles fetcher errors at contextual route boundaries", async () => {
         let t = setup({
           routes: [
@@ -9846,11 +10312,13 @@ describe("a router", () => {
             "formData": FormData {},
             "formEncType": "application/x-www-form-urlencoded",
             "formMethod": "post",
+            "json": undefined,
             "nextParams": {
               "a": "two",
               "b": "three",
             },
             "nextUrl": "http://localhost/two/three",
+            "text": undefined,
           }
         `);
 
@@ -10377,6 +10845,62 @@ describe("a router", () => {
         });
         expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
       });
+
+      it("does not call shouldRevalidate if fetcher has no data (called 2x rapidly)", async () => {
+        // This is specifically for a Remix use case where the initial fetcher.load
+        // call hasn't completed (and hasn't even loaded the route module yet), so
+        // there isn't even a shouldRevalidate implementation to access yet.  If
+        // there's no data it should just interrupt the existing load and load again,
+        // it's not a "revalidation"
+        let spy = jest.fn(() => true);
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  index: true,
+                },
+                {
+                  path: "page",
+                },
+              ],
+            },
+            {
+              id: "fetch",
+              path: "/fetch",
+              loader: true,
+              shouldRevalidate: spy,
+            },
+          ],
+        });
+
+        let key = "key";
+        let A = await t.fetch("/fetch", key, "root");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(A.loaders.fetch.signal.aborted).toBe(false);
+
+        // This should trigger an automatic revalidation of the fetcher since it
+        // hasn't loaded yet
+        let B = await t.navigate("/page", undefined, ["fetch"]);
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(A.loaders.fetch.signal.aborted).toBe(true);
+        expect(B.loaders.fetch.signal.aborted).toBe(false);
+
+        // No-op since the original call was aborted
+        await A.loaders.fetch.resolve("A");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+        // Complete the navigation
+        await B.loaders.fetch.resolve("B");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "B",
+        });
+        expect(spy).not.toHaveBeenCalled();
+      });
     });
 
     describe("fetcher ?index params", () => {
@@ -10590,6 +11114,205 @@ describe("a router", () => {
           }
         `);
         expect(t.router.getFetcher(key).data).toBe(undefined);
+      });
+    });
+
+    describe("fetcher submissions", () => {
+      it("serializes body as application/x-www-form-urlencoded", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = { a: "1" };
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/x-www-form-urlencoded",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.formData?.get("a")).toBe(
+          "1"
+        );
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        );
+        expect((await request.formData()).get("a")).toBe("1");
+      });
+
+      it("serializes body as application/json if specified (object)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = { a: "1" };
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/json",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.json).toBe(body);
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual(body);
+      });
+
+      it("serializes body as application/json if specified (array)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = [1, 2, 3];
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/json",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.json).toBe(body);
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual(body);
+      });
+
+      it("serializes body as application/json if specified (null)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = null;
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/json",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.json).toBe(body);
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual(body);
+      });
+
+      it("serializes body as text/plain if specified", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = "plain text";
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "text/plain",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.text).toBe(body);
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
+        expect(await request.text()).toEqual(body);
+      });
+
+      it("serializes body as text/plain if specified (empty string)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = "";
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "text/plain",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.text).toBe(body);
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
+        expect(await request.text()).toEqual(body);
+      });
+
+      it("serializes body when encType=undefined", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = { a: "1" };
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.formData?.get("a")).toBe(
+          "1"
+        );
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        );
+        expect((await request.formData()).get("a")).toBe("1");
       });
     });
   });

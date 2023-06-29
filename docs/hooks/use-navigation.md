@@ -23,6 +23,8 @@ function SomeComponent() {
   navigation.state;
   navigation.location;
   navigation.formData;
+  navigation.json;
+  navigation.text;
   navigation.formAction;
   navigation.formMethod;
 }
@@ -91,6 +93,14 @@ let isRedirecting =
 Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have your form's submission data attached to it. This is primarily useful to build "Optimistic UI" with the `submission.formData` [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object.
 
 In the case of a GET form submission, `formData` will be empty and the data will be reflected in `navigation.location.search`.
+
+## `navigation.json`
+
+Any POST, PUT, PATCH, or DELETE navigation that started from a `useSubmit(payload, { encType: "application/json" })` will have your JSON value available in `navigation.json`.
+
+## `navigation.text`
+
+Any POST, PUT, PATCH, or DELETE navigation that started from a `useSubmit(payload, { encType: "text/plain" })` will have your text value available in `navigation.text`.
 
 ## `navigation.location`
 

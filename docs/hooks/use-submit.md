@@ -78,14 +78,66 @@ formData.append("cheese", "gouda");
 submit(formData);
 ```
 
+Or you can submit `URLSearchParams`:
+
+```tsx
+let searchParams = new URLSearchParams();
+searchParams.append("cheese", "gouda");
+submit(searchParams);
+```
+
+Or anything that the `URLSearchParams` constructor accepts:
+
+```tsx
+submit("cheese=gouda&toasted=yes");
+submit([
+  ["cheese", "gouda"],
+  ["toasted", "yes"],
+]);
+```
+
+The default behavior if you submit a JSON object for a POST submission is to encode the data into `FormData`:
+
+```tsx
+submit({ key: "value" }, { method: "post" });
+// will serialize into request.formData() in your action
+// and will show up on useNavigation().formData during the navigation
+```
+
+Or you can opt-into JSON encoding:
+
+```tsx
+submit(
+  { key: "value" },
+  { method: "post", encType: "application/json" }
+);
+// will serialize into request.json() in your action
+// and will show up on useNavigation().json during the navigation
+
+submit('{"key":"value"}', {
+  method: "post",
+  encType: "application/json",
+});
+// will encode into request.json() in your action
+// and will show up on useNavigation().json during the navigation
+```
+
+Or plain text:
+
+```tsx
+submit("value", { method: "post", encType: "text/plain" });
+// will serialize into request.text() in your action
+// and will show up on useNavigation().text during the navigation
+```
+
 ## Submit options
 
-The second argument is a set of options that map directly to form submission attributes:
+The second argument is a set of options that map (mostly) directly to form submission attributes:
 
 ```tsx
 submit(null, {
-  action: "/logout",
   method: "post",
+  action: "/logout",
 });
 
 // same as
