@@ -974,10 +974,26 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
 
   React.useEffect(() => {
     let key = String(++blockerId);
-    setBlocker(router.getBlocker(key, blockerFunction));
+    // Since blockerFunction may change on re-renders (either based on a
+    // controlled input value changing or based on the calling context not
+    // leveraging React.useCallback()), we separate the key generation from
+    // the blockerFunction assignment.  All blockers will start in a
+    // non-blocking idle/unblocked state, and then the effect below will
+    // assign the blockerFunction to the keyed blocker initially and upon
+    // changes to the blocker function
+    setBlocker(router.getBlocker(key, () => false));
     setBlockerKey(key);
     return () => router.deleteBlocker(key);
-  }, [router, setBlocker, setBlockerKey, blockerFunction]);
+  }, [router, setBlocker, setBlockerKey]);
+
+  React.useEffect(() => {
+    // Assign the blockerFunction only after the prior effect setBlockerKey
+    // has taken effect so we don't get an orphaned blockerFunction in the
+    // router with a key of ""
+    if (blockerKey !== "") {
+      setBlocker(router.getBlocker(blockerKey, blockerFunction));
+    }
+  }, [blockerFunction, blockerKey, router]);
 
   // Prefer the blocker from state since DataRouterContext is memoized so this
   // ensures we update on blocker state updates

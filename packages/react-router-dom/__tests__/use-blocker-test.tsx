@@ -114,6 +114,48 @@ describe("navigation blocking with useBlocker", () => {
     act(() => root.unmount());
   });
 
+  it("handles unstable blocker function identities", async () => {
+    router = createMemoryRouter([
+      {
+        element: React.createElement(() => {
+          // New function identity on each render
+          let b = useBlocker(() => false);
+          blocker = b;
+          return (
+            <div>
+              <Link to="/about">/about</Link>
+              <Outlet />
+            </div>
+          );
+        }),
+        children: [
+          {
+            path: "/",
+            element: <h1>Home</h1>,
+          },
+          {
+            path: "/about",
+            element: <h1>About</h1>,
+          },
+        ],
+      },
+    ]);
+
+    act(() => {
+      root = ReactDOM.createRoot(node);
+      // TODO: Unsure if there's any way to detect the infinite render loop
+      // here?  Right now without the fix the this test just hangs...
+      root.render(<RouterProvider router={router} />);
+    });
+
+    expect(node.querySelector("h1")?.textContent).toBe("Home");
+
+    act(() => click(node.querySelector("a[href='/about']")));
+    expect(node.querySelector("h1")?.textContent).toBe("About");
+
+    act(() => root.unmount());
+  });
+
   describe("on <Link> navigation", () => {
     describe("blocker returns false", () => {
       beforeEach(() => {
