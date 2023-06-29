@@ -1,6 +1,7 @@
 import * as path from "path";
 import { builtinModules as nodeBuiltins } from "module";
 import * as esbuild from "esbuild";
+import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
 import type { RemixConfig } from "../../config";
 import { type Manifest } from "../../manifest";
@@ -11,7 +12,6 @@ import { cssFilePlugin } from "../plugins/cssImports";
 import { absoluteCssUrlsPlugin } from "../plugins/absoluteCssUrlsPlugin";
 import { deprecatedRemixPackagePlugin } from "../plugins/deprecatedRemixPackage";
 import { emptyModulesPlugin } from "../plugins/emptyModules";
-import { nodePolyfillsPlugin } from "../plugins/nodePolyfillsPlugin";
 import { mdxPlugin } from "../plugins/mdx";
 import { externalPlugin } from "../plugins/external";
 import { cssBundlePlugin } from "../plugins/cssBundlePlugin";
@@ -104,7 +104,7 @@ const createEsbuildConfig = (
     emptyModulesPlugin(ctx, /^@remix-run\/(deno|cloudflare|node)(\/.*)?$/, {
       includeNodeModules: true,
     }),
-    nodePolyfillsPlugin(),
+    nodeModulesPolyfillPlugin(),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
 
