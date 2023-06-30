@@ -1036,8 +1036,8 @@ export interface SubmitFunction {
 export interface FetcherSubmitFunction {
   (
     target: SubmitTarget,
-    // Fetchers cannot replace because they are not navigation events
-    options?: Omit<SubmitOptions, "replace">
+    // Fetchers cannot replace or set state because they are not navigation events
+    options?: Omit<SubmitOptions, "replace" | "state">
   ): void;
 }
 
