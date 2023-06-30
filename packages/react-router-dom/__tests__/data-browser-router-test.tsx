@@ -328,6 +328,49 @@ function testDomRouter(
       `);
     });
 
+    it("deserializes Error subclass instances from the window", async () => {
+      window.__staticRouterHydrationData = {
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            message: "error message",
+            __type: "Error",
+            __subType: "ReferenceError",
+          },
+        },
+      };
+      let router = createTestRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<h1>Nope</h1>} errorElement={<Boundary />} />
+        )
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Boundary() {
+        let error = useRouteError() as Error;
+        return error instanceof Error ? (
+          <>
+            <pre>{error.toString()}</pre>
+            <pre>stack:{error.stack}</pre>
+          </>
+        ) : (
+          <p>No :(</p>
+        );
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <pre>
+            ReferenceError: error message
+          </pre>
+          <pre>
+            stack:
+          </pre>
+        </div>"
+      `);
+    });
+
     it("renders fallbackElement while first data fetch happens", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(

@@ -4,7 +4,7 @@
 
 New releases should be created from release branches originating from the `dev` branch. When you are ready to begin the release process:
 
-- Make sure you've pulled all of the changes from GitHub for both `dev` and `main` branches.
+- Make sure you've pulled all the changes from GitHub for both `dev` and `main` branches.
 - Check out the `dev` branch.
 - Create a new release branch with the `release-` prefix (eg, `git checkout -b release-next`).
   - **IMPORTANT:** The `release-` prefix is important, as this is what triggers our GitHub CI workflow that will ultimately publish the release.
@@ -17,7 +17,7 @@ Changesets will do most of the heavy lifting for our releases. When changes are 
 
 - Ensure you are on the new `release-*` branch.
 - Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter pre`.
-- Commit the change and push the the `release-*` branch to GitHub.
+- Commit the change and push the `release-*` branch to GitHub.
 - Wait for the release workflow to finish. The Changesets action in the workflow will open a PR that will increment all versions and generate the changelogs.
 - Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR into the `release-*` branch.
   - `find packages -name 'CHANGELOG.md' -mindepth 2 -maxdepth 2 -exec code {} \;`
@@ -30,7 +30,7 @@ You may need to make changes to a pre-release prior to publishing a final stable
 - Make whatever changes you need.
 - Create a new changeset: `yarn changeset`.
   - **IMPORTANT:** This is required even if you ultimately don't want to include these changes in the logs. Remember, changelogs can be edited prior to publishing, but the Changeset version script needs to see new changesets in order to create a new version.
-- Commit the changesets and push the the `release-*` branch to GitHub.
+- Commit the changesets and push the `release-*` branch to GitHub.
 - Wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions.
 - Review the PR, make any adjustments necessary, and merge it into the `release-*` branch.
 - Once the PR is merged, the release workflow will publish the updated packages to npm.
@@ -38,19 +38,19 @@ You may need to make changes to a pre-release prior to publishing a final stable
 ### Publishing the stable release
 
 - Exit Changesets pre-release mode: `yarn changeset pre exit`.
-- Commit the edited pre-release file along with any unpublished changesets, and push the the `release-*` branch to GitHub.
+- Commit the edited pre-release file along with any unpublished changesets, and push the `release-*` branch to GitHub.
 - Wait for the release workflow to finish. The Changesets action in the workflow will open a PR that will increment all versions and generate the changelogs for the stable release.
 - Review the updated `CHANGELOG` files and make any adjustments necessary.
   - We should remove the changelogs for all pre-releases ahead of publishing the stable version.
   - [TODO: We should automate this]
-- Prepare the github release notes
+- Prepare the GitHub release notes
   - Copy the relevant changelog entries from all packages into the Release Notes and adjust accordingly, matching the format used by prior releases
 - Merge the PR into the `release-*` branch.
 - Once the PR is merged, the release workflow will publish the updated packages to npm.
 - Once the release is published:
   - merge the `release-*` branch into `main` and push it up to GitHub
   - merge the `release-*` branch into `dev` and push it up to GitHub
-  - Convert the `react-router@6.x.y` tag to a Release on Github with the name `v6.x.y`
+  - Convert the `react-router@6.x.y` tag to a Release on GitHub with the name `v6.x.y`
 
 ### Hotfix releases
 

@@ -239,12 +239,19 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "children",
 ]);
 
+type RequireOne<T, Key = keyof T> = Exclude<
+  {
+    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
+  }[keyof T],
+  undefined
+>;
+
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<Omit<R, ImmutableRouteKey>>;
+  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
 }
 
 /**
