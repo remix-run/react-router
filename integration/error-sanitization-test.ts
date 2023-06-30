@@ -1,8 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { ServerMode } from "@remix-run/server-runtime/mode";
 
-import { createFixture, js } from "./helpers/create-fixture";
 import type { Fixture } from "./helpers/create-fixture";
+import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 const routeFiles = {
   "app/root.jsx": js`
@@ -33,6 +34,10 @@ const routeFiles = {
       if (new URL(request.url).searchParams.has('loader')) {
         throw new Error("Loader Error");
       }
+      if (new URL(request.url).searchParams.has('subclass')) {
+        // This will throw a ReferenceError
+        console.log(thisisnotathing);
+      }
       return "LOADER"
     }
 
@@ -58,6 +63,7 @@ const routeFiles = {
         <>
           <h1>Index Error</h1>
           <p>{"MESSAGE:" + error.message}</p>
+          <p>{"NAME:" + error.name}</p>
           {error.stack ? <p>{"STACK:" + error.stack}</p> : null}
         </>
       );
@@ -279,6 +285,21 @@ test.describe("Error Sanitization", () => {
       );
       expect(errorLogs[0][0].stack).toMatch(" at ");
     });
+
+    test("does not support hydration of Error subclasses", async ({ page }) => {
+      let response = await fixture.requestDocument("/?subclass");
+      let html = await response.text();
+      expect(html).toMatch("<p>MESSAGE:Unexpected Server Error");
+      expect(html).toMatch("<p>NAME:Error");
+
+      // Hydration
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/?subclass", true);
+      html = await app.getHtml();
+      expect(html).toMatch("<p>MESSAGE:Unexpected Server Error");
+      expect(html).toMatch("<p>NAME:Error");
+    });
   });
 
   test.describe("serverMode=development", () => {
@@ -427,6 +448,27 @@ test.describe("Error Sanitization", () => {
         'Route "not-a-route" does not match URL "/"'
       );
       expect(errorLogs[0][0].stack).toMatch(" at ");
+    });
+
+    test("supports hydration of Error subclasses", async ({ page }) => {
+      let response = await fixture.requestDocument("/?subclass");
+      let html = await response.text();
+      expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
+      expect(html).toMatch("<p>NAME:ReferenceError");
+      expect(html).toMatch(
+        "<p>STACK:ReferenceError: thisisnotathing is not defined"
+      );
+
+      // Hydration
+      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/?subclass", true);
+      html = await app.getHtml();
+      expect(html).toMatch("<p>MESSAGE:thisisnotathing is not defined");
+      expect(html).toMatch("<p>NAME:ReferenceError");
+      expect(html).toMatch(
+        "STACK:ReferenceError: thisisnotathing is not defined"
+      );
     });
   });
 

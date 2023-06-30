@@ -109,6 +109,15 @@ export function serializeErrors(
         message: sanitized.message,
         stack: sanitized.stack,
         __type: "Error",
+        // If this is a subclass (i.e., ReferenceError), send up the type so we
+        // can re-create the same type during hydration.  This will only apply
+        // in dev mode since all production errors are sanitized to normal
+        // Error instances
+        ...(sanitized.name !== "Error"
+          ? {
+              __subType: sanitized.name,
+            }
+          : {}),
       };
     } else {
       serialized[key] = val;
