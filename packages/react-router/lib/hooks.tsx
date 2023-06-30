@@ -935,10 +935,10 @@ let blockerId = 0;
  * cross-origin navigations.
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
+  let blockerKey = React.useMemo(() => String(++blockerId), []);
   let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);
   let state = useDataRouterState(DataRouterStateHook.UseBlocker);
 
-  let [blockerKey, setBlockerKey] = React.useState("");
   let blockerFunction = React.useCallback<BlockerFunction>(
     (arg) => {
       if (typeof shouldBlock !== "function") {
@@ -971,29 +971,18 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [basename, shouldBlock]
   );
 
-  // This effect is in charge of blocker key assignment and deletion (which is
-  // tightly coupled to the key)
+  // register router blocker using blocker unique key
   React.useEffect(() => {
-    let key = String(++blockerId);
-    setBlockerKey(key);
-    return () => router.deleteBlocker(key);
-  }, [router]);
-
-  // This effect handles assigning the blockerFunction.  This is to handle
-  // unstable blocker function identities, and happens only after the prior
-  // effect so we don't get an orphaned blockerFunction in the router with a
-  // key of "".  Until then we just have the IDLE_BLOCKER.
-  React.useEffect(() => {
-    if (blockerKey !== "") {
-      router.getBlocker(blockerKey, blockerFunction);
-    }
+    router.getBlocker(blockerKey, blockerFunction);
   }, [router, blockerKey, blockerFunction]);
 
-  // Prefer the blocker from `state` not `router.state` since DataRouterContext
-  // is memoized so this ensures we update on blocker state updates
-  return blockerKey && state.blockers.has(blockerKey)
-    ? state.blockers.get(blockerKey)!
-    : IDLE_BLOCKER;
+  // unregister only on unmount to not loose state
+  React.useEffect(() => {
+    return () => router.deleteBlocker(blockerKey);
+  }, [router, blockerKey]);
+
+  // If key blocker does not exist should be IDLE
+  return state.blockers.get(blockerKey) || IDLE_BLOCKER;
 }
 
 /**
