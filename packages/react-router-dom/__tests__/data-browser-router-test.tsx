@@ -1584,6 +1584,46 @@ function testDomRouter(
       `);
     });
 
+    it("supports <Form state>", async () => {
+      let testWindow = getWindow("/");
+      let router = createTestRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              return (
+                <Form method="post" action="/action" state={{ key: "value" }}>
+                  <button type="submit">Submit</button>
+                </Form>
+              );
+            },
+          },
+          {
+            path: "/action",
+            action: () => null,
+            Component() {
+              let state = useLocation().state;
+              return <p>{JSON.stringify(state)}</p>;
+            },
+          },
+        ],
+        { window: testWindow }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+      expect(testWindow.history.state.usr).toBeUndefined();
+
+      fireEvent.click(screen.getByText("Submit"));
+      await waitFor(() => screen.getByText('{"key":"value"}'));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            {"key":"value"}
+          </p>
+        </div>"
+      `);
+      expect(testWindow.history.state.usr).toEqual({ key: "value" });
+    });
+
     it("supports <Form reloadDocument={true}>", async () => {
       let actionSpy = jest.fn();
       let router = createTestRouter(
