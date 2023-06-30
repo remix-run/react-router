@@ -939,7 +939,6 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let state = useDataRouterState(DataRouterStateHook.UseBlocker);
 
   let [blockerKey, setBlockerKey] = React.useState("");
-  let [blocker, setBlocker] = React.useState<Blocker>(IDLE_BLOCKER);
   let blockerFunction = React.useCallback<BlockerFunction>(
     (arg) => {
       if (typeof shouldBlock !== "function") {
@@ -986,15 +985,15 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   // key of "".  Until then we just have the IDLE_BLOCKER.
   React.useEffect(() => {
     if (blockerKey !== "") {
-      setBlocker(router.getBlocker(blockerKey, blockerFunction));
+      router.getBlocker(blockerKey, blockerFunction);
     }
   }, [router, blockerKey, blockerFunction]);
 
-  // Prefer the blocker from state since DataRouterContext is memoized so this
-  // ensures we update on blocker state updates
+  // Prefer the blocker from `state` not `router.state` since DataRouterContext
+  // is memoized so this ensures we update on blocker state updates
   return blockerKey && state.blockers.has(blockerKey)
     ? state.blockers.get(blockerKey)!
-    : blocker;
+    : IDLE_BLOCKER;
 }
 
 /**
