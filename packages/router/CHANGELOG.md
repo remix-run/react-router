@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.7.1
+
+### Patch Changes
+
+- Fix issues with reused blockers on subsequent navigations ([#10656](https://github.com/remix-run/react-router/pull/10656))
+
 ## 1.7.0
 
 ### Minor Changes
