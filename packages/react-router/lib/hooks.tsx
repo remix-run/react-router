@@ -989,7 +989,7 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     }
   }, [router, blockerKey, blockerFunction]);
 
-  // Prefer the blocker from `state` since not `router.state` DataRouterContext
+  // Prefer the blocker from `state` not `router.state` since DataRouterContext
   // is memoized so this ensures we update on blocker state updates
   return blockerKey && state.blockers.has(blockerKey)
     ? state.blockers.get(blockerKey)!
