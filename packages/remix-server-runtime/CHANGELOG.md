@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.18.1-pre.3
+
+### Patch Changes
+
+- Bump to stable router version 6.14.1 ([#6740](https://github.com/remix-run/remix/pull/6740))
+
 ## 1.18.1-pre.2
 
 ### Patch Changes

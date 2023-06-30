@@ -1,5 +1,14 @@
 # `@remix-run/testing`
 
+## 1.18.1-pre.3
+
+### Patch Changes
+
+- Bump to stable router version 6.14.1 ([#6740](https://github.com/remix-run/remix/pull/6740))
+- Updated dependencies:
+  - `@remix-run/react@1.18.1-pre.3`
+  - `@remix-run/node@1.18.1-pre.3`
+
 ## 1.18.1-pre.2
 
 ### Patch Changes
