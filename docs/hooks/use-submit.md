@@ -99,7 +99,13 @@ submit([
 The default behavior if you submit a JSON object for a POST submission is to encode the data into `FormData`:
 
 ```tsx
-submit({ key: "value" }, { method: "post" });
+submit(
+  { key: "value" },
+  {
+    method: "post",
+    encType: "application/x-www-form-urlencoded",
+  }
+);
 // will serialize into request.formData() in your action
 // and will show up on useNavigation().formData during the navigation
 ```

@@ -939,7 +939,6 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let state = useDataRouterState(DataRouterStateHook.UseBlocker);
 
   let [blockerKey, setBlockerKey] = React.useState("");
-  let [blocker, setBlocker] = React.useState<Blocker>(IDLE_BLOCKER);
   let blockerFunction = React.useCallback<BlockerFunction>(
     (arg) => {
       if (typeof shouldBlock !== "function") {
@@ -972,18 +971,29 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
     [basename, shouldBlock]
   );
 
+  // This effect is in charge of blocker key assignment and deletion (which is
+  // tightly coupled to the key)
   React.useEffect(() => {
     let key = String(++blockerId);
-    setBlocker(router.getBlocker(key, blockerFunction));
     setBlockerKey(key);
     return () => router.deleteBlocker(key);
-  }, [router, setBlocker, setBlockerKey, blockerFunction]);
+  }, [router]);
 
-  // Prefer the blocker from state since DataRouterContext is memoized so this
-  // ensures we update on blocker state updates
+  // This effect handles assigning the blockerFunction.  This is to handle
+  // unstable blocker function identities, and happens only after the prior
+  // effect so we don't get an orphaned blockerFunction in the router with a
+  // key of "".  Until then we just have the IDLE_BLOCKER.
+  React.useEffect(() => {
+    if (blockerKey !== "") {
+      router.getBlocker(blockerKey, blockerFunction);
+    }
+  }, [router, blockerKey, blockerFunction]);
+
+  // Prefer the blocker from `state` not `router.state` since DataRouterContext
+  // is memoized so this ensures we update on blocker state updates
   return blockerKey && state.blockers.has(blockerKey)
     ? state.blockers.get(blockerKey)!
-    : blocker;
+    : IDLE_BLOCKER;
 }
 
 /**

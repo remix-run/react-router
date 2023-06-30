@@ -114,6 +114,121 @@ describe("navigation blocking with useBlocker", () => {
     act(() => root.unmount());
   });
 
+  it("handles unstable blocker function identities", async () => {
+    let count = 0;
+    router = createMemoryRouter([
+      {
+        element: React.createElement(() => {
+          // New function identity on each render
+          let b = useBlocker(() => false);
+          blocker = b;
+          if (++count > 50) {
+            throw new Error("useBlocker caused a re-render loop!");
+          }
+          return (
+            <div>
+              <Link to="/about">/about</Link>
+              <Outlet />
+            </div>
+          );
+        }),
+        children: [
+          {
+            path: "/",
+            element: <h1>Home</h1>,
+          },
+          {
+            path: "/about",
+            element: <h1>About</h1>,
+          },
+        ],
+      },
+    ]);
+
+    act(() => {
+      root = ReactDOM.createRoot(node);
+      root.render(<RouterProvider router={router} />);
+    });
+
+    expect(node.querySelector("h1")?.textContent).toBe("Home");
+
+    act(() => click(node.querySelector("a[href='/about']")));
+    expect(node.querySelector("h1")?.textContent).toBe("About");
+
+    act(() => root.unmount());
+  });
+
+  it("handles reused blocker in a layout route", async () => {
+    router = createMemoryRouter([
+      {
+        Component() {
+          let blocker = useBlocker(true);
+          return (
+            <div>
+              <Link to="/one">/one</Link>
+              <Link to="/two">/two</Link>
+              <Outlet />
+              <p>{blocker.state}</p>
+              {blocker.state === "blocked" ? (
+                <button onClick={() => blocker.proceed?.()}>Proceed</button>
+              ) : null}
+            </div>
+          );
+        },
+        children: [
+          {
+            path: "/",
+            element: <h1>Home</h1>,
+          },
+          {
+            path: "/one",
+            element: <h1>One</h1>,
+          },
+          {
+            path: "/two",
+            element: <h1>Two</h1>,
+          },
+        ],
+      },
+    ]);
+
+    act(() => {
+      root = ReactDOM.createRoot(node);
+      root.render(<RouterProvider router={router} />);
+    });
+
+    // Start on /
+    expect(node.querySelector("h1")?.textContent).toBe("Home");
+    expect(node.querySelector("p")?.textContent).toBe("unblocked");
+    expect(node.querySelector("button")).toBeNull();
+
+    // Blocked navigation to /one
+    act(() => click(node.querySelector("a[href='/one']")));
+    expect(node.querySelector("h1")?.textContent).toBe("Home");
+    expect(node.querySelector("p")?.textContent).toBe("blocked");
+    expect(node.querySelector("button")?.textContent).toBe("Proceed");
+
+    // Proceed to /one
+    act(() => click(node.querySelector("button")));
+    expect(node.querySelector("h1")?.textContent).toBe("One");
+    expect(node.querySelector("p")?.textContent).toBe("unblocked");
+    expect(node.querySelector("button")).toBeNull();
+
+    // Blocked navigation to /two
+    act(() => click(node.querySelector("a[href='/two']")));
+    expect(node.querySelector("h1")?.textContent).toBe("One");
+    expect(node.querySelector("p")?.textContent).toBe("blocked");
+    expect(node.querySelector("button")?.textContent).toBe("Proceed");
+
+    // Proceed to /two
+    act(() => click(node.querySelector("button")));
+    expect(node.querySelector("h1")?.textContent).toBe("Two");
+    expect(node.querySelector("p")?.textContent).toBe("unblocked");
+    expect(node.querySelector("button")).toBeNull();
+
+    act(() => root.unmount());
+  });
+
   describe("on <Link> navigation", () => {
     describe("blocker returns false", () => {
       beforeEach(() => {

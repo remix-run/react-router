@@ -1,5 +1,13 @@
 # `react-router-dom-v5-compat`
 
+## 6.14.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.1`
+  - `react-router-dom@6.14.1`
+
 ## 6.14.0
 
 ### Patch Changes
