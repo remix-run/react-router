@@ -8,21 +8,6 @@
   - `react-router@6.14.1`
   - `@remix-run/router@1.7.1`
 
-## 6.14.1-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.14.1-pre.1`
-  - `@remix-run/router@1.7.1-pre.0`
-
-## 6.14.1-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `react-router@6.14.1-pre.0`
-
 ## 6.14.0
 
 ### Minor Changes
