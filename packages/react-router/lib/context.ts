@@ -10,7 +10,6 @@ import type {
   StaticHandlerContext,
   To,
   TrackedPromise,
-  LazyRouteFunction,
 } from "@remix-run/router";
 import type { Action as NavigationType } from "@remix-run/router";
 
@@ -31,7 +30,7 @@ export interface IndexRouteObject {
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<IndexRouteObject>;
+  lazy?: AgnosticIndexRouteObject["lazy"];
 }
 
 export interface NonIndexRouteObject {
@@ -49,7 +48,7 @@ export interface NonIndexRouteObject {
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<NonIndexRouteObject>;
+  lazy?: AgnosticNonIndexRouteObject["lazy"];
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
