@@ -1026,8 +1026,11 @@ export function createRouter(init: RouterInit): Router {
 
     // On a successful navigation we can assume we got through all blockers
     // so we can start fresh
-    let blockers = new Map();
-    blockerFunctions.clear();
+    let blockers = state.blockers;
+    if (blockers.size > 0) {
+      blockers = new Map(blockers);
+      blockers.forEach((_, k) => blockers.set(k, IDLE_BLOCKER));
+    }
 
     // Always respect the user flag.  Otherwise don't reset on mutation
     // submission navigations unless they redirect
