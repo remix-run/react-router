@@ -1,18 +1,13 @@
 # `react-router`
 
-## 6.14.1-pre.1
-
-### Patch Changes
-
-- Fix issue with reused blockers on subsequent navigations ([#10656](https://github.com/remix-run/react-router/pull/10656))
-- Updated dependencies:
-  - `@remix-run/router@1.7.1-pre.0`
-
-## 6.14.1-pre.0
+## 6.14.1
 
 ### Patch Changes
 
 - Fix loop in `unstable_useBlocker` when used with an unstable blocker function ([#10652](https://github.com/remix-run/react-router/pull/10652))
+- Fix issues with reused blockers on subsequent navigations ([#10656](https://github.com/remix-run/react-router/pull/10656))
+- Updated dependencies:
+  - `@remix-run/router@1.7.1`
 
 ## 6.14.0
 
