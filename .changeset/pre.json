@@ -9,6 +9,7 @@
     "@remix-run/router": "1.7.0"
   },
   "changesets": [
-    "fix-blocker-loop"
+    "fix-blocker-loop",
+    "fix-reused-blocker"
   ]
 }
