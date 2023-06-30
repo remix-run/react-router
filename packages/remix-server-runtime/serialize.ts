@@ -1,10 +1,6 @@
 import type { AppData } from "./data";
 import type { TypedDeferredData, TypedResponse } from "./responses";
 
-// force Typescript to simplify the type
-type Pretty<T> = { [K in keyof T]: T[K] } & {};
-type PrettyTransform<T, U> = [T] extends [U] ? T : Pretty<U>;
-
 type JsonPrimitive =
   | string
   | number
@@ -29,9 +25,9 @@ type Serialize<T> =
   T extends NonJsonPrimitive ? never :
   T extends { toJSON(): infer U } ? U :
   T extends [] ? [] :
-  T extends [unknown, ...unknown[]] ? PrettyTransform<T, SerializeTuple<T>> :
+  T extends [unknown, ...unknown[]] ? SerializeTuple<T> :
   T extends ReadonlyArray<infer U> ? (U extends NonJsonPrimitive ? null : Serialize<U>)[] :
-  T extends object ? PrettyTransform<T, SerializeObject<UndefinedToOptional<T>>> :
+  T extends object ? SerializeObject<UndefinedToOptional<T>> :
   never
 ;
 
