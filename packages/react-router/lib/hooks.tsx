@@ -1018,10 +1018,9 @@ function useNavigateStable(): NavigateFunction {
       if (!activeRef.current) return;
 
       if (typeof to === "number") {
-        router.navigate(to);
-      } else {
-        router.navigate(to, { fromRouteId: id, ...options });
+        return router.navigate(to, options);
       }
+      return router.navigate(to, { fromRouteId: id, ...options });
     },
     [router, id]
   );
