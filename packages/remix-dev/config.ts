@@ -38,12 +38,15 @@ export type ServerPlatform = "node" | "neutral";
 
 type Dev = {
   command?: string;
-  scheme?: string;
-  host?: string;
   port?: number;
   restart?: boolean;
   tlsKey?: string;
   tlsCert?: string;
+
+  /** @deprecated remove in v2 */
+  scheme?: string;
+  /** @deprecated remove in v2 */
+  host?: string;
 };
 
 interface FutureConfig {

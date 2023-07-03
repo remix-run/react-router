@@ -9,6 +9,7 @@ import * as colors from "../colors";
 import * as commands from "./commands";
 import { validateNewProjectPath, validateTemplate } from "./create";
 import { detectPackageManager } from "./detectPackageManager";
+import { logger } from "../tux";
 
 const helpText = `
 ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
@@ -44,8 +45,6 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
 
     [v2_dev]
     --command, -c       Command used to run your app server
-    --scheme            Scheme for the dev server. Default: http
-    --host              Host for the dev server. Default: localhost
     --port              Port for the dev server. Default: any open port
     --no-restart        Do not restart the app server when rebuilds occur.
     --tls-key           Path to TLS key (key.pem)
@@ -183,13 +182,15 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       // dev server
       "--command": String,
       "-c": "--command",
-      "--scheme": String,
-      "--host": String,
       "--port": Number,
       "-p": "--port",
       "--no-restart": Boolean,
       "--tls-key": String,
       "--tls-cert": String,
+
+      // deprecated, remove in v2
+      "--scheme": String,
+      "--host": String,
     },
     {
       argv,
@@ -212,6 +213,25 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     let version = require("../package.json").version;
     console.log(version);
     return;
+  }
+
+  // TODO: remove in v2
+  if (flags["scheme"]) {
+    logger.warn("`--scheme` flag is deprecated", {
+      details: [
+        "Use `REMIX_DEV_ORIGIN` instead",
+        "-> https://remix.run/docs/en/main/other-api/dev-v2#how-to-integrate-with-a-reverse-proxy",
+      ],
+    });
+  }
+  // TODO: remove in v2
+  if (flags["host"]) {
+    logger.warn("`--host` flag is deprecated", {
+      details: [
+        "Use `REMIX_DEV_ORIGIN` instead",
+        "-> https://remix.run/docs/en/main/other-api/dev-v2#how-to-integrate-with-a-reverse-proxy",
+      ],
+    });
   }
 
   if (flags["tls-key"]) {

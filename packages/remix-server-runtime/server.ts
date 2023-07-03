@@ -296,7 +296,6 @@ async function handleDocumentRequestRR(
         errors: serializeErrors(context.errors, serverMode),
       },
       future: build.future,
-      dev: build.dev,
     }),
     future: build.future,
   };

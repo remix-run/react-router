@@ -15,7 +15,6 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
-  dev?: { port: number };
 }
 
 export interface HandleDocumentRequestFunction {

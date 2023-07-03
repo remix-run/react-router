@@ -174,8 +174,8 @@ export async function build(
     sourcemap,
   };
   if (mode === "development" && config.future.v2_dev) {
-    let origin = await resolveDevOrigin(config);
-    options.devOrigin = origin;
+    let resolved = await resolveDev(config);
+    options.REMIX_DEV_ORIGIN = resolved.REMIX_DEV_ORIGIN;
   }
 
   let fileWatchCache = createFileWatchCache();
@@ -238,7 +238,8 @@ export async function dev(
     return await new Promise(() => {});
   }
 
-  await devServer_unstable.serve(config, await resolveDevServe(config, flags));
+  let resolved = await resolveDevServe(config, flags);
+  await devServer_unstable.serve(config, resolved);
 }
 
 export async function codemod(
@@ -467,58 +468,72 @@ let parseMode = (
 
 let findPort = async () => getPort({ port: makeRange(3001, 3100) });
 
-type DevOrigin = {
-  scheme: string;
-  host: string;
-  port: number;
-};
-let resolveDevOrigin = async (
+let resolveDev = async (
   config: RemixConfig,
-  flags: Partial<DevOrigin> & {
+  flags: {
+    port?: number;
     tlsKey?: string;
     tlsCert?: string;
+    /** @deprecated */
+    scheme?: string; // TODO: remove in v2
+    /** @deprecated */
+    host?: string; // TODO: remove in v2
   } = {}
-): Promise<DevOrigin> => {
+) => {
   let dev = config.future.v2_dev;
   if (dev === false) throw Error("This should never happen");
 
-  // prettier-ignore
-  let scheme =
-    flags.scheme ??
-    (dev === true ? undefined : dev.scheme) ??
-    (flags.tlsKey && flags.tlsCert) ? "https": "http";
-  // prettier-ignore
-  let host =
-    flags.host ??
-    (dev === true ? undefined : dev.host) ??
-    "localhost";
   // prettier-ignore
   let port =
     flags.port ??
     (dev === true ? undefined : dev.port) ??
     (await findPort());
 
+  let tlsKey = flags.tlsKey ?? (dev === true ? undefined : dev.tlsKey);
+  if (tlsKey) tlsKey = path.resolve(tlsKey);
+  let tlsCert = flags.tlsCert ?? (dev === true ? undefined : dev.tlsCert);
+  if (tlsCert) tlsCert = path.resolve(tlsCert);
+  let isTLS = tlsKey && tlsCert;
+
+  let REMIX_DEV_ORIGIN = process.env.REMIX_DEV_ORIGIN;
+  if (REMIX_DEV_ORIGIN === undefined) {
+    // prettier-ignore
+    let scheme =
+      flags.scheme ?? // TODO: remove in v2
+      (dev === true ? undefined : dev.scheme) ?? // TODO: remove in v2
+      isTLS ? "https" : "http";
+    // prettier-ignore
+    let hostname =
+      flags.host ?? // TODO: remove in v2
+      (dev === true ? undefined : dev.host) ?? // TODO: remove in v2
+      "localhost";
+    REMIX_DEV_ORIGIN = `${scheme}://${hostname}:${port}`;
+  }
+
   return {
-    scheme,
-    host,
     port,
+    tlsKey,
+    tlsCert,
+    REMIX_DEV_ORIGIN: new URL(REMIX_DEV_ORIGIN),
   };
 };
 
-type DevServeFlags = DevOrigin & {
-  command?: string;
-  restart: boolean;
-  tlsKey?: string;
-  tlsCert?: string;
-};
 let resolveDevServe = async (
   config: RemixConfig,
-  flags: Partial<DevServeFlags> = {}
-): Promise<DevServeFlags> => {
+  flags: {
+    port?: number;
+    tlsKey?: string;
+    tlsCert?: string;
+    scheme?: string; // TODO: remove in v2
+    host?: string; // TODO: remove in v2
+    command?: string;
+    restart?: boolean;
+  } = {}
+) => {
   let dev = config.future.v2_dev;
   if (dev === false) throw Error("Cannot resolve dev options");
 
-  let origin = await resolveDevOrigin(config, flags);
+  let resolved = await resolveDev(config, flags);
 
   // prettier-ignore
   let command =
@@ -528,16 +543,9 @@ let resolveDevServe = async (
   let restart =
     flags.restart ?? (dev === true ? undefined : dev.restart) ?? true;
 
-  let tlsKey = flags.tlsKey ?? (dev === true ? undefined : dev.tlsKey);
-  if (tlsKey) tlsKey = path.resolve(tlsKey);
-  let tlsCert = flags.tlsCert ?? (dev === true ? undefined : dev.tlsCert);
-  if (tlsCert) tlsCert = path.resolve(tlsCert);
-
   return {
+    ...resolved,
     command,
-    ...origin,
     restart,
-    tlsKey,
-    tlsCert,
   };
 };

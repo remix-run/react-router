@@ -4,10 +4,5 @@ export type Options = {
   mode: Mode;
   sourcemap: boolean;
 
-  // TODO: required in v2
-  devOrigin?: {
-    scheme: string;
-    host: string;
-    port: number;
-  };
+  REMIX_DEV_ORIGIN?: URL; // TODO: required in v2
 };

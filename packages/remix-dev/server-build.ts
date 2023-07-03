@@ -10,7 +10,6 @@ export const assets: ServerBuild["assets"] = undefined!;
 export const entry: ServerBuild["entry"] = undefined!;
 export const routes: ServerBuild["routes"] = undefined!;
 export const future: ServerBuild["future"] = undefined!;
-export const dev: ServerBuild["dev"] = undefined!;
 export const publicPath: ServerBuild["publicPath"] = undefined!;
 // prettier-ignore
 export const assetsBuildDirectory: ServerBuild["assetsBuildDirectory"] = undefined!;
