@@ -20,6 +20,7 @@ import type * as Channel from "../../channel";
 import type { Context } from "../context";
 import type { LazyValue } from "../lazyValue";
 import { cssBundlePlugin } from "../plugins/cssBundlePlugin";
+import { writeMetafile } from "../analysis";
 
 type Compiler = {
   // produce ./build/index.js
@@ -132,9 +133,11 @@ export const create = async (
   let compiler = await esbuild.context({
     ...createEsbuildConfig(ctx, refs),
     write: false,
+    metafile: true,
   });
   let compile = async () => {
-    let { outputFiles } = await compiler.rebuild();
+    let { outputFiles, metafile } = await compiler.rebuild();
+    writeMetafile(ctx, "metafile.server.json", metafile);
     return outputFiles;
   };
   return {

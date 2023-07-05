@@ -18,6 +18,7 @@ import {
 } from "./plugins/bundleEntry";
 import type { Context } from "../context";
 import { isBundle } from "./bundle";
+import { writeMetafile } from "../analysis";
 
 const getExternals = (config: RemixConfig): string[] => {
   // For the browser build, exclude node built-ins that don't have a
@@ -96,9 +97,11 @@ export let create = async (ctx: Context) => {
   let compiler = await esbuild.context({
     ...createEsbuildConfig(ctx),
     write: false,
+    metafile: true,
   });
   let compile = async () => {
-    let { outputFiles } = await compiler.rebuild();
+    let { outputFiles, metafile } = await compiler.rebuild();
+    writeMetafile(ctx, "metafile.css.json", metafile);
     let bundleOutputFile = outputFiles.find((outputFile) =>
       isBundle(ctx, outputFile, ".css")
     );
