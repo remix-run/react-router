@@ -4,14 +4,17 @@ import pidtree from "pidtree";
 let isWindows = process.platform === "win32";
 
 export let kill = async (pid: number) => {
-  try {
-    let cmd = isWindows
-      ? ["taskkill", "/F", "/PID", pid.toString()]
-      : ["kill", "-9", pid.toString()];
-    await execa(cmd[0], cmd.slice(1));
-  } catch (error) {
-    throw new Error(`Failed to kill process ${pid}: ${error}`);
+  if (isWindows) {
+    await execa("taskkill", ["/F", "/PID", pid.toString()]).catch((error) => {
+      // taskkill 128 -> the process is already dead
+      if (error.exitCode !== 128) throw error;
+    });
+    return;
   }
+  await execa("kill", ["-9", pid.toString()]).catch((error) => {
+    // process is already dead
+    if (!/No such process/.test(error.message)) throw error;
+  });
 };
 
 let isAlive = (pid: number) => {
