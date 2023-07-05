@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as esbuild from "esbuild";
+import type * as esbuild from "esbuild";
 
 import type { RemixConfig } from "../../../config";
 import type { Context } from "../../context";
@@ -161,6 +161,10 @@ export async function applyHMR(
 ) {
   let babel = await import("@babel/core");
   // @ts-expect-error
+  let babelPresetTypescript = await import("@babel/preset-typescript");
+  // @ts-expect-error
+  let babelJsx = await import("@babel/plugin-syntax-jsx");
+  // @ts-expect-error
   let reactRefresh = await import("react-refresh/babel");
 
   let IS_FAST_REFRESH_ENABLED = /\$RefreshReg\$\(/;
@@ -177,54 +181,45 @@ import.meta.hot = __hmr__.createHotContext(
 $id$
 );
 ${lastModified ? `import.meta.hot.lastModified = "${lastModified}";` : ""}
-}`.replace(/\$id\$/g, hmrId);
+}
+// REMIX HMR END
+\n`.replace(/\$id\$/g, hmrId);
   let sourceCodeWithHMR = hmrPrefix + sourceCode;
 
-  // turn the source code into JS for babel
-  let jsWithHMR = esbuild.transformSync(sourceCodeWithHMR, {
-    loader: argsPath.endsWith("x") ? "tsx" : "ts",
-    format: args.pluginData?.format || "esm",
-    jsx: "automatic",
-  }).code;
-  let resultCode = jsWithHMR;
-
   // run babel to add react-refresh
-  let transformResult = babel.transformSync(jsWithHMR, {
+  let transformResult = babel.transformSync(sourceCodeWithHMR, {
     filename: argsPath,
     ast: false,
     compact: false,
     sourceMaps: sourcemap,
     configFile: false,
     babelrc: false,
-    plugins: [[reactRefresh.default, { skipEnvCheck: true }]],
+    presets: [babelPresetTypescript.default],
+    plugins: [babelJsx.default, [reactRefresh.default, { skipEnvCheck: true }]],
   });
 
-  let jsWithReactRefresh = transformResult?.code || jsWithHMR;
+  let jsWithReactRefresh = transformResult?.code ?? sourceCodeWithHMR;
 
   // auto opt-in to accepting fast refresh updates if the module
   // has react components
-  if (IS_FAST_REFRESH_ENABLED.test(jsWithReactRefresh)) {
-    resultCode =
-      `
-        if (!window.$RefreshReg$ || !window.$RefreshSig$ || !window.$RefreshRuntime$) {
-          console.warn('remix:hmr: React Fast Refresh only works when the Remix compiler is running in development mode.');
-        } else {
-          var prevRefreshReg = window.$RefreshReg$;
-          var prevRefreshSig = window.$RefreshSig$;
-          window.$RefreshReg$ = (type, id) => {
-            window.$RefreshRuntime$.register(type, ${JSON.stringify(
-              hmrId
-            )} + id);
-          }
-          window.$RefreshSig$ = window.$RefreshRuntime$.createSignatureFunctionForTransform;
-        }
-      ` +
-      jsWithReactRefresh +
-      `
-        window.$RefreshReg$ = prevRefreshReg;
-        window.$RefreshSig$ = prevRefreshSig;
-      `;
+  if (!IS_FAST_REFRESH_ENABLED.test(jsWithReactRefresh)) {
+    return "// REMIX HMR BEGIN\n" + sourceCodeWithHMR;
   }
-
-  return resultCode;
+  return (
+    `// REMIX HMR BEGIN
+if (!window.$RefreshReg$ || !window.$RefreshSig$ || !window.$RefreshRuntime$) {
+  console.warn('remix:hmr: React Fast Refresh only works when the Remix compiler is running in development mode.');
+} else {
+  var prevRefreshReg = window.$RefreshReg$;
+  var prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = (type, id) => {
+    window.$RefreshRuntime$.register(type, ${JSON.stringify(hmrId)} + id);
+  }
+  window.$RefreshSig$ = window.$RefreshRuntime$.createSignatureFunctionForTransform;
+}\n` +
+    jsWithReactRefresh +
+    `\n
+window.$RefreshReg$ = prevRefreshReg;
+window.$RefreshSig$ = prevRefreshSig;`
+  );
 }
