@@ -1739,6 +1739,7 @@ export function createRouter(init: RouterInit): Router {
     );
     fetchControllers.set(key, abortController);
 
+    let originatingLoadId = incrementingLoadId;
     let actionResult = await callLoaderOrAction(
       "action",
       fetchRequest,
@@ -1760,15 +1761,26 @@ export function createRouter(init: RouterInit): Router {
 
     if (isRedirectResult(actionResult)) {
       fetchControllers.delete(key);
-      fetchRedirectIds.add(key);
-      let loadingFetcher = getLoadingFetcher(submission);
-      state.fetchers.set(key, loadingFetcher);
-      updateState({ fetchers: new Map(state.fetchers) });
+      if (pendingNavigationLoadId > originatingLoadId) {
+        // A new navigation was kicked off after our action started, so that
+        // should take precedence over this redirect navigation.  We already
+        // set isRevalidationRequired so all loaders for the new route should
+        // fire unless opted out via shouldRevalidate
+        let doneFetcher = getDoneFetcher(undefined);
+        state.fetchers.set(key, doneFetcher);
+        updateState({ fetchers: new Map(state.fetchers) });
+        return;
+      } else {
+        fetchRedirectIds.add(key);
+        let loadingFetcher = getLoadingFetcher(submission);
+        state.fetchers.set(key, loadingFetcher);
+        updateState({ fetchers: new Map(state.fetchers) });
 
-      return startRedirectNavigation(state, actionResult, {
-        submission,
-        isFetchActionRedirect: true,
-      });
+        return startRedirectNavigation(state, actionResult, {
+          submission,
+          isFetchActionRedirect: true,
+        });
+      }
     }
 
     // Process any non-redirect errors thrown
@@ -1962,6 +1974,7 @@ export function createRouter(init: RouterInit): Router {
     );
     fetchControllers.set(key, abortController);
 
+    let originatingLoadId = incrementingLoadId;
     let result: DataResult = await callLoaderOrAction(
       "loader",
       fetchRequest,
@@ -1994,9 +2007,18 @@ export function createRouter(init: RouterInit): Router {
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
-      fetchRedirectIds.add(key);
-      await startRedirectNavigation(state, result);
-      return;
+      if (pendingNavigationLoadId > originatingLoadId) {
+        // A new navigation was kicked off after our loader started, so that
+        // should take precedence over this redirect navigation
+        let doneFetcher = getDoneFetcher(undefined);
+        state.fetchers.set(key, doneFetcher);
+        updateState({ fetchers: new Map(state.fetchers) });
+        return;
+      } else {
+        fetchRedirectIds.add(key);
+        await startRedirectNavigation(state, result);
+        return;
+      }
     }
 
     // Process any non-redirect errors thrown
