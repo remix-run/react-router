@@ -1591,7 +1591,15 @@ export function createRouter(init: RouterInit): Router {
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
     if (redirect) {
-      await startRedirectNavigation(state, redirect, { replace });
+      if (redirect.idx >= matchesToLoad.length) {
+        // If this redirect came from a fetcher make sure we mark it in
+        // fetchRedirectIds so it doesn't get revalidated on the next set of
+        // loader executions
+        let fetcherKey =
+          revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
+        fetchRedirectIds.add(fetcherKey);
+      }
+      await startRedirectNavigation(state, redirect.result, { replace });
       return { shortCircuited: true };
     }
 
@@ -1887,7 +1895,15 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(results);
     if (redirect) {
-      return startRedirectNavigation(state, redirect);
+      if (redirect.idx >= matchesToLoad.length) {
+        // If this redirect came from a fetcher make sure we mark it in
+        // fetchRedirectIds so it doesn't get revalidated on the next set of
+        // loader executions
+        let fetcherKey =
+          revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
+        fetchRedirectIds.add(fetcherKey);
+      }
+      return startRedirectNavigation(state, redirect.result);
     }
 
     // Process and commit output from loaders
@@ -4112,11 +4128,13 @@ function getInternalRouterError(
 }
 
 // Find any returned redirect errors, starting from the lowest match
-function findRedirect(results: DataResult[]): RedirectResult | undefined {
+function findRedirect(
+  results: DataResult[]
+): { result: RedirectResult; idx: number } | undefined {
   for (let i = results.length - 1; i >= 0; i--) {
     let result = results[i];
     if (isRedirectResult(result)) {
-      return result;
+      return { result, idx: i };
     }
   }
 }

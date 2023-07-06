@@ -10052,15 +10052,18 @@ describe("a router", () => {
         it("ignores loader redirect navigation if preceded by a normal navigation", async () => {
           let key = "key";
           let t = initializeTmTest();
+
+          // Start a fetch load and interrupt with a navigation
           let A = await t.fetch("/foo", key);
           let B = await t.navigate("/bar", undefined, ["foo"]);
 
-          // This redirect should be ignored
+          // The fetcher loader redirect should be ignored
           await A.loaders.foo.redirect("/baz");
           expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
-          // Resolve navigation loader and the now revalidating fetcher which
-          // doesn't redirect this time
+          // The navigation should trigger the fetcher to revalidate since it's
+          // not yet "completed".  If it returns data this time that should be
+          // reflected
           await B.loaders.bar.resolve("BAR");
           await B.loaders.foo.resolve("FOO");
 
@@ -10079,15 +10082,21 @@ describe("a router", () => {
         it("processes second fetcher load redirect after interruption by normal navigation", async () => {
           let key = "key";
           let t = initializeTmTest();
+
+          // Start a fetch load and interrupt with a navigation
           let A = await t.fetch("/foo", key, "root");
           let B = await t.navigate("/bar", undefined, ["foo"]);
 
-          // This redirect should be ignored
+          // The fetcher loader redirect should be ignored
           await A.loaders.foo.redirect("/baz");
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/bar" } },
+            location: { pathname: "/" },
+          });
           expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
-          // Resolve navigation loader and the now revalidating fetcher with
-          // another redirect, which will be processed
+          // The navigation should trigger the fetcher to revalidate since it's
+          // not yet "completed".  If it redirects again we should follow that
           await B.loaders.bar.resolve("BAR");
           let C = await B.loaders.foo.redirect(
             "/foo/bar",
@@ -10104,8 +10113,8 @@ describe("a router", () => {
           });
           expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
+          // The fetcher should not revalidate here since it triggered the redirect
           await C.loaders.foobar.resolve("FOOBAR");
-          await C.loaders.foo.resolve("FOO");
           expect(t.router.state).toMatchObject({
             navigation: IDLE_NAVIGATION,
             location: { pathname: "/foo/bar" },
@@ -10115,7 +10124,66 @@ describe("a router", () => {
             },
           });
           expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-          expect(t.router.state.fetchers.get(key)?.data).toBe("FOO");
+          expect(t.router.state.fetchers.get(key)?.data).toBe(undefined);
+        });
+
+        it("handle multiple fetcher loader redirects", async () => {
+          let keyA = "a";
+          let keyB = "b";
+          let t = initializeTmTest();
+
+          // Start 2 fetch loads
+          let A = await t.fetch("/foo", keyA, "root");
+          let B = await t.fetch("/bar", keyB, "root");
+
+          // Return a redirect from the second fetcher.load (which will trigger
+          // a revalidation of the first fetcher)
+          let C = await B.loaders.bar.redirect("/baz", undefined, undefined, [
+            "foo",
+          ]);
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/baz" } },
+            location: { pathname: "/" },
+          });
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("loading");
+          expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+
+          // The original fetch load redirect should be ignored
+          await A.loaders.foo.redirect("/foo/bar");
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/baz" } },
+            location: { pathname: "/" },
+          });
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("loading");
+          expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+
+          // Resolve the navigation loader and the revalidating (first) fetcher
+          // loader which redirects again
+          await C.loaders.baz.resolve("BAZ");
+          let D = await C.loaders.foo.redirect("/foo/bar");
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/foo/bar" } },
+            location: { pathname: "/" },
+            loaderData: {
+              root: "ROOT",
+            },
+          });
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("loading");
+          expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+
+          // Resolve the navigation loader, bringing everything back to idle at
+          // the final location
+          await D.loaders.foobar.resolve("FOOBAR");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/foo/bar" },
+            loaderData: {
+              root: "ROOT",
+              foobar: "FOOBAR",
+            },
+          });
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(keyB)?.state).toBe("idle");
         });
       });
     });
