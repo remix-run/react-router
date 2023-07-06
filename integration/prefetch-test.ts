@@ -342,3 +342,95 @@ test.describe("prefetch=viewport", () => {
     await expect(page.locator("div link")).toHaveCount(0);
   });
 });
+
+test.describe("other scenarios", () => {
+  let fixture: Fixture;
+  let appFixture: AppFixture;
+
+  test.afterAll(() => {
+    appFixture?.close();
+  });
+
+  test("does not add prefetch links for stylesheets already in the DOM (active routes)", async ({
+    page,
+  }) => {
+    fixture = await createFixture({
+      config: {
+        future: { v2_routeConvention: true },
+      },
+      files: {
+        "app/root.jsx": js`
+            import { Links, Meta, Scripts, useFetcher } from "@remix-run/react";
+            import globalCss from "./global.css";
+
+            export function links() {
+              return [{ rel: "stylesheet", href: globalCss }];
+            }
+
+            export async function action() {
+              return null;
+            }
+
+            export async function loader() {
+              return null;
+            }
+
+            export default function Root() {
+              let fetcher = useFetcher();
+
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <button
+                      id="submit-fetcher"
+                      onClick={() => fetcher.submit({}, { method: 'post' })}>
+                        Submit Fetcher
+                    </button>
+                    <p id={"fetcher-state--" + fetcher.state}>{fetcher.state}</p>
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+
+        "app/global.css": `
+            body {
+              background-color: black;
+              color: white;
+            }
+          `,
+
+        "app/routes/_index.jsx": js`
+            export default function() {
+              return <h2 className="index">Index</h2>;
+            }
+          `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+    let requests: { type: string; url: string }[] = [];
+
+    page.on("request", (req) => {
+      requests.push({
+        type: req.resourceType(),
+        url: req.url(),
+      });
+    });
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await page.click("#submit-fetcher");
+    await page.waitForSelector("#fetcher-state--idle");
+    // We should not send a second request for this root stylesheet that's
+    // already been rendered in the DOM
+    let stylesheets = requests.filter(
+      (r) => r.type === "stylesheet" && /\/global-[a-z0-9]+\.css/i.test(r.url)
+    );
+    expect(stylesheets.length).toBe(1);
+  });
+});
