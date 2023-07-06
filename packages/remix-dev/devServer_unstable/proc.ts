@@ -4,16 +4,21 @@ import pidtree from "pidtree";
 let isWindows = process.platform === "win32";
 
 export let kill = async (pid: number) => {
+  if (!isAlive(pid)) return;
   if (isWindows) {
     await execa("taskkill", ["/F", "/PID", pid.toString()]).catch((error) => {
       // taskkill 128 -> the process is already dead
-      if (error.exitCode !== 128) throw error;
+      if (error.exitCode === 128) return;
+      if (/There is no running instance of the task./.test(error.message))
+        return;
+      console.warn(error.message);
     });
     return;
   }
   await execa("kill", ["-9", pid.toString()]).catch((error) => {
     // process is already dead
-    if (!/No such process/.test(error.message)) throw error;
+    if (/No such process/.test(error.message)) return;
+    console.warn(error.message);
   });
 };
 
@@ -34,8 +39,8 @@ export let killtree = async (pid: number) => {
 
   return new Promise<void>((resolve, reject) => {
     let check = setInterval(() => {
-      let alive = pids.filter(isAlive);
-      if (alive.length === 0) {
+      pids = pids.filter(isAlive);
+      if (pids.length === 0) {
         clearInterval(check);
         resolve();
       }
