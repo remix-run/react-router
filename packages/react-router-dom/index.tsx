@@ -1384,7 +1384,9 @@ function useScrollRestoration({
 
       // try to scroll to the hash
       if (location.hash) {
-        let el = document.getElementById(location.hash.slice(1));
+        let el = document.getElementById(
+          decodeURIComponent(location.hash.slice(1))
+        );
         if (el) {
           el.scrollIntoView();
           return;
