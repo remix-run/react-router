@@ -316,7 +316,7 @@ test.describe("route module link export", () => {
 
         "app/routes/gists.jsx": js`
           import { json } from "@remix-run/node";
-          import { Link, Outlet, useLoaderData, useTransition } from "@remix-run/react";
+          import { Link, Outlet, useLoaderData, useNavigation } from "@remix-run/react";
           import stylesHref from "~/gists.css";
           export function links() {
             return [{ rel: "stylesheet", href: stylesHref }];
@@ -343,7 +343,7 @@ test.describe("route module link export", () => {
             breadcrumb: () => <Link to="/gists">Gists</Link>,
           };
           export default function Gists() {
-            let locationPending = useTransition().location;
+            let locationPending = useNavigation().location;
             let { users } = useLoaderData();
             return (
               <div data-test-id="/gists">
