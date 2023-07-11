@@ -105,31 +105,27 @@ type JsonValue = JsonPrimitive | JsonObject | JsonArray;
  * Internal interface to pass around for action submissions, not intended for
  * external consumption
  */
-export type Submission =
+export type Submission = {
+  formMethod: FormMethod | V7_FormMethod;
+  formAction: string;
+  formEncType: FormEncType;
+} & (
   | {
-      formMethod: FormMethod | V7_FormMethod;
-      formAction: string;
-      formEncType: FormEncType;
       formData: FormData;
       json: undefined;
       text: undefined;
     }
   | {
-      formMethod: FormMethod | V7_FormMethod;
-      formAction: string;
-      formEncType: FormEncType;
       formData: undefined;
       json: JsonValue;
       text: undefined;
     }
   | {
-      formMethod: FormMethod | V7_FormMethod;
-      formAction: string;
-      formEncType: FormEncType;
       formData: undefined;
       json: undefined;
       text: string;
-    };
+    }
+);
 
 /**
  * @private
