@@ -2,4 +2,4 @@
 "@remix-run/router": patch
 ---
 
-Better handling of deferred promises that resolve/reject with `undefined`
+Trigger an error if a `defer` promise resolves/rejects with `undefined` in order to match the behavior of loaders and actions which must return a value or `null`
