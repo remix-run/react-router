@@ -14310,6 +14310,12 @@ describe("a router", () => {
                   ),
                 });
               }
+              if (new URL(request.url).searchParams.has("undefined")) {
+                return defer({
+                  critical: "loader",
+                  lazy: new Promise((r) => setTimeout(() => r(undefined), 10)),
+                });
+              }
               if (new URL(request.url).searchParams.has("status")) {
                 return defer(
                   {
@@ -15106,6 +15112,42 @@ describe("a router", () => {
               deferred: {
                 critical: "loader",
                 lazy: expect.trackedPromise(undefined, new Error("broken!")),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true),
+            },
+          });
+        });
+
+        it("should return rejected DeferredData on symbol for resolved undefined", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred?undefined")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(
+                  null,
+                  new Error(
+                    `Deferred data for key "lazy" resolved/rejected with \`undefined\`, you must resolve/reject with a value or \`null\`.`
+                  )
+                ),
               },
             },
             activeDeferreds: {
@@ -16175,6 +16217,28 @@ describe("a router", () => {
           expect(result).toMatchObject({
             critical: "loader",
             lazy: expect.trackedPromise(null, new Error("broken!")),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
+        });
+
+        it("should return rejected DeferredData on symbol for resolved undefined", async () => {
+          let result = await queryRoute(
+            createRequest("/parent/deferred?undefined")
+          );
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(
+              null,
+              new Error(
+                `Deferred data for key "lazy" resolved/rejected with \`undefined\`, you must resolve/reject with a value or \`null\`.`
+              )
+            ),
           });
           expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
         });
