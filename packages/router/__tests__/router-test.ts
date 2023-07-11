@@ -10014,10 +10014,40 @@ describe("a router", () => {
       });
 
       describe(`
+        A) fetch GET /foo |--R
+        B) nav   GET /bar   |---O
+      `, () => {
+        it("ignores loader redirect navigation if preceded by a normal GET navigation", async () => {
+          let key = "key";
+          let t = initializeTmTest();
+
+          // Start a fetch load and interrupt with a navigation
+          let A = await t.fetch("/foo", key);
+          let B = await t.navigate("/bar");
+
+          // The fetcher loader redirect should be ignored
+          await A.loaders.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+          await B.loaders.bar.resolve("BAR");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {
+              root: "ROOT",
+              bar: "BAR",
+            },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        });
+      });
+
+      describe(`
         A) fetch POST /foo |--R
         B) nav   GET  /bar   |---O
       `, () => {
-        it("ignores submission redirect navigation if preceded by a normal navigation", async () => {
+        it("ignores submission redirect navigation if preceded by a normal GET navigation", async () => {
           let key = "key";
           let t = initializeTmTest();
           let A = await t.fetch("/foo", key, {
@@ -10046,16 +10076,20 @@ describe("a router", () => {
       });
 
       describe(`
-        A) fetch GET /foo |--R
-        B) nav   GET /bar   |---O
+        A) fetch GET /foo |--R     |---O
+        B) nav   POST /bar   |--|--|---O
       `, () => {
-        it("ignores loader redirect navigation if preceded by a normal navigation", async () => {
+        it("ignores loader redirect navigation if preceded by a normal POST navigation", async () => {
           let key = "key";
           let t = initializeTmTest();
 
-          // Start a fetch load and interrupt with a navigation
+          // Start a fetch load and interrupt with a POST navigation
           let A = await t.fetch("/foo", key);
-          let B = await t.navigate("/bar", undefined, ["foo"]);
+          let B = await t.navigate(
+            "/bar",
+            { formMethod: "post", formData: createFormData({}) },
+            ["foo"]
+          );
 
           // The fetcher loader redirect should be ignored
           await A.loaders.foo.redirect("/baz");
@@ -10064,6 +10098,8 @@ describe("a router", () => {
           // The navigation should trigger the fetcher to revalidate since it's
           // not yet "completed".  If it returns data this time that should be
           // reflected
+          await B.actions.bar.resolve("ACTION");
+          await B.loaders.root.resolve("ROOT*");
           await B.loaders.bar.resolve("BAR");
           await B.loaders.foo.resolve("FOO");
 
@@ -10071,7 +10107,7 @@ describe("a router", () => {
             navigation: IDLE_NAVIGATION,
             location: { pathname: "/bar" },
             loaderData: {
-              root: "ROOT",
+              root: "ROOT*",
               bar: "BAR",
             },
           });
@@ -10079,13 +10115,18 @@ describe("a router", () => {
           expect(t.router.state.fetchers.get(key)?.data).toBe("FOO");
         });
 
-        it("processes second fetcher load redirect after interruption by normal navigation", async () => {
+        it("processes second fetcher load redirect after interruption by normal POST navigation", async () => {
           let key = "key";
           let t = initializeTmTest();
 
-          // Start a fetch load and interrupt with a navigation
+          // Start a fetch load and interrupt with a POST navigation
           let A = await t.fetch("/foo", key, "root");
-          let B = await t.navigate("/bar", undefined, ["foo"]);
+          let B = await t.navigate(
+            "/bar",
+            { formMethod: "post", formData: createFormData({}) },
+            ["foo"]
+          );
+          expect(A.loaders.foo.signal.aborted).toBe(true);
 
           // The fetcher loader redirect should be ignored
           await A.loaders.foo.redirect("/baz");
@@ -10097,6 +10138,8 @@ describe("a router", () => {
 
           // The navigation should trigger the fetcher to revalidate since it's
           // not yet "completed".  If it redirects again we should follow that
+          await B.actions.bar.resolve("ACTION");
+          await B.loaders.root.resolve("ROOT*");
           await B.loaders.bar.resolve("BAR");
           let C = await B.loaders.foo.redirect(
             "/foo/bar",
@@ -10114,20 +10157,26 @@ describe("a router", () => {
           expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
           // The fetcher should not revalidate here since it triggered the redirect
+          await C.loaders.root.resolve("ROOT**");
           await C.loaders.foobar.resolve("FOOBAR");
           expect(t.router.state).toMatchObject({
             navigation: IDLE_NAVIGATION,
             location: { pathname: "/foo/bar" },
             loaderData: {
-              root: "ROOT",
+              root: "ROOT**",
               foobar: "FOOBAR",
             },
           });
           expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
           expect(t.router.state.fetchers.get(key)?.data).toBe(undefined);
         });
+      });
 
-        it("handle multiple fetcher loader redirects", async () => {
+      describe(`
+        A) fetch GET /foo |-----X
+        B) fetch GET /bar  |---R
+      `, () => {
+        it("handles racing fetcher loader redirects", async () => {
           let keyA = "a";
           let keyB = "b";
           let t = initializeTmTest();
@@ -10136,11 +10185,8 @@ describe("a router", () => {
           let A = await t.fetch("/foo", keyA, "root");
           let B = await t.fetch("/bar", keyB, "root");
 
-          // Return a redirect from the second fetcher.load (which will trigger
-          // a revalidation of the first fetcher)
-          let C = await B.loaders.bar.redirect("/baz", undefined, undefined, [
-            "foo",
-          ]);
+          // Return a redirect from the second fetcher.load
+          let C = await B.loaders.bar.redirect("/baz");
           expect(t.router.state).toMatchObject({
             navigation: { location: { pathname: "/baz" } },
             location: { pathname: "/" },
@@ -10154,32 +10200,17 @@ describe("a router", () => {
             navigation: { location: { pathname: "/baz" } },
             location: { pathname: "/" },
           });
-          expect(t.router.state.fetchers.get(keyA)?.state).toBe("loading");
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
           expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
 
-          // Resolve the navigation loader and the revalidating (first) fetcher
-          // loader which redirects again
+          // Resolve the navigation loader
           await C.loaders.baz.resolve("BAZ");
-          let D = await C.loaders.foo.redirect("/foo/bar");
-          expect(t.router.state).toMatchObject({
-            navigation: { location: { pathname: "/foo/bar" } },
-            location: { pathname: "/" },
-            loaderData: {
-              root: "ROOT",
-            },
-          });
-          expect(t.router.state.fetchers.get(keyA)?.state).toBe("loading");
-          expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
-
-          // Resolve the navigation loader, bringing everything back to idle at
-          // the final location
-          await D.loaders.foobar.resolve("FOOBAR");
           expect(t.router.state).toMatchObject({
             navigation: IDLE_NAVIGATION,
-            location: { pathname: "/foo/bar" },
+            location: { pathname: "/baz" },
             loaderData: {
               root: "ROOT",
-              foobar: "FOOBAR",
+              baz: "BAZ",
             },
           });
           expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
@@ -11023,7 +11054,7 @@ describe("a router", () => {
         expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
       });
 
-      it("does not call shouldRevalidate if fetcher has no data (called 2x rapidly)", async () => {
+      it("does not call shouldRevalidate on POST navigation if fetcher has not yet loaded", async () => {
         // This is specifically for a Remix use case where the initial fetcher.load
         // call hasn't completed (and hasn't even loaded the route module yet), so
         // there isn't even a shouldRevalidate implementation to access yet.  If
@@ -11040,7 +11071,9 @@ describe("a router", () => {
                   index: true,
                 },
                 {
+                  id: "page",
                   path: "page",
+                  action: true,
                 },
               ],
             },
@@ -11056,11 +11089,15 @@ describe("a router", () => {
         let key = "key";
         let A = await t.fetch("/fetch", key, "root");
         expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-        expect(A.loaders.fetch.signal.aborted).toBe(false);
 
         // This should trigger an automatic revalidation of the fetcher since it
         // hasn't loaded yet
-        let B = await t.navigate("/page", undefined, ["fetch"]);
+        let B = await t.navigate(
+          "/page",
+          { formMethod: "post", body: createFormData({}) },
+          ["fetch"]
+        );
+        await B.actions.page.resolve("ACTION");
         expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
         expect(A.loaders.fetch.signal.aborted).toBe(true);
         expect(B.loaders.fetch.signal.aborted).toBe(false);
@@ -11075,6 +11112,54 @@ describe("a router", () => {
         expect(t.router.state.fetchers.get(key)).toMatchObject({
           state: "idle",
           data: "B",
+        });
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("does not trigger revalidation on GET navigation if fetcher has not yet loaded", async () => {
+        let spy = jest.fn(() => true);
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  index: true,
+                },
+                {
+                  id: "page",
+                  path: "page",
+                  loader: true,
+                },
+              ],
+            },
+            {
+              id: "fetch",
+              path: "/fetch",
+              loader: true,
+              shouldRevalidate: spy,
+            },
+          ],
+        });
+
+        let key = "key";
+        let A = await t.fetch("/fetch", key, "root");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+        let B = await t.navigate("/page");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(A.loaders.fetch.signal.aborted).toBe(false);
+
+        await A.loaders.fetch.resolve("A");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+        // Complete the navigation
+        await B.loaders.page.resolve("PAGE");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "A",
         });
         expect(spy).not.toHaveBeenCalled();
       });

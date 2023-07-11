@@ -3412,28 +3412,31 @@ function getMatchesToLoad(
     }
 
     // Revalidating fetchers are decoupled from the route matches since they
-    // load from a static href.  They only set `defaultShouldRevalidate` on
-    // explicit revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-    //
-    // They automatically revalidate without even calling shouldRevalidate if:
-    // - They were cancelled
-    // - They're in the middle of their first load and therefore this is still
-    //   an initial load and not a revalidation
-    //
-    // If neither of those is true, then they _always_ check shouldRevalidate
+    // load from a static href.  They revalidate based on explicit revalidation
+    // (submission, useRevalidator, or X-Remix-Revalidate)
     let fetcher = state.fetchers.get(key);
-    let isPerformingInitialLoad =
+    let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
+
+    let shouldRevalidate = false;
+    if (fetchRedirectIds.has(key)) {
+      // Never trigger a revalidation of an actively redirecting fetcher
+      shouldRevalidate = false;
+    } else if (cancelledFetcherLoads.includes(key)) {
+      // Always revalidate if the fetcher was cancelled
+      shouldRevalidate = true;
+    } else if (
       fetcher &&
       fetcher.state !== "idle" &&
-      fetcher.data === undefined &&
-      // If a fetcher.load redirected then it'll be "loading" without any data
-      // so ensure we're not processing the redirect from this fetcher
-      !fetchRedirectIds.has(key);
-    let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
-    let shouldRevalidate =
-      cancelledFetcherLoads.includes(key) ||
-      isPerformingInitialLoad ||
-      shouldRevalidateLoader(fetcherMatch, {
+      fetcher.data === undefined
+    ) {
+      // If the fetcher hasn't ever completed loading yet, then this isn't a
+      // revalidation, it would just be a brand new load if an explicit
+      // revalidation is required
+      shouldRevalidate = isRevalidationRequired;
+    } else {
+      // Otherwise fall back on any user-defined shouldRevalidate, defaulting
+      // to explicit revalidations only
+      shouldRevalidate = shouldRevalidateLoader(fetcherMatch, {
         currentUrl,
         currentParams: state.matches[state.matches.length - 1].params,
         nextUrl,
@@ -3442,6 +3445,7 @@ function getMatchesToLoad(
         actionResult,
         defaultShouldRevalidate: isRevalidationRequired,
       });
+    }
 
     if (shouldRevalidate) {
       revalidatingFetchers.push({
