@@ -304,6 +304,7 @@ async function handleDocumentRequestRR(
       future: build.future,
     }),
     future: build.future,
+    serializeError: (err) => serializeError(err, serverMode),
   };
 
   let handleDocumentRequestFunction = build.entry.module.default;

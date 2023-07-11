@@ -11,6 +11,8 @@ const DEFERRED_ID = "DEFERRED_ID";
 const RESOLVED_DEFERRED_ID = "RESOLVED_DEFERRED_ID";
 const FALLBACK_ID = "FALLBACK_ID";
 const ERROR_ID = "ERROR_ID";
+const UNDEFINED_ERROR_ID = "UNDEFINED_ERROR_ID";
+const NEVER_SHOW_ID = "NEVER_SHOW_ID";
 const ERROR_BOUNDARY_ID = "ERROR_BOUNDARY_ID";
 const MANUAL_RESOLVED_ID = "MANUAL_RESOLVED_ID";
 const MANUAL_FALLBACK_ID = "MANUAL_FALLBACK_ID";
@@ -232,6 +234,7 @@ test.describe("non-aborted", () => {
             return defer({
               deferredId: "${DEFERRED_ID}",
               resolvedId: Promise.resolve("${RESOLVED_DEFERRED_ID}"),
+              deferredUndefined: Promise.resolve(undefined),
             });
           }
 
@@ -269,6 +272,11 @@ test.describe("non-aborted", () => {
               resolvedId: new Promise(
                 (resolve) => setTimeout(() => {
                   resolve("${RESOLVED_DEFERRED_ID}");
+                }, 10)
+              ),
+              deferredUndefined: new Promise(
+                (resolve) => setTimeout(() => {
+                  resolve(undefined);
                 }, 10)
               ),
             });
@@ -351,11 +359,16 @@ test.describe("non-aborted", () => {
                   reject(new Error("${RESOLVED_DEFERRED_ID}"));
                 }, 10)
               ),
+              resolvedUndefined: new Promise(
+                (resolve) => setTimeout(() => {
+                  resolve(undefined);
+                }, 10)
+              ),
             });
           }
 
           export default function Deferred() {
-            let { deferredId, resolvedId } = useLoaderData();
+            let { deferredId, resolvedId, resolvedUndefined } = useLoaderData();
             return (
               <div id={deferredId}>
                 <p>{deferredId}</p>
@@ -373,6 +386,22 @@ test.describe("non-aborted", () => {
                       <div id={resolvedDeferredId}>
                         <p>{resolvedDeferredId}</p>
                         <Counter id={resolvedDeferredId} />
+                      </div>
+                    )}
+                  />
+                </Suspense>
+                <Suspense>
+                  <Await
+                    resolve={resolvedUndefined}
+                    errorElement={
+                      <div id="${UNDEFINED_ERROR_ID}">
+                        error
+                        <Counter id="${UNDEFINED_ERROR_ID}" />
+                      </div>
+                    }
+                    children={(resolvedDeferredId) => (
+                      <div id="${NEVER_SHOW_ID}">
+                        {"${NEVER_SHOW_ID}"}
                       </div>
                     )}
                   />
@@ -728,10 +757,12 @@ test.describe("non-aborted", () => {
     await page.waitForSelector(`#${ROOT_ID}`);
     await page.waitForSelector(`#${DEFERRED_ID}`);
     await page.waitForSelector(`#${ERROR_ID}`);
+    await page.waitForSelector(`#${UNDEFINED_ERROR_ID}`);
 
     await ensureInteractivity(page, ROOT_ID);
     await ensureInteractivity(page, DEFERRED_ID);
     await ensureInteractivity(page, ERROR_ID);
+    await ensureInteractivity(page, UNDEFINED_ERROR_ID);
 
     await assertConsole();
   });
@@ -891,6 +922,7 @@ test.describe("non-aborted", () => {
 
     await ensureInteractivity(page, DEFERRED_ID);
     await ensureInteractivity(page, ERROR_ID);
+    await ensureInteractivity(page, UNDEFINED_ERROR_ID);
     await ensureInteractivity(page, DEFERRED_ID, 2);
     await ensureInteractivity(page, ROOT_ID, 2);
 
