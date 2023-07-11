@@ -1,5 +1,14 @@
 # `@remix-run/router`
 
+## 1.7.2-pre.0
+
+### Patch Changes
+
+- Better handling of deferred promises that resolve/reject with `undefined` ([#10690](https://github.com/remix-run/react-router/pull/10690))
+- Properly handle fetcher redirects interrupted by normal navigations ([#10674](https://github.com/remix-run/react-router/pull/10674))
+- Initial-load fetchers should not automatically revalidate on GET navigations ([#10688](https://github.com/remix-run/react-router/pull/10688))
+- Enhance the return type of `Route.lazy` to prohibit returning an empty object ([#10634](https://github.com/remix-run/react-router/pull/10634))
+
 ## 1.7.1
 
 ### Patch Changes

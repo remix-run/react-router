@@ -8,5 +8,13 @@
     "react-router-native": "6.14.1",
     "@remix-run/router": "1.7.1"
   },
-  "changesets": []
+  "changesets": [
+    "decode-hash-scroll",
+    "defer-resolve-undefined",
+    "fetcher-redirect-interrupt",
+    "form-state-prop",
+    "hydrate-error-type",
+    "initial-load-fetcher",
+    "route-lazy-type"
+  ]
 }
