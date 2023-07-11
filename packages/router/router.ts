@@ -3395,11 +3395,6 @@ function getMatchesToLoad(
       return;
     }
 
-    // Don't revalidate an actively redirecting fetcher
-    if (fetchRedirectIds.has(key)) {
-      return;
-    }
-
     let fetcherMatches = matchRoutes(routesToUse, f.path, basename);
 
     // If the fetcher path no longer matches, push it in with null matches so
@@ -3425,7 +3420,10 @@ function getMatchesToLoad(
     let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
 
     let shouldRevalidate = false;
-    if (cancelledFetcherLoads.includes(key)) {
+    if (fetchRedirectIds.has(key)) {
+      // Never trigger a revalidation of an actively redirecting fetcher
+      shouldRevalidate = false;
+    } else if (cancelledFetcherLoads.includes(key)) {
       // Always revalidate if the fetcher was cancelled
       shouldRevalidate = true;
     } else if (
