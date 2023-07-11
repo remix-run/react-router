@@ -1351,17 +1351,15 @@ export class DeferredData {
       this.unlistenAbortSignal();
     }
 
-    if (error) {
+    // use argument length to detect error or value resolution
+    if (arguments.length === 3) {
       Object.defineProperty(promise, "_error", { get: () => error });
       this.emit(false, key);
       return Promise.reject(error);
     }
 
-    // TODO: We oughta just do the same for `error`.  If so we should add an
-    // `isError` boolean to this function so we stop using the presence of
-    // error/data as the switch
-
-    // Option 1
+    // If the promise was resolved with undefined, we'll throw an error as you
+    // should always resolve with a value or null
     if (data === undefined) {
       Object.defineProperty(promise, "_error", {
         get: () =>
@@ -1371,14 +1369,6 @@ export class DeferredData {
       });
       this.emit(false, key);
       return Promise.reject(error);
-    }
-
-    // Option 2
-    if (data === undefined) {
-      console.warn(
-        `Deferred data for key ${key} resolved to \`undefined\`, defaulting to \`null\`.`
-      );
-      data = null;
     }
 
     Object.defineProperty(promise, "_data", { get: () => data });
