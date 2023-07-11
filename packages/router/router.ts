@@ -2110,19 +2110,32 @@ export function createRouter(init: RouterInit): Router {
       redirectLocation,
       "Expected a location on the redirect navigation"
     );
-    // Check if this an absolute external redirect that goes to a new origin
-    if (ABSOLUTE_URL_REGEX.test(redirect.location) && isBrowser) {
-      let url = init.history.createURL(redirect.location);
-      let isDifferentBasename = stripBasename(url.pathname, basename) == null;
 
-      if (routerWindow.location.origin !== url.origin || isDifferentBasename) {
-        if (replace) {
-          routerWindow.location.replace(redirect.location);
-        } else {
-          routerWindow.location.assign(redirect.location);
-        }
-        return;
+    // Check if this redirect should trigger a document reload
+    const isDocumentReload = (thisOrigin: string) => {
+      if (redirect.reloadDocument) {
+        return true;
       }
+      if (!ABSOLUTE_URL_REGEX.test(redirect.location)) {
+        return false;
+      }
+
+      const url = init.history.createURL(redirect.location);
+      // Check if this an absolute external redirect that goes to a new origin
+      if (thisOrigin !== url.origin) {
+        return true;
+      }
+
+      const isDifferentBasename = stripBasename(url.pathname, basename) == null;
+      return isDifferentBasename;
+    };
+    if (isBrowser && isDocumentReload(routerWindow.location.origin)) {
+      if (replace) {
+        routerWindow.location.replace(redirect.location);
+      } else {
+        routerWindow.location.assign(redirect.location);
+      }
+      return;
     }
 
     // There's no need to abort on redirects, since we don't detect the
@@ -3733,6 +3746,7 @@ async function callLoaderOrAction(
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+        reloadDocument: result.headers.get("X-Remix-Reload-Document") !== null,
       };
     }
 
