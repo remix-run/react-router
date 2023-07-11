@@ -15143,9 +15143,9 @@ describe("a router", () => {
               deferred: {
                 critical: "loader",
                 lazy: expect.trackedPromise(
-                  undefined,
+                  null,
                   new Error(
-                    `Deferred data for key lazy resolved to \`undefined\`, you must resolve with a value or \`null\`.`
+                    `Deferred data for key "lazy" resolved/rejected with \`undefined\`, you must resolve/reject with a value or \`null\`.`
                   )
                 ),
               },
@@ -16236,7 +16236,7 @@ describe("a router", () => {
             lazy: expect.trackedPromise(
               null,
               new Error(
-                `Deferred data for key lazy resolved to \`undefined\`, you must resolve with a value or \`null\`.`
+                `Deferred data for key "lazy" resolved/rejected with \`undefined\`, you must resolve/reject with a value or \`null\`.`
               )
             ),
           });
