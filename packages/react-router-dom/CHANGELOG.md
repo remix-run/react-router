@@ -1,5 +1,16 @@
 # `react-router-dom`
 
+## 6.14.2-pre.0
+
+### Patch Changes
+
+- Add missing `<Form state>` prop to populate `history.state` on submission navigations ([#10630](https://github.com/remix-run/react-router/pull/10630))
+- Properly decode element id when emulating hash scrolling via `<ScrollRestoration>` ([#10682](https://github.com/remix-run/react-router/pull/10682))
+- Support proper hydration of `Error` subclasses such as `ReferenceError`/`TypeError` ([#10633](https://github.com/remix-run/react-router/pull/10633))
+- Updated dependencies:
+  - `@remix-run/router@1.7.2-pre.0`
+  - `react-router@6.14.2-pre.0`
+
 ## 6.14.1
 
 ### Patch Changes
