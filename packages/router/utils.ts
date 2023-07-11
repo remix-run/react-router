@@ -1357,6 +1357,30 @@ export class DeferredData {
       return Promise.reject(error);
     }
 
+    // TODO: We oughta just do the same for `error`.  If so we should add an
+    // `isError` boolean to this function so we stop using the presence of
+    // error/data as the switch
+
+    // Option 1
+    if (data === undefined) {
+      Object.defineProperty(promise, "_error", {
+        get: () =>
+          new Error(
+            `Deferred data for key ${key} resolved to \`undefined\`, you must resolve with a value or \`null\`.`
+          ),
+      });
+      this.emit(false, key);
+      return Promise.reject(error);
+    }
+
+    // Option 2
+    if (data === undefined) {
+      console.warn(
+        `Deferred data for key ${key} resolved to \`undefined\`, defaulting to \`null\`.`
+      );
+      data = null;
+    }
+
     Object.defineProperty(promise, "_data", { get: () => data });
     this.emit(false, key);
     return data;
