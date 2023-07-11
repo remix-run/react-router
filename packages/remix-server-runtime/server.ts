@@ -166,10 +166,16 @@ async function handleDataRequestRR(
       let init = deferredData.init || {};
       let headers = new Headers(init.headers);
       headers.set("Content-Type", "text/remix-deferred");
+      // Mark successful responses with a header so we can identify in-flight
+      // network errors that are missing this header
+      headers.set("X-Remix-Response", "yes");
       init.headers = headers;
       return new Response(body, init);
     }
 
+    // Mark all successful responses with a header so we can identify in-flight
+    // network errors that are missing this header
+    response.headers.set("X-Remix-Response", "yes");
     return response;
   } catch (error: unknown) {
     if (isResponse(error)) {
