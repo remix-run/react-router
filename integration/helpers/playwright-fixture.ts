@@ -140,6 +140,17 @@ export class PlaywrightFixture {
   }
 
   /**
+   * "Clicks" the refresh button.
+   */
+  async reload(options: { wait: boolean } = { wait: true }) {
+    if (options.wait) {
+      await doAndWait(this.page, () => this.page.reload());
+    } else {
+      await this.page.reload();
+    }
+  }
+
+  /**
    * Collects data responses from the network, usually after a link click or
    * form submission. This is useful for asserting that specific loaders
    * were called (or not).
