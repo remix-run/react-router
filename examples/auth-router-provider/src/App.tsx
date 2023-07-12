@@ -19,7 +19,7 @@ const router = createBrowserRouter([
     id: "root",
     path: "/",
     loader() {
-      // Out root route always provides the user, if logged in
+      // Our root route always provides the user, if logged in
       return { user: fakeAuthProvider.username };
     },
     Component: Layout,
@@ -98,6 +98,7 @@ function Layout() {
 }
 
 function AuthStatus() {
+  // Get our logged in user, if they exist, from the root route loader data
   let { user } = useRouteLoaderData("root") as { user: string | null };
   let fetcher = useFetcher();
 
