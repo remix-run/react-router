@@ -392,6 +392,39 @@ test.describe("Forms", () => {
           }
         `,
 
+        "app/routes/empty-file-upload.jsx": js`
+          import { json } from "@remix-run/server-runtime";
+          import { Form, useActionData } from "@remix-run/react";
+
+          export async function action({ request }) {
+            let formData = await request.formData();
+            return json({
+              text: formData.get('text'),
+              file: {
+                name: formData.get('file').name,
+                size: formData.get('file').size,
+              },
+              fileMultiple: formData.getAll('fileMultiple').map(f => ({
+                name: f.name,
+                size: f.size,
+              })),
+            })
+          }
+
+          export default function() {
+            const actionData = useActionData();
+            return (
+              <Form method="post" encType="multipart/form-data">
+                <input name="text" />
+                <input type="file" name="file" />
+                <input type="file" name="fileMultiple" multiple />
+                <button type="submit">Submit</button>
+                {actionData ? <p id="action-data">{JSON.stringify(actionData)}</p> : null}
+              </Form>
+            )
+          }
+        `,
+
         // Generic route for outputting url-encoded form data (either from the request body or search params)
         //
         // TODO: refactor other tests to use this
@@ -1062,6 +1095,19 @@ test.describe("Forms", () => {
 
       expect((await app.getElement("#formData")).val()).toBe(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
+      );
+    });
+
+    test("empty file inputs resolve to File objects on the server", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/empty-file-upload");
+      await app.clickSubmitButton("/empty-file-upload");
+      await page.waitForSelector("#action-data");
+      expect((await app.getElement("#action-data")).text()).toContain(
+        '{"text":"","file":{"name":"","size":0},"fileMultiple":[{"name":"","size":0}]}'
       );
     });
 
