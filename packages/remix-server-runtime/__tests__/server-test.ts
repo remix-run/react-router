@@ -412,7 +412,7 @@ describe("shared server runtime", () => {
   });
 
   describe("data requests", () => {
-    test("data request that does not match loader surfaces error for boundary", async () => {
+    test("data request that does not match loader surfaces 400 error for boundary", async () => {
       let build = mockServerBuild({
         root: {
           default: {},
@@ -430,6 +430,59 @@ describe("shared server runtime", () => {
 
       let result = await handler(request);
       expect(result.status).toBe(400);
+      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect((await result.json()).message).toBeTruthy();
+    });
+
+    test("data request that does not match routeId surfaces 403 error for boundary", async () => {
+      let build = mockServerBuild({
+        root: {
+          default: {},
+        },
+        "routes/index": {
+          parentId: "root",
+          index: true,
+          loader: () => null,
+        },
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      // This bug wasn't that the router wasn't returning a 404 (it was), but
+      // that we weren't defensive when looking at match.params when we went
+      // to call handleDataRequest(), - and that threw it's own uncaught
+      // exception triggering a 500.  We need to ensure that this build has a
+      // handleDataRequest implementation for this test to mean anything
+      expect(build.entry.module.handleDataRequest).toBeDefined();
+
+      let request = new Request(`${baseUrl}/?_data=routes/junk`, {
+        method: "get",
+      });
+
+      let result = await handler(request);
+      expect(result.status).toBe(403);
+      expect(result.headers.get("X-Remix-Error")).toBe("yes");
+      expect((await result.json()).message).toBeTruthy();
+    });
+
+    test("data request that does not match route surfaces 404 error for boundary", async () => {
+      let build = mockServerBuild({
+        root: {
+          default: {},
+        },
+        "routes/index": {
+          parentId: "root",
+          index: true,
+          loader: () => null,
+        },
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let request = new Request(`${baseUrl}/junk?_data=routes/junk`, {
+        method: "get",
+      });
+
+      let result = await handler(request);
+      expect(result.status).toBe(404);
       expect(result.headers.get("X-Remix-Error")).toBe("yes");
       expect((await result.json()).message).toBeTruthy();
     });

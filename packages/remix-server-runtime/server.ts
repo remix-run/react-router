@@ -82,10 +82,9 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       );
 
       if (build.entry.module.handleDataRequest) {
-        let match = matches!.find((match) => match.route.id == routeId)!;
         response = await build.entry.module.handleDataRequest(response, {
           context: loadContext,
-          params: match ? match.params : {},
+          params: matches?.find((m) => m.route.id == routeId)?.params || {},
           request,
         });
       }
