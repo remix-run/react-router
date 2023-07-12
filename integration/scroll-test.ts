@@ -43,6 +43,23 @@ test.beforeAll(async () => {
           );
         }
       `,
+
+      "app/routes/hash.jsx": js`
+        import { Link } from "@remix-run/react";
+
+        export default function Component() {
+          return (
+            <>
+              <h1>Hash Scrolling</h1>
+              <Link to="#hello-world">hash link to hello-world</Link>
+              <Link to="#hello 🌎">hash link to hello 🌎</Link>
+              <div style={{ height: '3000px' }}>Spacer Div</div>
+              <p id="hello-world">hello-world scroll target</p>
+              <p id="hello 🌎">hello 🌎 scroll target</p>
+            </>
+          );
+        }
+      `,
     },
   });
 
@@ -54,18 +71,54 @@ test.afterAll(() => {
   appFixture.close();
 });
 
-test("page scroll should be at the top on the new page", async ({ page }) => {
-  let app = new PlaywrightFixture(appFixture, page);
-  await app.goto("/");
-
-  // Scroll to the bottom and submit
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  let scroll = await page.evaluate(() => window.scrollY);
-  expect(scroll).toBeGreaterThan(0);
-  await app.clickSubmitButton("/?index");
-  await page.waitForSelector("#redirected");
-
-  // Ensure we scrolled back to the top
-  scroll = await page.evaluate(() => window.scrollY);
-  expect(scroll).toBe(0);
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+  runTests();
 });
+
+test.describe("with JavaScript", () => {
+  test.use({ javaScriptEnabled: true });
+  runTests();
+});
+
+function runTests() {
+  test("page scroll should be at the top on the new page", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+
+    // Scroll to the bottom and submit
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    let scroll = await page.evaluate(() => window.scrollY);
+    expect(scroll).toBeGreaterThan(0);
+    await app.clickSubmitButton("/?index");
+    await page.waitForSelector("#redirected");
+
+    // Ensure we scrolled back to the top
+    scroll = await page.evaluate(() => window.scrollY);
+    expect(scroll).toBe(0);
+  });
+
+  test("should scroll to hash locations", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/hash");
+    let scroll = await page.evaluate(() => window.scrollY);
+    expect(scroll).toBe(0);
+    await app.clickLink("/hash#hello-world");
+    await new Promise((r) => setTimeout(r, 0));
+    scroll = await page.evaluate(() => window.scrollY);
+    expect(scroll).toBeGreaterThan(0);
+  });
+
+  test("should scroll to hash locations with URL encoded characters", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/hash");
+    let scroll = await page.evaluate(() => window.scrollY);
+    expect(scroll).toBe(0);
+    await app.clickLink("/hash#hello 🌎");
+    await new Promise((r) => setTimeout(r, 0));
+    scroll = await page.evaluate(() => window.scrollY);
+    expect(scroll).toBeGreaterThan(0);
+  });
+}
