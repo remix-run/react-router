@@ -239,12 +239,19 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "children",
 ]);
 
+type RequireOne<T, Key = keyof T> = Exclude<
+  {
+    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
+  }[keyof T],
+  undefined
+>;
+
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<Omit<R, ImmutableRouteKey>>;
+  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
 }
 
 /**
@@ -1310,7 +1317,7 @@ export class DeferredData {
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
     let promise: TrackedPromise = Promise.race([value, this.abortPromise]).then(
-      (data) => this.onSettle(promise, key, null, data as unknown),
+      (data) => this.onSettle(promise, key, undefined, data as unknown),
       (error) => this.onSettle(promise, key, error as unknown)
     );
 
@@ -1344,7 +1351,19 @@ export class DeferredData {
       this.unlistenAbortSignal();
     }
 
-    if (error) {
+    // If the promise was resolved/rejected with undefined, we'll throw an error as you
+    // should always resolve with a value or null
+    if (error === undefined && data === undefined) {
+      let undefinedError = new Error(
+        `Deferred data for key "${key}" resolved/rejected with \`undefined\`, ` +
+          `you must resolve/reject with a value or \`null\`.`
+      );
+      Object.defineProperty(promise, "_error", { get: () => undefinedError });
+      this.emit(false, key);
+      return Promise.reject(undefinedError);
+    }
+
+    if (data === undefined) {
       Object.defineProperty(promise, "_error", { get: () => error });
       this.emit(false, key);
       return Promise.reject(error);

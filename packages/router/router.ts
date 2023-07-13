@@ -1026,8 +1026,11 @@ export function createRouter(init: RouterInit): Router {
 
     // On a successful navigation we can assume we got through all blockers
     // so we can start fresh
-    let blockers = new Map();
-    blockerFunctions.clear();
+    let blockers = state.blockers;
+    if (blockers.size > 0) {
+      blockers = new Map(blockers);
+      blockers.forEach((_, k) => blockers.set(k, IDLE_BLOCKER));
+    }
 
     // Always respect the user flag.  Otherwise don't reset on mutation
     // submission navigations unless they redirect
@@ -1481,6 +1484,7 @@ export function createRouter(init: RouterInit): Router {
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
       fetchLoadMatches,
+      fetchRedirectIds,
       routesToUse,
       basename,
       pendingActionData,
@@ -1539,6 +1543,9 @@ export function createRouter(init: RouterInit): Router {
 
     pendingNavigationLoadId = ++incrementingLoadId;
     revalidatingFetchers.forEach((rf) => {
+      if (fetchControllers.has(rf.key)) {
+        abortFetcher(rf.key);
+      }
       if (rf.controller) {
         // Fetchers use an independent AbortController so that aborting a fetcher
         // (via deleteFetcher) does not abort the triggering navigation that
@@ -1584,7 +1591,15 @@ export function createRouter(init: RouterInit): Router {
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
     if (redirect) {
-      await startRedirectNavigation(state, redirect, { replace });
+      if (redirect.idx >= matchesToLoad.length) {
+        // If this redirect came from a fetcher make sure we mark it in
+        // fetchRedirectIds so it doesn't get revalidated on the next set of
+        // loader executions
+        let fetcherKey =
+          revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
+        fetchRedirectIds.add(fetcherKey);
+      }
+      await startRedirectNavigation(state, redirect.result, { replace });
       return { shortCircuited: true };
     }
 
@@ -1732,6 +1747,7 @@ export function createRouter(init: RouterInit): Router {
     );
     fetchControllers.set(key, abortController);
 
+    let originatingLoadId = incrementingLoadId;
     let actionResult = await callLoaderOrAction(
       "action",
       fetchRequest,
@@ -1753,15 +1769,26 @@ export function createRouter(init: RouterInit): Router {
 
     if (isRedirectResult(actionResult)) {
       fetchControllers.delete(key);
-      fetchRedirectIds.add(key);
-      let loadingFetcher = getLoadingFetcher(submission);
-      state.fetchers.set(key, loadingFetcher);
-      updateState({ fetchers: new Map(state.fetchers) });
+      if (pendingNavigationLoadId > originatingLoadId) {
+        // A new navigation was kicked off after our action started, so that
+        // should take precedence over this redirect navigation.  We already
+        // set isRevalidationRequired so all loaders for the new route should
+        // fire unless opted out via shouldRevalidate
+        let doneFetcher = getDoneFetcher(undefined);
+        state.fetchers.set(key, doneFetcher);
+        updateState({ fetchers: new Map(state.fetchers) });
+        return;
+      } else {
+        fetchRedirectIds.add(key);
+        let loadingFetcher = getLoadingFetcher(submission);
+        state.fetchers.set(key, loadingFetcher);
+        updateState({ fetchers: new Map(state.fetchers) });
 
-      return startRedirectNavigation(state, actionResult, {
-        submission,
-        isFetchActionRedirect: true,
-      });
+        return startRedirectNavigation(state, actionResult, {
+          submission,
+          isFetchActionRedirect: true,
+        });
+      }
     }
 
     // Process any non-redirect errors thrown
@@ -1806,6 +1833,7 @@ export function createRouter(init: RouterInit): Router {
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
       fetchLoadMatches,
+      fetchRedirectIds,
       routesToUse,
       basename,
       { [match.route.id]: actionResult.data },
@@ -1825,6 +1853,9 @@ export function createRouter(init: RouterInit): Router {
           existingFetcher ? existingFetcher.data : undefined
         );
         state.fetchers.set(staleKey, revalidatingFetcher);
+        if (fetchControllers.has(staleKey)) {
+          abortFetcher(staleKey);
+        }
         if (rf.controller) {
           fetchControllers.set(staleKey, rf.controller);
         }
@@ -1864,7 +1895,15 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(results);
     if (redirect) {
-      return startRedirectNavigation(state, redirect);
+      if (redirect.idx >= matchesToLoad.length) {
+        // If this redirect came from a fetcher make sure we mark it in
+        // fetchRedirectIds so it doesn't get revalidated on the next set of
+        // loader executions
+        let fetcherKey =
+          revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
+        fetchRedirectIds.add(fetcherKey);
+      }
+      return startRedirectNavigation(state, redirect.result);
     }
 
     // Process and commit output from loaders
@@ -1951,6 +1990,7 @@ export function createRouter(init: RouterInit): Router {
     );
     fetchControllers.set(key, abortController);
 
+    let originatingLoadId = incrementingLoadId;
     let result: DataResult = await callLoaderOrAction(
       "loader",
       fetchRequest,
@@ -1983,9 +2023,18 @@ export function createRouter(init: RouterInit): Router {
 
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
-      fetchRedirectIds.add(key);
-      await startRedirectNavigation(state, result);
-      return;
+      if (pendingNavigationLoadId > originatingLoadId) {
+        // A new navigation was kicked off after our loader started, so that
+        // should take precedence over this redirect navigation
+        let doneFetcher = getDoneFetcher(undefined);
+        state.fetchers.set(key, doneFetcher);
+        updateState({ fetchers: new Map(state.fetchers) });
+        return;
+      } else {
+        fetchRedirectIds.add(key);
+        await startRedirectNavigation(state, result);
+        return;
+      }
     }
 
     // Process any non-redirect errors thrown
@@ -3137,7 +3186,7 @@ function normalizeNavigateOptions(
     : (rawFormMethod.toLowerCase() as FormMethod);
   let formAction = stripHashFromPath(path);
 
-  if (opts.body) {
+  if (opts.body !== undefined) {
     if (opts.formEncType === "text/plain") {
       // text only support POST/PUT/PATCH/DELETE submissions
       if (!isMutationMethod(formMethod)) {
@@ -3276,6 +3325,7 @@ function getMatchesToLoad(
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
   fetchLoadMatches: Map<string, FetchLoadMatch>,
+  fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
   pendingActionData?: RouteData,
@@ -3348,7 +3398,9 @@ function getMatchesToLoad(
     let fetcherMatches = matchRoutes(routesToUse, f.path, basename);
 
     // If the fetcher path no longer matches, push it in with null matches so
-    // we can trigger a 404 in callLoadersAndMaybeResolveData
+    // we can trigger a 404 in callLoadersAndMaybeResolveData.  Note this is
+    // currently only a use-case for Remix HMR where the route tree can change
+    // at runtime and remove a route previously loaded via a fetcher
     if (!fetcherMatches) {
       revalidatingFetchers.push({
         key,
@@ -3361,34 +3413,42 @@ function getMatchesToLoad(
       return;
     }
 
+    // Revalidating fetchers are decoupled from the route matches since they
+    // load from a static href.  They revalidate based on explicit revalidation
+    // (submission, useRevalidator, or X-Remix-Revalidate)
+    let fetcher = state.fetchers.get(key);
     let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
 
-    if (cancelledFetcherLoads.includes(key)) {
-      revalidatingFetchers.push({
-        key,
-        routeId: f.routeId,
-        path: f.path,
-        matches: fetcherMatches,
-        match: fetcherMatch,
-        controller: new AbortController(),
+    let shouldRevalidate = false;
+    if (fetchRedirectIds.has(key)) {
+      // Never trigger a revalidation of an actively redirecting fetcher
+      shouldRevalidate = false;
+    } else if (cancelledFetcherLoads.includes(key)) {
+      // Always revalidate if the fetcher was cancelled
+      shouldRevalidate = true;
+    } else if (
+      fetcher &&
+      fetcher.state !== "idle" &&
+      fetcher.data === undefined
+    ) {
+      // If the fetcher hasn't ever completed loading yet, then this isn't a
+      // revalidation, it would just be a brand new load if an explicit
+      // revalidation is required
+      shouldRevalidate = isRevalidationRequired;
+    } else {
+      // Otherwise fall back on any user-defined shouldRevalidate, defaulting
+      // to explicit revalidations only
+      shouldRevalidate = shouldRevalidateLoader(fetcherMatch, {
+        currentUrl,
+        currentParams: state.matches[state.matches.length - 1].params,
+        nextUrl,
+        nextParams: matches[matches.length - 1].params,
+        ...submission,
+        actionResult,
+        defaultShouldRevalidate: isRevalidationRequired,
       });
-      return;
     }
 
-    // Revalidating fetchers are decoupled from the route matches since they
-    // hit a static href, so they _always_ check shouldRevalidate and the
-    // default is strictly if a revalidation is explicitly required (action
-    // submissions, useRevalidator, X-Remix-Revalidate).
-    let shouldRevalidate = shouldRevalidateLoader(fetcherMatch, {
-      currentUrl,
-      currentParams: state.matches[state.matches.length - 1].params,
-      nextUrl,
-      nextParams: matches[matches.length - 1].params,
-      ...submission,
-      actionResult,
-      // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-      defaultShouldRevalidate: isRevalidationRequired,
-    });
     if (shouldRevalidate) {
       revalidatingFetchers.push({
         key,
@@ -4074,11 +4134,13 @@ function getInternalRouterError(
 }
 
 // Find any returned redirect errors, starting from the lowest match
-function findRedirect(results: DataResult[]): RedirectResult | undefined {
+function findRedirect(
+  results: DataResult[]
+): { result: RedirectResult; idx: number } | undefined {
   for (let i = results.length - 1; i >= 0; i--) {
     let result = results[i];
     if (isRedirectResult(result)) {
-      return result;
+      return { result, idx: i };
     }
   }
 }

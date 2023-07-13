@@ -22,7 +22,6 @@ import {
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
 
-import startTransitionImpl from "./polyfills/start-transition";
 import type {
   DataRouteObject,
   IndexRouteObject,
@@ -59,6 +58,30 @@ export interface RouterProviderProps {
   router: RemixRouter;
   future?: FutureConfig;
 }
+
+/**
+  Webpack + React 17 fails to compile on any of the following because webpack
+  complains that `startTransition` doesn't exist in `React`:
+  * import { startTransition } from "react"
+  * import * as React from from "react";
+    "startTransition" in React ? React.startTransition(() => setState()) : setState()
+  * import * as React from from "react";
+    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
+
+  Moving it to a constant such as the following solves the Webpack/React 17 issue:
+  * import * as React from from "react";
+    const START_TRANSITION = "startTransition";
+    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
+
+  However, that introduces webpack/terser minification issues in production builds
+  in React 18 where minification/obfuscation ends up removing the call of
+  React.startTransition entirely from the first half of the ternary.  Grabbing
+  this exported reference once up front resolves that issue.
+
+  See https://github.com/remix-run/react-router/issues/10579
+*/
+const START_TRANSITION = "startTransition";
+const startTransitionImpl = React[START_TRANSITION];
 
 /**
  * Given a Remix Router instance, render the appropriate UI

@@ -27,7 +27,6 @@ import {
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
-  UNSAFE_startTransitionImpl as startTransitionImpl,
   UNSAFE_useRouteId as useRouteId,
 } from "react-router";
 import type {
@@ -279,11 +278,30 @@ function deserializeErrors(
         val.internal === true
       );
     } else if (val && val.__type === "Error") {
-      let error = new Error(val.message);
-      // Wipe away the client-side stack trace.  Nothing to fill it in with
-      // because we don't serialize SSR stack traces for security reasons
-      error.stack = "";
-      serialized[key] = error;
+      // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
+      if (val.__subType) {
+        let ErrorConstructor = window[val.__subType];
+        if (typeof ErrorConstructor === "function") {
+          try {
+            // @ts-expect-error
+            let error = new ErrorConstructor(val.message);
+            // Wipe away the client-side stack trace.  Nothing to fill it in with
+            // because we don't serialize SSR stack traces for security reasons
+            error.stack = "";
+            serialized[key] = error;
+          } catch (e) {
+            // no-op - fall through and create a normal Error
+          }
+        }
+      }
+
+      if (serialized[key] == null) {
+        let error = new Error(val.message);
+        // Wipe away the client-side stack trace.  Nothing to fill it in with
+        // because we don't serialize SSR stack traces for security reasons
+        error.stack = "";
+        serialized[key] = error;
+      }
     } else {
       serialized[key] = val;
     }
@@ -296,6 +314,30 @@ function deserializeErrors(
 ////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
+
+/**
+  Webpack + React 17 fails to compile on any of the following because webpack
+  complains that `startTransition` doesn't exist in `React`:
+  * import { startTransition } from "react"
+  * import * as React from from "react";
+    "startTransition" in React ? React.startTransition(() => setState()) : setState()
+  * import * as React from from "react";
+    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
+
+  Moving it to a constant such as the following solves the Webpack/React 17 issue:
+  * import * as React from from "react";
+    const START_TRANSITION = "startTransition";
+    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
+
+  However, that introduces webpack/terser minification issues in production builds
+  in React 18 where minification/obfuscation ends up removing the call of
+  React.startTransition entirely from the first half of the ternary.  Grabbing
+  this exported reference once up front resolves that issue.
+
+  See https://github.com/remix-run/react-router/issues/10579
+*/
+const START_TRANSITION = "startTransition";
+const startTransitionImpl = React[START_TRANSITION];
 
 export interface BrowserRouterProps {
   basename?: string;
@@ -674,7 +716,8 @@ if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
 
-export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
+export interface FetcherFormProps
+  extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * The HTTP verb to use when the form is submit. Supports "get", "post",
    * "put", "delete", "patch".
@@ -696,18 +739,6 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   action?: string;
 
   /**
-   * Forces a full document navigation instead of a fetch.
-   */
-  reloadDocument?: boolean;
-
-  /**
-   * Replaces the current entry in the browser history stack when the form
-   * navigates. Use this if you don't want the user to be able to click "back"
-   * to the page with the form on it.
-   */
-  replace?: boolean;
-
-  /**
    * Determines whether the form action is relative to the route hierarchy or
    * the pathname.  Use this if you want to opt out of navigating the route
    * hierarchy and want to instead route based on /-delimited URL segments
@@ -725,6 +756,25 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * `event.preventDefault()` then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+}
+
+export interface FormProps extends FetcherFormProps {
+  /**
+   * Forces a full document navigation instead of a fetch.
+   */
+  reloadDocument?: boolean;
+
+  /**
+   * Replaces the current entry in the browser history stack when the form
+   * navigates. Use this if you don't want the user to be able to click "back"
+   * to the page with the form on it.
+   */
+  replace?: boolean;
+
+  /**
+   * State object to add to the history stack entry for this navigation
+   */
+  state?: any;
 }
 
 /**
@@ -761,6 +811,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     {
       reloadDocument,
       replace,
+      state,
       method = defaultMethod,
       action,
       onSubmit,
@@ -789,6 +840,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit(submitter || event.currentTarget, {
         method: submitMethod,
         replace,
+        state,
         relative,
         preventScrollReset,
       });
@@ -1006,8 +1058,8 @@ export interface SubmitFunction {
 export interface FetcherSubmitFunction {
   (
     target: SubmitTarget,
-    // Fetchers cannot replace because they are not navigation events
-    options?: Omit<SubmitOptions, "replace">
+    // Fetchers cannot replace or set state because they are not navigation events
+    options?: Omit<SubmitOptions, "replace" | "state">
   ): void;
 }
 
@@ -1045,6 +1097,7 @@ export function useSubmit(): SubmitFunction {
         formMethod: options.method || (method as HTMLFormMethod),
         formEncType: options.encType || (encType as FormEncType),
         replace: options.replace,
+        state: options.state,
         fromRouteId: currentRouteId,
       });
     },
@@ -1144,7 +1197,7 @@ export function useFormAction(
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
-  let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(
+  let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
     (props, ref) => {
       let submit = useSubmitFetcher(fetcherKey, routeId);
       return <FormImpl {...props} ref={ref} submit={submit} />;
@@ -1331,7 +1384,9 @@ function useScrollRestoration({
 
       // try to scroll to the hash
       if (location.hash) {
-        let el = document.getElementById(location.hash.slice(1));
+        let el = document.getElementById(
+          decodeURIComponent(location.hash.slice(1))
+        );
         if (el) {
           el.scrollIntoView();
           return;
@@ -1407,21 +1462,21 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
   let blocker = useBlocker(when);
 
   React.useEffect(() => {
-    if (blocker.state === "blocked" && !when) {
-      blocker.reset();
-    }
-  }, [blocker, when]);
-
-  React.useEffect(() => {
     if (blocker.state === "blocked") {
       let proceed = window.confirm(message);
       if (proceed) {
-        setTimeout(blocker.proceed, 0);
+        blocker.proceed();
       } else {
         blocker.reset();
       }
     }
   }, [blocker, message]);
+
+  React.useEffect(() => {
+    if (blocker.state === "blocked" && !when) {
+      blocker.reset();
+    }
+  }, [blocker, when]);
 }
 
 export { usePrompt as unstable_usePrompt };

@@ -43,7 +43,6 @@ import {
   UNSAFE_warning as warning,
 } from "@remix-run/router";
 
-import startTransitionImpl from "./lib/polyfills/start-transition";
 import type {
   AwaitProps,
   MemoryRouterProps,
@@ -304,5 +303,4 @@ export {
   mapRouteProperties as UNSAFE_mapRouteProperties,
   useRouteId as UNSAFE_useRouteId,
   useRoutesImpl as UNSAFE_useRoutesImpl,
-  startTransitionImpl as UNSAFE_startTransitionImpl,
 };

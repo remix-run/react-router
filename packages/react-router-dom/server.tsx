@@ -179,6 +179,13 @@ function serializeErrors(
       serialized[key] = {
         message: val.message,
         __type: "Error",
+        // If this is a subclass (i.e., ReferenceError), send up the type so we
+        // can re-create the same type during hydration.
+        ...(val.name !== "Error"
+          ? {
+              __subType: val.name,
+            }
+          : {}),
       };
     } else {
       serialized[key] = val;
