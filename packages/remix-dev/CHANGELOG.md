@@ -1,5 +1,48 @@
 # `@remix-run/dev`
 
+## 1.19.0-pre.0
+
+### Minor Changes
+
+- improved networking options for v2_dev ([#6724](https://github.com/remix-run/remix/pull/6724))
+
+  deprecate the `--scheme` and `--host` options and replace them with the `REMIX_DEV_ORIGIN` environment variable
+
+- Output esbuild metafiles for bundle analysis ([#6772](https://github.com/remix-run/remix/pull/6772))
+
+  Written to server build directory (`build/` by default):
+
+  - `metafile.css.json`
+  - `metafile.js.json` (browser JS)
+  - `metafile.server.json` (server JS)
+
+  Metafiles can be uploaded to https://esbuild.github.io/analyze/ for analysis.
+
+- Add `serverNodeBuiltinsPolyfill` config option. You can now disable polyfills of Node.js built-in modules for non-Node.js server platforms by setting `serverNodeBuiltinsPolyfill: false` in `remix.config.js`. You can also provide a list of server polyfills, e.g. `serverNodeBuiltinsPolyfill: ["crypto"]`. ([#6814](https://github.com/remix-run/remix/pull/6814))
+
+### Patch Changes
+
+- Exclude unimplemented polyfills from server build for non-Node.js server platforms ([#6814](https://github.com/remix-run/remix/pull/6814))
+- ignore missing react-dom/client for react 17 ([#6725](https://github.com/remix-run/remix/pull/6725))
+- Warn if not using v2_dev ([#6818](https://github.com/remix-run/remix/pull/6818))
+
+  Also, rename `--no-restart` to `--manual` to match intention and documentation.
+  `--no-restart` remains an alias for `--manual` in v1 for backwards compatibility.
+
+- ignore errors when killing already dead processes ([#6773](https://github.com/remix-run/remix/pull/6773))
+- fix sourcemaps for v2_dev ([#6762](https://github.com/remix-run/remix/pull/6762))
+- Do not clear screen when dev server starts ([#6719](https://github.com/remix-run/remix/pull/6719))
+
+  On some terminal emulators, "clearing" only scrolls the next line to the
+  top. on others, it erases the scrollback.
+
+  Instead, let users call `clear` themselves (`clear && remix dev`) if
+  they want to clear.
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.19.0-pre.0`
+  - `@remix-run/serve@1.19.0-pre.0`
+
 ## 1.18.1
 
 ### Patch Changes

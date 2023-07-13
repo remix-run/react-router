@@ -1,5 +1,14 @@
 # `@remix-run/testing`
 
+## 1.19.0-pre.0
+
+### Patch Changes
+
+- Bump `react-router-dom@6.14.2-pre.0` ([#6812](https://github.com/remix-run/remix/pull/6812))
+- Updated dependencies:
+  - `@remix-run/react@1.19.0-pre.0`
+  - `@remix-run/node@1.19.0-pre.0`
+
 ## 1.18.1
 
 ### Patch Changes

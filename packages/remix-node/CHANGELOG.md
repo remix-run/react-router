@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 1.19.0-pre.0
+
+### Patch Changes
+
+- - Upgrade to [`@remix-run/web-fetch@4.3.5`](https://github.com/remix-run/web-std-io/releases/tag/%40remix-run%2Fweb-fetch%404.3.5). Submitted empty file inputs are now correctly parsed out as empty `File` instances instead of being surfaced as an empty string via `request.formData()` ([#6816](https://github.com/remix-run/remix/pull/6816))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.19.0-pre.0`
+
 ## 1.18.1
 
 ### Patch Changes
