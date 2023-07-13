@@ -97,13 +97,18 @@ export function getSearchParamsForLocation(
   let searchParams = createSearchParams(locationSearch);
 
   if (defaultSearchParams) {
-    for (let key of defaultSearchParams.keys()) {
+    // Use `defaultSearchParams.forEach(...)` here instead of iterating of
+    // `defaultSearchParams.keys()` to work-around a bug in Firefox related to
+    // web extensions. Relevant Bugzilla tickets:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1414602
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1023984
+    defaultSearchParams.forEach((_, key) => {
       if (!searchParams.has(key)) {
         defaultSearchParams.getAll(key).forEach((value) => {
           searchParams.append(key, value);
         });
       }
-    }
+    });
   }
 
   return searchParams;
