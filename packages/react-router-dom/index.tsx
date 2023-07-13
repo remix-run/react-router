@@ -1462,21 +1462,21 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
   let blocker = useBlocker(when);
 
   React.useEffect(() => {
-    if (blocker.state === "blocked" && !when) {
-      blocker.reset();
-    }
-  }, [blocker, when]);
-
-  React.useEffect(() => {
     if (blocker.state === "blocked") {
       let proceed = window.confirm(message);
       if (proceed) {
-        setTimeout(blocker.proceed, 0);
+        blocker.proceed();
       } else {
         blocker.reset();
       }
     }
   }, [blocker, message]);
+
+  React.useEffect(() => {
+    if (blocker.state === "blocked" && !when) {
+      blocker.reset();
+    }
+  }, [blocker, when]);
 }
 
 export { usePrompt as unstable_usePrompt };
