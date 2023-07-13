@@ -38,11 +38,13 @@ export type ServerPlatform = "node" | "neutral";
 
 type Dev = {
   command?: string;
+  manual?: boolean;
   port?: number;
-  restart?: boolean;
   tlsKey?: string;
   tlsCert?: string;
 
+  /** @deprecated remove in v2 */
+  restart?: boolean;
   /** @deprecated remove in v2 */
   scheme?: string;
   /** @deprecated remove in v2 */

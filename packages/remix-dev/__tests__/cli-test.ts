@@ -118,8 +118,8 @@ describe("remix CLI", () => {
 
             [v2_dev]
             --command, -c       Command used to run your app server
+            --manual            Enable manual mode
             --port              Port for the dev server. Default: any open port
-            --no-restart        Do not restart the app server when rebuilds occur.
             --tls-key           Path to TLS key (key.pem)
             --tls-cert          Path to TLS certificate (cert.pem)
           \`init\` Options:

@@ -39,11 +39,11 @@ export let serve = async (
   initialConfig: RemixConfig,
   options: {
     command?: string;
+    manual: boolean;
     port: number;
     tlsKey?: string;
     tlsCert?: string;
     REMIX_DEV_ORIGIN: URL;
-    restart: boolean;
   }
 ) => {
   await loadEnv(initialConfig.rootDirectory);
@@ -200,7 +200,7 @@ export let serve = async (
         let newState: typeof state = { prevManifest: state.manifest };
         try {
           let start = Date.now();
-          if (state.appServer === undefined || options.restart) {
+          if (state.appServer === undefined || !options.manual) {
             if (state.appServer?.pid) {
               await killtree(state.appServer.pid);
             }

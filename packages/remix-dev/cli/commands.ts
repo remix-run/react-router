@@ -215,12 +215,13 @@ export async function dev(
 
     // v2_dev
     command?: string;
-    scheme?: string;
-    host?: string;
+    manual?: boolean;
     port?: number;
-    restart?: boolean;
     tlsKey?: string;
     tlsCert?: string;
+    scheme?: string; // TODO: remove in v2
+    host?: string; // TODO: remove in v2
+    restart?: boolean; // TODO: remove in v2
   } = {}
 ) {
   console.log(`\n 💿  remix dev\n`);
@@ -234,6 +235,12 @@ export async function dev(
   let config = await readConfig(remixRoot);
 
   if (config.future.v2_dev === false) {
+    logger.warn("The `remix dev` changing in v2", {
+      details: [
+        "You can use the `v2_dev` future flag to opt-in early.",
+        "-> https://remix.run/docs/en/main/pages/v2#dev-server",
+      ],
+    });
     await devServer.serve(config, flags.port);
     return await new Promise(() => {});
   }
@@ -521,13 +528,14 @@ let resolveDev = async (
 let resolveDevServe = async (
   config: RemixConfig,
   flags: {
+    command?: string;
+    manual?: boolean;
     port?: number;
     tlsKey?: string;
     tlsCert?: string;
     scheme?: string; // TODO: remove in v2
     host?: string; // TODO: remove in v2
-    command?: string;
-    restart?: boolean;
+    restart?: boolean; // TODO: remove in v2
   } = {}
 ) => {
   let dev = config.future.v2_dev;
@@ -540,12 +548,27 @@ let resolveDevServe = async (
     flags.command ??
     (dev === true ? undefined : dev.command)
 
-  let restart =
-    flags.restart ?? (dev === true ? undefined : dev.restart) ?? true;
+  // TODO: remove in v2
+  let restart = dev === true ? undefined : dev.restart;
+  if (restart !== undefined) {
+    logger.warn("The `v2_dev.restart` option is deprecated", {
+      details: [
+        "Use `v2_dev.manual` instead.",
+        "-> https://remix.run/docs/en/main/guides/development-performance#manual-mode",
+      ],
+    });
+  }
+
+  // prettier-ignore
+  let manual =
+    flags.manual ??
+    (dev === true ? undefined : dev.manual) ??
+    restart !== undefined ? !restart : // TODO: remove in v2
+    false;
 
   return {
     ...resolved,
     command,
-    restart,
+    manual,
   };
 };
