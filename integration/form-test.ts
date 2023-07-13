@@ -1083,6 +1083,7 @@ test.describe("Forms", () => {
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
       await app.clickElement("button");
+      await page.waitForSelector("#formData");
 
       expect((await app.getElement("#formData")).val()).toBe(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
@@ -1092,6 +1093,7 @@ test.describe("Forms", () => {
       await app.uploadFile(`[name=filey]`, myFile);
       await app.uploadFile(`[name=filey2]`, myFile, myFile);
       await app.clickElement("button");
+      await page.waitForSelector("#formData");
 
       expect((await app.getElement("#formData")).val()).toBe(
         "filey=myfile.txt&filey2=myfile.txt&filey2=myfile.txt&filey3="
