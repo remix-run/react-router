@@ -193,6 +193,12 @@ export interface AppConfig {
   serverModuleFormat?: ServerModuleFormat;
 
   /**
+   * Whether to polyfill Node.js built-in modules in the server build, or a
+   * list of polyfills. Defaults to `true` for non-Node.js server platforms.
+   */
+  serverNodeBuiltinsPolyfill?: boolean | string[];
+
+  /**
    * The platform the server build is targeting. Defaults to "node".
    */
   serverPlatform?: ServerPlatform;
@@ -364,6 +370,12 @@ export interface RemixConfig {
   serverModuleFormat: ServerModuleFormat;
 
   /**
+   * Whether to polyfill Node.js built-in modules in the server build, or a
+   * list of polyfills. Defaults to `true` for non-Node.js server platforms.
+   */
+  serverNodeBuiltinsPolyfill: boolean | string[];
+
+  /**
    * The platform the server build is targeting. Defaults to "node".
    */
   serverPlatform: ServerPlatform;
@@ -488,6 +500,20 @@ export async function readConfig(
   serverMainFields ??=
     serverModuleFormat === "esm" ? ["module", "main"] : ["main", "module"];
   serverMinify ??= false;
+
+  let serverNodeBuiltinsPolyfill: RemixConfig["serverNodeBuiltinsPolyfill"] =
+    serverPlatform !== "node";
+
+  if (appConfig.serverNodeBuiltinsPolyfill !== undefined) {
+    serverNodeBuiltinsPolyfill = appConfig.serverNodeBuiltinsPolyfill;
+  }
+
+  if (
+    serverPlatform !== "node" &&
+    appConfig.serverNodeBuiltinsPolyfill === undefined
+  ) {
+    serverNodeBuiltinsPolyfillWarning();
+  }
 
   if (appConfig.future) {
     if ("unstable_cssModules" in appConfig.future) {
@@ -820,6 +846,7 @@ export async function readConfig(
     serverMinify,
     serverMode,
     serverModuleFormat,
+    serverNodeBuiltinsPolyfill,
     serverPlatform,
     mdx,
     postcss,
@@ -976,6 +1003,20 @@ let serverModuleFormatWarning = () =>
     ],
     key: "serverModuleFormatWarning",
   });
+
+let serverNodeBuiltinsPolyfillWarning = () =>
+  logger.warn(
+    "The `serverNodeBuiltinsPolyfill` config default option will be changing in v2",
+    {
+      details: [
+        "The default value will change from `true` to `false` regardless of platform.",
+        "You can prepare for this change by explicitly specifying `serverNodeBuiltinsPolyfill: false` or",
+        "`serverNodeBuiltinsPolyfill: true` if you are currently relying on them.",
+        "-> https://remix.run/docs/en/v1.19.0/pages/v2#servernodebuiltinspolyfill",
+      ],
+      key: "serverNodeBuiltinsPolyfillWarning",
+    }
+  );
 
 let futureFlagWarning =
   (args: { message: string; flag: string; link: string }) => () => {

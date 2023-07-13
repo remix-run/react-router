@@ -1,3 +1,4 @@
+import { builtinModules } from "module";
 import * as esbuild from "esbuild";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
@@ -67,8 +68,38 @@ const createEsbuildConfig = (
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
 
-  if (ctx.config.serverPlatform !== "node") {
-    plugins.unshift(nodeModulesPolyfillPlugin());
+  if (ctx.config.serverNodeBuiltinsPolyfill) {
+    // These unimplemented polyfills throw an error at runtime if they're used.
+    // It's also possible that they'll be provided by the host environment (e.g.
+    // Cloudflare provides an "async_hooks" polyfill) so it's better to avoid
+    // them by default when server polyfills are enabled. If consumers want an
+    // unimplemented polyfill for some reason, they can explicitly pass a list
+    // of desired polyfills instead. This list was manually populated by looking
+    // for unimplemented browser polyfills in the jspm-core repo:
+    // https://github.com/jspm/jspm-core/tree/main/nodelibs/browser
+    let unimplemented = [
+      "async_hooks", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/async_hooks.js
+      "child_process", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/child_process.js
+      "cluster", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/cluster.js
+      "dgram", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/dgram.js
+      "dns", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/dns.js
+      "dns/promises", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/dns/promises.js
+      "http2", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/http2.js
+      "net", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/net.js
+      "readline", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/readline.js
+      "repl", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/repl.js
+      "tls", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/tls.js
+      "v8", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/v8.js
+    ];
+
+    plugins.unshift(
+      nodeModulesPolyfillPlugin({
+        modules:
+          ctx.config.serverNodeBuiltinsPolyfill === true
+            ? builtinModules.filter((mod) => !unimplemented.includes(mod))
+            : ctx.config.serverNodeBuiltinsPolyfill,
+      })
+    );
   }
 
   return {
