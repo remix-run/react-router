@@ -1,0 +1,16 @@
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 1s;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+.is-loading {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: lightgrey;
+  padding: 0.5rem;
+}
