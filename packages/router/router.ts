@@ -4220,7 +4220,7 @@ function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
   return (
     obj &&
     isResponse(obj.response) &&
-    (obj.type === ResultType.data || ResultType.error)
+    (obj.type === ResultType.data || obj.type === ResultType.error)
   );
 }
 
