@@ -50,7 +50,12 @@ export function cssFilePlugin(ctx: Context): esbuild.Plugin {
       build.onLoad({ filter: /\.css$/ }, async (args) => {
         let cacheKey = `css-file:${args.path}`;
         let {
-          cacheValue: { contents, watchFiles, warnings },
+          cacheValue: {
+            contents,
+            watchFiles,
+            warnings,
+            outputFilesWithoutEntry,
+          },
         } = await ctx.fileWatchCache.getOrSet(cacheKey, async () => {
           let fileDependencies = new Set([args.path]);
           let globDependencies = new Set<string>();
@@ -166,24 +171,25 @@ export function cssFilePlugin(ctx: Context): esbuild.Plugin {
             }
           }
 
-          // write all assets
-          await Promise.all(
-            outputFilesWithoutEntry.map(({ path: filepath, contents }) =>
-              fse.outputFile(filepath, contents)
-            )
-          );
-
           return {
             cacheValue: {
               contents: entryFile.contents,
               // add all dependencies to watchFiles
               watchFiles: Array.from(fileDependencies),
               warnings,
+              outputFilesWithoutEntry,
             },
             fileDependencies,
             globDependencies,
           };
         });
+
+        // write all assets
+        await Promise.all(
+          outputFilesWithoutEntry.map(({ path: filepath, contents }) =>
+            fse.outputFile(filepath, contents)
+          )
+        );
 
         return {
           contents,
