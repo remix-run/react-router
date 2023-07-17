@@ -15,6 +15,7 @@
     "form-state-prop",
     "hydrate-error-type",
     "initial-load-fetcher",
+    "nice-planets-fly",
     "route-lazy-type"
   ]
 }
