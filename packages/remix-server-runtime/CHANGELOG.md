@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.19.0-pre.2
+
+### Patch Changes
+
+- Bump router 6.14.2-pre.1 ([#6852](https://github.com/remix-run/remix/pull/6852))
+
 ## 1.19.0-pre.1
 
 ## 1.19.0-pre.0
