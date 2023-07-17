@@ -1,5 +1,14 @@
 # `@remix-run/testing`
 
+## 1.19.0-pre.3
+
+### Patch Changes
+
+- Bump RR 6.14.2 ([#6854](https://github.com/remix-run/remix/pull/6854))
+- Updated dependencies:
+  - `@remix-run/react@1.19.0-pre.3`
+  - `@remix-run/node@1.19.0-pre.3`
+
 ## 1.19.0-pre.2
 
 ### Patch Changes
