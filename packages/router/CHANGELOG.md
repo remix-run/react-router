@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.7.2-pre.1
+
+### Patch Changes
+
+- [REMOVE] Fix additional edge case for #10674 ([#10709](https://github.com/remix-run/react-router/pull/10709))
+
 ## 1.7.2-pre.0
 
 ### Patch Changes
