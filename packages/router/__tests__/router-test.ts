@@ -10073,6 +10073,54 @@ describe("a router", () => {
           expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
           expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
         });
+
+        it("ignores submission redirect navigation if preceded by a normal GET navigation (w/o loaders)", async () => {
+          let key = "key";
+          let t = setup({
+            routes: [
+              {
+                path: "",
+                id: "root",
+                children: [
+                  {
+                    path: "/",
+                    id: "index",
+                  },
+                  {
+                    path: "/foo",
+                    id: "foo",
+                    action: true,
+                  },
+                  {
+                    path: "/bar",
+                    id: "bar",
+                  },
+                  {
+                    path: "/baz",
+                    id: "baz",
+                  },
+                ],
+              },
+            ],
+          });
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await t.navigate("/bar");
+
+          // This redirect should be ignored
+          await A.actions.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {},
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        });
       });
 
       describe(`
