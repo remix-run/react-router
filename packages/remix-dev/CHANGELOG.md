@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 1.19.0-pre.1
+
+### Patch Changes
+
+- Always rewrite css-derived assets during builds ([#6837](https://github.com/remix-run/remix/pull/6837))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.19.0-pre.1`
+
 ## 1.19.0-pre.0
 
 ### Minor Changes
