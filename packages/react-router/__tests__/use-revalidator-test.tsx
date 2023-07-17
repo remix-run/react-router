@@ -19,7 +19,7 @@ import {
   useRouteError,
 } from "react-router";
 import MemoryNavigate from "./utils/MemoryNavigate";
-import getHtml from "./utils/getHTML";
+import getHtml from "./utils/getHtml";
 
 describe("useRevalidator", () => {
   it("reloads data using useRevalidator", async () => {
