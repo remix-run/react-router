@@ -1500,6 +1500,8 @@ export function createRouter(init: RouterInit): Router {
         (matchesToLoad && matchesToLoad.some((m) => m.route.id === routeId))
     );
 
+    pendingNavigationLoadId = ++incrementingLoadId;
+
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -1541,7 +1543,6 @@ export function createRouter(init: RouterInit): Router {
       });
     }
 
-    pendingNavigationLoadId = ++incrementingLoadId;
     revalidatingFetchers.forEach((rf) => {
       if (fetchControllers.has(rf.key)) {
         abortFetcher(rf.key);
