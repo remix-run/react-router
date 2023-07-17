@@ -1,17 +1,11 @@
 # `@remix-run/router`
 
-## 1.7.2-pre.1
-
-### Patch Changes
-
-- [REMOVE] Fix additional edge case for #10674 ([#10709](https://github.com/remix-run/react-router/pull/10709))
-
-## 1.7.2-pre.0
+## 1.7.2
 
 ### Patch Changes
 
 - Trigger an error if a `defer` promise resolves/rejects with `undefined` in order to match the behavior of loaders and actions which must return a value or `null` ([#10690](https://github.com/remix-run/react-router/pull/10690))
-- Properly handle fetcher redirects interrupted by normal navigations ([#10674](https://github.com/remix-run/react-router/pull/10674))
+- Properly handle fetcher redirects interrupted by normal navigations ([#10674](https://github.com/remix-run/react-router/pull/10674), [#10709](https://github.com/remix-run/react-router/pull/10709))
 - Initial-load fetchers should not automatically revalidate on GET navigations ([#10688](https://github.com/remix-run/react-router/pull/10688))
 - Enhance the return type of `Route.lazy` to prohibit returning an empty object ([#10634](https://github.com/remix-run/react-router/pull/10634))
 
