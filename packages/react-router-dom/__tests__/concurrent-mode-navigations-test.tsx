@@ -13,12 +13,13 @@ import {
 import {
   act,
   fireEvent,
-  prettyDOM,
   render,
   screen,
   waitFor,
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
+import createDeferred from "../../router/__tests__/utils/createDeferred";
+import getHtml from "react-router/__tests__/utils/getHtml";
 
 describe("Handles concurrent mode features during navigations", () => {
   function getComponents() {
@@ -377,37 +378,4 @@ function getWindowImpl(initialUrl: string, isHash = false): Window {
   const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
   dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
   return dom.window as unknown as Window;
-}
-
-function getHtml(container: HTMLElement) {
-  return prettyDOM(container, undefined, {
-    highlight: false,
-  });
-}
-
-async function tick() {
-  await new Promise((r) => setTimeout(r, 0));
-}
-
-function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
-      res(val);
-      await tick();
-      await promise;
-    };
-    reject = async (error?: Error) => {
-      rej(error);
-      await promise.catch(() => tick());
-    };
-  });
-  return {
-    promise,
-    //@ts-ignore
-    resolve,
-    //@ts-ignore
-    reject,
-  };
 }
