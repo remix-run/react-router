@@ -1,5 +1,12 @@
 # `react-router-native`
 
+## 6.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.2`
+
 ## 6.14.1
 
 ### Patch Changes
