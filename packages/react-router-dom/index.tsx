@@ -278,11 +278,30 @@ function deserializeErrors(
         val.internal === true
       );
     } else if (val && val.__type === "Error") {
-      let error = new Error(val.message);
-      // Wipe away the client-side stack trace.  Nothing to fill it in with
-      // because we don't serialize SSR stack traces for security reasons
-      error.stack = "";
-      serialized[key] = error;
+      // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
+      if (val.__subType) {
+        let ErrorConstructor = window[val.__subType];
+        if (typeof ErrorConstructor === "function") {
+          try {
+            // @ts-expect-error
+            let error = new ErrorConstructor(val.message);
+            // Wipe away the client-side stack trace.  Nothing to fill it in with
+            // because we don't serialize SSR stack traces for security reasons
+            error.stack = "";
+            serialized[key] = error;
+          } catch (e) {
+            // no-op - fall through and create a normal Error
+          }
+        }
+      }
+
+      if (serialized[key] == null) {
+        let error = new Error(val.message);
+        // Wipe away the client-side stack trace.  Nothing to fill it in with
+        // because we don't serialize SSR stack traces for security reasons
+        error.stack = "";
+        serialized[key] = error;
+      }
     } else {
       serialized[key] = val;
     }
@@ -697,7 +716,8 @@ if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
 
-export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
+export interface FetcherFormProps
+  extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * The HTTP verb to use when the form is submit. Supports "get", "post",
    * "put", "delete", "patch".
@@ -719,18 +739,6 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   action?: string;
 
   /**
-   * Forces a full document navigation instead of a fetch.
-   */
-  reloadDocument?: boolean;
-
-  /**
-   * Replaces the current entry in the browser history stack when the form
-   * navigates. Use this if you don't want the user to be able to click "back"
-   * to the page with the form on it.
-   */
-  replace?: boolean;
-
-  /**
    * Determines whether the form action is relative to the route hierarchy or
    * the pathname.  Use this if you want to opt out of navigating the route
    * hierarchy and want to instead route based on /-delimited URL segments
@@ -748,6 +756,25 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
    * `event.preventDefault()` then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+}
+
+export interface FormProps extends FetcherFormProps {
+  /**
+   * Forces a full document navigation instead of a fetch.
+   */
+  reloadDocument?: boolean;
+
+  /**
+   * Replaces the current entry in the browser history stack when the form
+   * navigates. Use this if you don't want the user to be able to click "back"
+   * to the page with the form on it.
+   */
+  replace?: boolean;
+
+  /**
+   * State object to add to the history stack entry for this navigation
+   */
+  state?: any;
 }
 
 /**
@@ -784,6 +811,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     {
       reloadDocument,
       replace,
+      state,
       method = defaultMethod,
       action,
       onSubmit,
@@ -812,6 +840,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit(submitter || event.currentTarget, {
         method: submitMethod,
         replace,
+        state,
         relative,
         preventScrollReset,
       });
@@ -1029,8 +1058,8 @@ export interface SubmitFunction {
 export interface FetcherSubmitFunction {
   (
     target: SubmitTarget,
-    // Fetchers cannot replace because they are not navigation events
-    options?: Omit<SubmitOptions, "replace">
+    // Fetchers cannot replace or set state because they are not navigation events
+    options?: Omit<SubmitOptions, "replace" | "state">
   ): void;
 }
 
@@ -1068,6 +1097,7 @@ export function useSubmit(): SubmitFunction {
         formMethod: options.method || (method as HTMLFormMethod),
         formEncType: options.encType || (encType as FormEncType),
         replace: options.replace,
+        state: options.state,
         fromRouteId: currentRouteId,
       });
     },
@@ -1167,7 +1197,7 @@ export function useFormAction(
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
-  let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(
+  let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
     (props, ref) => {
       let submit = useSubmitFetcher(fetcherKey, routeId);
       return <FormImpl {...props} ref={ref} submit={submit} />;
@@ -1354,7 +1384,9 @@ function useScrollRestoration({
 
       // try to scroll to the hash
       if (location.hash) {
-        let el = document.getElementById(location.hash.slice(1));
+        let el = document.getElementById(
+          decodeURIComponent(location.hash.slice(1))
+        );
         if (el) {
           el.scrollIntoView();
           return;

@@ -215,6 +215,24 @@ See also:
 - [`useActionData`][useactiondata]
 - [`useSubmit`][usesubmit]
 
+## `state`
+
+The `state` property can be used to set a stateful value for the new location which is stored inside [history state][history-state]. This value can subsequently be accessed via `useLocation()`.
+
+```tsx
+<Form
+  method="post"
+  action="new-path"
+  state={{ some: "value" }}
+/>
+```
+
+You can access this state value while on the "new-path" route:
+
+```ts
+let { state } = useLocation();
+```
+
 ## `preventScrollReset`
 
 If you are using [`<ScrollRestoration>`][scrollrestoration], this lets you prevent the scroll position from being reset to the top of the window when the form action redirects to a new location.
@@ -330,3 +348,4 @@ You can access those values from the `request.url`
 [pickingarouter]: ../routers/picking-a-router
 [scrollrestoration]: ./scroll-restoration
 [link-preventscrollreset]: ./link#preventscrollreset
+[history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
