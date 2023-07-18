@@ -1,6 +1,9 @@
 import { builtinModules } from "module";
 import * as esbuild from "esbuild";
-import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
+import {
+  type NodePolyfillsOptions,
+  nodeModulesPolyfillPlugin,
+} from "esbuild-plugins-node-modules-polyfill";
 
 import { type Manifest } from "../../manifest";
 import { loaders } from "../utils/loaders";
@@ -92,13 +95,19 @@ const createEsbuildConfig = (
       "v8", // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/v8.js
     ];
 
+    let defaultPolyfillOptions: NodePolyfillsOptions = {
+      modules: builtinModules.filter((mod) => !unimplemented.includes(mod)),
+    };
+
     plugins.unshift(
-      nodeModulesPolyfillPlugin({
-        modules:
-          ctx.config.serverNodeBuiltinsPolyfill === true
-            ? builtinModules.filter((mod) => !unimplemented.includes(mod))
-            : ctx.config.serverNodeBuiltinsPolyfill,
-      })
+      nodeModulesPolyfillPlugin(
+        ctx.config.serverNodeBuiltinsPolyfill === true
+          ? defaultPolyfillOptions
+          : {
+              // Ensure only "modules" option is passed to the plugin
+              modules: ctx.config.serverNodeBuiltinsPolyfill.modules,
+            }
+      )
     );
   }
 

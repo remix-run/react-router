@@ -5,6 +5,7 @@ import fse from "fs-extra";
 import getPort from "get-port";
 import NPMCliPackageJson from "@npmcli/package-json";
 import { coerce } from "semver";
+import type { NodePolyfillsOptions } from "esbuild-plugins-node-modules-polyfill";
 
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
 import { defineRoutes } from "./config/routes";
@@ -196,9 +197,10 @@ export interface AppConfig {
 
   /**
    * Whether to polyfill Node.js built-in modules in the server build, or a
-   * list of polyfills. Defaults to `true` for non-Node.js server platforms.
+   * configurable subset of polyfills. Defaults to `true` for non-Node.js server
+   * platforms.
    */
-  serverNodeBuiltinsPolyfill?: boolean | string[];
+  serverNodeBuiltinsPolyfill?: boolean | Pick<NodePolyfillsOptions, "modules">;
 
   /**
    * The platform the server build is targeting. Defaults to "node".
@@ -373,9 +375,10 @@ export interface RemixConfig {
 
   /**
    * Whether to polyfill Node.js built-in modules in the server build, or a
-   * list of polyfills. Defaults to `true` for non-Node.js server platforms.
+   * configurable subset of polyfills. Defaults to `true` for non-Node.js server
+   * platforms.
    */
-  serverNodeBuiltinsPolyfill: boolean | string[];
+  serverNodeBuiltinsPolyfill: boolean | Pick<NodePolyfillsOptions, "modules">;
 
   /**
    * The platform the server build is targeting. Defaults to "node".
