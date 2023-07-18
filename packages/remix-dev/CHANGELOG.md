@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 1.19.0-pre.4
+
+### Minor Changes
+
+- [REMOVE] Change serverNodeBuiltinsPolyfill to suport object format ([#6859](https://github.com/remix-run/remix/pull/6859))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.19.0-pre.4`
+
 ## 1.19.0-pre.3
 
 ### Patch Changes
