@@ -6,4 +6,4 @@
 "@remix-run/router": minor
 ---
 
-Add support for the new `X-Remix-Reload-Document` header on loader responses to trigger a document reload of the redirected location
+Add support for the new `X-Remix-Reload-Document` header on `loader`/`action` responses to trigger a document reload of the redirected location
