@@ -1486,20 +1486,14 @@ export const redirect: RedirectFunction = (url, init = 302) => {
 };
 
 /**
- * A redirect response with a forced document reload. Sets a custom header to
- * trigger the client-side reload.
+ * A redirect response that will force a document reload to the new location.
+ * Sets the status code and the `Location` header.
  * Defaults to "302 Found".
  */
-export const redirectWithReload: RedirectFunction = (url, init = 302) => {
-  let responseInit = init;
-  if (typeof responseInit === "number") {
-    responseInit = { status: responseInit };
-  }
-
-  responseInit.headers = new Headers(responseInit.headers);
-  responseInit.headers.set("X-Remix-Reload-Document", "true");
-
-  return redirect(url, responseInit);
+export const redirectWithReload: RedirectFunction = (url, init) => {
+  let response = redirect(url, init);
+  response.headers.set("X-Remix-Reload-Document", "true");
+  return response;
 };
 
 /**

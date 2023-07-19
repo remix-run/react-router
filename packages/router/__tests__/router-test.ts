@@ -7005,42 +7005,34 @@ describe("a router", () => {
     });
 
     it("processes redirects with document reload if header is present (assign)", async () => {
-      let urls = ["/redirect"];
+      let t = setup({ routes: REDIRECT_ROUTES });
 
-      for (let url of urls) {
-        let t = setup({ routes: REDIRECT_ROUTES });
+      let A = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
 
-        let A = await t.navigate("/parent/child", {
-          formMethod: "post",
-          formData: createFormData({}),
-        });
-
-        await A.actions.child.redirectReturn(url, 301, {
-          "X-Remix-Reload-Document": "true",
-        });
-        expect(t.window.location.assign).toHaveBeenCalledWith(url);
-        expect(t.window.location.replace).not.toHaveBeenCalled();
-      }
+      await A.actions.child.redirectReturn("/redirect", 301, {
+        "X-Remix-Reload-Document": "true",
+      });
+      expect(t.window.location.assign).toHaveBeenCalledWith("/redirect");
+      expect(t.window.location.replace).not.toHaveBeenCalled();
     });
 
     it("processes redirects with document reload if header is present (replace)", async () => {
-      let urls = ["/redirect"];
+      let t = setup({ routes: REDIRECT_ROUTES });
 
-      for (let url of urls) {
-        let t = setup({ routes: REDIRECT_ROUTES });
+      let A = await t.navigate("/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+        replace: true,
+      });
 
-        let A = await t.navigate("/parent/child", {
-          formMethod: "post",
-          formData: createFormData({}),
-          replace: true,
-        });
-
-        await A.actions.child.redirectReturn(url, 301, {
-          "X-Remix-Reload-Document": "true",
-        });
-        expect(t.window.location.replace).toHaveBeenCalledWith(url);
-        expect(t.window.location.assign).not.toHaveBeenCalled();
-      }
+      await A.actions.child.redirectReturn("/redirect", 301, {
+        "X-Remix-Reload-Document": "true",
+      });
+      expect(t.window.location.replace).toHaveBeenCalledWith("/redirect");
+      expect(t.window.location.assign).not.toHaveBeenCalled();
     });
 
     it("properly handles same-origin absolute URLs", async () => {

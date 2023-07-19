@@ -2111,31 +2111,31 @@ export function createRouter(init: RouterInit): Router {
       "Expected a location on the redirect navigation"
     );
 
-    // Check if this redirect should trigger a document reload
-    const isDocumentReload = (thisOrigin: string) => {
+    if (isBrowser) {
+      let isDocumentReload = false;
+
       if (redirect.reloadDocument) {
-        return true;
-      }
-      if (!ABSOLUTE_URL_REGEX.test(redirect.location)) {
-        return false;
+        // Hard reload if the response contained X-Remix-Reload-Document
+        isDocumentReload = true;
+      } else if (ABSOLUTE_URL_REGEX.test(redirect.location)) {
+        const url = init.history.createURL(redirect.location);
+        if (url.origin !== routerWindow.location.origin) {
+          // Hard reload if it's an absolute URL to a new origin
+          isDocumentReload = true;
+        } else {
+          // Hard reload if it's an absolute URL that does not match our basename
+          isDocumentReload = stripBasename(url.pathname, basename) == null;
+        }
       }
 
-      const url = init.history.createURL(redirect.location);
-      // Check if this an absolute external redirect that goes to a new origin
-      if (thisOrigin !== url.origin) {
-        return true;
+      if (isDocumentReload) {
+        if (replace) {
+          routerWindow.location.replace(redirect.location);
+        } else {
+          routerWindow.location.assign(redirect.location);
+        }
+        return;
       }
-
-      const isDifferentBasename = stripBasename(url.pathname, basename) == null;
-      return isDifferentBasename;
-    };
-    if (isBrowser && isDocumentReload(routerWindow.location.origin)) {
-      if (replace) {
-        routerWindow.location.replace(redirect.location);
-      } else {
-        routerWindow.location.assign(redirect.location);
-      }
-      return;
     }
 
     // There's no need to abort on redirects, since we don't detect the
