@@ -38,7 +38,7 @@ Please conform to the issue template and provide a clear path to reproduction wi
 
 ## Adding an Example?
 
-Examples can be added directly to the main branch. Create a branch off of your local clone of main. Once you've finished, create a pull request and outline your example. 
+Examples can be added directly to the main branch. Create a branch off of your local clone of main. Once you've finished, create a pull request and outline your example.
 
 ## Proposing New or Changed API?
 
