@@ -349,7 +349,7 @@ type _PathParam<Path extends string> =
  * "/:a/:b" -> "a" | "b"
  * "/:a/b/:c/*" -> "a" | "c" | "*"
  */
-type PathParam<Path extends string> =
+export type PathParam<Path extends string> =
   // check if path is just a wildcard
   Path extends "*" | "/*"
     ? "*"
