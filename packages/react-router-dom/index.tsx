@@ -1465,7 +1465,10 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
     if (blocker.state === "blocked") {
       let proceed = window.confirm(message);
       if (proceed) {
-        blocker.proceed();
+        // This timeout is needed to avoid a weird "race" on POP navigations
+        // between the `window.history` revert navigation and the result of
+        // `window.confirm`
+        setTimeout(blocker.proceed, 0);
       } else {
         blocker.reset();
       }
