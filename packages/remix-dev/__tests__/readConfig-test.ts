@@ -80,7 +80,7 @@ describe("readConfig", () => {
         "serverMinify": false,
         "serverMode": "production",
         "serverModuleFormat": "cjs",
-        "serverNodeBuiltinsPolyfill": false,
+        "serverNodeBuiltinsPolyfill": undefined,
         "serverPlatform": "node",
         "tailwind": false,
         "tsconfigPath": Any<String>,
