@@ -23,10 +23,14 @@ function SomeComponent() {
   navigation.state;
   navigation.location;
   navigation.formData;
+  navigation.json;
+  navigation.text;
   navigation.formAction;
   navigation.formMethod;
 }
 ```
+
+<docs-warning>The `useNavigation().formMethod` field is lowercase without the `future.v7_normalizeFormMethod` [Future Flag][api-development-strategy]. This is being normalized to uppercase to align with the `fetch()` behavior in v7, so please upgrade your React Router v6 applications to adopt the uppercase HTTP methods.</docs-warning>
 
 ## `navigation.state`
 
@@ -90,6 +94,14 @@ Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useS
 
 In the case of a GET form submission, `formData` will be empty and the data will be reflected in `navigation.location.search`.
 
+## `navigation.json`
+
+Any POST, PUT, PATCH, or DELETE navigation that started from a `useSubmit(payload, { encType: "application/json" })` will have your JSON value available in `navigation.json`.
+
+## `navigation.text`
+
+Any POST, PUT, PATCH, or DELETE navigation that started from a `useSubmit(payload, { encType: "text/plain" })` will have your text value available in `navigation.text`.
+
 ## `navigation.location`
 
 This tells you what the next [location][location] is going to be.
@@ -98,3 +110,4 @@ Note that this link will not appear "pending" if a form is being submitted to th
 
 [location]: ../utils/location
 [pickingarouter]: ../routers/picking-a-router
+[api-development-strategy]: ../guides/api-development-strategy

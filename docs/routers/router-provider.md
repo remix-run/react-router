@@ -5,7 +5,24 @@ new: true
 
 # `<RouterProvider>`
 
-All router objects are passed to this component to render your app and enable the rest of the APIs.
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function RouterProvider(
+  props: RouterProviderProps
+): React.ReactElement;
+
+interface RouterProviderProps {
+  fallbackElement?: React.ReactNode;
+  router: Router;
+  future?: FutureConfig;
+}
+```
+
+</details>
+
+All [data router][picking-a-router] objects are passed to this component to render your app and enable the rest of the data APIs.
 
 ```jsx lines=[24]
 import {
@@ -40,7 +57,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
 ## `fallbackElement`
 
-If you are not server rendering your app, `DataBrowserRouter` will initiate all matching route loaders when it mounts. During this time, you can provide a `fallbackElement` to give the user some indication that the app is working. Make that static hosting TTFB count!
+If you are not server rendering your app, `createBrowserRouter` will initiate all matching route loaders when it mounts. During this time, you can provide a `fallbackElement` to give the user some indication that the app is working. Make that static hosting TTFB count!
 
 ```tsx
 <RouterProvider
@@ -48,3 +65,21 @@ If you are not server rendering your app, `DataBrowserRouter` will initiate all 
   fallbackElement={<SpinnerOfDoom />}
 />
 ```
+
+## `future`
+
+An optional set of [Future Flags][api-development-strategy] to enable. We recommend opting into newly released future flags sooner rather than later to ease your eventual migration to v7.
+
+```jsx
+function App() {
+  return (
+    <RouterProvider
+      router={router}
+      future={{ v7_startTransition: true }}
+    />
+  );
+}
+```
+
+[picking-a-router]: ./picking-a-router
+[api-development-strategy]: ../guides/api-development-strategy

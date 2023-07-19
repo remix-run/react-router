@@ -5,6 +5,7 @@ import type {
   AgnosticNonIndexRouteObject,
   History,
   Location,
+  RelativeRoutingType,
   Router,
   StaticHandlerContext,
   To,
@@ -30,7 +31,7 @@ export interface IndexRouteObject {
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<IndexRouteObject>;
+  lazy?: LazyRouteFunction<RouteObject>;
 }
 
 export interface NonIndexRouteObject {
@@ -48,7 +49,7 @@ export interface NonIndexRouteObject {
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<NonIndexRouteObject>;
+  lazy?: LazyRouteFunction<RouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
@@ -87,8 +88,6 @@ export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 if (__DEV__) {
   AwaitContext.displayName = "Await";
 }
-
-export type RelativeRoutingType = "route" | "path";
 
 export interface NavigateOptions {
   replace?: boolean;
@@ -145,11 +144,13 @@ if (__DEV__) {
 export interface RouteContextObject {
   outlet: React.ReactElement | null;
   matches: RouteMatch[];
+  isDataRoute: boolean;
 }
 
 export const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   matches: [],
+  isDataRoute: false,
 });
 
 if (__DEV__) {

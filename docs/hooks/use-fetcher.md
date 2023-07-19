@@ -38,6 +38,8 @@ function SomeComponent() {
   // build your UI with these properties
   fetcher.state;
   fetcher.formData;
+  fetcher.json;
+  fetcher.text;
   fetcher.formMethod;
   fetcher.formAction;
   fetcher.data;
@@ -132,6 +134,8 @@ export function useIdleLogout() {
 }
 ```
 
+`fetcher.submit` is a wrapper around a [`useSubmit`][use-submit] call for the fetcher instance, so it also accepts the same options as `useSubmit`.
+
 If you want to submit to an index route, use the [`?index` param][indexsearchparam].
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
@@ -191,14 +195,22 @@ function TaskCheckbox({ task }) {
       <button
         type="submit"
         name="status"
-        value={isComplete ? "incomplete" : "complete"}
+        value={isComplete ? "complete" : "incomplete"}
       >
-        {isComplete ? "Mark Incomplete" : "Mark Complete"}
+        {isComplete ? "Mark Complete" : "Mark Incomplete"}
       </button>
     </fetcher.Form>
   );
 }
 ```
+
+## `fetcher.json`
+
+When using `fetcher.submit(data, { formEncType: "application/json" })`, the submitted JSON is available via `fetcher.json`.
+
+## `fetcher.text`
+
+When using `fetcher.submit(data, { formEncType: "text/plain" })`, the submitted text is available via `fetcher.text`.
 
 ## `fetcher.formAction`
 
@@ -222,9 +234,13 @@ Tells you the method of the form being submitted: get, post, put, patch, or dele
 fetcher.formMethod; // "post"
 ```
 
+<docs-warning>The `fetcher.formMethod` field is lowercase without the `future.v7_normalizeFormMethod` [Future Flag][api-development-strategy]. This is being normalized to uppercase to align with the `fetch()` behavior in v7, so please upgrade your React Router v6 applications to adopt the uppercase HTTP methods.</docs-warning>
+
 [loader]: ../route/loader
 [action]: ../route/action
 [pickingarouter]: ../routers/picking-a-router
 [indexsearchparam]: ../guides/index-search-param
 [link]: ../components/link
 [form]: ../components/form
+[api-development-strategy]: ../guides/api-development-strategy
+[use-submit]: ./use-submit.md

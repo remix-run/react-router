@@ -1,5 +1,86 @@
 # `react-router-dom-v5-compat`
 
+## 6.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.14.2`
+  - `react-router@6.14.2`
+
+## 6.14.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.1`
+  - `react-router-dom@6.14.1`
+
+## 6.14.0
+
+### Patch Changes
+
+- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
+- Updated dependencies:
+  - `react-router@6.14.0`
+  - `react-router-dom@6.14.0`
+
+## 6.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.13.0`
+  - `react-router-dom@6.13.0`
+
+## 6.12.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.12.1`
+  - `react-router-dom@6.12.1`
+
+## 6.12.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.12.0`
+  - `react-router@6.12.0`
+
+## 6.11.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.11.2`
+  - `react-router-dom@6.11.2`
+
+## 6.11.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.11.1`
+  - `react-router-dom@6.11.1`
+
+## 6.11.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.11.0`
+  - `react-router-dom@6.11.0`
+
+## 6.10.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.10.0`
+  - `react-router-dom@6.10.0`
+
 ## 6.9.0
 
 ### Minor Changes

@@ -9,6 +9,10 @@ on:
       - "!release-manual"
       - "!release-manual-*"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release:
     name: 🦋 Changesets Release
@@ -18,9 +22,6 @@ jobs:
       published_packages: ${{ steps.changesets.outputs.publishedPackages }}
       published: ${{ steps.changesets.outputs.published }}
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
         with:
@@ -55,7 +56,7 @@ jobs:
           publish: yarn run release
           createGithubReleases: false
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN_SO_OTHER_ACTIONS_RUN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   find_package_version:
@@ -66,9 +67,6 @@ jobs:
     outputs:
       package_version: ${{ steps.find_package_version.outputs.package_version }}
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -80,7 +78,7 @@ jobs:
 
       - id: find_package_version
         run: |
-          package_version=$(node ./scripts/release/find-release-from-changeset.js)
+          package_version=$(node ./scripts/find-release-from-changeset.js)
           echo "package_version=${package_version}" >> $GITHUB_OUTPUT
         env:
           PACKAGE_VERSION_TO_FOLLOW: "react-router"
@@ -91,7 +89,3 @@ jobs:
     if: github.repository == 'remix-run/react-router' && needs.find_package_version.outputs.package_version != ''
     needs: [release, find_package_version]
     uses: ./.github/workflows/release-comments.yml
-    with:
-      ref: refs/tags/react-router@${{ needs.find_package_version.outputs.package_version }}
-      package_version_to_follow: "react-router"
-      release_branch: ${{ github.ref_name }}

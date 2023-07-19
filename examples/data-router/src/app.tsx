@@ -1,14 +1,12 @@
-import React from "react";
+import * as React from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
 import {
   Await,
   createBrowserRouter,
-  createRoutesFromElements,
   defer,
   Form,
   Link,
   Outlet,
-  Route,
   RouterProvider,
   useAsyncError,
   useAsyncValue,

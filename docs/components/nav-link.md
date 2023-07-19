@@ -82,7 +82,7 @@ You can pass a render prop as children to customize the content of the `<NavLink
 
 ## `end`
 
-The `end` prop changes the matching logic for the `active` and `pending` states to only match to the "end" of the NavLinks's `to` path. If the URL is longer than `to`, it will no longer be considered active.
+The `end` prop changes the matching logic for the `active` and `pending` states to only match to the "end" of the NavLink's `to` path. If the URL is longer than `to`, it will no longer be considered active.
 
 Without the end prop, this link is always active because every URL matches `/`.
 
@@ -119,5 +119,9 @@ Adding the `caseSensitive` prop changes the matching logic to make it case sensi
 ## `aria-current`
 
 When a `NavLink` is active it will automatically apply `<a aria-current="page">` to the underlying anchor tag. See [aria-current][aria-current] on MDN.
+
+## `reloadDocument`
+
+The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
 
 [aria-current]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current

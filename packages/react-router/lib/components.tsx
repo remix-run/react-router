@@ -5,9 +5,10 @@ import type {
   Location,
   MemoryHistory,
   Router as RemixRouter,
-  RouterState,
   To,
   LazyRouteFunction,
+  RelativeRoutingType,
+  RouterState,
 } from "@remix-run/router";
 import {
   Action as NavigationType,
@@ -15,10 +16,11 @@ import {
   createMemoryHistory,
   UNSAFE_invariant as invariant,
   parsePath,
+  resolveTo,
   stripBasename,
   UNSAFE_warning as warning,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
-import { useSyncExternalStore as useSyncExternalStoreShim } from "./use-sync-external-store-shim";
 
 import type {
   DataRouteObject,
@@ -27,7 +29,6 @@ import type {
   RouteObject,
   Navigator,
   NonIndexRouteObject,
-  RelativeRoutingType,
 } from "./context";
 import {
   LocationContext,
@@ -35,6 +36,7 @@ import {
   DataRouterContext,
   DataRouterStateContext,
   AwaitContext,
+  RouteContext,
 } from "./context";
 import {
   useAsyncValue,
@@ -43,12 +45,43 @@ import {
   useOutlet,
   useRoutes,
   _renderMatches,
+  useRoutesImpl,
+  useLocation,
 } from "./hooks";
+
+export interface FutureConfig {
+  v7_startTransition: boolean;
+}
 
 export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
+  future?: FutureConfig;
 }
+
+/**
+  Webpack + React 17 fails to compile on any of the following because webpack
+  complains that `startTransition` doesn't exist in `React`:
+  * import { startTransition } from "react"
+  * import * as React from from "react";
+    "startTransition" in React ? React.startTransition(() => setState()) : setState()
+  * import * as React from from "react";
+    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
+
+  Moving it to a constant such as the following solves the Webpack/React 17 issue:
+  * import * as React from from "react";
+    const START_TRANSITION = "startTransition";
+    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
+
+  However, that introduces webpack/terser minification issues in production builds
+  in React 18 where minification/obfuscation ends up removing the call of
+  React.startTransition entirely from the first half of the ternary.  Grabbing
+  this exported reference once up front resolves that issue.
+
+  See https://github.com/remix-run/react-router/issues/10579
+*/
+const START_TRANSITION = "startTransition";
+const startTransitionImpl = React[START_TRANSITION];
 
 /**
  * Given a Remix Router instance, render the appropriate UI
@@ -56,18 +89,21 @@ export interface RouterProviderProps {
 export function RouterProvider({
   fallbackElement,
   router,
+  future,
 }: RouterProviderProps): React.ReactElement {
-  let getState = React.useCallback(() => router.state, [router]);
-
-  // Sync router state to our component state to force re-renders
-  let state: RouterState = useSyncExternalStoreShim(
-    router.subscribe,
-    getState,
-    // We have to provide this so React@18 doesn't complain during hydration,
-    // but we pass our serialized hydration data into the router so state here
-    // is already synced with what the server saw
-    getState
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  let [state, setStateImpl] = React.useState(router.state);
+  let { v7_startTransition } = future || {};
+  let setState = React.useCallback(
+    (newState: RouterState) => {
+      v7_startTransition && startTransitionImpl
+        ? startTransitionImpl(() => setStateImpl(newState))
+        : setStateImpl(newState);
+    },
+    [setStateImpl, v7_startTransition]
   );
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
   let navigator = React.useMemo((): Navigator => {
     return {
@@ -111,12 +147,16 @@ export function RouterProvider({
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
           <Router
-            basename={router.basename}
-            location={router.state.location}
-            navigationType={router.state.historyAction}
+            basename={basename}
+            location={state.location}
+            navigationType={state.historyAction}
             navigator={navigator}
           >
-            {router.state.initialized ? <Routes /> : fallbackElement}
+            {state.initialized ? (
+              <DataRoutes routes={router.routes} state={state} />
+            ) : (
+              fallbackElement
+            )}
           </Router>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
@@ -125,11 +165,22 @@ export function RouterProvider({
   );
 }
 
+function DataRoutes({
+  routes,
+  state,
+}: {
+  routes: DataRouteObject[];
+  state: RouterState;
+}): React.ReactElement | null {
+  return useRoutesImpl(routes, undefined, state);
+}
+
 export interface MemoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  future?: FutureConfig;
 }
 
 /**
@@ -142,6 +193,7 @@ export function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
+  future,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -153,12 +205,21 @@ export function MemoryRouter({
   }
 
   let history = historyRef.current;
-  let [state, setState] = React.useState({
+  let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
+  let setState = React.useCallback(
+    (newState: { action: NavigationType; location: Location }) => {
+      v7_startTransition && startTransitionImpl
+        ? startTransitionImpl(() => setStateImpl(newState))
+        : setStateImpl(newState);
+    },
+    [setStateImpl, v7_startTransition]
+  );
 
-  React.useLayoutEffect(() => history.listen(setState), [history]);
+  React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
   return (
     <Router
@@ -207,18 +268,24 @@ export function Navigate({
       `only ever rendered in response to some user interaction or state change.`
   );
 
-  let dataRouterState = React.useContext(DataRouterStateContext);
+  let { matches } = React.useContext(RouteContext);
+  let { pathname: locationPathname } = useLocation();
   let navigate = useNavigate();
 
-  React.useEffect(() => {
-    // Avoid kicking off multiple navigations if we're in the middle of a
-    // data-router navigation, since components get re-rendered when we enter
-    // a submitting/loading state
-    if (dataRouterState && dataRouterState.navigation.state !== "idle") {
-      return;
-    }
-    navigate(to, { replace, state, relative });
-  });
+  // Resolve the path outside of the effect so that when effects run twice in
+  // StrictMode they navigate to the same place
+  let path = resolveTo(
+    to,
+    getPathContributingMatches(matches).map((match) => match.pathnameBase),
+    locationPathname,
+    relative === "path"
+  );
+  let jsonPath = JSON.stringify(path);
+
+  React.useEffect(
+    () => navigate(JSON.parse(jsonPath), { replace, state, relative }),
+    [navigate, jsonPath, relative, replace, state]
+  );
 
   return null;
 }
@@ -393,15 +460,7 @@ export function Routes({
   children,
   location,
 }: RoutesProps): React.ReactElement | null {
-  let dataRouterContext = React.useContext(DataRouterContext);
-  // When in a DataRouterContext _without_ children, we use the router routes
-  // directly.  If we have children, then we're in a descendant tree and we
-  // need to use child routes.
-  let routes =
-    dataRouterContext && !children
-      ? (dataRouterContext.router.routes as DataRouteObject[])
-      : createRoutesFromChildren(children);
-  return useRoutes(routes, location);
+  return useRoutes(createRoutesFromChildren(children), location);
 }
 
 export interface AwaitResolveRenderFunction {
@@ -570,11 +629,13 @@ export function createRoutesFromChildren(
       return;
     }
 
+    let treePath = [...parentPath, index];
+
     if (element.type === React.Fragment) {
       // Transparently support React.Fragment and its children.
       routes.push.apply(
         routes,
-        createRoutesFromChildren(element.props.children, parentPath)
+        createRoutesFromChildren(element.props.children, treePath)
       );
       return;
     }
@@ -591,7 +652,6 @@ export function createRoutesFromChildren(
       "An index route cannot have child routes."
     );
 
-    let treePath = [...parentPath, index];
     let route: RouteObject = {
       id: element.props.id || treePath.join("-"),
       caseSensitive: element.props.caseSensitive,

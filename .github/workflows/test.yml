@@ -15,15 +15,23 @@ on:
       - "docs/**"
       - "**/*.md"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: 🧪 Test
+    name: "🧪 Test: (Node: ${{ matrix.node }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - 16
+          - 18
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -32,13 +40,22 @@ jobs:
         with:
           cache: yarn
           check-latest: true
-          node-version-file: ".nvmrc"
+          node-version: ${{ matrix.node }}
+
+      - name: Disable GitHub Actions Annotations
+        run: |
+          echo "::remove-matcher owner=tsc::"
+          echo "::remove-matcher owner=eslint-compact::"
+          echo "::remove-matcher owner=eslint-stylish::"
 
       - name: 📥 Install deps
         run: yarn --frozen-lockfile
 
       - name: 🏗 Build
         run: yarn build
+
+      - name: 🔬 Lint
+        run: yarn lint
 
       - name: 🧪 Run tests
         run: yarn test

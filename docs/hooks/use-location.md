@@ -11,7 +11,7 @@ title: useLocation
 declare function useLocation(): Location;
 
 interface Location extends Path {
-  state: unknown;
+  state: any;
   key: Key;
 }
 ```

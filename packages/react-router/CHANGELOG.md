@@ -1,5 +1,135 @@
 # `react-router`
 
+## 6.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.7.2`
+
+## 6.14.1
+
+### Patch Changes
+
+- Fix loop in `unstable_useBlocker` when used with an unstable blocker function ([#10652](https://github.com/remix-run/react-router/pull/10652))
+- Fix issues with reused blockers on subsequent navigations ([#10656](https://github.com/remix-run/react-router/pull/10656))
+- Updated dependencies:
+  - `@remix-run/router@1.7.1`
+
+## 6.14.0
+
+### Patch Changes
+
+- Strip `basename` from locations provided to `unstable_useBlocker` functions to match `useLocation` ([#10573](https://github.com/remix-run/react-router/pull/10573))
+- Fix `generatePath` when passed a numeric `0` value parameter ([#10612](https://github.com/remix-run/react-router/pull/10612))
+- Fix `unstable_useBlocker` key issues in `StrictMode` ([#10573](https://github.com/remix-run/react-router/pull/10573))
+- Fix `tsc --skipLibCheck:false` issues on React 17 ([#10622](https://github.com/remix-run/react-router/pull/10622))
+- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
+- Updated dependencies:
+  - `@remix-run/router@1.7.0`
+
+## 6.13.0
+
+### Minor Changes
+
+- Move [`React.startTransition`](https://react.dev/reference/react/startTransition) usage behind a [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) to avoid issues with existing incompatible `Suspense` usages. We recommend folks adopting this flag to be better compatible with React concurrent mode, but if you run into issues you can continue without the use of `startTransition` until v7. Issues usually boils down to creating net-new promises during the render cycle, so if you run into issues you should either lift your promise creation out of the render cycle or put it behind a `useMemo`. ([#10596](https://github.com/remix-run/react-router/pull/10596))
+
+  Existing behavior will no longer include `React.startTransition`:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>{/*...*/}</Routes>
+  </BrowserRouter>
+
+  <RouterProvider router={router} />
+  ```
+
+  If you wish to enable `React.startTransition`, pass the future flag to your component:
+
+  ```jsx
+  <BrowserRouter future={{ v7_startTransition: true }}>
+    <Routes>{/*...*/}</Routes>
+  </BrowserRouter>
+
+  <RouterProvider router={router} future={{ v7_startTransition: true }}/>
+  ```
+
+### Patch Changes
+
+- Work around webpack/terser `React.startTransition` minification bug in production mode ([#10588](https://github.com/remix-run/react-router/pull/10588))
+
+## 6.12.1
+
+> **Warning**
+> Please use version `6.13.0` or later instead of `6.12.1`. This version suffers from a `webpack`/`terser` minification issue resulting in invalid minified code in your resulting production bundles which can cause issues in your application. See [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
+
+### Patch Changes
+
+- Adjust feature detection of `React.startTransition` to fix webpack + react 17 compilation error ([#10569](https://github.com/remix-run/react-router/pull/10569))
+
+## 6.12.0
+
+### Minor Changes
+
+- Wrap internal router state updates with `React.startTransition` if it exists ([#10438](https://github.com/remix-run/react-router/pull/10438))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.6.3`
+
+## 6.11.2
+
+### Patch Changes
+
+- Fix `basename` duplication in descendant `<Routes>` inside a `<RouterProvider>` ([#10492](https://github.com/remix-run/react-router/pull/10492))
+- Updated dependencies:
+  - `@remix-run/router@1.6.2`
+
+## 6.11.1
+
+### Patch Changes
+
+- Fix usage of `Component` API within descendant `<Routes>` ([#10434](https://github.com/remix-run/react-router/pull/10434))
+- Fix bug when calling `useNavigate` from `<Routes>` inside a `<RouterProvider>` ([#10432](https://github.com/remix-run/react-router/pull/10432))
+- Fix usage of `<Navigate>` in strict mode when using a data router ([#10435](https://github.com/remix-run/react-router/pull/10435))
+- Updated dependencies:
+  - `@remix-run/router@1.6.1`
+
+## 6.11.0
+
+### Patch Changes
+
+- Log loader/action errors to the console in dev for easier stack trace evaluation ([#10286](https://github.com/remix-run/react-router/pull/10286))
+- Fix bug preventing rendering of descendant `<Routes>` when `RouterProvider` errors existed ([#10374](https://github.com/remix-run/react-router/pull/10374))
+- Fix inadvertent re-renders when using `Component` instead of `element` on a route definition ([#10287](https://github.com/remix-run/react-router/pull/10287))
+- Fix detection of `useNavigate` in the render cycle by setting the `activeRef` in a layout effect, allowing the `navigate` function to be passed to child components and called in a `useEffect` there. ([#10394](https://github.com/remix-run/react-router/pull/10394))
+- Switched from `useSyncExternalStore` to `useState` for internal `@remix-run/router` router state syncing in `<RouterProvider>`. We found some [subtle bugs](https://codesandbox.io/s/use-sync-external-store-loop-9g7b81) where router state updates got propagated _before_ other normal `useState` updates, which could lead to footguns in `useEffect` calls. ([#10377](https://github.com/remix-run/react-router/pull/10377), [#10409](https://github.com/remix-run/react-router/pull/10409))
+- Allow `useRevalidator()` to resolve a loader-driven error boundary scenario ([#10369](https://github.com/remix-run/react-router/pull/10369))
+- Avoid unnecessary unsubscribe/resubscribes on router state changes ([#10409](https://github.com/remix-run/react-router/pull/10409))
+- When using a `RouterProvider`, `useNavigate`/`useSubmit`/`fetcher.submit` are now stable across location changes, since we can handle relative routing via the `@remix-run/router` instance and get rid of our dependence on `useLocation()`. When using `BrowserRouter`, these hooks remain unstable across location changes because they still rely on `useLocation()`. ([#10336](https://github.com/remix-run/react-router/pull/10336))
+- Updated dependencies:
+  - `@remix-run/router@1.6.0`
+
+## 6.10.0
+
+### Minor Changes
+
+- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+  - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
+    - `useNavigation().formMethod` is lowercase
+    - `useFetcher().formMethod` is lowercase
+  - When `future.v7_normalizeFormMethod === true`:
+    - `useNavigation().formMethod` is uppercase
+    - `useFetcher().formMethod` is uppercase
+
+### Patch Changes
+
+- Fix route ID generation when using Fragments in `createRoutesFromElements` ([#10193](https://github.com/remix-run/react-router/pull/10193))
+- Updated dependencies:
+  - `@remix-run/router@1.5.0`
+
 ## 6.9.0
 
 ### Minor Changes

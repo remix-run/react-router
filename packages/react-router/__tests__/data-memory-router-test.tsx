@@ -8,9 +8,8 @@ import {
   queryByText,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import type { FormMethod, Router, RouterInit } from "@remix-run/router";
+import type { ErrorResponse, FormMethod } from "@remix-run/router";
 import { joinPaths } from "@remix-run/router";
-import type { RouteObject } from "react-router";
 import {
   Await,
   MemoryRouter,
@@ -35,38 +34,9 @@ import {
   UNSAFE_DataRouterContext as DataRouterContext,
 } from "react-router";
 
-let router: Router | null = null;
-
-describe("<DataMemoryRouter>", () => {
+describe("createMemoryRouter", () => {
   let consoleWarn: jest.SpyInstance;
   let consoleError: jest.SpyInstance;
-
-  // Abstraction to avoid re-writing all tests for the time being
-  function DataMemoryRouter({
-    basename,
-    children,
-    fallbackElement,
-    hydrationData,
-    initialEntries,
-    initialIndex,
-    routes,
-  }: {
-    basename?: RouterInit["basename"];
-    children?: React.ReactNode | React.ReactNode[];
-    fallbackElement?: React.ReactNode;
-    hydrationData?: RouterInit["hydrationData"];
-    initialEntries?: string[];
-    initialIndex?: number;
-    routes?: RouteObject[];
-  }) {
-    router = createMemoryRouter(routes || createRoutesFromElements(children), {
-      basename,
-      hydrationData,
-      initialEntries,
-      initialIndex,
-    });
-    return <RouterProvider router={router} fallbackElement={fallbackElement} />;
-  }
 
   beforeEach(() => {
     consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
@@ -76,15 +46,13 @@ describe("<DataMemoryRouter>", () => {
   afterEach(() => {
     consoleWarn.mockRestore();
     consoleError.mockRestore();
-    router = null;
   });
 
   it("renders the first route that matches the URL (element)", () => {
-    let { container } = render(
-      <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
-        <Route path="/" element={<h1>Home</h1>} />
-      </DataMemoryRouter>
+    let router = createMemoryRouter(
+      createRoutesFromElements(<Route path="/" element={<h1>Home</h1>} />)
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -96,11 +64,12 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders the first route that matches the URL (Component)", () => {
-    let { container } = render(
-      <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" Component={() => <h1>Home</h1>} />
-      </DataMemoryRouter>
+      )
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -112,19 +81,13 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("supports a `routes` prop instead of <Route /> children", () => {
-    let routes = [
+    let router = createMemoryRouter([
       {
         path: "/",
         element: <h1>Home</h1>,
       },
-    ];
-    let { container } = render(
-      <DataMemoryRouter
-        initialEntries={["/"]}
-        hydrationData={{}}
-        routes={routes}
-      />
-    );
+    ]);
+    let { container } = render(<RouterProvider router={router} />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -136,16 +99,17 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders the first route that matches the URL when wrapped in a root route", () => {
-    let { container } = render(
-      <DataMemoryRouter
-        initialEntries={["/my/base/path/thing"]}
-        hydrationData={{}}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/my/base/path">
           <Route path="thing" element={<h1>Heyooo</h1>} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        initialEntries: ["/my/base/path/thing"],
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -157,15 +121,16 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("supports a basename prop", () => {
-    let { container } = render(
-      <DataMemoryRouter
-        basename="/my/base/path"
-        initialEntries={["/my/base/path/thing"]}
-        hydrationData={{}}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="thing" element={<h1>Heyooo</h1>} />
-      </DataMemoryRouter>
+      ),
+      {
+        basename: "/my/base/path",
+        initialEntries: ["/my/base/path/thing"],
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -177,17 +142,19 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("prepends basename to loader/action redirects", async () => {
-    let { container } = render(
-      <DataMemoryRouter
-        basename="/my/base/path"
-        initialEntries={["/my/base/path"]}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Root />}>
           <Route path="thing" loader={() => redirect("/other")} />
           <Route path="other" element={<h1>Other</h1>} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        basename: "/my/base/path",
+        initialEntries: ["/my/base/path"],
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Root() {
       return (
@@ -225,19 +192,21 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("supports relative routing in loader/action redirects", async () => {
-    let { container } = render(
-      <DataMemoryRouter
-        basename="/my/base/path"
-        initialEntries={["/my/base/path"]}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Root />}>
           <Route path="parent" element={<Parent />}>
             <Route path="child" loader={() => redirect("../other")} />
             <Route path="other" element={<h2>Other</h2>} />
           </Route>
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        basename: "/my/base/path",
+        initialEntries: ["/my/base/path"],
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Root() {
       return (
@@ -287,10 +256,15 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders with hydration data", async () => {
-    let { container } = render(
-      <DataMemoryRouter
-        initialEntries={["/child"]}
-        hydrationData={{
+    let router = createMemoryRouter(
+      createRoutesFromElements(
+        <Route path="/" element={<Comp />}>
+          <Route path="child" element={<Comp />} />
+        </Route>
+      ),
+      {
+        initialEntries: ["/child"],
+        hydrationData: {
           loaderData: {
             "0": "parent data",
             "0-0": "child data",
@@ -298,23 +272,20 @@ describe("<DataMemoryRouter>", () => {
           actionData: {
             "0-0": "child action",
           },
-        }}
-      >
-        <Route path="/" element={<Comp />}>
-          <Route path="child" element={<Comp />} />
-        </Route>
-      </DataMemoryRouter>
+        },
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Comp() {
-      let data = useLoaderData();
+      let data = useLoaderData() as { message: string };
       let actionData = useActionData();
       let navigation = useNavigation();
       return (
         <div>
-          {data}
-          {actionData}
-          {navigation.state}
+          <>{data}</>
+          <>{actionData}</>
+          <>{navigation.state}</>
           <Outlet />
         </div>
       );
@@ -338,16 +309,19 @@ describe("<DataMemoryRouter>", () => {
 
   it("renders fallbackElement while first data fetch happens", async () => {
     let fooDefer = createDeferred();
-    let { container } = render(
-      <DataMemoryRouter
-        fallbackElement={<FallbackElement />}
-        initialEntries={["/foo"]}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        initialEntries: ["/foo"],
+      }
+    );
+    let { container } = render(
+      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
     );
 
     function FallbackElement() {
@@ -355,7 +329,7 @@ describe("<DataMemoryRouter>", () => {
     }
 
     function Foo() {
-      let data = useLoaderData();
+      let data = useLoaderData() as { message: string };
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -385,17 +359,21 @@ describe("<DataMemoryRouter>", () => {
 
   it("renders a null fallbackElement if none is provided", async () => {
     let fooDefer = createDeferred();
-    let { container } = render(
-      <DataMemoryRouter initialEntries={["/foo"]}>
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        initialEntries: ["/foo"],
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Foo() {
-      let data = useLoaderData();
+      let data = useLoaderData() as { message: string };
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -419,16 +397,20 @@ describe("<DataMemoryRouter>", () => {
 
   it("does not render fallbackElement if no data fetch is required", async () => {
     let fooDefer = createDeferred();
-    let { container } = render(
-      <DataMemoryRouter
-        fallbackElement={<FallbackElement />}
-        initialEntries={["/bar"]}
-      >
+
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        initialEntries: ["/bar"],
+      }
+    );
+    let { container } = render(
+      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
     );
 
     function FallbackElement() {
@@ -436,7 +418,7 @@ describe("<DataMemoryRouter>", () => {
     }
 
     function Foo() {
-      let data = useLoaderData();
+      let data = useLoaderData() as { message: string };
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -455,15 +437,16 @@ describe("<DataMemoryRouter>", () => {
 
   it("renders fallbackElement within router contexts", async () => {
     let fooDefer = createDeferred();
-    let { container } = render(
-      <DataMemoryRouter
-        fallbackElement={<FallbackElement />}
-        initialEntries={["/foo"]}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Outlet />}>
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      { initialEntries: ["/foo"] }
+    );
+    let { container } = render(
+      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
     );
 
     function FallbackElement() {
@@ -476,7 +459,7 @@ describe("<DataMemoryRouter>", () => {
     }
 
     function Foo() {
-      let data = useLoaderData();
+      let data = useLoaderData() as { message: string };
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -502,14 +485,16 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("handles link navigations", async () => {
-    render(
-      <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      { initialEntries: ["/foo"] }
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       return (
@@ -539,15 +524,16 @@ describe("<DataMemoryRouter>", () => {
 
   it("executes route loaders on navigation", async () => {
     let barDefer = createDeferred();
-
-    let { container } = render(
-      <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
         </Route>
-      </DataMemoryRouter>
+      ),
+      { initialEntries: ["/foo"] }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Layout() {
       let navigation = useNavigation();
@@ -564,7 +550,7 @@ describe("<DataMemoryRouter>", () => {
       return <h1>Foo</h1>;
     }
     function Bar() {
-      let data = useLoaderData();
+      let data = useLoaderData() as { message: string };
       return <h1>{data?.message}</h1>;
     }
 
@@ -632,8 +618,8 @@ describe("<DataMemoryRouter>", () => {
     let formData = new FormData();
     formData.append("test", "value");
 
-    let { container } = render(
-      <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route path="foo" element={<Foo />} />
           <Route
@@ -643,8 +629,10 @@ describe("<DataMemoryRouter>", () => {
             element={<Bar />}
           />
         </Route>
-      </DataMemoryRouter>
+      ),
+      { initialEntries: ["/foo"] }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Layout() {
       let navigation = useNavigation();
@@ -663,12 +651,12 @@ describe("<DataMemoryRouter>", () => {
       return <h1>Foo</h1>;
     }
     function Bar() {
-      let data = useLoaderData();
+      let data = useLoaderData() as { message: string };
       let actionData = useActionData();
       return (
         <h1>
-          {data}
-          {actionData}
+          <>{data}</>
+          <>{actionData}</>
         </h1>
       );
     }
@@ -747,8 +735,8 @@ describe("<DataMemoryRouter>", () => {
   it("provides useMatches", async () => {
     let spy = jest.fn();
 
-    render(
-      <DataMemoryRouter initialEntries={["/"]} hydrationData={{}}>
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route
             path="foo"
@@ -762,8 +750,9 @@ describe("<DataMemoryRouter>", () => {
             handle={{ key: "value" }}
           />
         </Route>
-      </DataMemoryRouter>
+      )
     );
+    render(<RouterProvider router={router} />);
 
     function Layout() {
       spy("Layout", useMatches());
@@ -832,15 +821,8 @@ describe("<DataMemoryRouter>", () => {
   it("provides useRouteLoaderData", async () => {
     let spy = jest.fn();
 
-    let { container } = render(
-      <DataMemoryRouter
-        initialEntries={["/foo"]}
-        hydrationData={{
-          loaderData: {
-            foo: "FOO",
-          },
-        }}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route id="layout" path="/" element={<Layout />}>
           <Route
             id="foo"
@@ -857,8 +839,17 @@ describe("<DataMemoryRouter>", () => {
             />
           </Route>
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        initialEntries: ["/foo"],
+        hydrationData: {
+          loaderData: {
+            foo: "FOO",
+          },
+        },
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Layout() {
       spy({
@@ -896,7 +887,7 @@ describe("<DataMemoryRouter>", () => {
 
     spy.mockClear();
     fireEvent.click(screen.getByText("Link to Child"));
-    await new Promise((r) => setTimeout(r, 0));
+    await waitFor(() => screen.getByText("Child"));
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -918,18 +909,10 @@ describe("<DataMemoryRouter>", () => {
     });
   });
 
-  it("reloads data using useRevalidate", async () => {
+  it("reloads data using useRevalidator", async () => {
     let count = 1;
-
-    let { container } = render(
-      <DataMemoryRouter
-        initialEntries={["/foo"]}
-        hydrationData={{
-          loaderData: {
-            "0-0": "count=1",
-          },
-        }}
-      >
+    let router = createMemoryRouter(
+      createRoutesFromElements(
         <Route path="/" element={<Layout />}>
           <Route
             path="foo"
@@ -937,8 +920,17 @@ describe("<DataMemoryRouter>", () => {
             element={<Foo />}
           />
         </Route>
-      </DataMemoryRouter>
+      ),
+      {
+        initialEntries: ["/foo"],
+        hydrationData: {
+          loaderData: {
+            "0-0": "count=1",
+          },
+        },
+      }
     );
+    let { container } = render(<RouterProvider router={router} />);
 
     function Layout() {
       let navigation = useNavigation();
@@ -954,7 +946,7 @@ describe("<DataMemoryRouter>", () => {
     }
 
     function Foo() {
-      let data = useLoaderData();
+      let data = useLoaderData() as string;
       return <p>{data}</p>;
     }
 
@@ -1019,6 +1011,18 @@ describe("<DataMemoryRouter>", () => {
   });
 
   it("renders descendent routes inside a data router", () => {
+    let router = createMemoryRouter(
+      createRoutesFromElements(
+        <Route path="/deep">
+          <Route path="path/*" element={<Child />} />
+        </Route>
+      ),
+      {
+        initialEntries: ["/deep/path/to/descendant/routes"],
+      }
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
     function GrandChild() {
       return (
         <Routes>
@@ -1040,17 +1044,6 @@ describe("<DataMemoryRouter>", () => {
       );
     }
 
-    let { container } = render(
-      <DataMemoryRouter
-        initialEntries={["/deep/path/to/descendant/routes"]}
-        hydrationData={{}}
-      >
-        <Route path="/deep">
-          <Route path="path/*" element={<Child />} />
-        </Route>
-      </DataMemoryRouter>
-    );
-
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <h1>
@@ -1060,12 +1053,71 @@ describe("<DataMemoryRouter>", () => {
     `);
   });
 
+  it("renders <Routes> alongside a data router ErrorBoundary", () => {
+    let router = createMemoryRouter(
+      [
+        {
+          path: "*",
+          Component() {
+            return (
+              <>
+                <Outlet />
+                <Routes>
+                  <Route index element={<h1>Descendant</h1>} />
+                </Routes>
+              </>
+            );
+          },
+          children: [
+            {
+              id: "index",
+              index: true,
+              Component: () => <h1>Child</h1>,
+              ErrorBoundary() {
+                return <p>{(useRouteError() as Error).message}</p>;
+              },
+            },
+          ],
+        },
+      ],
+      {
+        initialEntries: ["/"],
+        hydrationData: {
+          errors: {
+            index: new Error("Broken!"),
+          },
+        },
+      }
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Broken!
+        </p>
+        <h1>
+          Descendant
+        </h1>
+      </div>"
+    `);
+  });
+
   describe("errors", () => {
     it("renders hydration errors on leaf elements using errorElement", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/child"]}
-          hydrationData={{
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Comp />}>
+            <Route
+              path="child"
+              element={<Comp />}
+              errorElement={<ErrorBoundary />}
+            />
+          </Route>
+        ),
+        {
+          initialEntries: ["/child"],
+          hydrationData: {
             loaderData: {
               "0": "parent data",
             },
@@ -1075,34 +1127,27 @@ describe("<DataMemoryRouter>", () => {
             errors: {
               "0-0": new Error("Kaboom 💥"),
             },
-          }}
-        >
-          <Route path="/" element={<Comp />}>
-            <Route
-              path="child"
-              element={<Comp />}
-              errorElement={<ErrorBoundary />}
-            />
-          </Route>
-        </DataMemoryRouter>
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         let actionData = useActionData();
         let navigation = useNavigation();
         return (
           <div>
-            {data}
-            {actionData}
-            {navigation.state}
+            <>{data}</>
+            <>{actionData}</>
+            <>{navigation.state}</>
             <Outlet />
           </div>
         );
       }
 
       function ErrorBoundary() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>{error.message}</p>;
       }
 
@@ -1121,10 +1166,19 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders hydration errors on leaf elements using ErrorBoundary", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/child"]}
-          hydrationData={{
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Comp />}>
+            <Route
+              path="child"
+              element={<Comp />}
+              ErrorBoundary={() => <p>{(useRouteError() as Error).message}</p>}
+            />
+          </Route>
+        ),
+        {
+          initialEntries: ["/child"],
+          hydrationData: {
             loaderData: {
               "0": "parent data",
             },
@@ -1134,27 +1188,20 @@ describe("<DataMemoryRouter>", () => {
             errors: {
               "0-0": new Error("Kaboom 💥"),
             },
-          }}
-        >
-          <Route path="/" element={<Comp />}>
-            <Route
-              path="child"
-              element={<Comp />}
-              ErrorBoundary={() => <p>{useRouteError()?.message}</p>}
-            />
-          </Route>
-        </DataMemoryRouter>
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         let actionData = useActionData();
         let navigation = useNavigation();
         return (
           <div>
-            {data}
-            {actionData}
-            {navigation.state}
+            <>{data}</>
+            <>{actionData}</>
+            <>{navigation.state}</>
             <Outlet />
           </div>
         );
@@ -1175,39 +1222,41 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders hydration errors on parent elements", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/child"]}
-          hydrationData={{
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
+            <Route path="child" element={<Comp />} />
+          </Route>
+        ),
+        {
+          initialEntries: ["/child"],
+          hydrationData: {
             loaderData: {},
             actionData: null,
             errors: {
               "0": new Error("Kaboom 💥"),
             },
-          }}
-        >
-          <Route path="/" element={<Comp />} errorElement={<ErrorBoundary />}>
-            <Route path="child" element={<Comp />} />
-          </Route>
-        </DataMemoryRouter>
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         let actionData = useActionData();
         let navigation = useNavigation();
         return (
           <div>
-            {data}
-            {actionData}
-            {navigation.state}
+            <>{data}</>
+            <>{actionData}</>
+            <>{navigation.state}</>
             <Outlet />
           </div>
         );
       }
 
       function ErrorBoundary() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>{error.message}</p>;
       }
 
@@ -1224,17 +1273,8 @@ describe("<DataMemoryRouter>", () => {
       let fooDefer = createDeferred();
       let barDefer = createDeferred();
 
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/foo"]}
-          hydrationData={{
-            loaderData: {
-              "0-0": {
-                message: "hydrated from foo",
-              },
-            },
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route
               path="foo"
@@ -1249,8 +1289,19 @@ describe("<DataMemoryRouter>", () => {
               errorElement={<BarError />}
             />
           </Route>
-        </DataMemoryRouter>
+        ),
+        {
+          initialEntries: ["/foo"],
+          hydrationData: {
+            loaderData: {
+              "0-0": {
+                message: "hydrated from foo",
+              },
+            },
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -1265,19 +1316,19 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function Foo() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Foo:{data?.message}</h1>;
       }
       function FooError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Bar:{data?.message}</h1>;
       }
       function BarError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Bar Error:{error.message}</p>;
       }
 
@@ -1364,17 +1415,8 @@ describe("<DataMemoryRouter>", () => {
       let fooDefer = createDeferred();
       let barDefer = createDeferred();
 
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/foo"]}
-          hydrationData={{
-            loaderData: {
-              "0-0": {
-                message: "hydrated from foo",
-              },
-            },
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route
               path="foo"
@@ -1389,8 +1431,19 @@ describe("<DataMemoryRouter>", () => {
               ErrorBoundary={BarError}
             />
           </Route>
-        </DataMemoryRouter>
+        ),
+        {
+          initialEntries: ["/foo"],
+          hydrationData: {
+            loaderData: {
+              "0-0": {
+                message: "hydrated from foo",
+              },
+            },
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -1405,19 +1458,19 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function Foo() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Foo:{data?.message}</h1>;
       }
       function FooError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Bar:{data?.message}</h1>;
       }
       function BarError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Bar Error:{error.message}</p>;
       }
 
@@ -1504,17 +1557,8 @@ describe("<DataMemoryRouter>", () => {
       let fooDefer = createDeferred();
       let barDefer = createDeferred();
 
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/foo"]}
-          hydrationData={{
-            loaderData: {
-              "0-0": {
-                message: "hydrated from foo",
-              },
-            },
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />} errorElement={<LayoutError />}>
             <Route
               path="foo"
@@ -1528,8 +1572,19 @@ describe("<DataMemoryRouter>", () => {
               element={<Bar />}
             />
           </Route>
-        </DataMemoryRouter>
+        ),
+        {
+          initialEntries: ["/foo"],
+          hydrationData: {
+            loaderData: {
+              "0-0": {
+                message: "hydrated from foo",
+              },
+            },
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -1543,19 +1598,19 @@ describe("<DataMemoryRouter>", () => {
         );
       }
       function LayoutError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Layout Error:{error.message}</p>;
       }
       function Foo() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Foo:{data?.message}</h1>;
       }
       function FooError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Bar:{data?.message}</h1>;
       }
 
@@ -1597,42 +1652,46 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders 404 errors using path='/' error boundary", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/foo"]}
-          hydrationData={{
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <>
+            <Route
+              path="/thing"
+              element={<h1>Thing 1</h1>}
+              errorElement={<p>Not I!</p>}
+            />
+            <Route
+              path="/"
+              element={
+                <div>
+                  <h1>Hello</h1>
+                  <Outlet />
+                </div>
+              }
+              errorElement={<Boundary />}
+            />
+          </>
+        ),
+        {
+          initialEntries: ["/foo"],
+          hydrationData: {
             loaderData: {
               "0": {
                 message: "hydrated from foo",
               },
             },
-          }}
-        >
-          <Route
-            path="/thing"
-            element={<h1>Thing 1</h1>}
-            errorElement={<p>Not I!</p>}
-          />
-          <Route
-            path="/"
-            element={
-              <div>
-                <h1>Hello</h1>
-                <Outlet />
-              </div>
-            }
-            errorElement={<Boundary />}
-          />
-        </DataMemoryRouter>
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError();
+        let error = useRouteError() as ErrorResponse;
         return (
           <p>
             Error:
-            {error.status}
-            {error.statusText}
+            <>{error.status}</>
+            <>{error.statusText}</>
           </p>
         );
       }
@@ -1649,42 +1708,46 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders 404 errors using index error boundary", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/foo"]}
-          hydrationData={{
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <>
+            <Route
+              path="/thing"
+              element={<h1>Thing 1</h1>}
+              errorElement={<p>Not I!</p>}
+            />
+            <Route
+              index
+              element={
+                <div>
+                  <h1>Hello</h1>
+                  <Outlet />
+                </div>
+              }
+              errorElement={<Boundary />}
+            />
+          </>
+        ),
+        {
+          initialEntries: ["/foo"],
+          hydrationData: {
             loaderData: {
               "0": {
                 message: "hydrated from foo",
               },
             },
-          }}
-        >
-          <Route
-            path="/thing"
-            element={<h1>Thing 1</h1>}
-            errorElement={<p>Not I!</p>}
-          />
-          <Route
-            index
-            element={
-              <div>
-                <h1>Hello</h1>
-                <Outlet />
-              </div>
-            }
-            errorElement={<Boundary />}
-          />
-        </DataMemoryRouter>
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Boundary() {
-        let error = useRouteError();
+        let error = useRouteError() as ErrorResponse;
         return (
           <p>
             Error:
-            {error.status}
-            {error.statusText}
+            <>{error.status}</>
+            <>{error.statusText}</>
           </p>
         );
       }
@@ -1701,76 +1764,47 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("renders 404 errors using fallback boundary if no root layout route exists", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/foo"]}
-          hydrationData={{
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <>
+            <Route
+              path="/thing1"
+              element={<h1>Thing 1</h1>}
+              errorElement={<p>Not I!</p>}
+            />
+            <Route
+              path="/thing2"
+              element={<h1>Thing 2</h1>}
+              errorElement={<p>Not I!</p>}
+            />
+          </>
+        ),
+        {
+          initialEntries: ["/foo"],
+          hydrationData: {
             loaderData: {
               "0": {
                 message: "hydrated from foo",
               },
             },
-          }}
-        >
-          <Route
-            path="/thing1"
-            element={<h1>Thing 1</h1>}
-            errorElement={<p>Not I!</p>}
-          />
-          <Route
-            path="/thing2"
-            element={<h1>Thing 2</h1>}
-            errorElement={<p>Not I!</p>}
-          />
-        </DataMemoryRouter>
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h2>
-            Unexpected Application Error!
-          </h2>
-          <h3
-            style="font-style: italic;"
-          >
-            404 Not Found
-          </h3>
-          <p>
-            💿 Hey developer 👋
-          </p>
-          <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              ErrorBoundary
-            </code>
-             prop on 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              &lt;Route&gt;
-            </code>
-          </p>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("404 Not Found");
+      expect(html).toMatch("💿 Hey developer 👋");
+      expect(html).not.toMatch(/stack/i);
     });
 
     it("renders navigation errors with a default if no errorElements are provided", async () => {
       let fooDefer = createDeferred();
       let barDefer = createDeferred();
 
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/foo"]}
-          hydrationData={{
-            loaderData: {
-              "0-0": {
-                message: "hydrated from foo",
-              },
-            },
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route
               path="foo"
@@ -1783,8 +1817,19 @@ describe("<DataMemoryRouter>", () => {
               element={<Bar />}
             />
           </Route>
-        </DataMemoryRouter>
+        ),
+        {
+          initialEntries: ["/foo"],
+          hydrationData: {
+            loaderData: {
+              "0-0": {
+                message: "hydrated from foo",
+              },
+            },
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -1798,11 +1843,11 @@ describe("<DataMemoryRouter>", () => {
         );
       }
       function Foo() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Foo:{data?.message}</h1>;
       }
       function Bar() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Bar:{data?.message}</h1>;
       }
 
@@ -1835,40 +1880,11 @@ describe("<DataMemoryRouter>", () => {
       error.stack = "FAKE STACK TRACE";
       barDefer.reject(error);
       await waitFor(() => screen.getByText("Kaboom!"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h2>
-            Unexpected Application Error!
-          </h2>
-          <h3
-            style="font-style: italic;"
-          >
-            Kaboom!
-          </h3>
-          <pre
-            style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
-          >
-            FAKE STACK TRACE
-          </pre>
-          <p>
-            💿 Hey developer 👋
-          </p>
-          <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              ErrorBoundary
-            </code>
-             prop on 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              &lt;Route&gt;
-            </code>
-          </p>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("Kaboom!");
+      expect(html).toMatch("FAKE STACK TRACE");
+      expect(html).toMatch("💿 Hey developer 👋");
     });
 
     // This test ensures that when manual routes are used, we add hasErrorBoundary
@@ -1894,9 +1910,8 @@ describe("<DataMemoryRouter>", () => {
         },
       ];
 
-      let { container } = render(
-        <DataMemoryRouter routes={routes} initialEntries={["/foo"]} />
-      );
+      let router = createMemoryRouter(routes, { initialEntries: ["/foo"] });
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -1909,11 +1924,11 @@ describe("<DataMemoryRouter>", () => {
         );
       }
       function Bar() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { message: string };
         return <h1>Bar:{data?.message}</h1>;
       }
       function BarError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Bar Error:{error.message}</p>;
       }
 
@@ -1959,14 +1974,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles render errors in parent errorElement", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/child"]}
-          hydrationData={{
-            loaderData: {},
-            actionData: null,
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             element={
@@ -1979,15 +1988,17 @@ describe("<DataMemoryRouter>", () => {
           >
             <Route path="child" element={<ChildComp />} />
           </Route>
-        </DataMemoryRouter>
+        ),
+        { initialEntries: ["/child"] }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function ChildComp(): React.ReactElement {
         throw new Error("Kaboom!");
       }
 
       function ErrorBoundary() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>{error.message}</p>;
       }
 
@@ -2001,14 +2012,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles render errors in child errorElement", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/child"]}
-          hydrationData={{
-            loaderData: {},
-            actionData: null,
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             element={
@@ -2025,15 +2030,17 @@ describe("<DataMemoryRouter>", () => {
               errorElement={<ErrorBoundary />}
             />
           </Route>
-        </DataMemoryRouter>
+        ),
+        { initialEntries: ["/child"] }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function ChildComp(): React.ReactElement {
         throw new Error("Kaboom!");
       }
 
       function ErrorBoundary() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>{error.message}</p>;
       }
 
@@ -2052,14 +2059,8 @@ describe("<DataMemoryRouter>", () => {
     });
 
     it("handles render errors in default errorElement", async () => {
-      let { container } = render(
-        <DataMemoryRouter
-          initialEntries={["/child"]}
-          hydrationData={{
-            loaderData: {},
-            actionData: null,
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             element={
@@ -2071,8 +2072,10 @@ describe("<DataMemoryRouter>", () => {
           >
             <Route path="child" element={<ChildComp />} />
           </Route>
-        </DataMemoryRouter>
+        ),
+        { initialEntries: ["/child"] }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function ChildComp(): React.ReactElement {
         let error = new Error("Kaboom!");
@@ -2080,40 +2083,11 @@ describe("<DataMemoryRouter>", () => {
         throw error;
       }
 
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <h2>
-            Unexpected Application Error!
-          </h2>
-          <h3
-            style="font-style: italic;"
-          >
-            Kaboom!
-          </h3>
-          <pre
-            style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
-          >
-            FAKE STACK TRACE
-          </pre>
-          <p>
-            💿 Hey developer 👋
-          </p>
-          <p>
-            You can provide a way better UX than this when your app throws errors by providing your own 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              ErrorBoundary
-            </code>
-             prop on 
-            <code
-              style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              &lt;Route&gt;
-            </code>
-          </p>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("Kaboom!");
+      expect(html).toMatch("FAKE STACK TRACE");
+      expect(html).toMatch("💿 Hey developer 👋");
     });
 
     it("does not handle render errors for non-data routers", async () => {
@@ -2178,7 +2152,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function ErrorBoundary() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>{error.message}</p>;
       }
 
@@ -2263,42 +2237,11 @@ describe("<DataMemoryRouter>", () => {
 
       router.navigate("/child");
       await waitFor(() => screen.getByText("Kaboom!"));
-      expect(getHtml(container)).toMatchInlineSnapshot(`
-        "<div>
-          <div>
-            <h2>
-              Unexpected Application Error!
-            </h2>
-            <h3
-              style="font-style: italic;"
-            >
-              Kaboom!
-            </h3>
-            <pre
-              style="padding: 0.5rem; background-color: rgba(200, 200, 200, 0.5);"
-            >
-              FAKE STACK TRACE
-            </pre>
-            <p>
-              💿 Hey developer 👋
-            </p>
-            <p>
-              You can provide a way better UX than this when your app throws errors by providing your own 
-              <code
-                style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-              >
-                ErrorBoundary
-              </code>
-               prop on 
-              <code
-                style="padding: 2px 4px; background-color: rgba(200, 200, 200, 0.5);"
-              >
-                &lt;Route&gt;
-              </code>
-            </p>
-          </div>
-        </div>"
-      `);
+      let html = getHtml(container);
+      expect(html).toMatch("Unexpected Application Error!");
+      expect(html).toMatch("Kaboom!");
+      expect(html).toMatch("FAKE STACK TRACE");
+      expect(html).toMatch("💿 Hey developer 👋");
 
       router.navigate(-1);
       await waitFor(() => {
@@ -2318,8 +2261,8 @@ describe("<DataMemoryRouter>", () => {
     it("does not allow loaderData usage in self-caught error boundaries", async () => {
       let errorSpy = jest.spyOn(console, "error");
 
-      let { container } = render(
-        <DataMemoryRouter>
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route
               path="foo"
@@ -2328,8 +2271,9 @@ describe("<DataMemoryRouter>", () => {
               errorElement={<FooError />}
             />
           </Route>
-        </DataMemoryRouter>
+        )
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -2343,8 +2287,8 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function FooError() {
-        let error = useRouteError();
-        let data = useLoaderData();
+        let error = useRouteError() as Error;
+        let data = useLoaderData() as { message: string };
         return (
           <>
             <p>
@@ -2404,14 +2348,8 @@ describe("<DataMemoryRouter>", () => {
     it("does not allow useLoaderData usage in bubbled error boundaries", async () => {
       let errorSpy = jest.spyOn(console, "error");
 
-      let { container } = render(
-        <DataMemoryRouter
-          hydrationData={{
-            loaderData: {
-              "0": "ROOT",
-            },
-          }}
-        >
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route
             path="/"
             element={<Layout />}
@@ -2424,8 +2362,16 @@ describe("<DataMemoryRouter>", () => {
               element={<h1>Foo</h1>}
             />
           </Route>
-        </DataMemoryRouter>
+        ),
+        {
+          hydrationData: {
+            loaderData: {
+              "0": "ROOT",
+            },
+          },
+        }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -2438,8 +2384,8 @@ describe("<DataMemoryRouter>", () => {
         );
       }
       function LayoutError() {
-        let data = useLoaderData();
-        let error = useRouteError();
+        let data = useLoaderData() as { message: string };
+        let error = useRouteError() as Error;
         return (
           <>
             <p>
@@ -2486,6 +2432,120 @@ describe("<DataMemoryRouter>", () => {
       );
       errorSpy.mockRestore();
     });
+
+    it("allows a successful useRevalidator to resolve the error boundary (loader + child boundary)", async () => {
+      let shouldFail = true;
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            Component={() => (
+              <>
+                <MemoryNavigate to="child">/child</MemoryNavigate>
+                <Outlet />
+              </>
+            )}
+          >
+            <Route
+              path="child"
+              loader={() => {
+                if (shouldFail) {
+                  shouldFail = false;
+                  throw new Error("Broken");
+                } else {
+                  return "Fixed";
+                }
+              }}
+              Component={() => <p>{("Child:" + useLoaderData()) as string}</p>}
+              ErrorBoundary={() => {
+                let { revalidate } = useRevalidator();
+                return (
+                  <>
+                    <p>{"Error:" + (useRouteError() as Error).message}</p>
+                    <button onClick={() => revalidate()}>Try again</button>
+                  </>
+                );
+              }}
+            />
+          </Route>
+        )
+      );
+
+      let { container } = render(
+        <div>
+          <RouterProvider router={router} />
+        </div>
+      );
+
+      fireEvent.click(screen.getByText("/child"));
+      await waitFor(() => screen.getByText("Error:Broken"));
+      expect(getHtml(container)).toMatch("Error:Broken");
+      expect(router.state.errors).not.toBe(null);
+
+      fireEvent.click(screen.getByText("Try again"));
+      await waitFor(() => {
+        expect(queryByText(container, "Child:Fixed")).toBeInTheDocument();
+      });
+      expect(getHtml(container)).toMatch("Child:Fixed");
+      expect(router.state.errors).toBe(null);
+    });
+
+    it("allows a successful useRevalidator to resolve the error boundary (loader + parent boundary)", async () => {
+      let shouldFail = true;
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route
+            path="/"
+            Component={() => (
+              <>
+                <MemoryNavigate to="child">/child</MemoryNavigate>
+                <Outlet />
+              </>
+            )}
+            ErrorBoundary={() => {
+              let { revalidate } = useRevalidator();
+              return (
+                <>
+                  <p>{"Error:" + (useRouteError() as Error).message}</p>
+                  <button onClick={() => revalidate()}>Try again</button>
+                </>
+              );
+            }}
+          >
+            <Route
+              path="child"
+              loader={() => {
+                if (shouldFail) {
+                  shouldFail = false;
+                  throw new Error("Broken");
+                } else {
+                  return "Fixed";
+                }
+              }}
+              Component={() => <p>{("Child:" + useLoaderData()) as string}</p>}
+            />
+          </Route>
+        )
+      );
+
+      let { container } = render(
+        <div>
+          <RouterProvider router={router} />
+        </div>
+      );
+
+      fireEvent.click(screen.getByText("/child"));
+      await waitFor(() => screen.getByText("Error:Broken"));
+      expect(getHtml(container)).toMatch("Error:Broken");
+      expect(router.state.errors).not.toBe(null);
+
+      fireEvent.click(screen.getByText("Try again"));
+      await waitFor(() => {
+        expect(queryByText(container, "Child:Fixed")).toBeInTheDocument();
+      });
+      expect(getHtml(container)).toMatch("Child:Fixed");
+      expect(router.state.errors).toBe(null);
+    });
   });
 
   describe("defer", () => {
@@ -2499,8 +2559,9 @@ describe("<DataMemoryRouter>", () => {
       let awaitRenderCount = 0;
       let barDefer = createDeferred();
       let bazDefer = createDeferred();
-      let { container } = render(
-        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
+
+      let router = createMemoryRouter(
+        createRoutesFromElements(
           <Route path="/" element={<Layout />}>
             <Route path="foo" element={<h1>Foo</h1>} />
             <Route
@@ -2515,8 +2576,10 @@ describe("<DataMemoryRouter>", () => {
               element={<h1>Baz</h1>}
             />
           </Route>
-        </DataMemoryRouter>
+        ),
+        { initialEntries: ["/foo"] }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       function Layout() {
         let navigation = useNavigation();
@@ -2533,7 +2596,7 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function Bar() {
-        let data = useLoaderData();
+        let data = useLoaderData() as { critical: string };
         return (
           <>
             <p>{data.critical}</p>
@@ -2559,12 +2622,13 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function RouteError() {
-        let error = useRouteError();
+        let error = useRouteError() as Error;
         return <p>Route Error:{error.message}</p>;
       }
 
       function LazyFallback() {
         return triggerFallbackError ? (
+          // @ts-expect-error
           <p>{oops.i.did.it}</p>
         ) : (
           <p>Loading...</p>
@@ -2572,8 +2636,9 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function LazyData() {
-        let data = useAsyncValue();
+        let data = useAsyncValue() as string;
         return triggerRenderError ? (
+          // @ts-expect-error
           <p>{oops.i.did.it.again}</p>
         ) : (
           <p>{data}</p>
@@ -2581,12 +2646,12 @@ describe("<DataMemoryRouter>", () => {
       }
 
       function LazyError() {
-        let data = useAsyncError();
+        let data = useAsyncError() as Error;
         return <p>Await Error:{data.message}</p>;
       }
 
       return {
-        container: container.querySelector("#content"),
+        container: container.querySelector("#content") as HTMLElement,
         barDefer,
         bazDefer,
         getAwaitRenderCount() {
@@ -3128,28 +3193,37 @@ describe("<DataMemoryRouter>", () => {
 
     it("should permit direct access to resolved values", async () => {
       let barDefer = createDeferred();
-      let { container } = render(
-        <DataMemoryRouter initialEntries={["/foo"]} hydrationData={{}}>
-          <Route
-            path="foo"
-            element={
-              <>
-                <h1>Foo</h1>
-                <MemoryNavigate to="/bar">Link to bar</MemoryNavigate>
-              </>
-            }
-          />
-          <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
-        </DataMemoryRouter>
+
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <>
+            <Route
+              path="foo"
+              element={
+                <>
+                  <h1>Foo</h1>
+                  <MemoryNavigate to="/bar">Link to bar</MemoryNavigate>
+                </>
+              }
+            />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+            />
+          </>
+        ),
+        { initialEntries: ["/foo"] }
       );
+      let { container } = render(<RouterProvider router={router} />);
 
       let count = 0;
       function Bar() {
-        let { bar } = useLoaderData();
+        let { bar } = useLoaderData() as { bar: Promise<string> };
 
         React.useEffect(() => {
           bar.then((data) => {
-            container.querySelector("#content").innerHTML =
+            container.querySelector("#content")!.innerHTML =
               data + " " + ++count;
           });
         }, [bar]);
@@ -3225,8 +3299,8 @@ describe("<DataMemoryRouter>", () => {
       );
 
       function ErrorElement() {
-        let error = useAsyncError() as string;
-        return <p>Error:{error}</p>;
+        let error = useAsyncError() as Error;
+        return <p>Error:{error.message}</p>;
       }
 
       expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -3237,7 +3311,7 @@ describe("<DataMemoryRouter>", () => {
         </div>"
       `);
 
-      await dfd.reject("REJECTED");
+      await dfd.reject(new Error("REJECTED"));
       await waitFor(() => screen.getByText("Error:REJECTED"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
@@ -3310,11 +3384,6 @@ function MemoryNavigate({
 }) {
   let dataRouterContext = React.useContext(DataRouterContext);
 
-  let basename = dataRouterContext?.basename;
-  if (basename && basename !== "/") {
-    to = to === "/" ? basename : joinPaths([basename, to]);
-  }
-
   let onClickHandler = React.useCallback(
     async (event: React.MouseEvent) => {
       event.preventDefault();
@@ -3327,9 +3396,17 @@ function MemoryNavigate({
     [dataRouterContext, to, formMethod, formData]
   );
 
+  // Only prepend the basename to the rendered href, send the non-prefixed `to`
+  // value into the router since it will prepend the basename
+  let basename = dataRouterContext?.basename;
+  let href = to;
+  if (basename && basename !== "/") {
+    href = to === "/" ? basename : joinPaths([basename, to]);
+  }
+
   return formData ? (
     <form onClick={onClickHandler} children={children} />
   ) : (
-    <a href={to} onClick={onClickHandler} children={children} />
+    <a href={href} onClick={onClickHandler} children={children} />
   );
 }

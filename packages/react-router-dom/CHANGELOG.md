@@ -1,5 +1,202 @@
 # `react-router-dom`
 
+## 6.14.2
+
+### Patch Changes
+
+- Properly decode element id when emulating hash scrolling via `<ScrollRestoration>` ([#10682](https://github.com/remix-run/react-router/pull/10682))
+- Add missing `<Form state>` prop to populate `history.state` on submission navigations ([#10630](https://github.com/remix-run/react-router/pull/10630))
+- Support proper hydration of `Error` subclasses such as `ReferenceError`/`TypeError` ([#10633](https://github.com/remix-run/react-router/pull/10633))
+- Updated dependencies:
+  - `@remix-run/router@1.7.2`
+  - `react-router@6.14.2`
+
+## 6.14.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.1`
+  - `@remix-run/router@1.7.1`
+
+## 6.14.0
+
+### Minor Changes
+
+- Add support for `application/json` and `text/plain` encodings for `useSubmit`/`fetcher.submit`. To reflect these additional types, `useNavigation`/`useFetcher` now also contain `navigation.json`/`navigation.text` and `fetcher.json`/`fetcher.text` which include the json/text submission if applicable ([#10413](https://github.com/remix-run/react-router/pull/10413))
+
+  ```jsx
+  // The default behavior will still serialize as FormData
+  function Component() {
+    let navigation = useNavigation();
+    let submit = useSubmit();
+    submit({ key: "value" }, { method: "post" });
+    // navigation.formEncType => "application/x-www-form-urlencoded"
+    // navigation.formData    => FormData instance
+  }
+
+  async function action({ request }) {
+    // request.headers.get("Content-Type") => "application/x-www-form-urlencoded"
+    // await request.formData()            => FormData instance
+  }
+  ```
+
+  ```js
+  // Opt-into JSON encoding with `encType: "application/json"`
+  function Component() {
+    let navigation = useNavigation();
+    let submit = useSubmit();
+    submit({ key: "value" }, { method: "post", encType: "application/json" });
+    // navigation.formEncType => "application/json"
+    // navigation.json        => { key: "value" }
+  }
+
+  async function action({ request }) {
+    // request.headers.get("Content-Type") => "application/json"
+    // await request.json()                => { key: "value" }
+  }
+  ```
+
+  ```js
+  // Opt-into text encoding with `encType: "text/plain"`
+  function Component() {
+    let navigation = useNavigation();
+    let submit = useSubmit();
+    submit("Text submission", { method: "post", encType: "text/plain" });
+    // navigation.formEncType => "text/plain"
+    // navigation.text        => "Text submission"
+  }
+
+  async function action({ request }) {
+    // request.headers.get("Content-Type") => "text/plain"
+    // await request.text()                => "Text submission"
+  }
+  ```
+
+### Patch Changes
+
+- When submitting a form from a `submitter` element, prefer the built-in `new FormData(form, submitter)` instead of the previous manual approach in modern browsers (those that support the new `submitter` parameter) ([#9865](https://github.com/remix-run/react-router/pull/9865), [#10627](https://github.com/remix-run/react-router/pull/10627))
+  - For browsers that don't support it, we continue to just append the submit button's entry to the end, and we also add rudimentary support for `type="image"` buttons
+  - If developers want full spec-compliant support for legacy browsers, they can use the `formdata-submitter-polyfill`
+- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering ([#10448](https://github.com/remix-run/react-router/pull/10448))
+  - ⚠️ However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.)
+- Fix `tsc --skipLibCheck:false` issues on React 17 ([#10622](https://github.com/remix-run/react-router/pull/10622))
+- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
+- Updated dependencies:
+  - `react-router@6.14.0`
+  - `@remix-run/router@1.7.0`
+
+## 6.13.0
+
+### Minor Changes
+
+- Move [`React.startTransition`](https://react.dev/reference/react/startTransition) usage behind a [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) to avoid issues with existing incompatible `Suspense` usages. We recommend folks adopting this flag to be better compatible with React concurrent mode, but if you run into issues you can continue without the use of `startTransition` until v7. Issues usually boils down to creating net-new promises during the render cycle, so if you run into issues you should either lift your promise creation out of the render cycle or put it behind a `useMemo`. ([#10596](https://github.com/remix-run/react-router/pull/10596))
+
+  Existing behavior will no longer include `React.startTransition`:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>{/*...*/}</Routes>
+  </BrowserRouter>
+
+  <RouterProvider router={router} />
+  ```
+
+  If you wish to enable `React.startTransition`, pass the future flag to your component:
+
+  ```jsx
+  <BrowserRouter future={{ v7_startTransition: true }}>
+    <Routes>{/*...*/}</Routes>
+  </BrowserRouter>
+
+  <RouterProvider router={router} future={{ v7_startTransition: true }}/>
+  ```
+
+### Patch Changes
+
+- Work around webpack/terser `React.startTransition` minification bug in production mode ([#10588](https://github.com/remix-run/react-router/pull/10588))
+- Updated dependencies:
+  - `react-router@6.13.0`
+
+## 6.12.1
+
+> **Warning**
+> Please use version `6.13.0` or later instead of `6.12.1`. This version suffers from a `webpack`/`terser` minification issue resulting in invalid minified code in your resulting production bundles which can cause issues in your application. See [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
+
+### Patch Changes
+
+- Adjust feature detection of `React.startTransition` to fix webpack + react 17 compilation error ([#10569](https://github.com/remix-run/react-router/pull/10569))
+- Updated dependencies:
+  - `react-router@6.12.1`
+
+## 6.12.0
+
+### Minor Changes
+
+- Wrap internal router state updates with `React.startTransition` if it exists ([#10438](https://github.com/remix-run/react-router/pull/10438))
+
+### Patch Changes
+
+- Re-throw `DOMException` (`DataCloneError`) when attempting to perform a `PUSH` navigation with non-serializable state. ([#10427](https://github.com/remix-run/react-router/pull/10427))
+- Updated dependencies:
+  - `@remix-run/router@1.6.3`
+  - `react-router@6.12.0`
+
+## 6.11.2
+
+### Patch Changes
+
+- Export `SetURLSearchParams` type ([#10444](https://github.com/remix-run/react-router/pull/10444))
+- Updated dependencies:
+  - `react-router@6.11.2`
+  - `@remix-run/router@1.6.2`
+
+## 6.11.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.11.1`
+  - `@remix-run/router@1.6.1`
+
+## 6.11.0
+
+### Minor Changes
+
+- Enable `basename` support in `useFetcher` ([#10336](https://github.com/remix-run/react-router/pull/10336))
+  - If you were previously working around this issue by manually prepending the `basename` then you will need to remove the manually prepended `basename` from your `fetcher` calls (`fetcher.load('/basename/route') -> fetcher.load('/route')`)
+
+### Patch Changes
+
+- Fix inadvertent re-renders when using `Component` instead of `element` on a route definition ([#10287](https://github.com/remix-run/react-router/pull/10287))
+- Fail gracefully on `<Link to="//">` and other invalid URL values ([#10367](https://github.com/remix-run/react-router/pull/10367))
+- Switched from `useSyncExternalStore` to `useState` for internal `@remix-run/router` router state syncing in `<RouterProvider>`. We found some [subtle bugs](https://codesandbox.io/s/use-sync-external-store-loop-9g7b81) where router state updates got propagated _before_ other normal `useState` updates, which could lead to footguns in `useEffect` calls. ([#10377](https://github.com/remix-run/react-router/pull/10377), [#10409](https://github.com/remix-run/react-router/pull/10409))
+- Add static prop to `StaticRouterProvider`'s internal `Router` component ([#10401](https://github.com/remix-run/react-router/pull/10401))
+- When using a `RouterProvider`, `useNavigate`/`useSubmit`/`fetcher.submit` are now stable across location changes, since we can handle relative routing via the `@remix-run/router` instance and get rid of our dependence on `useLocation()`. When using `BrowserRouter`, these hooks remain unstable across location changes because they still rely on `useLocation()`. ([#10336](https://github.com/remix-run/react-router/pull/10336))
+- Updated dependencies:
+  - `react-router@6.11.0`
+  - `@remix-run/router@1.6.0`
+
+## 6.10.0
+
+### Minor Changes
+
+- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+  - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
+    - `useNavigation().formMethod` is lowercase
+    - `useFetcher().formMethod` is lowercase
+  - When `future.v7_normalizeFormMethod === true`:
+    - `useNavigation().formMethod` is uppercase
+    - `useFetcher().formMethod` is uppercase
+
+### Patch Changes
+
+- Fix `createStaticHandler` to also check for `ErrorBoundary` on routes in addition to `errorElement` ([#10190](https://github.com/remix-run/react-router/pull/10190))
+- Updated dependencies:
+  - `@remix-run/router@1.5.0`
+  - `react-router@6.10.0`
+
 ## 6.9.0
 
 ### Minor Changes

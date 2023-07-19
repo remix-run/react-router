@@ -907,4 +907,24 @@ describe("<Link> href", () => {
       );
     });
   });
+
+  test("fails gracefully on invalid `to` values", () => {
+    let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter>
+          <Routes>
+            <Route path="/" element={<Link to="//" />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.root.findByType("a").props.href).toEqual("//");
+    expect(warnSpy).toHaveBeenCalledWith(
+      '<Link to="//"> contains an invalid URL which will probably break when clicked - please update to a valid URL path.'
+    );
+    warnSpy.mockRestore();
+  });
 });

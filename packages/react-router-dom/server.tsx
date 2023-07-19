@@ -6,6 +6,7 @@ import type {
   StaticHandlerContext,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
+  RouterState,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -17,8 +18,16 @@ import {
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type { Location, RouteObject, To } from "react-router-dom";
-import { Routes } from "react-router-dom";
+import {
+  UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_useRoutesImpl as useRoutesImpl,
+} from "react-router";
+import type {
+  DataRouteObject,
+  Location,
+  RouteObject,
+  To,
+} from "react-router-dom";
 import {
   createPath,
   parsePath,
@@ -116,17 +125,20 @@ export function StaticRouterProvider({
     hydrateScript = `window.__staticRouterHydrationData = JSON.parse(${json});`;
   }
 
+  let { state } = dataRouterContext.router;
+
   return (
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={dataRouterContext.router.state}>
+        <DataRouterStateContext.Provider value={state}>
           <Router
             basename={dataRouterContext.basename}
-            location={dataRouterContext.router.state.location}
-            navigationType={dataRouterContext.router.state.historyAction}
+            location={state.location}
+            navigationType={state.historyAction}
             navigator={dataRouterContext.navigator}
+            static={dataRouterContext.static}
           >
-            <Routes />
+            <DataRoutes routes={router.routes} state={state} />
           </Router>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
@@ -139,6 +151,16 @@ export function StaticRouterProvider({
       ) : null}
     </>
   );
+}
+
+function DataRoutes({
+  routes,
+  state,
+}: {
+  routes: DataRouteObject[];
+  state: RouterState;
+}): React.ReactElement | null {
+  return useRoutesImpl(routes, undefined, state);
 }
 
 function serializeErrors(
@@ -157,6 +179,13 @@ function serializeErrors(
       serialized[key] = {
         message: val.message,
         __type: "Error",
+        // If this is a subclass (i.e., ReferenceError), send up the type so we
+        // can re-create the same type during hydration.
+        ...(val.name !== "Error"
+          ? {
+              __subType: val.name,
+            }
+          : {}),
       };
     } else {
       serialized[key] = val;
@@ -206,11 +235,9 @@ function getStatelessNavigator() {
   };
 }
 
-let detectErrorBoundary = (route: RouteObject) => Boolean(route.errorElement);
-
 type CreateStaticHandlerOptions = Omit<
   RouterCreateStaticHandlerOptions,
-  "detectErrorBoundary"
+  "detectErrorBoundary" | "mapRouteProperties"
 >;
 
 export function createStaticHandler(
@@ -219,7 +246,7 @@ export function createStaticHandler(
 ) {
   return routerCreateStaticHandler(routes, {
     ...opts,
-    detectErrorBoundary,
+    mapRouteProperties,
   });
 }
 
@@ -230,7 +257,7 @@ export function createStaticRouter(
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
-    detectErrorBoundary,
+    mapRouteProperties,
     undefined,
     manifest
   );

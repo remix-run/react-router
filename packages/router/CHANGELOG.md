@@ -1,5 +1,138 @@
 # `@remix-run/router`
 
+## 1.7.2
+
+### Patch Changes
+
+- Trigger an error if a `defer` promise resolves/rejects with `undefined` in order to match the behavior of loaders and actions which must return a value or `null` ([#10690](https://github.com/remix-run/react-router/pull/10690))
+- Properly handle fetcher redirects interrupted by normal navigations ([#10674](https://github.com/remix-run/react-router/pull/10674), [#10709](https://github.com/remix-run/react-router/pull/10709))
+- Initial-load fetchers should not automatically revalidate on GET navigations ([#10688](https://github.com/remix-run/react-router/pull/10688))
+- Enhance the return type of `Route.lazy` to prohibit returning an empty object ([#10634](https://github.com/remix-run/react-router/pull/10634))
+
+## 1.7.1
+
+### Patch Changes
+
+- Fix issues with reused blockers on subsequent navigations ([#10656](https://github.com/remix-run/react-router/pull/10656))
+
+## 1.7.0
+
+### Minor Changes
+
+- Add support for `application/json` and `text/plain` encodings for `router.navigate`/`router.fetch` submissions. To leverage these encodings, pass your data in a `body` parameter and specify the desired `formEncType`: ([#10413](https://github.com/remix-run/react-router/pull/10413))
+
+  ```js
+  // By default, the encoding is "application/x-www-form-urlencoded"
+  router.navigate("/", {
+    formMethod: "post",
+    body: { key: "value" },
+  });
+
+  async function action({ request }) {
+    // await request.formData() => FormData instance with entry [key=value]
+  }
+  ```
+
+  ```js
+  // Pass `formEncType` to opt-into a different encoding (json)
+  router.navigate("/", {
+    formMethod: "post",
+    formEncType: "application/json",
+    body: { key: "value" },
+  });
+
+  async function action({ request }) {
+    // await request.json() => { key: "value" }
+  }
+  ```
+
+  ```js
+  // Pass `formEncType` to opt-into a different encoding (text)
+  router.navigate("/", {
+    formMethod: "post",
+    formEncType: "text/plain",
+    body: "Text submission",
+  });
+
+  async function action({ request }) {
+    // await request.text() => "Text submission"
+  }
+  ```
+
+### Patch Changes
+
+- Call `window.history.pushState/replaceState` before updating React Router state (instead of after) so that `window.location` matches `useLocation` during synchronous React 17 rendering ([#10448](https://github.com/remix-run/react-router/pull/10448))
+  - ⚠️ However, generally apps should not be relying on `window.location` and should always reference `useLocation` when possible, as `window.location` will not be in sync 100% of the time (due to `popstate` events, concurrent mode, etc.)
+- Strip `basename` from the `location` provided to `<ScrollRestoration getKey>` to match the `useLocation` behavior ([#10550](https://github.com/remix-run/react-router/pull/10550))
+- Avoid calling `shouldRevalidate` for fetchers that have not yet completed a data load ([#10623](https://github.com/remix-run/react-router/pull/10623))
+- Fix `unstable_useBlocker` key issues in `StrictMode` ([#10573](https://github.com/remix-run/react-router/pull/10573))
+- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
+
+## 1.6.3
+
+### Patch Changes
+
+- Allow fetcher revalidations to complete if submitting fetcher is deleted ([#10535](https://github.com/remix-run/react-router/pull/10535))
+- Re-throw `DOMException` (`DataCloneError`) when attempting to perform a `PUSH` navigation with non-serializable state. ([#10427](https://github.com/remix-run/react-router/pull/10427))
+- Ensure revalidations happen when hash is present ([#10516](https://github.com/remix-run/react-router/pull/10516))
+- upgrade jest and jsdom ([#10453](https://github.com/remix-run/react-router/pull/10453))
+
+## 1.6.2
+
+### Patch Changes
+
+- Fix HMR-driven error boundaries by properly reconstructing new routes and `manifest` in `\_internalSetRoutes` ([#10437](https://github.com/remix-run/react-router/pull/10437))
+- Fix bug where initial data load would not kick off when hash is present ([#10493](https://github.com/remix-run/react-router/pull/10493))
+
+## 1.6.1
+
+### Patch Changes
+
+- Fix `basename` handling when navigating without a path ([#10433](https://github.com/remix-run/react-router/pull/10433))
+- "Same hash" navigations no longer re-run loaders to match browser behavior (i.e. `/path#hash -> /path#hash`) ([#10408](https://github.com/remix-run/react-router/pull/10408))
+
+## 1.6.0
+
+### Minor Changes
+
+- Enable relative routing in the `@remix-run/router` when providing a source route ID from which the path is relative to: ([#10336](https://github.com/remix-run/react-router/pull/10336))
+
+  - Example: `router.navigate("../path", { fromRouteId: "some-route" })`.
+  - This also applies to `router.fetch` which already receives a source route ID
+
+- Introduce a new `@remix-run/router` `future.v7_prependBasename` flag to enable `basename` prefixing to all paths coming into `router.navigate` and `router.fetch`.
+
+  - Previously the `basename` was prepended in the React Router layer, but now that relative routing is being handled by the router we need prepend the `basename` _after_ resolving any relative paths
+  - This also enables `basename` support in `useFetcher` as well
+
+### Patch Changes
+
+- Enhance `LoaderFunction`/`ActionFunction` return type to prevent `undefined` from being a valid return value ([#10267](https://github.com/remix-run/react-router/pull/10267))
+- Ensure proper 404 error on `fetcher.load` call to a route without a `loader` ([#10345](https://github.com/remix-run/react-router/pull/10345))
+- Deprecate the `createRouter` `detectErrorBoundary` option in favor of the new `mapRouteProperties` option for converting a framework-agnostic route to a framework-aware route. This allows us to set more than just the `hasErrorBoundary` property during route pre-processing, and is now used for mapping `Component -> element` and `ErrorBoundary -> errorElement` in `react-router`. ([#10287](https://github.com/remix-run/react-router/pull/10287))
+- Fixed a bug where fetchers were incorrectly attempting to revalidate on search params changes or routing to the same URL (using the same logic for route `loader` revalidations). However, since fetchers have a static href, they should only revalidate on `action` submissions or `router.revalidate` calls. ([#10344](https://github.com/remix-run/react-router/pull/10344))
+- Decouple `AbortController` usage between revalidating fetchers and the thing that triggered them such that the unmount/deletion of a revalidating fetcher doesn't impact the ongoing triggering navigation/revalidation ([#10271](https://github.com/remix-run/react-router/pull/10271))
+
+## 1.5.0
+
+### Minor Changes
+
+- Added support for [**Future Flags**](https://reactrouter.com/en/main/guides/api-development-strategy) in React Router. The first flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+  - When `future.v7_normalizeFormMethod === false` (default v6 behavior),
+    - `useNavigation().formMethod` is lowercase
+    - `useFetcher().formMethod` is lowercase
+  - When `future.v7_normalizeFormMethod === true`:
+    - `useNavigation().formMethod` is uppercase
+    - `useFetcher().formMethod` is uppercase
+
+### Patch Changes
+
+- Provide fetcher submission to `shouldRevalidate` if the fetcher action redirects ([#10208](https://github.com/remix-run/react-router/pull/10208))
+- Properly handle `lazy()` errors during router initialization ([#10201](https://github.com/remix-run/react-router/pull/10201))
+- Remove `instanceof` check for `DeferredData` to be resilient to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
+- Update to latest `@remix-run/web-fetch@4.3.3` ([#10216](https://github.com/remix-run/react-router/pull/10216))
+
 ## 1.4.0
 
 ### Minor Changes

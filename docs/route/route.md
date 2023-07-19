@@ -62,7 +62,7 @@ const router = createBrowserRouter(
 
 Neither style is discouraged and behavior is identical. For the majority of this doc we will use the JSX style because that's what most people are accustomed to in the context of React Router.
 
-<docs-info>If you do not wish to specify a React element (i.e., `element={<MyComponent />}`) you may specify a `Component` instead (i.e., `Component={MyComponent}`) and React Router will call `createElement` for you internally.</docs-info>
+<docs-info>When using `RouterProvider`, if you do not wish to specify a React element (i.e., `element={<MyComponent />}`) you may specify a `Component` instead (i.e., `Component={MyComponent}`) and React Router will call `createElement` for you internally. You should only do this for `RouterProvider` applications though since using `Component` inside of `<Routes>` will de-optimize React's ability to reuse the created element across renders.</docs-info>
 
 ## Type declaration
 
@@ -311,6 +311,8 @@ Otherwise use `Component` and React Router will create the React Element for you
 ```tsx
 <Route path="/for-sale" Component={Properties} />
 ```
+
+<docs-warning>You should only opt into the `Component` API for data routes via `RouterProvider`. Using this API on a `<Route>` inside `<Routes>` will de-optimize React's ability to reuse the created element across renders.</docs-warning>
 
 ## `errorElement`/`ErrorBoundary`
 

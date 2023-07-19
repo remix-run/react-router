@@ -1,5 +1,4 @@
 {
-  "include": ["src", "types"],
   "compilerOptions": {
     "baseUrl": ".",
     "target": "ESNext",
@@ -15,7 +14,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "importsNotUsedAsValues": "error"
-  }
+  },
+  "include": ["./src", "./types"]
 }

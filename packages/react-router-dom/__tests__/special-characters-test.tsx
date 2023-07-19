@@ -828,19 +828,8 @@ describe("special character tests", () => {
     });
 
     describe("browser routers", () => {
-      let testWindow: Window;
-
-      beforeEach(() => {
-        // Need to use our own custom DOM in order to get a working history
-        const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-          url: "https://remix.run/",
-        });
-        testWindow = dom.window as unknown as Window;
-        testWindow.history.pushState({}, "", "/");
-      });
-
       it("encodes characters in BrowserRouter", () => {
-        testWindow.history.replaceState(null, "", "/with space");
+        let testWindow = getWindow("/with space");
 
         let ctx = render(
           <BrowserRouter window={testWindow}>
@@ -857,7 +846,7 @@ describe("special character tests", () => {
       });
 
       it("encodes characters in BrowserRouter (navigate)", () => {
-        testWindow.history.replaceState(null, "", "/");
+        let testWindow = getWindow("/");
 
         function Start() {
           let navigate = useNavigate();
@@ -882,7 +871,7 @@ describe("special character tests", () => {
       });
 
       it("encodes characters in createBrowserRouter", () => {
-        testWindow.history.replaceState(null, "", "/with space");
+        let testWindow = getWindow("/with space");
 
         let router = createBrowserRouter(
           [{ path: "/with space", element: <ShowPath /> }],
@@ -897,7 +886,7 @@ describe("special character tests", () => {
       });
 
       it("encodes characters in createBrowserRouter (navigate)", () => {
-        testWindow.history.replaceState(null, "", "/with space");
+        let testWindow = getWindow("/");
 
         function Start() {
           let navigate = useNavigate();
@@ -923,19 +912,8 @@ describe("special character tests", () => {
     });
 
     describe("hash routers", () => {
-      let testWindow: Window;
-
-      beforeEach(() => {
-        // Need to use our own custom DOM in order to get a working history
-        const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
-          url: "https://remix.run/",
-        });
-        testWindow = dom.window as unknown as Window;
-        testWindow.history.pushState({}, "", "/");
-      });
-
       it("encodes characters in HashRouter", () => {
-        testWindow.history.replaceState(null, "", "/#/with space");
+        let testWindow = getWindow("/#/with space");
 
         let ctx = render(
           <HashRouter window={testWindow}>
@@ -953,7 +931,7 @@ describe("special character tests", () => {
       });
 
       it("encodes characters in HashRouter (navigate)", () => {
-        testWindow.history.replaceState(null, "", "/");
+        let testWindow = getWindow("/");
 
         function Start() {
           let navigate = useNavigate();
@@ -979,7 +957,7 @@ describe("special character tests", () => {
       });
 
       it("encodes characters in createHashRouter", () => {
-        testWindow.history.replaceState(null, "", "/#/with space");
+        let testWindow = getWindow("/#/with space");
 
         let router = createHashRouter(
           [{ path: "/with space", element: <ShowPath /> }],
@@ -995,7 +973,7 @@ describe("special character tests", () => {
       });
 
       it("encodes characters in createHashRouter (navigate)", () => {
-        testWindow.history.replaceState(null, "", "/");
+        let testWindow = getWindow("/");
 
         function Start() {
           let navigate = useNavigate();
@@ -1022,3 +1000,13 @@ describe("special character tests", () => {
     });
   });
 });
+
+function getWindow(initialPath) {
+  // Need to use our own custom DOM in order to get a working history
+  const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`, {
+    url: "https://remix.run/",
+  });
+  let testWindow = dom.window as unknown as Window;
+  testWindow.history.pushState({}, "", initialPath);
+  return testWindow;
+}

@@ -1,8 +1,12 @@
-import type { FormEncType, FormMethod } from "@remix-run/router";
-import type { RelativeRoutingType } from "react-router";
+import type {
+  FormEncType,
+  HTMLFormMethod,
+  RelativeRoutingType,
+} from "@remix-run/router";
+import { stripBasename, UNSAFE_warning as warning } from "@remix-run/router";
 
-export const defaultMethod = "get";
-const defaultEncType = "application/x-www-form-urlencoded";
+export const defaultMethod: HTMLFormMethod = "get";
+const defaultEncType: FormEncType = "application/x-www-form-urlencoded";
 
 export function isHtmlElement(object: any): object is HTMLElement {
   return object != null && typeof object.tagName === "string";
@@ -93,16 +97,57 @@ export function getSearchParamsForLocation(
   let searchParams = createSearchParams(locationSearch);
 
   if (defaultSearchParams) {
-    for (let key of defaultSearchParams.keys()) {
+    // Use `defaultSearchParams.forEach(...)` here instead of iterating of
+    // `defaultSearchParams.keys()` to work-around a bug in Firefox related to
+    // web extensions. Relevant Bugzilla tickets:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1414602
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1023984
+    defaultSearchParams.forEach((_, key) => {
       if (!searchParams.has(key)) {
         defaultSearchParams.getAll(key).forEach((value) => {
           searchParams.append(key, value);
         });
       }
-    }
+    });
   }
 
   return searchParams;
+}
+
+// Thanks https://github.com/sindresorhus/type-fest!
+type JsonObject = { [Key in string]: JsonValue } & {
+  [Key in string]?: JsonValue | undefined;
+};
+type JsonArray = JsonValue[] | readonly JsonValue[];
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+
+export type SubmitTarget =
+  | HTMLFormElement
+  | HTMLButtonElement
+  | HTMLInputElement
+  | FormData
+  | URLSearchParams
+  | JsonValue
+  | null;
+
+// One-time check for submitter support
+let _formDataSupportsSubmitter: boolean | null = null;
+
+function isFormDataSubmitterSupported() {
+  if (_formDataSupportsSubmitter === null) {
+    try {
+      new FormData(
+        document.createElement("form"),
+        // @ts-expect-error if FormData supports the submitter parameter, this will throw
+        0
+      );
+      _formDataSupportsSubmitter = false;
+    } catch (e) {
+      _formDataSupportsSubmitter = true;
+    }
+  }
+  return _formDataSupportsSubmitter;
 }
 
 export interface SubmitOptions {
@@ -110,19 +155,16 @@ export interface SubmitOptions {
    * The HTTP method used to submit the form. Overrides `<form method>`.
    * Defaults to "GET".
    */
-  method?: FormMethod;
+  method?: HTMLFormMethod;
 
   /**
    * The action URL path used to submit the form. Overrides `<form action>`.
    * Defaults to the path of the current route.
-   *
-   * Note: It is assumed the path is already resolved. If you need to resolve a
-   * relative path, use `useFormAction`.
    */
   action?: string;
 
   /**
-   * The action URL used to submit the form. Overrides `<form encType>`.
+   * The encoding used to submit the form. Overrides `<form encType>`.
    * Defaults to "application/x-www-form-urlencoded".
    */
   encType?: FormEncType;
@@ -133,6 +175,11 @@ export interface SubmitOptions {
    * to `false`.
    */
   replace?: boolean;
+
+  /**
+   * State object to add to the history stack entry for this navigation
+   */
+  state?: any;
 
   /**
    * Determines whether the form action is relative to the route hierarchy or
@@ -148,43 +195,51 @@ export interface SubmitOptions {
   preventScrollReset?: boolean;
 }
 
+const supportedFormEncTypes: Set<FormEncType> = new Set([
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+  "text/plain",
+]);
+
+function getFormEncType(encType: string | null) {
+  if (encType != null && !supportedFormEncTypes.has(encType as FormEncType)) {
+    warning(
+      false,
+      `"${encType}" is not a valid \`encType\` for \`<Form>\`/\`<fetcher.Form>\` ` +
+        `and will default to "${defaultEncType}"`
+    );
+
+    return null;
+  }
+  return encType;
+}
+
 export function getFormSubmissionInfo(
-  target:
-    | HTMLFormElement
-    | HTMLButtonElement
-    | HTMLInputElement
-    | FormData
-    | URLSearchParams
-    | { [name: string]: string }
-    | null,
-  defaultAction: string,
-  options: SubmitOptions
+  target: SubmitTarget,
+  basename: string
 ): {
-  url: URL;
+  action: string | null;
   method: string;
   encType: string;
-  formData: FormData;
+  formData: FormData | undefined;
+  body: any;
 } {
   let method: string;
-  let action: string;
+  let action: string | null;
   let encType: string;
-  let formData: FormData;
+  let formData: FormData | undefined;
+  let body: any;
 
   if (isFormElement(target)) {
-    let submissionTrigger: HTMLButtonElement | HTMLInputElement = (
-      options as any
-    ).submissionTrigger;
-
-    method = options.method || target.getAttribute("method") || defaultMethod;
-    action = options.action || target.getAttribute("action") || defaultAction;
-    encType =
-      options.encType || target.getAttribute("enctype") || defaultEncType;
+    // When grabbing the action from the element, it will have had the basename
+    // prefixed to ensure non-JS scenarios work, so strip it since we'll
+    // re-prefix in the router
+    let attr = target.getAttribute("action");
+    action = attr ? stripBasename(attr, basename) : null;
+    method = target.getAttribute("method") || defaultMethod;
+    encType = getFormEncType(target.getAttribute("enctype")) || defaultEncType;
 
     formData = new FormData(target);
-
-    if (submissionTrigger && submissionTrigger.name) {
-      formData.append(submissionTrigger.name, submissionTrigger.value);
-    }
   } else if (
     isButtonElement(target) ||
     (isInputElement(target) &&
@@ -200,28 +255,37 @@ export function getFormSubmissionInfo(
 
     // <button>/<input type="submit"> may override attributes of <form>
 
+    // When grabbing the action from the element, it will have had the basename
+    // prefixed to ensure non-JS scenarios work, so strip it since we'll
+    // re-prefix in the router
+    let attr = target.getAttribute("formaction") || form.getAttribute("action");
+    action = attr ? stripBasename(attr, basename) : null;
+
     method =
-      options.method ||
       target.getAttribute("formmethod") ||
       form.getAttribute("method") ||
       defaultMethod;
-    action =
-      options.action ||
-      target.getAttribute("formaction") ||
-      form.getAttribute("action") ||
-      defaultAction;
     encType =
-      options.encType ||
-      target.getAttribute("formenctype") ||
-      form.getAttribute("enctype") ||
+      getFormEncType(target.getAttribute("formenctype")) ||
+      getFormEncType(form.getAttribute("enctype")) ||
       defaultEncType;
 
-    formData = new FormData(form);
+    // Build a FormData object populated from a form and submitter
+    formData = new FormData(form, target);
 
-    // Include name + value from a <button>, appending in case the button name
-    // matches an existing input name
-    if (target.name) {
-      formData.append(target.name, target.value);
+    // If this browser doesn't support the `FormData(el, submitter)` format,
+    // then tack on the submitter value at the end.  This is a lightweight
+    // solution that is not 100% spec compliant.  For complete support in older
+    // browsers, consider using the `formdata-submitter-polyfill` package
+    if (!isFormDataSubmitterSupported()) {
+      let { name, type, value } = target;
+      if (type === "image") {
+        let prefix = name ? `${name}.` : "";
+        formData.append(`${prefix}x`, "0");
+        formData.append(`${prefix}y`, "0");
+      } else if (name) {
+        formData.append(name, value);
+      }
     }
   } else if (isHtmlElement(target)) {
     throw new Error(
@@ -229,29 +293,17 @@ export function getFormSubmissionInfo(
         `<input type="submit|image">`
     );
   } else {
-    method = options.method || defaultMethod;
-    action = options.action || defaultAction;
-    encType = options.encType || defaultEncType;
-
-    if (target instanceof FormData) {
-      formData = target;
-    } else {
-      formData = new FormData();
-
-      if (target instanceof URLSearchParams) {
-        for (let [name, value] of target) {
-          formData.append(name, value);
-        }
-      } else if (target != null) {
-        for (let name of Object.keys(target)) {
-          formData.append(name, target[name]);
-        }
-      }
-    }
+    method = defaultMethod;
+    action = null;
+    encType = defaultEncType;
+    body = target;
   }
 
-  let { protocol, host } = window.location;
-  let url = new URL(action, `${protocol}//${host}`);
+  // Send body for <Form encType="text/plain" so we encode it into text
+  if (formData && encType === "text/plain") {
+    body = formData;
+    formData = undefined;
+  }
 
-  return { url, method: method.toLowerCase(), encType, formData };
+  return { action, method: method.toLowerCase(), encType, formData, body };
 }
