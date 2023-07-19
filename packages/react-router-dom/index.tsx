@@ -1465,7 +1465,7 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
     if (blocker.state === "blocked") {
       let proceed = window.confirm(message);
       if (proceed) {
-        blocker.proceed();
+        setTimeout(blocker.proceed, 0);
       } else {
         blocker.reset();
       }
