@@ -1500,6 +1500,8 @@ export function createRouter(init: RouterInit): Router {
         (matchesToLoad && matchesToLoad.some((m) => m.route.id === routeId))
     );
 
+    pendingNavigationLoadId = ++incrementingLoadId;
+
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
       let updatedFetchers = markFetchRedirectsDone();
@@ -1541,7 +1543,6 @@ export function createRouter(init: RouterInit): Router {
       });
     }
 
-    pendingNavigationLoadId = ++incrementingLoadId;
     revalidatingFetchers.forEach((rf) => {
       if (fetchControllers.has(rf.key)) {
         abortFetcher(rf.key);
@@ -2799,7 +2800,7 @@ export function createStaticHandler(
       // it to bail out and then return or throw here based on whether the user
       // returned or threw
       if (isQueryRouteResponse(e)) {
-        if (e.type === ResultType.error && !isRedirectResponse(e.response)) {
+        if (e.type === ResultType.error) {
           throw e.response;
         }
         return e.response;
@@ -3752,11 +3753,12 @@ async function callLoaderOrAction(
     // without unwrapping.  We do this with the QueryRouteResponse wrapper
     // interface so we can know whether it was returned or thrown
     if (opts.isRouteRequest) {
-      // eslint-disable-next-line no-throw-literal
-      throw {
-        type: resultType || ResultType.data,
+      let queryRouteResponse: QueryRouteResponse = {
+        type:
+          resultType === ResultType.error ? ResultType.error : ResultType.data,
         response: result,
       };
+      throw queryRouteResponse;
     }
 
     let data: any;
@@ -4231,7 +4233,7 @@ function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
   return (
     obj &&
     isResponse(obj.response) &&
-    (obj.type === ResultType.data || ResultType.error)
+    (obj.type === ResultType.data || obj.type === ResultType.error)
   );
 }
 

@@ -821,10 +821,13 @@ export function useNavigation() {
 export function useRevalidator() {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
   let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
-  return {
-    revalidate: dataRouterContext.router.revalidate,
-    state: state.revalidation,
-  };
+  return React.useMemo(
+    () => ({
+      revalidate: dataRouterContext.router.revalidate,
+      state: state.revalidation,
+    }),
+    [dataRouterContext.router.revalidate, state.revalidation]
+  );
 }
 
 /**

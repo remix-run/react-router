@@ -10,7 +10,9 @@ import {
   createMemoryRouter,
   useLocation,
 } from "react-router";
-import { prettyDOM, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+
+import getHtml from "../../react-router/__tests__/utils/getHtml";
 
 describe("<Navigate>", () => {
   describe("with an absolute href", () => {
@@ -1153,9 +1155,3 @@ describe("concurrent mode", () => {
     });
   });
 });
-
-function getHtml(container: HTMLElement) {
-  return prettyDOM(container, undefined, {
-    highlight: false,
-  });
-}

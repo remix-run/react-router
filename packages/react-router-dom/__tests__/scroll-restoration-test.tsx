@@ -1,6 +1,6 @@
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import { render, prettyDOM, fireEvent, screen } from "@testing-library/react";
+import { render, fireEvent, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import {
   Link,
@@ -9,6 +9,8 @@ import {
   ScrollRestoration,
   createBrowserRouter,
 } from "react-router-dom";
+
+import getHtml from "../../react-router/__tests__/utils/getHtml";
 
 describe(`ScrollRestoration`, () => {
   it("removes the basename from the location provided to getKey", () => {
@@ -69,17 +71,4 @@ function getWindowImpl(initialUrl: string): Window {
   const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
   dom.window.history.replaceState(null, "", initialUrl);
   return dom.window as unknown as Window;
-}
-
-function getHtml(container: HTMLElement) {
-  return prettyDOM(container, undefined, {
-    highlight: false,
-    theme: {
-      comment: null,
-      content: null,
-      prop: null,
-      tag: null,
-      value: null,
-    },
-  });
 }

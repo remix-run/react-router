@@ -129,29 +129,6 @@ function invariant(value: any, message?: string) {
   }
 }
 
-function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
-      res(val);
-      await tick();
-      await promise;
-    };
-    reject = async (error?: Error) => {
-      rej(error);
-      await promise.catch(() => tick());
-    };
-  });
-  return {
-    promise,
-    //@ts-ignore
-    resolve,
-    //@ts-ignore
-    reject,
-  };
-}
-
 function createFormData(obj: Record<string, string>): FormData {
   let formData = new FormData();
   Object.entries(obj).forEach((e) => formData.append(e[0], e[1]));
@@ -4972,8 +4949,7 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "head",
-        // @ts-expect-error
-        formData: formData,
+        formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location).toMatchObject({
@@ -5013,7 +4989,6 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "options",
-        // @ts-expect-error
         formData: formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
@@ -10100,6 +10075,54 @@ describe("a router", () => {
               root: "ROOT*",
               bar: "BAR",
             },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        });
+
+        it("ignores submission redirect navigation if preceded by a normal GET navigation (w/o loaders)", async () => {
+          let key = "key";
+          let t = setup({
+            routes: [
+              {
+                path: "",
+                id: "root",
+                children: [
+                  {
+                    path: "/",
+                    id: "index",
+                  },
+                  {
+                    path: "/foo",
+                    id: "foo",
+                    action: true,
+                  },
+                  {
+                    path: "/bar",
+                    id: "bar",
+                  },
+                  {
+                    path: "/baz",
+                    id: "baz",
+                  },
+                ],
+              },
+            ],
+          });
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await t.navigate("/bar");
+
+          // This redirect should be ignored
+          await A.actions.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {},
           });
           expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
           expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
@@ -16213,6 +16236,46 @@ describe("a router", () => {
         expect(await data.json()).toEqual({ key: "value" });
       });
 
+      it("should not unwrap responses thrown from loaders", async () => {
+        let response = json({ key: "value" });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject(response),
+          },
+        ]);
+        let request = createRequest("/");
+        let data;
+        try {
+          await queryRoute(request, { routeId: "root" });
+        } catch (e) {
+          data = e;
+        }
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
+      });
+
+      it("should not unwrap responses thrown from actions", async () => {
+        let response = json({ key: "value" });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            action: () => Promise.reject(response),
+          },
+        ]);
+        let request = createSubmitRequest("/");
+        let data;
+        try {
+          await queryRoute(request, { routeId: "root" });
+        } catch (e) {
+          data = e;
+        }
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
+      });
+
       it("should handle aborted load requests", async () => {
         let dfd = createDeferred();
         let controller = new AbortController();
@@ -17460,3 +17523,28 @@ describe("a router", () => {
     });
   });
 });
+
+// We use a slightly modified version of createDeferred here that incoudes the
+// tick() calls to let the router finish updating
+function createDeferred() {
+  let resolve: (val?: any) => Promise<void>;
+  let reject: (error?: Error) => Promise<void>;
+  let promise = new Promise((res, rej) => {
+    resolve = async (val: any) => {
+      res(val);
+      await tick();
+      await promise;
+    };
+    reject = async (error?: Error) => {
+      rej(error);
+      await promise.catch(() => tick());
+    };
+  });
+  return {
+    promise,
+    //@ts-ignore
+    resolve,
+    //@ts-ignore
+    reject,
+  };
+}
