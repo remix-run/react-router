@@ -2119,13 +2119,11 @@ export function createRouter(init: RouterInit): Router {
         isDocumentReload = true;
       } else if (ABSOLUTE_URL_REGEX.test(redirect.location)) {
         const url = init.history.createURL(redirect.location);
-        if (url.origin !== routerWindow.location.origin) {
+        isDocumentReload =
           // Hard reload if it's an absolute URL to a new origin
-          isDocumentReload = true;
-        } else {
+          url.origin !== routerWindow.location.origin ||
           // Hard reload if it's an absolute URL that does not match our basename
-          isDocumentReload = stripBasename(url.pathname, basename) == null;
-        }
+          stripBasename(url.pathname, basename) == null;
       }
 
       if (isDocumentReload) {
