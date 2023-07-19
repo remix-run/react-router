@@ -2789,7 +2789,7 @@ export function createStaticHandler(
       // it to bail out and then return or throw here based on whether the user
       // returned or threw
       if (isQueryRouteResponse(e)) {
-        if (e.type === ResultType.error && !isRedirectResponse(e.response)) {
+        if (e.type === ResultType.error) {
           throw e.response;
         }
         return e.response;
@@ -3741,11 +3741,11 @@ async function callLoaderOrAction(
     // without unwrapping.  We do this with the QueryRouteResponse wrapper
     // interface so we can know whether it was returned or thrown
     if (opts.isRouteRequest) {
-      // eslint-disable-next-line no-throw-literal
-      throw {
+      let queryRouteResponse: QueryRouteResponse = {
         type: resultType || ResultType.data,
         response: result,
       };
+      throw queryRouteResponse;
     }
 
     let data: any;

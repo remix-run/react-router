@@ -16230,6 +16230,46 @@ describe("a router", () => {
         expect(await data.json()).toEqual({ key: "value" });
       });
 
+      it("should not unwrap responses thrown from loaders", async () => {
+        let response = json({ key: "value" });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject(response),
+          },
+        ]);
+        let request = createRequest("/");
+        let data;
+        try {
+          await queryRoute(request, { routeId: "root" });
+        } catch (e) {
+          data = e;
+        }
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
+      });
+
+      it("should not unwrap responses thrown from actions", async () => {
+        let response = json({ key: "value" });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            action: () => Promise.reject(response),
+          },
+        ]);
+        let request = createSubmitRequest("/");
+        let data;
+        try {
+          await queryRoute(request, { routeId: "root" });
+        } catch (e) {
+          data = e;
+        }
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
+      });
+
       it("should handle aborted load requests", async () => {
         let dfd = createDeferred();
         let controller = new AbortController();
