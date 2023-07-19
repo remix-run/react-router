@@ -1,12 +1,12 @@
 ---
-title: Modal
+title: Outlet Modal
 toc: false
 ---
 
-# Modal Example
+# Outlet Modal Example
 
 ## Preview
 
 Open this example on [StackBlitz](https://stackblitz.com):
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/modal?file=src/App.tsx)
+[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router/tree/main/examples/modal-route-with-outlet?file=src/App.tsx)

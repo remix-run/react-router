@@ -2,21 +2,51 @@ import * as React from "react";
 import {
   Outlet,
   Link,
-  useLocation,
   useNavigate,
   useParams,
+  RouterProvider,
+  createBrowserRouter,
 } from "react-router-dom";
 import { Dialog } from "@reach/dialog";
 import "@reach/dialog/styles.css";
 
 import { IMAGES, getImageById } from "./images";
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    Component: Layout,
+    children: [
+      {
+        path: "/",
+        Component: Home,
+      },
+      {
+        path: "gallery",
+        Component: Gallery,
+        children: [
+          {
+            path: "img/:id",
+            Component: ImageView,
+          },
+        ],
+      },
+    ],
+  },
+]);
+
 export default function App() {
+  return <RouterProvider router={router} />;
+}
+
+export function Layout() {
   return (
     <div>
-      <h1>Modal Example</h1>
+      <h1>Outlet Modal Example</h1>
       <p>
-        This is a modal example using createBrowserRouter. The modal is a child route of its parent and renders in the outlet. 
+        This is a modal example using createBrowserRouter that drives modal
+        displays through URL segments. The modal is a child route of its parent
+        and renders in the Outlet.
       </p>
       <div>
         <nav>
@@ -40,19 +70,24 @@ export function Home() {
   return (
     <div>
       <h2>Home</h2>
-      <p>I added the home route to give the router a more relastic feel, checkout the <Link to="/gallery">Gallery</Link> to see the modal in action</p>
+      <p>
+        Click over to the <Link to="/gallery">Gallery</Link> route to see the
+        modal in action
+      </p>
       <Outlet />
     </div>
   );
 }
 
 export function Gallery() {
-  let location = useLocation();
-
   return (
     <div style={{ padding: "0 24px" }}>
       <h2>Gallery</h2>
-      <p>Click on an image, you'll notice that you still see this route behinde the modal. The URL will also change as its a child route of <pre style={{display: "inline"}}>/gallery</pre> </p>
+      <p>
+        Click on an image, you'll notice that you still see this route behind
+        the modal. The URL will also change as its a child route of{" "}
+        <pre style={{ display: "inline" }}>/gallery</pre>{" "}
+      </p>
       <div
         style={{
           display: "grid",
@@ -61,10 +96,7 @@ export function Gallery() {
         }}
       >
         {IMAGES.map((image) => (
-          <Link
-            key={image.id}
-            to={`img/${image.id}`}
-          >
+          <Link key={image.id} to={`img/${image.id}`}>
             <img
               width={200}
               height={200}
@@ -95,7 +127,9 @@ export function ImageView() {
     navigate(-1);
   }
 
-  if (!image) return null;
+  if (!image) {
+    throw new Error(`No image found with id: ${id}`);
+  }
 
   return (
     <Dialog
@@ -134,16 +168,5 @@ export function ImageView() {
         </button>
       </div>
     </Dialog>
-  );
-}
-
-function NoMatch() {
-  return (
-    <div>
-      <h2>Nothing to see here!</h2>
-      <p>
-        <Link to="/">Go to the home page</Link>
-      </p>
-    </div>
   );
 }
