@@ -129,29 +129,6 @@ function invariant(value: any, message?: string) {
   }
 }
 
-function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
-      res(val);
-      await tick();
-      await promise;
-    };
-    reject = async (error?: Error) => {
-      rej(error);
-      await promise.catch(() => tick());
-    };
-  });
-  return {
-    promise,
-    //@ts-ignore
-    resolve,
-    //@ts-ignore
-    reject,
-  };
-}
-
 function createFormData(obj: Record<string, string>): FormData {
   let formData = new FormData();
   Object.entries(obj).forEach((e) => formData.append(e[0], e[1]));
@@ -4972,8 +4949,7 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "head",
-        // @ts-expect-error
-        formData: formData,
+        formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location).toMatchObject({
@@ -5013,7 +4989,6 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "options",
-        // @ts-expect-error
         formData: formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
@@ -17517,3 +17492,28 @@ describe("a router", () => {
     });
   });
 });
+
+// We use a slightly modified version of createDeferred here that incoudes the
+// tick() calls to let the router finish updating
+function createDeferred() {
+  let resolve: (val?: any) => Promise<void>;
+  let reject: (error?: Error) => Promise<void>;
+  let promise = new Promise((res, rej) => {
+    resolve = async (val: any) => {
+      res(val);
+      await tick();
+      await promise;
+    };
+    reject = async (error?: Error) => {
+      rej(error);
+      await promise.catch(() => tick());
+    };
+  });
+  return {
+    promise,
+    //@ts-ignore
+    resolve,
+    //@ts-ignore
+    reject,
+  };
+}
