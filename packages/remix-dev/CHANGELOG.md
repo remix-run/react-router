@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 1.19.0-pre.5
+
+### Minor Changes
+
+- [REMOVE] Remove boolean option from serverNodeBuiltinsPolyfill, and revert to "empty" polyfill for `fs`/`fs/promises` and `crypto` modules ([#6877](https://github.com/remix-run/remix/pull/6877))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.19.0-pre.5`
+
 ## 1.19.0-pre.4
 
 ### Minor Changes
