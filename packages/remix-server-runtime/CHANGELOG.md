@@ -1,37 +1,21 @@
 # `@remix-run/server-runtime`
 
-## 1.19.0-pre.5
-
-## 1.19.0-pre.4
-
-## 1.19.0-pre.3
-
-### Patch Changes
-
-- Bump RR 6.14.2 ([#6854](https://github.com/remix-run/remix/pull/6854))
-
-## 1.19.0-pre.2
-
-### Patch Changes
-
-- Bump router 6.14.2-pre.1 ([#6852](https://github.com/remix-run/remix/pull/6852))
-
-## 1.19.0-pre.1
-
-## 1.19.0-pre.0
+## 1.19.0
 
 ### Minor Changes
 
-- improved networking options for v2_dev ([#6724](https://github.com/remix-run/remix/pull/6724))
+- improved networking options for `v2_dev` ([#6724](https://github.com/remix-run/remix/pull/6724))
 
   deprecate the `--scheme` and `--host` options and replace them with the `REMIX_DEV_ORIGIN` environment variable
 
 ### Patch Changes
 
-- Bump `react-router-dom@6.14.2-pre.0` ([#6812](https://github.com/remix-run/remix/pull/6812))
 - Properly handle `?_data` HTTP/Network errors that don't reach the Remix server and ensure they bubble to the `ErrorBoundary` ([#6783](https://github.com/remix-run/remix/pull/6783))
 - Support proper hydration of `Error` subclasses such as `ReferenceError`/`TypeError` in development mode ([#6675](https://github.com/remix-run/remix/pull/6675))
 - Properly return a 404 for a `?_data` request that doesn't match routes ([#6820](https://github.com/remix-run/remix/pull/6820))
+- Bump RR 6.14.2 ([#6854](https://github.com/remix-run/remix/pull/6854))
+- Updated dependencies:
+  - [`@remix-run/router@1.7.2`](https://github.com/remix-run/react-router/blob/main/packages/router/CHANGELOG.md#172)
 
 ## 1.18.1
 

@@ -1,54 +1,10 @@
 # `@remix-run/dev`
 
-## 1.19.0-pre.5
+## 1.19.0
 
 ### Minor Changes
 
-- [REMOVE] Remove boolean option from serverNodeBuiltinsPolyfill, and revert to "empty" polyfill for `fs`/`fs/promises` and `crypto` modules ([#6877](https://github.com/remix-run/remix/pull/6877))
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.19.0-pre.5`
-
-## 1.19.0-pre.4
-
-### Minor Changes
-
-- [REMOVE] Change serverNodeBuiltinsPolyfill to suport object format ([#6859](https://github.com/remix-run/remix/pull/6859))
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.19.0-pre.4`
-
-## 1.19.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.19.0-pre.3`
-
-## 1.19.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.19.0-pre.2`
-
-## 1.19.0-pre.1
-
-### Patch Changes
-
-- Always rewrite css-derived assets during builds ([#6837](https://github.com/remix-run/remix/pull/6837))
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.19.0-pre.1`
-
-## 1.19.0-pre.0
-
-### Minor Changes
-
-- improved networking options for v2_dev ([#6724](https://github.com/remix-run/remix/pull/6724))
+- improved networking options for `v2_dev` ([#6724](https://github.com/remix-run/remix/pull/6724))
 
   deprecate the `--scheme` and `--host` options and replace them with the `REMIX_DEV_ORIGIN` environment variable
 
@@ -60,21 +16,38 @@
   - `metafile.js.json` (browser JS)
   - `metafile.server.json` (server JS)
 
-  Metafiles can be uploaded to https://esbuild.github.io/analyze/ for analysis.
+  Metafiles can be uploaded to <https://esbuild.github.io/analyze/> for analysis.
 
-- Add `serverNodeBuiltinsPolyfill` config option. You can now disable polyfills of Node.js built-in modules for non-Node.js server platforms by setting `serverNodeBuiltinsPolyfill: false` in `remix.config.js`. You can also provide a list of server polyfills, e.g. `serverNodeBuiltinsPolyfill: ["crypto"]`. ([#6814](https://github.com/remix-run/remix/pull/6814))
+- Add `serverNodeBuiltinsPolyfill` config option. In `remix.config.js` you can now disable polyfills of Node.js built-in modules for non-Node.js server platforms, or opt into a subset of polyfills. ([#6814](https://github.com/remix-run/remix/pull/6814), [#6859](https://github.com/remix-run/remix/pull/6859), [#6877](https://github.com/remix-run/remix/pull/6877))
+
+  ```js
+  // Disable all polyfills
+  exports.serverNodeBuiltinsPolyfill = { modules: {} };
+
+  // Enable specific polyfills
+  exports.serverNodeBuiltinsPolyfill = {
+    modules: {
+      crypto: true, // Provide a JSPM polyfill
+      fs: "empty", // Provide an empty polyfill
+    },
+  };
+  ```
 
 ### Patch Changes
 
-- Exclude unimplemented polyfills from server build for non-Node.js server platforms ([#6814](https://github.com/remix-run/remix/pull/6814))
 - ignore missing react-dom/client for react 17 ([#6725](https://github.com/remix-run/remix/pull/6725))
-- Warn if not using v2_dev ([#6818](https://github.com/remix-run/remix/pull/6818))
+
+- Warn if not using `v2_dev` ([#6818](https://github.com/remix-run/remix/pull/6818))
 
   Also, rename `--no-restart` to `--manual` to match intention and documentation.
   `--no-restart` remains an alias for `--manual` in v1 for backwards compatibility.
 
 - ignore errors when killing already dead processes ([#6773](https://github.com/remix-run/remix/pull/6773))
-- fix sourcemaps for v2_dev ([#6762](https://github.com/remix-run/remix/pull/6762))
+
+- Always rewrite css-derived assets during builds ([#6837](https://github.com/remix-run/remix/pull/6837))
+
+- fix sourcemaps for `v2_dev` ([#6762](https://github.com/remix-run/remix/pull/6762))
+
 - Do not clear screen when dev server starts ([#6719](https://github.com/remix-run/remix/pull/6719))
 
   On some terminal emulators, "clearing" only scrolls the next line to the
@@ -84,8 +57,7 @@
   they want to clear.
 
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.19.0-pre.0`
-  - `@remix-run/serve@1.19.0-pre.0`
+  - `@remix-run/server-runtime@1.19.0`
 
 ## 1.18.1
 
