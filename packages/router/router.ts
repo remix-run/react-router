@@ -3742,7 +3742,8 @@ async function callLoaderOrAction(
     // interface so we can know whether it was returned or thrown
     if (opts.isRouteRequest) {
       let queryRouteResponse: QueryRouteResponse = {
-        type: resultType || ResultType.data,
+        type:
+          resultType === ResultType.error ? ResultType.error : ResultType.data,
         response: result,
       };
       throw queryRouteResponse;
