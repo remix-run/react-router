@@ -66,7 +66,6 @@ describe("readConfig", () => {
           },
         },
         "serverBuildPath": Any<String>,
-        "serverBuildTarget": "node-cjs",
         "serverBuildTargetEntryModule": "export * from \\"@remix-run/dev/server-build\\";",
         "serverConditions": undefined,
         "serverDependenciesToBundle": Array [],
