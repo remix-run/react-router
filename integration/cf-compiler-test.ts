@@ -180,7 +180,6 @@ test.describe("cloudflare compiler", () => {
   // TODO: remove this when we get rid of that feature.
   test("magic imports still works", async () => {
     let magicExportsForNode = [
-      "createCloudflareKVSessionStorage",
       "createCookie",
       "createCookieSessionStorage",
       "createMemorySessionStorage",
