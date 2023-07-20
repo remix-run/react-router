@@ -29,7 +29,6 @@ export interface FutureConfig {
   v2_errorBoundary: boolean;
   v2_headers: boolean;
   v2_meta: boolean;
-  v2_normalizeFormMethod: boolean;
   v2_routeConvention: boolean;
 }
 

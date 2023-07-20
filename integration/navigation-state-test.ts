@@ -31,11 +31,6 @@ test.describe("navigation states", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: {
-          v2_normalizeFormMethod: true,
-        },
-      },
       files: {
         "app/root.jsx": js`
           import { useMemo, useRef } from "react";
