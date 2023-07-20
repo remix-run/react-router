@@ -128,14 +128,6 @@ export interface AppConfig {
   server?: string;
 
   /**
-   * The path to the server build, relative to `remix.config.js`. Defaults to
-   * "build".
-   *
-   * @deprecated Use {@link AppConfig.serverBuildPath} instead.
-   */
-  serverBuildDirectory?: string;
-
-  /**
    * The path to the server build file, relative to `remix.config.js`. This file
    * should end in a `.js` extension and should be deployed to your server.
    */
@@ -429,7 +421,10 @@ export async function readConfig(
     headersWarning();
   }
 
-  let serverBuildPath = resolveServerBuildPath(rootDirectory, appConfig);
+  let serverBuildPath = path.resolve(
+    rootDirectory,
+    appConfig.serverBuildPath ?? "build/index.js"
+  );
   let serverBuildTargetEntryModule = `export * from ${JSON.stringify(
     serverBuildVirtualModule.id
   )};`;
@@ -882,26 +877,6 @@ export function findConfig(
   return undefined;
 }
 
-const resolveServerBuildPath = (
-  rootDirectory: string,
-  appConfig: AppConfig
-) => {
-  let serverBuildPath = "build/index.js";
-
-  // retain deprecated behavior for now
-  if (appConfig.serverBuildDirectory) {
-    serverBuildDirectoryWarning();
-
-    serverBuildPath = path.join(appConfig.serverBuildDirectory, "index.js");
-  }
-
-  if (appConfig.serverBuildPath) {
-    serverBuildPath = appConfig.serverBuildPath;
-  }
-
-  return path.resolve(rootDirectory, serverBuildPath);
-};
-
 // adds types for `Intl.ListFormat` to the global namespace
 // we could also update our `tsconfig.json` to include `lib: ["es2021"]`
 declare namespace Intl {
@@ -938,18 +913,6 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "disjunction",
 });
-
-let serverBuildDirectoryWarning = () =>
-  logger.warn(
-    "The `serverBuildDirectory` config option will be removed in v2",
-    {
-      details: [
-        "You can use the `serverBuildPath` config option instead.",
-        "-> https://remix.run/docs/en/v1.15.0/pages/v2#serverbuilddirectory",
-      ],
-      key: "serverBuildDirectoryWarning",
-    }
-  );
 
 let serverModuleFormatWarning = () =>
   logger.warn("The default server module format is changing in v2", {
