@@ -4,25 +4,24 @@ import { blue, yellow } from "../colors";
 import * as git from "./utils/git";
 import * as log from "./utils/log";
 import { task } from "./utils/task";
-import type { Options } from "./codemod";
-import replaceRemixMagicImports from "./replace-remix-magic-imports";
+import type { Codemod, Options } from "./codemod";
 import { CodemodError } from "./utils/error";
 
-const codemods = {
-  "replace-remix-magic-imports": replaceRemixMagicImports,
-} as const;
+const codemods = {} as const;
+const codemodNames = Object.keys(codemods);
 
 type CodemodName = keyof typeof codemods;
 
 const isCodemodName = (maybe: string): maybe is CodemodName =>
-  Object.keys(codemods).includes(maybe);
+  codemodNames.includes(maybe);
 
-const availableCodemodsText = [
-  "Available codemods:",
-  ...Object.keys(codemods)
-    .sort()
-    .map((name) => `- ${name}`),
-].join("\n");
+const availableCodemodsText =
+  codemodNames.length === 0
+    ? "We currently don't have any codemods. Check back soon!"
+    : [
+        "Available codemods:",
+        ...codemodNames.sort().map((name) => `- ${name}`),
+      ].join("\n");
 
 export default async (
   projectDir: string,
@@ -59,7 +58,7 @@ export default async (
           availableCodemodsText
         );
       }
-      return codemods[codemodName];
+      return codemods[codemodName] as Codemod;
     },
     `Found codemod: ${blue(codemodName)}`
   );

@@ -7,7 +7,7 @@ import withApp from "./utils/withApp";
 
 jest.setTimeout(1000 * 20);
 
-let FIXTURE = path.join(__dirname, "fixtures/replace-remix-magic-imports");
+let FIXTURE = path.join(__dirname, "fixtures/indie-stack");
 
 it("checks that project is a clean git repository", async () => {
   await withApp(FIXTURE, async (projectDir) => {
