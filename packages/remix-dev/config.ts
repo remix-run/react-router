@@ -101,14 +101,6 @@ export interface AppConfig {
   assetsBuildDirectory?: string;
 
   /**
-   * The path to the browser build, relative to remix.config.js. Defaults to
-   * "public/build".
-   *
-   * @deprecated Use `{@link AppConfig.assetsBuildDirectory}` instead
-   */
-  browserBuildDirectory?: string;
-
-  /**
    * The URL prefix of the browser build with a trailing slash. Defaults to
    * `"/build/"`. This is the path the browser will use to find assets.
    */
@@ -785,14 +777,8 @@ export async function readConfig(
     ? path.resolve(appDirectory, userEntryServerFile)
     : path.resolve(defaultsDirectory, entryServerFile);
 
-  if (appConfig.browserBuildDirectory) {
-    browserBuildDirectoryWarning();
-  }
-
   let assetsBuildDirectory =
-    appConfig.assetsBuildDirectory ||
-    appConfig.browserBuildDirectory ||
-    path.join("public", "build");
+    appConfig.assetsBuildDirectory || path.join("public", "build");
 
   let absoluteAssetsBuildDirectory = path.resolve(
     rootDirectory,
@@ -1017,18 +1003,6 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "disjunction",
 });
-
-let browserBuildDirectoryWarning = () =>
-  logger.warn(
-    "The `browserBuildDirectory` config option will be removed in v2",
-    {
-      details: [
-        "You can use the `assetsBuildDirectory` config option instead.",
-        "-> https://remix.run/docs/en/v1.15.0/pages/v2#browserbuilddirectory",
-      ],
-      key: "browserBuildDirectoryWarning",
-    }
-  );
 
 let serverBuildDirectoryWarning = () =>
   logger.warn(
