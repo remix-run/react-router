@@ -221,7 +221,6 @@ test.describe("cloudflare compiler", () => {
       "useResolvedPath",
       "useSearchParams",
       "useSubmit",
-      "useTransition",
     ];
     let magicRemix = await fs.readFile(
       path.resolve(projectDir, "node_modules/remix/dist/index.js"),

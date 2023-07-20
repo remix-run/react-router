@@ -485,11 +485,11 @@ test.describe("route module link export", () => {
               { "data-test-id": "red" },
             ];
           }
-          
+
           export default function Component() {
             return <div data-test-id="/parent"><Outlet /></div>;
           }
-          
+
           export function ErrorBoundary() {
             return <h1 data-test-id="/parent:error-boundary">Error Boundary</h1>;
           }
@@ -507,7 +507,7 @@ test.describe("route module link export", () => {
               { "data-test-id": "blue" },
             ];
           }
-          
+
           export default function Component() {
             return <div data-test-id="/parent"><Outlet /></div>;
           }

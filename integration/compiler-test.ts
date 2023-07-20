@@ -357,7 +357,6 @@ test.describe("compiler", () => {
       "useResolvedPath",
       "useSearchParams",
       "useSubmit",
-      "useTransition",
     ];
     let magicRemix = await fse.readFile(
       path.resolve(fixture.projectDir, "node_modules/remix/dist/index.js"),

@@ -216,7 +216,6 @@ const exportsByRenderer: Record<Renderer, Partial<ExportNames>> = {
       "useResolvedPath",
       "useSearchParams",
       "useSubmit",
-      "useTransition",
     ],
   },
 };
