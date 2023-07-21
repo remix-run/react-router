@@ -76,9 +76,12 @@ export async function liveReload(config: RemixConfig) {
     }
   );
 
+  let heartbeat = setInterval(broadcast, 60000, { type: "PING" });
+
   exitHook(() => clean(config));
   return async () => {
     wss.close();
+    clearInterval(heartbeat);
     await dispose();
   };
 }
