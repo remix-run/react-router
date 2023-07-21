@@ -37,5 +37,12 @@ export let serve = (server: HTTPServer) => {
     broadcast({ type: "HMR", assetsManifest, updates });
   };
 
-  return { log, reload, hmr, close: wss.close };
+  let heartbeat = setInterval(broadcast, 60000, { type: "PING" });
+
+  let close = () => {
+    clearInterval(heartbeat);
+    return wss.close();
+  };
+
+  return { log, reload, hmr, close };
 };
