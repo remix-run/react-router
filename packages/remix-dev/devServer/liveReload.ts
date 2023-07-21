@@ -76,7 +76,7 @@ export async function liveReload(config: RemixConfig) {
     }
   );
 
-  const heartbeat = setInterval(broadcast, 60000, { type: "PING" });
+  let heartbeat = setInterval(broadcast, 60000, { type: "PING" });
 
   exitHook(() => clean(config));
   return async () => {
