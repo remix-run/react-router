@@ -88,7 +88,6 @@ describe("remix CLI", () => {
             $ remix dev [projectDir]
             $ remix routes [projectDir]
             $ remix watch [projectDir]
-            $ remix setup [remixPlatform]
 
           Options:
             --help, -h          Print this help message and exit

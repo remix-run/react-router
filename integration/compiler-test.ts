@@ -311,62 +311,6 @@ test.describe("compiler", () => {
     expect(fontFile).toBeTruthy();
   });
 
-  // TODO: remove this when we get rid of that feature.
-  test("magic imports still works", async () => {
-    let magicExportsForNode = [
-      "createCookie",
-      "createCookieSessionStorage",
-      "createFileSessionStorage",
-      "createMemorySessionStorage",
-      "createSessionStorage",
-      "unstable_createFileUploadHandler",
-      "unstable_createMemoryUploadHandler",
-      "unstable_parseMultipartFormData",
-      "createSession",
-      "isCookie",
-      "isSession",
-      "json",
-      "redirect",
-      "Form",
-      "Link",
-      "Links",
-      "LiveReload",
-      "Meta",
-      "NavLink",
-      "Outlet",
-      "PrefetchPageLinks",
-      "RemixBrowser",
-      "RemixServer",
-      "Scripts",
-      "ScrollRestoration",
-      "useActionData",
-      "useBeforeUnload",
-      "useCatch",
-      "useFetcher",
-      "useFetchers",
-      "useFormAction",
-      "useHref",
-      "useLoaderData",
-      "useLocation",
-      "useMatches",
-      "useNavigate",
-      "useNavigationType",
-      "useOutlet",
-      "useOutletContext",
-      "useParams",
-      "useResolvedPath",
-      "useSearchParams",
-      "useSubmit",
-    ];
-    let magicRemix = await fse.readFile(
-      path.resolve(fixture.projectDir, "node_modules/remix/dist/index.js"),
-      "utf8"
-    );
-    for (let name of magicExportsForNode) {
-      expect(magicRemix).toContain(name);
-    }
-  });
-
   test.describe("serverBareModulesPlugin", () => {
     let ogConsole: typeof global.console;
     test.beforeEach(() => {

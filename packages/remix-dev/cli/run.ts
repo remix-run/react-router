@@ -16,7 +16,6 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     $ remix dev [${colors.arg("projectDir")}]
     $ remix routes [${colors.arg("projectDir")}]
     $ remix watch [${colors.arg("projectDir")}]
-    $ remix setup [${colors.arg("remixPlatform")}]
 
   ${colors.heading("Options")}:
     --help, -h          Print this help message and exit
@@ -219,7 +218,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       await commands.watch(input[1], process.env.NODE_ENV);
       break;
     case "setup":
-      await commands.setup(input[1]);
+      commands.setup();
       break;
     case "reveal": {
       // TODO: simplify getting started guide

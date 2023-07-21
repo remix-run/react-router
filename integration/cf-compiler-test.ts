@@ -177,59 +177,6 @@ test.describe("cloudflare compiler", () => {
     );
   });
 
-  // TODO: remove this when we get rid of that feature.
-  test("magic imports still works", async () => {
-    let magicExportsForNode = [
-      "createCookie",
-      "createCookieSessionStorage",
-      "createMemorySessionStorage",
-      "createSessionStorage",
-      "createSession",
-      "createWorkersKVSessionStorage",
-      "isCookie",
-      "isSession",
-      "json",
-      "redirect",
-      "Form",
-      "Link",
-      "Links",
-      "LiveReload",
-      "Meta",
-      "NavLink",
-      "Outlet",
-      "PrefetchPageLinks",
-      "RemixBrowser",
-      "RemixServer",
-      "Scripts",
-      "ScrollRestoration",
-      "useActionData",
-      "useBeforeUnload",
-      "useCatch",
-      "useFetcher",
-      "useFetchers",
-      "useFormAction",
-      "useHref",
-      "useLoaderData",
-      "useLocation",
-      "useMatches",
-      "useNavigate",
-      "useNavigationType",
-      "useOutlet",
-      "useOutletContext",
-      "useParams",
-      "useResolvedPath",
-      "useSearchParams",
-      "useSubmit",
-    ];
-    let magicRemix = await fs.readFile(
-      path.resolve(projectDir, "node_modules/remix/dist/index.js"),
-      "utf8"
-    );
-    for (let name of magicExportsForNode) {
-      expect(magicRemix).toContain(name);
-    }
-  });
-
   test("node externals are not bundled in the browser bundle", async () => {
     let browserBundle = findBrowserBundle(projectDir);
     let browserCodeFiles = await findCodeFiles(browserBundle);

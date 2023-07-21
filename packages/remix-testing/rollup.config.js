@@ -8,7 +8,6 @@ const {
   createBanner,
   getOutputDir,
   isBareModuleId,
-  magicExportsPlugin,
 } = require("../../rollup.utils");
 const { name: packageName, version } = require("./package.json");
 
@@ -43,7 +42,6 @@ module.exports = function rollup() {
     },
     plugins: [
       ...sharedPlugins,
-      magicExportsPlugin({ packageName, version }),
       copy({
         targets: [
           { src: "LICENSE.md", dest: [outputDir, sourceDir] },
