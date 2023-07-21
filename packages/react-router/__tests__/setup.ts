@@ -1,4 +1,4 @@
-import { fetch, Request, Response } from "@remix-run/web-fetch";
+import { fetch, Request, Response, Headers } from "@remix-run/web-fetch";
 
 // https://reactjs.org/blog/2022/03/08/react-18-upgrade-guide.html#configuring-your-testing-environment
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -15,4 +15,5 @@ if (!globalThis.fetch) {
   // web-std/fetch Response does not currently implement Response.error()
   // @ts-expect-error
   globalThis.Response = Response;
+  globalThis.Headers = Headers;
 }

@@ -38,6 +38,8 @@ function SomeComponent() {
   // build your UI with these properties
   fetcher.state;
   fetcher.formData;
+  fetcher.json;
+  fetcher.text;
   fetcher.formMethod;
   fetcher.formAction;
   fetcher.data;
@@ -132,6 +134,8 @@ export function useIdleLogout() {
 }
 ```
 
+`fetcher.submit` is a wrapper around a [`useSubmit`][use-submit] call for the fetcher instance, so it also accepts the same options as `useSubmit`.
+
 If you want to submit to an index route, use the [`?index` param][indexsearchparam].
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
@@ -200,6 +204,14 @@ function TaskCheckbox({ task }) {
 }
 ```
 
+## `fetcher.json`
+
+When using `fetcher.submit(data, { formEncType: "application/json" })`, the submitted JSON is available via `fetcher.json`.
+
+## `fetcher.text`
+
+When using `fetcher.submit(data, { formEncType: "text/plain" })`, the submitted text is available via `fetcher.text`.
+
 ## `fetcher.formAction`
 
 Tells you the action url the form is being submitted to.
@@ -231,3 +243,4 @@ fetcher.formMethod; // "post"
 [link]: ../components/link
 [form]: ../components/form
 [api-development-strategy]: ../guides/api-development-strategy
+[use-submit]: ./use-submit.md

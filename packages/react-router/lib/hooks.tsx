@@ -22,6 +22,8 @@ import {
   matchRoutes,
   parsePath,
   resolveTo,
+  stripBasename,
+  IDLE_BLOCKER,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
@@ -819,10 +821,13 @@ export function useNavigation() {
 export function useRevalidator() {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
   let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
-  return {
-    revalidate: dataRouterContext.router.revalidate,
-    state: state.revalidation,
-  };
+  return React.useMemo(
+    () => ({
+      revalidate: dataRouterContext.router.revalidate,
+      state: state.revalidation,
+    }),
+    [dataRouterContext.router.revalidate, state.revalidation]
+  );
 }
 
 /**
@@ -933,30 +938,65 @@ let blockerId = 0;
  * cross-origin navigations.
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
-  let { router } = useDataRouterContext(DataRouterHook.UseBlocker);
+  let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);
   let state = useDataRouterState(DataRouterStateHook.UseBlocker);
-  let [blockerKey] = React.useState(() => String(++blockerId));
 
+  let [blockerKey, setBlockerKey] = React.useState("");
   let blockerFunction = React.useCallback<BlockerFunction>(
-    (args) => {
-      return typeof shouldBlock === "function"
-        ? !!shouldBlock(args)
-        : !!shouldBlock;
+    (arg) => {
+      if (typeof shouldBlock !== "function") {
+        return !!shouldBlock;
+      }
+      if (basename === "/") {
+        return shouldBlock(arg);
+      }
+
+      // If they provided us a function and we've got an active basename, strip
+      // it from the locations we expose to the user to match the behavior of
+      // useLocation
+      let { currentLocation, nextLocation, historyAction } = arg;
+      return shouldBlock({
+        currentLocation: {
+          ...currentLocation,
+          pathname:
+            stripBasename(currentLocation.pathname, basename) ||
+            currentLocation.pathname,
+        },
+        nextLocation: {
+          ...nextLocation,
+          pathname:
+            stripBasename(nextLocation.pathname, basename) ||
+            nextLocation.pathname,
+        },
+        historyAction,
+      });
     },
-    [shouldBlock]
+    [basename, shouldBlock]
   );
 
-  let blocker = router.getBlocker(blockerKey, blockerFunction);
+  // This effect is in charge of blocker key assignment and deletion (which is
+  // tightly coupled to the key)
+  React.useEffect(() => {
+    let key = String(++blockerId);
+    setBlockerKey(key);
+    return () => router.deleteBlocker(key);
+  }, [router]);
 
-  // Cleanup on unmount
-  React.useEffect(
-    () => () => router.deleteBlocker(blockerKey),
-    [router, blockerKey]
-  );
+  // This effect handles assigning the blockerFunction.  This is to handle
+  // unstable blocker function identities, and happens only after the prior
+  // effect so we don't get an orphaned blockerFunction in the router with a
+  // key of "".  Until then we just have the IDLE_BLOCKER.
+  React.useEffect(() => {
+    if (blockerKey !== "") {
+      router.getBlocker(blockerKey, blockerFunction);
+    }
+  }, [router, blockerKey, blockerFunction]);
 
-  // Prefer the blocker from state since DataRouterContext is memoized so this
-  // ensures we update on blocker state updates
-  return state.blockers.get(blockerKey) || blocker;
+  // Prefer the blocker from `state` not `router.state` since DataRouterContext
+  // is memoized so this ensures we update on blocker state updates
+  return blockerKey && state.blockers.has(blockerKey)
+    ? state.blockers.get(blockerKey)!
+    : IDLE_BLOCKER;
 }
 
 /**

@@ -31,7 +31,7 @@ export interface IndexRouteObject {
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<IndexRouteObject>;
+  lazy?: LazyRouteFunction<RouteObject>;
 }
 
 export interface NonIndexRouteObject {
@@ -49,7 +49,7 @@ export interface NonIndexRouteObject {
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<NonIndexRouteObject>;
+  lazy?: LazyRouteFunction<RouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;

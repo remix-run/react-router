@@ -701,6 +701,51 @@ describe("A <StaticRouterProvider>", () => {
     );
   });
 
+  it("serializes Error subclass instances", async () => {
+    let routes = [
+      {
+        path: "/",
+        loader: () => {
+          throw new ReferenceError("oh no");
+        },
+      },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+
+    // stack is stripped by default from SSR errors
+    let expectedJsonString = JSON.stringify(
+      JSON.stringify({
+        loaderData: {},
+        actionData: null,
+        errors: {
+          "0": {
+            message: "oh no",
+            __type: "Error",
+            __subType: "ReferenceError",
+          },
+        },
+      })
+    );
+    expect(html).toMatch(
+      `<script>window.__staticRouterHydrationData = JSON.parse(${expectedJsonString});</script>`
+    );
+  });
+
   it("supports a nonce prop", async () => {
     let routes = [
       {

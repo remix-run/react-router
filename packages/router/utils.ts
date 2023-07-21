@@ -88,19 +88,48 @@ export type V7_MutationFormMethod = Exclude<V7_FormMethod, "GET">;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
-  | "multipart/form-data";
+  | "multipart/form-data"
+  | "application/json"
+  | "text/plain";
+
+// Thanks https://github.com/sindresorhus/type-fest!
+type JsonObject = { [Key in string]: JsonValue } & {
+  [Key in string]?: JsonValue | undefined;
+};
+type JsonArray = JsonValue[] | readonly JsonValue[];
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 
 /**
  * @private
  * Internal interface to pass around for action submissions, not intended for
  * external consumption
  */
-export interface Submission {
-  formMethod: FormMethod | V7_FormMethod;
-  formAction: string;
-  formEncType: FormEncType;
-  formData: FormData;
-}
+export type Submission =
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: FormData;
+      json: undefined;
+      text: undefined;
+    }
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: undefined;
+      json: JsonValue;
+      text: undefined;
+    }
+  | {
+      formMethod: FormMethod | V7_FormMethod;
+      formAction: string;
+      formEncType: FormEncType;
+      formData: undefined;
+      json: undefined;
+      text: string;
+    };
 
 /**
  * @private
@@ -160,7 +189,9 @@ export interface ShouldRevalidateFunction {
     formMethod?: Submission["formMethod"];
     formAction?: Submission["formAction"];
     formEncType?: Submission["formEncType"];
+    text?: Submission["text"];
     formData?: Submission["formData"];
+    json?: Submission["json"];
     actionResult?: DataResult;
     defaultShouldRevalidate: boolean;
   }): boolean;
@@ -208,12 +239,19 @@ export const immutableRouteKeys = new Set<ImmutableRouteKey>([
   "children",
 ]);
 
+type RequireOne<T, Key = keyof T> = Exclude<
+  {
+    [K in keyof T]: K extends Key ? Omit<T, K> & Required<Pick<T, K>> : never;
+  }[keyof T],
+  undefined
+>;
+
 /**
  * lazy() function to load a route definition, which can add non-matching
  * related properties to a route
  */
 export interface LazyRouteFunction<R extends AgnosticRouteObject> {
-  (): Promise<Omit<R, ImmutableRouteKey>>;
+  (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
 }
 
 /**
@@ -748,6 +786,9 @@ export function generatePath<Path extends string>(
   // ensure `/` is added at the beginning if the path is absolute
   const prefix = path.startsWith("/") ? "/" : "";
 
+  const stringify = (p: any) =>
+    p == null ? "" : typeof p === "string" ? p : String(p);
+
   const segments = path
     .split(/\/+/)
     .map((segment, index, array) => {
@@ -756,26 +797,16 @@ export function generatePath<Path extends string>(
       // only apply the splat if it's the last segment
       if (isLastSegment && segment === "*") {
         const star = "*" as PathParam<Path>;
-        const starParam = params[star];
-
         // Apply the splat
-        return starParam;
+        return stringify(params[star]);
       }
 
       const keyMatch = segment.match(/^:(\w+)(\??)$/);
       if (keyMatch) {
         const [, key, optional] = keyMatch;
         let param = params[key as PathParam<Path>];
-
-        if (optional === "?") {
-          return param == null ? "" : param;
-        }
-
-        if (param == null) {
-          invariant(false, `Missing ":${key}" param`);
-        }
-
-        return param;
+        invariant(optional === "?" || param != null, `Missing ":${key}" param`);
+        return stringify(param);
       }
 
       // Remove any optional markers from optional static segments
@@ -1303,7 +1334,7 @@ export class DeferredData {
     // We store a little wrapper promise that will be extended with
     // _data/_error props upon resolve/reject
     let promise: TrackedPromise = Promise.race([value, this.abortPromise]).then(
-      (data) => this.onSettle(promise, key, null, data as unknown),
+      (data) => this.onSettle(promise, key, undefined, data as unknown),
       (error) => this.onSettle(promise, key, error as unknown)
     );
 
@@ -1337,7 +1368,19 @@ export class DeferredData {
       this.unlistenAbortSignal();
     }
 
-    if (error) {
+    // If the promise was resolved/rejected with undefined, we'll throw an error as you
+    // should always resolve with a value or null
+    if (error === undefined && data === undefined) {
+      let undefinedError = new Error(
+        `Deferred data for key "${key}" resolved/rejected with \`undefined\`, ` +
+          `you must resolve/reject with a value or \`null\`.`
+      );
+      Object.defineProperty(promise, "_error", { get: () => undefinedError });
+      this.emit(false, key);
+      return Promise.reject(undefinedError);
+    }
+
+    if (data === undefined) {
       Object.defineProperty(promise, "_error", { get: () => error });
       this.emit(false, key);
       return Promise.reject(error);

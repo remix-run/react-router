@@ -129,29 +129,6 @@ function invariant(value: any, message?: string) {
   }
 }
 
-function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
-      res(val);
-      await tick();
-      await promise;
-    };
-    reject = async (error?: Error) => {
-      rej(error);
-      await promise.catch(() => tick());
-    };
-  });
-  return {
-    promise,
-    //@ts-ignore
-    resolve,
-    //@ts-ignore
-    reject,
-  };
-}
-
 function createFormData(obj: Record<string, string>): FormData {
   let formData = new FormData();
   Object.entries(obj).forEach((e) => formData.append(e[0], e[1]));
@@ -1911,7 +1888,7 @@ describe("a router", () => {
       router.dispose();
     });
 
-    it("includes submission on actions that return data", async () => {
+    it("includes submissions on actions that return data", async () => {
       let shouldRevalidate = jest.fn(() => true);
 
       let history = createMemoryHistory({ initialEntries: ["/child"] });
@@ -2013,6 +1990,88 @@ describe("a router", () => {
       });
       // @ts-expect-error
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
+
+      router.dispose();
+    });
+
+    it("includes json submissions", async () => {
+      let shouldRevalidate = jest.fn(() => true);
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => "ROOT*",
+            action: () => "ACTION",
+            shouldRevalidate,
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      await tick();
+      router.navigate(null, {
+        formMethod: "post",
+        formEncType: "application/json",
+        body: { key: "value" },
+      });
+      await tick();
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      // @ts-expect-error
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchObject({
+        formMethod: "post",
+        formAction: "/",
+        formEncType: "application/json",
+        text: undefined,
+        formData: undefined,
+        json: { key: "value" },
+        actionResult: "ACTION",
+      });
+
+      router.dispose();
+    });
+
+    it("includes text submissions", async () => {
+      let shouldRevalidate = jest.fn(() => true);
+
+      let history = createMemoryHistory();
+      let router = createRouter({
+        history,
+        routes: [
+          {
+            path: "/",
+            id: "root",
+            loader: () => "ROOT*",
+            action: () => "ACTION",
+            shouldRevalidate,
+          },
+        ],
+        hydrationData: { loaderData: { root: "ROOT" } },
+      }).initialize();
+
+      await tick();
+      router.navigate(null, {
+        formMethod: "post",
+        formEncType: "text/plain",
+        body: "hello world",
+      });
+      await tick();
+      expect(shouldRevalidate.mock.calls.length).toBe(1);
+      // @ts-expect-error
+      let arg = shouldRevalidate.mock.calls[0][0];
+      expect(arg).toMatchObject({
+        formMethod: "post",
+        formAction: "/",
+        formEncType: "text/plain",
+        text: "hello world",
+        formData: undefined,
+        json: undefined,
+        actionResult: "ACTION",
+      });
 
       router.dispose();
     });
@@ -2272,8 +2331,10 @@ describe("a router", () => {
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
+          "json": undefined,
           "nextParams": {},
           "nextUrl": "http://localhost/",
+          "text": undefined,
         }
       `);
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
@@ -2333,8 +2394,10 @@ describe("a router", () => {
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
           "formMethod": "post",
+          "json": undefined,
           "nextParams": {},
           "nextUrl": "http://localhost/",
+          "text": undefined,
         }
       `);
 
@@ -4886,7 +4949,7 @@ describe("a router", () => {
       await t.navigate("/tasks", {
         // @ts-expect-error
         formMethod: "head",
-        formData: formData,
+        formData,
       });
       expect(t.router.state.navigation.state).toBe("idle");
       expect(t.router.state.location).toMatchObject({
@@ -6205,6 +6268,327 @@ describe("a router", () => {
           ),
         },
       });
+    });
+  });
+
+  describe("submission encTypes", () => {
+    async function validateFormDataSubmission(
+      body: any,
+      includeFormEncType: boolean
+    ) {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        ...(includeFormEncType
+          ? { formEncType: "application/x-www-form-urlencoded" }
+          : {}),
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.formData?.get("a")).toBe("1");
+      expect(t.router.state.navigation.formData?.get("b")).toBe("2");
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+      let fd = await request.formData();
+      expect(fd.get("a")).toBe("1");
+      expect(fd.get("b")).toBe("2");
+    }
+
+    async function validateJsonObjectSubmission(body: any) {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.json?.["a"]).toBe(1);
+      expect(t.router.state.navigation.json?.["b"]).toBe(2);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      let json = await request.json();
+      expect(json["a"]).toBe(1);
+      expect(json["b"]).toBe(2);
+    }
+
+    async function validateJsonArraySubmission(body: any) {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.json?.[0]).toBe(1);
+      expect(t.router.state.navigation.json?.[1]).toBe(2);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe("application/json");
+      let json = await request.json();
+      expect(json[0]).toBe(1);
+      expect(json[1]).toBe(2);
+    }
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (object)", async () => {
+      await validateFormDataSubmission({ a: "1", b: "2" }, false);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (string)", async () => {
+      await validateFormDataSubmission("a=1&b=2", false);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (string with leading ?)", async () => {
+      await validateFormDataSubmission("?a=1&b=2", false);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as implicit application/x-www-form-urlencoded (entries array)", async () => {
+      await validateFormDataSubmission(
+        [
+          ["a", "1"],
+          ["b", "2"],
+        ],
+        false
+      );
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (object)", async () => {
+      await validateFormDataSubmission({ a: "1", b: "2" }, true);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (string)", async () => {
+      await validateFormDataSubmission("a=1&b=2", true);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (string with leading ?)", async () => {
+      await validateFormDataSubmission("?a=1&b=2", true);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as explicit application/x-www-form-urlencoded (entries array)", async () => {
+      await validateFormDataSubmission(
+        [
+          ["a", "1"],
+          ["b", "2"],
+        ],
+        true
+      );
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (object)", async () => {
+      await validateJsonObjectSubmission({ a: 1, b: 2 });
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (object string)", async () => {
+      await validateJsonObjectSubmission('{"a":1,"b":2}');
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (array)", async () => {
+      await validateJsonArraySubmission([1, 2]);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("serializes body as application/json (array string)", async () => {
+      await validateJsonArraySubmission("[1,2]");
+    });
+
+    it("serializes body as text/plain (string)", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = "plain text";
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "text/plain",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBe(body);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "text/plain;charset=UTF-8"
+      );
+      expect(await request.text()).toEqual(body);
+    });
+
+    it("serializes body as text/plain (FormData)", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = new FormData();
+      body.append("a", "1");
+      body.append("b", "2");
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "text/plain",
+        body,
+      });
+      expect(t.router.state.navigation.text).toMatchInlineSnapshot(`
+        "a=1
+        b=2
+        "
+      `);
+      expect(t.router.state.navigation.formData).toBeUndefined();
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect(request.url).toBe("http://localhost/");
+      expect(request.headers.get("Content-Type")).toBe(
+        "text/plain;charset=UTF-8"
+      );
+      expect(await request.text()).toMatchInlineSnapshot(`
+        "a=1
+        b=2
+        "
+      `);
+    });
+
+    it("serializes body as FormData when encType=undefined", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      let body = { a: "1" };
+      let nav = await t.navigate("/", {
+        formMethod: "post",
+        body,
+      });
+      expect(t.router.state.navigation.text).toBeUndefined();
+      expect(t.router.state.navigation.formData?.get("a")).toBe("1");
+      expect(t.router.state.navigation.json).toBeUndefined();
+
+      await nav.actions.root.resolve("ACTION");
+
+      expect(nav.actions.root.stub).toHaveBeenCalledWith({
+        params: {},
+        request: expect.any(Request),
+      });
+
+      let request = nav.actions.root.stub.mock.calls[0][0].request;
+      expect(request.method).toBe("POST");
+      expect((await request.formData()).get("a")).toBe("1");
+      expect(request.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+    });
+
+    it("throws on invalid URLSearchParams submissions", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        body: ["you", "cant", "do", "this"],
+      });
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": ErrorResponse {
+            "data": "Error: Unable to encode submission body",
+            "error": [Error: Unable to encode submission body],
+            "internal": true,
+            "status": 400,
+            "statusText": "Bad Request",
+          },
+        }
+      `);
+    });
+
+    it("throws on invalid JSON submissions", async () => {
+      let t = setup({
+        routes: [{ id: "root", path: "/", action: true }],
+      });
+
+      await t.navigate("/", {
+        formMethod: "post",
+        formEncType: "application/json",
+        body: '{ not: "valid }',
+      });
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": ErrorResponse {
+            "data": "Error: Unable to encode submission body",
+            "error": [Error: Unable to encode submission body],
+            "internal": true,
+            "status": 400,
+            "statusText": "Bad Request",
+          },
+        }
+      `);
     });
   });
 
@@ -8625,6 +9009,32 @@ describe("a router", () => {
         });
       });
 
+      it("action fetch with invalid body (json)", async () => {
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              hasErrorBoundary: true,
+            },
+          ],
+        });
+        let A = await t.fetch("/", {
+          formMethod: "post",
+          body: "not json",
+          formEncType: "application/json",
+        });
+        expect(A.fetcher).toBe(IDLE_FETCHER);
+        expect(t.router.state.errors).toEqual({
+          root: new ErrorResponse(
+            400,
+            "Bad Request",
+            new Error("Unable to encode submission body"),
+            true
+          ),
+        });
+      });
+
       it("handles fetcher errors at contextual route boundaries", async () => {
         let t = setup({
           routes: [
@@ -9291,7 +9701,10 @@ describe("a router", () => {
           expect(A.loaders.foo.signal.aborted).toBe(false);
           expect(t.router.state.navigation.state).toBe("idle");
           expect(t.router.state.location.pathname).toBe("/foo");
-          expect(t.router.state.loaderData.foo).toBe("B");
+          expect(t.router.state.loaderData).toEqual({
+            root: "B root",
+            foo: "B",
+          });
 
           await A.loaders.root.resolve("A root");
           await A.loaders.foo.resolve("A");
@@ -9572,6 +9985,259 @@ describe("a router", () => {
           });
           expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
           expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        });
+      });
+
+      describe(`
+        A) fetch GET /foo |--R
+        B) nav   GET /bar   |---O
+      `, () => {
+        it("ignores loader redirect navigation if preceded by a normal GET navigation", async () => {
+          let key = "key";
+          let t = initializeTmTest();
+
+          // Start a fetch load and interrupt with a navigation
+          let A = await t.fetch("/foo", key);
+          let B = await t.navigate("/bar");
+
+          // The fetcher loader redirect should be ignored
+          await A.loaders.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+          await B.loaders.bar.resolve("BAR");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {
+              root: "ROOT",
+              bar: "BAR",
+            },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        });
+      });
+
+      describe(`
+        A) fetch POST /foo |--R
+        B) nav   GET  /bar   |---O
+      `, () => {
+        it("ignores submission redirect navigation if preceded by a normal GET navigation", async () => {
+          let key = "key";
+          let t = initializeTmTest();
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          let B = await t.navigate("/bar");
+
+          // This redirect should be ignored
+          await A.actions.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.bar.resolve("BAR");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {
+              root: "ROOT*",
+              bar: "BAR",
+            },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        });
+
+        it("ignores submission redirect navigation if preceded by a normal GET navigation (w/o loaders)", async () => {
+          let key = "key";
+          let t = setup({
+            routes: [
+              {
+                path: "",
+                id: "root",
+                children: [
+                  {
+                    path: "/",
+                    id: "index",
+                  },
+                  {
+                    path: "/foo",
+                    id: "foo",
+                    action: true,
+                  },
+                  {
+                    path: "/bar",
+                    id: "bar",
+                  },
+                  {
+                    path: "/baz",
+                    id: "baz",
+                  },
+                ],
+              },
+            ],
+          });
+          let A = await t.fetch("/foo", key, {
+            formMethod: "post",
+            formData: createFormData({ key: "value" }),
+          });
+          await t.navigate("/bar");
+
+          // This redirect should be ignored
+          await A.actions.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {},
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        });
+      });
+
+      describe(`
+        A) fetch GET /foo |--R     |---O
+        B) nav   POST /bar   |--|--|---O
+      `, () => {
+        it("ignores loader redirect navigation if preceded by a normal POST navigation", async () => {
+          let key = "key";
+          let t = initializeTmTest();
+
+          // Start a fetch load and interrupt with a POST navigation
+          let A = await t.fetch("/foo", key);
+          let B = await t.navigate(
+            "/bar",
+            { formMethod: "post", formData: createFormData({}) },
+            ["foo"]
+          );
+
+          // The fetcher loader redirect should be ignored
+          await A.loaders.foo.redirect("/baz");
+          expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+          // The navigation should trigger the fetcher to revalidate since it's
+          // not yet "completed".  If it returns data this time that should be
+          // reflected
+          await B.actions.bar.resolve("ACTION");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.bar.resolve("BAR");
+          await B.loaders.foo.resolve("FOO");
+
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/bar" },
+            loaderData: {
+              root: "ROOT*",
+              bar: "BAR",
+            },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBe("FOO");
+        });
+
+        it("processes second fetcher load redirect after interruption by normal POST navigation", async () => {
+          let key = "key";
+          let t = initializeTmTest();
+
+          // Start a fetch load and interrupt with a POST navigation
+          let A = await t.fetch("/foo", key, "root");
+          let B = await t.navigate(
+            "/bar",
+            { formMethod: "post", formData: createFormData({}) },
+            ["foo"]
+          );
+          expect(A.loaders.foo.signal.aborted).toBe(true);
+
+          // The fetcher loader redirect should be ignored
+          await A.loaders.foo.redirect("/baz");
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/bar" } },
+            location: { pathname: "/" },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+          // The navigation should trigger the fetcher to revalidate since it's
+          // not yet "completed".  If it redirects again we should follow that
+          await B.actions.bar.resolve("ACTION");
+          await B.loaders.root.resolve("ROOT*");
+          await B.loaders.bar.resolve("BAR");
+          let C = await B.loaders.foo.redirect(
+            "/foo/bar",
+            undefined,
+            undefined,
+            ["foo"]
+          );
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/foo/bar" } },
+            location: { pathname: "/" },
+            loaderData: {
+              root: "ROOT",
+            },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+          // The fetcher should not revalidate here since it triggered the redirect
+          await C.loaders.root.resolve("ROOT**");
+          await C.loaders.foobar.resolve("FOOBAR");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/foo/bar" },
+            loaderData: {
+              root: "ROOT**",
+              foobar: "FOOBAR",
+            },
+          });
+          expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(key)?.data).toBe(undefined);
+        });
+      });
+
+      describe(`
+        A) fetch GET /foo |-----X
+        B) fetch GET /bar  |---R
+      `, () => {
+        it("handles racing fetcher loader redirects", async () => {
+          let keyA = "a";
+          let keyB = "b";
+          let t = initializeTmTest();
+
+          // Start 2 fetch loads
+          let A = await t.fetch("/foo", keyA, "root");
+          let B = await t.fetch("/bar", keyB, "root");
+
+          // Return a redirect from the second fetcher.load
+          let C = await B.loaders.bar.redirect("/baz");
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/baz" } },
+            location: { pathname: "/" },
+          });
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("loading");
+          expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+
+          // The original fetch load redirect should be ignored
+          await A.loaders.foo.redirect("/foo/bar");
+          expect(t.router.state).toMatchObject({
+            navigation: { location: { pathname: "/baz" } },
+            location: { pathname: "/" },
+          });
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
+
+          // Resolve the navigation loader
+          await C.loaders.baz.resolve("BAZ");
+          expect(t.router.state).toMatchObject({
+            navigation: IDLE_NAVIGATION,
+            location: { pathname: "/baz" },
+            loaderData: {
+              root: "ROOT",
+              baz: "BAZ",
+            },
+          });
+          expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+          expect(t.router.state.fetchers.get(keyB)?.state).toBe("idle");
         });
       });
     });
@@ -9877,11 +10543,13 @@ describe("a router", () => {
             "formData": FormData {},
             "formEncType": "application/x-www-form-urlencoded",
             "formMethod": "post",
+            "json": undefined,
             "nextParams": {
               "a": "two",
               "b": "three",
             },
             "nextUrl": "http://localhost/two/three",
+            "text": undefined,
           }
         `);
 
@@ -10408,6 +11076,116 @@ describe("a router", () => {
         });
         expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
       });
+
+      it("does not call shouldRevalidate on POST navigation if fetcher has not yet loaded", async () => {
+        // This is specifically for a Remix use case where the initial fetcher.load
+        // call hasn't completed (and hasn't even loaded the route module yet), so
+        // there isn't even a shouldRevalidate implementation to access yet.  If
+        // there's no data it should just interrupt the existing load and load again,
+        // it's not a "revalidation"
+        let spy = jest.fn(() => true);
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  index: true,
+                },
+                {
+                  id: "page",
+                  path: "page",
+                  action: true,
+                },
+              ],
+            },
+            {
+              id: "fetch",
+              path: "/fetch",
+              loader: true,
+              shouldRevalidate: spy,
+            },
+          ],
+        });
+
+        let key = "key";
+        let A = await t.fetch("/fetch", key, "root");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+        // This should trigger an automatic revalidation of the fetcher since it
+        // hasn't loaded yet
+        let B = await t.navigate(
+          "/page",
+          { formMethod: "post", body: createFormData({}) },
+          ["fetch"]
+        );
+        await B.actions.page.resolve("ACTION");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(A.loaders.fetch.signal.aborted).toBe(true);
+        expect(B.loaders.fetch.signal.aborted).toBe(false);
+
+        // No-op since the original call was aborted
+        await A.loaders.fetch.resolve("A");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+        // Complete the navigation
+        await B.loaders.fetch.resolve("B");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "B",
+        });
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("does not trigger revalidation on GET navigation if fetcher has not yet loaded", async () => {
+        let spy = jest.fn(() => true);
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  index: true,
+                },
+                {
+                  id: "page",
+                  path: "page",
+                  loader: true,
+                },
+              ],
+            },
+            {
+              id: "fetch",
+              path: "/fetch",
+              loader: true,
+              shouldRevalidate: spy,
+            },
+          ],
+        });
+
+        let key = "key";
+        let A = await t.fetch("/fetch", key, "root");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+        let B = await t.navigate("/page");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+        expect(A.loaders.fetch.signal.aborted).toBe(false);
+
+        await A.loaders.fetch.resolve("A");
+        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+
+        // Complete the navigation
+        await B.loaders.page.resolve("PAGE");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toMatchObject({
+          state: "idle",
+          data: "A",
+        });
+        expect(spy).not.toHaveBeenCalled();
+      });
     });
 
     describe("fetcher ?index params", () => {
@@ -10621,6 +11399,205 @@ describe("a router", () => {
           }
         `);
         expect(t.router.getFetcher(key).data).toBe(undefined);
+      });
+    });
+
+    describe("fetcher submissions", () => {
+      it("serializes body as application/x-www-form-urlencoded", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = { a: "1" };
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/x-www-form-urlencoded",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.formData?.get("a")).toBe(
+          "1"
+        );
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        );
+        expect((await request.formData()).get("a")).toBe("1");
+      });
+
+      it("serializes body as application/json if specified (object)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = { a: "1" };
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/json",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.json).toBe(body);
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual(body);
+      });
+
+      it("serializes body as application/json if specified (array)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = [1, 2, 3];
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/json",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.json).toBe(body);
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual(body);
+      });
+
+      it("serializes body as application/json if specified (null)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = null;
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "application/json",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.json).toBe(body);
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe("application/json");
+        expect(await request.json()).toEqual(body);
+      });
+
+      it("serializes body as text/plain if specified", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = "plain text";
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "text/plain",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.text).toBe(body);
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
+        expect(await request.text()).toEqual(body);
+      });
+
+      it("serializes body as text/plain if specified (empty string)", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = "";
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          formEncType: "text/plain",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.text).toBe(body);
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "text/plain;charset=UTF-8"
+        );
+        expect(await request.text()).toEqual(body);
+      });
+
+      it("serializes body when encType=undefined", async () => {
+        let t = setup({
+          routes: [{ id: "root", path: "/", action: true }],
+        });
+
+        let body = { a: "1" };
+        let F = await t.fetch("/", "key", {
+          formMethod: "post",
+          body,
+        });
+        expect(t.router.state.fetchers.get("key")?.formData?.get("a")).toBe(
+          "1"
+        );
+
+        await F.actions.root.resolve("ACTION");
+
+        expect(F.actions.root.stub).toHaveBeenCalledWith({
+          params: {},
+          request: expect.any(Request),
+        });
+
+        let request = F.actions.root.stub.mock.calls[0][0].request;
+        expect(request.method).toBe("POST");
+        expect(request.url).toBe("http://localhost/");
+        expect(request.headers.get("Content-Type")).toBe(
+          "application/x-www-form-urlencoded;charset=UTF-8"
+        );
+        expect((await request.formData()).get("a")).toBe("1");
       });
     });
   });
@@ -13441,6 +14418,12 @@ describe("a router", () => {
                   ),
                 });
               }
+              if (new URL(request.url).searchParams.has("undefined")) {
+                return defer({
+                  critical: "loader",
+                  lazy: new Promise((r) => setTimeout(() => r(undefined), 10)),
+                });
+              }
               if (new URL(request.url).searchParams.has("status")) {
                 return defer(
                   {
@@ -14237,6 +15220,42 @@ describe("a router", () => {
               deferred: {
                 critical: "loader",
                 lazy: expect.trackedPromise(undefined, new Error("broken!")),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(true),
+            },
+          });
+        });
+
+        it("should return rejected DeferredData on symbol for resolved undefined", async () => {
+          let context = (await query(
+            createRequest("/parent/deferred?undefined")
+          )) as StaticHandlerContext;
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(),
+              },
+            },
+            activeDeferreds: {
+              deferred: expect.deferredData(false),
+            },
+          });
+          await new Promise((r) => setTimeout(r, 10));
+          expect(context).toMatchObject({
+            loaderData: {
+              parent: "PARENT LOADER",
+              deferred: {
+                critical: "loader",
+                lazy: expect.trackedPromise(
+                  null,
+                  new Error(
+                    `Deferred data for key "lazy" resolved/rejected with \`undefined\`, you must resolve/reject with a value or \`null\`.`
+                  )
+                ),
               },
             },
             activeDeferreds: {
@@ -15186,6 +16205,46 @@ describe("a router", () => {
         expect(await data.json()).toEqual({ key: "value" });
       });
 
+      it("should not unwrap responses thrown from loaders", async () => {
+        let response = json({ key: "value" });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            loader: () => Promise.reject(response),
+          },
+        ]);
+        let request = createRequest("/");
+        let data;
+        try {
+          await queryRoute(request, { routeId: "root" });
+        } catch (e) {
+          data = e;
+        }
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
+      });
+
+      it("should not unwrap responses thrown from actions", async () => {
+        let response = json({ key: "value" });
+        let { queryRoute } = createStaticHandler([
+          {
+            id: "root",
+            path: "/",
+            action: () => Promise.reject(response),
+          },
+        ]);
+        let request = createSubmitRequest("/");
+        let data;
+        try {
+          await queryRoute(request, { routeId: "root" });
+        } catch (e) {
+          data = e;
+        }
+        expect(data instanceof Response).toBe(true);
+        expect(await data.json()).toEqual({ key: "value" });
+      });
+
       it("should handle aborted load requests", async () => {
         let dfd = createDeferred();
         let controller = new AbortController();
@@ -15306,6 +16365,28 @@ describe("a router", () => {
           expect(result).toMatchObject({
             critical: "loader",
             lazy: expect.trackedPromise(null, new Error("broken!")),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
+        });
+
+        it("should return rejected DeferredData on symbol for resolved undefined", async () => {
+          let result = await queryRoute(
+            createRequest("/parent/deferred?undefined")
+          );
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(),
+          });
+          expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(false);
+          await new Promise((r) => setTimeout(r, 10));
+          expect(result).toMatchObject({
+            critical: "loader",
+            lazy: expect.trackedPromise(
+              null,
+              new Error(
+                `Deferred data for key "lazy" resolved/rejected with \`undefined\`, you must resolve/reject with a value or \`null\`.`
+              )
+            ),
           });
           expect(result[UNSAFE_DEFERRED_SYMBOL]).deferredData(true);
         });
@@ -16411,3 +17492,28 @@ describe("a router", () => {
     });
   });
 });
+
+// We use a slightly modified version of createDeferred here that incoudes the
+// tick() calls to let the router finish updating
+function createDeferred() {
+  let resolve: (val?: any) => Promise<void>;
+  let reject: (error?: Error) => Promise<void>;
+  let promise = new Promise((res, rej) => {
+    resolve = async (val: any) => {
+      res(val);
+      await tick();
+      await promise;
+    };
+    reject = async (error?: Error) => {
+      rej(error);
+      await promise.catch(() => tick());
+    };
+  });
+  return {
+    promise,
+    //@ts-ignore
+    resolve,
+    //@ts-ignore
+    reject,
+  };
+}

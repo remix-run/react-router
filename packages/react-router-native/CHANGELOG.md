@@ -1,5 +1,55 @@
 # `react-router-native`
 
+## 6.14.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.2`
+
+## 6.14.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.1`
+
+## 6.14.1-pre.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.1-pre.1`
+
+## 6.14.1-pre.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.14.1-pre.0`
+
+## 6.14.0
+
+### Patch Changes
+
+- Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
+- Updated dependencies:
+  - `react-router@6.14.0`
+
+## 6.13.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.13.0`
+
+## 6.12.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.12.1`
+
 ## 6.12.0
 
 ### Patch Changes

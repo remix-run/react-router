@@ -13,13 +13,13 @@ import {
 import {
   act,
   fireEvent,
-  prettyDOM,
   render,
   screen,
   waitFor,
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
-import LazyComponent from "./components//LazyComponent";
+import createDeferred from "../../router/__tests__/utils/createDeferred";
+import getHtml from "react-router/__tests__/utils/getHtml";
 
 describe("Handles concurrent mode features during navigations", () => {
   function getComponents() {
@@ -117,7 +117,7 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <MemoryRouter>
+        <MemoryRouter future={{ v7_startTransition: true }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -149,7 +149,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <BrowserRouter window={getWindowImpl("/", false)}>
+        <BrowserRouter
+          window={getWindowImpl("/", false)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -181,7 +184,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <HashRouter window={getWindowImpl("/", true)}>
+        <HashRouter
+          window={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route
@@ -235,7 +241,9 @@ describe("Handles concurrent mode features during navigations", () => {
           </>
         )
       );
-      let { container } = render(<RouterProvider router={router} />);
+      let { container } = render(
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      );
 
       await assertNavigation(container, resolve, resolveLazy);
     });
@@ -288,7 +296,7 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <MemoryRouter>
+        <MemoryRouter future={{ v7_startTransition: true }}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -306,7 +314,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <BrowserRouter window-={getWindowImpl("/", true)}>
+        <BrowserRouter
+          window-={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -324,7 +335,10 @@ describe("Handles concurrent mode features during navigations", () => {
         getComponents();
 
       let { container } = render(
-        <HashRouter window-={getWindowImpl("/", true)}>
+        <HashRouter
+          window-={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+        >
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -350,7 +364,9 @@ describe("Handles concurrent mode features during navigations", () => {
           </>
         )
       );
-      let { container } = render(<RouterProvider router={router} />);
+      let { container } = render(
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      );
 
       await assertNavigation(container, resolve, resolveLazy);
     });
@@ -362,37 +378,4 @@ function getWindowImpl(initialUrl: string, isHash = false): Window {
   const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
   dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
   return dom.window as unknown as Window;
-}
-
-function getHtml(container: HTMLElement) {
-  return prettyDOM(container, undefined, {
-    highlight: false,
-  });
-}
-
-async function tick() {
-  await new Promise((r) => setTimeout(r, 0));
-}
-
-function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
-      res(val);
-      await tick();
-      await promise;
-    };
-    reject = async (error?: Error) => {
-      rej(error);
-      await promise.catch(() => tick());
-    };
-  });
-  return {
-    promise,
-    //@ts-ignore
-    resolve,
-    //@ts-ignore
-    reject,
-  };
 }

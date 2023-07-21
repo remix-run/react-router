@@ -4,6 +4,7 @@
  */
 import * as React from "react";
 import type {
+  FutureConfig,
   Location,
   NavigateOptions,
   NavigationType,
@@ -33,7 +34,7 @@ import type {
   Fetcher,
   FormEncType,
   FormMethod,
-  FutureConfig,
+  FutureConfig as RouterFutureConfig,
   GetScrollRestorationKeyFunction,
   HashHistory,
   History,
@@ -57,6 +58,7 @@ import type {
   SubmitOptions,
   ParamKeyValuePair,
   URLSearchParamsInit,
+  SubmitTarget,
 } from "./dom";
 import {
   createSearchParams,
@@ -209,7 +211,7 @@ declare global {
 
 interface DOMRouterOpts {
   basename?: string;
-  future?: Partial<Omit<FutureConfig, "v7_prependBasename">>;
+  future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
 }
@@ -276,11 +278,30 @@ function deserializeErrors(
         val.internal === true
       );
     } else if (val && val.__type === "Error") {
-      let error = new Error(val.message);
-      // Wipe away the client-side stack trace.  Nothing to fill it in with
-      // because we don't serialize SSR stack traces for security reasons
-      error.stack = "";
-      serialized[key] = error;
+      // Attempt to reconstruct the right type of Error (i.e., ReferenceError)
+      if (val.__subType) {
+        let ErrorConstructor = window[val.__subType];
+        if (typeof ErrorConstructor === "function") {
+          try {
+            // @ts-expect-error
+            let error = new ErrorConstructor(val.message);
+            // Wipe away the client-side stack trace.  Nothing to fill it in with
+            // because we don't serialize SSR stack traces for security reasons
+            error.stack = "";
+            serialized[key] = error;
+          } catch (e) {
+            // no-op - fall through and create a normal Error
+          }
+        }
+      }
+
+      if (serialized[key] == null) {
+        let error = new Error(val.message);
+        // Wipe away the client-side stack trace.  Nothing to fill it in with
+        // because we don't serialize SSR stack traces for security reasons
+        error.stack = "";
+        serialized[key] = error;
+      }
     } else {
       serialized[key] = val;
     }
@@ -294,9 +315,34 @@ function deserializeErrors(
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
 
+/**
+  Webpack + React 17 fails to compile on any of the following because webpack
+  complains that `startTransition` doesn't exist in `React`:
+  * import { startTransition } from "react"
+  * import * as React from from "react";
+    "startTransition" in React ? React.startTransition(() => setState()) : setState()
+  * import * as React from from "react";
+    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
+
+  Moving it to a constant such as the following solves the Webpack/React 17 issue:
+  * import * as React from from "react";
+    const START_TRANSITION = "startTransition";
+    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
+
+  However, that introduces webpack/terser minification issues in production builds
+  in React 18 where minification/obfuscation ends up removing the call of
+  React.startTransition entirely from the first half of the ternary.  Grabbing
+  this exported reference once up front resolves that issue.
+
+  See https://github.com/remix-run/react-router/issues/10579
+*/
+const START_TRANSITION = "startTransition";
+const startTransitionImpl = React[START_TRANSITION];
+
 export interface BrowserRouterProps {
   basename?: string;
   children?: React.ReactNode;
+  future?: FutureConfig;
   window?: Window;
 }
 
@@ -306,6 +352,7 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
+  future,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -318,13 +365,14 @@ export function BrowserRouter({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      v7_startTransition && startTransitionImpl
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -343,6 +391,7 @@ export function BrowserRouter({
 export interface HashRouterProps {
   basename?: string;
   children?: React.ReactNode;
+  future?: FutureConfig;
   window?: Window;
 }
 
@@ -350,7 +399,12 @@ export interface HashRouterProps {
  * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ basename, children, window }: HashRouterProps) {
+export function HashRouter({
+  basename,
+  children,
+  future,
+  window,
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
@@ -361,13 +415,14 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      v7_startTransition && startTransitionImpl
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -386,6 +441,7 @@ export function HashRouter({ basename, children, window }: HashRouterProps) {
 export interface HistoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
+  future?: FutureConfig;
   history: History;
 }
 
@@ -395,18 +451,24 @@ export interface HistoryRouterProps {
  * two versions of the history library to your bundles unless you use the same
  * version of the history library that React Router uses internally.
  */
-function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
+function HistoryRouter({
+  basename,
+  children,
+  future,
+  history,
+}: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
   });
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      "startTransition" in React
-        ? React.startTransition(() => setStateImpl(newState))
+      v7_startTransition && startTransitionImpl
+        ? startTransitionImpl(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
-    [setStateImpl]
+    [setStateImpl, v7_startTransition]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -654,7 +716,8 @@ if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
 
-export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
+export interface FetcherFormProps
+  extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * The HTTP verb to use when the form is submit. Supports "get", "post",
    * "put", "delete", "patch".
@@ -662,21 +725,18 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   method?: HTMLFormMethod;
 
   /**
+   * `<form encType>` - enhancing beyond the normal string type and limiting
+   * to the built-in browser supported values
+   */
+  encType?:
+    | "application/x-www-form-urlencoded"
+    | "multipart/form-data"
+    | "text/plain";
+
+  /**
    * Normal `<form action>` but supports React Router's relative paths.
    */
   action?: string;
-
-  /**
-   * Forces a full document navigation instead of a fetch.
-   */
-  reloadDocument?: boolean;
-
-  /**
-   * Replaces the current entry in the browser history stack when the form
-   * navigates. Use this if you don't want the user to be able to click "back"
-   * to the page with the form on it.
-   */
-  replace?: boolean;
 
   /**
    * Determines whether the form action is relative to the route hierarchy or
@@ -698,6 +758,25 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
 }
 
+export interface FormProps extends FetcherFormProps {
+  /**
+   * Forces a full document navigation instead of a fetch.
+   */
+  reloadDocument?: boolean;
+
+  /**
+   * Replaces the current entry in the browser history stack when the form
+   * navigates. Use this if you don't want the user to be able to click "back"
+   * to the page with the form on it.
+   */
+  replace?: boolean;
+
+  /**
+   * State object to add to the history stack entry for this navigation
+   */
+  state?: any;
+}
+
 /**
  * A `@remix-run/router`-aware `<form>`. It behaves like a normal form except
  * that the interaction with the server is with `fetch` instead of new document
@@ -706,7 +785,8 @@ export interface FormProps extends React.FormHTMLAttributes<HTMLFormElement> {
  */
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (props, ref) => {
-    return <FormImpl {...props} ref={ref} />;
+    let submit = useSubmit();
+    return <FormImpl {...props} submit={submit} ref={ref} />;
   }
 );
 
@@ -723,8 +803,7 @@ type HTMLSubmitEvent = React.BaseSyntheticEvent<
 type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
 interface FormImplProps extends FormProps {
-  fetcherKey?: string;
-  routeId?: string;
+  submit: SubmitFunction | FetcherSubmitFunction;
 }
 
 const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
@@ -732,18 +811,17 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     {
       reloadDocument,
       replace,
+      state,
       method = defaultMethod,
       action,
       onSubmit,
-      fetcherKey,
-      routeId,
+      submit,
       relative,
       preventScrollReset,
       ...props
     },
     forwardedRef
   ) => {
-    let submit = useSubmitImpl(fetcherKey, routeId);
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
     let formAction = useFormAction(action, { relative });
@@ -762,6 +840,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit(submitter || event.currentTarget, {
         method: submitMethod,
         replace,
+        state,
         relative,
         preventScrollReset,
       });
@@ -811,7 +890,8 @@ if (__DEV__) {
 
 enum DataRouterHook {
   UseScrollRestoration = "useScrollRestoration",
-  UseSubmitImpl = "useSubmitImpl",
+  UseSubmit = "useSubmit",
+  UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
 }
 
@@ -949,15 +1029,6 @@ export type SetURLSearchParams = (
   navigateOpts?: NavigateOptions
 ) => void;
 
-type SubmitTarget =
-  | HTMLFormElement
-  | HTMLButtonElement
-  | HTMLInputElement
-  | FormData
-  | URLSearchParams
-  | { [name: string]: string }
-  | null;
-
 /**
  * Submits a HTML `<form>` to the server without reloading the page.
  */
@@ -982,59 +1053,90 @@ export interface SubmitFunction {
 }
 
 /**
+ * Submits a fetcher `<form>` to the server without reloading the page.
+ */
+export interface FetcherSubmitFunction {
+  (
+    target: SubmitTarget,
+    // Fetchers cannot replace or set state because they are not navigation events
+    options?: Omit<SubmitOptions, "replace" | "state">
+  ): void;
+}
+
+function validateClientSideSubmission() {
+  if (typeof document === "undefined") {
+    throw new Error(
+      "You are calling submit during the server render. " +
+        "Try calling submit within a `useEffect` or callback instead."
+    );
+  }
+}
+
+/**
  * Returns a function that may be used to programmatically submit a form (or
  * some arbitrary data) to the server.
  */
 export function useSubmit(): SubmitFunction {
-  return useSubmitImpl();
-}
-
-function useSubmitImpl(
-  fetcherKey?: string,
-  fetcherRouteId?: string
-): SubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmitImpl);
+  let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
   let { basename } = React.useContext(NavigationContext);
   let currentRouteId = useRouteId();
 
-  return React.useCallback(
+  return React.useCallback<SubmitFunction>(
     (target, options = {}) => {
-      if (typeof document === "undefined") {
-        throw new Error(
-          "You are calling submit during the server render. " +
-            "Try calling submit within a `useEffect` or callback instead."
-        );
-      }
+      validateClientSideSubmission();
 
-      let { action, method, encType, formData } = getFormSubmissionInfo(
+      let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
-        options,
         basename
       );
 
-      // Base options shared between fetch() and navigate()
-      let opts = {
+      router.navigate(options.action || action, {
         preventScrollReset: options.preventScrollReset,
         formData,
-        formMethod: method as HTMLFormMethod,
-        formEncType: encType as FormEncType,
-      };
-
-      if (fetcherKey) {
-        invariant(
-          fetcherRouteId != null,
-          "No routeId available for useFetcher()"
-        );
-        router.fetch(fetcherKey, fetcherRouteId, action, opts);
-      } else {
-        router.navigate(action, {
-          ...opts,
-          replace: options.replace,
-          fromRouteId: currentRouteId,
-        });
-      }
+        body,
+        formMethod: options.method || (method as HTMLFormMethod),
+        formEncType: options.encType || (encType as FormEncType),
+        replace: options.replace,
+        state: options.state,
+        fromRouteId: currentRouteId,
+      });
     },
-    [router, basename, fetcherKey, fetcherRouteId, currentRouteId]
+    [router, basename, currentRouteId]
+  );
+}
+
+/**
+ * Returns the implementation for fetcher.submit
+ */
+function useSubmitFetcher(
+  fetcherKey: string,
+  fetcherRouteId: string
+): FetcherSubmitFunction {
+  let { router } = useDataRouterContext(DataRouterHook.UseSubmitFetcher);
+  let { basename } = React.useContext(NavigationContext);
+
+  return React.useCallback<FetcherSubmitFunction>(
+    (target, options = {}) => {
+      validateClientSideSubmission();
+
+      let { action, method, encType, formData, body } = getFormSubmissionInfo(
+        target,
+        basename
+      );
+
+      invariant(
+        fetcherRouteId != null,
+        "No routeId available for useFetcher()"
+      );
+      router.fetch(fetcherKey, fetcherRouteId, options.action || action, {
+        preventScrollReset: options.preventScrollReset,
+        formData,
+        body,
+        formMethod: options.method || (method as HTMLFormMethod),
+        formEncType: options.encType || (encType as FormEncType),
+      });
+    },
+    [router, basename, fetcherKey, fetcherRouteId]
   );
 }
 
@@ -1095,16 +1197,10 @@ export function useFormAction(
 }
 
 function createFetcherForm(fetcherKey: string, routeId: string) {
-  let FetcherForm = React.forwardRef<HTMLFormElement, FormProps>(
+  let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
     (props, ref) => {
-      return (
-        <FormImpl
-          {...props}
-          ref={ref}
-          fetcherKey={fetcherKey}
-          routeId={routeId}
-        />
-      );
+      let submit = useSubmitFetcher(fetcherKey, routeId);
+      return <FormImpl {...props} ref={ref} submit={submit} />;
     }
   );
   if (__DEV__) {
@@ -1117,12 +1213,7 @@ let fetcherId = 0;
 
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
   Form: ReturnType<typeof createFetcherForm>;
-  submit: (
-    target: SubmitTarget,
-    // Fetchers cannot replace/preventScrollReset because they are not
-    // navigation events
-    options?: Omit<SubmitOptions, "replace" | "preventScrollReset">
-  ) => void;
+  submit: FetcherSubmitFunction;
   load: (href: string) => void;
 };
 
@@ -1152,7 +1243,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     invariant(routeId, "No routeId available for fetcher.load()");
     router.fetch(fetcherKey, routeId, href);
   });
-  let submit = useSubmitImpl(fetcherKey, routeId);
+  let submit = useSubmitFetcher(fetcherKey, routeId);
 
   let fetcher = router.getFetcher<TData>(fetcherKey);
 
@@ -1293,7 +1384,9 @@ function useScrollRestoration({
 
       // try to scroll to the hash
       if (location.hash) {
-        let el = document.getElementById(location.hash.slice(1));
+        let el = document.getElementById(
+          decodeURIComponent(location.hash.slice(1))
+        );
         if (el) {
           el.scrollIntoView();
           return;
@@ -1369,21 +1462,24 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
   let blocker = useBlocker(when);
 
   React.useEffect(() => {
-    if (blocker.state === "blocked" && !when) {
-      blocker.reset();
-    }
-  }, [blocker, when]);
-
-  React.useEffect(() => {
     if (blocker.state === "blocked") {
       let proceed = window.confirm(message);
       if (proceed) {
+        // This timeout is needed to avoid a weird "race" on POP navigations
+        // between the `window.history` revert navigation and the result of
+        // `window.confirm`
         setTimeout(blocker.proceed, 0);
       } else {
         blocker.reset();
       }
     }
   }, [blocker, message]);
+
+  React.useEffect(() => {
+    if (blocker.state === "blocked" && !when) {
+      blocker.reset();
+    }
+  }, [blocker, when]);
 }
 
 export { usePrompt as unstable_usePrompt };

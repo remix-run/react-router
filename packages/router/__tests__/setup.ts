@@ -2,7 +2,7 @@ import {
   TextEncoder as NodeTextEncoder,
   TextDecoder as NodeTextDecoder,
 } from "util";
-import { fetch, Request, Response } from "@remix-run/web-fetch";
+import { fetch, Request, Response, Headers } from "@remix-run/web-fetch";
 import { AbortController as NodeAbortController } from "abort-controller";
 
 if (!globalThis.fetch) {
@@ -17,6 +17,7 @@ if (!globalThis.fetch) {
   // web-std/fetch Response does not currently implement Response.error()
   // @ts-expect-error
   globalThis.Response = Response;
+  globalThis.Headers = Headers;
 }
 
 if (!globalThis.AbortController) {
