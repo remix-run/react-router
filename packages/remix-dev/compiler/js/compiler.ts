@@ -144,6 +144,11 @@ const createEsbuildConfig = (
       "process.env.REMIX_DEV_SERVER_WS_PORT": JSON.stringify(
         ctx.config.devServerPort
       ),
+      ...(ctx.options.mode === "production"
+        ? {
+            "import.meta.hot": "undefined",
+          }
+        : {}),
     },
     jsx: "automatic",
     jsxDev: ctx.options.mode !== "production",
