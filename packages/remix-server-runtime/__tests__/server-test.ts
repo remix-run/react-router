@@ -811,7 +811,7 @@ describe("shared server runtime", () => {
   });
 
   describe("document requests", () => {
-    test("not found document request for no matches and no CatchBoundary", async () => {
+    test("not found document request for no matches and no ErrorBoundary", async () => {
       let rootLoader = jest.fn(() => {
         return "root";
       });
@@ -847,7 +847,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
       });
       let handler = createRequestHandler(build, ServerMode.Test);
@@ -878,7 +878,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
@@ -918,14 +918,14 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
           index: true,
           default: {},
           loader: indexLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
       });
       let handler = createRequestHandler(build, ServerMode.Test);
@@ -962,7 +962,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/test": {
           parentId: "root",
@@ -1009,7 +1009,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
@@ -1056,7 +1056,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/test": {
           parentId: "root",
@@ -1064,7 +1064,7 @@ describe("shared server runtime", () => {
           default: {},
           loader: testLoader,
           action: testAction,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
       });
       let handler = createRequestHandler(build, ServerMode.Test);
@@ -1103,7 +1103,7 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/index": {
           parentId: "root",
@@ -1111,7 +1111,7 @@ describe("shared server runtime", () => {
           default: {},
           loader: indexLoader,
           action: indexAction,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
       });
       let handler = createRequestHandler(build, ServerMode.Test);
@@ -1153,13 +1153,13 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/__layout": {
           parentId: "root",
           default: {},
           loader: layoutLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/__layout/test": {
           parentId: "routes/__layout",
@@ -1209,13 +1209,13 @@ describe("shared server runtime", () => {
         root: {
           default: {},
           loader: rootLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/__layout": {
           parentId: "root",
           default: {},
           loader: layoutLoader,
-          CatchBoundary: {},
+          ErrorBoundary: {},
         },
         "routes/__layout/index": {
           parentId: "routes/__layout",

@@ -49,7 +49,6 @@ interface FutureConfig {
   unstable_postcss: boolean;
   /** @deprecated Use the `tailwind` config option instead */
   unstable_tailwind: boolean;
-  v2_errorBoundary: boolean;
   v2_headers: boolean;
   v2_meta: boolean;
   v2_routeConvention: boolean;
@@ -409,10 +408,6 @@ export async function readConfig(
     }
   }
 
-  if (!appConfig.future?.v2_errorBoundary) {
-    errorBoundaryWarning();
-  }
-
   if (!appConfig.future?.v2_meta) {
     metaWarning();
   }
@@ -767,7 +762,6 @@ export async function readConfig(
     v2_dev: appConfig.future?.v2_dev ?? false,
     unstable_postcss: appConfig.future?.unstable_postcss === true,
     unstable_tailwind: appConfig.future?.unstable_tailwind === true,
-    v2_errorBoundary: appConfig.future?.v2_errorBoundary === true,
     v2_headers: appConfig.future?.v2_headers === true,
     v2_meta: appConfig.future?.v2_meta === true,
     v2_routeConvention: appConfig.future?.v2_routeConvention === true,
@@ -914,12 +908,6 @@ let flatRoutesWarning = futureFlagWarning({
   message: "The route file convention is changing in v2",
   flag: "v2_routeConvention",
   link: "https://remix.run/docs/en/v1.15.0/pages/v2#file-system-route-convention",
-});
-
-let errorBoundaryWarning = futureFlagWarning({
-  message: "The `CatchBoundary` and `ErrorBoundary` API is changing in v2",
-  flag: "v2_errorBoundary",
-  link: "https://remix.run/docs/en/v1.15.0/pages/v2#catchboundary-and-errorboundary",
 });
 
 let metaWarning = futureFlagWarning({

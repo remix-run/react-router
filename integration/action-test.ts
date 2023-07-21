@@ -20,7 +20,6 @@ test.describe("actions", () => {
       config: {
         future: {
           v2_routeConvention: true,
-          v2_errorBoundary: true,
         },
       },
       files: {

@@ -35,7 +35,6 @@ test.describe("route module link export", () => {
       config: {
         future: {
           v2_routeConvention: true,
-          v2_errorBoundary: true,
         },
       },
       files: {

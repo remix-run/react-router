@@ -45,7 +45,6 @@ test.describe("non-aborted", () => {
       config: {
         future: {
           v2_routeConvention: true,
-          v2_errorBoundary: true,
         },
       },
       files: {
@@ -600,7 +599,6 @@ test.describe("non-aborted", () => {
   test("works with critical JSON like data", async ({ page }) => {
     let response = await fixture.requestDocument("/");
     let html = await response.text();
-    console.log(html);
     let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
     expect(criticalHTML).toContain(ROOT_ID);
     expect(criticalHTML).toContain(INDEX_ID);

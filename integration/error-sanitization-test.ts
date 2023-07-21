@@ -153,9 +153,7 @@ test.describe("Error Sanitization", () => {
       fixture = await createFixture(
         {
           config: {
-            future: {
-              v2_errorBoundary: true,
-            },
+            future: {},
           },
           files: routeFiles,
         },
@@ -307,9 +305,7 @@ test.describe("Error Sanitization", () => {
       fixture = await createFixture(
         {
           config: {
-            future: {
-              v2_errorBoundary: true,
-            },
+            future: {},
           },
           files: routeFiles,
         },
@@ -477,9 +473,7 @@ test.describe("Error Sanitization", () => {
       fixture = await createFixture(
         {
           config: {
-            future: {
-              v2_errorBoundary: true,
-            },
+            future: {},
           },
           files: {
             "app/entry.server.tsx": js`

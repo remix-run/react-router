@@ -44,35 +44,6 @@ export interface ActionFunction {
     | AppData;
 }
 
-/**
- * A React component that is rendered when the server throws a Response.
- *
- * @deprecated Please enable the v2_errorBoundary flag to eliminate the need
- * for this type.  If you are still using this, please use `@remix-run/react`'s
- * `CatchBoundaryComponent` type
- */
-export type CatchBoundaryComponent = any;
-
-/**
- * A React component that is rendered when there is an error on a route.
- *
- * @deprecated Please enable the v2_errorBoundary flag to eliminate the need
- * for this type.  If you are still using this, please use `@remix-run/react`'s
- * `ErrorBoundaryComponent` type
- */
-export type ErrorBoundaryComponent = any;
-
-/**
- * V2 version of the ErrorBoundary that eliminates the distinction between
- * Error and Catch Boundaries and behaves like RR 6.4 errorElement and captures
- * errors with useRouteError()
- *
- * @deprecated Please enable the v2_errorBoundary flag to eliminate the need
- * for this type.  If you are still using this, please use `@remix-run/react`'s
- * `V2_ErrorBoundaryComponent` type
- */
-export type V2_ErrorBoundaryComponent = any;
-
 export type HeadersArgs = {
   loaderHeaders: Headers;
   parentHeaders: Headers;
@@ -268,21 +239,13 @@ type LdJsonPrimitive = string | number | boolean | null;
 type LdJsonValue = LdJsonPrimitive | LdJsonObject | LdJsonArray;
 
 /**
- * A React component that is rendered for a route.
- *
- * @deprecated Please use `@remix-run/react`'s `RouteComponent` type instead
- */
-export type RouteComponent = any;
-
-/**
  * An arbitrary object that is associated with a route.
  */
 export type RouteHandle = any;
 
 export interface EntryRouteModule {
-  CatchBoundary?: CatchBoundaryComponent;
-  ErrorBoundary?: ErrorBoundaryComponent | V2_ErrorBoundaryComponent;
-  default: RouteComponent;
+  ErrorBoundary?: any; // Weakly typed because server-runtime is not React-aware
+  default: any; // Weakly typed because server-runtime is not React-aware
   handle?: RouteHandle;
   links?: LinksFunction;
   meta?: MetaFunction | HtmlMetaDescriptor;

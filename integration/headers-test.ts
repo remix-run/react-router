@@ -18,7 +18,7 @@ test.describe("headers export", () => {
         config: {
           future: {
             v2_routeConvention: true,
-            v2_errorBoundary: true,
+
             v2_headers: true,
           },
         },
@@ -439,7 +439,7 @@ test.describe("v1 behavior (future.v2_headers=false)", () => {
         config: {
           future: {
             v2_routeConvention: true,
-            v2_errorBoundary: true,
+
             v2_headers: false,
           },
         },

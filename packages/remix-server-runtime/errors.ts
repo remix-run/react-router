@@ -45,16 +45,6 @@ import { ServerMode } from "./mode";
  * line.
  */
 
-/**
- * @deprecated in favor of the `ErrorResponse` class in React Router.  Please
- * enable the `future.v2_errorBoundary` flag to ease your migration to Remix v2.
- */
-export interface ThrownResponse<T = any> {
-  status: number;
-  statusText: string;
-  data: T;
-}
-
 export function sanitizeError<T = unknown>(error: T, serverMode: ServerMode) {
   if (error instanceof Error && serverMode !== ServerMode.Development) {
     let sanitized = new Error("Unexpected Server Error");

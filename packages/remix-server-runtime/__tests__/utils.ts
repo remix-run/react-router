@@ -11,7 +11,6 @@ export function mockServerBuild(
       index?: true;
       path?: string;
       default?: any;
-      CatchBoundary?: any;
       ErrorBoundary?: any;
       action?: ActionFunction;
       headers?: HeadersFunction;
@@ -28,7 +27,6 @@ export function mockServerBuild(
       routes: Object.entries(routes).reduce((p, [id, config]) => {
         let route: EntryRoute = {
           hasAction: !!config.action,
-          hasCatchBoundary: !!config.CatchBoundary,
           hasErrorBoundary: !!config.ErrorBoundary,
           hasLoader: !!config.loader,
           id,
@@ -72,7 +70,6 @@ export function mockServerBuild(
           parentId: config.parentId,
           module: {
             default: config.default,
-            CatchBoundary: config.CatchBoundary,
             ErrorBoundary: config.ErrorBoundary,
             action: config.action,
             headers: config.headers,

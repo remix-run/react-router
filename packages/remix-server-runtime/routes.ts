@@ -27,7 +27,6 @@ export interface Route {
 export interface EntryRoute extends Route {
   hasAction: boolean;
   hasLoader: boolean;
-  hasCatchBoundary: boolean;
   hasErrorBoundary: boolean;
   imports?: string[];
   module: string;
@@ -81,15 +80,10 @@ export function createStaticHandlerDataRoutes(
   > = groupRoutesByParentId(manifest)
 ): AgnosticDataRouteObject[] {
   return (routesByParentId[parentId] || []).map((route) => {
-    let hasErrorBoundary =
-      future.v2_errorBoundary === true
-        ? route.id === "root" || route.module.ErrorBoundary != null
-        : route.id === "root" ||
-          route.module.CatchBoundary != null ||
-          route.module.ErrorBoundary != null;
     let commonRoute = {
       // Always include root due to default boundaries
-      hasErrorBoundary,
+      hasErrorBoundary:
+        route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
       loader: route.module.loader

@@ -27,7 +27,6 @@ describe("readConfig", () => {
         future: {
           unstable_postcss: expect.any(Boolean),
           unstable_tailwind: expect.any(Boolean),
-          v2_errorBoundary: expect.any(Boolean),
           v2_headers: expect.any(Boolean),
           v2_meta: expect.any(Boolean),
           v2_routeConvention: expect.any(Boolean),
@@ -48,7 +47,6 @@ describe("readConfig", () => {
           "unstable_postcss": Any<Boolean>,
           "unstable_tailwind": Any<Boolean>,
           "v2_dev": false,
-          "v2_errorBoundary": Any<Boolean>,
           "v2_headers": Any<Boolean>,
           "v2_meta": Any<Boolean>,
           "v2_routeConvention": Any<Boolean>,

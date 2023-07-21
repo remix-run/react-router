@@ -127,7 +127,6 @@ export function createRemixStub(
           v2_dev: false,
           unstable_postcss: false,
           unstable_tailwind: false,
-          v2_errorBoundary: false,
           v2_headers: false,
           v2_meta: false,
           v2_routeConvention: false,
@@ -179,7 +178,6 @@ function createRouteModules(
     }
 
     modules[route.id!] = {
-      CatchBoundary: undefined,
       ErrorBoundary: undefined,
       // @ts-expect-error - types are still `agnostic` here
       default: () => route.element,
@@ -206,7 +204,6 @@ function convertToEntryRoute(
     hasAction: !!route.action,
     hasLoader: !!route.loader,
     module: "",
-    hasCatchBoundary: false,
     hasErrorBoundary: false,
   };
 }

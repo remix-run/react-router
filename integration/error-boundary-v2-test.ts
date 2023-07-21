@@ -6,7 +6,7 @@ import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import type { Fixture, AppFixture } from "./helpers/create-fixture";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
-test.describe("V2 Singular ErrorBoundary (future.v2_errorBoundary)", () => {
+test.describe("ErrorBoundary", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
   let oldConsoleError: () => void;
@@ -15,7 +15,6 @@ test.describe("V2 Singular ErrorBoundary (future.v2_errorBoundary)", () => {
     fixture = await createFixture({
       config: {
         future: {
-          v2_errorBoundary: true,
           v2_routeConvention: true,
         },
       },
