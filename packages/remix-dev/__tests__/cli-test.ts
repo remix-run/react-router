@@ -89,7 +89,6 @@ describe("remix CLI", () => {
             $ remix routes [projectDir]
             $ remix watch [projectDir]
             $ remix setup [remixPlatform]
-            $ remix codemod <codemod> [projectDir]
 
           Options:
             --help, -h          Print this help message and exit
@@ -111,9 +110,6 @@ describe("remix CLI", () => {
             --no-delete         Skip deleting the \`remix.init\` script
           \`routes\` Options:
             --json              Print the routes as JSON
-          \`codemod\` Options:
-            --dry               Dry run (no changes are made to files)
-            --force             Bypass Git safety checks
 
           Values:
             - projectDir        The Remix project directory

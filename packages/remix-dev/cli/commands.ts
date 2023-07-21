@@ -17,9 +17,6 @@ import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
 import { detectPackageManager } from "./detectPackageManager";
 import { setupRemix, isSetupPlatform, SetupPlatform } from "./setup";
-import runCodemod from "../codemod";
-import { CodemodError } from "../codemod/utils/error";
-import { TaskError } from "../codemod/utils/task";
 import { transpile as convertFileToJS } from "./useJavascript";
 import type { Options } from "../compiler/options";
 import { createFileWatchCache } from "../compiler/fileWatchCache";
@@ -204,41 +201,6 @@ export async function dev(
 
   let resolved = await resolveDevServe(config, flags);
   await devServer_unstable.serve(config, resolved);
-}
-
-export async function codemod(
-  codemodName?: string,
-  projectDir?: string,
-  { dry = false, force = false } = {}
-) {
-  if (!codemodName) {
-    console.error(colors.red("Error: Missing codemod name"));
-    console.log(
-      "Usage: " +
-        colors.gray(
-          `remix codemod <${colors.arg("codemod")}> [${colors.arg(
-            "projectDir"
-          )}]`
-        )
-    );
-    process.exit(1);
-  }
-  try {
-    await runCodemod(projectDir ?? process.cwd(), codemodName, {
-      dry,
-      force,
-    });
-  } catch (error: unknown) {
-    if (error instanceof CodemodError) {
-      console.error(`${colors.red("Error:")} ${error.message}`);
-      if (error.additionalInfo) console.info(colors.gray(error.additionalInfo));
-      process.exit(1);
-    }
-    if (error instanceof TaskError) {
-      process.exit(1);
-    }
-    throw error;
-  }
 }
 
 let clientEntries = ["entry.client.tsx", "entry.client.js", "entry.client.jsx"];

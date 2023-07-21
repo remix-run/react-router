@@ -17,9 +17,6 @@ export function deprecatedRemixPackagePlugin(ctx: Context): Plugin {
           ctx.logger.warn(`deprecated \`remix\` import in ${relativePath}`, {
             details: [
               "Imports from the `remix` package were deprecated in v1.3.3.",
-              "Change your code to import from the appropriate `@remix-run/*` package instead.",
-              "You can run the following codemod to autofix this issue:",
-              "-> `npx @remix-run/dev@latest codemod replace-remix-magic-imports`",
             ],
             key: importer,
           });

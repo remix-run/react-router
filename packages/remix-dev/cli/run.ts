@@ -17,7 +17,6 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     $ remix routes [${colors.arg("projectDir")}]
     $ remix watch [${colors.arg("projectDir")}]
     $ remix setup [${colors.arg("remixPlatform")}]
-    $ remix codemod <${colors.arg("codemod")}> [${colors.arg("projectDir")}]
 
   ${colors.heading("Options")}:
     --help, -h          Print this help message and exit
@@ -39,9 +38,6 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     --no-delete         Skip deleting the \`remix.init\` script
   \`routes\` Options:
     --json              Print the routes as JSON
-  \`codemod\` Options:
-    --dry               Dry run (no changes are made to files)
-    --force             Bypass Git safety checks
 
   ${colors.heading("Values")}:
     - ${colors.arg("projectDir")}        The Remix project directory
@@ -225,10 +221,6 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     case "setup":
       await commands.setup(input[1]);
       break;
-    case "codemod": {
-      await commands.codemod(input[1], input[2]);
-      break;
-    }
     case "reveal": {
       // TODO: simplify getting started guide
       await commands.generateEntry(input[1], input[2], flags.typescript);
