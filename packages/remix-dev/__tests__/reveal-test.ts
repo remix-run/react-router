@@ -1,6 +1,5 @@
 import os from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 import fse from "fs-extra";
 
 import { run } from "../cli/run";
@@ -72,14 +71,7 @@ describe("the reveal command", () => {
   for (let runtime of runtimes) {
     it(`generates a "${runtime}" specific entry.server.tsx file in the app directory`, async () => {
       let projectDir = await getProjectDir(`entry.server.${runtime}`);
-      await run([
-        "create",
-        projectDir,
-        "--template",
-        pathToFileURL(path.join(__dirname, "fixtures", runtime)).toString(),
-        "--no-install",
-        "--typescript",
-      ]);
+      fse.copySync(path.join(__dirname, "fixtures", runtime), projectDir);
 
       let entryClientFile = path.join(projectDir, "app", "entry.client.tsx");
       let entryServerFile = path.join(projectDir, "app", "entry.server.tsx");
@@ -96,14 +88,7 @@ describe("the reveal command", () => {
 
     it(`generates a "${runtime}" specific entry.server.jsx file in the app directory`, async () => {
       let projectDir = await getProjectDir(`entry.server.${runtime}-js`);
-      await run([
-        "create",
-        projectDir,
-        "--template",
-        pathToFileURL(path.join(__dirname, "fixtures", runtime)).toString(),
-        "--no-install",
-        "--typescript",
-      ]);
+      fse.copySync(path.join(__dirname, "fixtures", runtime), projectDir);
 
       let entryClientFile = path.join(projectDir, "app", "entry.client.jsx");
       let entryServerFile = path.join(projectDir, "app", "entry.server.jsx");

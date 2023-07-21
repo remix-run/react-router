@@ -5,11 +5,6 @@ import util from "util";
 import fse from "fs-extra";
 import semver from "semver";
 
-import { jestTimeout } from "./setupAfterEnv";
-
-let DOWN = "\x1B\x5B\x42";
-let ENTER = "\x0D";
-
 let execFile = util.promisify(childProcess.execFile);
 
 const TEMP_DIR = path.join(
@@ -37,8 +32,6 @@ async function execRemix(
       [
         "--require",
         require.resolve("esbuild-register"),
-        "--require",
-        path.join(__dirname, "./msw.ts"),
         path.resolve(__dirname, "../cli.ts"),
         ...args,
       ],
@@ -62,8 +55,6 @@ async function execRemix(
       [
         "--require",
         require.resolve("esbuild-register"),
-        "--require",
-        path.join(__dirname, "./msw.ts"),
         path.resolve(__dirname, "../cli.ts"),
         ...args,
       ],
@@ -92,7 +83,6 @@ describe("remix CLI", () => {
         "R E M I X
 
           Usage:
-            $ remix create <projectDir> --template <template>
             $ remix init [projectDir]
             $ remix build [projectDir]
             $ remix dev [projectDir]
@@ -105,11 +95,6 @@ describe("remix CLI", () => {
             --help, -h          Print this help message and exit
             --version, -v       Print the CLI version and exit
             --no-color          Disable ANSI colors in console output
-          \`create\` Options:
-            --template          The template to use
-            --no-install        Skip installing dependencies after creation
-            --no-typescript     Convert the template to JavaScript
-            --remix-version     The version of Remix to use
           \`build\` Options:
             --sourcemap         Generate source maps for production
           \`dev\` Options:
@@ -132,29 +117,7 @@ describe("remix CLI", () => {
 
           Values:
             - projectDir        The Remix project directory
-            - template          The project template to use
             - remixPlatform     \`node\` or \`cloudflare\`
-
-          Creating a new project:
-
-            Remix projects are created from templates. A template can be:
-
-            - a file path to a directory of files
-            - a file path to a tarball
-            - the name of a :username/:repo on GitHub
-            - the URL of a tarball
-
-            $ remix create my-app --template /path/to/remix-template
-            $ remix create my-app --template /path/to/remix-template.tar.gz
-            $ remix create my-app --template remix-run/grunge-stack
-            $ remix create my-app --template :username/:repo
-            $ remix create my-app --template https://github.com/:username/:repo
-            $ remix create my-app --template https://github.com/:username/:repo/tree/:branch
-            $ remix create my-app --template https://github.com/:username/:repo/archive/refs/tags/:tag.tar.gz
-            $ remix create my-app --template https://example.com/remix-template.tar.gz
-
-            To create a new project from a template in a private GitHub repo,
-            pass the \`token\` flag with a personal access token with access to that repo.
 
           Initialize a project::
 
@@ -207,161 +170,4 @@ describe("remix CLI", () => {
       expect(!!semver.valid(stdout.trim())).toBe(true);
     });
   });
-
-  describe("create prompts", () => {
-    it("allows you to go through the prompts", async () => {
-      let projectDir = path.join(TEMP_DIR, "my-app");
-
-      let proc = childProcess.spawn(
-        "node",
-        [
-          "--require",
-          require.resolve("esbuild-register"),
-          "--require",
-          path.join(__dirname, "./msw.ts"),
-          path.resolve(__dirname, "../cli.ts"),
-          "create",
-        ],
-        { stdio: [null, null, null] }
-      );
-
-      await interactWithShell(proc, [
-        { question: /Where.*create.*app/i, type: [projectDir, ENTER] },
-        { question: /What type of app/i, answer: /basics/i },
-        { question: /Where.*deploy/i, answer: /remix/i },
-        { question: /typescript or javascript/i, answer: /typescript/i },
-        { question: /install/i, type: ["n", ENTER] },
-      ]);
-    });
-
-    it("allows you to go through the prompts and convert to JS", async () => {
-      let projectDir = path.join(TEMP_DIR, "my-js-app");
-
-      let proc = childProcess.spawn(
-        "node",
-        [
-          "--require",
-          require.resolve("esbuild-register"),
-          "--require",
-          path.join(__dirname, "./msw.ts"),
-          path.resolve(__dirname, "../cli.ts"),
-          "create",
-        ],
-        { stdio: [null, null, null] }
-      );
-
-      await interactWithShell(proc, [
-        { question: /Where.*create.*app/i, type: [projectDir, ENTER] },
-        { question: /What type of app/i, answer: /basics/i },
-        { question: /Where.*deploy/i, answer: /remix/i },
-        { question: /typescript or javascript/i, answer: /javascript/i },
-        { question: /install/i, type: ["n", ENTER] },
-      ]);
-
-      expect(fse.existsSync(path.join(projectDir, "app/root.tsx"))).toBeFalsy();
-      expect(
-        fse.existsSync(path.join(projectDir, "app/root.jsx"))
-      ).toBeTruthy();
-    });
-  });
 });
-
-function defer() {
-  let resolve: (value: unknown) => void, reject: (reason?: any) => void;
-  let state: { current: "pending" | "resolved" | "rejected" } = {
-    current: "pending",
-  };
-  let promise = new Promise((res, rej) => {
-    resolve = (value: unknown) => {
-      state.current = "resolved";
-      return res(value);
-    };
-    reject = (reason?: any) => {
-      state.current = "rejected";
-      return rej(reason);
-    };
-  });
-  return { promise, resolve: resolve!, reject: reject!, state };
-}
-
-async function interactWithShell(
-  proc: childProcess.ChildProcessWithoutNullStreams,
-  qAndA: Array<
-    | { question: RegExp; type: Array<string>; answer?: never }
-    | { question: RegExp; answer: RegExp; type?: never }
-  >
-) {
-  proc.stdin.setDefaultEncoding("utf-8");
-
-  let deferred = defer();
-
-  let stepNumber = 0;
-
-  let stdout = "";
-  let stderr = "";
-  proc.stdout.on("data", (chunk: unknown) => {
-    if (chunk instanceof Buffer) {
-      chunk = String(chunk);
-    }
-    if (typeof chunk !== "string") {
-      console.error({ stdoutChunk: chunk });
-      throw new Error("stdout chunk is not a string");
-    }
-    stdout += chunk;
-    let step = qAndA[stepNumber];
-    if (!step) return;
-    let { question, answer, type } = step;
-    if (question.test(chunk)) {
-      if (answer) {
-        let currentSelection = chunk
-          .split("\n")
-          .slice(1)
-          .find((l) => l.includes("❯") || l.includes(">"));
-
-        if (currentSelection && answer.test(currentSelection)) {
-          proc.stdin.write(ENTER);
-          stepNumber += 1;
-        } else {
-          proc.stdin.write(DOWN);
-        }
-      } else if (type) {
-        for (let command of type) {
-          proc.stdin.write(command);
-        }
-        stepNumber += 1;
-      }
-    }
-
-    if (stepNumber === qAndA.length) {
-      proc.stdin.end();
-    }
-  });
-
-  proc.stderr.on("data", (chunk: unknown) => {
-    if (chunk instanceof Buffer) {
-      chunk = String(chunk);
-    }
-    if (typeof chunk !== "string") {
-      console.error({ stderrChunk: chunk });
-      throw new Error("stderr chunk is not a string");
-    }
-    stderr += chunk;
-  });
-
-  proc.on("close", (status) => {
-    if (status === 0) return deferred.resolve(status);
-    else return deferred.reject({ stdout, stderr });
-  });
-
-  // this ensures that if we do timeout we at least get as much useful
-  // output as possible.
-  let timeout = setTimeout(() => {
-    if (deferred.state.current === "pending") {
-      proc.kill();
-      deferred.reject({ status: "timeout", stdout, stderr });
-    }
-  }, jestTimeout);
-
-  await deferred.promise;
-  clearTimeout(timeout);
-}
