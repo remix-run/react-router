@@ -1,14 +1,13 @@
 # `@remix-run/dev`
 
-## 1.19.1-pre.0
+## 1.19.1
 
 ### Patch Changes
 
-- Add a heartbeat ping to prevent the WebSocket connection from being closed due to inactivity when using a proxy like Cloudflare ([#6904](https://github.com/remix-run/remix/pull/6904)) ([`ce0303e51`](https://github.com/remix-run/remix/commit/ce0303e5135a519ed0aa22f2a5491ecf07f59ef7))
+- Add a heartbeat ping to prevent the WebSocket connection from being closed due to inactivity when using a proxy like Cloudflare ([#6904](https://github.com/remix-run/remix/pull/6904), [#6927](https://github.com/remix-run/remix/pull/6927))
 - Treeshake out HMR code from production builds ([#6894](https://github.com/remix-run/remix/pull/6894))
 - Updated dependencies:
-  - `@remix-run/serve@1.19.1-pre.0`
-  - `@remix-run/server-runtime@1.19.1-pre.0`
+  - `@remix-run/server-runtime@1.19.1`
 
 ## 1.19.0
 
