@@ -1,5 +1,4 @@
-import path, { isAbsolute, relative } from "path";
-import fs from "fs";
+import { isAbsolute, relative } from "path";
 import { builtinModules } from "module";
 import type { Plugin } from "esbuild";
 
@@ -34,7 +33,7 @@ export function serverBareModulesPlugin(ctx: Context): Plugin {
   return {
     name: "server-bare-modules",
     setup(build) {
-      build.onResolve({ filter: /.*/ }, ({ importer, kind, path }) => {
+      build.onResolve({ filter: /.*/ }, ({ importer, path }) => {
         // If it's not a bare module ID, bundle it.
         if (!isBareModuleId(resolvePath(path))) {
           return undefined;
@@ -113,14 +112,6 @@ export function serverBareModulesPlugin(ctx: Context): Plugin {
           }
         }
 
-        if (
-          !isNodeBuiltIn(packageName) &&
-          kind !== "dynamic-import" &&
-          ctx.config.serverPlatform === "node"
-        ) {
-          warnOnceIfEsmOnlyPackage(ctx, packageName, path, importer);
-        }
-
         // Externalize everything else if we've gotten here.
         return {
           path,
@@ -144,92 +135,4 @@ function getNpmPackageName(id: string): string {
 
 function isBareModuleId(id: string): boolean {
   return !id.startsWith("node:") && !id.startsWith(".") && !isAbsolute(id);
-}
-
-function warnOnceIfEsmOnlyPackage(
-  ctx: Context,
-  packageName: string,
-  fullImportPath: string,
-  importer: string
-) {
-  try {
-    let packageDir = resolveModuleBasePath(
-      packageName,
-      fullImportPath,
-      importer
-    );
-    let packageJsonFile = path.join(packageDir, "package.json");
-
-    if (!fs.existsSync(packageJsonFile)) {
-      ctx.logger.warn(`could not find package.json for ${packageName}`);
-      return;
-    }
-    let pkg = JSON.parse(fs.readFileSync(packageJsonFile, "utf-8"));
-
-    let subImport = fullImportPath.slice(packageName.length + 1);
-
-    if (pkg.type === "module") {
-      let isEsmOnly = true;
-      if (pkg.exports) {
-        if (!subImport) {
-          if (pkg.exports.require) {
-            isEsmOnly = false;
-          } else if (pkg.exports["."]?.require) {
-            isEsmOnly = false;
-          }
-        } else if (pkg.exports[`./${subImport}`]?.require) {
-          isEsmOnly = false;
-        }
-      }
-
-      if (isEsmOnly) {
-        ctx.logger.warn(`esm-only package: ${packageName}`, {
-          details: [
-            `${packageName} is possibly an ESM-only package.`,
-            "To bundle it with your server, include it in `serverDependenciesToBundle`",
-            "-> https://remix.run/docs/en/main/file-conventions/remix-config#serverdependenciestobundle",
-          ],
-          key: packageName + ":esm-only",
-        });
-      }
-    }
-  } catch (error: unknown) {
-    // module not installed
-    // we warned earlier if a package is used without being in package.json
-    // if the build fails, the reason will be right there
-  }
-}
-
-// https://github.com/nodejs/node/issues/33460#issuecomment-919184789
-// adapted to use the fullImportPath to resolve sub packages like @heroicons/react/solid
-function resolveModuleBasePath(
-  packageName: string,
-  fullImportPath: string,
-  importer: string
-) {
-  let moduleMainFilePath = require.resolve(fullImportPath, {
-    paths: [importer],
-  });
-
-  let packageNameParts = packageName.split("/");
-
-  let searchForPathSection;
-
-  if (packageName.startsWith("@") && packageNameParts.length > 1) {
-    let [org, mod] = packageNameParts;
-    searchForPathSection = `node_modules${path.sep}${org}${path.sep}${mod}`;
-  } else {
-    let [mod] = packageNameParts;
-    searchForPathSection = `node_modules${path.sep}${mod}`;
-  }
-
-  let lastIndex = moduleMainFilePath.lastIndexOf(searchForPathSection);
-
-  if (lastIndex === -1) {
-    throw new Error(
-      `Couldn't resolve the base path of "${packageName}". Searched inside the resolved main file path "${moduleMainFilePath}" using "${searchForPathSection}"`
-    );
-  }
-
-  return moduleMainFilePath.slice(0, lastIndex + searchForPathSection.length);
 }
