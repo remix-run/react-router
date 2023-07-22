@@ -24,9 +24,7 @@ interface RouterProviderProps {
 
 All [data router][picking-a-router] objects are passed to this component to render your app and enable the rest of the data APIs.
 
-<docs-info>
-Due to the decoupling of fetching and rendering in the design of the data APIs, you should create your router outside of the React tree with a statically defined set of routes. For more information on this design, please see the [Remixing React Router][remixing-react-router] blog post and the W[When to Fetch][when-to-fetch] conference talk.
-</docs-info>
+<docs-info>Due to the decoupling of fetching and rendering in the design of the data APIs, you should create your router outside of the React tree with a statically defined set of routes. For more information on this design, please see the [Remixing React Router][remixing-react-router] blog post and the [When to Fetch][when-to-fetch] conference talk.</docs-info>
 
 ```jsx lines=[24]
 import {
