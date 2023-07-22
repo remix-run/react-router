@@ -153,4 +153,4 @@ submit(null, {
 Because submissions are navigations, the options may also contain the other navigation related props from [`<Form>`][form] such as `replace`, `state`, `preventScrollReset`, `relative`, etc.
 
 [pickingarouter]: ../routers/picking-a-router
-[form]: ../components/form.md
+[form]: ../components/form
