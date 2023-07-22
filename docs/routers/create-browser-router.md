@@ -9,9 +9,7 @@ This is the recommended router for all React Router web projects. It uses the [D
 
 It also enables the v6.4 data APIs like [loaders][loader], [actions][action], [fetchers][fetcher] and more.
 
-<docs-info>
-Due to the decoupling of fetching and rendering in the design of the data APIs, you should create your router outside of the React tree with a statically defined set of routes. For more information on this design, please see the [Remixing React Router][remixing-react-router] blog post and the W[When to Fetch][when-to-fetch] conference talk.
-</docs-info>
+<docs-info>Due to the decoupling of fetching and rendering in the design of the data APIs, you should create your router outside of the React tree with a statically defined set of routes. For more information on this design, please see the [Remixing React Router][remixing-react-router] blog post and the [When to Fetch][when-to-fetch] conference talk.</docs-info>
 
 ```tsx lines=[4,11-24]
 import * as React from "react";
