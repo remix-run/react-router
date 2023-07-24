@@ -15,7 +15,7 @@ Be sure to pay attention to the following features in this example:
 
 - The use of a standalone object _outside of the React tree_ that manages our authentication state
 - The use of `loader` functions to check for user authentication
-- The use of `redirect` from the `/protexted` `loader` when the user is not logged in
+- The use of `redirect` from the `/protected` `loader` when the user is not logged in
 - The use of a `<Form>` and an `action` to perform the login
 - The use of a `from` search param and a `redirectTo` hidden input to preserve the previous location so you can send the user there after they authenticate
 - The use of `<Form replace>` to replace the `/login` route in the history stack so the user doesn't return to the login page when clicking the back button after logging in
