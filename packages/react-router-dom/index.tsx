@@ -661,7 +661,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       locationPathname === toPathname ||
       (!end &&
         locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(toPathname.length) === "/");
+        locationPathname.charAt(toPathname.length - 1) === "/");
 
     let isPending =
       nextLocationPathname != null &&
