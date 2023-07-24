@@ -45,10 +45,6 @@ type Dev = {
 
 interface FutureConfig {
   v2_dev: boolean | Dev;
-  /** @deprecated Use the `postcss` config option instead */
-  unstable_postcss: boolean;
-  /** @deprecated Use the `tailwind` config option instead */
-  unstable_tailwind: boolean;
   v2_headers: boolean;
   v2_meta: boolean;
   v2_routeConvention: boolean;
@@ -114,7 +110,7 @@ export interface AppConfig {
 
   /**
    * Whether to process CSS using PostCSS if `postcss.config.js` is present.
-   * Defaults to `false`.
+   * Defaults to `true`.
    */
   postcss?: boolean;
 
@@ -179,7 +175,7 @@ export interface AppConfig {
 
   /**
    * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
-   * Defaults to `false`.
+   * Defaults to `true`.
    */
   tailwind?: boolean;
 
@@ -277,7 +273,7 @@ export interface RemixConfig {
 
   /**
    * Whether to process CSS using PostCSS if `postcss.config.js` is present.
-   * Defaults to `false`.
+   * Defaults to `true`.
    */
   postcss: boolean;
 
@@ -350,7 +346,7 @@ export interface RemixConfig {
 
   /**
    * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
-   * Defaults to `false`.
+   * Defaults to `true`.
    */
   tailwind: boolean;
 
@@ -510,32 +506,6 @@ export async function readConfig(
   }
 
   if (appConfig.future) {
-    if (appConfig.future.unstable_postcss !== undefined) {
-      logger.warn(
-        "The `future.unstable_postcss` config option has been deprecated.",
-        {
-          details: [
-            "PostCSS support is now stable.",
-            "Use the `postcss` config option instead.",
-          ],
-          key: "unstable_postcss",
-        }
-      );
-    }
-
-    if (appConfig.future.unstable_tailwind !== undefined) {
-      logger.warn(
-        "The `future.unstable_tailwind` config option has been deprecated.",
-        {
-          details: [
-            "Tailwind support is now stable.",
-            "Use the `tailwind` config option instead.",
-          ],
-          key: "unstable_tailwind",
-        }
-      );
-    }
-
     if ("unstable_dev" in appConfig.future) {
       logger.warn("The `future.unstable_dev` config option has been removed", {
         details: [
@@ -549,10 +519,8 @@ export async function readConfig(
   }
 
   let mdx = appConfig.mdx;
-  let postcss =
-    appConfig.postcss ?? appConfig.future?.unstable_postcss === true;
-  let tailwind =
-    appConfig.tailwind ?? appConfig.future?.unstable_tailwind === true;
+  let postcss = appConfig.postcss ?? true;
+  let tailwind = appConfig.tailwind ?? true;
 
   let appDirectory = path.resolve(
     rootDirectory,
@@ -760,8 +728,6 @@ export async function readConfig(
 
   let future: FutureConfig = {
     v2_dev: appConfig.future?.v2_dev ?? false,
-    unstable_postcss: appConfig.future?.unstable_postcss === true,
-    unstable_tailwind: appConfig.future?.unstable_tailwind === true,
     v2_headers: appConfig.future?.v2_headers === true,
     v2_meta: appConfig.future?.v2_meta === true,
     v2_routeConvention: appConfig.future?.v2_routeConvention === true,

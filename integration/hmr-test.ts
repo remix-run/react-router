@@ -13,7 +13,6 @@ test.setTimeout(150_000);
 let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
   config: {
     serverModuleFormat: "cjs",
-    postcss: true,
     future: {
       v2_dev: {
         port: options.devPort,

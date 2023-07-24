@@ -125,8 +125,6 @@ export function createRemixStub(
       remixContextRef.current = {
         future: {
           v2_dev: false,
-          unstable_postcss: false,
-          unstable_tailwind: false,
           v2_headers: false,
           v2_meta: false,
           v2_routeConvention: false,

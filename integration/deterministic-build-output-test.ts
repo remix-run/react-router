@@ -27,7 +27,6 @@ test("builds deterministically under different paths", async () => {
   //  * vanillaExtractPlugin (via app/routes/foo.tsx' .css.ts file import)
   let init: FixtureInit = {
     config: {
-      postcss: true,
       future: {
         v2_routeConvention: true,
       },

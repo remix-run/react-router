@@ -34,8 +34,6 @@ test.describe("PostCSS enabled", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       config: {
-        postcss: true,
-        tailwind: true,
         future: {
           v2_routeConvention: true,
         },
@@ -345,92 +343,6 @@ test.describe("PostCSS enabled", () => {
     let locator = await page.locator(
       "[data-testid='automatic-tailwind-plugin-insertion']"
     );
-    let padding = await locator.evaluate((el) => getComputedStyle(el).padding);
-    expect(padding).toBe(TEST_PADDING_VALUE);
-  });
-});
-
-test.describe("PostCSS enabled via unstable future flag", () => {
-  let fixture: Fixture;
-  let appFixture: AppFixture;
-
-  test.beforeAll(async () => {
-    fixture = await createFixture({
-      config: {
-        future: {
-          unstable_postcss: true,
-        },
-      },
-      files: {
-        "postcss.config.js": js`
-          module.exports = (ctx) => ({
-            plugins: [
-              {
-                postcssPlugin: 'replace',
-                Declaration (decl) {
-                  decl.value = decl.value
-                    .replace(
-                      /TEST_PADDING_VALUE/g,
-                      ${JSON.stringify(TEST_PADDING_VALUE)},
-                    );
-                },
-              },
-            ],
-          });
-        `,
-        "app/root.jsx": js`
-          import { Links, Outlet } from "@remix-run/react";
-          export default function Root() {
-            return (
-              <html>
-                <head>
-                  <Links />
-                </head>
-                <body>
-                  <Outlet />
-                </body>
-              </html>
-            )
-          }
-        `,
-        "app/routes/postcss-unstable-future-flag-test.jsx": js`
-          import { Test, links as testLinks } from "~/test-components/postcss-unstable-future-flag";
-          export function links() {
-            return [...testLinks()];
-          }
-          export default function() {
-            return <Test />;
-          }
-        `,
-        "app/test-components/postcss-unstable-future-flag/index.jsx": js`
-          import stylesHref from "./styles.css";
-          export function links() {
-            return [{ rel: 'stylesheet', href: stylesHref }];
-          }
-          export function Test() {
-            return (
-              <div data-testid="postcss-unstable-future-flag" className="postcss-unstable-future-flag-test">
-                <p>PostCSS unstable future flag test.</p>
-              </div>
-            );
-          }
-        `,
-        "app/test-components/postcss-unstable-future-flag/styles.css": css`
-          .postcss-unstable-future-flag-test {
-            padding: TEST_PADDING_VALUE;
-          }
-        `,
-      },
-    });
-    appFixture = await createAppFixture(fixture);
-  });
-
-  test.afterAll(() => appFixture.close());
-
-  test("uses PostCSS config", async ({ page }) => {
-    let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/postcss-unstable-future-flag-test");
-    let locator = await page.getByTestId("postcss-unstable-future-flag");
     let padding = await locator.evaluate((el) => getComputedStyle(el).padding);
     expect(padding).toBe(TEST_PADDING_VALUE);
   });
