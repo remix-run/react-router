@@ -435,75 +435,7 @@ export async function readConfig(
     serverModuleFormat === "esm" ? ["module", "main"] : ["main", "module"];
   serverMinify ??= false;
 
-  let serverNodeBuiltinsPolyfill: RemixConfig["serverNodeBuiltinsPolyfill"];
-
-  if (appConfig.serverNodeBuiltinsPolyfill != null) {
-    serverNodeBuiltinsPolyfill = appConfig.serverNodeBuiltinsPolyfill;
-  } else if (serverPlatform !== "node") {
-    serverNodeBuiltinsPolyfillWarning();
-    serverNodeBuiltinsPolyfill = {
-      modules: {
-        // Note: Remove this in Remix v2
-        // All polyfills are ultimately sourced from JSPM: https://github.com/jspm/jspm-core/tree/main/nodelibs/browser
-        // Polyfills we choose to disable are explicitly configured here so we can note the reason for disabling them.
-        // Links are provided here to make it easier to review the source code for each polyfill.
-        _stream_duplex: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/_stream_duplex.js
-        _stream_passthrough: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/_stream_passthrough.js
-        _stream_readable: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/_stream_readable.js
-        _stream_transform: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/_stream_transform.js
-        _stream_writable: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/_stream_writable.js
-        assert: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/assert.js
-        "assert/strict": true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/assert/strict.js
-        async_hooks: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/async_hooks.js. Also Cloudflare Workers provides an implementation: https://developers.cloudflare.com/workers/runtime-apis/nodejs/asynclocalstorage/
-        buffer: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/buffer.js
-        child_process: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/child_process.js
-        cluster: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/cluster.js
-        console: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/console.js
-        constants: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/constants.js
-        crypto: "empty", // Polyfill exists (https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/crypto.js) but source code is over 2MB! Also, it was "empty" in esbuild-plugin-polyfill-node which we used previously as of Remix v1.17.0: https://github.com/cyco130/esbuild-plugin-polyfill-node/blob/9afcb6abaf9062a15daaffce9a14e478b365139c/src/index.ts#L144
-        dgram: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/dgram.js
-        diagnostics_channel: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/diagnostics_channel.js
-        dns: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/dns.js
-        "dns/promises": false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/dns/promises.js
-        domain: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/domain.js
-        events: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/events.js
-        fs: "empty", // Polyfill was "empty" in esbuild-plugin-polyfill-node which we used previously as of Remix v1.17.0 (https://github.com/cyco130/esbuild-plugin-polyfill-node/blob/9afcb6abaf9062a15daaffce9a14e478b365139c/src/index.ts#L143C6-L143C6). Also, the polyfill immediately throws when importing in Cloudflare Workers due to top-level setTimeout usage which is not allowed outside of the request lifecycle: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/fs.js
-        "fs/promises": "empty", // See above
-        http: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/http.js
-        http2: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/http2.js
-        https: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/https.js
-        module: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/module.js
-        net: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/net.js
-        os: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/os.js
-        path: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/path.js
-        "path/posix": true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/path/posix.js
-        "path/win32": true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/path/win32.js
-        perf_hooks: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/perf_hooks.js
-        process: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/process.js
-        punycode: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/punycode.js
-        querystring: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/querystring.js
-        readline: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/readline.js
-        repl: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/repl.js
-        stream: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/stream.js
-        "stream/promises": true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/stream/promises.js
-        "stream/web": true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/stream/web.js
-        string_decoder: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/string_decoder.js
-        sys: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/sys.js
-        timers: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/timers.js
-        "timers/promises": true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/timers/promises.js
-        tls: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/tls.js
-        tty: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/tty.js - Effectively not implemented, but provides `isatty` as `false` so consumers can check to avoid it
-        url: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/url.js
-        util: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/util.js
-        "util/types": true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/util/types.js
-        v8: false, // Unimplemented, throws on usage: https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/v8.js
-        vm: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/vm.js
-        wasi: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/wasi.js
-        worker_threads: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/worker_threads.js
-        zlib: true, // https://github.com/jspm/jspm-core/blob/main/nodelibs/browser/zlib.js
-      },
-    };
-  }
+  let serverNodeBuiltinsPolyfill = appConfig.serverNodeBuiltinsPolyfill;
 
   if (appConfig.future) {
     if ("unstable_dev" in appConfig.future) {
@@ -845,19 +777,6 @@ let serverModuleFormatWarning = () =>
     ],
     key: "serverModuleFormatWarning",
   });
-
-let serverNodeBuiltinsPolyfillWarning = () =>
-  logger.warn(
-    "The `serverNodeBuiltinsPolyfill` config default option will be changing in v2",
-    {
-      details: [
-        "Server polyfills will no longer be provided by default for non-Node.js platforms.",
-        "You can prepare for this change by specifying server polyfills, or opting out entirely.",
-        "-> https://remix.run/docs/en/v1.19.0/pages/v2#servernodebuiltinspolyfill",
-      ],
-      key: "serverNodeBuiltinsPolyfillWarning",
-    }
-  );
 
 let futureFlagWarning =
   (args: { message: string; flag: string; link: string }) => () => {
