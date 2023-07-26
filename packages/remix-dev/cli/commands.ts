@@ -163,9 +163,6 @@ export async function dev(
     port?: number;
     tlsKey?: string;
     tlsCert?: string;
-    scheme?: string; // TODO: remove in v2
-    host?: string; // TODO: remove in v2
-    restart?: boolean; // TODO: remove in v2
   } = {}
 ) {
   console.log(`\n 💿  remix dev\n`);
@@ -390,10 +387,6 @@ let resolveDev = async (
     port?: number;
     tlsKey?: string;
     tlsCert?: string;
-    /** @deprecated */
-    scheme?: string; // TODO: remove in v2
-    /** @deprecated */
-    host?: string; // TODO: remove in v2
   } = {}
 ) => {
   let dev = config.future.v2_dev;
@@ -413,17 +406,8 @@ let resolveDev = async (
 
   let REMIX_DEV_ORIGIN = process.env.REMIX_DEV_ORIGIN;
   if (REMIX_DEV_ORIGIN === undefined) {
-    // prettier-ignore
-    let scheme =
-      flags.scheme ?? // TODO: remove in v2
-      (dev === true ? undefined : dev.scheme) ?? // TODO: remove in v2
-      isTLS ? "https" : "http";
-    // prettier-ignore
-    let hostname =
-      flags.host ?? // TODO: remove in v2
-      (dev === true ? undefined : dev.host) ?? // TODO: remove in v2
-      "localhost";
-    REMIX_DEV_ORIGIN = `${scheme}://${hostname}:${port}`;
+    let scheme = isTLS ? "https" : "http";
+    REMIX_DEV_ORIGIN = `${scheme}://localhost:${port}`;
   }
 
   return {
@@ -442,9 +426,6 @@ let resolveDevServe = async (
     port?: number;
     tlsKey?: string;
     tlsCert?: string;
-    scheme?: string; // TODO: remove in v2
-    host?: string; // TODO: remove in v2
-    restart?: boolean; // TODO: remove in v2
   } = {}
 ) => {
   let dev = config.future.v2_dev;
@@ -457,22 +438,10 @@ let resolveDevServe = async (
     flags.command ??
     (dev === true ? undefined : dev.command)
 
-  // TODO: remove in v2
-  let restart = dev === true ? undefined : dev.restart;
-  if (restart !== undefined) {
-    logger.warn("The `v2_dev.restart` option is deprecated", {
-      details: [
-        "Use `v2_dev.manual` instead.",
-        "-> https://remix.run/docs/en/main/guides/development-performance#manual-mode",
-      ],
-    });
-  }
-
   // prettier-ignore
   let manual =
     flags.manual ??
     (dev === true ? undefined : dev.manual) ??
-    restart !== undefined ? !restart : // TODO: remove in v2
     false;
 
   return {
