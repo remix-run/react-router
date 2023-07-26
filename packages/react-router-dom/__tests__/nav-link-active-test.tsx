@@ -397,6 +397,33 @@ describe("NavLink", () => {
       expect(anchor.props.className).toMatch("active");
     });
 
+    it("In case of trailing slash with no further ", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home/child"]}>
+            <Routes>
+              <Route
+                path="home"
+                element={
+                  <div>
+                    <NavLink to="/home/">Home</NavLink>
+                    <Outlet />
+                  </div>
+                }
+              >
+                <Route path="child" element={<div>Child</div>} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).toMatch("active");
+    });
+
     describe("when end=true", () => {
       it("does not apply the default 'active' className to the underlying <a>", () => {
         let renderer: TestRenderer.ReactTestRenderer;

@@ -656,12 +656,12 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         : null;
       toPathname = toPathname.toLowerCase();
     }
-
+    const endSlashPosition = (toPathname.length > 1 && toPathname[toPathname.length - 1] === "/") ? toPathname.length - 1 : toPathname.length;
     let isActive =
       locationPathname === toPathname ||
       (!end &&
-        locationPathname.startsWith(toPathname) &&
-        (locationPathname.charAt(toPathname.length - 1) === "/" || locationPathname.charAt(toPathname.length) === "/")
+        locationPathname.startsWith(toPathname) && 
+            locationPathname.charAt(endSlashPosition) === "/" 
       );
 
     let isPending =
