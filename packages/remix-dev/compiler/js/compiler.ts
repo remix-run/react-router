@@ -138,10 +138,6 @@ const createEsbuildConfig = (
       "process.env.REMIX_DEV_ORIGIN": JSON.stringify(
         ctx.options.REMIX_DEV_ORIGIN ?? ""
       ),
-      // TODO: remove in v2
-      "process.env.REMIX_DEV_SERVER_WS_PORT": JSON.stringify(
-        ctx.config.devServerPort
-      ),
       ...(ctx.options.mode === "production"
         ? {
             "import.meta.hot": "undefined",
