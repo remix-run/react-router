@@ -60,6 +60,31 @@ describe("matchRoutes", () => {
     { path: "*", element: <h1>Not Found</h1> },
   ];
 
+  let routesWithOptionalParameters: RouteObject[] = [
+    {
+      path: "/*",
+      element: <h1>Home</h1>,
+      children: [
+        {
+          path: "layout/:type?/*",
+          element: <p>Layout</p>,
+          children: [
+            {
+              path: ":details/*",
+              element: <p>details</p>,
+              children: [
+                {
+                  path: "content",
+                  element: <p>Content</p>,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
   it("matches root * routes correctly", () => {
     expect(pickPaths(routes, "/not-found")).toEqual(["*"]);
     expect(pickPaths(routes, "/hometypo")).toEqual(["*"]);
@@ -116,6 +141,13 @@ describe("matchRoutes", () => {
     let matches = matchRoutes(routes, "/users/mj")!;
     expect(matches[0].route).toBe(usersRoute);
     expect(matches[1].route).toBe(userProfileRoute);
+  });
+
+  it("matches parent path with optional parameter without matching any child", () => {
+    expect(pickPaths(routesWithOptionalParameters, "/layout/type1")).toEqual([
+      "/*",
+      "layout/:type?/*",
+    ]);
   });
 
   describe("with a basename", () => {
