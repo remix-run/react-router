@@ -34,13 +34,6 @@ type Dev = {
   port?: number;
   tlsKey?: string;
   tlsCert?: string;
-
-  /** @deprecated remove in v2 */
-  restart?: boolean;
-  /** @deprecated remove in v2 */
-  scheme?: string;
-  /** @deprecated remove in v2 */
-  host?: string;
 };
 
 interface FutureConfig {
