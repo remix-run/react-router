@@ -99,7 +99,6 @@ export let serve = async (
           PATH:
             bin + (process.platform === "win32" ? ";" : ":") + process.env.PATH,
           REMIX_DEV_ORIGIN: options.REMIX_DEV_ORIGIN.href,
-          REMIX_DEV_HTTP_ORIGIN: options.REMIX_DEV_ORIGIN.href, // TODO: remove in v2
           FORCE_COLOR: process.env.NO_COLOR === undefined ? "1" : "0",
         },
         // https://github.com/sindresorhus/execa/issues/433

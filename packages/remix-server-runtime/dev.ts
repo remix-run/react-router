@@ -1,7 +1,7 @@
 import type { ServerBuild } from "./build";
 
 export async function broadcastDevReady(build: ServerBuild, origin?: string) {
-  origin ??= process.env.REMIX_DEV_HTTP_ORIGIN;
+  origin ??= process.env.REMIX_DEV_ORIGIN;
   if (!origin) throw Error("Dev server origin not set");
   let url = new URL(origin);
   url.pathname = "ping";

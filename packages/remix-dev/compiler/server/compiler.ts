@@ -115,10 +115,6 @@ const createEsbuildConfig = (
       "process.env.REMIX_DEV_ORIGIN": JSON.stringify(
         ctx.options.REMIX_DEV_ORIGIN ?? ""
       ),
-      // TODO: remove in v2
-      "process.env.REMIX_DEV_HTTP_ORIGIN": JSON.stringify(
-        ctx.options.REMIX_DEV_ORIGIN ?? ""
-      ),
     },
     jsx: "automatic",
     jsxDev: ctx.options.mode !== "production",
