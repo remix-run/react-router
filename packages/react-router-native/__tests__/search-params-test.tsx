@@ -1,11 +1,12 @@
 import * as React from "react";
 import { View, Text, TextInput } from "react-native";
+import type {
+  SetURLSearchParams} from "react-router-native";
 import {
   NativeRouter,
   Routes,
   Route,
-  useSearchParams,
-  SetURLSearchParams,
+  useSearchParams
 } from "react-router-native";
 import * as TestRenderer from "react-test-renderer";
 
@@ -165,7 +166,7 @@ describe("useSearchParams", () => {
       const lastParamsRef = React.useRef<URLSearchParams>();
       const lastSetterRef = React.useRef<SetURLSearchParams>();
       const [searchParams, setSearchParams] = useSearchParams({ q: "" });
-      const [query, setQuery] = React.useState(searchParams.get("q")!);
+      const [query] = React.useState(searchParams.get("q")!);
 
       if(lastParamsRef.current !== searchParams) {
         incrementParamsUpdateCount();
