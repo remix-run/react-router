@@ -397,7 +397,7 @@ describe("NavLink", () => {
       expect(anchor.props.className).toMatch("active");
     });
 
-    it("In case of trailing slash with no further ", () => {
+    it("In case of trailing slash with no further", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
