@@ -42,11 +42,6 @@ test.describe("ErrorBoundary", () => {
     console.error = () => {};
     fixture = await createFixture(
       {
-        config: {
-          future: {
-            v2_routeConvention: true,
-          },
-        },
         files: {
           "app/root.jsx": js`
               import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -499,11 +494,6 @@ test.describe("ErrorBoundary", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            v2_routeConvention: true,
-          },
-        },
         files: {
           "app/root.jsx": js`
               import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -669,11 +659,6 @@ test.describe("loaderData in ErrorBoundary", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: {
-          v2_routeConvention: true,
-        },
-      },
       files: {
         "app/root.jsx": js`
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -1022,11 +1007,6 @@ test.describe("Default ErrorBoundary", () => {
     test.beforeAll(async () => {
       fixture = await createFixture(
         {
-          config: {
-            future: {
-              v2_routeConvention: true,
-            },
-          },
           files: getFiles({ includeRootErrorBoundary: false }),
         },
         ServerMode.Development
@@ -1098,11 +1078,6 @@ test.describe("Default ErrorBoundary", () => {
     test.beforeAll(async () => {
       fixture = await createFixture(
         {
-          config: {
-            future: {
-              v2_routeConvention: true,
-            },
-          },
           files: getFiles({ includeRootErrorBoundary: true }),
         },
         ServerMode.Development
@@ -1168,11 +1143,6 @@ test.describe("Default ErrorBoundary", () => {
   test.describe("When the root route has a boundary but it also throws 😦", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            v2_routeConvention: true,
-          },
-        },
         files: getFiles({
           includeRootErrorBoundary: true,
           rootErrorBoundaryThrows: true,
@@ -1257,11 +1227,6 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
   console.error = () => {};
 
   let fixture = await createFixture({
-    config: {
-      future: {
-        v2_routeConvention: true,
-      },
-    },
     files: {
       "app/root.jsx": js`
           import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";

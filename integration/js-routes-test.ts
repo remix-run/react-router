@@ -10,11 +10,6 @@ test.describe(".js route files", () => {
   test.beforeAll(async () => {
     appFixture = await createAppFixture(
       await createFixture({
-        config: {
-          future: {
-            v2_routeConvention: true,
-          },
-        },
         files: {
           "app/routes/js.js": js`
             export default () => <div data-testid="route-js">Rendered with .js ext</div>;

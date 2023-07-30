@@ -27,7 +27,6 @@ describe("readConfig", () => {
         future: {
           v2_headers: expect.any(Boolean),
           v2_meta: expect.any(Boolean),
-          v2_routeConvention: expect.any(Boolean),
         },
       },
       `
@@ -45,7 +44,6 @@ describe("readConfig", () => {
           "v2_dev": false,
           "v2_headers": Any<Boolean>,
           "v2_meta": Any<Boolean>,
-          "v2_routeConvention": Any<Boolean>,
         },
         "mdx": undefined,
         "postcss": true,

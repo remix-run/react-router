@@ -15,9 +15,6 @@ test.describe("flat routes", () => {
     fixture = await createFixture({
       config: {
         ignoredRouteFiles: [IGNORED_ROUTE],
-        future: {
-          v2_routeConvention: true,
-        },
       },
       files: {
         "app/root.jsx": js`
@@ -165,56 +162,6 @@ test.describe("flat routes", () => {
   });
 });
 
-test.describe("warns when v1 routesConvention is used", () => {
-  let buildStdio = new PassThrough();
-  let buildOutput: string;
-
-  let originalConsoleLog = console.log;
-  let originalConsoleWarn = console.warn;
-  let originalConsoleError = console.error;
-
-  test.beforeAll(async () => {
-    console.log = () => {};
-    console.warn = () => {};
-    console.error = () => {};
-    await createFixtureProject({
-      buildStdio,
-      config: {
-        future: { v2_routeConvention: false },
-      },
-      files: {
-        "routes/index.tsx": js`
-          export default function () {
-            return <p>routes/index</p>;
-          }
-        `,
-      },
-    });
-
-    let chunks: Buffer[] = [];
-    buildOutput = await new Promise<string>((resolve, reject) => {
-      buildStdio.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-      buildStdio.on("error", (err) => reject(err));
-      buildStdio.on("end", () =>
-        resolve(Buffer.concat(chunks).toString("utf8"))
-      );
-    });
-  });
-
-  test.afterAll(() => {
-    console.log = originalConsoleLog;
-    console.warn = originalConsoleWarn;
-    console.error = originalConsoleError;
-  });
-
-  test("v2_routeConvention is not enabled", () => {
-    console.log(buildOutput);
-    expect(buildOutput).toContain(
-      "The route file convention is changing in v2"
-    );
-  });
-});
-
 test.describe("emits warnings for route conflicts", async () => {
   let buildStdio = new PassThrough();
   let buildOutput: string;
@@ -229,9 +176,6 @@ test.describe("emits warnings for route conflicts", async () => {
     console.error = () => {};
     await createFixtureProject({
       buildStdio,
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "routes/_dashboard._index.tsx": js`
           export default function () {
@@ -287,9 +231,6 @@ test.describe("", () => {
     console.error = () => {};
     await createFixtureProject({
       buildStdio,
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "app/routes/_index/route.jsx": js``,
         "app/routes/_index/utils.js": js``,
@@ -320,9 +261,6 @@ test.describe("", () => {
 test.describe("pathless routes and route collisions", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "app/root.tsx": js`
           import { Link, Outlet, Scripts, useMatches } from "@remix-run/react";
@@ -407,11 +345,11 @@ test.describe("pathless routes and route collisions", () => {
    *
    * <Routes>
    *   <Route file="root.jsx">
-   *     <Route path="nested" file="routes/nested/__pathless.jsx">
-   *       <Route path="foo" file="routes/nested/__pathless/foo.jsx" />
+   *     <Route path="nested" file="routes/nested._pathless.jsx">
+   *       <Route path="foo" file="routes/nested._pathless/foo.jsx" />
    *     </Route>
-   *     <Route path="nested" index file="routes/nested/index.jsx" />
-   *     <Route index file="routes/index.jsx" />
+   *     <Route path="nested" index file="routes/nested._index.jsx" />
+   *     <Route index file="routes/_index.jsx" />
    *   </Route>
    * </Routes>
    */

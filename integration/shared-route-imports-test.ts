@@ -10,9 +10,6 @@ let appFixture: AppFixture;
 test.describe("v1 compiler", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "app/routes/parent.jsx": js`
           import { createContext, useContext } from "react";
@@ -101,7 +98,9 @@ test.describe("v2 compiler", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       config: {
-        future: { v2_routeConvention: true, v2_dev: true },
+        future: {
+          v2_dev: true,
+        },
       },
       files: {
         "app/routes/parent.jsx": js`

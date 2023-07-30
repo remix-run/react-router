@@ -33,11 +33,6 @@ test.describe("PostCSS enabled", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: {
-          v2_routeConvention: true,
-        },
-      },
       files: {
         // We provide a test plugin that replaces the strings
         // "TEST_PADDING_VALUE" and "TEST_POSTCSS_CONTEXT".

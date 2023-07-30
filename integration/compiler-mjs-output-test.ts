@@ -14,7 +14,6 @@ test.beforeAll(async () => {
         export default {
           serverModuleFormat: "esm",
           serverBuildPath: "build/index.mjs",
-          future: { v2_routeConvention: true },
         };
       `,
       "package.json": js`

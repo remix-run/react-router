@@ -28,9 +28,6 @@ test.describe("cloudflare compiler", () => {
 
   test.beforeAll(async () => {
     projectDir = await createFixtureProject({
-      config: {
-        future: { v2_routeConvention: true },
-      },
       setup: "cloudflare",
       template: "cf-template",
       files: {

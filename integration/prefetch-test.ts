@@ -12,9 +12,6 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture";
 // Generate the test app using the given prefetch mode
 function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
   return {
-    config: {
-      future: { v2_routeConvention: true },
-    },
     files: {
       "app/root.jsx": js`
         import {
@@ -278,9 +275,6 @@ test.describe("prefetch=viewport", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "app/routes/_index.jsx": js`
           import { Link } from "@remix-run/react";
@@ -355,9 +349,6 @@ test.describe("other scenarios", () => {
     page,
   }) => {
     fixture = await createFixture({
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "app/root.jsx": js`
             import { Links, Meta, Scripts, useFetcher } from "@remix-run/react";

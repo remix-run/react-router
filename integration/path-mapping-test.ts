@@ -7,9 +7,6 @@ let fixture: Fixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    config: {
-      future: { v2_routeConvention: true },
-    },
     files: {
       "app/components/my-lib/index.ts": js`
         export const pizza = "this is a pizza";

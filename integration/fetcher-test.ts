@@ -17,9 +17,6 @@ test.describe("useFetcher", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "app/routes/resource-route-action-only.ts": js`
           import { json } from "@remix-run/node";
@@ -425,11 +422,6 @@ test.describe("fetcher aborts and adjacent forms", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: {
-          v2_routeConvention: true,
-        },
-      },
       files: {
         "app/routes/_index.jsx": js`
           import * as React from "react";

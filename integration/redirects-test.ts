@@ -10,9 +10,6 @@ test.describe("redirects", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: { v2_routeConvention: true },
-      },
       files: {
         "app/routes/action.jsx": js`
           import { Outlet, useLoaderData } from "@remix-run/react";

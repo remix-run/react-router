@@ -43,11 +43,6 @@ function runTests(ext: typeof extensions[number]) {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: {
-          v2_routeConvention: true,
-        },
-      },
       files: {
         [tailwindConfigName]: tailwindConfig,
 

@@ -14,9 +14,6 @@ let appFixture: AppFixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    config: {
-      future: { v2_routeConvention: true },
-    },
     files: {
       "node_modules/has-side-effects/package.json": json({
         name: "has-side-effects",

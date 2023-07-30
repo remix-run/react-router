@@ -17,8 +17,6 @@ test.describe("headers export", () => {
       {
         config: {
           future: {
-            v2_routeConvention: true,
-
             v2_headers: true,
           },
         },
@@ -226,9 +224,6 @@ test.describe("headers export", () => {
 
     let fixture = await createFixture(
       {
-        config: {
-          future: { v2_routeConvention: true },
-        },
         files: {
           "app/root.jsx": js`
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -438,8 +433,6 @@ test.describe("v1 behavior (future.v2_headers=false)", () => {
       {
         config: {
           future: {
-            v2_routeConvention: true,
-
             v2_headers: false,
           },
         },

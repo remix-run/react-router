@@ -63,7 +63,7 @@ test.describe("navigation states", () => {
             );
           }
         `,
-        "app/routes/index.jsx": js`
+        "app/routes/_index.jsx": js`
           import { Form, Link, useFetcher } from "@remix-run/react";
           export function loader() { return null; }
           export default function() {
