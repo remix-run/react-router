@@ -1,9 +1,8 @@
 import type { Plugin } from "esbuild";
-import { readFile } from "fs-extra";
 
 import type { LazyValue } from "../lazyValue";
 
-const pluginName = "css-bundle-update-plugin";
+const pluginName = "css-bundle-plugin";
 const namespace = `${pluginName}-ns`;
 
 /**
@@ -38,19 +37,14 @@ export function cssBundlePlugin(refs: {
         };
       });
 
-      build.onLoad({ filter: /.*/, namespace }, async (args) => {
+      build.onLoad({ filter: /.*/, namespace }, async () => {
         let cssBundleHref = await refs.lazyCssBundleHref.get();
-
-        let contents = await readFile(args.path, "utf8");
-
-        contents = contents.replace(
-          /__INJECT_CSS_BUNDLE_HREF__/g,
-          cssBundleHref ? JSON.stringify(cssBundleHref) : "undefined"
-        );
 
         return {
           loader: "js",
-          contents,
+          contents: `export const cssBundleHref = ${
+            cssBundleHref ? JSON.stringify(cssBundleHref) : "undefined"
+          };`,
         };
       });
     },
