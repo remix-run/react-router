@@ -18,7 +18,6 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
         port: options.devPort,
       },
       v2_meta: true,
-      v2_headers: true,
     },
   },
   files: {

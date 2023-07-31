@@ -50,9 +50,8 @@ export function getDocumentHeadersRR(
       errorHeaders !== loaderHeaders &&
       errorHeaders !== actionHeaders;
 
-    // When the future flag is enabled, use the parent headers for any route
-    // that doesn't have a `headers` export
-    if (routeModule.headers == null && build.future.v2_headers) {
+    // Use the parent headers for any route without a `headers` export
+    if (routeModule.headers == null) {
       let headers = new Headers(parentHeaders);
       if (includeErrorCookies) {
         prependCookies(errorHeaders!, headers);

@@ -25,7 +25,6 @@ describe("readConfig", () => {
         entryServerFilePath: expect.any(String),
         tsconfigPath: expect.any(String),
         future: {
-          v2_headers: expect.any(Boolean),
           v2_meta: expect.any(Boolean),
         },
       },
@@ -42,7 +41,6 @@ describe("readConfig", () => {
         "entryServerFilePath": Any<String>,
         "future": Object {
           "v2_dev": false,
-          "v2_headers": Any<Boolean>,
           "v2_meta": Any<Boolean>,
         },
         "mdx": undefined,
