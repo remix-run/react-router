@@ -32,7 +32,7 @@
     "@types/source-map-support": "^0.5.4"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "files": [
     "dist/",

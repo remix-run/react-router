@@ -45,7 +45,7 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
         typescript: "0.0.0-local-version",
       },
       engines: {
-        node: ">=14.0.0",
+        node: ">=18.0.0",
       },
     }),
 
