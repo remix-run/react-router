@@ -13,9 +13,7 @@ export interface EntryContext {
   serializeError(error: Error): SerializedError;
 }
 
-export interface FutureConfig {
-  v2_meta: boolean;
-}
+export interface FutureConfig {}
 
 export interface AssetsManifest {
   entry: {

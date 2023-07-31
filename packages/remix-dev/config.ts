@@ -35,9 +35,7 @@ type Dev = {
   tlsCert?: string;
 };
 
-interface FutureConfig {
-  v2_meta: boolean;
-}
+interface FutureConfig {}
 
 type ServerNodeBuiltinsPolyfillOptions = Pick<
   EsbuildPluginsNodeModulesPolyfillOptions,
@@ -407,10 +405,6 @@ export async function readConfig(
     }
   }
 
-  if (!appConfig.future?.v2_meta) {
-    metaWarning();
-  }
-
   let serverBuildPath = path.resolve(
     rootDirectory,
     appConfig.serverBuildPath ?? "build/index.js"
@@ -631,9 +625,7 @@ export async function readConfig(
     tsconfigPath = rootJsConfig;
   }
 
-  let future: FutureConfig = {
-    v2_meta: appConfig.future?.v2_meta === true,
-  };
+  let future: FutureConfig = {};
 
   return {
     appDirectory,
@@ -748,20 +740,3 @@ let serverModuleFormatWarning = () =>
     ],
     key: "serverModuleFormatWarning",
   });
-
-let futureFlagWarning =
-  (args: { message: string; flag: string; link: string }) => () => {
-    logger.warn(args.message, {
-      key: args.flag,
-      details: [
-        `You can use the \`${args.flag}\` future flag to opt-in early.`,
-        `-> ${args.link}`,
-      ],
-    });
-  };
-
-let metaWarning = futureFlagWarning({
-  message: "The route `meta` API is changing in v2",
-  flag: "v2_meta",
-  link: "https://remix.run/docs/en/v1.15.0/pages/v2#meta",
-});

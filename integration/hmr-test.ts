@@ -16,9 +16,6 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
     dev: {
       port: options.devPort,
     },
-    future: {
-      v2_meta: true,
-    },
   },
   files: {
     "package.json": json({

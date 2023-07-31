@@ -24,9 +24,6 @@ describe("readConfig", () => {
         entryClientFilePath: expect.any(String),
         entryServerFilePath: expect.any(String),
         tsconfigPath: expect.any(String),
-        future: {
-          v2_meta: expect.any(Boolean),
-        },
       },
       `
       Object {
@@ -40,9 +37,7 @@ describe("readConfig", () => {
         "entryClientFilePath": Any<String>,
         "entryServerFile": "entry.server.tsx",
         "entryServerFilePath": Any<String>,
-        "future": Object {
-          "v2_meta": Any<Boolean>,
-        },
+        "future": Object {},
         "mdx": undefined,
         "postcss": true,
         "publicPath": "/build/",

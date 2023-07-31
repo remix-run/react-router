@@ -1,15 +1,8 @@
-import type {
-  AgnosticRouteMatch,
-  Location,
-  Params,
-  RouterState,
-} from "@remix-run/router";
+import type { AgnosticRouteMatch, Location, Params } from "@remix-run/router";
 
 import type { AppLoadContext, AppData } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "./serialize";
-
-type RouteData = RouterState["loaderData"];
 
 export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule;
@@ -79,12 +72,14 @@ export interface LoaderFunction {
 }
 
 /**
- * A function that returns an object of name + content pairs to use for
- * `<meta>` tags for a route. These tags will be merged with (and take
- * precedence over) tags from parent routes.
+ * A function that returns an array of data objects to use for rendering
+ * metadata HTML tags in a route. These tags are not rendered on descendant
+ * routes in the route hierarchy. In other words, they will only be rendered on
+ * the route in which they are exported.
  *
- * @param Loader - Loader for this meta function's route
- * @param ParentsLoaders - Mapping from a parent's route filepath to that route's loader
+ * @param Loader - The type of the current route's loader function
+ * @param MatchLoaders - Mapping from a parent route's filepath to its loader
+ * function type
  *
  * Note that parent route filepaths are relative to the `app/` directory.
  *
@@ -122,39 +117,28 @@ export interface LoaderFunction {
  *  "root": RootLoader,
  *  "routes/sales": SalesLoader,
  *  "routes/sales/customers": CustomersLoader,
- * }> = ({ data, parentsData }) => {
+ * }> = ({ data, matches }) => {
  *   const { name } = data
  *   //      ^? string
- *   const { customerCount } = parentsData["routes/sales/customers"]
+ *   const { customerCount } = matches.find((match) => match.id === "routes/sales/customers").data
  *   //      ^? number
- *   const { salesCount } = parentsData["routes/sales"]
+ *   const { salesCount } = matches.find((match) => match.id === "routes/sales").data
  *   //      ^? number
- *   const { hello } = parentsData["root"]
+ *   const { hello } = matches.find((match) => match.id === "root").data
  *   //      ^? "world"
  * }
  * ```
  */
-export interface V1_MetaFunction<
+export interface ServerRuntimeMetaFunction<
   Loader extends LoaderFunction | unknown = unknown,
   ParentsLoaders extends Record<string, LoaderFunction> = {}
 > {
-  (args: {
-    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
-    parentsData: {
-      [k in keyof ParentsLoaders]: SerializeFrom<ParentsLoaders[k]>;
-    } & RouteData;
-    params: Params;
-    location: Location;
-  }): HtmlMetaDescriptor;
+  (
+    args: ServerRuntimeMetaArgs<Loader, ParentsLoaders>
+  ): ServerRuntimeMetaDescriptor[];
 }
 
-// TODO: Replace in v2
-export type MetaFunction<
-  Loader extends LoaderFunction | unknown = unknown,
-  ParentsLoaders extends Record<string, LoaderFunction> = {}
-> = V1_MetaFunction<Loader, ParentsLoaders>;
-
-interface V2_ServerRuntimeMetaMatch<
+interface ServerRuntimeMetaMatch<
   RouteId extends string = string,
   Loader extends LoaderFunction | unknown = unknown
 > {
@@ -163,21 +147,21 @@ interface V2_ServerRuntimeMetaMatch<
   data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
   handle?: unknown;
   params: AgnosticRouteMatch["params"];
-  meta: V2_ServerRuntimeMetaDescriptor[];
+  meta: ServerRuntimeMetaDescriptor[];
 }
 
-type V2_ServerRuntimeMetaMatches<
+type ServerRuntimeMetaMatches<
   MatchLoaders extends Record<string, unknown> = Record<string, unknown>
 > = Array<
   {
-    [K in keyof MatchLoaders]: V2_ServerRuntimeMetaMatch<
+    [K in keyof MatchLoaders]: ServerRuntimeMetaMatch<
       Exclude<K, number | symbol>,
       MatchLoaders[K]
     >;
   }[keyof MatchLoaders]
 >;
 
-export interface V2_ServerRuntimeMetaArgs<
+export interface ServerRuntimeMetaArgs<
   Loader extends LoaderFunction | unknown = unknown,
   MatchLoaders extends Record<string, unknown> = Record<string, unknown>
 > {
@@ -186,42 +170,10 @@ export interface V2_ServerRuntimeMetaArgs<
     | undefined;
   params: Params;
   location: Location;
-  matches: V2_ServerRuntimeMetaMatches<MatchLoaders>;
+  matches: ServerRuntimeMetaMatches<MatchLoaders>;
 }
 
-export interface V2_ServerRuntimeMetaFunction<
-  Loader extends LoaderFunction | unknown = unknown,
-  ParentsLoaders extends Record<string, LoaderFunction> = {}
-> {
-  (
-    args: V2_ServerRuntimeMetaArgs<Loader, ParentsLoaders>
-  ): V2_ServerRuntimeMetaDescriptor[];
-}
-
-/**
- * A name/content pair used to render `<meta>` tags in a meta function for a
- * route. The value can be either a string, which will render a single `<meta>`
- * tag, or an array of strings that will render multiple tags with the same
- * `name` attribute.
- */
-export interface V1_HtmlMetaDescriptor {
-  charset?: "utf-8";
-  charSet?: "utf-8";
-  title?: string;
-  [name: string]:
-    | null
-    | string
-    | undefined
-    | Record<string, string>
-    | Array<Record<string, string> | string>;
-}
-
-// TODO: Replace in v2
-export type HtmlMetaDescriptor = V1_HtmlMetaDescriptor;
-
-export type MetaDescriptor = HtmlMetaDescriptor;
-
-export type V2_ServerRuntimeMetaDescriptor =
+export type ServerRuntimeMetaDescriptor =
   | { charSet: "utf-8" }
   | { title: string }
   | { name: string; content: string }
@@ -248,7 +200,7 @@ export interface EntryRouteModule {
   default: any; // Weakly typed because server-runtime is not React-aware
   handle?: RouteHandle;
   links?: LinksFunction;
-  meta?: MetaFunction | HtmlMetaDescriptor;
+  meta?: ServerRuntimeMetaFunction;
 }
 
 export interface ServerRouteModule extends EntryRouteModule {
