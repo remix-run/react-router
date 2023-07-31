@@ -33,6 +33,7 @@ describe("readConfig", () => {
         "appDirectory": Any<String>,
         "assetsBuildDirectory": Any<String>,
         "cacheDirectory": Any<String>,
+        "dev": Object {},
         "devServerBroadcastDelay": 0,
         "devServerPort": Any<Number>,
         "entryClientFile": "entry.client.tsx",
@@ -40,7 +41,6 @@ describe("readConfig", () => {
         "entryServerFile": "entry.server.tsx",
         "entryServerFilePath": Any<String>,
         "future": Object {
-          "v2_dev": false,
           "v2_meta": Any<Boolean>,
         },
         "mdx": undefined,

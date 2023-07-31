@@ -83,9 +83,6 @@ export function mockServerBuild(
       },
       {}
     ),
-    future: {
-      v2_dev: {},
-    },
   };
 }
 

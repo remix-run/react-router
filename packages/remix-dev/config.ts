@@ -36,7 +36,6 @@ type Dev = {
 };
 
 interface FutureConfig {
-  v2_dev: boolean | Dev;
   v2_meta: boolean;
 }
 
@@ -83,11 +82,20 @@ export interface AppConfig {
   publicPath?: string;
 
   /**
+   * Options for `remix dev`. See https://remix.run/docs/en/main/other-api/dev-v2#options-1
+   */
+  dev?: Dev;
+
+  /**
+   * @deprecated
+   *
    * The port number to use for the dev server. Defaults to 8002.
    */
   devServerPort?: number;
 
   /**
+   * @deprecated
+   *
    * The delay, in milliseconds, before the dev server broadcasts a reload
    * event. There is no delay by default.
    */
@@ -245,6 +253,11 @@ export interface RemixConfig {
    * The URL prefix of the public build with a trailing slash.
    */
   publicPath: string;
+
+  /**
+   * Options for `remix dev`. See https://remix.run/docs/en/main/other-api/dev-v2#options-1
+   */
+  dev: Dev;
 
   /**
    * The port number to use for the dev (asset) server.
@@ -619,7 +632,6 @@ export async function readConfig(
   }
 
   let future: FutureConfig = {
-    v2_dev: appConfig.future?.v2_dev ?? false,
     v2_meta: appConfig.future?.v2_meta === true,
   };
 
@@ -630,6 +642,7 @@ export async function readConfig(
     entryClientFilePath,
     entryServerFile,
     entryServerFilePath,
+    dev: appConfig.dev ?? {},
     devServerPort,
     devServerBroadcastDelay,
     assetsBuildDirectory: absoluteAssetsBuildDirectory,

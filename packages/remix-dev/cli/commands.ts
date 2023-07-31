@@ -1,6 +1,5 @@
 import * as path from "path";
 import { execSync } from "child_process";
-import inspector from "inspector";
 import * as fse from "fs-extra";
 import getPort, { makeRange } from "get-port";
 import prettyMs from "pretty-ms";
@@ -117,7 +116,7 @@ export async function build(
     mode,
     sourcemap,
   };
-  if (mode === "development" && config.future.v2_dev) {
+  if (mode === "development") {
     let resolved = await resolveDev(config);
     options.REMIX_DEV_ORIGIN = resolved.REMIX_DEV_ORIGIN;
   }
@@ -135,7 +134,6 @@ export async function build(
   logger.info("built" + pc.gray(` (${prettyMs(Date.now() - start)})`));
 }
 
-// TODO: replace watch in v2
 export async function watch(
   remixRootOrConfig: string | RemixConfig,
   modeArg?: string
@@ -155,9 +153,6 @@ export async function watch(
 export async function dev(
   remixRoot: string,
   flags: {
-    debug?: boolean;
-
-    // v2_dev
     command?: string;
     manual?: boolean;
     port?: number;
@@ -171,20 +166,8 @@ export async function dev(
     logger.warn(`overriding NODE_ENV=${process.env.NODE_ENV} to development`);
   }
   process.env.NODE_ENV = "development";
-  if (flags.debug) inspector.open();
 
   let config = await readConfig(remixRoot);
-
-  if (config.future.v2_dev === false) {
-    logger.warn("The `remix dev` changing in v2", {
-      details: [
-        "You can use the `v2_dev` future flag to opt-in early.",
-        "-> https://remix.run/docs/en/main/pages/v2#dev-server",
-      ],
-    });
-    await devServer.serve(config, flags.port);
-    return await new Promise(() => {});
-  }
 
   let resolved = await resolveDevServe(config, flags);
   await devServer_unstable.serve(config, resolved);
@@ -389,18 +372,13 @@ let resolveDev = async (
     tlsCert?: string;
   } = {}
 ) => {
-  let dev = config.future.v2_dev;
-  if (dev === false) throw Error("This should never happen");
+  let { dev } = config;
 
-  // prettier-ignore
-  let port =
-    flags.port ??
-    (dev === true ? undefined : dev.port) ??
-    (await findPort());
+  let port = flags.port ?? dev.port ?? (await findPort());
 
-  let tlsKey = flags.tlsKey ?? (dev === true ? undefined : dev.tlsKey);
+  let tlsKey = flags.tlsKey ?? dev.tlsKey;
   if (tlsKey) tlsKey = path.resolve(tlsKey);
-  let tlsCert = flags.tlsCert ?? (dev === true ? undefined : dev.tlsCert);
+  let tlsCert = flags.tlsCert ?? dev.tlsCert;
   if (tlsCert) tlsCert = path.resolve(tlsCert);
   let isTLS = tlsKey && tlsCert;
 
@@ -428,21 +406,12 @@ let resolveDevServe = async (
     tlsCert?: string;
   } = {}
 ) => {
-  let dev = config.future.v2_dev;
-  if (dev === false) throw Error("Cannot resolve dev options");
+  let { dev } = config;
 
   let resolved = await resolveDev(config, flags);
 
-  // prettier-ignore
-  let command =
-    flags.command ??
-    (dev === true ? undefined : dev.command)
-
-  // prettier-ignore
-  let manual =
-    flags.manual ??
-    (dev === true ? undefined : dev.manual) ??
-    false;
+  let command = flags.command ?? dev.command;
+  let manual = flags.manual ?? dev.manual ?? false;
 
   return {
     ...resolved,

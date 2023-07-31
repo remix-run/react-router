@@ -68,10 +68,7 @@ const createEsbuildConfig = (
     entryPoints[id] += "?browser";
   }
 
-  if (
-    ctx.options.mode === "development" &&
-    ctx.config.future.v2_dev !== false
-  ) {
+  if (ctx.options.mode === "development") {
     let defaultsDirectory = path.resolve(
       __dirname,
       "..",
@@ -91,9 +88,7 @@ const createEsbuildConfig = (
     cssModulesPlugin(ctx, { outputCss: false }),
     vanillaExtractPlugin(ctx, { outputCss: false }),
     cssSideEffectImportsPlugin(ctx, {
-      hmr:
-        ctx.options.mode === "development" &&
-        ctx.config.future.v2_dev !== false,
+      hmr: ctx.options.mode === "development",
     }),
     cssFilePlugin(ctx),
     absoluteCssUrlsPlugin(),
@@ -107,7 +102,7 @@ const createEsbuildConfig = (
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
 
-  if (ctx.options.mode === "development" && ctx.config.future.v2_dev) {
+  if (ctx.options.mode === "development") {
     plugins.push(hmrPlugin(ctx));
   }
 
@@ -167,7 +162,7 @@ export const create = async (
     writeMetafile(ctx, "metafile.js.json", metafile);
 
     let hmr: Manifest["hmr"] | undefined = undefined;
-    if (ctx.options.mode === "development" && ctx.config.future.v2_dev) {
+    if (ctx.options.mode === "development") {
       let hmrRuntimeOutput = Object.entries(metafile.outputs).find(
         ([_, output]) => output.inputs["hmr-runtime:remix:hmr"]
       )?.[0];
