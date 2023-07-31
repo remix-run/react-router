@@ -422,20 +422,6 @@ export async function readConfig(
   serverMinify ??= false;
 
   let serverNodeBuiltinsPolyfill = appConfig.serverNodeBuiltinsPolyfill;
-
-  if (appConfig.future) {
-    if ("unstable_dev" in appConfig.future) {
-      logger.warn("The `future.unstable_dev` config option has been removed", {
-        details: [
-          "The v2 dev server is now stable.",
-          "Use the `future.v2_dev` config option instead.",
-          "-> https://remix.run/docs/en/main/pages/v2#dev-server",
-        ],
-        key: "unstable_dev",
-      });
-    }
-  }
-
   let mdx = appConfig.mdx;
   let postcss = appConfig.postcss ?? true;
   let tailwind = appConfig.tailwind ?? true;
