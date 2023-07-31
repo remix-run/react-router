@@ -90,8 +90,8 @@ describe("defineRoutes", () => {
 
   it("allows multiple routes with the same route module", () => {
     let routes = defineRoutes((route) => {
-      route("/user/:id", "routes/index.tsx", { id: "user-by-id" });
-      route("/user", "routes/index.tsx", { id: "user" });
+      route("/user/:id", "routes/_index.tsx", { id: "user-by-id" });
+      route("/user", "routes/_index.tsx", { id: "user" });
       route("/other", "routes/other-route.tsx");
     });
 
@@ -107,7 +107,7 @@ describe("defineRoutes", () => {
         },
         "user": Object {
           "caseSensitive": undefined,
-          "file": "routes/index.tsx",
+          "file": "routes/_index.tsx",
           "id": "user",
           "index": undefined,
           "parentId": "root",
@@ -115,7 +115,7 @@ describe("defineRoutes", () => {
         },
         "user-by-id": Object {
           "caseSensitive": undefined,
-          "file": "routes/index.tsx",
+          "file": "routes/_index.tsx",
           "id": "user-by-id",
           "index": undefined,
           "parentId": "root",
