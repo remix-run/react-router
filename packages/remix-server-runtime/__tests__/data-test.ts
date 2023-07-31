@@ -22,7 +22,6 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -62,7 +61,6 @@ describe("loaders", () => {
           handleError() {},
         },
       },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -102,7 +100,6 @@ describe("loaders", () => {
           handleError() {},
         },
       },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -145,7 +142,6 @@ describe("loaders", () => {
           handleError() {},
         },
       },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -187,7 +183,6 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -227,7 +222,6 @@ describe("loaders", () => {
           handleError() {},
         },
       },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -265,7 +259,6 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -300,7 +293,6 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
-      future: {},
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);

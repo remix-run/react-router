@@ -152,9 +152,6 @@ test.describe("Error Sanitization", () => {
     test.beforeAll(async () => {
       fixture = await createFixture(
         {
-          config: {
-            future: {},
-          },
           files: routeFiles,
         },
         ServerMode.Production
@@ -304,9 +301,6 @@ test.describe("Error Sanitization", () => {
     test.beforeAll(async () => {
       fixture = await createFixture(
         {
-          config: {
-            future: {},
-          },
           files: routeFiles,
         },
         ServerMode.Development
@@ -472,9 +466,6 @@ test.describe("Error Sanitization", () => {
     test.beforeAll(async () => {
       fixture = await createFixture(
         {
-          config: {
-            future: {},
-          },
           files: {
             "app/entry.server.tsx": js`
               import type { EntryContext } from "@remix-run/node";

@@ -55,7 +55,6 @@ describe("server", () => {
         },
       },
     },
-    future: {},
   } as unknown as ServerBuild;
 
   describe("createRequestHandler", () => {
@@ -139,7 +138,6 @@ describe("shared server runtime", () => {
           loader: resourceLoader,
           path: "resource",
         },
-        future: {},
       });
       let handler = createRequestHandler(build, ServerMode.Test);
 
