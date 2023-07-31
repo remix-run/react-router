@@ -84,21 +84,23 @@ You can pass a render prop as children to customize the content of the `<NavLink
 
 The `end` prop changes the matching logic for the `active` and `pending` states to only match to the "end" of the NavLink's `to` path. If the URL is longer than `to`, it will no longer be considered active.
 
-Without the end prop, this link is always active because every URL matches `/`.
+For example, suppose we have an url `/tasks`
 
 ```tsx
-<NavLink to="/">Home</NavLink>
+<NavLink to="/tasks">Tasks</NavLink>
 ```
+The link will be active for sub-paths such as `/tasks/123`
+
 
 To match the URL "to the end" of `to`, use `end`:
 
 ```tsx
-<NavLink to="/" end>
-  Home
+<NavLink to="/tasks" end>
+  Tasks
 </NavLink>
 ```
 
-Now this link will only be active at `"/"`. This works for paths with more segments as well:
+Now this link will only be active at `"/tasks"`. This works for paths with more segments as well:
 
 | Link                          | URL          | isActive |
 | ----------------------------- | ------------ | -------- |
@@ -106,6 +108,9 @@ Now this link will only be active at `"/"`. This works for paths with more segme
 | `<NavLink to="/tasks" />`     | `/tasks/123` | true     |
 | `<NavLink to="/tasks" end />` | `/tasks`     | true     |
 | `<NavLink to="/tasks" end />` | `/tasks/123` | false    |
+| `<NavLink to="/tasks/" end />`| `/tasks`     | false    |
+| `<NavLink to="/tasks/" end />`| `/tasks/`    | true     |
+| `<NavLink to="/tasks/" end />`| `/tasks`     | false    |
 
 ## `caseSensitive`
 
