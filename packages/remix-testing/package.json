@@ -27,10 +27,16 @@
     "@types/react-dom": "^18.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.1.0"
   },
   "peerDependencies": {
-    "react": "^17.0.0 || ^18.0.0"
+    "react": "^17.0.0 || ^18.0.0",
+    "typescript": "^5.1.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=18.0.0"

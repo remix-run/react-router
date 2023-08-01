@@ -91,10 +91,14 @@
     "type-fest": "^2.16.0"
   },
   "peerDependencies": {
-    "@remix-run/serve": "^1.19.1"
+    "@remix-run/serve": "^1.19.1",
+    "typescript": "^5.1.0"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {
+      "optional": true
+    },
+    "typescript": {
       "optional": true
     }
   },

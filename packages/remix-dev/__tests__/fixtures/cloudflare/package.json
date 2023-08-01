@@ -27,7 +27,7 @@
     "@types/react-dom": "^18.0.8",
     "eslint": "^8.27.0",
     "npm-run-all": "^4.1.5",
-    "typescript": "^5.0.4",
+    "typescript": "^5.1.0",
     "wrangler": "^2.2.1"
   },
   "engines": {

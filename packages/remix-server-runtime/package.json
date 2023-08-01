@@ -25,7 +25,16 @@
   },
   "devDependencies": {
     "@remix-run/web-file": "^3.0.2",
-    "@types/set-cookie-parser": "^2.4.1"
+    "@types/set-cookie-parser": "^2.4.1",
+    "typescript": "^5.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.1.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=18.0.0"
