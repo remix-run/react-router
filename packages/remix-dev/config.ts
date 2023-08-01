@@ -568,11 +568,10 @@ export async function readConfig(
     assetsBuildDirectory
   );
 
-  let devServerPort =
-    Number(process.env.REMIX_DEV_SERVER_WS_PORT) ||
-    (await getPort({ port: Number(appConfig.devServerPort) || 8002 }));
+  let devServerPort = await getPort({
+    port: Number(appConfig.devServerPort) || 8002,
+  });
   // set env variable so un-bundled servers can use it
-  process.env.REMIX_DEV_SERVER_WS_PORT = String(devServerPort);
   let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
 
   let publicPath = addTrailingSlash(appConfig.publicPath || "/build/");
