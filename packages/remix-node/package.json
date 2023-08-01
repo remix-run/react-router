@@ -18,9 +18,9 @@
   ],
   "dependencies": {
     "@remix-run/server-runtime": "1.19.1",
-    "@remix-run/web-fetch": "^4.3.5",
-    "@remix-run/web-file": "^3.0.2",
-    "@remix-run/web-stream": "^1.0.3",
+    "@remix-run/web-fetch": "^4.3.6",
+    "@remix-run/web-file": "^3.0.3",
+    "@remix-run/web-stream": "^1.0.4",
     "@web3-storage/multipart-parser": "^1.0.0",
     "abort-controller": "^3.0.0",
     "cookie-signature": "^1.1.0",
