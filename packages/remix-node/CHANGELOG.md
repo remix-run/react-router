@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 1.19.2-pre.0
+
+### Patch Changes
+
+- Update to latest `@remix-run/web-*` packages ([#7026](https://github.com/remix-run/remix/pull/7026))
+- Updated dependencies:
+  - `@remix-run/server-runtime@1.19.2-pre.0`
+
 ## 1.19.1
 
 ### Patch Changes

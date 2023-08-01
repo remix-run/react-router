@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 1.19.2-pre.0
+
+### Patch Changes
+
+- Update to latest `@remix-run/web-*` packages ([#7026](https://github.com/remix-run/remix/pull/7026))
+
 ## 1.19.1
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.19.1) for an overview of all changes in v1.19.1.
