@@ -2,7 +2,6 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import fse from "fs-extra";
-import getPort from "get-port";
 import NPMCliPackageJson from "@npmcli/package-json";
 import { coerce } from "semver";
 import type { NodePolyfillsOptions as EsbuildPluginsNodeModulesPolyfillOptions } from "esbuild-plugins-node-modules-polyfill";
@@ -83,13 +82,6 @@ export interface AppConfig {
    * Options for `remix dev`. See https://remix.run/docs/en/main/other-api/dev-v2#options-1
    */
   dev?: Dev;
-
-  /**
-   * @deprecated
-   *
-   * The port number to use for the dev server. Defaults to 8002.
-   */
-  devServerPort?: number;
 
   /**
    * @deprecated
@@ -256,11 +248,6 @@ export interface RemixConfig {
    * Options for `remix dev`. See https://remix.run/docs/en/main/other-api/dev-v2#options-1
    */
   dev: Dev;
-
-  /**
-   * The port number to use for the dev (asset) server.
-   */
-  devServerPort: number;
 
   /**
    * The delay before the dev (asset) server broadcasts a reload event.
@@ -568,9 +555,6 @@ export async function readConfig(
     assetsBuildDirectory
   );
 
-  let devServerPort = await getPort({
-    port: Number(appConfig.devServerPort) || 8002,
-  });
   // set env variable so un-bundled servers can use it
   let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
 
@@ -634,7 +618,6 @@ export async function readConfig(
     entryServerFile,
     entryServerFilePath,
     dev: appConfig.dev ?? {},
-    devServerPort,
     devServerBroadcastDelay,
     assetsBuildDirectory: absoluteAssetsBuildDirectory,
     relativeAssetsBuildDirectory: assetsBuildDirectory,

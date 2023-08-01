@@ -17,7 +17,6 @@ describe("readConfig", () => {
         rootDirectory: expect.any(String),
         appDirectory: expect.any(String),
         cacheDirectory: expect.any(String),
-        devServerPort: expect.any(Number),
         serverBuildPath: expect.any(String),
         assetsBuildDirectory: expect.any(String),
         relativeAssetsBuildDirectory: expect.any(String),
@@ -32,7 +31,6 @@ describe("readConfig", () => {
         "cacheDirectory": Any<String>,
         "dev": Object {},
         "devServerBroadcastDelay": 0,
-        "devServerPort": Any<Number>,
         "entryClientFile": "entry.client.tsx",
         "entryClientFilePath": Any<String>,
         "entryServerFile": "entry.server.tsx",
@@ -70,10 +68,5 @@ describe("readConfig", () => {
       }
     `
     );
-  });
-
-  it("returns the same devServerPort value across reloads", async () => {
-    let newConfig = await readConfig(remixRoot);
-    expect(newConfig.devServerPort).toBe(config.devServerPort);
   });
 });

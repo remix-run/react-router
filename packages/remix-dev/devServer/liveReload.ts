@@ -19,9 +19,12 @@ let clean = (config: RemixConfig) => {
   }
 };
 
-export async function liveReload(config: RemixConfig) {
+export async function liveReload(
+  config: RemixConfig,
+  options: { port: number }
+) {
   clean(config);
-  let wss = new WebSocket.Server({ port: config.devServerPort });
+  let wss = new WebSocket.Server({ port: options.port });
   function broadcast(event: { type: string } & Record<string, unknown>) {
     setTimeout(() => {
       wss.clients.forEach((client) => {
