@@ -7,7 +7,7 @@ import fse from "fs-extra";
 import gunzip from "gunzip-maybe";
 import fetch from "node-fetch";
 import ora from "ora";
-import ProxyAgent from "proxy-agent";
+import { ProxyAgent } from "proxy-agent";
 import * as semver from "semver";
 import sortPackageJSON from "sort-package-json";
 import tar from "tar-fs";
