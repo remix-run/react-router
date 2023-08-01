@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import type { BinaryLike } from "crypto";
-import { createHash } from "crypto";
+import * as fs from "node:fs";
+import type { BinaryLike } from "node:crypto";
+import { createHash } from "node:crypto";
 
 export function getHash(source: BinaryLike): string {
   return createHash("sha256").update(source).digest("hex");

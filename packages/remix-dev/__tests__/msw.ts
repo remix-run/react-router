@@ -1,5 +1,5 @@
-import path from "path";
-import fsp from "fs/promises";
+import path from "node:path";
+import fsp from "node:fs/promises";
 import { setupServer } from "msw/node";
 import { rest } from "msw";
 

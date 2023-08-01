@@ -1,4 +1,4 @@
-import * as path from "path";
+import * as path from "node:path";
 import type esbuild from "esbuild";
 
 import type { Context } from "../context";

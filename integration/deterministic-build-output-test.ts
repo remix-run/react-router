@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import globby from "globby";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 import type { FixtureInit } from "./helpers/create-fixture";
 import { createFixtureProject, js, css } from "./helpers/create-fixture";

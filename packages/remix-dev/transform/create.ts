@@ -1,5 +1,5 @@
 import { transformSync } from "@babel/core";
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 // @ts-expect-error TODO
 import babelPluginSyntaxJsx from "@babel/plugin-syntax-jsx";
 // @ts-expect-error TODO

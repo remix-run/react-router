@@ -1,6 +1,6 @@
 const tar = require("tar-fs");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 let files = fs.readdirSync(__dirname);
 let dirs = files.filter((file) =>

@@ -1,4 +1,4 @@
-import * as path from "path";
+import * as path from "node:path";
 import type * as esbuild from "esbuild";
 import * as fse from "fs-extra";
 

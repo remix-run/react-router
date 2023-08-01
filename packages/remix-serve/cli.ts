@@ -1,6 +1,6 @@
 import "./env";
-import path from "path";
-import os from "os";
+import path from "node:path";
+import os from "node:os";
 import { broadcastDevReady } from "@remix-run/node";
 
 import { createApp } from "./index";

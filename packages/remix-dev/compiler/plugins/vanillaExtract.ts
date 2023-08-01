@@ -1,4 +1,4 @@
-import { dirname, resolve } from "path";
+import { dirname, resolve } from "node:path";
 import type { Compiler } from "@vanilla-extract/integration";
 import { cssFileFilter, createCompiler } from "@vanilla-extract/integration";
 import type { Plugin } from "esbuild";

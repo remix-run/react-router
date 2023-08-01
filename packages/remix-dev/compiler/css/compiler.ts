@@ -1,4 +1,4 @@
-import { builtinModules as nodeBuiltins } from "module";
+import { builtinModules as nodeBuiltins } from "node:module";
 import * as esbuild from "esbuild";
 
 import type { RemixConfig } from "../../config";

@@ -1,5 +1,5 @@
-import { isAbsolute, relative } from "path";
-import { builtinModules } from "module";
+import { isAbsolute, relative } from "node:path";
+import { builtinModules } from "node:module";
 import type { Plugin } from "esbuild";
 
 import {

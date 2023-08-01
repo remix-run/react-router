@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import type { Plugin } from "esbuild";
 import fse from "fs-extra";
 import { parse, type ParserOptions } from "@babel/parser";

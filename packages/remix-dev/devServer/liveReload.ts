@@ -1,6 +1,6 @@
 import exitHook from "exit-hook";
 import fse from "fs-extra";
-import path from "path";
+import path from "node:path";
 import prettyMs from "pretty-ms";
 import WebSocket from "ws";
 

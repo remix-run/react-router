@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 import shell from "shelljs";
 import glob from "glob";
 

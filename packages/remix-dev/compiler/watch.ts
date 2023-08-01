@@ -1,6 +1,6 @@
 import chokidar from "chokidar";
 import debounce from "lodash.debounce";
-import * as path from "path";
+import * as path from "node:path";
 
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";

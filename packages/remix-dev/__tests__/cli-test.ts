@@ -1,7 +1,7 @@
-import childProcess from "child_process";
-import os from "os";
-import path from "path";
-import util from "util";
+import childProcess from "node:child_process";
+import os from "node:os";
+import path from "node:path";
+import util from "node:util";
 import fse from "fs-extra";
 import semver from "semver";
 

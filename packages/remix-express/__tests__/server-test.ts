@@ -5,7 +5,7 @@ import {
   createRequestHandler as createRemixRequestHandler,
   Response as NodeResponse,
 } from "@remix-run/node";
-import { Readable } from "stream";
+import { Readable } from "node:stream";
 
 import {
   createRemixHeaders,

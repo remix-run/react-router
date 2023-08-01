@@ -1,6 +1,6 @@
 import getPort, { makeRange } from "get-port";
-import type { Server } from "http";
-import os from "os";
+import type { Server } from "node:http";
+import os from "node:os";
 
 import { loadEnv } from "../devServer_unstable/env";
 import { liveReload } from "./liveReload";

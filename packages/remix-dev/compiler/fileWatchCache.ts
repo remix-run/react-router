@@ -1,5 +1,5 @@
 import picomatch from "picomatch";
-import path from "path";
+import path from "node:path";
 
 type CacheValue<T> = {
   cacheValue: T;

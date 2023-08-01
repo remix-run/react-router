@@ -1,5 +1,5 @@
 import execa from "execa";
-import path from "path";
+import path from "node:path";
 import glob from "fast-glob";
 import fse from "fs-extra";
 

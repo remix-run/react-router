@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import * as fse from "fs-extra";
-import path from "path";
+import path from "node:path";
 import shell from "shelljs";
 import glob from "glob";
 

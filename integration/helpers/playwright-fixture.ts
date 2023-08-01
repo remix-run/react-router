@@ -1,4 +1,4 @@
-import cp from "child_process";
+import cp from "node:child_process";
 import type { Page, Response, Request } from "@playwright/test";
 import { test } from "@playwright/test";
 import cheerio from "cheerio";

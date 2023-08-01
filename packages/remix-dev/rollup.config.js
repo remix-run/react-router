@@ -1,4 +1,4 @@
-const path = require("path");
+const path = require("node:path");
 const babel = require("@rollup/plugin-babel").default;
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");

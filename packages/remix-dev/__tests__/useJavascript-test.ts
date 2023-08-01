@@ -1,5 +1,5 @@
-import { tmpdir } from "os";
-import path from "path";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import glob from "fast-glob";
 import fs from "fs-extra";
 

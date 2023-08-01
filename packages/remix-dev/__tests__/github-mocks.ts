@@ -1,5 +1,5 @@
-import * as nodePath from "path";
-import fsp from "fs/promises";
+import * as nodePath from "node:path";
+import fsp from "node:fs/promises";
 import invariant from "tiny-invariant";
 import type { setupServer } from "msw/node";
 import { rest } from "msw";

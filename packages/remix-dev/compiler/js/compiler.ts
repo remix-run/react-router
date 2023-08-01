@@ -1,5 +1,5 @@
-import * as path from "path";
-import { builtinModules as nodeBuiltins } from "module";
+import * as path from "node:path";
+import { builtinModules as nodeBuiltins } from "node:module";
 import * as esbuild from "esbuild";
 import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 

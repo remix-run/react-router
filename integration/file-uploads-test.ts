@@ -1,5 +1,5 @@
-import * as fs from "fs/promises";
-import * as path from "path";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import { test, expect } from "@playwright/test";
 
 import { createFixture, createAppFixture, js } from "./helpers/create-fixture";
@@ -14,7 +14,7 @@ test.describe("file-uploads", () => {
     fixture = await createFixture({
       files: {
         "app/fileUploadHandler.js": js`
-          import * as path from "path";
+          import * as path from "node:path";
           import {
             unstable_composeUploadHandlers as composeUploadHandlers,
             unstable_createFileUploadHandler as createFileUploadHandler,

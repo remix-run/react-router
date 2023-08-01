@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import type { Plugin, PluginBuild } from "esbuild";
 import fse from "fs-extra";
 import postcss from "postcss";

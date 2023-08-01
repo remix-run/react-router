@@ -1,5 +1,5 @@
-import type { Readable, Writable } from "stream";
-import { Stream } from "stream";
+import type { Readable, Writable } from "node:stream";
+import { Stream } from "node:stream";
 
 export async function writeReadableStreamToWritable(
   stream: ReadableStream,

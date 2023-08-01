@@ -1,4 +1,4 @@
-import * as path from "path";
+import * as path from "node:path";
 
 /**
  * A route that was created using `defineRoutes` or created conventionally from

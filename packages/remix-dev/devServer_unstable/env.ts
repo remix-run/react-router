@@ -1,5 +1,5 @@
 import * as fse from "fs-extra";
-import * as path from "path";
+import * as path from "node:path";
 
 // Import environment variables from: .env, failing gracefully if it doesn't exist
 export async function loadEnv(rootDirectory: string): Promise<void> {
