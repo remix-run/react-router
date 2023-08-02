@@ -39,7 +39,7 @@ export {
   matchRoutes,
   normalizePathname,
   redirect,
-  redirectWithReload,
+  redirectDocument,
   resolvePath,
   resolveTo,
   stripBasename,

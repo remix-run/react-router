@@ -158,7 +158,7 @@ export {
   Form,
   json,
   redirect,
-  redirectWithReload,
+  redirectDocument,
   useActionData,
   useAsyncError,
   useAsyncValue,

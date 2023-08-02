@@ -1490,7 +1490,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
  * Sets the status code and the `Location` header.
  * Defaults to "302 Found".
  */
-export const redirectWithReload: RedirectFunction = (url, init) => {
+export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
   response.headers.set("X-Remix-Reload-Document", "true");
   return response;

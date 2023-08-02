@@ -6,4 +6,4 @@
 "@remix-run/router": minor
 ---
 
-Add support for the new `X-Remix-Reload-Document` header on `loader`/`action` responses to trigger a document reload of the redirected location
+Add's a new `redirectDocument()` function which allows users to specify that a redirect from a `loader`/`action` should trigger a document reload (via `window.location`) instead of attempting to navigate to the redirected location via React Router
