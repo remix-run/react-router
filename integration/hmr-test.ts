@@ -51,7 +51,9 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       let path = require("node:path");
       let express = require("express");
       let { createRequestHandler } = require("@remix-run/express");
-      let { broadcastDevReady } = require("@remix-run/node");
+      let { broadcastDevReady, installGlobals } = require("@remix-run/node");
+
+      installGlobals();
 
       const app = express();
       app.use(express.static("public", { immutable: true, maxAge: "1y" }));
