@@ -71,8 +71,8 @@ module.exports = function rollup() {
       input: `${sourceDir}/server-build.ts`,
       output: [
         {
-          // TODO: Remove deep import support in v2 or move to package.json
-          // "exports" field
+          // TODO: Remove deep import support or move to package.json
+          // "exports" field in a future major release
           banner: createBanner("@remix-run/dev", version, true),
           dir: outputDir,
           format: "cjs",
