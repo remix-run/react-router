@@ -93,7 +93,7 @@ The `end` prop changes the matching logic for the `active` and `pending` states 
 
 **A note on links to the root route**
 
-`<NavLink to="/">` is an exceptional case because _every_ URL matches `/`. To avoid this matching every single route by default, it effectively ignores the `end` prop and only matches when you're at the home route.
+`<NavLink to="/">` is an exceptional case because _every_ URL matches `/`. To avoid this matching every single route by default, it effectively ignores the `end` prop and only matches when you're at the root route.
 
 ## `caseSensitive`
 
