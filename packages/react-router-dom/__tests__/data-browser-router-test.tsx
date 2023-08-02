@@ -2939,7 +2939,7 @@ function testDomRouter(
         });
       });
 
-      it("allows uer to specify search params and hash", async () => {
+      it("allows user to specify search params and hash", async () => {
         let router = createTestRouter(
           createRoutesFromElements(
             <Route path="/">
