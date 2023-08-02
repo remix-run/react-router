@@ -65,6 +65,22 @@ describe("a hash history", () => {
     expect(unencodedHref).toEqual("#/#abc");
   });
 
+  it("prefixes raw hash values with /", () => {
+    dom.window.history.replaceState(null, "", "#hello");
+    history = createHashHistory({ window: dom.window as unknown as Window });
+    expect(history.location.pathname).toBe("/hello");
+
+    history.push("world");
+    expect(history.location.pathname).toBe("/world");
+
+    // Not supported but ensure we don't prefix here
+    history.push("./relative");
+    expect(history.location.pathname).toBe("./relative");
+
+    history.push("../relative");
+    expect(history.location.pathname).toBe("../relative");
+  });
+
   describe("listen", () => {
     it("does not immediately call listeners", () => {
       Listen(history);
