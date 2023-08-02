@@ -318,9 +318,7 @@ type _PathParam<Path extends string> =
     ? _PathParam<L> | _PathParam<R>
     : // find params after `:`
     Path extends `:${infer Param}`
-    ? Param extends `${infer Optional}?`
-      ? Optional
-      : Param
+    ? Param
     : // otherwise, there aren't any params present
       never;
 
@@ -343,12 +341,30 @@ type PathParam<Path extends string> =
     : // look for params in the absence of wildcards
       _PathParam<Path>;
 
+type Optional<Path extends string> = {
+  [key in PathParam<Path> as key extends `${infer K}?`
+    ? K
+    : key extends "*"
+    ? "*"
+    : never]?: string;
+};
+
+type Required<Path extends string> = {
+  [key in PathParam<Path> as key extends `${infer _}?`
+    ? never
+    : key extends "*"
+    ? never
+    : key]: string;
+};
+
 // Attempt to parse the given string segment. If it fails, then just return the
 // plain string type as a default fallback. Otherwise return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
   // if could not find path params, fallback to `string`
-  [PathParam<Segment>] extends [never] ? string : PathParam<Segment>;
+  [keyof Required<Segment> & Optional<Segment>] extends [never]
+    ? string
+    : keyof Required<Segment> & Optional<Segment>;
 
 /**
  * The parameters that were parsed from the URL path.
@@ -750,10 +766,11 @@ function matchRouteBranch<
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
-  params: {
-    [key in PathParam<Path>]: string | null;
-  } = {} as any
+  ...routeParams: keyof Required<Path> extends never
+    ? [Optional<Path>?]
+    : [Optional<Path> & Required<Path>]
 ): string {
+  const params = routeParams[0] || ({} as any);
   let path: string = originalPath;
   if (path.endsWith("*") && path !== "*" && !path.endsWith("/*")) {
     warning(
