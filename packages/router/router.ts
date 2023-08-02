@@ -2111,12 +2111,23 @@ export function createRouter(init: RouterInit): Router {
       redirectLocation,
       "Expected a location on the redirect navigation"
     );
-    // Check if this an absolute external redirect that goes to a new origin
-    if (ABSOLUTE_URL_REGEX.test(redirect.location) && isBrowser) {
-      let url = init.history.createURL(redirect.location);
-      let isDifferentBasename = stripBasename(url.pathname, basename) == null;
 
-      if (routerWindow.location.origin !== url.origin || isDifferentBasename) {
+    if (isBrowser) {
+      let isDocumentReload = false;
+
+      if (redirect.reloadDocument) {
+        // Hard reload if the response contained X-Remix-Reload-Document
+        isDocumentReload = true;
+      } else if (ABSOLUTE_URL_REGEX.test(redirect.location)) {
+        const url = init.history.createURL(redirect.location);
+        isDocumentReload =
+          // Hard reload if it's an absolute URL to a new origin
+          url.origin !== routerWindow.location.origin ||
+          // Hard reload if it's an absolute URL that does not match our basename
+          stripBasename(url.pathname, basename) == null;
+      }
+
+      if (isDocumentReload) {
         if (replace) {
           routerWindow.location.replace(redirect.location);
         } else {
@@ -3734,6 +3745,7 @@ async function callLoaderOrAction(
         status,
         location,
         revalidate: result.headers.get("X-Remix-Revalidate") !== null,
+        reloadDocument: result.headers.get("X-Remix-Reload-Document") !== null,
       };
     }
 
