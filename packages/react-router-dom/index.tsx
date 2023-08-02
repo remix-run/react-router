@@ -1157,17 +1157,15 @@ export function useFormAction(
   let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
   // Previously we set the default action to ".". The problem with this is that
-  // `useResolvedPath(".")` excludes search params and the hash of the resolved
-  // URL. This is the intended behavior of when "." is specifically provided as
+  // `useResolvedPath(".")` excludes search params of the resolved URL. This is
+  // the intended behavior of when "." is specifically provided as
   // the form action, but inconsistent w/ browsers when the action is omitted.
   // https://github.com/remix-run/remix/issues/927
   let location = useLocation();
   if (action == null) {
-    // Safe to write to these directly here since if action was undefined, we
+    // Safe to write to this directly here since if action was undefined, we
     // would have called useResolvedPath(".") which will never include a search
-    // or hash
     path.search = location.search;
-    path.hash = location.hash;
 
     // When grabbing search params from the URL, remove the automatically
     // inserted ?index param so we match the useResolvedPath search behavior
