@@ -20,14 +20,7 @@ module.exports = function rollup() {
 
   return [
     {
-      external(id, parent) {
-        if (
-          id === "../package.json" &&
-          parent === path.resolve(__dirname, "cli/create.ts")
-        ) {
-          return true;
-        }
-
+      external(id) {
         return isBareModuleId(id);
       },
       input: `${sourceDir}/index.ts`,
