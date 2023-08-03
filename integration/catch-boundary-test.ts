@@ -25,7 +25,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
             import { json } from "@remix-run/node";
             import { Links, Meta, Outlet, Scripts, useMatches } from "@remix-run/react";
 
@@ -63,7 +63,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
             }
           `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
             import { Link, Form } from "@remix-run/react";
             export default function() {
               return (
@@ -161,7 +161,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
             }
           `,
 
-        "app/routes/action.jsx": js`
+        "app/routes/action.tsx": js`
             import { Outlet, useLoaderData } from "@remix-run/react";
 
             export function loader() {
@@ -178,7 +178,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
             }
           `,
 
-        "app/routes/action.child-catch.jsx": js`
+        "app/routes/action.child-catch.tsx": js`
             import { Form, useLoaderData, useRouteError } from "@remix-run/react";
 
             export function loader() {

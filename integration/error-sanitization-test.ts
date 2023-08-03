@@ -6,7 +6,7 @@ import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
 import { PlaywrightFixture } from "./helpers/playwright-fixture";
 
 const routeFiles = {
-  "app/root.jsx": js`
+  "app/root.tsx": js`
     import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
     export default function Root() {
@@ -27,7 +27,7 @@ const routeFiles = {
     }
   `,
 
-  "app/routes/_index.jsx": js`
+  "app/routes/_index.tsx": js`
     import { useLoaderData, useLocation, useRouteError } from "@remix-run/react";
 
     export function loader({ request }) {
@@ -70,7 +70,7 @@ const routeFiles = {
     }
   `,
 
-  "app/routes/defer.jsx": js`
+  "app/routes/defer.tsx": js`
     import * as React from 'react';
     import { defer } from "@remix-run/server-runtime";
     import { Await, useAsyncError, useLoaderData, useRouteError  } from "@remix-run/react";
@@ -123,7 +123,7 @@ const routeFiles = {
     }
   `,
 
-  "app/routes/resource.jsx": js`
+  "app/routes/resource.tsx": js`
     export function loader({ request }) {
       if (new URL(request.url).searchParams.has('loader')) {
         throw new Error("Loader Error");

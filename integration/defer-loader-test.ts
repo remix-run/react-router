@@ -10,7 +10,7 @@ let appFixture: AppFixture;
 test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
         import { useLoaderData, Link } from "@remix-run/react";
         export default function Index() {
           return (
@@ -22,7 +22,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/redirect.jsx": js`
+      "app/routes/redirect.tsx": js`
         import { defer } from "@remix-run/node";
         export function loader() {
           return defer({food: "pizza"}, { status: 301, headers: { Location: "/?redirected" } });
@@ -30,7 +30,7 @@ test.beforeAll(async () => {
         export default function Redirect() {return null;}
       `,
 
-      "app/routes/direct-promise-access.jsx": js`
+      "app/routes/direct-promise-access.tsx": js`
         import * as React from "react";
         import { defer } from "@remix-run/node";
         import { useLoaderData, Link, Await } from "@remix-run/react";

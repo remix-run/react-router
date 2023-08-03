@@ -52,7 +52,7 @@ test.beforeAll(async () => {
           "@remix-run/dev": "0.0.0-local-version",
         },
       }),
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
         import fake from "deno-pkg";
         import { urlComponent } from "https://deno.land/x/component.ts";
         import { urlUtil } from "https://deno.land/x/util.ts";

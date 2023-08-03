@@ -11,7 +11,7 @@ test.describe("Revalidation", () => {
     appFixture = await createAppFixture(
       await createFixture({
         files: {
-          "app/root.jsx": js`
+          "app/root.tsx": js`
             import { Link, Outlet, Scripts, useNavigation } from "@remix-run/react";
 
             export default function Component() {
@@ -41,7 +41,7 @@ test.describe("Revalidation", () => {
             }
           `,
 
-          "app/routes/parent.jsx": js`
+          "app/routes/parent.tsx": js`
             import { json } from "@remix-run/node";
             import { Outlet, useLoaderData } from "@remix-run/react";
 
@@ -81,7 +81,7 @@ test.describe("Revalidation", () => {
             }
           `,
 
-          "app/routes/parent.child.jsx": js`
+          "app/routes/parent.child.tsx": js`
             import { json } from "@remix-run/node";
             import { Form, useLoaderData, useRevalidator } from "@remix-run/react";
 

@@ -32,7 +32,7 @@ test.describe("navigation states", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { useMemo, useRef } from "react";
           import { Outlet, Scripts, useNavigation } from "@remix-run/react";
           export default function() {
@@ -63,7 +63,7 @@ test.describe("navigation states", () => {
             );
           }
         `,
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import { Form, Link, useFetcher } from "@remix-run/react";
           export function loader() { return null; }
           export default function() {

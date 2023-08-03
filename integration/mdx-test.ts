@@ -17,7 +17,7 @@ test.describe("mdx", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
@@ -36,7 +36,7 @@ test.describe("mdx", () => {
           }
         `,
 
-        "app/routes/blog.jsx": js`
+        "app/routes/blog.tsx": js`
           import { useMatches, Outlet } from "@remix-run/react";
 
           export default function Blog() {

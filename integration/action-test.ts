@@ -18,7 +18,7 @@ test.describe("actions", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/routes/urlencoded.jsx": js`
+        "app/routes/urlencoded.tsx": js`
           import { Form, useActionData } from "@remix-run/react";
 
           export let action = async ({ request }) => {
@@ -43,7 +43,7 @@ test.describe("actions", () => {
           }
         `,
 
-        "app/routes/request-text.jsx": js`
+        "app/routes/request-text.tsx": js`
           import { Form, useActionData } from "@remix-run/react";
 
           export let action = async ({ request }) => {

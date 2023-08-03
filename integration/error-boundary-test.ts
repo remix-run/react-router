@@ -43,7 +43,7 @@ test.describe("ErrorBoundary", () => {
     fixture = await createFixture(
       {
         files: {
-          "app/root.jsx": js`
+          "app/root.tsx": js`
               import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
               export default function Root() {
@@ -78,7 +78,7 @@ test.describe("ErrorBoundary", () => {
               }
             `,
 
-          "app/routes/_index.jsx": js`
+          "app/routes/_index.tsx": js`
               import { Link, Form } from "@remix-run/react";
               export default function () {
                 return (
@@ -206,7 +206,7 @@ test.describe("ErrorBoundary", () => {
               }
             `,
 
-          "app/routes/fetcher-boundary.jsx": js`
+          "app/routes/fetcher-boundary.tsx": js`
               import { useFetcher } from "@remix-run/react";
               export function ErrorBoundary() {
                 return <p id="fetcher-boundary">${OWN_BOUNDARY_TEXT}</p>
@@ -224,7 +224,7 @@ test.describe("ErrorBoundary", () => {
               }
             `,
 
-          "app/routes/fetcher-no-boundary.jsx": js`
+          "app/routes/fetcher-no-boundary.tsx": js`
               import { useFetcher } from "@remix-run/react";
               export default function() {
                 let fetcher = useFetcher();
@@ -241,7 +241,7 @@ test.describe("ErrorBoundary", () => {
               }
             `,
 
-          "app/routes/action.jsx": js`
+          "app/routes/action.tsx": js`
               import { Outlet, useLoaderData } from "@remix-run/react";
 
               export function loader() {
@@ -258,7 +258,7 @@ test.describe("ErrorBoundary", () => {
               }
             `,
 
-          "app/routes/action.child-error.jsx": js`
+          "app/routes/action.child-error.tsx": js`
               import { Form, useLoaderData, useRouteError } from "@remix-run/react";
 
               export function loader() {
@@ -495,7 +495,7 @@ test.describe("ErrorBoundary", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
         files: {
-          "app/root.jsx": js`
+          "app/root.tsx": js`
               import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
               export default function Root() {
@@ -514,7 +514,7 @@ test.describe("ErrorBoundary", () => {
               }
             `,
 
-          "app/routes/_index.jsx": js`
+          "app/routes/_index.tsx": js`
               import { Link, Form } from "@remix-run/react";
 
               export default function () {
@@ -660,7 +660,7 @@ test.describe("loaderData in ErrorBoundary", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
             export default function Root() {
@@ -681,7 +681,7 @@ test.describe("loaderData in ErrorBoundary", () => {
             }
           `,
 
-        "app/routes/parent.jsx": js`
+        "app/routes/parent.tsx": js`
             import { Outlet, useLoaderData, useMatches, useRouteError } from "@remix-run/react";
 
             export function loader() {
@@ -711,7 +711,7 @@ test.describe("loaderData in ErrorBoundary", () => {
             }
           `,
 
-        "app/routes/parent.child-with-boundary.jsx": js`
+        "app/routes/parent.child-with-boundary.tsx": js`
             import { Form, useLoaderData, useRouteError } from "@remix-run/react";
 
             export function loader() {
@@ -746,7 +746,7 @@ test.describe("loaderData in ErrorBoundary", () => {
             }
           `,
 
-        "app/routes/parent.child-without-boundary.jsx": js`
+        "app/routes/parent.child-without-boundary.tsx": js`
             import { Form, useLoaderData } from "@remix-run/react";
 
             export function loader() {
@@ -940,7 +940,7 @@ test.describe("Default ErrorBoundary", () => {
       `;
 
     return {
-      "app/root.jsx": js`
+      "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";
 
           export default function Root() {
@@ -963,7 +963,7 @@ test.describe("Default ErrorBoundary", () => {
           ${errorBoundaryCode}
         `,
 
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
           import { Link } from "@remix-run/react";
           export default function () {
             return (
@@ -976,7 +976,7 @@ test.describe("Default ErrorBoundary", () => {
           }
         `,
 
-      "app/routes/loader-error.jsx": js`
+      "app/routes/loader-error.tsx": js`
           export function loader() {
             throw new Error('Loader Error');
           }
@@ -985,7 +985,7 @@ test.describe("Default ErrorBoundary", () => {
           }
         `,
 
-      "app/routes/render-error.jsx": js`
+      "app/routes/render-error.tsx": js`
           export default function () {
             throw new Error("Render Error")
           }
@@ -1228,7 +1228,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
 
   let fixture = await createFixture({
     files: {
-      "app/root.jsx": js`
+      "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";
 
           export default function App() {
@@ -1263,7 +1263,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
             );
           }
         `,
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
           import { Link } from "@remix-run/react";
 
           export default function Index() {
@@ -1276,7 +1276,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
           }
         `,
 
-      "app/routes/boom.jsx": js`
+      "app/routes/boom.tsx": js`
           import { json } from "@remix-run/node";
           export function loader() { return boom(); }
           export default function() { return <b>my page</b>; }

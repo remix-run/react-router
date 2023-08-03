@@ -79,8 +79,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/root.jsx": js`
-          import { useEffect } from "react";
+        "app/root.tsx": js`
           import {
             Link,
             Links,
@@ -192,7 +191,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import { useEffect } from "react";
           import { Link } from "@remix-run/react";
 
@@ -226,7 +225,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/links.jsx": js`
+        "app/routes/links.tsx": js`
           import { useLoaderData, Link } from "@remix-run/react";
           import redTextHref from "~/redText.css";
           import blueTextHref from "~/blueText.css";
@@ -275,7 +274,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/responsive-image-preload.jsx": js`
+        "app/routes/responsive-image-preload.tsx": js`
           import { Link } from "@remix-run/react";
           import guitar600 from "~/guitar-600.jpg";
           import guitar900 from "~/guitar-900.jpg";
@@ -308,7 +307,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/gists.jsx": js`
+        "app/routes/gists.tsx": js`
           import { json } from "@remix-run/node";
           import { Link, Outlet, useLoaderData, useNavigation } from "@remix-run/react";
           import stylesHref from "~/gists.css";
@@ -359,7 +358,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/gists.$username.jsx": js`
+        "app/routes/gists.$username.tsx": js`
           import { json, redirect } from "@remix-run/node";
           import { Link, useLoaderData, useParams } from "@remix-run/react";
           export async function loader({ params }) {
@@ -417,7 +416,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/gists._index.jsx": js`
+        "app/routes/gists._index.tsx": js`
           import { useLoaderData } from "@remix-run/react";
           export async function loader() {
             return ${JSON.stringify(fakeGists)};
@@ -458,7 +457,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/resources.theme-css.jsx": js`
+        "app/routes/resources.theme-css.tsx": js`
           import { redirect } from "@remix-run/node";
           export async function loader({ request }) {
             return new Response(":root { --nc-tx-1: #ffffff; --nc-tx-2: #eeeeee; }",
@@ -473,7 +472,7 @@ test.describe("route module link export", () => {
 
         `,
 
-        "app/routes/parent.jsx": js`
+        "app/routes/parent.tsx": js`
           import { Outlet } from "@remix-run/react";
 
           export function links() {
@@ -491,7 +490,7 @@ test.describe("route module link export", () => {
           }
         `,
 
-        "app/routes/parent.child.jsx": js`
+        "app/routes/parent.child.tsx": js`
           import { Outlet } from "@remix-run/react";
 
           export function loader() {

@@ -11,23 +11,23 @@ test.describe("pathless layout routes", () => {
     appFixture = await createAppFixture(
       await createFixture({
         files: {
-          "app/routes/_layout.jsx": js`
+          "app/routes/_layout.tsx": js`
             import { Outlet } from "@remix-run/react";
 
             export default () => <div data-testid="layout-route"><Outlet /></div>;
           `,
-          "app/routes/_layout._index.jsx": js`
+          "app/routes/_layout._index.tsx": js`
             export default () => <div data-testid="layout-index">Layout index</div>;
           `,
-          "app/routes/_layout.subroute.jsx": js`
+          "app/routes/_layout.subroute.tsx": js`
             export default () => <div data-testid="layout-subroute">Layout subroute</div>;
           `,
-          "app/routes/sandwiches._pathless.jsx": js`
+          "app/routes/sandwiches._pathless.tsx": js`
             import { Outlet } from "@remix-run/react";
 
             export default () => <div data-testid="sandwiches-pathless-route"><Outlet /></div>;
           `,
-          "app/routes/sandwiches._pathless._index.jsx": js`
+          "app/routes/sandwiches._pathless._index.tsx": js`
             export default () => <div data-testid="sandwiches-pathless-index">Sandwiches pathless index</div>;
           `,
         },

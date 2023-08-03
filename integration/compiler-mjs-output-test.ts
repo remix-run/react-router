@@ -46,7 +46,7 @@ test.beforeAll(async () => {
           }
         }      
       `,
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
         import { json } from "@remix-run/node";
         import { useLoaderData, Link } from "@remix-run/react";
 

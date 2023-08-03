@@ -22,7 +22,7 @@ test.describe("CSS side-effect imports", () => {
         serverDependenciesToBundle: [/@test-package/],
       },
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Outlet } from "@remix-run/react";
           import { cssBundleHref } from "@remix-run/css-bundle";
           export function links() {
@@ -63,7 +63,7 @@ test.describe("CSS side-effect imports", () => {
         padding: ${TEST_PADDING_VALUE};
       }
     `,
-    "app/routes/basic-side-effect-test.jsx": js`
+    "app/routes/basic-side-effect-test.tsx": js`
       import "../basicSideEffect/styles.css";
 
       export default function() {
@@ -92,7 +92,7 @@ test.describe("CSS side-effect imports", () => {
         padding: ${TEST_PADDING_VALUE};
       }
     `,
-    "app/routes/root-relative-test.jsx": js`
+    "app/routes/root-relative-test.tsx": js`
       import "~/rootRelative/styles.css";
 
       export default function() {
@@ -127,7 +127,7 @@ test.describe("CSS side-effect imports", () => {
         <circle cx="50" cy="50" r="50" fill="coral" />
       </svg>
     `,
-    "app/routes/image-urls-test.jsx": js`
+    "app/routes/image-urls-test.tsx": js`
       import "../imageUrls/styles.css";
 
       export default function() {
@@ -167,7 +167,7 @@ test.describe("CSS side-effect imports", () => {
         <circle cx="50" cy="50" r="50" fill="coral" />
       </svg>
     `,
-    "app/routes/root-relative-image-urls-test.jsx": js`
+    "app/routes/root-relative-image-urls-test.tsx": js`
       import "../rootRelativeImageUrls/styles.css";
 
       export default function() {
@@ -209,7 +209,7 @@ test.describe("CSS side-effect imports", () => {
         <circle cx="50" cy="50" r="50" fill="coral" />
       </svg>
     `,
-    "app/routes/absolute-image-urls-test.jsx": js`
+    "app/routes/absolute-image-urls-test.tsx": js`
       import "../absoluteImageUrls/styles.css";
 
       export default function() {
@@ -287,7 +287,7 @@ test.describe("CSS side-effect imports", () => {
         );
       };
     `,
-    "app/routes/commonjs-package-test.jsx": js`
+    "app/routes/commonjs-package-test.tsx": js`
       import { Test } from "@test-package/commonjs";
       export default function() {
         return <Test />;
@@ -329,7 +329,7 @@ test.describe("CSS side-effect imports", () => {
     "node_modules/@test-package/esm/package.json": json({
       exports: "./index.mjs",
     }),
-    "app/routes/esm-package-test.jsx": js`
+    "app/routes/esm-package-test.tsx": js`
       import { Test } from "@test-package/esm";
       export default function() {
         return <Test />;

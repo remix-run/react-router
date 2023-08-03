@@ -11,7 +11,7 @@ test.describe("root route", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           export default function Root() {
             return (
               <html>

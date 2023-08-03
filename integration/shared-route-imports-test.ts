@@ -11,7 +11,7 @@ test.describe("v1 compiler", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/routes/parent.jsx": js`
+        "app/routes/parent.tsx": js`
           import { createContext, useContext } from "react";
           import { Outlet } from "@remix-run/react";
   
@@ -30,7 +30,7 @@ test.describe("v1 compiler", () => {
           }
         `,
 
-        "app/routes/parent.child.jsx": js`
+        "app/routes/parent.child.tsx": js`
           import { useParentContext } from "./parent";
   
           export default function Index() {
@@ -98,7 +98,7 @@ test.describe("v2 compiler", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/routes/parent.jsx": js`
+        "app/routes/parent.tsx": js`
           import { createContext, useContext } from "react";
           import { Outlet } from "@remix-run/react";
   
@@ -117,7 +117,7 @@ test.describe("v2 compiler", () => {
           }
         `,
 
-        "app/routes/parent.child.jsx": js`
+        "app/routes/parent.child.tsx": js`
           import { useParentContext } from "./parent";
   
           export default function Index() {

@@ -11,7 +11,7 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     sourcemap: true,
     files: {
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
         import { json } from "@remix-run/node";
         import { useLoaderData } from "@remix-run/react";
 

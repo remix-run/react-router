@@ -11,7 +11,7 @@ test.describe("useMatches", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import * as React from 'react';
           import { json } from "@remix-run/node";
           import { Link, Links, Meta, Outlet, Scripts, useMatches } from "@remix-run/react";
@@ -42,7 +42,7 @@ test.describe("useMatches", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import { json } from "@remix-run/node";
           export const handle = { stuff: "index handle"};
           export const loader = () => json("INDEX");
@@ -51,7 +51,7 @@ test.describe("useMatches", () => {
           }
         `,
 
-        "app/routes/about.jsx": js`
+        "app/routes/about.tsx": js`
           import { json } from "@remix-run/node";
           export const handle = { stuff: "about handle"};
           export const loader = async () => {
@@ -63,7 +63,7 @@ test.describe("useMatches", () => {
           }
         `,
 
-        "app/routes/count.jsx": js`
+        "app/routes/count.tsx": js`
           import * as React from 'react';
           import { useMatches } from "@remix-run/react";
           export default function Count() {

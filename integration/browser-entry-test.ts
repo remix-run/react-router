@@ -10,7 +10,7 @@ let appFixture: AppFixture;
 test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
         import { Link } from "@remix-run/react";
 
         export default function Index() {
@@ -23,7 +23,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/burgers.jsx": js`
+      "app/routes/burgers.tsx": js`
         export default function Index() {
           return <div id="cheeseburger">cheeseburger</div>;
         }

@@ -17,7 +17,7 @@ test.describe("rendering", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
@@ -36,25 +36,25 @@ test.describe("rendering", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           export default function() {
             return <h2>${ROOT_INDEX}</h2>;
           }
         `,
 
-        "app/routes/$.jsx": js`
+        "app/routes/$.tsx": js`
           export default function() {
             return <h2>${ROOT_$}</h2>;
           }
         `,
 
-        "app/routes/flat.$.jsx": js`
+        "app/routes/flat.$.tsx": js`
           export default function() {
             return <h2>${FLAT_$}</h2>
           }
         `,
 
-        "app/routes/nested.jsx": js`
+        "app/routes/nested.tsx": js`
           import { Outlet } from "@remix-run/react";
           export default function() {
             return (
@@ -66,19 +66,19 @@ test.describe("rendering", () => {
           }
         `,
 
-        "app/routes/nested.$.jsx": js`
+        "app/routes/nested.$.tsx": js`
           export default function() {
             return <h2>${NESTED_$}</h2>
           }
         `,
 
-        "app/routes/nested._index.jsx": js`
+        "app/routes/nested._index.tsx": js`
           export default function() {
             return <h2>${NESTED_INDEX}</h2>
           }
         `,
 
-        "app/routes/parentless.$.jsx": js`
+        "app/routes/parentless.$.tsx": js`
           export default function() {
             return <h2>${PARENTLESS_$}</h2>
           }

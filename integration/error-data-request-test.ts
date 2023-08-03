@@ -17,7 +17,7 @@ test.describe("ErrorBoundary", () => {
 
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
         export default function Root() {
@@ -36,7 +36,7 @@ test.describe("ErrorBoundary", () => {
         }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import { Link, Form } from "@remix-run/react";
 
           export default function () {

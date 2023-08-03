@@ -10,7 +10,7 @@ let appFixture: AppFixture;
 test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
-      "app/routes/_index.jsx": js`
+      "app/routes/_index.tsx": js`
         import { redirect } from "@remix-run/node";
         import { Form } from "@remix-run/react";
 
@@ -30,7 +30,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/test.jsx": js`
+      "app/routes/test.tsx": js`
         export default function Component() {
           return (
             <>
@@ -41,7 +41,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/hash.jsx": js`
+      "app/routes/hash.tsx": js`
         import { Link } from "@remix-run/react";
 
         export default function Component() {

@@ -53,7 +53,7 @@ test.describe("cloudflare compiler", () => {
             "@remix-run/eslint-config": "0.0.0-local-version",
           },
         }),
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import fake from "worker-pkg";
           import { content as browserPackage } from "browser-pkg";
           import { content as esmOnlyPackage } from "esm-only-pkg";

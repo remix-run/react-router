@@ -564,7 +564,7 @@ test.describe("non-aborted", () => {
           }
         `,
 
-        "app/routes/headers.jsx": js`
+        "app/routes/headers.tsx": js`
           import { defer } from "@remix-run/node";
           export function loader() {
             return defer({}, { headers: { "x-custom-header": "value from loader" } });

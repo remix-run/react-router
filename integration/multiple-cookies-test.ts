@@ -11,7 +11,7 @@ test.describe("pathless layout routes", () => {
     appFixture = await createAppFixture(
       await createFixture({
         files: {
-          "app/routes/_index.jsx": js`
+          "app/routes/_index.tsx": js`
             import { redirect, json } from "@remix-run/node";
             import { Form, useActionData } from "@remix-run/react";
 

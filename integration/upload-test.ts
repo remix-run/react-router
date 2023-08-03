@@ -11,7 +11,7 @@ let appFixture: AppFixture;
 test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
-      "app/routes/file-upload-handler.jsx": js`
+      "app/routes/file-upload-handler.tsx": js`
         import {
           json,
           unstable_composeUploadHandlers as composeUploadHandlers,
@@ -74,7 +74,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/memory-upload-handler.jsx": js`
+      "app/routes/memory-upload-handler.tsx": js`
         import {
           json,
           unstable_createMemoryUploadHandler as createMemoryUploadHandler,
@@ -129,7 +129,7 @@ test.beforeAll(async () => {
         }
       `,
 
-      "app/routes/passthrough-upload-handler.jsx": js`
+      "app/routes/passthrough-upload-handler.tsx": js`
         import {
           json,
           unstable_parseMultipartFormData as parseMultipartFormData,

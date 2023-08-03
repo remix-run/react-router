@@ -20,7 +20,7 @@ test.describe("CSS Modules", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Outlet } from "@remix-run/react";
           import { cssBundleHref } from "@remix-run/css-bundle";
           export function links() {
@@ -64,13 +64,13 @@ test.describe("CSS Modules", () => {
   test.afterAll(() => appFixture.close());
 
   let basicStylesFixture = () => ({
-    "app/routes/basic-styles-test.jsx": js`
+    "app/routes/basic-styles-test.tsx": js`
       import { Test } from "~/test-components/basic-styles";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/basic-styles/index.jsx": js`
+    "app/test-components/basic-styles/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -98,13 +98,13 @@ test.describe("CSS Modules", () => {
   });
 
   let globalSelectorsFixture = () => ({
-    "app/routes/global-selector-test.jsx": js`
+    "app/routes/global-selector-test.tsx": js`
       import { Test } from "~/test-components/global-selector";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/global-selector/index.jsx": js`
+    "app/test-components/global-selector/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -134,13 +134,13 @@ test.describe("CSS Modules", () => {
   });
 
   let nestedGlobalSelectorsFixture = () => ({
-    "app/routes/nested-global-selector-test.jsx": js`
+    "app/routes/nested-global-selector-test.tsx": js`
       import { Test } from "~/test-components/nested-global-selector";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/nested-global-selector/index.jsx": js`
+    "app/test-components/nested-global-selector/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -170,13 +170,13 @@ test.describe("CSS Modules", () => {
   });
 
   let localClassCompositionFixture = () => ({
-    "app/routes/local-class-composition-test.jsx": js`
+    "app/routes/local-class-composition-test.tsx": js`
       import { Test } from "~/test-components/local-class-composition";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/local-class-composition/index.jsx": js`
+    "app/test-components/local-class-composition/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -207,13 +207,13 @@ test.describe("CSS Modules", () => {
   });
 
   let importedClassCompositionFixture = () => ({
-    "app/routes/imported-class-composition-test.jsx": js`
+    "app/routes/imported-class-composition-test.tsx": js`
       import { Test } from "~/test-components/imported-class-composition";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/imported-class-composition/index.jsx": js`
+    "app/test-components/imported-class-composition/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -248,13 +248,13 @@ test.describe("CSS Modules", () => {
   });
 
   let rootRelativeImportedClassCompositionFixture = () => ({
-    "app/routes/root-relative-imported-class-composition-test.jsx": js`
+    "app/routes/root-relative-imported-class-composition-test.tsx": js`
       import { Test } from "~/test-components/root-relative-imported-class-composition";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/root-relative-imported-class-composition/index.jsx": js`
+    "app/test-components/root-relative-imported-class-composition/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -289,13 +289,13 @@ test.describe("CSS Modules", () => {
   });
 
   let globalClassCompositionFixture = () => ({
-    "app/routes/global-class-composition-test.jsx": js`
+    "app/routes/global-class-composition-test.tsx": js`
       import { Test } from "~/test-components/global-class-composition";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/global-class-composition/index.jsx": js`
+    "app/test-components/global-class-composition/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -328,13 +328,13 @@ test.describe("CSS Modules", () => {
   });
 
   let localValueFixture = () => ({
-    "app/routes/local-value-test.jsx": js`
+    "app/routes/local-value-test.tsx": js`
       import { Test } from "~/test-components/local-value";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/local-value/index.jsx": js`
+    "app/test-components/local-value/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -363,13 +363,13 @@ test.describe("CSS Modules", () => {
   });
 
   let importedValueFixture = () => ({
-    "app/routes/imported-value-test.jsx": js`
+    "app/routes/imported-value-test.tsx": js`
       import { Test } from "~/test-components/imported-value";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/imported-value/index.jsx": js`
+    "app/test-components/imported-value/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -401,13 +401,13 @@ test.describe("CSS Modules", () => {
   });
 
   let rootRelativeImportedValueFixture = () => ({
-    "app/routes/root-relative-imported-value-test.jsx": js`
+    "app/routes/root-relative-imported-value-test.tsx": js`
       import { Test } from "~/test-components/root-relative-imported-value";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/root-relative-imported-value/index.jsx": js`
+    "app/test-components/root-relative-imported-value/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -441,13 +441,13 @@ test.describe("CSS Modules", () => {
   });
 
   let imageUrlsFixture = () => ({
-    "app/routes/image-urls-test.jsx": js`
+    "app/routes/image-urls-test.tsx": js`
       import { Test } from "~/test-components/image-urls";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/image-urls/index.jsx": js`
+    "app/test-components/image-urls/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -486,13 +486,13 @@ test.describe("CSS Modules", () => {
   });
 
   let rootRelativeImageUrlsFixture = () => ({
-    "app/routes/root-relative-image-urls-test.jsx": js`
+    "app/routes/root-relative-image-urls-test.tsx": js`
       import { Test } from "~/test-components/root-relative-image-urls";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/root-relative-image-urls/index.jsx": js`
+    "app/test-components/root-relative-image-urls/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -533,13 +533,13 @@ test.describe("CSS Modules", () => {
   });
 
   let absoluteImageUrlsFixture = () => ({
-    "app/routes/absolute-image-urls-test.jsx": js`
+    "app/routes/absolute-image-urls-test.tsx": js`
       import { Test } from "~/test-components/absolute-image-urls";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/absolute-image-urls/index.jsx": js`
+    "app/test-components/absolute-image-urls/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -578,7 +578,7 @@ test.describe("CSS Modules", () => {
   });
 
   let clientEntrySideEffectsFixture = () => ({
-    "app/entry.client.jsx": js`
+    "app/entry.client.tsx": js`
       import { RemixBrowser } from "@remix-run/react";
       import { startTransition, StrictMode } from "react";
       import { hydrateRoot } from "react-dom/client";
@@ -606,7 +606,7 @@ test.describe("CSS Modules", () => {
         padding: ${TEST_PADDING_VALUE};
       }
     `,
-    "app/routes/client-entry-side-effects-test.jsx": js`
+    "app/routes/client-entry-side-effects-test.tsx": js`
       export default function() {
         return (
           <div data-testid="client-entry-side-effects" className="clientEntry">
@@ -629,13 +629,13 @@ test.describe("CSS Modules", () => {
   });
 
   let deduplicatedCssFixture = () => ({
-    "app/routes/deduplicated-css-test.jsx": js`
+    "app/routes/deduplicated-css-test.tsx": js`
       import { Test } from "~/test-components/deduplicated-css";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/deduplicated-css/index.jsx": js`
+    "app/test-components/deduplicated-css/index.tsx": js`
       import styles_1 from "./styles_1.module.css";
       import styles_2 from "./styles_2.module.css";
       import sharedStyles from "./shared.module.css";
@@ -707,13 +707,13 @@ test.describe("CSS Modules", () => {
   });
 
   let uniqueClassNamesFixture = () => ({
-    "app/routes/unique-class-names-test.jsx": js`
+    "app/routes/unique-class-names-test.tsx": js`
       import { Test } from "~/test-components/unique-class-names";
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/unique-class-names/index.jsx": js`
+    "app/test-components/unique-class-names/index.tsx": js`
       import styles from "./styles.module.css";
       export function Test() {
         return (
@@ -741,17 +741,17 @@ test.describe("CSS Modules", () => {
   });
 
   let treeShakingFixture = () => ({
-    "app/routes/tree-shaking-test.jsx": js`
+    "app/routes/tree-shaking-test.tsx": js`
       import { UsedTest } from "~/test-components/tree-shaking";
       export default function() {
         return <UsedTest />;
       }
     `,
-    "app/test-components/tree-shaking/index.js": js`
+    "app/test-components/tree-shaking/index.ts": js`
       export { UsedTest } from "./used";
       export { UnusedTest } from "./unused";
     `,
-    "app/test-components/tree-shaking/used/index.jsx": js`
+    "app/test-components/tree-shaking/used/index.tsx": js`
       import styles from "./styles.module.css";
       export function UsedTest() {
         return (
@@ -767,7 +767,7 @@ test.describe("CSS Modules", () => {
         padding: ${TEST_PADDING_VALUE};
       }
     `,
-    "app/test-components/tree-shaking/unused/index.jsx": js`
+    "app/test-components/tree-shaking/unused/index.tsx": js`
       import styles from "./styles.module.css";
       export function UnusedTest() {
         return (

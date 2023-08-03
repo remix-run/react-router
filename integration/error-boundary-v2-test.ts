@@ -14,7 +14,7 @@ test.describe("ErrorBoundary", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
@@ -35,7 +35,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        "app/routes/parent.jsx": js`
+        "app/routes/parent.tsx": js`
           import {
             Link,
             Outlet,
@@ -76,7 +76,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        "app/routes/parent.child-with-boundary.jsx": js`
+        "app/routes/parent.child-with-boundary.tsx": js`
           import {
             isRouteErrorResponse,
             useLoaderData,
@@ -110,7 +110,7 @@ test.describe("ErrorBoundary", () => {
           }
         `,
 
-        "app/routes/parent.child-without-boundary.jsx": js`
+        "app/routes/parent.child-without-boundary.tsx": js`
           import { useLoaderData, useLocation } from "@remix-run/react";
 
           export function loader({ request }) {

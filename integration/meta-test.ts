@@ -19,7 +19,7 @@ test.describe("meta", () => {
         ignoredRouteFiles: ["**/.*"],
       },
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { json } from "@remix-run/node";
           import { Meta, Links, Outlet, Scripts } from "@remix-run/react";
 
@@ -53,7 +53,7 @@ test.describe("meta", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           export const meta = ({ data, matches }) =>
             matches.flatMap((match) => match.meta);
 
@@ -62,20 +62,20 @@ test.describe("meta", () => {
           }
         `,
 
-        "app/routes/no-meta-export.jsx": js`
+        "app/routes/no-meta-export.tsx": js`
           export default function NoMetaExport() {
             return <div>Parent meta here!</div>;
           }
         `,
 
-        "app/routes/empty-meta-function.jsx": js`
+        "app/routes/empty-meta-function.tsx": js`
           export const meta = () => [];
           export default function EmptyMetaFunction() {
             return <div>No meta here!</div>;
           }
         `,
 
-        "app/routes/authors.$authorId.jsx": js`
+        "app/routes/authors.$authorId.tsx": js`
           import { json } from "@remix-run/node";
 
           export async function loader({ params }) {
@@ -128,7 +128,7 @@ test.describe("meta", () => {
           }
         `,
 
-        "app/routes/music.jsx": js`
+        "app/routes/music.tsx": js`
           export function meta({ data, matches }) {
             let rootModule = matches.find(match => match.id === "root");
             let rootCharSet = rootModule.meta.find(meta => meta.charSet);

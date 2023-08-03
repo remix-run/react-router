@@ -68,7 +68,7 @@ test.describe("PostCSS enabled", () => {
             },
           };
         `,
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Outlet } from "@remix-run/react";
           import { cssBundleHref } from "@remix-run/css-bundle";
           export function links() {
@@ -102,7 +102,7 @@ test.describe("PostCSS enabled", () => {
   test.afterAll(() => appFixture.close());
 
   let regularStylesSheetsFixture = () => ({
-    "app/routes/regular-style-sheets-test.jsx": js`
+    "app/routes/regular-style-sheets-test.tsx": js`
       import { Test, links as testLinks } from "~/test-components/regular-style-sheets";
 
       export function links() {
@@ -113,7 +113,7 @@ test.describe("PostCSS enabled", () => {
         return <Test />;
       }
     `,
-    "app/test-components/regular-style-sheets/index.jsx": js`
+    "app/test-components/regular-style-sheets/index.tsx": js`
       import stylesHref from "./styles.css";
 
       export function links() {
@@ -157,14 +157,14 @@ test.describe("PostCSS enabled", () => {
   });
 
   let cssModulesFixture = () => ({
-    "app/routes/css-modules-test.jsx": js`
+    "app/routes/css-modules-test.tsx": js`
       import { Test } from "~/test-components/css-modules";
 
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/css-modules/index.jsx": js`
+    "app/test-components/css-modules/index.tsx": js`
       import styles from "./styles.module.css";
 
       export function Test() {
@@ -204,14 +204,14 @@ test.describe("PostCSS enabled", () => {
   });
 
   let vanillaExtractFixture = () => ({
-    "app/routes/vanilla-extract-test.jsx": js`
+    "app/routes/vanilla-extract-test.tsx": js`
       import { Test } from "~/test-components/vanilla-extract";
 
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/vanilla-extract/index.jsx": js`
+    "app/test-components/vanilla-extract/index.tsx": js`
       import * as styles from "./styles.css";
 
       export function Test() {
@@ -253,14 +253,14 @@ test.describe("PostCSS enabled", () => {
   });
 
   let cssSideEffectImportsFixture = () => ({
-    "app/routes/css-side-effect-imports-test.jsx": js`
+    "app/routes/css-side-effect-imports-test.tsx": js`
       import { Test } from "~/test-components/css-side-effect-imports";
 
       export default function() {
         return <Test />;
       }
     `,
-    "app/test-components/css-side-effect-imports/index.jsx": js`
+    "app/test-components/css-side-effect-imports/index.tsx": js`
       import "./styles.css";
 
       export function Test() {
@@ -300,7 +300,7 @@ test.describe("PostCSS enabled", () => {
   });
 
   let automaticTailwindPluginInsertionFixture = () => ({
-    "app/routes/automatic-tailwind-plugin-insertion-test.jsx": js`
+    "app/routes/automatic-tailwind-plugin-insertion-test.tsx": js`
       import { Test, links as testLinks } from "~/test-components/automatic-tailwind-plugin-insertion";
 
       export function links() {
@@ -311,7 +311,7 @@ test.describe("PostCSS enabled", () => {
         return <Test />;
       }
     `,
-    "app/test-components/automatic-tailwind-plugin-insertion/index.jsx": js`
+    "app/test-components/automatic-tailwind-plugin-insertion/index.tsx": js`
       import stylesHref from "./styles.css";
 
       export function links() {
@@ -369,7 +369,7 @@ test.describe("PostCSS disabled", () => {
             ],
           });
         `,
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Outlet } from "@remix-run/react";
           export default function Root() {
             return (
@@ -384,7 +384,7 @@ test.describe("PostCSS disabled", () => {
             )
           }
         `,
-        "app/routes/postcss-disabled-test.jsx": js`
+        "app/routes/postcss-disabled-test.tsx": js`
           import { Test, links as testLinks } from "~/test-components/postcss-disabled";
           export function links() {
             return [...testLinks()];
@@ -393,7 +393,7 @@ test.describe("PostCSS disabled", () => {
             return <Test />;
           }
         `,
-        "app/test-components/postcss-disabled/index.jsx": js`
+        "app/test-components/postcss-disabled/index.tsx": js`
           import stylesHref from "./styles.css";
           export function links() {
             return [{ rel: 'stylesheet', href: stylesHref }];

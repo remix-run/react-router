@@ -20,7 +20,7 @@ test.describe("rendering", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
@@ -41,7 +41,7 @@ test.describe("rendering", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import { Link } from "@remix-run/react";
           export default function() {
             return (
@@ -124,7 +124,7 @@ test.describe("rendering", () => {
           }
         `,
 
-        "app/routes/gh-1691.jsx": js`
+        "app/routes/gh-1691.tsx": js`
           import { json, redirect } from "@remix-run/node";
           import { useFetcher} from "@remix-run/react";
 
@@ -153,7 +153,7 @@ test.describe("rendering", () => {
           }
         `,
 
-        "app/routes/parent.jsx": js`
+        "app/routes/parent.tsx": js`
           import { Outlet, useLoaderData } from "@remix-run/react";
 
           if (!global.counts) {
@@ -180,7 +180,7 @@ test.describe("rendering", () => {
           }
         `,
 
-        "app/routes/parent.child.jsx": js`
+        "app/routes/parent.child.tsx": js`
           import { redirect } from "@remix-run/node";
           import { useFetcher} from "@remix-run/react";
 

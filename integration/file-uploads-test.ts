@@ -13,7 +13,7 @@ test.describe("file-uploads", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/fileUploadHandler.js": js`
+        "app/fileUploadHandler.ts": js`
           import * as path from "node:path";
           import {
             unstable_composeUploadHandlers as composeUploadHandlers,
@@ -34,7 +34,7 @@ test.describe("file-uploads", () => {
             createMemoryUploadHandler(),
           );
         `,
-        "app/routes/file-upload.jsx": js`
+        "app/routes/file-upload.tsx": js`
           import {
             unstable_parseMultipartFormData as parseMultipartFormData,
           } from "@remix-run/node";

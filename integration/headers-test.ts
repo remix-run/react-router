@@ -16,7 +16,7 @@ test.describe("headers export", () => {
     appFixture = await createFixture(
       {
         files: {
-          "app/root.jsx": js`
+          "app/root.tsx": js`
             import { json } from "@remix-run/node";
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
@@ -38,7 +38,7 @@ test.describe("headers export", () => {
             }
           `,
 
-          "app/routes/_index.jsx": js`
+          "app/routes/_index.tsx": js`
             import { json } from "@remix-run/node";
 
             export function loader() {
@@ -60,7 +60,7 @@ test.describe("headers export", () => {
             }
           `,
 
-          "app/routes/action.jsx": js`
+          "app/routes/action.tsx": js`
             import { json } from "@remix-run/node";
 
             export function action() {
@@ -80,7 +80,7 @@ test.describe("headers export", () => {
             export default function Action() { return <div/> }
           `,
 
-          "app/routes/parent.jsx": js`
+          "app/routes/parent.tsx": js`
             export function headers({ actionHeaders, errorHeaders, loaderHeaders, parentHeaders }) {
               return new Headers([
                 ...(parentHeaders ? Array.from(parentHeaders.entries()) : []),
@@ -122,7 +122,7 @@ test.describe("headers export", () => {
             }
           `,
 
-          "app/routes/parent.child.jsx": js`
+          "app/routes/parent.child.tsx": js`
             export function loader({ request }) {
               if (new URL(request.url).searchParams.get('throw') === "child") {
                 throw new Response(null, {
@@ -147,7 +147,7 @@ test.describe("headers export", () => {
             export default function Component() { return <div/> }
           `,
 
-          "app/routes/parent.child.grandchild.jsx": js`
+          "app/routes/parent.child.grandchild.tsx": js`
             export function loader({ request }) {
               throw new Response(null, {
                 status: 400,
@@ -158,7 +158,7 @@ test.describe("headers export", () => {
             export default function Component() { return <div/> }
           `,
 
-          "app/routes/cookie.jsx": js`
+          "app/routes/cookie.tsx": js`
             import { json } from "@remix-run/server-runtime";
             import { Outlet } from "@remix-run/react";
 
@@ -178,7 +178,7 @@ test.describe("headers export", () => {
             }
           `,
 
-          "app/routes/cookie.child.jsx": js`
+          "app/routes/cookie.child.tsx": js`
             import { json } from "@remix-run/node";
 
             export function loader({ request }) {
@@ -220,7 +220,7 @@ test.describe("headers export", () => {
     let fixture = await createFixture(
       {
         files: {
-          "app/root.jsx": js`
+          "app/root.tsx": js`
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
             export default function Root() {
@@ -239,7 +239,7 @@ test.describe("headers export", () => {
             }
           `,
 
-          "app/routes/_index.jsx": js`
+          "app/routes/_index.tsx": js`
             import { json } from "@remix-run/node";
 
             export function loader() {

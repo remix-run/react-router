@@ -13,7 +13,7 @@ test.describe("Custom Server Entry", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/entry.server.jsx": js`
+        "app/entry.server.tsx": js`
           export default function handleRequest() {
             return new Response("");
           }
@@ -24,7 +24,7 @@ test.describe("Custom Server Entry", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           export function loader() {
             return ""
           }
@@ -48,7 +48,7 @@ test.describe("Default Server Entry", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           export default function () {
             return <p>Hello World</p>
           }
@@ -69,7 +69,7 @@ test.describe("Default Server Entry (React 17)", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           export default function () {
             return <p>Hello World</p>
           }

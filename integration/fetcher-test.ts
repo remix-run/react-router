@@ -47,7 +47,7 @@ test.describe("useFetcher", () => {
           }
         `,
 
-        "app/routes/resource-route.jsx": js`
+        "app/routes/resource-route.tsx": js`
           export function loader() {
             return "${LUNCH}";
           }
@@ -56,7 +56,7 @@ test.describe("useFetcher", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import { useFetcher } from "@remix-run/react";
           export default function Index() {
             let fetcher = useFetcher();
@@ -85,7 +85,7 @@ test.describe("useFetcher", () => {
           }
         `,
 
-        "app/routes/parent.jsx": js`
+        "app/routes/parent.tsx": js`
           import { Outlet } from "@remix-run/react";
 
           export function action() {
@@ -101,7 +101,7 @@ test.describe("useFetcher", () => {
           }
         `,
 
-        "app/routes/parent._index.jsx": js`
+        "app/routes/parent._index.tsx": js`
           import { useFetcher } from "@remix-run/react";
 
           export function action() {
@@ -144,7 +144,7 @@ test.describe("useFetcher", () => {
           }
         `,
 
-        "app/routes/fetcher-echo.jsx": js`
+        "app/routes/fetcher-echo.tsx": js`
           import { json } from "@remix-run/node";
           import { useFetcher } from "@remix-run/react";
 
@@ -423,7 +423,7 @@ test.describe("fetcher aborts and adjacent forms", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           import * as React from "react";
           import {
             Form,
@@ -475,7 +475,7 @@ test.describe("fetcher aborts and adjacent forms", () => {
           }
         `,
 
-        "app/routes/api.jsx": js`
+        "app/routes/api.tsx": js`
           export async function loader() {
             await new Promise((resolve) => setTimeout(resolve, 500));
             return { message: 'Hello world!' }

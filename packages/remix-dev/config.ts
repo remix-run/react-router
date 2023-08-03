@@ -106,7 +106,7 @@ export interface AppConfig {
    * A server entrypoint, relative to the root directory that becomes your
    * server's main module. If specified, Remix will compile this file along with
    * your application into a single file to be deployed to your server. This
-   * file can use either a `.js` or `.ts` file extension.
+   * file can use either a `.ts` or `.js` file extension.
    */
   server?: string;
 

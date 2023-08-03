@@ -17,7 +17,7 @@ test.describe("flat routes", () => {
         ignoredRouteFiles: [IGNORED_ROUTE],
       },
       files: {
-        "app/root.jsx": js`
+        "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
@@ -39,31 +39,31 @@ test.describe("flat routes", () => {
           }
         `,
 
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           export default function () {
             return <h2>Index</h2>;
           }
         `,
 
-        "app/routes/folder/route.jsx": js`
+        "app/routes/folder/route.tsx": js`
           export default function () {
             return <h2>Folder (Route.jsx)</h2>;
           }
         `,
 
-        "app/routes/folder2/index.jsx": js`
+        "app/routes/folder2/index.tsx": js`
           export default function () {
             return <h2>Folder (Index.jsx)</h2>;
           }
         `,
 
-        "app/routes/flat.file.jsx": js`
+        "app/routes/flat.file.tsx": js`
           export default function () {
             return <h2>Flat File</h2>;
           }
         `,
 
-        "app/routes/dashboard/route.jsx": js`
+        "app/routes/dashboard/route.tsx": js`
           import { Outlet } from "@remix-run/react";
 
           export default function () {
@@ -76,7 +76,7 @@ test.describe("flat routes", () => {
           }
         `,
 
-        "app/routes/dashboard._index/route.jsx": js`
+        "app/routes/dashboard._index/route.tsx": js`
           export default function () {
             return <h3>Dashboard Index</h3>;
           }
@@ -182,12 +182,12 @@ test.describe("emits warnings for route conflicts", async () => {
             return <p>routes/_dashboard._index</p>;
           }
         `,
-        "app/routes/_index.jsx": js`
+        "app/routes/_index.tsx": js`
           export default function () {
             return <p>routes._index</p>;
           }
         `,
-        "app/routes/_landing._index.jsx": js`
+        "app/routes/_landing._index.tsx": js`
           export default function () {
             return <p>routes/_landing._index</p>;
           }
@@ -232,8 +232,8 @@ test.describe("", () => {
     await createFixtureProject({
       buildStdio,
       files: {
-        "app/routes/_index/route.jsx": js``,
-        "app/routes/_index/utils.js": js``,
+        "app/routes/_index/route.tsx": js``,
+        "app/routes/_index/utils.ts": js``,
       },
     });
 
@@ -284,12 +284,12 @@ test.describe("pathless routes and route collisions", () => {
             );
           }
         `,
-        "app/routes/nested._index.jsx": js`
+        "app/routes/nested._index.tsx": js`
           export default function Index() {
             return <h1>Index</h1>;
           }
         `,
-        "app/routes/nested._pathless.jsx": js`
+        "app/routes/nested._pathless.tsx": js`
           import { Outlet } from "@remix-run/react";
 
           export default function Layout() {
@@ -301,12 +301,12 @@ test.describe("pathless routes and route collisions", () => {
             );
           }
         `,
-        "app/routes/nested._pathless.foo.jsx": js`
+        "app/routes/nested._pathless.foo.tsx": js`
           export default function Foo() {
             return <h1>Foo</h1>;
           }
         `,
-        "app/routes/nested._pathless2.jsx": js`
+        "app/routes/nested._pathless2.tsx": js`
           import { Outlet } from "@remix-run/react";
 
           export default function Layout() {
@@ -318,7 +318,7 @@ test.describe("pathless routes and route collisions", () => {
             );
           }
         `,
-        "app/routes/nested._pathless2.bar.jsx": js`
+        "app/routes/nested._pathless2.bar.tsx": js`
           export default function Bar() {
             return <h1>Bar</h1>;
           }
