@@ -39,6 +39,7 @@ import {
   matchRoutes,
   parsePath,
   redirect,
+  redirectDocument,
   resolvePath,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
@@ -187,6 +188,7 @@ export {
   matchRoutes,
   parsePath,
   redirect,
+  redirectDocument,
   renderMatches,
   resolvePath,
   useActionData,
