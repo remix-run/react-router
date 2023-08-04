@@ -66,7 +66,7 @@ When using the [`<ScrollRestoration>`][scrollrestoration] component, you can dis
 
 ## `options.relative`
 
-By default, navigation is relative to the route hierarchy, so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing. You can opt into this behavior with `relative: true`:
+By default, navigation is relative to the route hierarchy (`relative: "route"`), so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing. You can opt into this behavior with `relative: "path"`:
 
 ```jsx
 // Contact and EditContact do not share additional UI layout
