@@ -1,27 +1,12 @@
 # `@remix-run/dev`
 
-## 1.19.2-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.19.2-pre.2`
-
-## 1.19.2-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@1.19.2-pre.1`
-
-## 1.19.2-pre.0
+## 1.19.2
 
 ### Patch Changes
 
 - Update `proxy-agent` to resolve npm audit security vulnerability ([#7027](https://github.com/remix-run/remix/pull/7027))
 - Updated dependencies:
-  - `@remix-run/server-runtime@1.19.2-pre.0`
-  - `@remix-run/serve@1.19.2-pre.0`
+  - `@remix-run/server-runtime@1.19.2`
 
 ## 1.19.1
 

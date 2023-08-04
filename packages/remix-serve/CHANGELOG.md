@@ -1,29 +1,13 @@
 # `@remix-run/serve`
 
-## 1.19.2-pre.2
+## 1.19.2
 
 ### Patch Changes
 
 - Install `source-map-support` ([#7039](https://github.com/remix-run/remix/pull/7039))
 - Updated dependencies:
-  - `@remix-run/express@1.19.2-pre.2`
-  - `@remix-run/node@1.19.2-pre.2`
-
-## 1.19.2-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@1.19.2-pre.1`
-  - `@remix-run/node@1.19.2-pre.1`
-
-## 1.19.2-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@1.19.2-pre.0`
-  - `@remix-run/express@1.19.2-pre.0`
+  - `@remix-run/node@1.19.2`
+  - `@remix-run/express@1.19.2`
 
 ## 1.19.1
 
