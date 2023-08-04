@@ -608,7 +608,38 @@ export async function readConfig(
     tsconfigPath = rootJsConfig;
   }
 
+  // Note: When a future flag is removed from here, it should be added to the
+  // list below so we can let folks know if they have obsolete flags in their
+  // config.  If we ever convert remix.config.js to a TS file so we get proper
+  // typings this won't be necessary anymore.
   let future: FutureConfig = {};
+
+  if (appConfig.future) {
+    let userFlags = appConfig.future;
+    let deprecatedFlags = [
+      "unstable_cssModules",
+      "unstable_cssSideEffectImports",
+      "unstable_dev",
+      "unstable_postcss",
+      "unstable_tailwind",
+      "unstable_vanillaExtract",
+      "v2_dev",
+      "v2_errorBoundary",
+      "v2_headers",
+      "v2_meta",
+      "v2_normalizeFormMethod",
+      "v2_routeConvention",
+    ] as const;
+
+    let obsoleteFlags = deprecatedFlags.filter((f) => f in userFlags);
+    if (obsoleteFlags.length > 0) {
+      logger.warn(
+        `⚠️ REMIX FUTURE CHANGE: the following Remix future flags are now obsolete ` +
+          `and can be removed from your remix.config.js file:\n` +
+          obsoleteFlags.map((f) => `- ${f}\n`).join("")
+      );
+    }
+  }
 
   return {
     appDirectory,
