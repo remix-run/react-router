@@ -5,7 +5,7 @@ import * as build from "@remix-run/dev/server-build";
 
 const remixHandler = createRequestHandlerWithStaticFiles({
   build,
-  mode: Deno.env.get("NODE_ENV"),
+  mode: build.mode,
   getLoadContext: () => ({}),
 });
 

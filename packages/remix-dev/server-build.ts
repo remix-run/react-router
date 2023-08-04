@@ -6,6 +6,7 @@ throw new Error(
     " by the Remix compiler at build time."
 );
 
+export const mode: ServerBuild["mode"] = undefined!;
 export const assets: ServerBuild["assets"] = undefined!;
 export const entry: ServerBuild["entry"] = undefined!;
 export const routes: ServerBuild["routes"] = undefined!;
