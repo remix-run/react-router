@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/server-runtime",
-  "version": "1.19.1",
+  "version": "1.19.2",
   "description": "Server runtime for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"
@@ -24,7 +24,7 @@
     "source-map": "^0.7.3"
   },
   "devDependencies": {
-    "@remix-run/web-file": "^3.0.2",
+    "@remix-run/web-file": "^3.0.3",
     "@types/set-cookie-parser": "^2.4.1",
     "typescript": "^5.1.0"
   },
