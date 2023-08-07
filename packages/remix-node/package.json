@@ -22,7 +22,6 @@
     "@remix-run/web-file": "^3.0.3",
     "@remix-run/web-stream": "^1.0.4",
     "@web3-storage/multipart-parser": "^1.0.0",
-    "abort-controller": "^3.0.0",
     "cookie-signature": "^1.1.0",
     "source-map-support": "^0.5.21",
     "stream-slice": "^0.1.2"

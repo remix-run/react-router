@@ -1,5 +1,3 @@
-export { AbortController } from "abort-controller";
-
 export type {
   HeadersInit,
   RequestInfo,
