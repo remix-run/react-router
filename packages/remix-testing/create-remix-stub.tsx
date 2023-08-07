@@ -79,15 +79,17 @@ function patchRoutesWithContext(
 }
 
 interface StubIndexRouteObject
-  extends Omit<IndexRouteObject, "loader" | "action"> {
+  extends Omit<IndexRouteObject, "loader" | "action" | "children"> {
   loader?: LoaderFunction;
   action?: ActionFunction;
+  children?: StubRouteObject[];
 }
 
 interface StubNonIndexRouteObject
-  extends Omit<NonIndexRouteObject, "loader" | "action"> {
+  extends Omit<NonIndexRouteObject, "loader" | "action" | "children"> {
   loader?: LoaderFunction;
   action?: ActionFunction;
+  children?: StubRouteObject[];
 }
 
 type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
