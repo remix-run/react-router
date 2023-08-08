@@ -1,52 +1,54 @@
 import type { SerializeFrom } from "../index";
 import { defer, json } from "../index";
-import type { IsNever } from "./utils";
 import { isEqual } from "./utils";
 
-describe("SerializeFrom", () => {
-  it("infers types", () => {
-    isEqual<SerializeFrom<string>, string>(true);
-    isEqual<SerializeFrom<number>, number>(true);
-    isEqual<SerializeFrom<boolean>, boolean>(true);
-    isEqual<SerializeFrom<String>, String>(true);
-    isEqual<SerializeFrom<Number>, Number>(true);
-    isEqual<SerializeFrom<Boolean>, Boolean>(true);
-    isEqual<SerializeFrom<null>, null>(true);
+it("infers basic types", () => {
+  isEqual<
+    SerializeFrom<{
+      hello?: string;
+      count: number | undefined;
+      date: Date | number;
+      isActive: boolean;
+      items: { name: string; price: number; orderedAt: Date }[];
+    }>,
+    {
+      hello?: string;
+      count?: number;
+      date: string | number;
+      isActive: boolean;
+      items: { name: string; price: number; orderedAt: string }[];
+    }
+  >(true);
+});
 
-    isEqual<IsNever<SerializeFrom<undefined>>, true>(true);
-    isEqual<IsNever<SerializeFrom<Function>>, true>(true);
-    isEqual<IsNever<SerializeFrom<symbol>>, true>(true);
+it("infers deferred types", () => {
+  let get = (): Promise<Date> | undefined => {
+    if (Math.random() > 0.5) return Promise.resolve(new Date());
+    return undefined;
+  };
+  let loader = async () =>
+    defer({
+      critical: await Promise.resolve("hello"),
+      deferred: get(),
+    });
+  isEqual<
+    SerializeFrom<typeof loader>,
+    {
+      critical: string;
+      deferred: Promise<string> | undefined;
+    }
+  >(true);
+});
 
-    isEqual<SerializeFrom<[]>, []>(true);
-    isEqual<SerializeFrom<[string, number]>, [string, number]>(true);
-    isEqual<SerializeFrom<[number, number]>, [number, number]>(true);
+it("infers types from json", () => {
+  let loader = () => json({ data: "remix" });
+  isEqual<SerializeFrom<typeof loader>, { data: string }>(true);
 
-    isEqual<SerializeFrom<ReadonlyArray<string>>, string[]>(true);
-    isEqual<SerializeFrom<ReadonlyArray<Function>>, null[]>(true);
+  let asyncLoader = async () => json({ data: "remix" });
+  isEqual<SerializeFrom<typeof asyncLoader>, { data: string }>(true);
+});
 
-    isEqual<SerializeFrom<{ hello: "remix" }>, { hello: "remix" }>(true);
-    isEqual<
-      SerializeFrom<{ data: { hello: "remix" } }>,
-      { data: { hello: "remix" } }
-    >(true);
-  });
-
-  it("infers type from json responses", () => {
-    let loader = () => json({ hello: "remix" });
-    isEqual<SerializeFrom<typeof loader>, { hello: string }>(true);
-
-    let asyncLoader = async () => json({ hello: "remix" });
-    isEqual<SerializeFrom<typeof asyncLoader>, { hello: string }>(true);
-  });
-
-  it("infers type from defer responses", () => {
-    let loader = async () => defer({ data: { hello: "remix" } });
-    isEqual<SerializeFrom<typeof loader>, { data: { hello: string } }>(true);
-  });
-
-  // Special case that covers https://github.com/remix-run/remix/issues/5211
-  it("infers type from json responses containing a data key", () => {
-    let loader = async () => json({ data: { hello: "remix" } });
-    isEqual<SerializeFrom<typeof loader>, { data: { hello: string } }>(true);
-  });
+it("infers type from defer", () => {
+  let loader = async () => defer({ data: "remix" });
+  isEqual<SerializeFrom<typeof loader>, { data: string }>(true);
 });

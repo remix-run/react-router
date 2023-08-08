@@ -4,35 +4,38 @@ import type { AppData } from "./data";
 import type { TypedDeferredData, TypedResponse } from "./responses";
 
 // Note: The return value has to be `any` and not `unknown` so it can match `void`.
-type ArbitraryFunction = (...args: any[]) => any;
-type NotJsonable = ArbitraryFunction | undefined | symbol;
-
-type Serialize<T> = T extends TypedDeferredData<infer U>
-  ? SerializeDeferred<U>
-  : Jsonify<T>;
+type Fn = (...args: any[]) => any;
 
 // prettier-ignore
-type SerializeDeferred<T extends Record<string, unknown>> = {
-  [k in keyof T as
-    T[k] extends Promise<unknown> ? k :
-    T[k] extends NotJsonable ? never :
-    k
-  ]:
-    T[k] extends Promise<infer U>
-    ? Promise<Serialize<U>> extends never ? "wtf" : Promise<Serialize<U>>
-    : Serialize<T[k]>  extends never ? k : Serialize<T[k]>;
-};
-
 /**
  * Infer JSON serialized data type returned by a loader or action.
  *
  * For example:
  * `type LoaderData = SerializeFrom<typeof loader>`
  */
-export type SerializeFrom<T extends AppData | ArbitraryFunction> = Serialize<
-  T extends (...args: any[]) => infer Output
-    ? Awaited<Output> extends TypedResponse<infer U>
-      ? U
-      : Awaited<Output>
-    : Awaited<T>
->;
+export type SerializeFrom<T extends AppData | Fn> =
+  T extends (...args: any[]) => infer Output ?
+    Awaited<Output> extends TypedResponse<infer U> ? Jsonify<U> :
+    Awaited<Output> extends TypedDeferredData<infer U> ?
+      // top-level promises
+      & {
+        [K in keyof U as
+          K extends symbol ? never :
+          Promise<any> extends U[K] ? K :
+          never
+        ]:
+        // use generic to distribute over union
+        DeferValue<U[K]>
+      }
+      // non-promises
+      & Jsonify<{ [K in keyof U as Promise<any> extends U[K] ? never : K]: U[K] }>
+      :
+    Jsonify<Awaited<Output>> :
+  Jsonify<Awaited<T>>
+;
+
+// prettier-ignore
+type DeferValue<T> =
+  T extends undefined ? undefined :
+  T extends Promise<unknown> ? Promise<Jsonify<Awaited<T>>> :
+  Jsonify<T>;
