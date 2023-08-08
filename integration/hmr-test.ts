@@ -59,12 +59,13 @@ let fixture = (options: { appPort: number; devPort: number }): FixtureInit => ({
       app.use(express.static("public", { immutable: true, maxAge: "1y" }));
 
       const BUILD_DIR = path.join(process.cwd(), "build");
+      const build = require(BUILD_DIR);
 
       app.all(
         "*",
         createRequestHandler({
-          build: require(BUILD_DIR),
-          mode: process.env.NODE_ENV,
+          build,
+          mode: build.mode,
         })
       );
 
