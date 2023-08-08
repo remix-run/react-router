@@ -526,7 +526,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     },
     ref
   ) {
-    let { basename } = React.useContext(NavigationContext);
+    let { basename, static: isStatic } = React.useContext(NavigationContext);
 
     // Rendered into <a href> for absolute URLs
     let absoluteHref;
@@ -564,6 +564,12 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
+
+    // Render encoded URIs on the server to avoid hydration issues on the
+    // client when pathnames contain spaces or other URL-encoded chars
+    if (isStatic) {
+      href = encodeURI(href);
+    }
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
@@ -823,9 +829,17 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     },
     forwardedRef
   ) => {
+    let { static: isStatic } = React.useContext(NavigationContext);
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
     let formAction = useFormAction(action, { relative });
+
+    // Render encoded URIs on the server to avoid hydration issues on the
+    // client when pathnames contain spaces or other URL-encoded chars
+    if (isStatic) {
+      formAction = encodeURI(formAction);
+    }
+
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
