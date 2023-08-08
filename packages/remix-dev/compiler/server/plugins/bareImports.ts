@@ -10,6 +10,7 @@ import { isCssSideEffectImportPath } from "../../plugins/cssSideEffectImports";
 import { createMatchPath } from "../../utils/tsconfig";
 import { detectPackageManager } from "../../../cli/detectPackageManager";
 import type { Context } from "../../context";
+import { getLoaderForFile } from "../../utils/loaders";
 
 /**
  * A plugin responsible for resolving bare module ids based on server target.
@@ -59,8 +60,23 @@ export function serverBareModulesPlugin(ctx: Context): Plugin {
           return undefined;
         }
 
-        // Always bundle CSS files so we get immutable fingerprinted asset URLs.
-        if (path.endsWith(".css")) {
+        // Skip assets that are treated as files (.css, .svg, .png, etc.).
+        // Otherwise, esbuild would emit code that would attempt to require()
+        // or import these files --- which aren't JavaScript!
+        let loader;
+        try {
+          loader = getLoaderForFile(path);
+        } catch (e) {
+          if (
+            !(
+              e instanceof Error &&
+              e.message.startsWith("Cannot get loader for file")
+            )
+          ) {
+            throw e;
+          }
+        }
+        if (loader === "file") {
           return undefined;
         }
 
