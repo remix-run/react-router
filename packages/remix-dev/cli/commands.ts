@@ -178,15 +178,11 @@ let clientEntries = ["entry.client.tsx", "entry.client.js", "entry.client.jsx"];
 let serverEntries = ["entry.server.tsx", "entry.server.js", "entry.server.jsx"];
 let entries = ["entry.client", "entry.server"];
 
-// @ts-expect-error available in node 12+
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat#browser_compatibility
 let conjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "conjunction",
 });
 
-// @ts-expect-error available in node 12+
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat#browser_compatibility
 let disjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "disjunction",

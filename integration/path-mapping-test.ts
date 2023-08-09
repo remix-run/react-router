@@ -77,13 +77,13 @@ test.beforeAll(async () => {
       "tsconfig.json": json({
         include: ["remix.env.d.ts", "**/*.ts", "**/*.tsx"],
         compilerOptions: {
-          lib: ["DOM", "DOM.Iterable", "ES2019"],
+          lib: ["DOM", "DOM.Iterable", "ES2022"],
           isolatedModules: true,
           esModuleInterop: true,
           jsx: "react-jsx",
           moduleResolution: "node",
           resolveJsonModule: true,
-          target: "ES2019",
+          target: "ES2022",
           strict: true,
           baseUrl: ".",
           paths: {
