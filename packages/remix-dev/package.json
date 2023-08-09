@@ -85,7 +85,7 @@
     "@types/tar-fs": "^2.0.1",
     "@types/ws": "^7.4.1",
     "esbuild-register": "^3.3.2",
-    "msw": "^0.39.2",
+    "msw": "^1.2.3",
     "shelljs": "^0.8.5",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0"
