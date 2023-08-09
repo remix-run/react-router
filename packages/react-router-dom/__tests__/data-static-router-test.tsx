@@ -512,30 +512,7 @@ describe("A <StaticRouterProvider>", () => {
     );
   });
 
-  it("encodes absolute <a href> values to avoid hydration errors", async () => {
-    let routes = [
-      { path: "/", element: <Link to="/path/with space">👋</Link> },
-    ];
-    let { query } = createStaticHandler(routes);
-
-    let context = (await query(
-      new Request("http://localhost/", {
-        signal: new AbortController().signal,
-      })
-    )) as StaticHandlerContext;
-
-    let html = ReactDOMServer.renderToStaticMarkup(
-      <React.StrictMode>
-        <StaticRouterProvider
-          router={createStaticRouter(routes, context)}
-          context={context}
-        />
-      </React.StrictMode>
-    );
-    expect(html).toContain('<a href="/path/with%20space">👋</a>');
-  });
-
-  it("encodes self <a href> values to avoid hydration errors", async () => {
+  it("encodes auto-generated <a href> values to avoid hydration errors", async () => {
     let routes = [{ path: "/path/:param", element: <Link to=".">👋</Link> }];
     let { query } = createStaticHandler(routes);
 
@@ -556,7 +533,78 @@ describe("A <StaticRouterProvider>", () => {
     expect(html).toContain('<a href="/path/with%20space">👋</a>');
   });
 
-  it("encodes absolute <form action> values to avoid hydration errors", async () => {
+  it("does not encode user-specified <a href> values", async () => {
+    let routes = [
+      { path: "/", element: <Link to="/path/with space">👋</Link> },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toContain('<a href="/path/with space">👋</a>');
+  });
+
+  it("encodes auto-generated <form action> values to avoid hydration errors (action=undefined)", async () => {
+    let routes = [{ path: "/path/:param", element: <Form>👋</Form> }];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/path/with space", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toContain(
+      '<form method="get" action="/path/with%20space">👋</form>'
+    );
+  });
+
+  it('encodes auto-generated <form action> values to avoid hydration errors (action=".")', async () => {
+    let routes = [
+      { path: "/path/:param", element: <Form action=".">👋</Form> },
+    ];
+    let { query } = createStaticHandler(routes);
+
+    let context = (await query(
+      new Request("http://localhost/path/with space", {
+        signal: new AbortController().signal,
+      })
+    )) as StaticHandlerContext;
+
+    let html = ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouterProvider
+          router={createStaticRouter(routes, context)}
+          context={context}
+        />
+      </React.StrictMode>
+    );
+    expect(html).toContain(
+      '<form method="get" action="/path/with%20space">👋</form>'
+    );
+  });
+
+  it("does not encode user-specified <form action> values", async () => {
     let routes = [
       { path: "/", element: <Form action="/path/with space">👋</Form> },
     ];
@@ -577,30 +625,7 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toContain(
-      '<form method="get" action="/path/with%20space">👋</form>'
-    );
-  });
-
-  it("encodes self <form action> values to avoid hydration errors", async () => {
-    let routes = [{ path: "/path/:param", element: <Form>👋</Form> }];
-    let { query } = createStaticHandler(routes);
-
-    let context = (await query(
-      new Request("http://localhost/path/with space", {
-        signal: new AbortController().signal,
-      })
-    )) as StaticHandlerContext;
-
-    let html = ReactDOMServer.renderToStaticMarkup(
-      <React.StrictMode>
-        <StaticRouterProvider
-          router={createStaticRouter(routes, context)}
-          context={context}
-        />
-      </React.StrictMode>
-    );
-    expect(html).toContain(
-      '<form method="get" action="/path/with%20space">👋</form>'
+      '<form method="get" action="/path/with space">👋</form>'
     );
   });
 

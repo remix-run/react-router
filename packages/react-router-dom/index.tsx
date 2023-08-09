@@ -52,6 +52,7 @@ import {
   ErrorResponse,
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
+  parsePath,
 } from "@remix-run/router";
 
 import type {
@@ -565,10 +566,10 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
 
-    // Render encoded URIs on the server to avoid hydration issues on the
-    // client when pathnames contain spaces or other URL-encoded chars
+    // When <a href> URLs contain characters that require encoding (such as
+    // spaces) - encode them on the server to avoid hydration issues
     if (isStatic) {
-      href = encodeURI(href);
+      href = safelyEncodeSsrHref(to, href);
     }
 
     let internalOnClick = useLinkClickHandler(to, {
@@ -834,10 +835,10 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       method.toLowerCase() === "get" ? "get" : "post";
     let formAction = useFormAction(action, { relative });
 
-    // Render encoded URIs on the server to avoid hydration issues on the
-    // client when pathnames contain spaces or other URL-encoded chars
+    // When <form action> URLs contain characters that require encoding (such as
+    // spaces) - encode them on the server to avoid hydration issues
     if (isStatic) {
-      formAction = encodeURI(formAction);
+      formAction = safelyEncodeSsrHref(action || ".", formAction);
     }
 
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
@@ -1497,4 +1498,26 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 
 export { usePrompt as unstable_usePrompt };
 
+/**
+ * @private
+ * Avoid hydration issues for auto-generated hrefs (i.e., to=".") on the server
+ * since when we auto-generate on the client we'll take our current location
+ * from window.location which will have encoded any special characters and
+ * we'll get a hydration mismatch on the SSR attribute and the client attribute.
+ */
+function safelyEncodeSsrHref(to: To, href: string): string {
+  let path = typeof to === "string" ? parsePath(to).pathname : to.pathname;
+  // Only touch the href for auto-generated paths
+  if (path === null || path === "" || path === ".") {
+    try {
+      let encoded = ABSOLUTE_URL_REGEX.test(href)
+        ? new URL(href)
+        : new URL(href, "http://localhost");
+      return encoded.pathname + encoded.search;
+    } catch (e) {
+      // no-op - don't change href if we aren't sure it needs encoding
+    }
+  }
+  return href;
+}
 //#endregion
