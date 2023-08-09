@@ -2,7 +2,11 @@ import { test, expect } from "@playwright/test";
 
 import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
 import type { Fixture } from "./helpers/create-fixture.js";
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture.js";
+import {
+  createAppFixture,
+  createFixture,
+  js,
+} from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 const routeFiles = {

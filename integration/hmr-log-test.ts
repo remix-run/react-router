@@ -6,7 +6,12 @@ import type { Readable } from "node:stream";
 import getPort, { makeRange } from "get-port";
 
 import type { FixtureInit } from "./helpers/create-fixture.js";
-import { createFixtureProject, css, js, json } from "./helpers/create-fixture.js";
+import {
+  createFixtureProject,
+  css,
+  js,
+  json,
+} from "./helpers/create-fixture.js";
 
 test.setTimeout(120_000);
 

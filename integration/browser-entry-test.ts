@@ -1,7 +1,11 @@
 import { test, expect } from "@playwright/test";
 
 import type { AppFixture, Fixture } from "./helpers/create-fixture.js";
-import { createFixture, js, createAppFixture } from "./helpers/create-fixture.js";
+import {
+  createFixture,
+  js,
+  createAppFixture,
+} from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 let fixture: Fixture;

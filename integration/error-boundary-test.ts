@@ -1,7 +1,11 @@
 import { test, expect } from "@playwright/test";
 
 import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture.js";
+import {
+  createAppFixture,
+  createFixture,
+  js,
+} from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
