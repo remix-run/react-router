@@ -88,6 +88,9 @@ export interface AppConfig {
    *
    * The delay, in milliseconds, before the dev server broadcasts a reload
    * event. There is no delay by default.
+   *
+   * @deprecated Enable {@link AppConfig.future.v2_dev} to eliminate the race
+   * conditions that necessitated this option.
    */
   devServerBroadcastDelay?: number;
 
@@ -251,6 +254,9 @@ export interface RemixConfig {
 
   /**
    * The delay before the dev (asset) server broadcasts a reload event.
+   *
+   * @deprecated Enable {@link RemixConfig.future.v2_dev} to eliminate the race
+   * conditions that necessitated this option.
    */
   devServerBroadcastDelay: number;
 
@@ -376,7 +382,7 @@ export async function readConfig(
     try {
       // shout out to next
       // https://github.com/vercel/next.js/blob/b15a976e11bf1dc867c241a4c1734757427d609c/packages/next/server/config.ts#L748-L765
-      if (process.env.NODE_ENV === "test") {
+      if (process.env.JEST_WORKER_ID) {
         // dynamic import does not currently work inside of vm which
         // jest relies on so we fall back to require for this case
         // https://github.com/nodejs/node/issues/35889
@@ -554,6 +560,10 @@ export async function readConfig(
     rootDirectory,
     assetsBuildDirectory
   );
+
+  if (appConfig.devServerBroadcastDelay) {
+    devServerBroadcastDelayWarning();
+  }
 
   // set env variable so un-bundled servers can use it
   let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
@@ -742,6 +752,18 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "disjunction",
 });
+
+let devServerBroadcastDelayWarning = () =>
+  logger.warn(
+    "The `devServerBroadcastDelay` config option will be removed in v2",
+    {
+      details: [
+        "Enable `v2_dev` to eliminate the race conditions that necessitated this option.",
+        "-> https://remix.run/docs/en/v1.19.3/pages/v2#devserverbroadcastdelay",
+      ],
+      key: "devServerBroadcastDelayWarning",
+    }
+  );
 
 let serverModuleFormatWarning = () =>
   logger.warn("The default server module format is changing in v2", {
