@@ -27,7 +27,7 @@
   "devDependencies": {
     "@remix-run/web-file": "^3.0.3",
     "@types/set-cookie-parser": "^2.4.1",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.6"
   },
   "peerDependencies": {
     "typescript": "^5.1.0"

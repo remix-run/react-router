@@ -29,7 +29,7 @@
   "devDependencies": {
     "@types/cookie-signature": "^1.0.3",
     "@types/source-map-support": "^0.5.4",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.6"
   },
   "peerDependencies": {
     "typescript": "^5.1.0"

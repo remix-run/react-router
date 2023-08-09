@@ -27,7 +27,7 @@
     "@types/react-dom": "^18.0.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.1.0"
+    "typescript": "^5.1.6"
   },
   "peerDependencies": {
     "react": "^17.0.0 || ^18.0.0",
