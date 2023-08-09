@@ -11,8 +11,8 @@ export function mdxPlugin({ config }: Pick<Context, "config">): esbuild.Plugin {
   return {
     name: "remix-mdx",
     async setup(build) {
-      let [xdm, { default: remarkFrontmatter }] = await Promise.all([
-        import("xdm"),
+      let [mdx, { default: remarkFrontmatter }] = await Promise.all([
+        import("@mdx-js/mdx"),
         import("remark-frontmatter") as any,
       ]);
 
@@ -48,7 +48,7 @@ export function mdxPlugin({ config }: Pick<Context, "config">): esbuild.Plugin {
         let absolutePath = path.join(config.appDirectory, args.path);
 
         return processMDX(
-          xdm,
+          mdx,
           remarkFrontmatter,
           config,
           args.path,
@@ -61,7 +61,7 @@ export function mdxPlugin({ config }: Pick<Context, "config">): esbuild.Plugin {
 
 export async function processMDX(
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  xdm: typeof import("xdm"),
+  mdx: typeof import("@mdx-js/mdx"),
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   remarkFrontmatter: typeof import("remark-frontmatter")["default"],
   config: Pick<Context, "config">["config"],
@@ -97,7 +97,7 @@ export const meta = typeof attributes !== "undefined" && attributes.meta;
 export const handle = typeof attributes !== "undefined" && attributes.handle;
     `;
 
-    let compiled = await xdm.compile(fileContents, {
+    let compiled = await mdx.compile(fileContents, {
       jsx: true,
       jsxRuntime: "automatic",
       rehypePlugins,

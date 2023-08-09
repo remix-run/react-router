@@ -67,34 +67,14 @@ declare module "*.jpg" {
   export default asset;
 }
 declare module "*.md" {
-  import type { ComponentType, ReactHTML } from "react";
+  import "mdx/types";
   export let attributes: any;
   export let filename: string;
-  let Component: ComponentType<
-    Readonly<Record<string, unknown>> & {
-      components?: Readonly<
-        Partial<
-          Record<keyof ReactHTML | "wrapper", keyof ReactHTML | ComponentType>
-        >
-      >;
-    }
-  >;
-  export default Component;
 }
 declare module "*.mdx" {
-  import type { ComponentType, ReactHTML } from "react";
+  import "mdx/types";
   export let attributes: any;
   export let filename: string;
-  let Component: ComponentType<
-    Readonly<Record<string, unknown>> & {
-      components?: Readonly<
-        Partial<
-          Record<keyof ReactHTML | "wrapper", keyof ReactHTML | ComponentType>
-        >
-      >;
-    }
-  >;
-  export default Component;
 }
 declare module "*.mp3" {
   let asset: string;

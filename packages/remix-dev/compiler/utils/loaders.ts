@@ -21,7 +21,7 @@ export const loaders: { [ext: string]: esbuild.Loader } = {
   ".js": "jsx",
   ".jsx": "jsx",
   ".json": "json",
-  // We preprocess md and mdx files using XDM and send through
+  // We preprocess md and mdx files using @mdx-js/mdx and send through
   // the JSX for esbuild to handle
   ".md": "jsx",
   ".mdx": "jsx",
