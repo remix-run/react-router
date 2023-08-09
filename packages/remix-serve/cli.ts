@@ -38,7 +38,7 @@ let onListen = () => {
     );
   }
   if (process.env.NODE_ENV === "development") {
-    broadcastDevReady(build);
+    void broadcastDevReady(build);
   }
 };
 
