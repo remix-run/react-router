@@ -1508,11 +1508,9 @@ export { usePrompt as unstable_usePrompt };
 function safelyEncodeSsrHref(to: To, href: string): string {
   let path = typeof to === "string" ? parsePath(to).pathname : to.pathname;
   // Only touch the href for auto-generated paths
-  if (path === null || path === "" || path === ".") {
+  if (!path || path === ".") {
     try {
-      let encoded = ABSOLUTE_URL_REGEX.test(href)
-        ? new URL(href)
-        : new URL(href, "http://localhost");
+      let encoded = new URL(href, "http://localhost");
       return encoded.pathname + encoded.search;
     } catch (e) {
       // no-op - don't change href if we aren't sure it needs encoding
