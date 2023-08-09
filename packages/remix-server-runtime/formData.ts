@@ -1,3 +1,4 @@
+// @ts-ignore
 import { streamMultipart } from "@web3-storage/multipart-parser";
 
 export type UploadHandlerPart = {

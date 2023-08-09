@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-import { createFixture, js, json } from "./helpers/create-fixture";
-import type { Fixture } from "./helpers/create-fixture";
-import { selectHtml } from "./helpers/playwright-fixture";
+import { createFixture, js, json } from "./helpers/create-fixture.js";
+import type { Fixture } from "./helpers/create-fixture.js";
+import { selectHtml } from "./helpers/playwright-fixture.js";
 
 test.describe("Custom Server Entry", () => {
   let fixture: Fixture;
@@ -78,6 +78,7 @@ test.describe("Default Server Entry (React 17)", () => {
           name: "remix-template-remix",
           private: true,
           sideEffects: false,
+          type: "module",
           scripts: {
             build:
               "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",

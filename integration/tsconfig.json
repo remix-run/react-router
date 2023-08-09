@@ -3,11 +3,11 @@
   "exclude": ["helpers/*-template"],
   "compilerOptions": {
     "lib": ["ES2019", "DOM", "DOM.Iterable"],
-    "target": "ES2019",
-    "module": "CommonJS",
+    "target": "ES2020",
+    "module": "ES2020",
     "skipLibCheck": true,
 
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "resolveJsonModule": true,

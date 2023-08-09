@@ -1,4 +1,4 @@
-import * as fse from "fs-extra";
+import fse from "fs-extra";
 import * as path from "node:path";
 
 // Import environment variables from: .env, failing gracefully if it doesn't exist

@@ -5,14 +5,14 @@ import {
   createFixture,
   js,
   css,
-} from "./helpers/create-fixture";
+} from "./helpers/create-fixture.js";
 import type {
   Fixture,
   FixtureInit,
   AppFixture,
-} from "./helpers/create-fixture";
-import type { RemixLinkProps } from "../build/node_modules/@remix-run/react/dist/components";
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
+} from "./helpers/create-fixture.js";
+import type { RemixLinkProps } from "../build/node_modules/@remix-run/react/dist/components.js";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 // Generate the test app using the given prefetch mode
 function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {

@@ -6,9 +6,9 @@ import {
   js,
   mdx,
   css,
-} from "./helpers/create-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
+} from "./helpers/create-fixture.js";
+import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 test.describe("mdx", () => {
   let fixture: Fixture;

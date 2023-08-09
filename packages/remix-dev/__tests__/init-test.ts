@@ -1,6 +1,6 @@
 import * as os from "node:os";
 import * as path from "node:path";
-import * as fse from "fs-extra";
+import fse from "fs-extra";
 import stripAnsi from "strip-ansi";
 
 import { run } from "../cli/run";

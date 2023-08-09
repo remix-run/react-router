@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { createFixtureProject, js } from "./helpers/create-fixture";
+import { createFixtureProject, js } from "./helpers/create-fixture.js";
 
 let projectDir: string;
 

@@ -4,10 +4,10 @@
   "compilerOptions": {
     "lib": ["ES2019", "DOM.Iterable"],
     "target": "ES2019",
-    "module": "CommonJS",
+    "module": "ES2020",
     "composite": true,
 
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,

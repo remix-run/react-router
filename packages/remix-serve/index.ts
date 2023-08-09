@@ -23,16 +23,20 @@ export function createApp(
   app.use(express.static("public", { maxAge: "1h" }));
 
   app.use(morgan("tiny"));
-  app.all(
-    "*",
-    mode === "production"
-      ? createRequestHandler({ build: require(buildPath), mode })
-      : (req, res, next) => {
-          // require cache is purged in @remix-run/dev where the file watcher is
-          let build = require(buildPath);
-          return createRequestHandler({ build, mode })(req, res, next);
-        }
-  );
+
+  let requestHandler: ReturnType<typeof createRequestHandler> | undefined;
+  app.all("*", async (req, res, next) => {
+    try {
+      if (!requestHandler) {
+        let build = await import(buildPath);
+        requestHandler = createRequestHandler({ build, mode });
+      }
+
+      return await requestHandler(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  });
 
   return app;
 }

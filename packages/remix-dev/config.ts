@@ -100,7 +100,7 @@ export interface AppConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
-   * Whether to process CSS using PostCSS if `postcss.config.js` is present.
+   * Whether to process CSS using PostCSS if a PostCSS config file is present.
    * Defaults to `true`.
    */
   postcss?: boolean;
@@ -266,7 +266,7 @@ export interface RemixConfig {
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
 
   /**
-   * Whether to process CSS using PostCSS if `postcss.config.js` is present.
+   * Whether to process CSS using PostCSS if a PostCSS config file is present.
    * Defaults to `true`.
    */
   postcss: boolean;
@@ -411,11 +411,7 @@ export async function readConfig(
   let serverMainFields = appConfig.serverMainFields;
   let serverMinify = appConfig.serverMinify;
 
-  if (!appConfig.serverModuleFormat) {
-    serverModuleFormatWarning();
-  }
-
-  let serverModuleFormat = appConfig.serverModuleFormat || "cjs";
+  let serverModuleFormat = appConfig.serverModuleFormat || "esm";
   let serverPlatform = appConfig.serverPlatform || "node";
   serverMainFields ??=
     serverModuleFormat === "esm" ? ["module", "main"] : ["main", "module"];
@@ -764,14 +760,3 @@ let devServerBroadcastDelayWarning = () =>
       key: "devServerBroadcastDelayWarning",
     }
   );
-
-let serverModuleFormatWarning = () =>
-  logger.warn("The default server module format is changing in v2", {
-    details: [
-      "The default format will change from `cjs` to `esm`.",
-      "You can keep using `cjs` by explicitly specifying `serverModuleFormat: 'cjs'`.",
-      "You can opt-in early to this change by explicitly specifying `serverModuleFormat: 'esm'`",
-      "-> https://remix.run/docs/en/v1.16.0/pages/v2#servermoduleformat",
-    ],
-    key: "serverModuleFormatWarning",
-  });

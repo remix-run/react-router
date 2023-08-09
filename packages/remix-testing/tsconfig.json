@@ -8,7 +8,7 @@
     "skipLibCheck": true,
     "composite": true,
 
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "jsx": "react",

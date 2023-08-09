@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import {
   createAppFixture,
   createFixture,
   css,
   js,
-} from "./helpers/create-fixture";
+} from "./helpers/create-fixture.js";
 
 const TEST_PADDING_VALUE = "20px";
 
@@ -19,7 +19,7 @@ function runTests(ext: typeof extensions[number]) {
 
   let tailwindConfigName = `tailwind.config.${ext}`;
 
-  let tailwindConfig = ["mjs", "ts"].includes(ext)
+  let tailwindConfig = ["mjs", "ts", "js"].includes(ext)
     ? js`
       export default {
         content: ["./app/**/*.{ts,tsx,jsx,js}"],

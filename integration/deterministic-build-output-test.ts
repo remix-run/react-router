@@ -3,8 +3,8 @@ import globby from "globby";
 import fs from "node:fs";
 import path from "node:path";
 
-import type { FixtureInit } from "./helpers/create-fixture";
-import { createFixtureProject, js, css } from "./helpers/create-fixture";
+import type { FixtureInit } from "./helpers/create-fixture.js";
+import { createFixtureProject, js, css } from "./helpers/create-fixture.js";
 
 test("builds deterministically under different paths", async () => {
   // This test validates various flavors of remix virtual modules to ensure
@@ -28,7 +28,7 @@ test("builds deterministically under different paths", async () => {
   let init: FixtureInit = {
     files: {
       "postcss.config.js": js`
-        module.exports = {
+        export default {
           plugins: {
             "postcss-import": {},
           },

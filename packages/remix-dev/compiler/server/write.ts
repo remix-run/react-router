@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import type * as esbuild from "esbuild";
-import * as fse from "fs-extra";
+import fse from "fs-extra";
 
 import type { RemixConfig } from "../../config";
 

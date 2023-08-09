@@ -1,5 +1,6 @@
 import type { Writable } from "node:stream";
 import path from "node:path";
+import url from "node:url";
 import fse from "fs-extra";
 import express from "express";
 import getPort from "get-port";
@@ -9,18 +10,16 @@ import serializeJavaScript from "serialize-javascript";
 import { sync as spawnSync } from "cross-spawn";
 import type { JsonObject } from "type-fest";
 import type { AppConfig } from "@remix-run/dev";
-import { ServerMode } from "@remix-run/server-runtime/mode";
 
+import { ServerMode } from "../../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import type { ServerBuild } from "../../build/node_modules/@remix-run/server-runtime/dist/index.js";
+import { createRequestHandler } from "../../build/node_modules/@remix-run/server-runtime/dist/index.js";
+import { createRequestHandler as createExpressHandler } from "../../build/node_modules/@remix-run/express/dist/index.js";
 // @ts-ignore
-import type { ServerBuild } from "../../build/node_modules/@remix-run/server-runtime";
-// @ts-ignore
-import { createRequestHandler } from "../../build/node_modules/@remix-run/server-runtime";
-// @ts-ignore
-import { createRequestHandler as createExpressHandler } from "../../build/node_modules/@remix-run/express";
-// @ts-ignore
-import { installGlobals } from "../../build/node_modules/@remix-run/node";
+import { installGlobals } from "../../build/node_modules/@remix-run/node/dist/index.js";
 
 const TMP_DIR = path.join(process.cwd(), ".tmp", "integration");
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export interface FixtureInit {
   buildStdio?: Writable;
@@ -44,7 +43,7 @@ export function json(value: JsonObject) {
 export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   installGlobals();
   let projectDir = await createFixtureProject(init, mode);
-  let buildPath = path.resolve(projectDir, "build");
+  let buildPath = url.pathToFileURL(path.join(projectDir, "build/index.js")).href;
   let app: ServerBuild = await import(buildPath);
   let handler = createRequestHandler(app, mode || ServerMode.Production);
 
@@ -153,7 +152,7 @@ export async function createFixtureProject(
   mode?: ServerMode
 ): Promise<string> {
   let template = init.template ?? "node-template";
-  let integrationTemplateDir = path.join(__dirname, template);
+  let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `remix-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
 
@@ -206,7 +205,7 @@ export async function createFixtureProject(
       to the \`global.INJECTED_FIXTURE_REMIX_CONFIG\` placeholder so it can
       accept the injected config values. Either move all config values into
       \`remix.config.js\` file, or spread the  injected config, 
-      e.g. \`module.exports = { ...global.INJECTED_FIXTURE_REMIX_CONFIG }\`.
+      e.g. \`export default { ...global.INJECTED_FIXTURE_REMIX_CONFIG }\`.
     `);
   }
   contents = contents.replace(
@@ -226,6 +225,12 @@ function build(
   sourcemap?: boolean,
   mode?: ServerMode
 ) {
+  // We have a "require" instead of a dynamic import in readConfig gated
+  // behind mode === ServerMode.Test to make jest happy, but that doesn't
+  // work for ESM configs, those MUST be dynamic imports. So we need to
+  // force the mode to be production for ESM configs when runtime mode is
+  // test.
+  mode = mode === ServerMode.Test ? ServerMode.Production : mode;
   let buildArgs = ["node_modules/@remix-run/dev/dist/cli.js", "build"];
   if (sourcemap) {
     buildArgs.push("--sourcemap");

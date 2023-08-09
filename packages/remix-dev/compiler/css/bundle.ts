@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import * as fse from "fs-extra";
+import fse from "fs-extra";
 import type * as esbuild from "esbuild";
 import postcss from "postcss";
 import postcssDiscardDuplicates from "postcss-discard-duplicates";

@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
-import type { AppFixture } from "./helpers/create-fixture";
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
+import { createAppFixture, createFixture, js } from "./helpers/create-fixture.js";
+import type { AppFixture } from "./helpers/create-fixture.js";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 test.describe("Revalidation", () => {
   let appFixture: AppFixture;

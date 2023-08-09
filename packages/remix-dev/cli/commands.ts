@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import { execSync } from "node:child_process";
-import * as fse from "fs-extra";
+import fse from "fs-extra";
 import getPort, { makeRange } from "get-port";
 import prettyMs from "pretty-ms";
 import NPMCliPackageJson from "@npmcli/package-json";

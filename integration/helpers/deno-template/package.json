@@ -2,6 +2,7 @@
   "name": "remix-template-deno",
   "private": true,
   "sideEffects": false,
+  "type": "module",
   "dependencies": {
     "@remix-run/deno": "0.0.0-local-version",
     "@remix-run/react": "0.0.0-local-version",

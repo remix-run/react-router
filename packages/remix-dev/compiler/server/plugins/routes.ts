@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import * as fse from "fs-extra";
+import fse from "fs-extra";
 import type esbuild from "esbuild";
 
 import { getLoaderForFile } from "../../utils/loaders";

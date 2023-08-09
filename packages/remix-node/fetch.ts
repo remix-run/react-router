@@ -6,6 +6,7 @@ import {
   Response as WebResponse,
 } from "@remix-run/web-fetch";
 export { FormData } from "@remix-run/web-fetch";
+// @ts-ignore
 export { File, Blob } from "@remix-run/web-file";
 
 type NodeHeadersInit = ConstructorParameters<typeof WebHeaders>[0];

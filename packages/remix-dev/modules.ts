@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 declare module "*.aac" {
   let asset: string;
   export default asset;

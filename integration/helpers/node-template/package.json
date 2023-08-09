@@ -2,6 +2,7 @@
   "name": "remix-template-remix",
   "private": true,
   "sideEffects": false,
+  "type": "module",
   "scripts": {
     "build": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",
     "dev": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js dev",

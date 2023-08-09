@@ -6,7 +6,7 @@
     "target": "ES2019",
     "composite": true,
 
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "declaration": true,

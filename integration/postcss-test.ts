@@ -1,14 +1,14 @@
 import { test, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import {
   createAppFixture,
   createFixture,
   css,
   js,
-} from "./helpers/create-fixture";
+} from "./helpers/create-fixture.js";
 
 const TEST_PADDING_VALUE = "20px";
 
@@ -38,7 +38,7 @@ test.describe("PostCSS enabled", () => {
         // "TEST_PADDING_VALUE" and "TEST_POSTCSS_CONTEXT".
         // This lets us assert that the plugin is being run
         // and that the correct context values are provided.
-        "postcss.config.js": js`
+        "postcss.config.cjs": js`
           module.exports = (ctx) => ({
             plugins: [
               {
@@ -59,7 +59,7 @@ test.describe("PostCSS enabled", () => {
           });
         `,
         "tailwind.config.js": js`
-          module.exports = {
+          export default {
             content: ["./app/**/*.{ts,tsx,jsx,js}"],
             theme: {
               spacing: {

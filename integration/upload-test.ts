@@ -1,17 +1,22 @@
 import * as path from "node:path";
+import * as url from "node:url";
 import { test, expect } from "@playwright/test";
 
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
+import { createAppFixture, createFixture, js } from "./helpers/create-fixture.js";
 
 let fixture: Fixture;
 let appFixture: AppFixture;
+
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/file-upload-handler.tsx": js`
+        import * as path from "node:path";
+        import * as url from "node:url";
         import {
           json,
           unstable_composeUploadHandlers as composeUploadHandlers,
@@ -22,10 +27,11 @@ test.beforeAll(async () => {
         } from "@remix-run/node";
         import { Form, useActionData } from "@remix-run/react";
 
+        const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
         export let action = async ({ request }) => {
           let uploadHandler = composeUploadHandlers(
             createFileUploadHandler({
-              directory: "./uploads",
+              directory: path.resolve(__dirname, "..", "uploads"),
               maxPartSize: 13,
               avoidFileConflicts: false,
               file: ({ filename }) => filename,

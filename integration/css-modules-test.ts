@@ -2,14 +2,14 @@ import { test, expect } from "@playwright/test";
 import globby from "globby";
 import fse from "fs-extra";
 
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import {
   createAppFixture,
   createFixture,
   css,
   js,
-} from "./helpers/create-fixture";
+} from "./helpers/create-fixture.js";
 
 const TEST_PADDING_VALUE = "20px";
 

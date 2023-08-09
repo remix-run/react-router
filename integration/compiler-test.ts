@@ -10,9 +10,9 @@ import {
   json,
   createFixtureProject,
   css,
-} from "./helpers/create-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
+} from "./helpers/create-fixture.js";
+import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 test.describe("compiler", () => {
   let fixture: Fixture;
@@ -25,8 +25,11 @@ test.describe("compiler", () => {
         // We need a custom config file here to test usage of `getDependenciesToBundle`
         // since this can't be serialized from the fixture object.
         "remix.config.js": js`
-          let { getDependenciesToBundle } = require("@remix-run/dev");
-          module.exports = {
+          import { getDependenciesToBundle } from "@remix-run/dev";
+          export default {
+            future: {
+              v2_routeConvention: true,
+            },
             serverDependenciesToBundle: [
               "esm-only-pkg",
               "esm-only-single-export",
@@ -94,8 +97,8 @@ test.describe("compiler", () => {
             return <div id="esm-only-single-export">{esmOnlyPkg}</div>;
           }
         `,
-        "app/routes/package-with-submodule.tsx": js`
-          import { submodule } from "@org/package/sub-package";
+        "app/routes/package-with-submodule.jsx": js`
+          import { submodule } from "@org/package/sub-package/index.js";
 
           export default function PackageWithSubModule() {
             return <div id="package-with-submodule">{submodule()}</div>;
@@ -146,7 +149,9 @@ test.describe("compiler", () => {
           version: "1.0.0",
         }),
         "node_modules/@org/package/sub-package/package.json": json({
-          module: "./esm/index.js",
+          module: "./index.js",
+          exports: "./index.js",
+          main: "./index.js",
           sideEffects: false,
         }),
         "node_modules/@org/package/sub-package/index.js": js`
@@ -160,6 +165,8 @@ test.describe("compiler", () => {
         "node_modules/@org/package/sub-package/esm/package.json": json({
           type: "module",
           sideEffects: false,
+          exports: "./esm/index.js",
+          main: "./esm/index.js",
         }),
         "node_modules/@org/package/sub-package/esm/index.js": js`
           export { default as submodule } from "./submodule.js";

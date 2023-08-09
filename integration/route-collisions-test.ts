@@ -1,7 +1,7 @@
 import { PassThrough } from "node:stream";
 import { test, expect } from "@playwright/test";
 
-import { createFixture, js } from "./helpers/create-fixture";
+import { createFixture, js } from "./helpers/create-fixture.js";
 
 let ROOT_FILE_CONTENTS = js`
   import { Outlet, Scripts } from "@remix-run/react";

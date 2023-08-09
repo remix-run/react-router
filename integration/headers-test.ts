@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { ServerMode } from "@remix-run/server-runtime/mode";
 
-import { createFixture, js } from "./helpers/create-fixture";
-import type { Fixture } from "./helpers/create-fixture";
+import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { createFixture, js } from "./helpers/create-fixture.js";
+import type { Fixture } from "./helpers/create-fixture.js";
 
 test.describe("headers export", () => {
   let ROOT_HEADER_KEY = "X-Test";

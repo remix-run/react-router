@@ -4,7 +4,7 @@ import { test } from "@playwright/test";
 import cheerio from "cheerio";
 import prettier from "prettier";
 
-import type { AppFixture } from "./create-fixture";
+import type { AppFixture } from "./create-fixture.js";
 
 export class PlaywrightFixture {
   readonly page: Page;

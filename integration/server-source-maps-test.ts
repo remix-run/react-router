@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 import path from "node:path";
 import fsp from "node:fs/promises";
 
-import { createFixture, js } from "./helpers/create-fixture";
-import type { Fixture } from "./helpers/create-fixture";
+import { createFixture, js } from "./helpers/create-fixture.js";
+import type { Fixture } from "./helpers/create-fixture.js";
 
 let fixture: Fixture;
 

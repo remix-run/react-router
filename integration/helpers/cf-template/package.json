@@ -3,6 +3,7 @@
   "private": true,
   "sideEffects": false,
   "main": "build/index.js",
+  "type": "module",
   "scripts": {},
   "dependencies": {
     "@remix-run/cloudflare": "0.0.0-local-version",

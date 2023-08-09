@@ -1,10 +1,10 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
-import { ServerMode } from "@remix-run/server-runtime/mode";
 
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
-import type { Fixture, AppFixture } from "./helpers/create-fixture";
-import { PlaywrightFixture } from "./helpers/playwright-fixture";
+import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { createAppFixture, createFixture, js } from "./helpers/create-fixture.js";
+import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
+import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 test.describe("ErrorBoundary", () => {
   let fixture: Fixture;
