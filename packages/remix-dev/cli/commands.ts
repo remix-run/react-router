@@ -91,14 +91,14 @@ export async function routes(
 
 export async function build(
   remixRoot: string,
-  modeArg?: string,
+  mode?: string,
   sourcemap: boolean = false
 ): Promise<void> {
-  let mode = parseMode(modeArg) ?? "production";
+  mode = mode ?? "production";
 
   logger.info(`building...` + pc.gray(` (NODE_ENV=${mode})`));
 
-  if (modeArg === "production" && sourcemap) {
+  if (mode === "production" && sourcemap) {
     logger.warn("🚨  source maps enabled in production", {
       details: [
         "You are using `--sourcemap` to enable source maps in production,",
@@ -136,9 +136,9 @@ export async function build(
 
 export async function watch(
   remixRootOrConfig: string | RemixConfig,
-  modeArg?: string
+  mode?: string
 ): Promise<void> {
-  let mode = parseMode(modeArg) ?? "development";
+  mode = mode ?? "development";
   console.log(`Watching Remix app in ${mode} mode...`);
 
   let config =
@@ -351,17 +351,6 @@ async function createClientEntry(
   let contents = await fse.readFile(inputFile, "utf-8");
   return contents;
 }
-
-let parseMode = (
-  mode?: string
-): compiler.CompileOptions["mode"] | undefined => {
-  if (mode === undefined) return undefined;
-  if (mode === "development") return mode;
-  if (mode === "production") return mode;
-  if (mode === "test") return mode;
-  console.error(`Unrecognized mode: ${mode}`);
-  process.exit(1);
-};
 
 let findPort = async () => getPort({ port: makeRange(3001, 3100) });
 
