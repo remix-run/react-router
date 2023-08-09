@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-import { createAppFixture, createFixture, js } from "./helpers/create-fixture";
+import {
+  createAppFixture,
+  createFixture,
+  js,
+  css,
+} from "./helpers/create-fixture";
 import type {
   Fixture,
   FixtureInit,
@@ -423,5 +428,141 @@ test.describe("other scenarios", () => {
       (r) => r.type === "stylesheet" && /\/global-[a-z0-9]+\.css/i.test(r.url)
     );
     expect(stylesheets.length).toBe(1);
+  });
+
+  test("dedupes prefetch tags", async ({ page }) => {
+    fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import {
+            Link,
+            Links,
+            Meta,
+            Outlet,
+            Scripts,
+            useLoaderData,
+          } from "@remix-run/react";
+
+          export default function Root() {
+            const styles =
+            'a:hover { color: red; } a:hover:after { content: " (hovered)"; }' +
+            'a:focus { color: green; } a:focus:after { content: " (focused)"; }';
+
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <style>{styles}</style>
+                  <h1>Root</h1>
+                  <nav id="nav">
+                    <Link to="/with-nested-links/nested" prefetch="intent">
+                      Nested Links Page
+                    </Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+
+        "app/global.css": css`
+          .global-class {
+            background-color: gray;
+            color: black;
+          }
+        `,
+
+        "app/local.css": css`
+          .local-class {
+            background-color: black;
+            color: white;
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export default function() {
+            return <h2 className="index">Index</h2>;
+          }
+        `,
+
+        "app/routes/with-nested-links.tsx": js`
+          import { Outlet } from "@remix-run/react";
+          import globalCss from "../global.css";
+          
+          export function links() {
+            return [
+              // Same links as child route but with different key order
+              {
+                rel: "stylesheet",
+                href: globalCss,
+              },
+              {
+                rel: "preload",
+                as: "image",
+                imageSrcSet: "image-600.jpg 600w, image-1200.jpg 1200w",
+                imageSizes: "9999px",
+              },
+            ];
+          }
+          export default function() {
+            return <Outlet />;
+          }
+        `,
+
+        "app/routes/with-nested-links.nested.tsx": js`
+          import globalCss from '../global.css';
+          import localCss from '../local.css';
+          
+          export function links() {
+            return [
+              // Same links as parent route but with different key order
+              {
+                href: globalCss,
+                rel: "stylesheet",
+              },
+              {
+                imageSrcSet: "image-600.jpg 600w, image-1200.jpg 1200w",
+                imageSizes: "9999px",
+                rel: "preload",
+                as: "image",
+              },
+              // Unique links for child route
+              {
+                rel: "stylesheet",
+                href: localCss,
+              },
+              {
+                rel: "preload",
+                as: "image",
+                imageSrcSet: "image-700.jpg 700w, image-1400.jpg 1400w",
+                imageSizes: "9999px",
+              },
+            ];
+          }
+          export default function() {
+            return <h2 className="with-nested-links">With Nested Links</h2>;
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await page.hover("a[href='/with-nested-links/nested']");
+    await page.waitForSelector("#nav link[rel='prefetch'][as='style']", {
+      state: "attached",
+    });
+    expect(
+      await page.locator("#nav link[rel='prefetch'][as='style']").count()
+    ).toBe(2);
+    expect(
+      await page.locator("#nav link[rel='prefetch'][as='image']").count()
+    ).toBe(2);
   });
 });
