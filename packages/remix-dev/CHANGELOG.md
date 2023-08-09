@@ -1,13 +1,12 @@
 # `@remix-run/dev`
 
-## 1.19.3-pre.0
+## 1.19.3
 
 ### Patch Changes
 
 - Show deprecation warning when using `devServerBroadcastDelay` and `devServerPort` config options ([#7064](https://github.com/remix-run/remix/pull/7064))
 - Updated dependencies:
-  - `@remix-run/serve@1.19.3-pre.0`
-  - `@remix-run/server-runtime@1.19.3-pre.0`
+  - `@remix-run/server-runtime@1.19.3`
 
 ## 1.19.2
 

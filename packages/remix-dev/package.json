@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/dev",
-  "version": "1.19.3-pre.0",
+  "version": "1.19.3",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
   "bugs": {
@@ -28,7 +28,7 @@
     "@babel/traverse": "^7.21.5",
     "@babel/types": "^7.21.5",
     "@npmcli/package-json": "^2.0.0",
-    "@remix-run/server-runtime": "1.19.3-pre.0",
+    "@remix-run/server-runtime": "1.19.3",
     "@vanilla-extract/integration": "^6.2.0",
     "arg": "^5.0.1",
     "cacache": "^15.0.5",
@@ -74,7 +74,7 @@
     "xdm": "^2.0.0"
   },
   "devDependencies": {
-    "@remix-run/serve": "1.19.3-pre.0",
+    "@remix-run/serve": "1.19.3",
     "@types/cacache": "^15.0.0",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/inquirer": "^8.2.0",
@@ -94,7 +94,7 @@
     "type-fest": "^2.16.0"
   },
   "peerDependencies": {
-    "@remix-run/serve": "^1.19.3-pre.0"
+    "@remix-run/serve": "^1.19.3"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {
