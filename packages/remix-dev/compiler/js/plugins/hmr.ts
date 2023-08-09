@@ -139,7 +139,7 @@ declare global {
             sourceCode,
             output: {
               contents: resultCode,
-              loader: args.path.endsWith("x") ? "tsx" : "ts",
+              loader: "tsx",
               resolveDir: path.dirname(args.path),
             },
           };
