@@ -8,5 +8,15 @@
     "react-router-native": "6.14.2",
     "@remix-run/router": "1.7.2"
   },
-  "changesets": []
+  "changesets": [
+    "firefox-addons-and-web-extensions-bug",
+    "fix-query-route-response",
+    "form-action-hash",
+    "hash-leading-slash",
+    "prompt-add-back-settimeout",
+    "prompt-effect-order",
+    "stable-use-revalidator",
+    "update-ungap-pkg",
+    "x-remix-reload-document"
+  ]
 }
