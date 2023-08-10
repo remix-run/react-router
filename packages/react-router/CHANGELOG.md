@@ -1,6 +1,6 @@
 # `react-router`
 
-## 6.15.0-pre.0
+## 6.15.0
 
 ### Minor Changes
 
@@ -8,9 +8,9 @@
 
 ### Patch Changes
 
-- Ensure `useRevalidator` is referentially stable across re-renders if revalidations are not actively occuring ([#10707](https://github.com/remix-run/react-router/pull/10707))
+- Ensure `useRevalidator` is referentially stable across re-renders if revalidations are not actively occurring ([#10707](https://github.com/remix-run/react-router/pull/10707))
 - Updated dependencies:
-  - `@remix-run/router@1.8.0-pre.0`
+  - `@remix-run/router@1.8.0`
 
 ## 6.14.2
 

@@ -1,6 +1,6 @@
 # `react-router-native`
 
-## 6.15.0-pre.0
+## 6.15.0
 
 ### Minor Changes
 
@@ -10,7 +10,7 @@
 
 - Update `@ungap/url-search-params` dependency from `^0.1.4` to `^0.2.2` ([#10590](https://github.com/remix-run/react-router/pull/10590))
 - Updated dependencies:
-  - `react-router@6.15.0-pre.0`
+  - `react-router@6.15.0`
 
 ## 6.14.2
 

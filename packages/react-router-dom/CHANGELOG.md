@@ -1,6 +1,6 @@
 # `react-router-dom`
 
-## 6.15.0-pre.0
+## 6.15.0
 
 ### Minor Changes
 
@@ -10,11 +10,10 @@
 
 - Fixes an edge-case affecting web extensions in Firefox that use `URLSearchParams` and the `useSearchParams` hook. ([#10620](https://github.com/remix-run/react-router/pull/10620))
 - Do not include hash in `useFormAction()` for unspecified actions since it cannot be determined on the server and causes hydration issues ([#10758](https://github.com/remix-run/react-router/pull/10758))
-- [Remove] add back in `setTimeout` removal from `usePrompt` ([#10718](https://github.com/remix-run/react-router/pull/10718))
-- Reorder effects in `unstable_usePrompt` to avoid throwing an exception if the prompt is unblocked and a navigation is performed syncronously ([#10687](https://github.com/remix-run/react-router/pull/10687))
+- Reorder effects in `unstable_usePrompt` to avoid throwing an exception if the prompt is unblocked and a navigation is performed synchronously ([#10687](https://github.com/remix-run/react-router/pull/10687), [#10718](https://github.com/remix-run/react-router/pull/10718))
 - Updated dependencies:
-  - `@remix-run/router@1.8.0-pre.0`
-  - `react-router@6.15.0-pre.0`
+  - `@remix-run/router@1.8.0`
+  - `react-router@6.15.0`
 
 ## 6.14.2
 
