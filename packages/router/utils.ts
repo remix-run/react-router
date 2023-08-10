@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { warning, invariant, parsePath } from "./history";
+import { invariant, parsePath, warning } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
