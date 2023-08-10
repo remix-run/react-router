@@ -36,7 +36,6 @@ export async function init(
   }
 
   let initPackageJson = path.resolve(initScriptDir, "package.json");
-  let isTypeScript = fse.existsSync(path.join(projectDir, "tsconfig.json"));
   let packageManager = detectPackageManager() ?? "npm";
 
   if (await fse.pathExists(initPackageJson)) {
@@ -51,7 +50,7 @@ export async function init(
     initFn = initFn.default;
   }
   try {
-    await initFn({ isTypeScript, packageManager, rootDirectory: projectDir });
+    await initFn({ packageManager, rootDirectory: projectDir });
 
     if (deleteScript) {
       await fse.remove(initScriptDir);
