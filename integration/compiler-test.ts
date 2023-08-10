@@ -27,9 +27,6 @@ test.describe("compiler", () => {
         "remix.config.js": js`
           import { getDependenciesToBundle } from "@remix-run/dev";
           export default {
-            future: {
-              v2_routeConvention: true,
-            },
             serverDependenciesToBundle: [
               "esm-only-pkg",
               "esm-only-single-export",
