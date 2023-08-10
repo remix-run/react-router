@@ -1,5 +1,16 @@
 # `@remix-run/router`
 
+## 1.8.0
+
+### Minor Changes
+
+- Add's a new `redirectDocument()` function which allows users to specify that a redirect from a `loader`/`action` should trigger a document reload (via `window.location`) instead of attempting to navigate to the redirected location via React Router ([#10705](https://github.com/remix-run/react-router/pull/10705))
+
+### Patch Changes
+
+- Fix an issue in `queryRoute` that was not always identifying thrown `Response` instances ([#10717](https://github.com/remix-run/react-router/pull/10717))
+- Ensure hash history always includes a leading slash on hash pathnames ([#10753](https://github.com/remix-run/react-router/pull/10753))
+
 ## 1.7.2
 
 ### Patch Changes

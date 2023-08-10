@@ -161,4 +161,25 @@ describe("useSearchParams", () => {
 
     expect(node.innerHTML).toMatch(/The current value is ""/);
   });
+
+  it("returns initial default values in search params", () => {
+    function SearchPage() {
+      let [searchParams] = useSearchParams({ a: "1", b: "2" });
+      return <p>{searchParams.toString()}</p>;
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?value=initial"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(node.innerHTML).toMatchInlineSnapshot(
+      `"<p>value=initial&amp;a=1&amp;b=2</p>"`
+    );
+  });
 });

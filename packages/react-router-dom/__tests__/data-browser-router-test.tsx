@@ -6,7 +6,6 @@ import {
   fireEvent,
   waitFor,
   screen,
-  prettyDOM,
 } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import type { ErrorResponse, Fetcher } from "@remix-run/router";
@@ -36,6 +35,9 @@ import {
   useSearchParams,
   createRoutesFromElements,
 } from "react-router-dom";
+
+import createDeferred from "../../router/__tests__/utils/createDeferred";
+import getHtml from "../../react-router/__tests__/utils/getHtml";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -2527,7 +2529,7 @@ function testDomRouter(
       }
 
       describe("static routes", () => {
-        it("includes search params + hash when no action is specified", async () => {
+        it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2543,11 +2545,11 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1#hash"
+            "/foo/bar?a=1"
           );
         });
 
-        it("does not include search params + hash when action='.'", async () => {
+        it("does not include search params when action='.'", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2565,7 +2567,7 @@ function testDomRouter(
           );
         });
 
-        it("does not include search params + hash when action=''", async () => {
+        it("does not include search params when action=''", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2585,7 +2587,7 @@ function testDomRouter(
       });
 
       describe("layout routes", () => {
-        it("includes search params + hash when no action is specified", async () => {
+        it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2603,11 +2605,11 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1#hash"
+            "/foo/bar?a=1"
           );
         });
 
-        it("does not include search params + hash when action='.'", async () => {
+        it("does not include search params when action='.'", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2629,7 +2631,7 @@ function testDomRouter(
           );
         });
 
-        it("does not include search params + hash when action=''", async () => {
+        it("does not include search params when action=''", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2653,7 +2655,7 @@ function testDomRouter(
       });
 
       describe("index routes", () => {
-        it("includes search params + hash when no action is specified", async () => {
+        it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2671,11 +2673,11 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?index&a=1#hash"
+            "/foo/bar?index&a=1"
           );
         });
 
-        it("does not include search params + hash action='.'", async () => {
+        it("does not include search params action='.'", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2697,7 +2699,7 @@ function testDomRouter(
           );
         });
 
-        it("does not include search params + hash action=''", async () => {
+        it("does not include search params action=''", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2775,7 +2777,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?index&a=1#hash"
+            "/foo/bar?index&a=1"
           );
         });
 
@@ -2814,7 +2816,7 @@ function testDomRouter(
       });
 
       describe("dynamic routes", () => {
-        it("includes search params + hash when no action is specified", async () => {
+        it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2830,11 +2832,11 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1#hash"
+            "/foo/bar?a=1"
           );
         });
 
-        it("does not include search params + hash action='.'", async () => {
+        it("does not include search params action='.'", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2854,7 +2856,7 @@ function testDomRouter(
           );
         });
 
-        it("does not include search params + hash when action=''", async () => {
+        it("does not include search params when action=''", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2876,7 +2878,7 @@ function testDomRouter(
       });
 
       describe("splat routes", () => {
-        it("includes search params + hash when no action is specified", async () => {
+        it("includes search params when no action is specified", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2892,11 +2894,11 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo?a=1#hash"
+            "/foo?a=1"
           );
         });
 
-        it("does not include search params + hash when action='.'", async () => {
+        it("does not include search params when action='.'", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2916,7 +2918,7 @@ function testDomRouter(
           );
         });
 
-        it("does not include search params + hash when action=''", async () => {
+        it("does not include search params when action=''", async () => {
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
@@ -2935,6 +2937,24 @@ function testDomRouter(
             "/foo"
           );
         });
+      });
+
+      it("allows user to specify search params and hash", async () => {
+        let router = createTestRouter(
+          createRoutesFromElements(
+            <Route path="/">
+              <Route path="foo">
+                <Route path="bar" element={<Form action=".?a=1#newhash" />} />
+              </Route>
+            </Route>
+          ),
+          { window: getWindow("/foo/bar?a=1#hash") }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(container.querySelector("form")?.getAttribute("action")).toBe(
+          "/foo/bar?a=1#newhash"
+        );
       });
     });
 
@@ -5925,48 +5945,9 @@ function testDomRouter(
   });
 }
 
-function createDeferred() {
-  let resolve: (val?: any) => Promise<void>;
-  let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
-      res(val);
-      try {
-        await promise;
-      } catch (e) {}
-    };
-    reject = async (error?: Error) => {
-      rej(error);
-      try {
-        await promise;
-      } catch (e) {}
-    };
-  });
-  return {
-    promise,
-    //@ts-ignore
-    resolve,
-    //@ts-ignore
-    reject,
-  };
-}
-
 function getWindowImpl(initialUrl: string, isHash = false): Window {
   // Need to use our own custom DOM in order to get a working history
   const dom = new JSDOM(`<!DOCTYPE html>`, { url: "http://localhost/" });
   dom.window.history.replaceState(null, "", (isHash ? "#" : "") + initialUrl);
   return dom.window as unknown as Window;
-}
-
-function getHtml(container: HTMLElement) {
-  return prettyDOM(container, undefined, {
-    highlight: false,
-    theme: {
-      comment: null,
-      content: null,
-      prop: null,
-      tag: null,
-      value: null,
-    },
-  });
 }

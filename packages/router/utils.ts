@@ -43,6 +43,7 @@ export interface RedirectResult {
   status: number;
   location: string;
   revalidate: boolean;
+  reloadDocument?: boolean;
 }
 
 /**
@@ -1482,6 +1483,17 @@ export const redirect: RedirectFunction = (url, init = 302) => {
     ...responseInit,
     headers,
   });
+};
+
+/**
+ * A redirect response that will force a document reload to the new location.
+ * Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ */
+export const redirectDocument: RedirectFunction = (url, init) => {
+  let response = redirect(url, init);
+  response.headers.set("X-Remix-Reload-Document", "true");
+  return response;
 };
 
 /**

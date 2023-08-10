@@ -423,6 +423,17 @@ export function createHashHistory(
       search = "",
       hash = "",
     } = parsePath(window.location.hash.substr(1));
+
+    // Hash URL should always have a leading / just like window.location.pathname
+    // does, so if an app ends up at a route like /#something then we add a
+    // leading slash so all of our path-matching behaves the same as if it would
+    // in a browser router.  This is particularly important when there exists a
+    // root splat route (<Route path="*">) since that matches internally against
+    // "/*" and we'd expect /#something to 404 in a hash router app.
+    if (!pathname.startsWith("/") && !pathname.startsWith(".")) {
+      pathname = "/" + pathname;
+    }
+
     return createLocation(
       "",
       { pathname, search, hash },
