@@ -317,6 +317,42 @@ describe("NavLink", () => {
       expect(anchors.map((a) => a.props.className)).toEqual(["active", ""]);
     });
 
+    it("matches the root route with or without the end prop", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter>
+            <Routes>
+              <Route index element={<NavLink to="/">Root</NavLink>} />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+      expect(anchor.props.className).toMatch("active");
+
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter>
+            <Routes>
+              <Route
+                index
+                element={
+                  <NavLink to="/" end>
+                    Root
+                  </NavLink>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      anchor = renderer.root.findByType("a");
+      expect(anchor.props.className).toMatch("active");
+    });
+
     it("does not automatically apply to root non-layout segments", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {

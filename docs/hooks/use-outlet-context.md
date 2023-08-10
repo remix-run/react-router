@@ -36,7 +36,7 @@ function Child() {
 
 If you're using TypeScript, we recommend the parent component provide a custom hook for accessing the context value. This makes it easier for consumers to get nice typings, control consumers, and know who's consuming the context value. Here's a more realistic example:
 
-```tsx filename=src/routes/dashboard.tsx lines=[13, 19]
+```tsx filename=src/routes/dashboard.tsx lines=[13,19]
 import * as React from "react";
 import type { User } from "./types";
 import { Outlet, useOutletContext } from "react-router-dom";
