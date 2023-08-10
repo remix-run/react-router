@@ -1513,7 +1513,7 @@ function safelyEncodeSsrHref(to: To, href: string): string {
       let encoded = new URL(href, "http://localhost");
       return encoded.pathname + encoded.search;
     } catch (e) {
-      // no-op - don't change href if we aren't sure it needs encoding
+      // no-op - no changes if we can't construct a valid URL
     }
   }
   return href;
