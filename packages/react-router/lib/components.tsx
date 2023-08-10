@@ -1,52 +1,52 @@
-import * as React from "react";
 import type {
-  TrackedPromise,
   InitialEntry,
+  LazyRouteFunction,
   Location,
   MemoryHistory,
-  Router as RemixRouter,
-  To,
-  LazyRouteFunction,
   RelativeRoutingType,
+  Router as RemixRouter,
   RouterState,
+  To,
+  TrackedPromise,
 } from "@remix-run/router";
 import {
-  Action as NavigationType,
   AbortedDeferredError,
+  Action as NavigationType,
   createMemoryHistory,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
   stripBasename,
   UNSAFE_warning as warning,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
+import * as React from "react";
 
 import type {
   DataRouteObject,
   IndexRouteObject,
-  RouteMatch,
-  RouteObject,
   Navigator,
   NonIndexRouteObject,
+  RouteMatch,
+  RouteObject,
 } from "./context";
 import {
-  LocationContext,
-  NavigationContext,
+  AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  AwaitContext,
+  LocationContext,
+  NavigationContext,
   RouteContext,
 } from "./context";
 import {
+  _renderMatches,
   useAsyncValue,
   useInRouterContext,
+  useLocation,
   useNavigate,
   useOutlet,
   useRoutes,
-  _renderMatches,
   useRoutesImpl,
-  useLocation,
 } from "./hooks";
 
 export interface FutureConfig {

@@ -9,12 +9,11 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
-  LazyRouteFunction,
-  TrackedPromise,
   FormEncType,
   FormMethod,
   HTMLFormMethod,
   JsonFunction,
+  LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
   ParamParseKey,
@@ -23,6 +22,7 @@ export type {
   PathPattern,
   RedirectFunction,
   ShouldRevalidateFunction,
+  TrackedPromise,
   V7_FormMethod,
 } from "./utils";
 
@@ -62,9 +62,9 @@ export type {
 export {
   Action,
   createBrowserHistory,
-  createPath,
   createHashHistory,
   createMemoryHistory,
+  createPath,
   parsePath,
 } from "./history";
 

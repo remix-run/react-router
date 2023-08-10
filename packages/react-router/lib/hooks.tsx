@@ -14,7 +14,9 @@ import type {
   To,
 } from "@remix-run/router";
 import {
+  IDLE_BLOCKER,
   Action as NavigationType,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -23,26 +25,24 @@ import {
   parsePath,
   resolveTo,
   stripBasename,
-  IDLE_BLOCKER,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
+  DataRouteMatch,
   NavigateOptions,
   RouteContextObject,
   RouteMatch,
   RouteObject,
-  DataRouteMatch,
 } from "./context";
 import {
+  AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
   RouteErrorContext,
-  AwaitContext,
 } from "./context";
 
 /**
