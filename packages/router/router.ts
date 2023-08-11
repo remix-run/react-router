@@ -2394,28 +2394,24 @@ export function createRouter(init: RouterInit): Router {
     if (blockerFunctions.size === 0) {
       return;
     }
-
-    // We ony support a single active blocker at the moment since we don't have
-    // any compelling use cases for multi-blocker yet
-    if (blockerFunctions.size > 1) {
-      warning(false, "A router only supports one blocker at a time");
-    }
-
     let entries = Array.from(blockerFunctions.entries());
-    let [blockerKey, blockerFunction] = entries[entries.length - 1];
-    let blocker = state.blockers.get(blockerKey);
-
-    if (blocker && blocker.state === "proceeding") {
-      // If the blocker is currently proceeding, we don't need to re-check
-      // it and can let this navigation continue
-      return;
-    }
-
-    // At this point, we know we're unblocked/blocked so we need to check the
-    // user-provided blocker function
-    if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
-      return blockerKey;
-    }
+    let blockingKey: string | undefined = undefined;
+    entries.some(entry=>{
+      let [blockerKey, blockerFunction] = entry;
+      let blocker = state.blockers.get(blockerKey);
+      if (blocker && blocker.state === "proceeding") {
+        // If the blocker is currently proceeding, we don't need to re-check
+        // it and can let this navigation continue
+        return;
+      }
+      // At this point, we know we're unblocked/blocked so we need to check the
+      // user-provided blocker function
+      if (blockerFunction({ currentLocation, nextLocation, historyAction })) {
+        blockingKey = blockerKey;
+        return blockerKey;
+      }
+    });
+    return blockingKey;
   }
 
   function cancelActiveDeferreds(
