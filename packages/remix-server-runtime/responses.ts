@@ -2,6 +2,7 @@ import {
   defer as routerDefer,
   json as routerJson,
   redirect as routerRedirect,
+  redirectDocument as routerRedirectDocument,
   type UNSAFE_DeferredData as DeferredData,
   type TrackedPromise,
 } from "@remix-run/router";
@@ -67,6 +68,17 @@ export type RedirectFunction = (
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
   return routerRedirect(url, init) as TypedResponse<never>;
+};
+
+/**
+ * A redirect response that will force a document reload to the new location.
+ * Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ *
+ * @see https://remix.run/utils/redirect
+ */
+export const redirectDocument: RedirectFunction = (url, init = 302) => {
+  return routerRedirectDocument(url, init) as TypedResponse<never>;
 };
 
 export function isDeferredData(value: any): value is DeferredData {

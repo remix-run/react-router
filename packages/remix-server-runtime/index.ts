@@ -4,7 +4,7 @@ export {
   composeUploadHandlers as unstable_composeUploadHandlers,
   parseMultipartFormData as unstable_parseMultipartFormData,
 } from "./formData";
-export { defer, json, redirect } from "./responses";
+export { defer, json, redirect, redirectDocument } from "./responses";
 export { createRequestHandler } from "./server";
 export {
   createSession,
