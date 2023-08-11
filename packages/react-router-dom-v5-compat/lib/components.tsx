@@ -66,6 +66,8 @@ export interface StaticRouterProps {
   location: Partial<Location> | string;
 }
 
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
+
 /**
  * A <Router> that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
@@ -93,11 +95,14 @@ export function StaticRouter({
       return typeof to === "string" ? to : createPath(to);
     },
     encodeLocation(to: To) {
-      let path = typeof to === "string" ? parsePath(to) : to;
+      let href = typeof to === "string" ? to : createPath(to);
+      let encoded = ABSOLUTE_URL_REGEX.test(href)
+        ? new URL(href)
+        : new URL(href, "http://localhost");
       return {
-        pathname: path.pathname || "",
-        search: path.search || "",
-        hash: path.hash || "",
+        pathname: encoded.pathname,
+        search: encoded.search,
+        hash: encoded.hash,
       };
     },
     push(to: To) {

@@ -348,14 +348,18 @@ function createHref(to: To) {
 }
 
 function encodeLocation(to: To): Path {
-  // Locations should already be encoded on the server, so just return as-is
-  let path = typeof to === "string" ? parsePath(to) : to;
+  let href = typeof to === "string" ? to : createPath(to);
+  let encoded = ABSOLUTE_URL_REGEX.test(href)
+    ? new URL(href)
+    : new URL(href, "http://localhost");
   return {
-    pathname: path.pathname || "",
-    search: path.search || "",
-    hash: path.hash || "",
+    pathname: encoded.pathname,
+    search: encoded.search,
+    hash: encoded.hash,
   };
 }
+
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 // This utility is based on https://github.com/zertosh/htmlescape
 // License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE
