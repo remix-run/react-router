@@ -54,7 +54,7 @@ The `navigate` function has two signatures:
 
 ## `options.replace`
 
-Specifying `replace: true` will cause the navigation will replace the current entry in the history stack instead of adding a new one.
+Specifying `replace: true` will cause the navigation to replace the current entry in the history stack instead of adding a new one.
 
 ## `options.state`
 
