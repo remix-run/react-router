@@ -177,7 +177,7 @@ export interface ActionFunction {
 /**
  * Arguments passed to shouldRevalidate function
  */
-export interface ShouldRevalidateArgs {
+export interface ShouldRevalidateFunctionArgs {
   currentUrl: URL;
   currentParams: AgnosticDataRouteMatch["params"];
   nextUrl: URL;
@@ -200,7 +200,7 @@ export interface ShouldRevalidateArgs {
  * have to re-run based on the data models that were potentially mutated.
  */
 export interface ShouldRevalidateFunction {
-  (args: ShouldRevalidateArgs): boolean;
+  (args: ShouldRevalidateFunctionArgs): boolean;
 }
 
 /**

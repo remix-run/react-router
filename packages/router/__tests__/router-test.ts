@@ -34,7 +34,7 @@ import type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
   DeferredData,
-  ShouldRevalidateArgs,
+  ShouldRevalidateFunctionArgs,
   TrackedPromise,
 } from "../utils";
 import {
@@ -1861,7 +1861,7 @@ describe("a router", () => {
       router.navigate("/params/aValue/bValue");
       await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
-      let expectedArg: ShouldRevalidateArgs = {
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {
@@ -1926,7 +1926,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      let expectedArg: ShouldRevalidateArgs = {
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
@@ -1980,7 +1980,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      let expectedArg: ShouldRevalidateArgs = {
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
@@ -2026,7 +2026,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      let expectedArg: Partial<ShouldRevalidateArgs> = {
+      let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
         formMethod: "post",
         formAction: "/",
         formEncType: "application/json",
@@ -2068,7 +2068,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      let expectedArg: Partial<ShouldRevalidateArgs> = {
+      let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
         formMethod: "post",
         formAction: "/",
         formEncType: "text/plain",
