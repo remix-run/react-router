@@ -28,7 +28,7 @@ import type {
   RedirectResult,
   RouteData,
   RouteManifest,
-  ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   Submission,
   SuccessResult,
   V7_FormMethod,
@@ -3513,7 +3513,7 @@ function isNewRouteInstance(
 
 function shouldRevalidateLoader(
   loaderMatch: AgnosticDataRouteMatch,
-  arg: Parameters<ShouldRevalidateFunction>[0]
+  arg: ShouldRevalidateFunctionArgs
 ) {
   if (loaderMatch.route.shouldRevalidate) {
     let routeChoice = loaderMatch.route.shouldRevalidate(arg);
