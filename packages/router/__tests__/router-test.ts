@@ -34,6 +34,7 @@ import type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
   DeferredData,
+  ShouldRevalidateFunctionArgs,
   TrackedPromise,
 } from "../utils";
 import {
@@ -1860,7 +1861,7 @@ describe("a router", () => {
       router.navigate("/params/aValue/bValue");
       await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
-      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {
@@ -1870,7 +1871,8 @@ describe("a router", () => {
         nextUrl: expect.URL("http://localhost/params/aValue/bValue"),
         defaultShouldRevalidate: false,
         actionResult: undefined,
-      });
+      };
+      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject(expectedArg);
       rootLoader.mockClear();
       shouldRevalidate.mockClear();
 
@@ -1924,7 +1926,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
@@ -1934,7 +1936,8 @@ describe("a router", () => {
         formAction: "/child",
         formEncType: "application/x-www-form-urlencoded",
         actionResult: "ACTION",
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
       // @ts-expect-error
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
@@ -1977,7 +1980,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
@@ -1987,7 +1990,8 @@ describe("a router", () => {
         formAction: "/child",
         formEncType: "application/x-www-form-urlencoded",
         actionResult: undefined,
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
       // @ts-expect-error
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
@@ -2022,7 +2026,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
         formMethod: "post",
         formAction: "/",
         formEncType: "application/json",
@@ -2030,7 +2034,8 @@ describe("a router", () => {
         formData: undefined,
         json: { key: "value" },
         actionResult: "ACTION",
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
 
       router.dispose();
     });
@@ -2063,7 +2068,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
         formMethod: "post",
         formAction: "/",
         formEncType: "text/plain",
@@ -2071,7 +2076,8 @@ describe("a router", () => {
         formData: undefined,
         json: undefined,
         actionResult: "ACTION",
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
 
       router.dispose();
     });

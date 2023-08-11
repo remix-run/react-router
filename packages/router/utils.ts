@@ -175,6 +175,24 @@ export interface ActionFunction {
 }
 
 /**
+ * Arguments passed to shouldRevalidate function
+ */
+export interface ShouldRevalidateFunctionArgs {
+  currentUrl: URL;
+  currentParams: AgnosticDataRouteMatch["params"];
+  nextUrl: URL;
+  nextParams: AgnosticDataRouteMatch["params"];
+  formMethod?: Submission["formMethod"];
+  formAction?: Submission["formAction"];
+  formEncType?: Submission["formEncType"];
+  text?: Submission["text"];
+  formData?: Submission["formData"];
+  json?: Submission["json"];
+  actionResult?: any;
+  defaultShouldRevalidate: boolean;
+}
+
+/**
  * Route shouldRevalidate function signature.  This runs after any submission
  * (navigation or fetcher), so we flatten the navigation/fetcher submission
  * onto the arguments.  It shouldn't matter whether it came from a navigation
@@ -182,20 +200,7 @@ export interface ActionFunction {
  * have to re-run based on the data models that were potentially mutated.
  */
 export interface ShouldRevalidateFunction {
-  (args: {
-    currentUrl: URL;
-    currentParams: AgnosticDataRouteMatch["params"];
-    nextUrl: URL;
-    nextParams: AgnosticDataRouteMatch["params"];
-    formMethod?: Submission["formMethod"];
-    formAction?: Submission["formAction"];
-    formEncType?: Submission["formEncType"];
-    text?: Submission["text"];
-    formData?: Submission["formData"];
-    json?: Submission["json"];
-    actionResult?: DataResult;
-    defaultShouldRevalidate: boolean;
-  }): boolean;
+  (args: ShouldRevalidateFunctionArgs): boolean;
 }
 
 /**
