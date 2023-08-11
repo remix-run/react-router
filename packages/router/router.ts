@@ -3643,10 +3643,19 @@ async function callLoaderOrAction(
     if (match.route.lazy) {
       if (handler) {
         // Run statically defined handler in parallel with lazy()
+        let handlerError;
         let values = await Promise.all([
-          runHandler(handler),
+          // If the handler throws, don't let it immediately bubble out,
+          // since we need to let the lazy() execution finish so we know if this
+          // route has a boundary that can handle the error
+          runHandler(handler).catch((e) => {
+            handlerError = e;
+          }),
           loadLazyRouteModule(match.route, mapRouteProperties, manifest),
         ]);
+        if (handlerError) {
+          throw handlerError;
+        }
         result = values[0];
       } else {
         // Load lazy route module, then run any returned handler

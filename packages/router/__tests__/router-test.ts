@@ -13737,6 +13737,45 @@ describe("a router", () => {
         );
         consoleWarn.mockReset();
       });
+
+      it("handles errors thrown from static loaders before lazy has completed", async () => {
+        let consoleWarn = jest.spyOn(console, "warn");
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  id: "lazy",
+                  path: "lazy",
+                  loader: true,
+                  lazy: true,
+                },
+              ],
+            },
+          ],
+        });
+
+        let A = await t.navigate("/lazy");
+
+        await A.loaders.lazy.reject("STATIC LOADER ERROR");
+        expect(t.router.state.navigation.state).toBe("loading");
+
+        // We shouldn't bubble the loader error until after this resolves
+        // so we know if it has a boundary or not
+        await A.lazy.lazy.resolve({
+          hasErrorBoundary: true,
+        });
+        expect(t.router.state.location.pathname).toBe("/lazy");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.loaderData).toEqual({});
+        expect(t.router.state.errors).toEqual({
+          lazy: "STATIC LOADER ERROR",
+        });
+
+        consoleWarn.mockReset();
+      });
     });
 
     describe("interruptions", () => {
