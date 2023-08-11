@@ -23,7 +23,6 @@
     "@babel/parser": "^7.21.8",
     "@babel/plugin-syntax-jsx": "^7.21.4",
     "@babel/plugin-syntax-typescript": "^7.21.4",
-    "@babel/preset-env": "^7.21.5",
     "@babel/preset-typescript": "^7.21.5",
     "@babel/traverse": "^7.21.5",
     "@babel/types": "^7.21.5",
