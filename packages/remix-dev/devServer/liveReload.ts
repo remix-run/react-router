@@ -32,7 +32,7 @@ export async function liveReload(
           client.send(JSON.stringify(event));
         }
       });
-    }, config.devServerBroadcastDelay);
+    }, 500);
   }
 
   function log(message: string) {

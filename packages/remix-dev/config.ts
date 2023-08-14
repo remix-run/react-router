@@ -84,17 +84,6 @@ export interface AppConfig {
   dev?: Dev;
 
   /**
-   * @deprecated
-   *
-   * The delay, in milliseconds, before the dev server broadcasts a reload
-   * event. There is no delay by default.
-   *
-   * @deprecated Enable {@link AppConfig.future.v2_dev} to eliminate the race
-   * conditions that necessitated this option.
-   */
-  devServerBroadcastDelay?: number;
-
-  /**
    * Additional MDX remark / rehype plugins.
    */
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
@@ -253,14 +242,6 @@ export interface RemixConfig {
   dev: Dev;
 
   /**
-   * The delay before the dev (asset) server broadcasts a reload event.
-   *
-   * @deprecated Enable {@link RemixConfig.future.v2_dev} to eliminate the race
-   * conditions that necessitated this option.
-   */
-  devServerBroadcastDelay: number;
-
-  /**
    * Additional MDX remark / rehype plugins.
    */
   mdx?: RemixMdxConfig | RemixMdxConfigFunction;
@@ -383,8 +364,8 @@ export async function readConfig(
       // shout out to next
       // https://github.com/vercel/next.js/blob/b15a976e11bf1dc867c241a4c1734757427d609c/packages/next/server/config.ts#L748-L765
       if (process.env.JEST_WORKER_ID) {
-        // dynamic import does not currently work inside of vm which
-        // jest relies on so we fall back to require for this case
+        // dynamic import does not currently work inside vm which
+        // jest relies on, so we fall back to require for this case
         // https://github.com/nodejs/node/issues/35889
         appConfigModule = require(configFile);
       } else {
@@ -557,13 +538,6 @@ export async function readConfig(
     assetsBuildDirectory
   );
 
-  if (appConfig.devServerBroadcastDelay) {
-    devServerBroadcastDelayWarning();
-  }
-
-  // set env variable so un-bundled servers can use it
-  let devServerBroadcastDelay = appConfig.devServerBroadcastDelay || 0;
-
   let publicPath = addTrailingSlash(appConfig.publicPath || "/build/");
 
   let rootRouteFile = findEntry(appDirectory, "root");
@@ -615,8 +589,8 @@ export async function readConfig(
   }
 
   // Note: When a future flag is removed from here, it should be added to the
-  // list below so we can let folks know if they have obsolete flags in their
-  // config.  If we ever convert remix.config.js to a TS file so we get proper
+  // list below, so we can let folks know if they have obsolete flags in their
+  // config.  If we ever convert remix.config.js to a TS file, so we get proper
   // typings this won't be necessary anymore.
   let future: FutureConfig = {};
 
@@ -655,7 +629,6 @@ export async function readConfig(
     entryServerFile,
     entryServerFilePath,
     dev: appConfig.dev ?? {},
-    devServerBroadcastDelay,
     assetsBuildDirectory: absoluteAssetsBuildDirectory,
     relativeAssetsBuildDirectory: assetsBuildDirectory,
     publicPath,
@@ -748,15 +721,3 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
   type: "disjunction",
 });
-
-let devServerBroadcastDelayWarning = () =>
-  logger.warn(
-    "The `devServerBroadcastDelay` config option will be removed in v2",
-    {
-      details: [
-        "Enable `v2_dev` to eliminate the race conditions that necessitated this option.",
-        "-> https://remix.run/docs/en/v1.19.3/pages/v2#devserverbroadcastdelay",
-      ],
-      key: "devServerBroadcastDelayWarning",
-    }
-  );

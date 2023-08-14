@@ -30,7 +30,6 @@ describe("readConfig", () => {
         "assetsBuildDirectory": Any<String>,
         "cacheDirectory": Any<String>,
         "dev": Object {},
-        "devServerBroadcastDelay": 0,
         "entryClientFile": "entry.client.tsx",
         "entryClientFilePath": Any<String>,
         "entryServerFile": "entry.server.tsx",
