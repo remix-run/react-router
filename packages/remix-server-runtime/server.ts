@@ -88,7 +88,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       }
     } else if (
       matches &&
-      matches[matches.length - 1].route.module.default == null
+      matches[matches.length - 1].route.module.default == null &&
+      matches[matches.length - 1].route.module.ErrorBoundary == null
     ) {
       response = await handleResourceRequestRR(
         serverMode,

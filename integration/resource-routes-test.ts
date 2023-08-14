@@ -27,6 +27,7 @@ test.describe("loader in an app", async () => {
           export default () => (
             <>
               <Link to="/redirect">Redirect</Link>
+              <Link to="/some-404-path">404 route</Link>
               <Form action="/redirect-to" method="post">
                 <input name="destination" defaultValue="/redirect-destination" />
                 <button type="submit">Redirect</button>
@@ -109,6 +110,19 @@ test.describe("loader in an app", async () => {
             return json({ ok: true });
           }
         `,
+        "app/routes/$.tsx": js`
+          import { json } from "@remix-run/node";
+          import { useRouteError } from "@remix-run/react";
+          export function loader({ request }) {
+            throw json({ message: new URL(request.url).pathname + ' not found' }, {
+              status: 404
+            });
+          }
+          export function ErrorBoundary() {
+            let error = useRouteError();
+            return <pre>{error.status + ' ' + error.data.message}</pre>;
+          }
+        `,
       },
     });
     appFixture = await createAppFixture(fixture, ServerMode.Test);
@@ -166,6 +180,16 @@ test.describe("loader in an app", async () => {
       expect(await res.text()).toEqual(
         "Unexpected Server Error\n\nError: Oh noes!"
       );
+    });
+
+    test("should let loader throw to it's own boundary without a default export", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/", true);
+      await app.clickLink("/some-404-path");
+      let html = await app.getHtml();
+      expect(html).toMatch("404 /some-404-path not found");
     });
   }
 
