@@ -47,6 +47,18 @@ export async function watch(
   let compiler = await Compiler.create(ctx);
   let compile = () =>
     compiler.compile({ onManifest: onBuildManifest }).catch((thrown) => {
+      if (
+        thrown instanceof Error &&
+        thrown.message === "The service is no longer running"
+      ) {
+        ctx.logger.error("esbuild is no longer running", {
+          details: [
+            "Most likely, your machine ran out of memory and killed the esbuild process",
+            "that `remix dev` relies on for builds and rebuilds.",
+          ],
+        });
+        process.exit(1);
+      }
       logThrown(thrown);
       return undefined;
     });
