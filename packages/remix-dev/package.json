@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@remix-run/serve": "1.19.3",
-    "@types/cacache": "^15.0.0",
+    "@types/cacache": "^17.0.0",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/jsesc": "^3.0.1",
     "@types/lodash.debounce": "^4.0.6",
