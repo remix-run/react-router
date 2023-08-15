@@ -26,7 +26,6 @@ export interface FixtureInit {
   sourcemap?: boolean;
   files?: { [filename: string]: string };
   template?: "cf-template" | "deno-template" | "node-template";
-  setup?: "node" | "cloudflare";
   config?: Partial<AppConfig>;
 }
 
@@ -165,28 +164,6 @@ export async function createFixtureProject(
     path.join(projectDir, "node_modules"),
     { overwrite: true }
   );
-
-  if (init.setup) {
-    let setupSpawn = spawnSync(
-      "node",
-      ["node_modules/@remix-run/dev/dist/cli.js", "setup", init.setup],
-      { cwd: projectDir }
-    );
-
-    // These logs are helpful for debugging. Remove comments if needed.
-    // console.log("spawning @remix-run/dev/cli.js `setup`:\n");
-    // console.log("  STDOUT:");
-    // console.log("  " + setupSpawn.stdout.toString("utf-8"));
-    // console.log("  STDERR:");
-    // console.log("  " + setupSpawn.stderr.toString("utf-8"));
-    if (setupSpawn.error || setupSpawn.status) {
-      console.error(setupSpawn.stderr.toString("utf-8"));
-      throw (
-        setupSpawn.error || new Error(`Setup failed, check the output above`)
-      );
-    }
-  }
-
   await writeTestFiles(init, projectDir);
 
   // We update the config file *after* writing test files so that tests can provide a custom
@@ -231,7 +208,7 @@ function build(
   // behind mode === ServerMode.Test to make jest happy, but that doesn't
   // work for ESM configs, those MUST be dynamic imports. So we need to
   // force the mode to be production for ESM configs when runtime mode is
-  // test.
+  // tested.
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
   let buildArgs = ["node_modules/@remix-run/dev/dist/cli.js", "build"];
   if (sourcemap) {

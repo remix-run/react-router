@@ -28,7 +28,6 @@ test.describe("cloudflare compiler", () => {
 
   test.beforeAll(async () => {
     projectDir = await createFixtureProject({
-      setup: "cloudflare",
       template: "cf-template",
       files: {
         "package.json": json({
