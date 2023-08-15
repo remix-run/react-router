@@ -12597,6 +12597,130 @@ describe("a router", () => {
       expect(shouldRevalidateSpy).not.toHaveBeenCalled();
     });
 
+    it("should allow user to provide an AbortController for defer cancellations after navigation completes", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+      });
+
+      let A = await t.navigate("/lazy");
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      await A.loaders.lazy.resolve(
+        defer({ lazy: dfd.promise }, null, controller)
+      );
+
+      // Interrupt pending deferred's from /lazy navigation
+      let B = await t.navigate("/");
+      expect(A.loaders.lazy.signal.aborted).toBe(false);
+      expect(controller.signal.aborted).toBe(true);
+
+      await B.loaders.index.resolve("INDEX*");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/" },
+        navigation: IDLE_NAVIGATION,
+      });
+    });
+
+    it("should proxy navigation AbortController through to defer AbortController when request aborts prior to defer call", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+      });
+
+      // Route to lazy
+      let A = await t.navigate("/lazy");
+      let controller = new AbortController();
+
+      // Navigate away from /lazy before it's loader returns the defer()
+      let B = await t.navigate("/");
+      expect(A.loaders.lazy.signal.aborted).toBe(true);
+
+      let dfd = createDeferred();
+      await A.loaders.lazy.resolve(
+        defer({ lazy: dfd.promise }, null, controller)
+      );
+      expect(controller.signal.aborted).toBe(true);
+
+      await B.loaders.index.resolve("INDEX*");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/" },
+        navigation: IDLE_NAVIGATION,
+      });
+    });
+
+    it("should proxy navigation AbortController through to defer AbortController when request aborts after defer call", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "index",
+            index: true,
+            loader: true,
+          },
+          {
+            id: "lazy",
+            path: "lazy",
+            loader: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                loader: true,
+              },
+            ],
+          },
+        ],
+        hydrationData: { loaderData: { index: "INDEX" } },
+      });
+
+      // Route to lazy
+      let A = await t.navigate("/lazy/child");
+      let controller = new AbortController();
+
+      let dfd = createDeferred();
+      await A.loaders.lazy.resolve(
+        defer({ lazy: dfd.promise }, null, controller)
+      );
+      expect(controller.signal.aborted).toBe(false);
+
+      // Navigate away from /lazy after it's loader returns the defer() but
+      // before /child's loader finishes so the request is aborted which gets
+      // proxied through to the lazy loaders already resolved defer() instance
+      let B = await t.navigate("/");
+      expect(A.loaders.lazy.signal.aborted).toBe(true);
+      expect(controller.signal.aborted).toBe(true);
+
+      await A.loaders.child.resolve("CHILD");
+
+      await B.loaders.index.resolve("INDEX*");
+      expect(t.router.state).toMatchObject({
+        location: { pathname: "/" },
+        navigation: IDLE_NAVIGATION,
+      });
+    });
+
     it("does not put resolved deferred's back into a loading state during revalidation", async () => {
       let shouldRevalidateSpy = jest.fn(() => false);
       let t = setup({

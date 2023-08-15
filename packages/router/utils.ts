@@ -1276,7 +1276,11 @@ export class DeferredData {
   init?: ResponseInit;
   deferredKeys: string[] = [];
 
-  constructor(data: Record<string, unknown>, responseInit?: ResponseInit) {
+  constructor(
+    data: Record<string, unknown>,
+    responseInit: ResponseInit,
+    controller: AbortController
+  ) {
     invariant(
       data && typeof data === "object" && !Array.isArray(data),
       "defer() only accepts plain objects"
@@ -1286,7 +1290,7 @@ export class DeferredData {
     // cancellation
     let reject: (e: AbortedDeferredError) => void;
     this.abortPromise = new Promise((_, r) => (reject = r));
-    this.controller = new AbortController();
+    this.controller = controller;
     let onAbort = () =>
       reject(new AbortedDeferredError("Deferred data aborted"));
     this.unlistenAbortSignal = () =>
@@ -1455,13 +1459,18 @@ function unwrapTrackedPromise(value: any) {
 
 export type DeferFunction = (
   data: Record<string, unknown>,
-  init?: number | ResponseInit
+  init?: number | ResponseInit | null,
+  controller?: AbortController
 ) => DeferredData;
 
-export const defer: DeferFunction = (data, init = {}) => {
-  let responseInit = typeof init === "number" ? { status: init } : init;
-
-  return new DeferredData(data, responseInit);
+export const defer: DeferFunction = (data, init, controller) => {
+  let responseInit =
+    typeof init === "number" ? { status: init } : init != null ? init : {};
+  return new DeferredData(
+    data,
+    responseInit,
+    controller || new AbortController()
+  );
 };
 
 export type RedirectFunction = (
