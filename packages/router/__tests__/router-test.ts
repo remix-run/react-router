@@ -12616,15 +12616,15 @@ describe("a router", () => {
 
       let A = await t.navigate("/lazy");
       let dfd = createDeferred();
-      let controller = new AbortController();
+      let deferController = new AbortController();
       await A.loaders.lazy.resolve(
-        defer({ lazy: dfd.promise }, null, controller)
+        defer({ lazy: dfd.promise }, null, deferController)
       );
 
       // Interrupt pending deferred's from /lazy navigation
       let B = await t.navigate("/");
       expect(A.loaders.lazy.signal.aborted).toBe(false);
-      expect(controller.signal.aborted).toBe(true);
+      expect(deferController.signal.aborted).toBe(true);
 
       await B.loaders.index.resolve("INDEX*");
       expect(t.router.state).toMatchObject({
@@ -12652,17 +12652,17 @@ describe("a router", () => {
 
       // Route to lazy
       let A = await t.navigate("/lazy");
-      let controller = new AbortController();
 
       // Navigate away from /lazy before it's loader returns the defer()
       let B = await t.navigate("/");
       expect(A.loaders.lazy.signal.aborted).toBe(true);
 
       let dfd = createDeferred();
+      let deferController = new AbortController();
       await A.loaders.lazy.resolve(
-        defer({ lazy: dfd.promise }, null, controller)
+        defer({ lazy: dfd.promise }, null, deferController)
       );
-      expect(controller.signal.aborted).toBe(true);
+      expect(deferController.signal.aborted).toBe(true);
 
       await B.loaders.index.resolve("INDEX*");
       expect(t.router.state).toMatchObject({
@@ -12697,20 +12697,20 @@ describe("a router", () => {
 
       // Route to lazy
       let A = await t.navigate("/lazy/child");
-      let controller = new AbortController();
 
       let dfd = createDeferred();
+      let deferController = new AbortController();
       await A.loaders.lazy.resolve(
-        defer({ lazy: dfd.promise }, null, controller)
+        defer({ lazy: dfd.promise }, null, deferController)
       );
-      expect(controller.signal.aborted).toBe(false);
+      expect(deferController.signal.aborted).toBe(false);
 
       // Navigate away from /lazy after it's loader returns the defer() but
       // before /child's loader finishes so the request is aborted which gets
       // proxied through to the lazy loaders already resolved defer() instance
       let B = await t.navigate("/");
       expect(A.loaders.lazy.signal.aborted).toBe(true);
-      expect(controller.signal.aborted).toBe(true);
+      expect(deferController.signal.aborted).toBe(true);
 
       await A.loaders.child.resolve("CHILD");
 
