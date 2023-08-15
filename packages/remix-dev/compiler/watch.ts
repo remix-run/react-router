@@ -31,6 +31,11 @@ export type WatchOptions = {
   onFileDeleted?(file: string): void;
 };
 
+function shouldIgnore(file: string): boolean {
+  let filename = path.basename(file);
+  return filename === ".DS_Store";
+}
+
 export async function watch(
   ctx: Context,
   {
@@ -120,10 +125,12 @@ export async function watch(
     })
     .on("error", (error) => ctx.logger.error(String(error)))
     .on("change", async (file) => {
+      if (shouldIgnore(file)) return;
       onFileChanged?.(file);
       await rebuild();
     })
     .on("add", async (file) => {
+      if (shouldIgnore(file)) return;
       onFileCreated?.(file);
 
       try {
@@ -136,6 +143,7 @@ export async function watch(
       await (isEntryPoint(ctx.config, file) ? restart : rebuild)();
     })
     .on("unlink", async (file) => {
+      if (shouldIgnore(file)) return;
       onFileDeleted?.(file);
       await (isEntryPoint(ctx.config, file) ? restart : rebuild)();
     });
