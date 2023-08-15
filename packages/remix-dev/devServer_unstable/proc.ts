@@ -32,7 +32,8 @@ let isAlive = (pid: number) => {
 };
 
 export let killtree = async (pid: number) => {
-  let descendants = await pidtree(pid);
+  let descendants = await pidtree(pid).catch(() => undefined);
+  if (descendants === undefined) return;
   let pids = [pid, ...descendants];
 
   await Promise.all(pids.map(kill));

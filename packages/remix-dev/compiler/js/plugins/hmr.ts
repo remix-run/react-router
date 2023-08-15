@@ -166,6 +166,8 @@ export async function applyHMR(
   let babelJsx = await import("@babel/plugin-syntax-jsx");
   // @ts-expect-error
   let reactRefresh = await import("react-refresh/babel");
+  // @ts-expect-error
+  let babelDecorators = await import("@babel/plugin-syntax-decorators");
 
   let IS_FAST_REFRESH_ENABLED = /\$RefreshReg\$\(/;
 
@@ -195,7 +197,11 @@ ${lastModified ? `import.meta.hot.lastModified = "${lastModified}";` : ""}
     configFile: false,
     babelrc: false,
     presets: [babelPresetTypescript.default],
-    plugins: [babelJsx.default, [reactRefresh.default, { skipEnvCheck: true }]],
+    plugins: [
+      [babelDecorators.default, { legacy: true }],
+      babelJsx.default,
+      [reactRefresh.default, { skipEnvCheck: true }],
+    ],
   });
 
   let jsWithReactRefresh = transformResult?.code ?? sourceCodeWithHMR;
