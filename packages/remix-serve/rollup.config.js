@@ -38,6 +38,17 @@ module.exports = function rollup() {
           extensions: [".ts", ".tsx"],
         }),
         nodeResolve({ extensions: [".ts", ".tsx"] }),
+        // Allow dynamic imports in CJS code to allow us to utilize
+        // ESM modules as part of the compiler.
+        {
+          name: "dynamic-import-polyfill",
+          renderDynamicImport() {
+            return {
+              left: "import(",
+              right: ")",
+            };
+          },
+        },
         copy({
           targets: [
             { src: "LICENSE.md", dest: [outputDir, sourceDir] },
