@@ -4,7 +4,6 @@ import fse from "fs-extra";
 import getPort, { makeRange } from "get-port";
 import prettyMs from "pretty-ms";
 import NPMCliPackageJson from "@npmcli/package-json";
-import { coerce } from "semver";
 import pc from "picocolors";
 
 import * as colors from "../colors";
@@ -214,20 +213,6 @@ export async function generateEntry(
   let pkgJson = await NPMCliPackageJson.load(config.rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  let maybeReactVersion = coerce(deps.react);
-  if (!maybeReactVersion) {
-    let react = ["react", "react-dom"];
-    let list = conjunctionListFormat.format(react);
-    throw new Error(
-      `Could not determine React version. Please install the following packages: ${list}`
-    );
-  }
-
-  let type =
-    maybeReactVersion.major >= 18 || maybeReactVersion.raw === "0.0.0"
-      ? ("stream" as const)
-      : ("string" as const);
-
   let serverRuntime = deps["@remix-run/deno"]
     ? "deno"
     : deps["@remix-run/cloudflare"]
@@ -251,26 +236,11 @@ export async function generateEntry(
     return;
   }
 
-  let clientRenderer = deps["@remix-run/react"] ? "react" : undefined;
-
-  if (!clientRenderer) {
-    console.error(
-      colors.error(
-        `Could not determine runtime. Please install the following: @remix-run/react`
-      )
-    );
-    return;
-  }
-
   let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
-  let defaultEntryClient = path.resolve(
-    defaultsDirectory,
-    `entry.client.${clientRenderer}-${type}.tsx`
-  );
+  let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    serverRuntime,
-    `entry.server.${clientRenderer}-${type}.tsx`
+    `entry.server.${serverRuntime}.tsx`
   );
 
   let isServerEntry = entry === "entry.server";

@@ -175,7 +175,6 @@ function createRouteModules(
 
     modules[route.id!] = {
       ErrorBoundary: undefined,
-      // @ts-expect-error - types are still `agnostic` here
       default: () => route.element,
       handle: route.handle,
       links: undefined,

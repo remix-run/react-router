@@ -3,7 +3,6 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import fse from "fs-extra";
 import NPMCliPackageJson from "@npmcli/package-json";
-import { coerce } from "semver";
 import type { NodePolyfillsOptions as EsbuildPluginsNodeModulesPolyfillOptions } from "esbuild-plugins-node-modules-polyfill";
 
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
@@ -419,7 +418,7 @@ export async function readConfig(
   let userEntryServerFile = findEntry(appDirectory, "entry.server");
 
   let entryServerFile: string;
-  let entryClientFile: string;
+  let entryClientFile = userEntryClientFile || "entry.client.tsx";
 
   let pkgJson = await NPMCliPackageJson.load(remixRoot);
   let deps = pkgJson.content.dependencies ?? {};
@@ -447,29 +446,7 @@ export async function readConfig(
       );
     }
 
-    let clientRenderer = deps["@remix-run/react"] ? "react" : undefined;
-
-    if (!clientRenderer) {
-      throw new Error(
-        `Could not determine renderer. Please install the following: @remix-run/react`
-      );
-    }
-
-    let maybeReactVersion = coerce(deps.react);
-    if (!maybeReactVersion) {
-      let react = ["react", "react-dom"];
-      let list = conjunctionListFormat.format(react);
-      throw new Error(
-        `Could not determine React version. Please install the following packages: ${list}`
-      );
-    }
-
-    let type: "stream" | "string" =
-      maybeReactVersion.major >= 18 || maybeReactVersion.raw === "0.0.0"
-        ? "stream"
-        : "string";
-
-    if (!deps["isbot"] && type === "stream") {
+    if (!deps["isbot"]) {
       console.log(
         "adding `isbot` to your package.json, you should commit this change"
       );
@@ -491,35 +468,7 @@ export async function readConfig(
       });
     }
 
-    entryServerFile = `${serverRuntime}/entry.server.${clientRenderer}-${type}.tsx`;
-  }
-
-  if (userEntryClientFile) {
-    entryClientFile = userEntryClientFile;
-  } else {
-    let clientRenderer = deps["@remix-run/react"] ? "react" : undefined;
-
-    if (!clientRenderer) {
-      throw new Error(
-        `Could not determine runtime. Please install the following: @remix-run/react`
-      );
-    }
-
-    let maybeReactVersion = coerce(deps.react);
-    if (!maybeReactVersion) {
-      let react = ["react", "react-dom"];
-      let list = conjunctionListFormat.format(react);
-      throw new Error(
-        `Could not determine React version. Please install the following packages: ${list}`
-      );
-    }
-
-    let type: "stream" | "string" =
-      maybeReactVersion.major >= 18 || maybeReactVersion.raw === "0.0.0"
-        ? "stream"
-        : "string";
-
-    entryClientFile = `entry.client.${clientRenderer}-${type}.tsx`;
+    entryServerFile = `entry.server.${serverRuntime}.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
@@ -711,11 +660,6 @@ declare namespace Intl {
     ): string[];
   }
 }
-
-let conjunctionListFormat = new Intl.ListFormat("en", {
-  style: "long",
-  type: "conjunction",
-});
 
 let disjunctionListFormat = new Intl.ListFormat("en", {
   style: "long",
