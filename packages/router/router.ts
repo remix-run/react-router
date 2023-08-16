@@ -2850,7 +2850,9 @@ export function createStaticHandler(
 
       if (request.signal.aborted) {
         let method = isRouteRequest ? "queryRoute" : "query";
-        throw new Error(`${method}() call aborted`);
+        throw new Error(
+          `${method}() call aborted: ${request.method} ${request.url}`
+        );
       }
     }
 
@@ -3018,7 +3020,9 @@ export function createStaticHandler(
 
     if (request.signal.aborted) {
       let method = isRouteRequest ? "queryRoute" : "query";
-      throw new Error(`${method}() call aborted`);
+      throw new Error(
+        `${method}() call aborted: ${request.method} ${request.url}`
+      );
     }
 
     // Process and commit output from loaders

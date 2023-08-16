@@ -15022,34 +15022,11 @@ describe("a router", () => {
         let { query } = createStaticHandler([
           {
             id: "root",
-            path: "/",
+            path: "/path",
             loader: () => dfd.promise,
           },
         ]);
-        let request = createRequest("/", { signal: controller.signal });
-        let e;
-        try {
-          let contextPromise = query(request);
-          controller.abort();
-          // This should resolve even though we never resolved the loader
-          await contextPromise;
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
-      });
-
-      it("should handle aborted submit requests", async () => {
-        let dfd = createDeferred();
-        let controller = new AbortController();
-        let { query } = createStaticHandler([
-          {
-            id: "root",
-            path: "/",
-            action: () => dfd.promise,
-          },
-        ]);
-        let request = createSubmitRequest("/", {
+        let request = createRequest("/path?key=value", {
           signal: controller.signal,
         });
         let e;
@@ -15061,7 +15038,36 @@ describe("a router", () => {
         } catch (_e) {
           e = _e;
         }
-        expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query() call aborted: GET http://localhost/path?key=value]`
+        );
+      });
+
+      it("should handle aborted submit requests", async () => {
+        let dfd = createDeferred();
+        let controller = new AbortController();
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/path",
+            action: () => dfd.promise,
+          },
+        ]);
+        let request = createSubmitRequest("/path?key=value", {
+          signal: controller.signal,
+        });
+        let e;
+        try {
+          let contextPromise = query(request);
+          controller.abort();
+          // This should resolve even though we never resolved the loader
+          await contextPromise;
+        } catch (_e) {
+          e = _e;
+        }
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query() call aborted: POST http://localhost/path?key=value]`
+        );
       });
 
       it("should assign signals to requests by default (per the", async () => {
@@ -16327,11 +16333,11 @@ describe("a router", () => {
         let { queryRoute } = createStaticHandler([
           {
             id: "root",
-            path: "/",
+            path: "/path",
             loader: () => dfd.promise,
           },
         ]);
-        let request = createRequest("/", {
+        let request = createRequest("/path?key=value", {
           signal: controller.signal,
         });
         let e;
@@ -16343,7 +16349,9 @@ describe("a router", () => {
         } catch (_e) {
           e = _e;
         }
-        expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        expect(e).toMatchInlineSnapshot(
+          `[Error: queryRoute() call aborted: GET http://localhost/path?key=value]`
+        );
       });
 
       it("should handle aborted submit requests", async () => {
@@ -16352,11 +16360,11 @@ describe("a router", () => {
         let { queryRoute } = createStaticHandler([
           {
             id: "root",
-            path: "/",
+            path: "/path",
             action: () => dfd.promise,
           },
         ]);
-        let request = createSubmitRequest("/", {
+        let request = createSubmitRequest("/path?key=value", {
           signal: controller.signal,
         });
         let e;
@@ -16368,7 +16376,9 @@ describe("a router", () => {
         } catch (_e) {
           e = _e;
         }
-        expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        expect(e).toMatchInlineSnapshot(
+          `[Error: queryRoute() call aborted: POST http://localhost/path?key=value]`
+        );
       });
 
       it("should assign signals to requests by default (per the spec)", async () => {
