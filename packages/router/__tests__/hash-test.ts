@@ -66,6 +66,8 @@ describe("a hash history", () => {
   });
 
   it("prefixes raw hash values with /", () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
     dom.window.history.replaceState(null, "", "#hello");
     history = createHashHistory({ window: dom.window as unknown as Window });
     expect(history.location.pathname).toBe("/hello");
@@ -79,6 +81,8 @@ describe("a hash history", () => {
 
     history.push("../relative");
     expect(history.location.pathname).toBe("../relative");
+
+    spy.mockReset();
   });
 
   describe("listen", () => {
