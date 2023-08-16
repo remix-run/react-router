@@ -1,4 +1,4 @@
-type PackageManager = "npm" | "pnpm" | "yarn";
+type PackageManager = "npm" | "pnpm" | "yarn" | "bun";
 
 /**
  * Determine which package manager the user prefers.
@@ -15,6 +15,7 @@ export const detectPackageManager = (): PackageManager | undefined => {
     if (pkgManager === "npm") return "npm";
     if (pkgManager === "pnpm") return "pnpm";
     if (pkgManager === "yarn") return "yarn";
+    if (pkgManager === "bun") return "bun";
     return undefined;
   } catch {
     return undefined;

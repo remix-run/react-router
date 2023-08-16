@@ -31,6 +31,10 @@ let detectBin = async (): Promise<string> => {
     let { stdout } = await execa(pkgManager, ["prefix"]);
     return path.join(stdout.trim(), "node_modules", ".bin");
   }
+  if (pkgManager === "bun") {
+    let { stdout } = await execa(pkgManager, ["pm", "bin"]);
+    return stdout.trim();
+  }
   let { stdout } = await execa(pkgManager, ["bin"]);
   return stdout.trim();
 };
