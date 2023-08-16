@@ -3,7 +3,7 @@ import { execSync } from "node:child_process";
 import fse from "fs-extra";
 import getPort, { makeRange } from "get-port";
 import prettyMs from "pretty-ms";
-import NPMCliPackageJson from "@npmcli/package-json";
+import PackageJson from "@npmcli/package-json";
 import pc from "picocolors";
 
 import * as colors from "../colors";
@@ -210,7 +210,7 @@ export async function generateEntry(
     return;
   }
 
-  let pkgJson = await NPMCliPackageJson.load(config.rootDirectory);
+  let pkgJson = await PackageJson.load(config.rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
   let serverRuntime = deps["@remix-run/deno"]

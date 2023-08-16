@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import fse from "fs-extra";
-import NPMCliPackageJson from "@npmcli/package-json";
+import PackageJson from "@npmcli/package-json";
 import type { NodePolyfillsOptions as EsbuildPluginsNodeModulesPolyfillOptions } from "esbuild-plugins-node-modules-polyfill";
 
 import type { RouteManifest, DefineRoutesFunction } from "./config/routes";
@@ -420,7 +420,7 @@ export async function readConfig(
   let entryServerFile: string;
   let entryClientFile = userEntryClientFile || "entry.client.tsx";
 
-  let pkgJson = await NPMCliPackageJson.load(remixRoot);
+  let pkgJson = await PackageJson.load(remixRoot);
   let deps = pkgJson.content.dependencies ?? {};
 
   if (userEntryServerFile) {
