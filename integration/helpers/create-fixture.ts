@@ -7,7 +7,7 @@ import getPort from "get-port";
 import dedent from "dedent";
 import stripIndent from "strip-indent";
 import serializeJavaScript from "serialize-javascript";
-import { sync as spawnSync } from "cross-spawn";
+import { sync as spawnSync, spawn } from "cross-spawn";
 import type { JsonObject } from "type-fest";
 import type { AppConfig } from "@remix-run/dev";
 
@@ -27,6 +27,7 @@ export interface FixtureInit {
   files?: { [filename: string]: string };
   template?: "cf-template" | "deno-template" | "node-template";
   config?: Partial<AppConfig>;
+  useRemixServe?: boolean;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -97,6 +98,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     requestData,
     postDocument,
     getBrowserAsset,
+    useRemixServe: init.useRemixServe,
   };
 }
 
@@ -105,6 +107,63 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     port: number;
     stop: VoidFunction;
   }> => {
+    if (fixture.useRemixServe) {
+      return new Promise(async (accept, reject) => {
+        let port = await getPort();
+
+        let nodebin = process.argv[0];
+        let serveProcess = spawn(
+          nodebin,
+          ["node_modules/@remix-run/serve/dist/cli.js", "build/index.js"],
+          {
+            env: {
+              NODE_ENV: mode || "production",
+              PORT: port.toFixed(0),
+            },
+            cwd: fixture.projectDir,
+            stdio: "pipe",
+          }
+        );
+        // Wait for `started at http://localhost:${port}` to be printed
+        // and extract the port from it.
+        let started = false;
+        let stdout = "";
+        let rejectTimeout = setTimeout(() => {
+          reject(new Error("Timed out waiting for remix-serve to start"));
+        }, 20000);
+        serveProcess.stderr.pipe(process.stderr);
+        serveProcess.stdout.on("data", (chunk) => {
+          if (started) return;
+          let newChunk = chunk.toString();
+          stdout += newChunk;
+          let match: RegExpMatchArray | null = stdout.match(
+            /started at http:\/\/localhost:(\d+)\s/
+          );
+          if (match) {
+            clearTimeout(rejectTimeout);
+            started = true;
+            let parsedPort = parseInt(match[1], 10);
+
+            if (port !== parsedPort) {
+              reject(
+                new Error(
+                  `Expected remix-serve to start on port ${port}, but it started on port ${parsedPort}`
+                )
+              );
+              return;
+            }
+
+            accept({
+              stop: () => {
+                serveProcess.kill();
+              },
+              port,
+            });
+          }
+        });
+      });
+    }
+
     return new Promise(async (accept) => {
       let port = await getPort();
       let app = express();
