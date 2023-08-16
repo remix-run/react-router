@@ -19,7 +19,7 @@ let miscHandlers: Array<RequestHandler> = [
   }),
   rest.get("https://example.com/remix-stack.tar.gz", async (req, res, ctx) => {
     let fileBuffer = await fsp.readFile(
-      path.join(__dirname, "./fixtures/stack.tar.gz")
+      path.join(__dirname, "fixtures", "stack.tar.gz")
     );
 
     return res(

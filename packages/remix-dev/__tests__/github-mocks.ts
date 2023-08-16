@@ -1,4 +1,4 @@
-import * as nodePath from "node:path";
+import * as path from "node:path";
 import fsp from "node:fs/promises";
 import invariant from "tiny-invariant";
 import type { setupServer } from "msw/node";
@@ -56,13 +56,13 @@ let sendTarball: ResponseResolver = async (req, res, ctx) => {
 
   let pathToTarball: string;
   if (owner === "remix-run" && repo === "examples") {
-    pathToTarball = nodePath.join(__dirname, "fixtures/examples-main.tar.gz");
+    pathToTarball = path.join(__dirname, "fixtures", "examples-main.tar.gz");
   } else if (owner === "remix-run" && repo === "remix") {
-    pathToTarball = nodePath.join(__dirname, "fixtures/remix-repo.tar.gz");
+    pathToTarball = path.join(__dirname, "fixtures", "remix-repo.tar.gz");
   } else if (owner === "fake-remix-tester" && repo === "nested-dir") {
-    pathToTarball = nodePath.join(__dirname, "fixtures/nested-dir-repo.tar.gz");
+    pathToTarball = path.join(__dirname, "fixtures", "nested-dir-repo.tar.gz");
   } else {
-    pathToTarball = nodePath.join(__dirname, "fixtures/stack.tar.gz");
+    pathToTarball = path.join(__dirname, "fixtures", "stack.tar.gz");
   }
 
   let fileBuffer = await fsp.readFile(pathToTarball);
@@ -168,7 +168,7 @@ let githubHandlers: Array<RequestHandler> = [
         throw new Error(message);
       }
 
-      let localPath = nodePath.join(__dirname, "../../..", path);
+      let localPath = path.join(__dirname, "../../..", path);
       let isLocalDir = await isDirectory(localPath);
       let isLocalFile = await isFile(localPath);
 
@@ -199,11 +199,11 @@ let githubHandlers: Array<RequestHandler> = [
 
       let contentDescriptions = await Promise.all(
         dirList.map(async (name): Promise<GHContentsDescription> => {
-          let relativePath = nodePath.join(path, name);
+          let relativePath = path.join(path, name);
           // NOTE: this is a cheat-code so we don't have to determine the sha of the file
           // and our sha endpoint handler doesn't have to do a reverse-lookup.
           let sha = relativePath;
-          let fullPath = nodePath.join(localPath, name);
+          let fullPath = path.join(localPath, name);
           let isDir = await isDirectory(fullPath);
           let size = isDir ? 0 : (await fsp.stat(fullPath)).size;
           return {
@@ -247,7 +247,7 @@ let githubHandlers: Array<RequestHandler> = [
 
       // NOTE: we cheat a bit and in the contents/:path handler, we set the sha to the relativePath
       let relativePath = sha;
-      let fullPath = nodePath.join(__dirname, "..", relativePath);
+      let fullPath = path.join(__dirname, "..", relativePath);
       let encoding = "base64" as const;
       let size = (await fsp.stat(fullPath)).size;
       let content = await fsp.readFile(fullPath, { encoding: "utf-8" });
@@ -273,7 +273,7 @@ let githubHandlers: Array<RequestHandler> = [
       if (typeof relativePath !== "string") {
         throw new Error("req.params.path must be a string");
       }
-      let fullPath = nodePath.join(__dirname, "..", relativePath);
+      let fullPath = path.join(__dirname, "..", relativePath);
       let encoding = "base64" as const;
       let size = (await fsp.stat(fullPath)).size;
       let content = await fsp.readFile(fullPath, { encoding: "utf-8" });

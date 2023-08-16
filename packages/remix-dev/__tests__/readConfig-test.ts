@@ -3,7 +3,7 @@ import path from "node:path";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 
-const remixRoot = path.resolve(__dirname, "./fixtures/stack");
+const remixRoot = path.join(__dirname, "fixtures", "stack");
 
 describe("readConfig", () => {
   let config: RemixConfig;
