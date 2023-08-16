@@ -118,10 +118,8 @@ export async function sendRemixResponse(
   res.statusMessage = nodeResponse.statusText;
   res.status(nodeResponse.status);
 
-  for (let [key, values] of Object.entries(nodeResponse.headers.raw())) {
-    for (let value of values) {
-      res.append(key, value);
-    }
+  for (let [key, value] of nodeResponse.headers.entries()) {
+    res.append(key, value);
   }
 
   if (nodeResponse.body) {
