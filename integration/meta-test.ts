@@ -149,6 +149,26 @@ test.describe("meta", () => {
             return <h1>Music</h1>;
           }
         `,
+
+        "app/routes/error.tsx": js`
+          import { Link, useRouteError } from '@remix-run/react'
+
+          export function loader() {
+            throw new Error('lol oops')
+          }
+
+          export const meta = (args) => {
+            return [{ title: args.error ? "Oops!" : "Home"}]
+          }
+
+          export default function Error() {
+            return <h1>Error</h1>
+          }
+
+          export function ErrorBoundary() {
+            return <h1>Error boundary</h1>
+          }
+        `,
       },
     });
     appFixture = await createAppFixture(fixture);
@@ -231,4 +251,23 @@ test.describe("meta", () => {
     await app.goto("/authors/1");
     expect(await app.getHtml('link[rel="canonical"]')).toBeTruthy();
   });
+
+  test("loader errors are passed to meta", async ({ page }) => {
+    let restoreErrors = hideErrors();
+
+    new PlaywrightFixture(appFixture, page);
+    let response = await fixture.requestDocument("/error");
+    expect(await response.text()).toMatch("<title>Oops!</title>");
+
+    restoreErrors();
+  });
 });
+
+function hideErrors() {
+  let oldConsoleError: any;
+  oldConsoleError = console.error;
+  console.error = () => {};
+  return () => {
+    console.error = oldConsoleError;
+  };
+}
