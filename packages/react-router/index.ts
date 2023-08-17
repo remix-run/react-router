@@ -19,6 +19,7 @@ import type {
   RedirectFunction,
   RelativeRoutingType,
   Router as RemixRouter,
+  ShouldRevalidateArgs,
   ShouldRevalidateFunction,
   To,
   InitialEntry,
@@ -163,9 +164,11 @@ export type {
   RouterProviderProps,
   RoutesProps,
   Search,
+  ShouldRevalidateArgs,
   ShouldRevalidateFunction,
   To,
 };
+
 export {
   AbortedDeferredError,
   Await,

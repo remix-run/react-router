@@ -22,6 +22,7 @@ export type {
   PathMatch,
   PathPattern,
   RedirectFunction,
+  ShouldRevalidateArgs,
   ShouldRevalidateFunction,
   V7_FormMethod,
 } from "./utils";

@@ -56,21 +56,23 @@ Note that this is only for data that has already been loaded, is currently rende
 ## Type Declaration
 
 ```ts
+interface ShouldRevalidateArgs {
+  currentUrl: URL;
+  currentParams: AgnosticDataRouteMatch["params"];
+  nextUrl: URL;
+  nextParams: AgnosticDataRouteMatch["params"];
+  formMethod?: Submission["formMethod"];
+  formAction?: Submission["formAction"];
+  formEncType?: Submission["formEncType"];
+  text?: Submission["text"];
+  formData?: Submission["formData"];
+  json?: Submission["json"];
+  actionResult?: DataResult;
+  defaultShouldRevalidate: boolean;
+}
+
 interface ShouldRevalidateFunction {
-  (args: {
-    currentUrl: URL;
-    currentParams: AgnosticDataRouteMatch["params"];
-    nextUrl: URL;
-    nextParams: AgnosticDataRouteMatch["params"];
-    formMethod?: Submission["formMethod"];
-    formAction?: Submission["formAction"];
-    formEncType?: Submission["formEncType"];
-    formData?: Submission["formData"];
-    json?: Submission["json"];
-    text?: Submission["text"];
-    actionResult?: DataResult;
-    defaultShouldRevalidate: boolean;
-  }): boolean;
+  (args: ShouldRevalidateArgs): boolean;
 }
 ```
 

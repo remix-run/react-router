@@ -23,7 +23,7 @@ import type {
   Submission,
   SuccessResult,
   AgnosticRouteMatch,
-  ShouldRevalidateFunction,
+  ShouldRevalidateArgs,
   RouteManifest,
   ImmutableRouteKey,
   ActionFunction,
@@ -3513,7 +3513,7 @@ function isNewRouteInstance(
 
 function shouldRevalidateLoader(
   loaderMatch: AgnosticDataRouteMatch,
-  arg: Parameters<ShouldRevalidateFunction>[0]
+  arg: ShouldRevalidateArgs
 ) {
   if (loaderMatch.route.shouldRevalidate) {
     let routeChoice = loaderMatch.route.shouldRevalidate(arg);
