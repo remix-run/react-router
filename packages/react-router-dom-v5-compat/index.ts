@@ -98,6 +98,7 @@ export type {
   ScrollRestorationProps,
   Search,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   SubmitFunction,
   SubmitOptions,
   To,
