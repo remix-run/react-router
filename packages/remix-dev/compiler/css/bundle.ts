@@ -63,7 +63,7 @@ type GroupedCssBundleFiles = {
   css?: esbuild.OutputFile;
   sourceMap?: esbuild.OutputFile;
   assets: esbuild.OutputFile[];
-}
+};
 
 export function groupCssBundleFiles(
   ctx: Context,
