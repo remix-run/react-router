@@ -23,6 +23,7 @@ import type {
   Router as RemixRouter,
   FutureConfig as RouterFutureConfig,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   To,
 } from "@remix-run/router";
 import {
@@ -162,6 +163,7 @@ export type {
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   To,
   Blocker as unstable_Blocker,
   BlockerFunction as unstable_BlockerFunction,

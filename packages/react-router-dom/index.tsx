@@ -127,6 +127,7 @@ export type {
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   To,
 } from "react-router";
 export {
