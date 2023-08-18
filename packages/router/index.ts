@@ -21,8 +21,8 @@ export type {
   PathMatch,
   PathPattern,
   RedirectFunction,
-  ShouldRevalidateFunctionArgs,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   TrackedPromise,
   V7_FormMethod,
 } from "./utils";
