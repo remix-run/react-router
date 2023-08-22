@@ -170,6 +170,41 @@ test.describe("redirects", () => {
             return redirect("https://remix.run/");
           }
         `,
+
+        "app/routes/redirect-document.tsx": js`
+          import * as React from "react";
+          import { Outlet } from "@remix-run/react";
+
+          export default function Component() {
+            let [count, setCount] = React.useState(0);
+            let countText = 'Count:' + count;
+            return (
+              <>
+                <button onClick={() => setCount(count+1)}>{countText}</button>
+                <Outlet />
+              </>
+            );
+          }
+        `,
+
+        "app/routes/redirect-document._index.tsx": js`
+          import { Link } from "@remix-run/react";
+
+          export default function Component() {
+            return <Link to="/redirect-document/a">Link</Link>
+          }
+        `,
+
+        "app/routes/redirect-document.a.tsx": js`
+          import { redirectDocument } from "@remix-run/node";
+          export const loader = () =>  redirectDocument("/redirect-document/b");
+        `,
+
+        "app/routes/redirect-document.b.tsx": js`
+          export default function Component() {
+            return <h1>Hello B!</h1>
+          }
+        `,
       },
     });
 
@@ -229,5 +264,19 @@ test.describe("redirects", () => {
     );
     await page.waitForSelector(`#app:has-text("Page 2")`);
     await page.waitForSelector(`#count:has-text("3")`);
+  });
+
+  test("supports hard redirects within the app via reloadDocument", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/redirect-document", true);
+    expect(await app.getHtml("button")).toMatch("Count:0");
+    await app.clickElement("button");
+    expect(await app.getHtml("button")).toMatch("Count:1");
+    await app.waitForNetworkAfter(() => app.clickLink("/redirect-document/a"));
+    await page.waitForSelector(`h1`);
+    // Hard reload resets client side react state
+    expect(await app.getHtml("button")).toMatch("Count:0");
   });
 });
