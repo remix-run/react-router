@@ -1,5 +1,4 @@
-import { isAbsolute, relative } from "node:path";
-import { builtinModules } from "node:module";
+import { isAbsolute } from "node:path";
 import type { Plugin } from "esbuild";
 
 import {
@@ -8,7 +7,6 @@ import {
 } from "../virtualModules";
 import { isCssSideEffectImportPath } from "../../plugins/cssSideEffectImports";
 import { createMatchPath } from "../../utils/tsconfig";
-import { detectPackageManager } from "../../../cli/detectPackageManager";
 import type { Context } from "../../context";
 import { getLoaderForFile } from "../../utils/loaders";
 
@@ -85,36 +83,6 @@ export function serverBareModulesPlugin(ctx: Context): Plugin {
           return undefined;
         }
 
-        let packageName = getNpmPackageName(path);
-        let pkgManager = detectPackageManager() ?? "npm";
-
-        // Warn if we can't find an import for a package.
-        if (
-          !isNodeBuiltIn(packageName) &&
-          !/\bnode_modules\b/.test(importer) &&
-          // Silence spurious warnings when using Yarn PnP. Yarn PnP doesn’t use
-          // a `node_modules` folder to keep its dependencies, so the above check
-          // will always fail.
-          (pkgManager === "npm" ||
-            (pkgManager === "yarn" && process.versions.pnp == null))
-        ) {
-          try {
-            require.resolve(path, { paths: [importer] });
-          } catch (error: unknown) {
-            ctx.logger.warn(`could not resolve "${path}"`, {
-              details: [
-                `You imported "${path}" in ${relative(
-                  process.cwd(),
-                  importer
-                )},`,
-                "but that package is not in your `node_modules`.",
-                "Did you forget to install it?",
-              ],
-              key: path,
-            });
-          }
-        }
-
         if (ctx.config.serverDependenciesToBundle === "all") {
           return undefined;
         }
@@ -136,17 +104,6 @@ export function serverBareModulesPlugin(ctx: Context): Plugin {
       });
     },
   };
-}
-
-function isNodeBuiltIn(packageName: string) {
-  return builtinModules.includes(packageName);
-}
-
-function getNpmPackageName(id: string): string {
-  let split = id.split("/");
-  let packageName = split[0];
-  if (packageName.startsWith("@")) packageName += `/${split[1]}`;
-  return packageName;
 }
 
 function isBareModuleId(id: string): boolean {

@@ -1,14 +1,12 @@
 import path from "node:path";
 import fse from "fs-extra";
 import { test, expect } from "@playwright/test";
-import { PassThrough } from "node:stream";
 
 import {
   createFixture,
   createAppFixture,
   js,
   json,
-  createFixtureProject,
   css,
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
@@ -309,76 +307,5 @@ test.describe("compiler", () => {
     let fontFile = files.find((file) => file.match(/font-[a-z0-9]{8}\.woff2/i));
     expect(cssFile).toBeTruthy();
     expect(fontFile).toBeTruthy();
-  });
-
-  test.describe("serverBareModulesPlugin", () => {
-    let ogConsole: typeof global.console;
-    test.beforeEach(() => {
-      ogConsole = global.console;
-      // @ts-ignore
-      global.console = {
-        log() {},
-        warn() {},
-        error() {},
-      };
-    });
-    test.afterEach(() => {
-      global.console = ogConsole;
-    });
-    test("warns when a module isn't installed", async () => {
-      let buildOutput: string;
-      let buildStdio = new PassThrough();
-
-      await expect(() =>
-        createFixtureProject({
-          buildStdio,
-          files: {
-            "app/routes/_index.tsx": js`
-            import { json } from "@remix-run/node";
-            import { useLoaderData } from "@remix-run/react";
-            import notInstalledMain from "some-not-installed-module";
-            import { notInstalledSub } from "some-not-installed-module/sub";
-
-            export function loader() {
-              return json({ main: notInstalledMain(), sub: notInstalledSub() });
-            }
-
-            export default function Index() {
-                let data = useLoaderData();
-                return null;
-              }
-              `,
-          },
-        })
-      ).rejects.toThrowError("Build failed, check the output above");
-
-      let chunks: Buffer[] = [];
-      buildOutput = await new Promise<string>((resolve, reject) => {
-        buildStdio.on("error", (error) => {
-          reject(error);
-        });
-        buildStdio.on("data", (chunk) => {
-          chunks.push(Buffer.from(chunk));
-        });
-        buildStdio.on("end", () => {
-          resolve(Buffer.concat(chunks).toString("utf8"));
-        });
-      });
-
-      let importer = path.join("app", "routes", "_index.tsx");
-
-      expect(buildOutput).toContain(
-        `could not resolve "some-not-installed-module"`
-      );
-      expect(buildOutput).toContain(
-        `You imported "some-not-installed-module" in ${importer},`
-      );
-      expect(buildOutput).toContain(
-        `could not resolve "some-not-installed-module/sub"`
-      );
-      expect(buildOutput).toContain(
-        `You imported "some-not-installed-module/sub" in ${importer},`
-      );
-    });
   });
 });
