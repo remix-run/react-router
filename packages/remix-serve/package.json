@@ -11,8 +11,6 @@
     "directory": "packages/remix-serve"
   },
   "license": "MIT",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
   "bin": {
     "remix-serve": "dist/cli.js"
   },

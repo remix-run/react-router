@@ -1,6 +1,6 @@
 {
   "include": ["**/*.ts"],
-  "exclude": ["dist", "__tests__", "node_modules"],
+  "exclude": ["dist", "node_modules"],
   "compilerOptions": {
     "lib": ["ES2022"],
     "target": "ES2022",

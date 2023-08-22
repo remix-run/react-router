@@ -1,11 +1,19 @@
-import "./env";
+import "@remix-run/node/install";
 import path from "node:path";
 import os from "node:os";
 import url from "node:url";
-import { broadcastDevReady, installGlobals } from "@remix-run/node";
+import {
+  type ServerBuild,
+  broadcastDevReady,
+  installGlobals,
+} from "@remix-run/node";
+import { createRequestHandler } from "@remix-run/express";
+import compression from "compression";
+import express from "express";
+import morgan from "morgan";
 import sourceMapSupport from "source-map-support";
 
-import { createApp } from "./index";
+process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 
 sourceMapSupport.install();
 installGlobals();
@@ -28,7 +36,7 @@ async function run() {
     path.resolve(process.cwd(), buildPathArg)
   ).href;
 
-  let build = await import(buildPath);
+  let build: ServerBuild = await import(buildPath);
 
   let onListen = () => {
     let address =
@@ -50,12 +58,36 @@ async function run() {
     }
   };
 
-  let app = createApp(
-    buildPath,
-    process.env.NODE_ENV,
+  let app = express();
+  app.disable("x-powered-by");
+  app.use(compression());
+  app.use(
     build.publicPath,
-    build.assetsBuildDirectory
+    express.static(build.assetsBuildDirectory, {
+      immutable: true,
+      maxAge: "1y",
+    })
   );
+  app.use(express.static("public", { maxAge: "1h" }));
+  app.use(morgan("tiny"));
+
+  let requestHandler: ReturnType<typeof createRequestHandler> | undefined;
+  app.all("*", async (req, res, next) => {
+    try {
+      if (!requestHandler) {
+        let build = await import(buildPath);
+        requestHandler = createRequestHandler({
+          build,
+          mode: process.env.NODE_ENV,
+        });
+      }
+
+      return await requestHandler(req, res, next);
+    } catch (error) {
+      next(error);
+    }
+  });
+
   let server = process.env.HOST
     ? app.listen(port, process.env.HOST, onListen)
     : app.listen(port, onListen);
