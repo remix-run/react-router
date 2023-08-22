@@ -1747,12 +1747,14 @@ describe("shared server runtime", () => {
       });
       let build = mockServerBuild({
         root: {
+          path: "/",
           default: {},
           loader: rootLoader,
           ErrorBoundary: {},
         },
         "routes/_index": {
           parentId: "root",
+          index: true,
           default: {},
           loader: indexLoader,
         },
@@ -1772,21 +1774,19 @@ describe("shared server runtime", () => {
       let result = await handler(request);
       expect(result.status).toBe(500);
       expect((await result.text()).includes(errorMessage)).toBe(true);
-      expect(rootLoader.mock.calls.length).toBe(0);
-      expect(indexLoader.mock.calls.length).toBe(0);
+      expect(rootLoader.mock.calls.length).toBe(1);
+      expect(indexLoader.mock.calls.length).toBe(1);
 
       let calls = build.entry.module.default.mock.calls;
       expect(calls.length).toBe(2);
-      expect(spy.console.mock.calls[0][0].data).toEqual(
-        'Error: No route matches URL "/"'
-      );
-      expect(spy.console.mock.calls[1][0].message).toEqual(
-        "thrown from handleDocumentRequest and expected to be logged in console only once"
-      );
-      expect(spy.console.mock.calls[2][0].message).toEqual(
-        "second error thrown from handleDocumentRequest"
-      );
-      expect(spy.console.mock.calls.length).toBe(3);
+      expect(spy.console.mock.calls).toEqual([
+        [
+          new Error(
+            "thrown from handleDocumentRequest and expected to be logged in console only once"
+          ),
+        ],
+        [new Error("second error thrown from handleDocumentRequest")],
+      ]);
     });
   });
 

@@ -500,7 +500,11 @@ test.describe("Error Sanitization", () => {
               ) {
                 console.error("App Specific Error Logging:");
                 console.error("  Request: " + request.method + " " + request.url);
-                if (error instanceof Error) {
+                if (isRouteErrorResponse(error)) {
+                  console.error("  Status: " + error.status + " " + error.statusText);
+                  console.error("  Error: " + error.error.message);
+                  console.error("  Stack: " + error.error.stack);
+                } else if (error instanceof Error) {
                   console.error("  Error: " + error.message);
                   console.error("  Stack: " + error.stack);
                 } else {
@@ -647,11 +651,12 @@ test.describe("Error Sanitization", () => {
       expect(errorLogs[1][0]).toEqual(
         "  Request: GET test://test/?_data=not-a-route"
       );
-      expect(errorLogs[2][0]).toEqual(
+      expect(errorLogs[2][0]).toEqual("  Status: 403 Forbidden");
+      expect(errorLogs[3][0]).toEqual(
         '  Error: Route "not-a-route" does not match URL "/"'
       );
-      expect(errorLogs[3][0]).toMatch(" at ");
-      expect(errorLogs.length).toBe(4);
+      expect(errorLogs[4][0]).toMatch(" at ");
+      expect(errorLogs.length).toBe(5);
     });
   });
 });

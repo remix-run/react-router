@@ -51,7 +51,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     build.entry.module.handleError ||
     ((error, { request }) => {
       if (serverMode !== ServerMode.Test && !request.signal.aborted) {
-        console.error(error);
+        console.error(isRouteErrorResponse(error) ? error.error : error);
       }
     });
 
@@ -182,8 +182,8 @@ async function handleDataRequestRR(
     }
 
     if (isRouteErrorResponse(error)) {
-      if (error.error) {
-        handleError(error.error);
+      if (error) {
+        handleError(error);
       }
       return errorResponseToJson(error, serverMode);
     }
@@ -336,8 +336,8 @@ async function handleResourceRequestRR(
     }
 
     if (isRouteErrorResponse(error)) {
-      if (error.error) {
-        handleError(error.error);
+      if (error) {
+        handleError(error);
       }
       return errorResponseToJson(error, serverMode);
     }
