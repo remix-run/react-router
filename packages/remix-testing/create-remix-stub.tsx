@@ -1,28 +1,61 @@
 import * as React from "react";
-import type { HydrationState, InitialEntry, Router } from "@remix-run/router";
+import {
+  UNSAFE_convertRoutesToDataRoutes,
+  type ActionFunctionArgs,
+  type HydrationState,
+  type InitialEntry,
+  type LoaderFunctionArgs,
+  type Router,
+} from "@remix-run/router";
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
 import type {
   UNSAFE_FutureConfig as FutureConfig,
   UNSAFE_AssetsManifest as AssetsManifest,
   UNSAFE_EntryRoute as EntryRoute,
-  UNSAFE_RouteManifest as RouteManifest,
   UNSAFE_RouteModules as RouteModules,
   UNSAFE_RemixContextObject as RemixContextObject,
+  MetaFunction,
 } from "@remix-run/react";
 import type {
   DataRouteObject,
   IndexRouteObject,
   NonIndexRouteObject,
-  RouteObject,
 } from "react-router-dom";
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
+import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
 import type {
   ActionFunction,
   AppLoadContext,
+  LinksFunction,
   LoaderFunction,
 } from "@remix-run/server-runtime";
 
-type RemixStubOptions = {
+interface StubIndexRouteObject
+  extends Omit<
+    IndexRouteObject,
+    "loader" | "action" | "element" | "errorElement" | "children"
+  > {
+  loader?: LoaderFunction;
+  action?: ActionFunction;
+  children?: StubRouteObject[];
+  meta?: MetaFunction;
+  links?: LinksFunction;
+}
+
+interface StubNonIndexRouteObject
+  extends Omit<
+    NonIndexRouteObject,
+    "loader" | "action" | "element" | "errorElement" | "children"
+  > {
+  loader?: LoaderFunction;
+  action?: ActionFunction;
+  children?: StubRouteObject[];
+  meta?: MetaFunction;
+  links?: LinksFunction;
+}
+
+type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
+
+export interface RemixStubProps {
   /**
    *  The initial entries in the history stack. This allows you to start a test with
    *  multiple locations already in the history stack (for testing a back navigation, etc.)
@@ -30,6 +63,15 @@ type RemixStubOptions = {
    *  e.g. initialEntries={["/home", "/about", "/contact"]}
    */
   initialEntries?: InitialEntry[];
+
+  /**
+   * The initial index in the history stack to render. This allows you to start a test at a specific entry.
+   * It defaults to the last entry in initialEntries.
+   * e.g.
+   *   initialEntries: ["/", "/events/123"]
+   *   initialIndex: 1 // start at "/events/123"
+   */
+  initialIndex?: number;
 
   /**
    *  Used to set the route's initial loader and action data.
@@ -41,66 +83,13 @@ type RemixStubOptions = {
   hydrationData?: HydrationState;
 
   /**
-   * The initial index in the history stack to render. This allows you to start a test at a specific entry.
-   * It defaults to the last entry in initialEntries.
-   * e.g.
-   *   initialEntries: ["/", "/events/123"]
-   *   initialIndex: 1 // start at "/events/123"
+   * Future flags mimicking the settings in remix.config.js
    */
-  initialIndex?: number;
-
   remixConfigFuture?: Partial<FutureConfig>;
-};
-
-function patchRoutesWithContext(
-  routes: (StubRouteObject | StubDataRouteObject)[],
-  context: AppLoadContext
-): (RouteObject | DataRouteObject)[] {
-  return routes.map((route) => {
-    if (route.loader) {
-      let loader = route.loader;
-      route.loader = (args) => loader({ ...args, context });
-    }
-
-    if (route.action) {
-      let action = route.action;
-      route.action = (args) => action({ ...args, context });
-    }
-
-    if (route.children) {
-      return {
-        ...route,
-        children: patchRoutesWithContext(route.children, context),
-      };
-    }
-
-    return route as RouteObject | DataRouteObject;
-  }) as (RouteObject | DataRouteObject)[];
 }
-
-interface StubIndexRouteObject
-  extends Omit<IndexRouteObject, "loader" | "action" | "children"> {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-}
-
-interface StubNonIndexRouteObject
-  extends Omit<NonIndexRouteObject, "loader" | "action" | "children"> {
-  loader?: LoaderFunction;
-  action?: ActionFunction;
-  children?: StubRouteObject[];
-}
-
-type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
-
-type StubDataRouteObject = StubRouteObject & {
-  children?: DataRouteObject[];
-  id: string;
-};
 
 export function createRemixStub(
-  routes: (StubRouteObject | StubDataRouteObject)[],
+  routes: StubRouteObject[],
   context: AppLoadContext = {}
 ) {
   return function RemixStub({
@@ -108,29 +97,36 @@ export function createRemixStub(
     initialIndex,
     hydrationData,
     remixConfigFuture,
-  }: RemixStubOptions) {
+  }: RemixStubProps) {
     let routerRef = React.useRef<Router>();
     let remixContextRef = React.useRef<RemixContextObject>();
 
     if (routerRef.current == null) {
-      // update the routes to include context in the loader/action
-      let patched = patchRoutesWithContext(routes, context);
+      remixContextRef.current = {
+        future: { ...remixConfigFuture },
+        manifest: {
+          routes: {},
+          entry: { imports: [], module: "" },
+          url: "",
+          version: "",
+        },
+        routeModules: {},
+      };
 
+      // Update the routes to include context in the loader/action and populate
+      // the manifest and routeModules during the walk
+      let patched = processRoutes(
+        // @ts-expect-error loader/action context types don't match :/
+        UNSAFE_convertRoutesToDataRoutes(routes, (r) => r),
+        context,
+        remixContextRef.current.manifest,
+        remixContextRef.current.routeModules
+      );
       routerRef.current = createMemoryRouter(patched, {
         initialEntries,
         initialIndex,
         hydrationData,
       });
-    }
-
-    if (remixContextRef.current == null) {
-      remixContextRef.current = {
-        future: {
-          ...remixConfigFuture,
-        },
-        manifest: createManifest(routerRef.current.routes),
-        routeModules: createRouteModules(routerRef.current.routes),
-      };
     }
 
     return (
@@ -141,64 +137,71 @@ export function createRemixStub(
   };
 }
 
-function createManifest(routes: RouteObject[]): AssetsManifest {
-  return {
-    routes: createRouteManifest(routes),
-    entry: { imports: [], module: "" },
-    url: "",
-    version: "",
-  };
-}
-
-function createRouteManifest(
-  routes: RouteObject[],
-  manifest?: RouteManifest<EntryRoute>,
+function processRoutes(
+  routes: StubRouteObject[],
+  context: AppLoadContext,
+  manifest: AssetsManifest,
+  routeModules: RouteModules,
   parentId?: string
-): RouteManifest<EntryRoute> {
-  return routes.reduce((manifest, route) => {
-    if (route.children) {
-      createRouteManifest(route.children, manifest, route.id);
-    }
-    manifest[route.id!] = convertToEntryRoute(route, parentId);
-    return manifest;
-  }, manifest || {});
-}
-
-function createRouteModules(
-  routes: RouteObject[],
-  routeModules?: RouteModules
-): RouteModules {
-  return routes.reduce((modules, route) => {
-    if (route.children) {
-      createRouteModules(route.children, modules);
+): DataRouteObject[] {
+  return routes.map((route) => {
+    if (!route.id) {
+      throw new Error(
+        "Expected a route.id in @remix-run/testing processRoutes() function"
+      );
     }
 
-    modules[route.id!] = {
-      ErrorBoundary: undefined,
-      default: () => route.element,
+    // Patch in the Remix context to loaders/actions
+    let { loader, action } = route;
+    let newRoute: DataRouteObject = {
+      id: route.id,
+      path: route.path,
+      index: route.index,
+      Component: route.Component,
+      ErrorBoundary: route.ErrorBoundary,
+      action: action
+        ? (args: ActionFunctionArgs) => action!({ ...args, context })
+        : undefined,
+      loader: loader
+        ? (args: LoaderFunctionArgs) => loader!({ ...args, context })
+        : undefined,
       handle: route.handle,
-      links: undefined,
-      meta: undefined,
-      shouldRevalidate: undefined,
+      shouldRevalidate: route.shouldRevalidate,
     };
 
-    return modules;
-  }, routeModules || {});
-}
+    // Add the EntryRoute to the manifest
+    let entryRoute: EntryRoute = {
+      id: route.id,
+      path: route.path,
+      index: route.index,
+      parentId,
+      hasAction: route.action != null,
+      hasLoader: route.loader != null,
+      hasErrorBoundary: route.ErrorBoundary != null,
+      module: "build/stub-path-to-module.js", // any need for this?
+    };
+    manifest.routes[newRoute.id] = entryRoute;
 
-function convertToEntryRoute(
-  route: RouteObject,
-  parentId?: string
-): EntryRoute {
-  return {
-    id: route.id!,
-    index: route.index,
-    caseSensitive: route.caseSensitive,
-    path: route.path,
-    parentId,
-    hasAction: !!route.action,
-    hasLoader: !!route.loader,
-    module: "",
-    hasErrorBoundary: false,
-  };
+    // Add the route to routeModules
+    routeModules[route.id] = {
+      default: route.Component || Outlet,
+      ErrorBoundary: route.ErrorBoundary || undefined,
+      handle: route.handle,
+      links: route.links,
+      meta: route.meta,
+      shouldRevalidate: route.shouldRevalidate,
+    };
+
+    if (route.children) {
+      newRoute.children = processRoutes(
+        route.children,
+        context,
+        manifest,
+        routeModules,
+        newRoute.id
+      );
+    }
+
+    return newRoute;
+  });
 }

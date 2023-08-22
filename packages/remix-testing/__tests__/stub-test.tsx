@@ -9,7 +9,7 @@ test("renders a route", () => {
   let RemixStub = unstable_createRemixStub([
     {
       path: "/",
-      element: <div>HOME</div>,
+      Component: () => <div>HOME</div>,
     },
   ]);
 
@@ -21,16 +21,18 @@ test("renders a route", () => {
 test("renders a nested route", () => {
   let RemixStub = unstable_createRemixStub([
     {
-      element: (
-        <div>
-          <h1>ROOT</h1>
-          <Outlet />
-        </div>
-      ),
+      Component() {
+        return (
+          <div>
+            <h1>ROOT</h1>
+            <Outlet />
+          </div>
+        );
+      },
       children: [
         {
           path: "/",
-          element: <div>INDEX</div>,
+          Component: () => <div>INDEX</div>,
         },
       ],
     },
@@ -52,7 +54,7 @@ test("loaders work", async () => {
     {
       path: "/",
       index: true,
-      element: <App />,
+      Component: App,
       loader() {
         return json({ message: "hello" });
       },
@@ -99,14 +101,14 @@ test("can pass context values", async () => {
     [
       {
         path: "/",
-        element: <App />,
+        Component: App,
         loader({ context }) {
           return json(context);
         },
         children: [
           {
             path: "hello",
-            element: <Hello />,
+            Component: Hello,
             loader({ context }) {
               return json(context);
             },
@@ -141,16 +143,18 @@ test("all routes have ids", () => {
 
   let RemixStub = unstable_createRemixStub([
     {
-      element: (
-        <div>
-          <h1>ROOT</h1>
-          <Outlet />
-        </div>
-      ),
+      Component() {
+        return (
+          <div>
+            <h1>ROOT</h1>
+            <Outlet />
+          </div>
+        );
+      },
       children: [
         {
           path: "/",
-          element: <Home />,
+          Component: Home,
         },
       ],
     },
