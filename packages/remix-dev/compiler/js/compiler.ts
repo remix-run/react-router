@@ -33,23 +33,10 @@ type Compiler = {
   dispose: () => Promise<void>;
 };
 
-const getExternals = (remixConfig: RemixConfig): string[] => {
-  // For the browser build, exclude node built-ins that don't have a
-  // browser-safe alternative installed in node_modules. Nothing should
-  // *actually* be external in the browser build (we want to bundle all deps) so
-  // this is really just making sure we don't accidentally have any dependencies
-  // on node built-ins in browser bundles.
+const getFakeBuiltins = (remixConfig: RemixConfig): string[] => {
   let dependencies = Object.keys(getAppDependencies(remixConfig));
   let fakeBuiltins = nodeBuiltins.filter((mod) => dependencies.includes(mod));
-
-  if (fakeBuiltins.length > 0) {
-    throw new Error(
-      `It appears you're using a module that is built in to node, but you installed it as a dependency which could cause problems. Please remove ${fakeBuiltins.join(
-        ", "
-      )} before continuing.`
-    );
-  }
-  return nodeBuiltins.filter((mod) => !dependencies.includes(mod));
+  return fakeBuiltins;
 };
 
 const createEsbuildConfig = (
@@ -82,6 +69,15 @@ const createEsbuildConfig = (
     );
   }
 
+  let fakeBuiltins = getFakeBuiltins(ctx.config);
+  if (fakeBuiltins.length > 0) {
+    throw new Error(
+      `It appears you're using a module that is built in to Node, but you installed it as a dependency which could cause problems. Please remove ${fakeBuiltins.join(
+        ", "
+      )} before continuing.`
+    );
+  }
+
   let plugins: esbuild.Plugin[] = [
     browserRouteModulesPlugin(ctx, /\?browser$/),
     cssBundlePlugin(refs),
@@ -98,7 +94,14 @@ const createEsbuildConfig = (
     emptyModulesPlugin(ctx, /^@remix-run\/(deno|cloudflare|node)(\/.*)?$/, {
       includeNodeModules: true,
     }),
-    nodeModulesPolyfillPlugin(),
+    nodeModulesPolyfillPlugin({
+      // For the browser build, we replace any Node built-ins that don't have a
+      // polyfill with an empty module. This ensures the build can pass without
+      // having to mark all Node built-ins as external which can result in other
+      // issues, e.g. https://github.com/remix-run/remix/issues/5521. We then
+      // rely on tree-shaking to remove all unused polyfills and fallbacks.
+      fallback: "empty",
+    }),
     externalPlugin(/^node:.*/, { sideEffects: false }),
   ];
 
@@ -111,7 +114,6 @@ const createEsbuildConfig = (
     outdir: ctx.config.assetsBuildDirectory,
     platform: "browser",
     format: "esm",
-    external: getExternals(ctx.config),
     loader: loaders,
     bundle: true,
     logLevel: "silent",
