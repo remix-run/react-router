@@ -86,6 +86,17 @@ describe("In-memory session storage", () => {
 
     expect(session.get("user")).toEqual("mjackson");
   });
+
+  it("uses random hash keys as session ids", async () => {
+    let { getSession, commitSession } = createMemorySessionStorage({
+      cookie: { secrets: ["secret1"] },
+    });
+    let session = await getSession();
+    session.set("user", "mjackson");
+    let setCookie = await commitSession(session);
+    session = await getSession(getCookieFromSetCookie(setCookie));
+    expect(session.id).toMatch(/^[a-z0-9]{8}$/);
+  });
 });
 
 describe("Cookie session storage", () => {

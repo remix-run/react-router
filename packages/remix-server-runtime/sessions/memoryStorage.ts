@@ -37,7 +37,6 @@ export const createMemorySessionStorageFactory =
   <Data = SessionData, FlashData = Data>({
     cookie,
   }: MemorySessionStorageOptions = {}): SessionStorage<Data, FlashData> => {
-    let uniqueId = 0;
     let map = new Map<
       string,
       { data: FlashSessionData<Data, FlashData>; expires?: Date }
@@ -46,7 +45,7 @@ export const createMemorySessionStorageFactory =
     return createSessionStorage({
       cookie,
       async createData(data, expires) {
-        let id = (++uniqueId).toString();
+        let id = Math.random().toString(36).substring(2, 10);
         map.set(id, { data, expires });
         return id;
       },
