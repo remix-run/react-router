@@ -40,8 +40,8 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
       let content = JSON.stringify({ data, expires });
 
       while (true) {
-        // TODO: Once node v16 is available on AWS we should use the webcrypto
-        // API's crypto.getRandomValues() function here instead.
+        // TODO: Once Node v19 is supported we should use the globally provided
+        // Web Crypto API's crypto.getRandomValues() function here instead.
         let randomBytes = crypto.randomBytes(8);
         // This storage manages an id space of 2^64 ids, which is far greater
         // than the maximum number of files allowed on an NTFS or ext4 volume

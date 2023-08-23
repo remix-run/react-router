@@ -5,22 +5,18 @@ export type UnsignFunction = (
   secret: string
 ) => Promise<string | false>;
 
-// TODO: Once node v16 is available on AWS we should use the globally provided
-// webcrypto "crypto" variable and re-enable this code-path in "./cookies.ts"
-// instead of referencing the sign and unsign globals.
+// TODO: Once Node v19 is supported we should use the globally provided
+// Web Crypto API's and re-enable this code-path in "./cookies.ts"
+// instead of referencing the `sign` and `unsign` globals.
 
 // const encoder = new TextEncoder();
 
-// export async function sign(value: string, secret: string): Promise<string> {
-//   let key = await crypto.subtle.importKey(
-//     "raw",
-//     encoder.encode(secret),
-//     { name: "HMAC", hash: "SHA-256" },
-//     false,
-//     ["sign"]
-//   );
-
+// export const sign: SignFunction = async (
+//   value: string,
+//   secret: string
+// ): Promise<string> => {
 //   let data = encoder.encode(value);
+//   let key = await createKey(secret, ["sign"]);
 //   let signature = await crypto.subtle.sign("HMAC", key, data);
 //   let hash = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(
 //     /=+$/,
@@ -28,31 +24,36 @@ export type UnsignFunction = (
 //   );
 
 //   return value + "." + hash;
-// }
+// };
 
-// export async function unsign(
+// export const unsign: UnsignFunction = async (
 //   cookie: string,
 //   secret: string
-// ): Promise<string | false> {
-//   let key = await crypto.subtle.importKey(
-//     "raw",
-//     encoder.encode(secret),
-//     { name: "HMAC", hash: "SHA-256" },
-//     false,
-//     ["verify"]
-//   );
-
+// ): Promise<string | false> => {
 //   let value = cookie.slice(0, cookie.lastIndexOf("."));
 //   let hash = cookie.slice(cookie.lastIndexOf(".") + 1);
 
 //   let data = encoder.encode(value);
+//   let key = await createKey(secret, ["verify"]);
 //   let signature = byteStringToUint8Array(atob(hash));
 //   let valid = await crypto.subtle.verify("HMAC", key, signature, data);
 
 //   return valid ? value : false;
-// }
+// };
 
-// function byteStringToUint8Array(byteString: string): Uint8Array {
+// const createKey = async (
+//   secret: string,
+//   usages: CryptoKey["usages"]
+// ): Promise<CryptoKey> =>
+//   crypto.subtle.importKey(
+//     "raw",
+//     encoder.encode(secret),
+//     { name: "HMAC", hash: "SHA-256" },
+//     false,
+//     usages
+//   );
+
+// const byteStringToUint8Array = (byteString: string): Uint8Array => {
 //   let array = new Uint8Array(byteString.length);
 
 //   for (let i = 0; i < byteString.length; i++) {
@@ -60,4 +61,4 @@ export type UnsignFunction = (
 //   }
 
 //   return array;
-// }
+// };
