@@ -7080,6 +7080,115 @@ describe("a router", () => {
       expect(t.window.location.replace).not.toHaveBeenCalled();
     });
 
+    it("preserves action revalidation across multiple redirects", async () => {
+      let t = setup({
+        initialEntries: ["/action"],
+        routes: [
+          {
+            id: "action",
+            path: "/action",
+            loader: true,
+            children: [
+              {
+                id: "index",
+                index: true,
+                action: true,
+                loader: true,
+              },
+              {
+                id: "one",
+                path: "1",
+                loader: true,
+              },
+              {
+                path: "2",
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            action: "ACTION 0",
+          },
+        },
+      });
+
+      let A = await t.navigate("/action?index", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let B = await A.actions.index.redirectReturn("/action/1");
+      await B.loaders.action.resolve("ACTION 1");
+      let C = await B.loaders.one.redirectReturn("/action/2");
+      await C.loaders.action.resolve("ACTION 2");
+
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/action/2",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          action: "ACTION 2",
+        },
+      });
+    });
+
+    it("preserves X-Remix-Revalidate revalidation across multiple redirects", async () => {
+      let t = setup({
+        initialEntries: ["/loader"],
+        routes: [
+          {
+            id: "loader",
+            path: "/loader",
+            loader: true,
+            children: [
+              {
+                id: "index",
+                index: true,
+              },
+              {
+                id: "one",
+                path: "1",
+                loader: true,
+              },
+              {
+                id: "two",
+                path: "2",
+                loader: true,
+              },
+              {
+                path: "3",
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            loader: "LOADER 0",
+          },
+        },
+      });
+
+      let A = await t.navigate("/loader/1");
+      let B = await A.loaders.one.redirectReturn("/loader/2", undefined, {
+        "X-Remix-Revalidate": "true",
+      });
+      await B.loaders.loader.resolve("LOADER 3");
+      let C = await B.loaders.two.redirectReturn("/loader/3");
+      await C.loaders.loader.resolve("LOADER 3");
+
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/loader/3",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          loader: "LOADER 3",
+        },
+      });
+    });
+
     describe("redirect status code handling", () => {
       it("should not treat 300 as a redirect", async () => {
         let t = setup({ routes: REDIRECT_ROUTES });
