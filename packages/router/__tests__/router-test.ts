@@ -19,7 +19,6 @@ import {
   createStaticHandler,
   defer,
   UNSAFE_DEFERRED_SYMBOL,
-  ErrorResponse,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
   json,
@@ -39,6 +38,7 @@ import type {
 } from "../utils";
 import {
   AbortedDeferredError,
+  ErrorResponseImpl,
   isRouteErrorResponse,
   stripBasename,
 } from "../utils";
@@ -2678,7 +2678,7 @@ describe("a router", () => {
         root: "ROOT",
       });
       expect(t.router.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
@@ -2707,7 +2707,7 @@ describe("a router", () => {
 
       t.navigate("/not-found");
       expect(t.router.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
@@ -2754,7 +2754,7 @@ describe("a router", () => {
         root: "ROOT*",
       });
       expect(t.router.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
@@ -4034,7 +4034,7 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         expect(t.router.state.errors).toEqual({
-          child: new ErrorResponse(
+          child: new ErrorResponseImpl(
             405,
             "Method Not Allowed",
             new Error(
@@ -4094,7 +4094,7 @@ describe("a router", () => {
         });
         expect(t.router.state.actionData).toBe(null);
         expect(t.router.state.errors).toEqual({
-          grandchild: new ErrorResponse(
+          grandchild: new ErrorResponseImpl(
             405,
             "Method Not Allowed",
             new Error(
@@ -4813,7 +4813,7 @@ describe("a router", () => {
         navigation: IDLE_NAVIGATION,
         loaderData: {},
         errors: {
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/junk"'),
@@ -4963,7 +4963,7 @@ describe("a router", () => {
         search: "",
       });
       expect(t.router.state.errors).toEqual({
-        tasks: new ErrorResponse(
+        tasks: new ErrorResponseImpl(
           405,
           "Method Not Allowed",
           new Error('Invalid request method "HEAD"'),
@@ -5003,7 +5003,7 @@ describe("a router", () => {
         search: "",
       });
       expect(t.router.state.errors).toEqual({
-        tasks: new ErrorResponse(
+        tasks: new ErrorResponseImpl(
           405,
           "Method Not Allowed",
           new Error('Invalid request method "OPTIONS"'),
@@ -5915,7 +5915,7 @@ describe("a router", () => {
         },
         actionData: null,
         errors: {
-          tasks: new ErrorResponse(400, "Bad Request", "broken"),
+          tasks: new ErrorResponseImpl(400, "Bad Request", "broken"),
         },
       });
     });
@@ -5950,7 +5950,7 @@ describe("a router", () => {
         },
         actionData: null,
         errors: {
-          tasks: new ErrorResponse(400, "Bad Request", { key: "value" }),
+          tasks: new ErrorResponseImpl(400, "Bad Request", { key: "value" }),
         },
       });
     });
@@ -5985,7 +5985,7 @@ describe("a router", () => {
         },
         actionData: null,
         errors: {
-          tasks: new ErrorResponse(400, "Bad Request", { key: "value" }),
+          tasks: new ErrorResponseImpl(400, "Bad Request", { key: "value" }),
         },
       });
     });
@@ -6563,7 +6563,7 @@ describe("a router", () => {
       });
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
-          "root": ErrorResponse {
+          "root": ErrorResponseImpl {
             "data": "Error: Unable to encode submission body",
             "error": [Error: Unable to encode submission body],
             "internal": true,
@@ -6586,7 +6586,7 @@ describe("a router", () => {
       });
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
-          "root": ErrorResponse {
+          "root": ErrorResponseImpl {
             "data": "Error: Unable to encode submission body",
             "error": [Error: Unable to encode submission body],
             "internal": true,
@@ -9091,7 +9091,7 @@ describe("a router", () => {
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(400, undefined, ""),
+          root: new ErrorResponseImpl(400, undefined, ""),
         });
       });
 
@@ -9104,7 +9104,7 @@ describe("a router", () => {
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(400, undefined, ""),
+          root: new ErrorResponseImpl(400, undefined, ""),
         });
       });
 
@@ -9117,7 +9117,7 @@ describe("a router", () => {
         await A.actions.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(400, undefined, ""),
+          root: new ErrorResponseImpl(400, undefined, ""),
         });
       });
 
@@ -9143,7 +9143,7 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             405,
             "Method Not Allowed",
             new Error(
@@ -9172,7 +9172,7 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             400,
             "Bad Request",
             new Error("Unable to encode submission body"),
@@ -9221,7 +9221,7 @@ describe("a router", () => {
         await t.fetch("/not-found", "key2", "wit");
         expect(t.router.getFetcher("key2")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9246,7 +9246,7 @@ describe("a router", () => {
         });
         expect(t.router.getFetcher("key4")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          wit: new ErrorResponse(
+          wit: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9257,7 +9257,7 @@ describe("a router", () => {
         await t.fetch("/not-found", "key5", "wit");
         expect(t.router.getFetcher("key5")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          wit: new ErrorResponse(
+          wit: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9279,7 +9279,7 @@ describe("a router", () => {
         await t.fetch("/not-found", "key7", "witout");
         expect(t.router.getFetcher("key7")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9650,12 +9650,12 @@ describe("a router", () => {
 
           await A.actions.foo.reject(new Response(null, { status: 400 }));
           expect(t.router.state.errors).toEqual({
-            root: new ErrorResponse(400, undefined, ""),
+            root: new ErrorResponseImpl(400, undefined, ""),
           });
 
           await B.actions.foo.resolve("B");
           expect(t.router.state.errors).toEqual({
-            root: new ErrorResponse(400, undefined, ""),
+            root: new ErrorResponseImpl(400, undefined, ""),
           });
 
           await B.loaders.root.resolve(null);
@@ -9688,7 +9688,7 @@ describe("a router", () => {
 
           await B.actions.foo.reject(new Response(null, { status: 400 }));
           expect(t.router.state.errors).toEqual({
-            root: new ErrorResponse(400, undefined, ""),
+            root: new ErrorResponseImpl(400, undefined, ""),
           });
         });
       });
@@ -11426,7 +11426,7 @@ describe("a router", () => {
         await t.fetch("/parent");
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: No route matches URL "/parent"",
               "error": [Error: No route matches URL "/parent"],
               "internal": true,
@@ -11461,7 +11461,7 @@ describe("a router", () => {
         await t.fetch("/parent?index");
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: No route matches URL "/parent?index"",
               "error": [Error: No route matches URL "/parent?index"],
               "internal": true,
@@ -11498,7 +11498,7 @@ describe("a router", () => {
         });
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: You made a POST request to "/parent" but did not provide an \`action\` for route "parent", so there is no way to handle the request.",
               "error": [Error: You made a POST request to "/parent" but did not provide an \`action\` for route "parent", so there is no way to handle the request.],
               "internal": true,
@@ -11535,7 +11535,7 @@ describe("a router", () => {
         });
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: You made a POST request to "/parent?index" but did not provide an \`action\` for route "parent", so there is no way to handle the request.",
               "error": [Error: You made a POST request to "/parent?index" but did not provide an \`action\` for route "parent", so there is no way to handle the request.],
               "internal": true,
@@ -12449,7 +12449,7 @@ describe("a router", () => {
         },
       });
       expect(t.router.state.errors).toEqual({
-        parent: new ErrorResponse(400, "Bad Request", "broken", false),
+        parent: new ErrorResponseImpl(400, "Bad Request", "broken", false),
       });
 
       await parentDfd.resolve("Yep!");
@@ -12555,7 +12555,7 @@ describe("a router", () => {
         b: "B LOADER",
       });
       expect(t.router.state.errors).toEqual({
-        bChild: new ErrorResponse(400, "Bad Request", "broken", false),
+        bChild: new ErrorResponseImpl(400, "Bad Request", "broken", false),
       });
     });
 
@@ -14993,7 +14993,7 @@ describe("a router", () => {
           loaderData: {},
           actionData: null,
           errors: {
-            index: new ErrorResponse(
+            index: new ErrorResponseImpl(
               404,
               "Not Found",
               new Error('No route matches URL "/not/found"'),
@@ -15201,7 +15201,7 @@ describe("a router", () => {
           actionData: null,
           loaderData: {},
           errors: {
-            root: new ErrorResponse(
+            root: new ErrorResponseImpl(
               405,
               "Method Not Allowed",
               new Error(
@@ -15228,7 +15228,7 @@ describe("a router", () => {
           actionData: null,
           loaderData: {},
           errors: {
-            root: new ErrorResponse(
+            root: new ErrorResponseImpl(
               405,
               "Method Not Allowed",
               new Error('Invalid request method "OPTIONS"'),
@@ -15505,7 +15505,7 @@ describe("a router", () => {
           });
           expect(context.activeDeferreds).toEqual(null);
           expect(context.errors).toEqual({
-            parent: new ErrorResponse(
+            parent: new ErrorResponseImpl(
               400,
               "Bad Request",
               new Error("defer() is not supported in actions"),
@@ -16614,7 +16614,7 @@ describe("a router", () => {
           } catch (e) {
             // eslint-disable-next-line jest/no-conditional-expect
             expect(e).toEqual(
-              new ErrorResponse(
+              new ErrorResponseImpl(
                 400,
                 "Bad Request",
                 new Error("defer() is not supported in actions"),
@@ -17067,7 +17067,7 @@ describe("a router", () => {
       expect(currentRouter.state.fetchers.get("key")?.data).toBe(undefined);
       expect(currentRouter.state.errors).toMatchInlineSnapshot(`
         {
-          "root": ErrorResponse {
+          "root": ErrorResponseImpl {
             "data": "Error: No route matches URL "/foo"",
             "error": [Error: No route matches URL "/foo"],
             "internal": true,
@@ -17161,7 +17161,7 @@ describe("a router", () => {
       // Fetcher should have been revalidated but theown a 404 wince the route was removed
       expect(currentRouter.state.fetchers.get("key")?.data).toBe(undefined);
       expect(currentRouter.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/foo"'),

@@ -9,6 +9,7 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
+  ErrorResponse,
   FormEncType,
   FormMethod,
   HTMLFormMethod,
@@ -29,7 +30,6 @@ export type {
 
 export {
   AbortedDeferredError,
-  ErrorResponse,
   defer,
   generatePath,
   getToPathname,
@@ -82,6 +82,7 @@ export * from "./router";
 export type { RouteManifest as UNSAFE_RouteManifest } from "./utils";
 export {
   DeferredData as UNSAFE_DeferredData,
+  ErrorResponseImpl as UNSAFE_ErrorResponse,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
 } from "./utils";

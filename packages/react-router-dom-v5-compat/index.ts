@@ -53,6 +53,7 @@ export type {
   BrowserRouterProps,
   DataRouteMatch,
   DataRouteObject,
+  ErrorResponse,
   Fetcher,
   FetcherWithComponents,
   FormEncType,
