@@ -49,7 +49,7 @@ import {
   createHashHistory,
   joinPaths,
   stripBasename,
-  UNSAFE_ErrorResponse as ErrorResponseImpl,
+  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
