@@ -27,6 +27,7 @@ export type {
   unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  ErrorResponse,
   Fetcher,
   Hash,
   IndexRouteObject,

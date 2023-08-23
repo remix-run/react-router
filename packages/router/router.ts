@@ -35,7 +35,7 @@ import type {
   V7_MutationFormMethod,
 } from "./utils";
 import {
-  ErrorResponse,
+  ErrorResponseImpl,
   ResultType,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
@@ -1229,7 +1229,7 @@ export function createRouter(init: RouterInit): Router {
       submission?: Submission;
       fetcherSubmission?: Submission;
       overrideNavigation?: Navigation;
-      pendingError?: ErrorResponse;
+      pendingError?: ErrorResponseImpl;
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
       replace?: boolean;
@@ -3176,7 +3176,7 @@ function normalizeNavigateOptions(
 ): {
   path: string;
   submission?: Submission;
-  error?: ErrorResponse;
+  error?: ErrorResponseImpl;
 } {
   // Return location verbatim on non-submission navigations
   if (!opts || !isSubmissionNavigation(opts)) {
@@ -3787,7 +3787,7 @@ async function callLoaderOrAction(
     if (resultType === ResultType.error) {
       return {
         type: resultType,
-        error: new ErrorResponse(status, result.statusText, data),
+        error: new ErrorResponseImpl(status, result.statusText, data),
         headers: result.headers,
       };
     }
@@ -4152,7 +4152,7 @@ function getInternalRouterError(
     }
   }
 
-  return new ErrorResponse(
+  return new ErrorResponseImpl(
     status || 500,
     statusText,
     new Error(errorMessage),

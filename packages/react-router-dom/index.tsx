@@ -49,7 +49,7 @@ import {
   createHashHistory,
   joinPaths,
   stripBasename,
-  ErrorResponse,
+  UNSAFE_ErrorResponse as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
@@ -92,6 +92,7 @@ export type {
   unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  ErrorResponse,
   Fetcher,
   Hash,
   IndexRouteObject,
@@ -273,7 +274,7 @@ function deserializeErrors(
     // Hey you!  If you change this, please change the corresponding logic in
     // serializeErrors in react-router-dom/server.tsx :)
     if (val && val.__type === "RouteErrorResponse") {
-      serialized[key] = new ErrorResponse(
+      serialized[key] = new ErrorResponseImpl(
         val.status,
         val.statusText,
         val.data,
