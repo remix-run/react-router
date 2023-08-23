@@ -82,7 +82,7 @@ export * from "./router";
 export type { RouteManifest as UNSAFE_RouteManifest } from "./utils";
 export {
   DeferredData as UNSAFE_DeferredData,
-  ErrorResponseImpl as UNSAFE_ErrorResponse,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
 } from "./utils";
