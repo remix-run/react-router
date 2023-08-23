@@ -6,30 +6,24 @@ export async function writeReadableStreamToWritable(
   writable: Writable
 ) {
   let reader = stream.getReader();
-
-  async function read() {
-    let { done, value } = await reader.read();
-
-    if (done) {
-      writable.end();
-      return;
-    }
-
-    writable.write(value);
-
-    // If the stream is flushable, flush it to allow streaming to continue.
-    let flushable = writable as { flush?: Function };
-    if (typeof flushable.flush === "function") {
-      flushable.flush();
-    }
-
-    await read();
-  }
+  let flushable = writable as { flush?: Function };
 
   try {
-    await read();
-  } catch (error: any) {
-    writable.destroy(error);
+    while (true) {
+      let { done, value } = await reader.read();
+
+      if (done) {
+        writable.end();
+        break;
+      }
+
+      writable.write(value);
+      if (typeof flushable.flush === "function") {
+        flushable.flush();
+      }
+    }
+  } catch (error: unknown) {
+    writable.destroy(error as Error);
     throw error;
   }
 }
@@ -56,19 +50,15 @@ export async function readableStreamToString(
   let reader = stream.getReader();
   let chunks: Uint8Array[] = [];
 
-  async function read() {
+  while (true) {
     let { done, value } = await reader.read();
-
     if (done) {
-      return;
-    } else if (value) {
+      break;
+    }
+    if (value) {
       chunks.push(value);
     }
-
-    await read();
   }
-
-  await read();
 
   return Buffer.concat(chunks).toString(encoding);
 }
