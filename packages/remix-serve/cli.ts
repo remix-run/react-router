@@ -1,13 +1,15 @@
 import "@remix-run/node/install";
-import path from "node:path";
+import fs from "node:fs";
 import os from "node:os";
+import path from "node:path";
 import url from "node:url";
 import {
   type ServerBuild,
   broadcastDevReady,
   installGlobals,
 } from "@remix-run/node";
-import { createRequestHandler } from "@remix-run/express";
+import { type RequestHandler, createRequestHandler } from "@remix-run/express";
+import chokidar from "chokidar";
 import compression from "compression";
 import express from "express";
 import morgan from "morgan";
@@ -32,11 +34,43 @@ async function run() {
     process.exit(1);
   }
 
-  let buildPath = url.pathToFileURL(
-    path.resolve(process.cwd(), buildPathArg)
-  ).href;
+  let buildPath = path.resolve(buildPathArg);
 
-  let build: ServerBuild = await import(buildPath);
+  async function reimportServer() {
+    let stat = fs.statSync(buildPath);
+
+    // use a timestamp query parameter to bust the import cache
+    return import(url.pathToFileURL(buildPath).href + "?t=" + stat.mtimeMs);
+  }
+
+  function createDevRequestHandler(initialBuild: ServerBuild): RequestHandler {
+    let build = initialBuild;
+    async function handleServerUpdate() {
+      // 1. re-import the server build
+      build = await reimportServer();
+      // 2. tell Remix that this app server is now up-to-date and ready
+      broadcastDevReady(build);
+    }
+
+    chokidar
+      .watch(buildPath, { ignoreInitial: true })
+      .on("add", handleServerUpdate)
+      .on("change", handleServerUpdate);
+
+    // wrap request handler to make sure its recreated with the latest build for every request
+    return async (req, res, next) => {
+      try {
+        return createRequestHandler({
+          build,
+          mode: "development",
+        })(req, res, next);
+      } catch (error) {
+        next(error);
+      }
+    };
+  }
+
+  let build: ServerBuild = await reimportServer();
 
   let onListen = () => {
     let address =
@@ -47,10 +81,10 @@ async function run() {
         ?.address;
 
     if (!address) {
-      console.log(`Remix App Server started at http://localhost:${port}`);
+      console.log(`[remix-serve] http://localhost:${port}`);
     } else {
       console.log(
-        `Remix App Server started at http://localhost:${port} (http://${address}:${port})`
+        `[remix-serve] http://localhost:${port} (http://${address}:${port})`
       );
     }
     if (process.env.NODE_ENV === "development") {
@@ -71,22 +105,15 @@ async function run() {
   app.use(express.static("public", { maxAge: "1h" }));
   app.use(morgan("tiny"));
 
-  let requestHandler: ReturnType<typeof createRequestHandler> | undefined;
-  app.all("*", async (req, res, next) => {
-    try {
-      if (!requestHandler) {
-        let build = await import(buildPath);
-        requestHandler = createRequestHandler({
+  app.all(
+    "*",
+    process.env.NODE_ENV === "development"
+      ? createDevRequestHandler(build)
+      : createRequestHandler({
           build,
           mode: process.env.NODE_ENV,
-        });
-      }
-
-      return await requestHandler(req, res, next);
-    } catch (error) {
-      next(error);
-    }
-  });
+        })
+  );
 
   let server = process.env.HOST
     ? app.listen(port, process.env.HOST, onListen)

@@ -137,7 +137,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           let newChunk = chunk.toString();
           stdout += newChunk;
           let match: RegExpMatchArray | null = stdout.match(
-            /started at http:\/\/localhost:(\d+)\s/
+            /\[remix-serve\] http:\/\/localhost:(\d+)\s/
           );
           if (match) {
             clearTimeout(rejectTimeout);
@@ -223,6 +223,26 @@ export async function createFixtureProject(
     path.join(projectDir, "node_modules"),
     { overwrite: true }
   );
+  // let remixDev = path.join(
+  //   projectDir,
+  //   "node_modules/@remix-run/dev/dist/cli.js"
+  // );
+  // await fse.chmod(remixDev, 0o755);
+  // await fse.ensureSymlink(
+  //   remixDev,
+  //   path.join(projectDir, "node_modules/.bin/remix")
+  // );
+  //
+  // let remixServe = path.join(
+  //   projectDir,
+  //   "node_modules/@remix-run/serve/dist/cli.js"
+  // );
+  // await fse.chmod(remixServe, 0o755);
+  // await fse.ensureSymlink(
+  //   remixServe,
+  //   path.join(projectDir, "node_modules/.bin/remix-serve")
+  // );
+
   await writeTestFiles(init, projectDir);
 
   // We update the config file *after* writing test files so that tests can provide a custom

@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",
     "dev": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js dev",
-    "start": "node ../../../build/node_modules/@remix-run/serve/dist/cli.js build"
+    "start": "node ../../../build/node_modules/@remix-run/serve/dist/cli.js ./build/index.js"
   },
   "dependencies": {
     "@remix-run/node": "0.0.0-local-version",
