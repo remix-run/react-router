@@ -131,7 +131,10 @@ export interface LoaderFunction {
  */
 export interface ServerRuntimeMetaFunction<
   Loader extends LoaderFunction | unknown = unknown,
-  ParentsLoaders extends Record<string, LoaderFunction> = {}
+  ParentsLoaders extends Record<string, LoaderFunction | unknown> = Record<
+    string,
+    unknown
+  >
 > {
   (
     args: ServerRuntimeMetaArgs<Loader, ParentsLoaders>
@@ -148,10 +151,14 @@ interface ServerRuntimeMetaMatch<
   handle?: unknown;
   params: AgnosticRouteMatch["params"];
   meta: ServerRuntimeMetaDescriptor[];
+  error?: unknown;
 }
 
 type ServerRuntimeMetaMatches<
-  MatchLoaders extends Record<string, unknown> = Record<string, unknown>
+  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+    string,
+    unknown
+  >
 > = Array<
   {
     [K in keyof MatchLoaders]: ServerRuntimeMetaMatch<
@@ -163,7 +170,10 @@ type ServerRuntimeMetaMatches<
 
 export interface ServerRuntimeMetaArgs<
   Loader extends LoaderFunction | unknown = unknown,
-  MatchLoaders extends Record<string, unknown> = Record<string, unknown>
+  MatchLoaders extends Record<string, LoaderFunction | unknown> = Record<
+    string,
+    unknown
+  >
 > {
   data:
     | (Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData)
