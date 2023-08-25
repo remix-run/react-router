@@ -245,8 +245,11 @@ test.describe("useFetcher", () => {
           method: "get",
         }),
       ]);
-
-      await page.waitForSelector(`pre:has-text("${LUNCH}")`);
+      // Check full HTML here - Chromium/Firefox/Webkit seem to render this in
+      // a <pre> but Edge puts it in some weird code editor markup:
+      // <body data-code-mirror="Readonly code editor.">
+      //   <div hidden="true">"LUNCH"</div>
+      expect(await app.getHtml()).toContain(LUNCH);
     });
 
     test("Form can hit an action", async ({ page }) => {
@@ -259,7 +262,11 @@ test.describe("useFetcher", () => {
           method: "post",
         }),
       ]);
-      await page.waitForSelector(`pre:has-text("${CHEESESTEAK}")`);
+      // Check full HTML here - Chromium/Firefox/Webkit seem to render this in
+      // a <pre> but Edge puts it in some weird code editor markup:
+      // <body data-code-mirror="Readonly code editor.">
+      //   <div hidden="true">"LUNCH"</div>
+      expect(await app.getHtml()).toContain(CHEESESTEAK);
     });
   });
 
