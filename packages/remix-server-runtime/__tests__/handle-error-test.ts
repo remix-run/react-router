@@ -1,4 +1,4 @@
-import { ErrorResponse } from "@remix-run/router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "@remix-run/router";
 
 import type { ServerBuild } from "../build";
 import { createRequestHandler } from "../server";
@@ -56,7 +56,7 @@ describe("handleError", () => {
       let request = new Request("http://example.com/", { method: "post" });
       await handler(request);
       expect(handleErrorSpy).toHaveBeenCalledWith(
-        new ErrorResponse(
+        new ErrorResponseImpl(
           405,
           "Method Not Allowed",
           new Error(
@@ -126,7 +126,7 @@ describe("handleError", () => {
       });
       await handler(request);
       expect(handleErrorSpy).toHaveBeenCalledWith(
-        new ErrorResponse(
+        new ErrorResponseImpl(
           405,
           "Method Not Allowed",
           new Error(
@@ -182,7 +182,7 @@ describe("handleError", () => {
       });
       await handler(request);
       expect(handleErrorSpy).toHaveBeenCalledWith(
-        new ErrorResponse(
+        new ErrorResponseImpl(
           405,
           "Method Not Allowed",
           new Error(
