@@ -150,6 +150,37 @@ describe("Cookie session storage", () => {
     await expect(() => commitSession(session)).rejects.toThrow();
   });
 
+  it("destroys sessions using a past date", async () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let { getSession, destroySession } = createCookieSessionStorage({
+      cookie: {
+        secrets: ["secret1"],
+      },
+    });
+    let session = await getSession();
+    let setCookie = await destroySession(session);
+    expect(setCookie).toMatchInlineSnapshot(
+      `"__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`
+    );
+    spy.mockRestore();
+  });
+
+  it("destroys sessions that leverage maxAge", async () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let { getSession, destroySession } = createCookieSessionStorage({
+      cookie: {
+        maxAge: 60 * 60, // 1 hour
+        secrets: ["secret1"],
+      },
+    });
+    let session = await getSession();
+    let setCookie = await destroySession(session);
+    expect(setCookie).toMatchInlineSnapshot(
+      `"__session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`
+    );
+    spy.mockRestore();
+  });
+
   describe("warnings when providing options you may not want to", () => {
     let spy = spyConsole();
 
@@ -204,6 +235,104 @@ describe("Cookie session storage", () => {
       let setCookie2 = await storage.commitSession(session);
       expect(setCookie2).not.toEqual(setCookie);
     });
+  });
+});
+
+describe("Custom cookie-backed session storage", () => {
+  let memoryBacking = {};
+  let createCookieBackedSessionStorage =
+    createSessionStorageFactory(createCookie);
+  let implementation = {
+    createData(data) {
+      let id = Math.random().toString(36).substring(2, 10);
+      memoryBacking[id] = data;
+      return Promise.resolve(id);
+    },
+    readData(id) {
+      return Promise.resolve(memoryBacking[id] || null);
+    },
+    updateData(id, data) {
+      memoryBacking[id] = data;
+      return Promise.resolve();
+    },
+    deleteData(id) {
+      memoryBacking[id] = null;
+      return Promise.resolve(memoryBacking[id]);
+    },
+  };
+
+  it("persists session data across requests", async () => {
+    let { getSession, commitSession } = createCookieBackedSessionStorage({
+      ...implementation,
+      cookie: createCookie("test", { secrets: ["test"] }),
+    });
+    let session = await getSession();
+    session.set("user", "mjackson");
+    let setCookie = await commitSession(session);
+    session = await getSession(getCookieFromSetCookie(setCookie));
+
+    expect(session.get("user")).toEqual("mjackson");
+  });
+
+  it("returns an empty session for cookies that are not signed properly", async () => {
+    let { getSession, commitSession } = createCookieBackedSessionStorage({
+      ...implementation,
+      cookie: createCookie("test", { secrets: ["test"] }),
+    });
+    let session = await getSession();
+    session.set("user", "mjackson");
+
+    expect(session.get("user")).toEqual("mjackson");
+
+    let setCookie = await commitSession(session);
+    session = await getSession(
+      // Tamper with the session cookie...
+      getCookieFromSetCookie(setCookie).slice(0, -1)
+    );
+
+    expect(session.get("user")).toBeUndefined();
+  });
+
+  it('"makes the default path of cookies to be /', async () => {
+    let { getSession, commitSession } = createCookieBackedSessionStorage({
+      ...implementation,
+      cookie: createCookie("test", { secrets: ["test"] }),
+    });
+    let session = await getSession();
+    session.set("user", "mjackson");
+    let setCookie = await commitSession(session);
+    expect(setCookie).toContain("Path=/");
+  });
+
+  it("destroys sessions using a past date", async () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let { getSession, destroySession } = createCookieBackedSessionStorage({
+      ...implementation,
+      cookie: createCookie("test", { secrets: ["test"] }),
+    });
+    let session = await getSession();
+    let setCookie = await destroySession(session);
+    expect(setCookie).toMatchInlineSnapshot(
+      `"test=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`
+    );
+    spy.mockRestore();
+  });
+
+  it("destroys sessions that leverage maxAge", async () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    let { getSession, destroySession } = createCookieBackedSessionStorage({
+      ...implementation,
+      cookie: createCookie("test", {
+        maxAge: 60 * 60, // 1 hour
+        secrets: ["test"],
+      }),
+    });
+    let session = await getSession();
+    let setCookie = await destroySession(session);
+    expect(setCookie).toMatchInlineSnapshot(
+      `"test=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"`
+    );
+    spy.mockRestore();
   });
 });
 

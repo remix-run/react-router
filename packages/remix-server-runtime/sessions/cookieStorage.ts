@@ -61,6 +61,7 @@ export const createCookieSessionStorageFactory =
       async destroySession(_session, options) {
         return cookie.serialize("", {
           ...options,
+          maxAge: undefined,
           expires: new Date(0),
         });
       },

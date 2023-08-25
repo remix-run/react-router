@@ -296,6 +296,7 @@ export const createSessionStorageFactory =
         await deleteData(session.id);
         return cookie.serialize("", {
           ...options,
+          maxAge: undefined,
           expires: new Date(0),
         });
       },
