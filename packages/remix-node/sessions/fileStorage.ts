@@ -103,7 +103,7 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
   });
 }
 
-function getFile(dir: string, id: string): string {
+export function getFile(dir: string, id: string): string {
   // Divide the session id up into a directory (first 2 bytes) and filename
   // (remaining 6 bytes) to reduce the chance of having very large directories,
   // which should speed up file access. This is a maximum of 2^16 directories,

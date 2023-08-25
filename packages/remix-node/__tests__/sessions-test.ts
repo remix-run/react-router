@@ -2,7 +2,7 @@ import path from "node:path";
 import { promises as fsp } from "node:fs";
 import os from "node:os";
 
-import { createFileSessionStorage } from "../sessions/fileStorage";
+import { createFileSessionStorage, getFile } from "../sessions/fileStorage";
 
 function getCookieFromSetCookie(setCookie: string): string {
   return setCookie.split(/;\s*/)[0];
@@ -60,6 +60,39 @@ describe("File session storage", () => {
     let session = await getSession();
 
     await expect(destroySession(session)).resolves.not.toThrowError();
+  });
+
+  it("saves expires to file if expires provided to commitSession when creating new cookie", async () => {
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+    let session = await getSession();
+    session.set("user", "mjackson");
+    let date = new Date(Date.now() + 1000 * 60);
+    let cookieHeader = await commitSession(session, { expires: date });
+    let createdSession = await getSession(cookieHeader);
+
+    let { id } = createdSession;
+    let fileContents = await fsp.readFile(getFile(dir, id), "utf8");
+    let fileData = JSON.parse(fileContents);
+    expect(fileData.expires).toEqual(date.toISOString());
+  });
+
+  it("saves expires to file if maxAge provided to commitSession when creating new cookie", async () => {
+    let { getSession, commitSession } = createFileSessionStorage({
+      dir,
+      cookie: { secrets: ["secret1"] },
+    });
+    let session = await getSession();
+    session.set("user", "mjackson");
+    let cookieHeader = await commitSession(session, { maxAge: 60 });
+    let createdSession = await getSession(cookieHeader);
+
+    let { id } = createdSession;
+    let fileContents = await fsp.readFile(getFile(dir, id), "utf8");
+    let fileData = JSON.parse(fileContents);
+    expect(typeof fileData.expires).toBe("string");
   });
 
   describe("when a new secret shows up in the rotation", () => {
