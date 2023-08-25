@@ -590,7 +590,7 @@ whatsup
     // let expectedErrorCount = 0;
     let expectDestructureTypeError = expectConsoleError((error) => {
       let expectedMessage = new Set([
-        // chrome, edge
+        // chrome, msedge
         "Cannot destructure property 'hello' of 'useLoaderData(...)' as it is null.",
         // firefox
         "(intermediate value)() is null",
