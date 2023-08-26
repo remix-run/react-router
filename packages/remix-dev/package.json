@@ -84,7 +84,6 @@
     "esbuild-register": "^3.3.2",
     "fast-glob": "3.2.11",
     "msw": "^1.2.3",
-    "shelljs": "^0.8.5",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0"
   },

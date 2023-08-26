@@ -2,12 +2,16 @@
   "name": "remix-template-cloudflare-workers",
   "private": true,
   "sideEffects": false,
-  "main": "build/index.js",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "build": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",
+    "dev": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js dev --manual -c \"npm start\"",
+    "start": "node ../../../node_modules/wrangler/bin/wrangler.js dev ./build/index.js"
+  },
   "dependencies": {
+    "@cloudflare/kv-asset-handler": "0.0.0-local-version",
     "@remix-run/cloudflare": "0.0.0-local-version",
-    "@remix-run/cloudflare-workers": "0.0.0-local-version",
+    "@remix-run/css-bundle": "0.0.0-local-version",
     "@remix-run/react": "0.0.0-local-version",
     "isbot": "0.0.0-local-version",
     "react": "0.0.0-local-version",
@@ -18,7 +22,8 @@
     "@remix-run/dev": "0.0.0-local-version",
     "@types/react": "0.0.0-local-version",
     "@types/react-dom": "0.0.0-local-version",
-    "typescript": "0.0.0-local-version"
+    "typescript": "0.0.0-local-version",
+    "wrangler": "0.0.0-local-version"
   },
   "engines": {
     "node": ">=18.0.0"

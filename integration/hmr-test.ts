@@ -177,8 +177,9 @@ whatsup
     `,
 };
 
-let packageJson = (options: { devScript: string; deps?: string[] }) => {
-  return json({
+let packageJson = (options: { devScript: string; deps?: string[] }) =>
+  json({
+    name: "remix-template-express",
     private: true,
     sideEffects: false,
     type: "module",
@@ -191,12 +192,12 @@ let packageJson = (options: { devScript: string; deps?: string[] }) => {
       "@remix-run/express",
       "@remix-run/node",
       "@remix-run/react",
-      "cross-env",
       "express",
       "isbot",
-      "postcss-import",
       "react",
       "react-dom",
+
+      "postcss-import",
       "tailwindcss",
     ]),
     devDependencies: deps([
@@ -209,12 +210,11 @@ let packageJson = (options: { devScript: string; deps?: string[] }) => {
       node: ">=18.0.0",
     },
   });
-};
 
 let customServer = (options: { appPort: number; devReady: string }) => {
   return js`
-      import path from "path";
-      import url from "url";
+      import path from "node:path";
+      import url from "node:url";
       import express from "express";
       import { createRequestHandler } from "@remix-run/express";
       import { ${options.devReady}, installGlobals } from "@remix-run/node";
@@ -400,7 +400,7 @@ async function dev(
     `;
     fs.writeFileSync(importedStylePath, newImportedStyle);
 
-    // // make changes to imported side-effect styles
+    // // make changes to imported side effect styles
     let newImportedSideEffectStyle = `
       .importedSideEffectStyle {
         font-size: 32px;

@@ -8,6 +8,7 @@ import {
   createFixture,
   css,
   js,
+  json,
 } from "./helpers/create-fixture.js";
 
 const TEST_PADDING_VALUE = "20px";
@@ -34,6 +35,34 @@ test.describe("PostCSS enabled", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
+        "package.json": json({
+          name: "remix-template-remix",
+          private: true,
+          sideEffects: false,
+          type: "module",
+          dependencies: {
+            "@remix-run/css-bundle": "0.0.0-local-version",
+            "@remix-run/node": "0.0.0-local-version",
+            "@remix-run/react": "0.0.0-local-version",
+            "@remix-run/serve": "0.0.0-local-version",
+            isbot: "0.0.0-local-version",
+            react: "0.0.0-local-version",
+            "react-dom": "0.0.0-local-version",
+          },
+          devDependencies: {
+            "@remix-run/dev": "0.0.0-local-version",
+            "@types/react": "0.0.0-local-version",
+            "@types/react-dom": "0.0.0-local-version",
+            typescript: "0.0.0-local-version",
+
+            "@vanilla-extract/css": "0.0.0-local-version",
+            tailwindcss: "0.0.0-local-version",
+          },
+          engines: {
+            node: ">=18.0.0",
+          },
+        }),
+
         // We provide a test plugin that replaces the strings
         // "TEST_PADDING_VALUE" and "TEST_POSTCSS_CONTEXT".
         // This lets us assert that the plugin is being run
@@ -353,7 +382,7 @@ test.describe("PostCSS disabled", () => {
         postcss: false,
       },
       files: {
-        "postcss.config.js": js`
+        "postcss.config.cjs": js`
           module.exports = (ctx) => ({
             plugins: [
               {

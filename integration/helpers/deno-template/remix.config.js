@@ -1,5 +1,5 @@
 /** @type {import('@remix-run/dev').AppConfig} */
-export default {
+module.exports = {
   ignoredRouteFiles: ["**/.*"],
   server: "./server.ts",
   serverConditions: ["deno", "worker"],
@@ -9,10 +9,10 @@ export default {
   serverPlatform: "neutral",
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
-  // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
+  // serverBuildPath: "build/index.js",
 
-  // !!! Don't adust this without changing the code that overwrites this
+  // !!! Don't adjust this without changing the code that overwrites this
   // in createFixtureProject()
   ...global.INJECTED_FIXTURE_REMIX_CONFIG,
 };

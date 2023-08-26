@@ -37,15 +37,16 @@ test.beforeAll(async () => {
     template: "deno-template",
     files: {
       "package.json": json({
+        name: "remix-template-deno",
         private: true,
         sideEffects: false,
-        type: "module",
         dependencies: {
           "@remix-run/deno": "0.0.0-local-version",
           "@remix-run/react": "0.0.0-local-version",
           isbot: "0.0.0-local-version",
           react: "0.0.0-local-version",
           "react-dom": "0.0.0-local-version",
+
           component: "0.0.0-local-version",
           "deno-pkg": "0.0.0-local-version",
         },
@@ -53,6 +54,7 @@ test.beforeAll(async () => {
           "@remix-run/dev": "0.0.0-local-version",
         },
       }),
+
       "app/routes/_index.tsx": js`
         import fake from "deno-pkg";
         import { urlComponent } from "https://deno.land/x/component.ts";

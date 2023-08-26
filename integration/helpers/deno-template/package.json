@@ -3,7 +3,15 @@
   "private": true,
   "sideEffects": false,
   "type": "module",
+  "scripts": {
+    "build": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",
+    "dev": "node ../../../node_modules/npm-run-all/bin/npm-run-all/index.js build --parallel \"dev:*\"",
+    "dev:deno": "node ../../../node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development deno run --unstable --watch --allow-net --allow-read --allow-env ./build/index.js",
+    "dev:remix": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js watch",
+    "start": "node ../../../node_modules/cross-env/src/bin/cross-env.js NODE_ENV=production deno run --unstable --allow-net --allow-read --allow-env ./build/index.js"
+  },
   "dependencies": {
+    "@remix-run/css-bundle": "0.0.0-local-version",
     "@remix-run/deno": "0.0.0-local-version",
     "@remix-run/react": "0.0.0-local-version",
     "isbot": "0.0.0-local-version",
@@ -11,7 +19,9 @@
     "react-dom": "0.0.0-local-version"
   },
   "devDependencies": {
-    "@remix-run/dev": "0.0.0-local-version"
+    "@remix-run/dev": "0.0.0-local-version",
+    "cross-env": "0.0.0-local-version",
+    "npm-run-all": "0.0.0-local-version"
   },
   "engines": {
     "node": ">=18.0.0"

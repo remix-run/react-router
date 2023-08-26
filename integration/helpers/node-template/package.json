@@ -9,6 +9,7 @@
     "start": "node ../../../build/node_modules/@remix-run/serve/dist/cli.js ./build/index.js"
   },
   "dependencies": {
+    "@remix-run/css-bundle": "0.0.0-local-version",
     "@remix-run/node": "0.0.0-local-version",
     "@remix-run/react": "0.0.0-local-version",
     "@remix-run/serve": "0.0.0-local-version",
@@ -20,7 +21,6 @@
     "@remix-run/dev": "0.0.0-local-version",
     "@types/react": "0.0.0-local-version",
     "@types/react-dom": "0.0.0-local-version",
-    "@vanilla-extract/css": "^1.10.0",
     "typescript": "0.0.0-local-version"
   },
   "engines": {
