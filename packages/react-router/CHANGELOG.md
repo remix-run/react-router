@@ -1,5 +1,14 @@
 # `react-router`
 
+## 6.15.1
+
+### Patch Changes
+
+- Move the `@private` class export `ErrorResponse` to an `UNSAFE_ErrorResponseImpl` export since it is an implementation detail and there should be no construction of `ErrorResponse` instances in userland. This frees us up to export a `type ErrorResponse` which correlates to an instance of the class via `InstanceType`. Userland code should only ever be using `ErrorResponse` as a type and should be type-narrowing via `isRouteErrorResponse`. ([#10811](https://github.com/remix-run/react-router/pull/10811))
+- Export `ShouldRevalidateFunctionArgs` interface ([#10797](https://github.com/remix-run/react-router/pull/10797))
+- Updated dependencies:
+  - `@remix-run/router@1.9.0`
+
 ## 6.15.0
 
 ### Minor Changes
