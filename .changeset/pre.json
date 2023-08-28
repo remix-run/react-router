@@ -8,5 +8,13 @@
     "react-router-native": "6.15.0",
     "@remix-run/router": "1.8.0"
   },
-  "changesets": []
+  "changesets": [
+    "aborted-query-error-message",
+    "encode-uri-ssr",
+    "error-response-type",
+    "export-should-revalidate-args",
+    "remix-v2-prep",
+    "route-lazy-race",
+    "should-revalidate-action-result-type"
+  ]
 }
