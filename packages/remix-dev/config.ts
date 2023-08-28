@@ -173,7 +173,9 @@ export interface AppConfig {
     | string[]
     | (() => Promise<string | string[]> | string | string[]);
 
-  future?: Partial<FutureConfig>;
+  future?: Partial<FutureConfig> & {
+    [propName: string]: never;
+  };
 }
 
 /**
