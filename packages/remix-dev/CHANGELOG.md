@@ -1,5 +1,166 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.0
+
+### Major Changes
+
+- Remove `serverBuildTarget` config option ([#6896](https://github.com/remix-run/remix/pull/6896))
+- The `create-remix` CLI has been rewritten to feature a cleaner interface, Git repo initialization and optional `remix.init` script execution. The interactive template prompt and official Remix stack/template shorthands have also been removed so that community/third-party templates are now on a more equal footing. ([#6887](https://github.com/remix-run/remix/pull/6887))
+
+  The code for `create-remix` has been moved out of the Remix CLI since it's not intended for use within an existing Remix application. This means that the `remix create` command is no longer available.
+
+- Remove deprecated REMIX_DEV_HTTP_ORIGIN env var. ([#6963](https://github.com/remix-run/remix/pull/6963))
+
+  Use REMIX_DEV_ORIGIN instead.
+
+- Enable built-in PostCSS and Tailwind support by default. ([#6909](https://github.com/remix-run/remix/pull/6909))
+
+  These tools are now automatically used within the Remix compiler if PostCSS and/or Tailwind configuration files are present in your project.
+
+  If you have a custom PostCSS and/or Tailwind setup outside of Remix, you can disable these features in your `remix.config.js`.
+
+  ```js
+  module.exports = {
+    postcss: false,
+    tailwind: false,
+  };
+  ```
+
+- Remove `devServerBroadcastDelay` config option ([#7063](https://github.com/remix-run/remix/pull/7063))
+- Stop passing `isTypeScript` to `remix.init` script ([#7099](https://github.com/remix-run/remix/pull/7099))
+- remove deprecated `devServerPort` option ([#7078](https://github.com/remix-run/remix/pull/7078))
+
+  use `--port` / `config.dev.port` option instead
+
+- remove deprecated REMIX_DEV_SERVER_WS_PORT env var ([#6965](https://github.com/remix-run/remix/pull/6965))
+
+  use `remix dev`'s '`--port`/`port` option instead
+
+- Remove `replace-remix-magic-imports` codemod ([#6899](https://github.com/remix-run/remix/pull/6899))
+- Drop React 17 support ([#7121](https://github.com/remix-run/remix/pull/7121))
+- Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
+- Remove default Node.js polyfills from the server build when targeting non-Node.js platforms. ([#6911](https://github.com/remix-run/remix/pull/6911))
+
+  Any Node.js polyfills that are required for your server code to run on non-Node.js platforms must be manually specified in `remix.config.js` using the `serverNodeBuiltinsPolyfill` option.
+
+  ```js
+  exports.serverNodeBuiltinsPolyfill = {
+    modules: {
+      path: true, // Provide a JSPM polyfill
+      fs: "empty", // Provide an empty polyfill
+    },
+  };
+  ```
+
+- We have made a few important changes to the route `meta` API as reflected in the v1 implementation when using the `future.v2_meta` config option. ([#6958](https://github.com/remix-run/remix/pull/6958))
+
+  - The `meta` function should no longer return an object, but an array of objects that map to the HTML tag's respective attributes. This provides more flexibility and control over how certain tags are rendered, and the order in which they appear.
+  - In most cases, `meta` descriptor objects render a `<meta>` tag. There are a few notable exceptions:
+    - `{ title: "My app" }` will render `<title>My app</title>`.
+    - `{ 'script:ld+json': { /* ... */ } }` will render `<script type="application/ld+json">/* ... */</script>`, where the value is serialized to JSON and rendered inside the `<script>` tag.
+    - `{ tagName: 'link', ...attributes }` will render `<link {...attributes} />`
+      - This is useful for things like setting canonical URLs. For loading assets, we encourage you to use the `links` export instead.
+      - It's important to note that `tagName` may only accept `meta` or `link`, so other arbitrary elements will be ignored.
+  - `<Meta />` will no longer render the `meta` output from the entire route hierarchy. Only the output from the leaf (current) route will be rendered unless that route does not export a `meta` function, in which case the output from the nearest ancestor route with `meta` will be rendered.
+    - This change comes from user feedback that auto-merging meta made effective SEO difficult to implement. Our goal is to give you as much control as you need over meta tags for each individual route.
+    - Our suggested approach is to **only export a `meta` function from leaf route modules**. However, if you do want to render a tag from another matched route, `meta` now accepts a `matches` argument for you to merge or override parent route meta as you'd like.
+    ```tsx
+    export function meta({ matches }) {
+      return [
+        // render all ancestor route meta except for title tags
+        ...matches
+          .flatMap((match) => match.meta)
+          .filter((match) => !("title" in match)),
+        { title: "Override the title!" },
+      ];
+    }
+    ```
+  - The `parentsData` argument has been removed. If you need to access data from a parent route, you can use `matches` instead.
+    ```tsx
+    // before
+    export function meta({ parentsData }) {
+      return [{ title: parentsData["routes/some-route"].title }];
+    }
+    // after
+    export function meta({ matches }) {
+      return [
+        {
+          title: matches.find((match) => match.id === "routes/some-route").data
+            .title,
+        },
+      ];
+    }
+    ```
+
+- remove deprecated cli args and flags ([#6962](https://github.com/remix-run/remix/pull/6962))
+
+  - `--no-restart`/`restart` 👉 use `--manual`/`manual` instead
+  - `--scheme`/`scheme` and `--host`/`host` 👉 use `REMIX_DEV_ORIGIN` instead
+
+- promote config.future.v2_dev to config.dev ([#7002](https://github.com/remix-run/remix/pull/7002))
+- Remove `browserBuildDirectory` config option ([#6900](https://github.com/remix-run/remix/pull/6900))
+- remove codemod command ([#6918](https://github.com/remix-run/remix/pull/6918))
+- Remove `serverBuildDirectory` config option ([#6897](https://github.com/remix-run/remix/pull/6897))
+- Default to serverModuleFormat esm, and update remix-serve to use dynamic import to support esm and cjs build outputs. ([#6949](https://github.com/remix-run/remix/pull/6949))
+- Remove `v2_errorBoundary` flag and `CatchBoundary` implementation ([#6906](https://github.com/remix-run/remix/pull/6906))
+- Removed support for "magic exports" from the `remix` package. This package can be removed from your `package.json` and you should update all imports to use the source `@remix-run/*` packages: ([#6895](https://github.com/remix-run/remix/pull/6895))
+
+  ```diff
+  - import type { ActionArgs } from "remix";
+  - import { json, useLoaderData } from "remix";
+  + import type { ActionArgs } from "@remix-run/node";
+  + import { json } from "@remix-run/node";
+  + import { useLoaderData } from "@remix-run/react";
+  ```
+
+- Remove `v2_normalizeFormMethod` future flag - all `formMethod` values will be normalized in v2 ([#6875](https://github.com/remix-run/remix/pull/6875))
+- Remove `v2_routeConvention` flag. The flat route file convention is now standard. ([#6969](https://github.com/remix-run/remix/pull/6969))
+- Remove `v2_headers` flag. It is now the default behavior to use the deepest `headers` function in the route tree. ([#6979](https://github.com/remix-run/remix/pull/6979))
+
+### Minor Changes
+
+- Warn users about obsolete future flags in remix.config.js ([#7048](https://github.com/remix-run/remix/pull/7048))
+- detect built mode via `build.mode` ([#6964](https://github.com/remix-run/remix/pull/6964))
+
+  Prevents mode mismatch between built Remix server entry and user-land server.
+  Additionally, all runtimes (including non-Node runtimes) can use `build.mode` to determine if HMR should be performed.
+
+- Support bun package manager ([#7074](https://github.com/remix-run/remix/pull/7074))
+
+### Patch Changes
+
+- Fix importing of PNGs, SVGs, and other assets from packages in `node_modules` ([#6813](https://github.com/remix-run/remix/pull/6813)) ([#7182](https://github.com/remix-run/remix/pull/7182))
+- Decouple the `@remix-run/dev` package from the contents of the `@remix-run/css-bundle` package. ([#6982](https://github.com/remix-run/remix/pull/6982))
+
+  The contents of the `@remix-run/css-bundle` package are now entirely managed by the Remix compiler. Even though it's still recommended that your Remix dependencies all share the same version, this change ensures that there are no runtime errors when upgrading `@remix-run/dev` without upgrading `@remix-run/css-bundle`.
+
+- allow non-development modes for remix watch ([#7117](https://github.com/remix-run/remix/pull/7117))
+- stop remix dev when esbuild is not running ([#7158](https://github.com/remix-run/remix/pull/7158))
+- Improve browser compatibility of minified CSS ([#7187](https://github.com/remix-run/remix/pull/7187))
+
+  We now minify CSS targeting the Remix browser support baseline (i.e. anything that supports [ES module scripts](https://caniuse.com/es6-module)), whereas previously CSS was minified using esbuild's default "esnext" target. This meant that CSS in the production build could be using properties that are unsupported in some browsers. This change also means you now have more control over CSS transformations using the built-in PostCSS support since they won't be reversed by esbuild's minification.
+
+- allow decorators in app code ([#7176](https://github.com/remix-run/remix/pull/7176))
+- allow jsx in js files during hmr ([#7112](https://github.com/remix-run/remix/pull/7112))
+- Support dependencies that import polyfill packages for Node built-ins via a trailing slash (e.g. importing the `buffer` package with `var Buffer = require('buffer/').Buffer` as recommended in their readme). These imports were previously marked as external. This meant that they were left as dynamic imports in the client bundle and would throw a runtime error in the browser (e.g. `Dynamic require of "buffer/" is not supported`). ([#7198](https://github.com/remix-run/remix/pull/7198))
+- Remove outdated ESM import warnings ([#6916](https://github.com/remix-run/remix/pull/6916))
+
+  Most of the time these warnings were false positives.
+  Instead, we now rely on built-in Node warnings for ESM imports.
+
+- do not trigger rebuilds when .DS_Store changes ([#7172](https://github.com/remix-run/remix/pull/7172))
+- Remove warnings for stabilized flags: ([#6905](https://github.com/remix-run/remix/pull/6905))
+
+  - `unstable_cssSideEffectImports`
+  - `unstable_cssModules`
+  - `unstable_vanillaExtract`
+
+- allow any mode (NODE_ENV) ([#7113](https://github.com/remix-run/remix/pull/7113))
+- Replace the deprecated [`xdm`](https://github.com/wooorm/xdm) package with [`@mdx-js/mdx`](https://github.com/mdx-js/mdx) ([#4054](https://github.com/remix-run/remix/pull/4054))
+- Updated dependencies:
+  - `@remix-run/serve@2.0.0-pre.0`
+  - `@remix-run/server-runtime@2.0.0-pre.0`
+
 ## 1.19.3
 
 ### Patch Changes

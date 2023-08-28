@@ -1,5 +1,81 @@
 # `@remix-run/testing`
 
+## 2.0.0-pre.0
+
+### Major Changes
+
+- Drop React 17 support ([#7121](https://github.com/remix-run/remix/pull/7121))
+- Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
+- We have made a few important changes to the route `meta` API as reflected in the v1 implementation when using the `future.v2_meta` config option. ([#6958](https://github.com/remix-run/remix/pull/6958))
+
+  - The `meta` function should no longer return an object, but an array of objects that map to the HTML tag's respective attributes. This provides more flexibility and control over how certain tags are rendered, and the order in which they appear.
+  - In most cases, `meta` descriptor objects render a `<meta>` tag. There are a few notable exceptions:
+    - `{ title: "My app" }` will render `<title>My app</title>`.
+    - `{ 'script:ld+json': { /* ... */ } }` will render `<script type="application/ld+json">/* ... */</script>`, where the value is serialized to JSON and rendered inside the `<script>` tag.
+    - `{ tagName: 'link', ...attributes }` will render `<link {...attributes} />`
+      - This is useful for things like setting canonical URLs. For loading assets, we encourage you to use the `links` export instead.
+      - It's important to note that `tagName` may only accept `meta` or `link`, so other arbitrary elements will be ignored.
+  - `<Meta />` will no longer render the `meta` output from the entire route hierarchy. Only the output from the leaf (current) route will be rendered unless that route does not export a `meta` function, in which case the output from the nearest ancestor route with `meta` will be rendered.
+    - This change comes from user feedback that auto-merging meta made effective SEO difficult to implement. Our goal is to give you as much control as you need over meta tags for each individual route.
+    - Our suggested approach is to **only export a `meta` function from leaf route modules**. However, if you do want to render a tag from another matched route, `meta` now accepts a `matches` argument for you to merge or override parent route meta as you'd like.
+    ```tsx
+    export function meta({ matches }) {
+      return [
+        // render all ancestor route meta except for title tags
+        ...matches
+          .flatMap((match) => match.meta)
+          .filter((match) => !("title" in match)),
+        { title: "Override the title!" },
+      ];
+    }
+    ```
+  - The `parentsData` argument has been removed. If you need to access data from a parent route, you can use `matches` instead.
+    ```tsx
+    // before
+    export function meta({ parentsData }) {
+      return [{ title: parentsData["routes/some-route"].title }];
+    }
+    // after
+    export function meta({ matches }) {
+      return [
+        {
+          title: matches.find((match) => match.id === "routes/some-route").data
+            .title,
+        },
+      ];
+    }
+    ```
+
+- promote config.future.v2_dev to config.dev ([#7002](https://github.com/remix-run/remix/pull/7002))
+- Remove `v2_errorBoundary` flag and `CatchBoundary` implementation ([#6906](https://github.com/remix-run/remix/pull/6906))
+- Removed support for "magic exports" from the `remix` package. This package can be removed from your `package.json` and you should update all imports to use the source `@remix-run/*` packages: ([#6895](https://github.com/remix-run/remix/pull/6895))
+
+  ```diff
+  - import type { ActionArgs } from "remix";
+  - import { json, useLoaderData } from "remix";
+  + import type { ActionArgs } from "@remix-run/node";
+  + import { json } from "@remix-run/node";
+  + import { useLoaderData } from "@remix-run/react";
+  ```
+
+- Remove `v2_normalizeFormMethod` future flag - all `formMethod` values will be normalized in v2 ([#6875](https://github.com/remix-run/remix/pull/6875))
+- Remove `v2_routeConvention` flag. The flat route file convention is now standard. ([#6969](https://github.com/remix-run/remix/pull/6969))
+- Remove `v2_headers` flag. It is now the default behavior to use the deepest `headers` function in the route tree. ([#6979](https://github.com/remix-run/remix/pull/6979))
+
+### Minor Changes
+
+- - `unstable_createRemixStub` now supports adding `meta`/`links` functions on stubbed Remix routes ([#7186](https://github.com/remix-run/remix/pull/7186))
+  - ⚠️ `unstable_createRemixStub` no longer supports the `element`/`errorElement` properties on routes. You must use `Component`/`ErrorBoundary` to match what you would export from a Remix route module.
+- Update Remix to use React Router `route.lazy` for module loading ([#7133](https://github.com/remix-run/remix/pull/7133))
+
+### Patch Changes
+
+- Fix types for `StubRouteObject` `children` property ([#7098](https://github.com/remix-run/remix/pull/7098))
+- Bump router to 1.9.0/6.16.0 prereleases ([#7283](https://github.com/remix-run/remix/pull/7283))
+- Updated dependencies:
+  - `@remix-run/react@2.0.0-pre.0`
+  - `@remix-run/node@2.0.0-pre.0`
+
 ## 1.19.3
 
 ### Patch Changes
