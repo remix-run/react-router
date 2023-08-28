@@ -526,7 +526,6 @@ type FetcherStates<TData = any> = {
     formData: undefined;
     json: undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Loading: {
     state: "loading";
@@ -537,7 +536,6 @@ type FetcherStates<TData = any> = {
     formData: Submission["formData"] | undefined;
     json: Submission["json"] | undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Submitting: {
     state: "submitting";
@@ -548,7 +546,6 @@ type FetcherStates<TData = any> = {
     formData: Submission["formData"];
     json: Submission["json"];
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
 };
 
@@ -1786,8 +1783,7 @@ export function createRouter(init: RouterInit): Router {
         updateState({ fetchers: new Map(state.fetchers) });
 
         return startRedirectNavigation(state, actionResult, {
-          submission,
-          isFetchActionRedirect: true,
+          fetcherSubmission: submission,
         });
       }
     }
@@ -2086,27 +2082,21 @@ export function createRouter(init: RouterInit): Router {
     redirect: RedirectResult,
     {
       submission,
+      fetcherSubmission,
       replace,
-      isFetchActionRedirect,
     }: {
       submission?: Submission;
+      fetcherSubmission?: Submission;
       replace?: boolean;
-      isFetchActionRedirect?: boolean;
     } = {}
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
 
-    let redirectLocation = createLocation(
-      state.location,
-      redirect.location,
-      // TODO: This can be removed once we get rid of useTransition in Remix v2
-      {
-        _isRedirect: true,
-        ...(isFetchActionRedirect ? { _isFetchActionRedirect: true } : {}),
-      }
-    );
+    let redirectLocation = createLocation(state.location, redirect.location, {
+      _isRedirect: true,
+    });
     invariant(
       redirectLocation,
       "Expected a location on the redirect navigation"
@@ -2146,12 +2136,21 @@ export function createRouter(init: RouterInit): Router {
 
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
-    let activeSubmission =
-      submission || getSubmissionFromNavigation(state.navigation);
+    let { formMethod, formAction, formEncType } = state.navigation;
+    if (
+      !submission &&
+      !fetcherSubmission &&
+      formMethod &&
+      formAction &&
+      formEncType
+    ) {
+      submission = getSubmissionFromNavigation(state.navigation);
+    }
 
     // If this was a 307/308 submission we want to preserve the HTTP method and
     // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
+    let activeSubmission = submission || fetcherSubmission;
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
       activeSubmission &&
@@ -2165,23 +2164,17 @@ export function createRouter(init: RouterInit): Router {
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
-    } else if (isFetchActionRedirect) {
-      // For a fetch action redirect, we kick off a new loading navigation
-      // without the fetcher submission, but we send it along for shouldRevalidate
-      await startNavigation(redirectHistoryAction, redirectLocation, {
-        overrideNavigation: getLoadingNavigation(redirectLocation),
-        fetcherSubmission: activeSubmission,
-        // Preserve this flag across redirects
-        preventScrollReset: pendingPreventScrollReset,
-      });
     } else {
-      // If we have a submission, we will preserve it through the redirect navigation
+      // If we have a navigation submission, we will preserve it through the
+      // redirect navigation
       let overrideNavigation = getLoadingNavigation(
         redirectLocation,
-        activeSubmission
+        submission
       );
       await startNavigation(redirectHistoryAction, redirectLocation, {
         overrideNavigation,
+        // Send fetcher submissions through for shouldRevalidate
+        fetcherSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
@@ -4475,7 +4468,6 @@ function getLoadingFetcher(
       json: submission.json,
       text: submission.text,
       data,
-      " _hasFetcherDoneAnything ": true,
     };
     return fetcher;
   } else {
@@ -4488,7 +4480,6 @@ function getLoadingFetcher(
       json: undefined,
       text: undefined,
       data,
-      " _hasFetcherDoneAnything ": true,
     };
     return fetcher;
   }
@@ -4507,7 +4498,6 @@ function getSubmittingFetcher(
     json: submission.json,
     text: submission.text,
     data: existingFetcher ? existingFetcher.data : undefined,
-    " _hasFetcherDoneAnything ": true,
   };
   return fetcher;
 }
@@ -4522,7 +4512,6 @@ function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
     json: undefined,
     text: undefined,
     data,
-    " _hasFetcherDoneAnything ": true,
   };
   return fetcher;
 }
