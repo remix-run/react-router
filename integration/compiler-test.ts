@@ -28,6 +28,7 @@ test.describe("compiler", () => {
               "esm-only-pkg",
               "esm-only-single-export",
               ...getDependenciesToBundle("esm-only-exports-pkg"),
+              ...getDependenciesToBundle("esm-only-nested-exports-pkg"),
             ],
           };
         `,
@@ -84,6 +85,13 @@ test.describe("compiler", () => {
             return <div id="esm-only-exports-pkg">{esmOnlyPkg}</div>;
           }
         `,
+        "app/routes/esm-only-nested-exports-pkg.tsx": js`
+          import esmOnlyPkg from "esm-only-nested-exports-pkg/nested";
+
+          export default function EsmOnlyPkg() {
+            return <div id="esm-only-nested-exports-pkg">{esmOnlyPkg}</div>;
+          }
+        `,
         "app/routes/esm-only-single-export.tsx": js`
           import esmOnlyPkg from "esm-only-single-export";
 
@@ -128,6 +136,18 @@ test.describe("compiler", () => {
         }),
         "node_modules/esm-only-exports-pkg/esm-only-exports-pkg.js": js`
           export default "esm-only-exports-pkg";
+        `,
+        "node_modules/esm-only-nested-exports-pkg/package.json": json({
+          name: "esm-only-nested-exports-pkg",
+          version: "1.0.0",
+          type: "module",
+          exports: {
+            "./package.json": "./package.json",
+            "./nested": "./esm-only-nested-exports-pkg.js",
+          },
+        }),
+        "node_modules/esm-only-nested-exports-pkg/esm-only-nested-exports-pkg.js": js`
+          export default "esm-only-nested-exports-pkg";
         `,
         "node_modules/esm-only-single-export/package.json": json({
           name: "esm-only-exports-pkg",
@@ -285,6 +305,18 @@ test.describe("compiler", () => {
     // rendered the page instead of the error boundary
     expect(await app.getHtml("#esm-only-exports-pkg")).toBe(
       '<div id="esm-only-exports-pkg">esm-only-exports-pkg</div>'
+    );
+  });
+
+  test("allows consumption of ESM modules with only nested exports in CJS builds with `serverDependenciesToBundle` and `getDependenciesToBundle`", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/esm-only-nested-exports-pkg", true);
+    expect(res.status()).toBe(200); // server rendered fine
+    // rendered the page instead of the error boundary
+    expect(await app.getHtml("#esm-only-nested-exports-pkg")).toBe(
+      '<div id="esm-only-nested-exports-pkg">esm-only-nested-exports-pkg</div>'
     );
   });
 
