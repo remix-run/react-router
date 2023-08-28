@@ -14,6 +14,7 @@ import compression from "compression";
 import express from "express";
 import morgan from "morgan";
 import sourceMapSupport from "source-map-support";
+import getPort from "get-port";
 
 process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 
@@ -22,9 +23,15 @@ installGlobals();
 
 run();
 
+function parseNumber(raw?: string) {
+  if (raw === undefined) return undefined;
+  let maybe = Number(raw);
+  if (Number.isNaN(maybe)) return undefined;
+  return maybe;
+}
+
 async function run() {
-  let port = process.env.PORT ? Number(process.env.PORT) : 3000;
-  if (Number.isNaN(port)) port = 3000;
+  let port = parseNumber(process.env.PORT) ?? (await getPort({ port: 3000 }));
 
   let buildPathArg = process.argv[2];
 
