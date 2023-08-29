@@ -1,5 +1,66 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.1
+
+### Major Changes
+
+- Remove default Node.js polyfills. ([#7269](https://github.com/remix-run/remix/pull/7269))
+
+  Any Node.js polyfills (or empty polyfills) that are required for your browser code must be configured via the `browserNodeBuiltinsPolyfill` option in `remix.config.js`.
+
+  ```js
+  exports.browserNodeBuiltinsPolyfill = {
+    modules: {
+      buffer: true,
+      fs: "empty",
+    },
+    globals: {
+      Buffer: true,
+    },
+  };
+  ```
+
+  If you're targeting a non-Node.js server platform, any Node.js polyfills (or empty polyfills) that are required for your server code must be configured via the `serverNodeBuiltinsPolyfill` option in `remix.config.js`.
+
+  ```js
+  exports.serverNodeBuiltinsPolyfill = {
+    modules: {
+      buffer: true,
+      fs: "empty",
+    },
+    globals: {
+      Buffer: true,
+    },
+  };
+  ```
+
+### Minor Changes
+
+- The `serverNodeBuiltinsPolyfill` option (along with the newly added `browserNodeBuiltinsPolyfill`) now supports defining global polyfills in addition to module polyfills. ([#7269](https://github.com/remix-run/remix/pull/7269))
+
+  For example, to polyfill Node's `Buffer` global:
+
+  ```js
+  module.exports = {
+    serverNodeBuiltinsPolyfill: {
+      globals: {
+        Buffer: true,
+      },
+      // You'll probably need to polyfill the "buffer" module
+      // too since the global polyfill imports this:
+      modules: {
+        buffer: true,
+      },
+    },
+  };
+  ```
+
+### Patch Changes
+
+- Restart dev server when Remix config changes ([#7269](https://github.com/remix-run/remix/pull/7269))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.1`
+
 ## 2.0.0-pre.0
 
 ### Major Changes
