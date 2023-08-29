@@ -1,5 +1,4 @@
 import * as esbuild from "esbuild";
-import { nodeModulesPolyfillPlugin } from "esbuild-plugins-node-modules-polyfill";
 
 import { type Manifest } from "../../manifest";
 import { loaders } from "../utils/loaders";
@@ -9,6 +8,7 @@ import { vanillaExtractPlugin } from "../plugins/vanillaExtract";
 import { cssFilePlugin } from "../plugins/cssImports";
 import { absoluteCssUrlsPlugin } from "../plugins/absoluteCssUrlsPlugin";
 import { emptyModulesPlugin } from "../plugins/emptyModules";
+import { serverNodeBuiltinsPolyfillPlugin } from "./plugins/serverNodeBuiltinsPolyfill";
 import { mdxPlugin } from "../plugins/mdx";
 import { serverAssetsManifestPlugin } from "./plugins/manifest";
 import { serverBareModulesPlugin } from "./plugins/bareImports";
@@ -66,12 +66,7 @@ const createEsbuildConfig = (
   ];
 
   if (ctx.config.serverNodeBuiltinsPolyfill) {
-    plugins.unshift(
-      nodeModulesPolyfillPlugin({
-        // Ensure only "modules" option is passed to the plugin
-        modules: ctx.config.serverNodeBuiltinsPolyfill.modules,
-      })
-    );
+    plugins.unshift(serverNodeBuiltinsPolyfillPlugin(ctx));
   }
 
   return {

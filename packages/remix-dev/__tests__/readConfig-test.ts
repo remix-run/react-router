@@ -28,6 +28,7 @@ describe("readConfig", () => {
       Object {
         "appDirectory": Any<String>,
         "assetsBuildDirectory": Any<String>,
+        "browserNodeBuiltinsPolyfill": undefined,
         "cacheDirectory": Any<String>,
         "dev": Object {},
         "entryClientFile": "entry.client.tsx",

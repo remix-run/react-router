@@ -29,6 +29,11 @@ test.describe("compiler", () => {
               "esm-only-single-export",
               ...getDependenciesToBundle("esm-only-exports-pkg"),
             ],
+            browserNodeBuiltinsPolyfill: {
+              modules: {
+                path: true,
+              },
+            },
           };
         `,
         "app/fake.server.ts": js`

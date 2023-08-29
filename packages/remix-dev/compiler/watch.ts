@@ -11,8 +11,10 @@ import { normalizeSlashes } from "../config/routes";
 import type { Manifest } from "../manifest";
 
 function isEntryPoint(config: RemixConfig, file: string): boolean {
+  let configFile = path.join(config.rootDirectory, "remix.config.js");
   let appFile = path.relative(config.appDirectory, file);
   let entryPoints = [
+    configFile,
     config.entryClientFile,
     config.entryServerFile,
     ...Object.values(config.routes).map((route) => route.file),
@@ -98,7 +100,8 @@ export async function watch(
     onBuildFinish?.(ctx, Date.now() - start, manifest !== undefined);
   }, 100);
 
-  let toWatch = [ctx.config.appDirectory];
+  let remixConfigPath = path.join(ctx.config.rootDirectory, "remix.config.js");
+  let toWatch = [remixConfigPath, ctx.config.appDirectory];
 
   // WARNING: Chokidar returns different paths in change events depending on
   // whether the path provided to the watcher is absolute or relative. If the
@@ -127,7 +130,7 @@ export async function watch(
     .on("change", async (file) => {
       if (shouldIgnore(file)) return;
       onFileChanged?.(file);
-      await rebuild();
+      await (file === remixConfigPath ? restart : rebuild)();
     })
     .on("add", async (file) => {
       if (shouldIgnore(file)) return;

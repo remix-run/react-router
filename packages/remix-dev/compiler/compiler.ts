@@ -62,6 +62,7 @@ export let create = async (ctx: Context): Promise<Compiler> => {
 
     // keep track of manually written artifacts
     let writes: {
+      js?: Promise<void>;
       cssBundle?: Promise<void>;
       manifest?: Promise<void>;
       server?: Promise<void>;
@@ -100,7 +101,8 @@ export let create = async (ctx: Context): Promise<Compiler> => {
     // js compilation (implicitly writes artifacts/js)
     let js = await tasks.js;
     if (!js.ok) throw error ?? js.error;
-    let { metafile, hmr } = js.value;
+    let { metafile, outputFiles, hmr } = js.value;
+    writes.js = JS.write(ctx.config, outputFiles);
 
     // artifacts/manifest
     let manifest = await createManifest({
