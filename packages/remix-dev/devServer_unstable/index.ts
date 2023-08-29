@@ -7,6 +7,7 @@ import prettyMs from "pretty-ms";
 import execa from "execa";
 import express from "express";
 import pc from "picocolors";
+import exitHook from "exit-hook";
 
 import * as Channel from "../channel";
 import { type Manifest } from "../manifest";
@@ -22,7 +23,7 @@ import type { Result } from "../result";
 import { err, ok } from "../result";
 import invariant from "../invariant";
 import { logger } from "../tux";
-import { kill, killtree } from "./proc";
+import { killtree } from "./proc";
 
 let detectBin = async (): Promise<string> => {
   let pkgManager = detectPackageManager() ?? "npm";
@@ -267,12 +268,14 @@ export let serve = async (
 
   server.listen(options.port);
 
-  return new Promise(() => {}).finally(async () => {
-    state.appServer?.pid && (await kill(state.appServer.pid));
+  let cleanup = async () => {
+    state.appServer?.kill();
     websocket.close();
     server.close();
     await dispose();
-  });
+  };
+  exitHook(cleanup);
+  return cleanup;
 };
 
 let clean = (config: RemixConfig) => {

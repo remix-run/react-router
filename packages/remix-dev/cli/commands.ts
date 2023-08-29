@@ -169,7 +169,10 @@ export async function dev(
   let config = await readConfig(remixRoot);
 
   let resolved = await resolveDevServe(config, flags);
-  await devServer_unstable.serve(config, resolved);
+  devServer_unstable.serve(config, resolved);
+
+  // keep `remix dev` alive by waiting indefinitely
+  await new Promise(() => {});
 }
 
 let clientEntries = ["entry.client.tsx", "entry.client.js", "entry.client.jsx"];
