@@ -78,6 +78,7 @@
     "@types/node-fetch": "^2.5.7",
     "@types/npmcli__package-json": "^4.0.0",
     "@types/picomatch": "^2.3.0",
+    "@types/prettier": "^2.7.3",
     "@types/shelljs": "^0.8.11",
     "@types/tar-fs": "^2.0.1",
     "@types/ws": "^7.4.1",

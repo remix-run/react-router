@@ -10,7 +10,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"require(\\"./foo.css?__remix_sideEffect__\\");"`
+        `"require("./foo.css?__remix_sideEffect__");"`
       );
     });
 
@@ -20,7 +20,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"import \\"./foo.css?__remix_sideEffect__\\";"`
+        `"import "./foo.css?__remix_sideEffect__";"`
       );
     });
 
@@ -33,7 +33,7 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("jsx", code))
         .toMatchInlineSnapshot(`
-        "import \\"./foo.css?__remix_sideEffect__\\";
+        "import "./foo.css?__remix_sideEffect__";
 
         export const Foo = () => <div />;"
       `);
@@ -48,7 +48,7 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("ts", code))
         .toMatchInlineSnapshot(`
-        "require(\\"./foo.css?__remix_sideEffect__\\");
+        "require("./foo.css?__remix_sideEffect__");
 
         export const foo: string = ('foo' satisfies string);"
       `);
@@ -64,7 +64,7 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("tsx", code))
         .toMatchInlineSnapshot(`
-        "require(\\"./foo.css?__remix_sideEffect__\\");
+        "require("./foo.css?__remix_sideEffect__");
 
         export const foo: string = ('foo' satisfies string);
         export const Bar = () => <div>{foo}</div>;"
@@ -82,10 +82,10 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("js", code))
         .toMatchInlineSnapshot(`
-        "if (process.env.NODE_ENV === \\"production\\") {
-          require(\\"./foo.min.css?__remix_sideEffect__\\");
+        "if (process.env.NODE_ENV === "production") {
+          require("./foo.min.css?__remix_sideEffect__");
         } else {
-          require(\\"./foo.css?__remix_sideEffect__\\");
+          require("./foo.css?__remix_sideEffect__");
         }"
       `);
     });
@@ -96,7 +96,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"process.env.NODE_ENV === \\"production\\" ? require(\\"./foo.min.css?__remix_sideEffect__\\") : require(\\"./foo.css?__remix_sideEffect__\\");"`
+        `"process.env.NODE_ENV === "production" ? require("./foo.min.css?__remix_sideEffect__") : require("./foo.css?__remix_sideEffect__");"`
       );
     });
 
@@ -106,7 +106,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"process.env.NODE_ENV === \\"development\\" && require(\\"./debug.css?__remix_sideEffect__\\");"`
+        `"process.env.NODE_ENV === "development" && require("./debug.css?__remix_sideEffect__");"`
       );
     });
 
@@ -116,7 +116,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"process.env.NODE_ENV === \\"production\\" || require(\\"./debug.css?__remix_sideEffect__\\");"`
+        `"process.env.NODE_ENV === "production" || require("./debug.css?__remix_sideEffect__");"`
       );
     });
   });
@@ -128,7 +128,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"const href = require(\\"./foo.css\\");"`
+        `"const href = require("./foo.css");"`
       );
     });
 
@@ -138,7 +138,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"import href from \\"./foo.css\\";"`
+        `"import href from "./foo.css";"`
       );
     });
 
@@ -148,7 +148,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"import { foo } from \\"./foo.css\\";"`
+        `"import { foo } from "./foo.css";"`
       );
     });
 
@@ -158,7 +158,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"import * as foo from \\"./foo.css\\";"`
+        `"import * as foo from "./foo.css";"`
       );
     });
 
@@ -171,9 +171,9 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("js", code))
         .toMatchInlineSnapshot(`
-        "const href = process.env.NODE_ENV === \\"production\\" ?
-        require(\\"./foo.min.css\\") :
-        require(\\"./foo.css\\");"
+        "const href = process.env.NODE_ENV === "production" ?
+        require("./foo.min.css") :
+        require("./foo.css");"
       `);
     });
 
@@ -183,7 +183,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"const href = process.env.NODE_ENV === \\"production\\" && require(\\"./foo.min.css\\") || require(\\"./foo.css\\");"`
+        `"const href = process.env.NODE_ENV === "production" && require("./foo.min.css") || require("./foo.css");"`
       );
     });
 
@@ -193,7 +193,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"require(\\"./foo\\");"`
+        `"require("./foo");"`
       );
     });
 
@@ -203,7 +203,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       `;
 
       expect(addSuffixToCssSideEffectImports("js", code)).toMatchInlineSnapshot(
-        `"import \\"./foo\\";"`
+        `"import "./foo";"`
       );
     });
 
@@ -217,7 +217,7 @@ describe("addSuffixToCssSideEffectImports", () => {
       expect(addSuffixToCssSideEffectImports("js", code))
         .toMatchInlineSnapshot(`
         "export const foo = async () => {
-          await import(\\"./foo.css\\");
+          await import("./foo.css");
         };"
       `);
     });
@@ -288,7 +288,7 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("js", code))
         .toMatchInlineSnapshot(`
-        "require(\\"./foo.css?__remix_sideEffect__\\");
+        "require("./foo.css?__remix_sideEffect__");
 
         // JS
         const topLevelAwait = await Promise.resolve('top level await');
@@ -330,7 +330,7 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("jsx", code))
         .toMatchInlineSnapshot(`
-        "require(\\"./foo.css?__remix_sideEffect__\\");
+        "require("./foo.css?__remix_sideEffect__");
 
         // JSX
         const ExampleComponent = () => <div>JSX element</div>;
@@ -375,7 +375,7 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("tsx", code))
         .toMatchInlineSnapshot(`
-        "require(\\"./foo.css?__remix_sideEffect__\\");
+        "require("./foo.css?__remix_sideEffect__");
 
         // TS
         const exampleSatisfies = ('satisfies' satisfies string);
@@ -425,7 +425,7 @@ describe("addSuffixToCssSideEffectImports", () => {
 
       expect(addSuffixToCssSideEffectImports("tsx", code))
         .toMatchInlineSnapshot(`
-        "require(\\"./foo.css?__remix_sideEffect__\\");
+        "require("./foo.css?__remix_sideEffect__");
 
         // TS
         const exampleSatisfies = ('satisfies' satisfies string);

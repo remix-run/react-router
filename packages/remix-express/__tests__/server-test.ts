@@ -158,9 +158,7 @@ describe("express createRemixHeaders", () => {
   describe("creates fetch headers from express headers", () => {
     it("handles empty headers", () => {
       let headers = createRemixHeaders({});
-      expect(Object.fromEntries(headers.entries())).toMatchInlineSnapshot(
-        `Object {}`
-      );
+      expect(Object.fromEntries(headers.entries())).toMatchInlineSnapshot(`{}`);
     });
 
     it("handles simple headers", () => {
