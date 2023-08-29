@@ -1,5 +1,19 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.2
+
+### Major Changes
+
+- Compile server build to Node 18. ([#7292](https://github.com/remix-run/remix/pull/7292))
+
+  This allows features like top-level `await` to be used within a Remix app.
+
+### Patch Changes
+
+- kill app server when remix dev terminates ([#7280](https://github.com/remix-run/remix/pull/7280))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.2`
+
 ## 2.0.0-pre.1
 
 ### Major Changes
