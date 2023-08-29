@@ -12,6 +12,7 @@ import type {
 import {
   AbortedDeferredError,
   Action as NavigationType,
+  RouterSubscriber,
   createMemoryHistory,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
@@ -48,9 +49,17 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
+import { flushSync } from "react-dom";
+
+declare global {
+  interface Document {
+    startViewTransition(cb: () => void): void;
+  }
+}
 
 export interface FutureConfig {
   v7_startTransition: boolean;
+  unstable_startViewTransition: boolean;
 }
 
 export interface RouterProviderProps {
@@ -94,14 +103,31 @@ export function RouterProvider({
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
-  let { v7_startTransition } = future || {};
-  let setState = React.useCallback(
-    (newState: RouterState) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
-        : setStateImpl(newState);
+  let { v7_startTransition, unstable_startViewTransition } = future || {};
+  let setState = React.useCallback<RouterSubscriber>(
+    (newState: RouterState, { isCompletedNavigation }) => {
+      let useStartViewTransition =
+        unstable_startViewTransition &&
+        typeof document.startViewTransition === "function" &&
+        isCompletedNavigation;
+
+      if (v7_startTransition && startTransitionImpl) {
+        if (useStartViewTransition) {
+          document.startViewTransition(() =>
+            flushSync(() => startTransitionImpl(() => setStateImpl(newState)))
+          );
+        } else {
+          startTransitionImpl(() => setStateImpl(newState));
+        }
+      } else {
+        if (useStartViewTransition) {
+          document.startViewTransition(() => setStateImpl(newState));
+        } else {
+          setStateImpl(newState);
+        }
+      }
     },
-    [setStateImpl, v7_startTransition]
+    [setStateImpl, v7_startTransition, unstable_startViewTransition]
   );
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 

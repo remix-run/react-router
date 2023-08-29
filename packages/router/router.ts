@@ -337,6 +337,7 @@ export type HydrationState = Partial<
 export interface FutureConfig {
   v7_normalizeFormMethod: boolean;
   v7_prependBasename: boolean;
+  v7_deferRevalidateFallbacks: boolean;
 }
 
 /**
@@ -392,7 +393,7 @@ export interface StaticHandler {
  * Subscriber function signature for changes to router state
  */
 export interface RouterSubscriber {
-  (state: RouterState): void;
+  (state: RouterState, opts: { isCompletedNavigation: boolean }): void;
 }
 
 /**
@@ -744,6 +745,7 @@ export function createRouter(init: RouterInit): Router {
   let future: FutureConfig = {
     v7_normalizeFormMethod: false,
     v7_prependBasename: false,
+    v7_deferRevalidateFallbacks: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -959,28 +961,17 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Update our state and notify the calling context of the change
-  function updateState(newState: Partial<RouterState>): void {
+  function updateState(
+    newState: Partial<RouterState>,
+    isCompletedNavigation = false
+  ): void {
     state = {
       ...state,
       ...newState,
     };
-    subscribers.forEach((subscriber) => subscriber(state));
-  }
-
-  function completeNavigation(
-    location: Location,
-    newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
-  ) {
-    // @ts-expect-error
-    if (typeof document !== "undefined" && document.startViewTransition) {
-      // TODO: Do we need a flushSync here?
-      // @ts-expect-error
-      document.startViewTransition(() =>
-        completeNavigationForRealz(location, newState)
-      );
-    } else {
-      completeNavigationForRealz(location, newState);
-    }
+    subscribers.forEach((subscriber) =>
+      subscriber(state, { isCompletedNavigation })
+    );
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -988,7 +979,7 @@ export function createRouter(init: RouterInit): Router {
   // - Location is a required param
   // - Navigation will always be set to IDLE_NAVIGATION
   // - Can pass any other state in newState
-  function completeNavigationForRealz(
+  function completeNavigation(
     location: Location,
     newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
   ): void {
@@ -1061,22 +1052,25 @@ export function createRouter(init: RouterInit): Router {
       init.history.replace(location, location.state);
     }
 
-    updateState({
-      ...newState, // matches, errors, fetchers go through as-is
-      actionData,
-      loaderData,
-      historyAction: pendingAction,
-      location,
-      initialized: true,
-      navigation: IDLE_NAVIGATION,
-      revalidation: "idle",
-      restoreScrollPosition: getSavedScrollPosition(
+    updateState(
+      {
+        ...newState, // matches, errors, fetchers go through as-is
+        actionData,
+        loaderData,
+        historyAction: pendingAction,
         location,
-        newState.matches || state.matches
-      ),
-      preventScrollReset,
-      blockers,
-    });
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        revalidation: "idle",
+        restoreScrollPosition: getSavedScrollPosition(
+          location,
+          newState.matches || state.matches
+        ),
+        preventScrollReset,
+        blockers,
+      },
+      true
+    );
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
@@ -2236,14 +2230,21 @@ export function createRouter(init: RouterInit): Router {
     let fetcherResults = results.slice(matchesToLoad.length);
 
     await Promise.all([
-      resolveDeferredResults(
-        currentMatches,
-        matchesToLoad,
-        loaderResults,
-        loaderResults.map(() => request.signal),
-        false,
-        state.loaderData
-      ),
+      // By default, route deferred data is resolved if it's a revalidation to
+      // avoid re-triggering fallbacks.  Users can opt out of this behavior via
+      // the flag and handle fallbacks with startTransition and Suspense keys
+      // themselves
+      !future.v7_deferRevalidateFallbacks
+        ? resolveDeferredResults(
+            currentMatches,
+            matchesToLoad,
+            loaderResults,
+            loaderResults.map(() => request.signal),
+            false,
+            state.loaderData
+          )
+        : null,
+      // Fetchers do not support deferred and always resolve
       resolveDeferredResults(
         currentMatches,
         fetchersToLoad.map((f) => f.match),
