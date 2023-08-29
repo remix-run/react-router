@@ -134,7 +134,7 @@ const router = createBrowserRouter(
     future: {
       // Prevent react router from await-ing defer() promises for revalidating
       // loaders, which includes changing search params on the active route
-      v7_deferRevalidateFallbacks: true,
+      v7_fallbackOnDeferRevalidation: true,
     },
   }
 );
@@ -188,7 +188,7 @@ function Nav() {
               ✅ It also uses a location-based key on the suspense boundary so
               revalidations will trigger a fresh fallback. Click this link again
               while on the page to see this behavior (requires
-              v7_deferRevalidateFallbacks: true)
+              v7_fallbackOnDeferRevalidation: true)
             </li>
             <li>
               ❌ Without the key on the suspense boundary, it will animate in
