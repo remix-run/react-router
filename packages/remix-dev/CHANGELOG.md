@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.3
+
+### Patch Changes
+
+- internal: write a version.txt sentinel file _after_ server build is completely written ([#7299](https://github.com/remix-run/remix/pull/7299))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.3`
+
 ## 2.0.0-pre.2
 
 ### Major Changes
