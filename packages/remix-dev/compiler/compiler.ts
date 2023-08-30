@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import * as path from "node:path";
 
 import type { Context } from "./context";
@@ -119,7 +120,16 @@ export let create = async (ctx: Context): Promise<Compiler> => {
     let server = await tasks.server;
     if (!server.ok) throw error ?? server.error;
     // artifacts/server
-    writes.server = Server.write(ctx.config, server.value);
+    writes.server = Server.write(ctx.config, server.value).then(() => {
+      // write the version to a sentinel file _after_ the server has been written
+      // this allows the app server to watch for changes to `version.txt`
+      // avoiding race conditions when the app server would attempt to reload a partially written server build
+      let versionTxt = path.join(
+        path.dirname(ctx.config.serverBuildPath),
+        "version.txt"
+      );
+      fs.writeFileSync(versionTxt, manifest.version);
+    });
 
     await Promise.all(Object.values(writes));
     return manifest;
