@@ -1,3 +1,4 @@
+import * as ReactDOM from "react-dom";
 import type {
   InitialEntry,
   LazyRouteFunction,
@@ -6,13 +7,13 @@ import type {
   RelativeRoutingType,
   Router as RemixRouter,
   RouterState,
+  RouterSubscriber,
   To,
   TrackedPromise,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
-  RouterSubscriber,
   createMemoryHistory,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
@@ -49,11 +50,15 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
-import { flushSync } from "react-dom";
+
+interface ViewTransition {
+  finished: Promise<void>;
+  ready: Promise<void>;
+}
 
 declare global {
   interface Document {
-    startViewTransition(cb: () => void): void;
+    startViewTransition(cb: () => Promise<void> | void): ViewTransition;
   }
 }
 
@@ -114,7 +119,9 @@ export function RouterProvider({
       if (v7_startTransition && startTransitionImpl) {
         if (useStartViewTransition) {
           document.startViewTransition(() =>
-            flushSync(() => startTransitionImpl(() => setStateImpl(newState)))
+            ReactDOM.flushSync(() =>
+              startTransitionImpl(() => setStateImpl(newState))
+            )
           );
         } else {
           startTransitionImpl(() => setStateImpl(newState));
