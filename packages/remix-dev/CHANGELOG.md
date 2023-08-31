@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.5
+
+### Patch Changes
+
+- REMOVE: removed dependency that caused TS error ([#7317](https://github.com/remix-run/remix/pull/7317))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.5`
+
 ## 2.0.0-pre.4
 
 ### Patch Changes

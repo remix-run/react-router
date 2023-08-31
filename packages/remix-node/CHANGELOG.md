@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 2.0.0-pre.5
+
+### Patch Changes
+
+- Add the rest of the Web Streams API to `installGlobals` ([#7321](https://github.com/remix-run/remix/pull/7321))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.5`
+
 ## 2.0.0-pre.4
 
 ### Patch Changes
