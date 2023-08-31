@@ -979,15 +979,10 @@ test.describe("aborted", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      ////////////////////////////////////////////////////////////////////////////
-      // 💿 Next, add files to this object, just like files in a real app,
-      // `createFixture` will make an app and run your tests against it.
-      ////////////////////////////////////////////////////////////////////////////
       files: {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
           import type { AppLoadContext, EntryContext } from "@remix-run/node";
-          import { Response } from "@remix-run/node";
           import { RemixServer } from "@remix-run/react";
           import isbot from "isbot";
           import { renderToPipeableStream } from "react-dom/server";
