@@ -63,7 +63,6 @@
     "remark-frontmatter": "4.0.1",
     "remark-mdx-frontmatter": "^1.0.1",
     "semver": "^7.3.7",
-    "sort-package-json": "^1.55.0",
     "tar-fs": "^2.1.1",
     "tsconfig-paths": "^4.0.0",
     "ws": "^7.4.5"
