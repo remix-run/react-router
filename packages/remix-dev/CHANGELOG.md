@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.6
+
+### Patch Changes
+
+- [REMOVE] Revert CSS minification changes from #7187 ([#7324](https://github.com/remix-run/remix/pull/7324))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.6`
+
 ## 2.0.0-pre.5
 
 ### Patch Changes

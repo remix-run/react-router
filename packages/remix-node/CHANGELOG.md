@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 2.0.0-pre.6
+
+### Patch Changes
+
+- Remove `atob`/`btoa` polyfills in favor of built-in versions ([#7206](https://github.com/remix-run/remix/pull/7206))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.6`
+
 ## 2.0.0-pre.5
 
 ### Patch Changes
