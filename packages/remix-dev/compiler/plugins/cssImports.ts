@@ -8,7 +8,6 @@ import {
   getPostcssProcessor,
   populateDependenciesFromMessages,
 } from "../utils/postcss";
-import { cssTarget } from "../utils/cssTarget";
 import { absoluteCssUrlsPlugin } from "./absoluteCssUrlsPlugin";
 
 const isExtendedLengthPath = /^\\\\\?\\/;
@@ -42,6 +41,7 @@ export function cssFilePlugin(ctx: Context): esbuild.Plugin {
         nodePaths,
         platform,
         publicPath,
+        target,
       } = build.initialOptions;
 
       // eslint-disable-next-line prefer-let/prefer-let -- Avoid needing to repeatedly check for null since const can't be reassigned
@@ -74,7 +74,7 @@ export function cssFilePlugin(ctx: Context): esbuild.Plugin {
               platform,
               publicPath,
               sourceRoot,
-              target: cssTarget,
+              target,
               treeShaking,
               tsconfig,
               minify: ctx.options.mode === "production",
