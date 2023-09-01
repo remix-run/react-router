@@ -14,7 +14,6 @@ import {
   WritableStreamDefaultWriter as NodeWritableStreamDefaultWriter,
 } from "@remix-run/web-stream";
 
-import { atob, btoa } from "./base64";
 import {
   Blob as NodeBlob,
   File as NodeFile,
@@ -32,9 +31,6 @@ declare global {
     }
 
     interface Global {
-      atob: typeof atob;
-      btoa: typeof btoa;
-
       Blob: typeof Blob;
       File: typeof File;
 
@@ -51,9 +47,6 @@ declare global {
 }
 
 export function installGlobals() {
-  global.atob = atob;
-  global.btoa = btoa;
-
   global.Blob = NodeBlob;
   global.File = NodeFile;
 
