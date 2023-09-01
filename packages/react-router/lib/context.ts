@@ -89,9 +89,9 @@ if (__DEV__) {
   AwaitContext.displayName = "Await";
 }
 
-export interface NavigateOptions {
+export interface NavigateOptions<State = any> {
   replace?: boolean;
-  state?: any;
+  state?: State | null;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
 }

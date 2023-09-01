@@ -98,7 +98,7 @@ export function useInRouterContext(): boolean {
  *
  * @see https://reactrouter.com/hooks/use-location
  */
-export function useLocation(): Location {
+export function useLocation<State>(): Location<State> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -147,8 +147,8 @@ export function useMatch<
 /**
  * The interface for the navigate() function returned from useNavigate().
  */
-export interface NavigateFunction {
-  (to: To, options?: NavigateOptions): void;
+export interface NavigateFunction<State = any> {
+  (to: To, options?: NavigateOptions<State>): void;
   (delta: number): void;
 }
 
@@ -175,7 +175,7 @@ function useIsomorphicLayoutEffect(
  *
  * @see https://reactrouter.com/hooks/use-navigate
  */
-export function useNavigate(): NavigateFunction {
+export function useNavigate<State = any>(): NavigateFunction<State> {
   let { isDataRoute } = React.useContext(RouteContext);
   // Conditional usage is OK here because the usage of a data router is static
   // eslint-disable-next-line react-hooks/rules-of-hooks
