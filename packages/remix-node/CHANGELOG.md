@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 2.0.0-pre.7
+
+### Patch Changes
+
+- Update to latest web-std-io prereleases ([#7328](https://github.com/remix-run/remix/pull/7328))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.7`
+
 ## 2.0.0-pre.6
 
 ### Patch Changes
