@@ -10,6 +10,7 @@
   },
   "changesets": [
     "aborted-query-error-message",
+    "align-types",
     "encode-uri-ssr",
     "error-response-type",
     "export-should-revalidate-args",
