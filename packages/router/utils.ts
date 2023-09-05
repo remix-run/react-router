@@ -137,21 +137,24 @@ export type Submission =
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
  */
-interface DataFunctionArgs {
+interface DataFunctionArgs<Context> {
   request: Request;
   params: Params;
-  context?: any;
+  context?: Context;
 }
+
+// TODO: (v7) Change the defaults from any to unknown in and remove Remix wrappers:
+//   ActionFunction, ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs extends DataFunctionArgs {}
+export interface LoaderFunctionArgs<C = any> extends DataFunctionArgs<C> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs extends DataFunctionArgs {}
+export interface ActionFunctionArgs<C = any> extends DataFunctionArgs<C> {}
 
 /**
  * Loaders and actions can return anything except `undefined` (`null` is a
@@ -163,15 +166,15 @@ type DataFunctionValue = Response | NonNullable<unknown> | null;
 /**
  * Route loader function signature
  */
-export interface LoaderFunction {
-  (args: LoaderFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
+export interface LoaderFunction<C = any> {
+  (args: LoaderFunctionArgs<C>): Promise<DataFunctionValue> | DataFunctionValue;
 }
 
 /**
  * Route action function signature
  */
-export interface ActionFunction {
-  (args: ActionFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
+export interface ActionFunction<C = any> {
+  (args: ActionFunctionArgs<C>): Promise<DataFunctionValue> | DataFunctionValue;
 }
 
 /**
@@ -488,6 +491,28 @@ export function matchRoutes<
   }
 
   return matches;
+}
+
+export interface UIMatch<D = unknown, H = unknown> {
+  id: string;
+  pathname: string;
+  params: AgnosticRouteMatch["params"];
+  data: D;
+  handle: H;
+}
+
+export function convertRouteMatchToUiMatch(
+  match: AgnosticDataRouteMatch,
+  loaderData: RouteData
+): UIMatch {
+  let { route, pathname, params } = match;
+  return {
+    id: route.id,
+    pathname,
+    params,
+    data: loaderData[route.id],
+    handle: route.handle,
+  };
 }
 
 interface RouteMeta<

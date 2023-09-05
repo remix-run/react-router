@@ -26,6 +26,7 @@ import type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   To,
+  UIMatch,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -167,6 +168,7 @@ export type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   To,
+  UIMatch,
   Blocker as unstable_Blocker,
   BlockerFunction as unstable_BlockerFunction,
 };

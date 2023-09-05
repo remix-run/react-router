@@ -11,7 +11,6 @@ import type {
   ActionFunction,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
-  AgnosticRouteMatch,
   AgnosticRouteObject,
   DataResult,
   DeferredData,
@@ -31,12 +30,14 @@ import type {
   ShouldRevalidateFunctionArgs,
   Submission,
   SuccessResult,
+  UIMatch,
   V7_FormMethod,
   V7_MutationFormMethod,
 } from "./utils";
 import {
   ErrorResponseImpl,
   ResultType,
+  convertRouteMatchToUiMatch,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   immutableRouteKeys,
@@ -394,20 +395,12 @@ export interface RouterSubscriber {
   (state: RouterState): void;
 }
 
-interface UseMatchesMatch {
-  id: string;
-  pathname: string;
-  params: AgnosticRouteMatch["params"];
-  data: unknown;
-  handle: unknown;
-}
-
 /**
  * Function signature for determining the key to be used in scroll restoration
  * for a given location
  */
 export interface GetScrollRestorationKeyFunction {
-  (location: Location, matches: UseMatchesMatch[]): string | null;
+  (location: Location, matches: UIMatch[]): string | null;
 }
 
 /**
@@ -2461,7 +2454,7 @@ export function createRouter(init: RouterInit): Router {
     if (getScrollRestorationKey) {
       let key = getScrollRestorationKey(
         location,
-        matches.map((m) => createUseMatchesMatch(m, state.loaderData))
+        matches.map((m) => convertRouteMatchToUiMatch(m, state.loaderData))
       );
       return key || location.key;
     }
@@ -4330,22 +4323,6 @@ async function resolveDeferredData(
 
 function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
-}
-
-// Note: This should match the format exported by useMatches, so if you change
-// this please also change that :)  Eventually we'll DRY this up
-function createUseMatchesMatch(
-  match: AgnosticDataRouteMatch,
-  loaderData: RouteData
-): UseMatchesMatch {
-  let { route, pathname, params } = match;
-  return {
-    id: route.id,
-    pathname,
-    params,
-    data: loaderData[route.id] as unknown,
-    handle: route.handle as unknown,
-  };
 }
 
 function getTargetMatch(

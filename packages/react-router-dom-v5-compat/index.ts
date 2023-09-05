@@ -104,6 +104,7 @@ export type {
   SubmitOptions,
   To,
   URLSearchParamsInit,
+  UIMatch,
   unstable_Blocker,
   unstable_BlockerFunction,
 } from "./react-router-dom";

@@ -49,15 +49,18 @@ export interface Path {
   hash: string;
 }
 
+// TODO: (v7) Change the Location generic default from `any` to `unknown` and
+// remove Remix `useLocation` wrapper.
+
 /**
  * An entry in a history stack. A location contains information about the
  * URL path, as well as possibly some arbitrary state and a key.
  */
-export interface Location extends Path {
+export interface Location<S = any> extends Path {
   /**
    * A value of arbitrary data associated with this location.
    */
-  state: any;
+  state: S;
 
   /**
    * A unique string associated with this location. May be used to safely store
