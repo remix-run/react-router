@@ -25,6 +25,7 @@ export type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   TrackedPromise,
+  UIMatch,
   V7_FormMethod,
 } from "./utils";
 
@@ -84,6 +85,7 @@ export {
   DeferredData as UNSAFE_DeferredData,
   ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
+  convertRouteMatchToUiMatch as UNSAFE_convertRouteMatchToUiMatch,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
 } from "./utils";
 

@@ -65,6 +65,7 @@ export type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   To,
+  UIMatch,
 } from "react-router";
 export {
   AbortedDeferredError,
