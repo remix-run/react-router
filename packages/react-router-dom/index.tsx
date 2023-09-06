@@ -1320,11 +1320,15 @@ function useScrollRestoration({
         let key = (getKey ? getKey(location, matches) : null) || location.key;
         savedScrollPositions[key] = window.scrollY;
       }
-      sessionStorage.setItem(
-        storageKey || SCROLL_RESTORATION_STORAGE_KEY,
-        JSON.stringify(savedScrollPositions)
-      );
-      window.history.scrollRestoration = "auto";
+      try {
+        sessionStorage.setItem(
+          storageKey || SCROLL_RESTORATION_STORAGE_KEY,
+          JSON.stringify(savedScrollPositions)
+        );
+        window.history.scrollRestoration = "auto";
+      } catch (error) {
+        console.warn("Failed to record scroll position in session storage. Scroll restoration will not work.", error);
+      }
     }, [storageKey, getKey, navigation.state, location, matches])
   );
 
