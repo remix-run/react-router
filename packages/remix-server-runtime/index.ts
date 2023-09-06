@@ -33,8 +33,8 @@ export type {
 
 // Remix server runtime packages should re-export these types
 export type {
-  ActionArgs,
   ActionFunction,
+  ActionFunctionArgs,
   AppData,
   AppLoadContext,
   Cookie,
@@ -53,8 +53,8 @@ export type {
   HtmlLinkDescriptor,
   LinkDescriptor,
   LinksFunction,
-  LoaderArgs,
   LoaderFunction,
+  LoaderFunctionArgs,
   MemoryUploadHandlerFilterArgs,
   MemoryUploadHandlerOptions,
   HandleErrorFunction,

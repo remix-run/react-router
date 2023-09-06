@@ -37,14 +37,14 @@ export type {
 export type { TypedDeferredData, TypedResponse } from "./responses";
 
 export type {
-  ActionArgs,
   ActionFunction,
+  ActionFunctionArgs,
   DataFunctionArgs,
   HeadersArgs,
   HeadersFunction,
   LinksFunction,
-  LoaderArgs,
   LoaderFunction,
+  LoaderFunctionArgs,
   RouteHandle,
   ServerRuntimeMetaArgs,
   ServerRuntimeMetaDescriptor,

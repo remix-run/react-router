@@ -1,3 +1,5 @@
+import type { ActionFunction, LoaderFunction } from "@remix-run/router";
+
 import {
   redirect,
   json,
@@ -5,26 +7,18 @@ import {
   isResponse,
   isRedirectStatusCode,
 } from "./responses";
-import type {
-  ActionFunction,
-  DataFunctionArgs,
-  LoaderFunction,
-} from "./routeModules";
+import type { DataFunctionArgs } from "./routeModules";
 
 /**
- * An object of unknown type for route loaders and actions provided by the
- * server's `getLoadContext()` function.
+ * An unknown type for route loaders and actions provided by the server's
+ * `getLoadContext()` function.
  */
-export interface AppLoadContext {
-  [key: string]: unknown;
-}
+export type AppLoadContext = unknown;
 
 /**
  * Data for a route that was returned from a `loader()`.
- *
- * Note: This moves to unknown in ReactRouter and eventually likely in Remix
  */
-export type AppData = any;
+export type AppData = unknown;
 
 export async function callRouteActionRR({
   loadContext,

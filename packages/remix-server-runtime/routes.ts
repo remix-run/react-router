@@ -1,12 +1,12 @@
-import type {
-  AgnosticDataRouteObject,
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-} from "@remix-run/router";
+import type { AgnosticDataRouteObject } from "@remix-run/router";
 
 import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { FutureConfig } from "./entry";
-import type { ServerRouteModule } from "./routeModules";
+import type {
+  ServerRouteModule,
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+} from "./routeModules";
 
 export interface RouteManifest<Route> {
   [routeId: string]: Route;

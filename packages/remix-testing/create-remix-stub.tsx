@@ -1,10 +1,8 @@
 import * as React from "react";
 import {
   UNSAFE_convertRoutesToDataRoutes,
-  type ActionFunctionArgs,
   type HydrationState,
   type InitialEntry,
-  type LoaderFunctionArgs,
   type Router,
 } from "@remix-run/router";
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
@@ -24,9 +22,11 @@ import type {
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
 import type {
   ActionFunction,
+  ActionFunctionArgs,
   AppLoadContext,
   LinksFunction,
   LoaderFunction,
+  LoaderFunctionArgs,
 } from "@remix-run/server-runtime";
 
 interface StubIndexRouteObject
