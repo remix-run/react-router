@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.9.0-pre.2
+
+### Patch Changes
+
+- [REMOVE] Use long generic names ([#10845](https://github.com/remix-run/react-router/pull/10845))
+
 ## 1.9.0-pre.1
 
 ### Patch Changes
