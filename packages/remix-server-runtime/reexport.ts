@@ -24,7 +24,7 @@ export type {
 
 export type { SignFunction, UnsignFunction } from "./crypto";
 
-export type { AppLoadContext, AppData } from "./data";
+export type { AppLoadContext } from "./data";
 
 export type { EntryContext } from "./entry";
 
@@ -45,7 +45,6 @@ export type {
   LinksFunction,
   LoaderFunction,
   LoaderFunctionArgs,
-  RouteHandle,
   ServerRuntimeMetaArgs,
   ServerRuntimeMetaDescriptor,
   ServerRuntimeMetaFunction,

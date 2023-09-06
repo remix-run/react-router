@@ -35,7 +35,6 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  AppData,
   AppLoadContext,
   Cookie,
   CookieOptions,
@@ -60,7 +59,6 @@ export type {
   HandleErrorFunction,
   PageLinkDescriptor,
   RequestHandler,
-  RouteHandle,
   SerializeFrom,
   ServerBuild,
   ServerEntryModule,
