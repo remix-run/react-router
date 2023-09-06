@@ -1,5 +1,30 @@
 # `@remix-run/node`
 
+## 2.0.0-pre.8
+
+### Major Changes
+
+- Remove/align Remix types with those used in React Router ([#7319](https://github.com/remix-run/remix/pull/7319))
+
+  - Change exposed `any` types to `unknown`
+    - `AppData`
+    - `useLocation.state`
+    - `useMatches()[i].data`
+    - `useFetcher().data`
+    - `MetaMatch.handle`
+  - `useMatches()[i].handle` type changed from `{ [k: string]: any }` to `unknown`
+  - `AppLoadContext` type changed from `{ [k: string]: unknown }` to `unknown`
+  - Rename the `useMatches()` return type from `RouteMatch` to `UIMatch`
+  - Rename `LoaderArgs`/`ActionArgs` to `LoaderFunctionArgs`/`ActionFunctionArgs` and add a generic to accept a `context` type
+
+- Remove `AppData`/`RouteHandle` types which are just aliases for `unknown` ([#7354](https://github.com/remix-run/remix/pull/7354))
+- Stop exporting the `fetch` API in favor of using the version in the global scope - which is polyfilled via `installGlobals` ([#7293](https://github.com/remix-run/remix/pull/7293))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.8`
+
 ## 2.0.0-pre.7
 
 ### Patch Changes
