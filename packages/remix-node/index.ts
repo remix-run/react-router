@@ -1,11 +1,3 @@
-export type {
-  HeadersInit,
-  RequestInfo,
-  RequestInit,
-  ResponseInit,
-} from "./fetch";
-export { fetch, FormData, Headers, Request, Response } from "./fetch";
-
 export { installGlobals } from "./globals";
 
 export { createFileSessionStorage } from "./sessions/fileStorage";

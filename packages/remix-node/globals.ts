@@ -1,4 +1,12 @@
 import {
+  fetch as nodeFetch,
+  FormData as NodeFormData,
+  Headers as NodeHeaders,
+  Request as NodeRequest,
+  Response as NodeResponse,
+} from "@remix-run/web-fetch";
+import { Blob as NodeBlob, File as NodeFile } from "@remix-run/web-file";
+import {
   ByteLengthQueuingStrategy as NodeByteLengthQueuingStrategy,
   CountQueuingStrategy as NodeCountQueuingStrategy,
   ReadableByteStreamController as NodeReadableByteStreamController,
@@ -13,16 +21,6 @@ import {
   WritableStreamDefaultController as NodeWritableStreamDefaultController,
   WritableStreamDefaultWriter as NodeWritableStreamDefaultWriter,
 } from "@remix-run/web-stream";
-
-import {
-  Blob as NodeBlob,
-  File as NodeFile,
-  FormData as NodeFormData,
-  Headers as NodeHeaders,
-  Request as NodeRequest,
-  Response as NodeResponse,
-  fetch as nodeFetch,
-} from "./fetch";
 
 declare global {
   namespace NodeJS {

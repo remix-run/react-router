@@ -1,11 +1,8 @@
-import express from "express";
-import supertest from "supertest";
-import { createRequest, createResponse } from "node-mocks-http";
-import {
-  createRequestHandler as createRemixRequestHandler,
-  Response as NodeResponse,
-} from "@remix-run/node";
 import { Readable } from "node:stream";
+import { createRequestHandler as createRemixRequestHandler } from "@remix-run/node";
+import express from "express";
+import { createRequest, createResponse } from "node-mocks-http";
+import supertest from "supertest";
 
 import {
   createRemixHeaders,
@@ -103,7 +100,8 @@ describe("express createRequestHandler", () => {
     it("handles body as stream", async () => {
       mockedCreateRequestHandler.mockImplementation(() => async () => {
         let stream = Readable.from("hello world");
-        return new NodeResponse(stream, { status: 200 }) as unknown as Response;
+        let webStream = Readable.toWeb(stream);
+        return new Response(webStream as ReadableStream, { status: 200 });
       });
 
       let request = supertest(createApp());
