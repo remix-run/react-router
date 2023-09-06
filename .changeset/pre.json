@@ -14,6 +14,7 @@
     "encode-uri-ssr",
     "error-response-type",
     "export-should-revalidate-args",
+    "gold-ghosts-draw",
     "remix-v2-prep",
     "route-lazy-race",
     "should-revalidate-action-result-type"
