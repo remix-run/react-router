@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 2.0.0-pre.9
+
+### Patch Changes
+
+- [REMOVE] Revert AppLoadContext back to an interface for use with module augmentation ([#7360](https://github.com/remix-run/remix/pull/7360))
+
 ## 2.0.0-pre.8
 
 ### Major Changes
