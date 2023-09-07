@@ -1,12 +1,12 @@
-import type { AgnosticDataRouteObject } from "@remix-run/router";
+import type {
+  AgnosticDataRouteObject,
+  LoaderFunctionArgs as RRLoaderFunctionArgs,
+  ActionFunctionArgs as RRActionFunctionArgs,
+} from "@remix-run/router";
 
 import { callRouteActionRR, callRouteLoaderRR } from "./data";
 import type { FutureConfig } from "./entry";
-import type {
-  ServerRouteModule,
-  ActionFunctionArgs,
-  LoaderFunctionArgs,
-} from "./routeModules";
+import type { ServerRouteModule } from "./routeModules";
 
 export interface RouteManifest<Route> {
   [routeId: string]: Route;
@@ -87,7 +87,9 @@ export function createStaticHandlerDataRoutes(
       id: route.id,
       path: route.path,
       loader: route.module.loader
-        ? (args: LoaderFunctionArgs) =>
+        ? // Need to use RR's version here to permit the optional context even
+          // though we know it'll always be provided in remix
+          (args: RRLoaderFunctionArgs) =>
             callRouteLoaderRR({
               request: args.request,
               params: args.params,
@@ -97,7 +99,7 @@ export function createStaticHandlerDataRoutes(
             })
         : undefined,
       action: route.module.action
-        ? (args: ActionFunctionArgs) =>
+        ? (args: RRActionFunctionArgs) =>
             callRouteActionRR({
               request: args.request,
               params: args.params,

@@ -8,7 +8,7 @@ import type {
   Params,
 } from "@remix-run/router";
 
-import type { AppData } from "./data";
+import type { AppData, AppLoadContext } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "./serialize";
 
@@ -16,11 +16,32 @@ export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule;
 }
 
-export type ActionFunctionArgs = RRActionFunctionArgs<unknown>;
-export type ActionFunction = RRActionFunction<unknown>;
-export type LoaderFunctionArgs = RRLoaderFunctionArgs<unknown>;
-export type LoaderFunction = RRLoaderFunction<unknown>;
-export type DataFunctionArgs = LoaderFunctionArgs | ActionFunctionArgs;
+// Context is always provided in Remix, and typed for module augmentation support.
+// RR also doesn't export DataFunctionArgs so we extend the two interfaces here
+// even tough they're identical under the hood
+export interface DataFunctionArgs
+  extends RRActionFunctionArgs,
+    RRLoaderFunctionArgs {
+  context: AppLoadContext;
+}
+
+/**
+ * A function that handles data mutations for a route.
+ */
+export type ActionFunction = (
+  args: DataFunctionArgs
+) => ReturnType<RRActionFunction>;
+
+export type ActionFunctionArgs = DataFunctionArgs;
+
+/**
+ * A function that loads data for a route.
+ */
+export type LoaderFunction = (
+  args: DataFunctionArgs
+) => ReturnType<RRLoaderFunction>;
+
+export type LoaderFunctionArgs = DataFunctionArgs;
 
 export type HeadersArgs = {
   loaderHeaders: Headers;

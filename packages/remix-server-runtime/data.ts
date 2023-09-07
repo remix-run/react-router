@@ -1,5 +1,3 @@
-import type { ActionFunction, LoaderFunction } from "@remix-run/router";
-
 import {
   redirect,
   json,
@@ -7,13 +5,21 @@ import {
   isResponse,
   isRedirectStatusCode,
 } from "./responses";
-import type { DataFunctionArgs } from "./routeModules";
+import type {
+  ActionFunction,
+  DataFunctionArgs,
+  LoaderFunction,
+} from "./routeModules";
 
 /**
- * An unknown type for route loaders and actions provided by the server's
- * `getLoadContext()` function.
+ * An object of unknown type for route loaders and actions provided by the
+ * server's `getLoadContext()` function.  This is defined as an empty interface
+ * specifically so apps can leverage declaration merging to augment this type
+ * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
  */
-export type AppLoadContext = unknown;
+export interface AppLoadContext {
+  [key: string]: unknown;
+}
 
 /**
  * Data for a route that was returned from a `loader()`.

@@ -4,6 +4,8 @@ import {
   type HydrationState,
   type InitialEntry,
   type Router,
+  type ActionFunctionArgs as RRActionFunctionArgs,
+  type LoaderFunctionArgs as RRLoaderFunctionArgs,
 } from "@remix-run/router";
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
 import type {
@@ -22,11 +24,9 @@ import type {
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
 import type {
   ActionFunction,
-  ActionFunctionArgs,
   AppLoadContext,
   LinksFunction,
   LoaderFunction,
-  LoaderFunctionArgs,
 } from "@remix-run/server-runtime";
 
 interface StubIndexRouteObject
@@ -160,10 +160,10 @@ function processRoutes(
       Component: route.Component,
       ErrorBoundary: route.ErrorBoundary,
       action: action
-        ? (args: ActionFunctionArgs) => action!({ ...args, context })
+        ? (args: RRActionFunctionArgs) => action!({ ...args, context })
         : undefined,
       loader: loader
-        ? (args: LoaderFunctionArgs) => loader!({ ...args, context })
+        ? (args: RRLoaderFunctionArgs) => loader!({ ...args, context })
         : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,
