@@ -4075,7 +4075,8 @@ function getShortCircuitMatches(routes: AgnosticDataRouteObject[]): {
   route: AgnosticDataRouteObject;
 } {
   // Prefer a root layout route if present, otherwise shim in a route object
-  let route = routes.find((r) => r.index || !r.path || r.path === "/") || {
+  let route = routes.find((r) => r.index || !r.path || r.path === "/") ||
+              routes.find((r) => r.id === "root") || {
     id: `__shim-error-route__`,
   };
 
