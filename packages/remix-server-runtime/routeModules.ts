@@ -17,13 +17,10 @@ export interface RouteModules<RouteModule> {
 }
 
 // Context is always provided in Remix, and typed for module augmentation support.
-// RR also doesn't export DataFunctionArgs so we extend the two interfaces here
+// RR also doesn't export DataFunctionArgs, so we extend the two interfaces here
 // even tough they're identical under the hood
-export interface DataFunctionArgs
-  extends RRActionFunctionArgs,
-    RRLoaderFunctionArgs {
-  context: AppLoadContext;
-}
+export type DataFunctionArgs = RRActionFunctionArgs<AppLoadContext> &
+  RRLoaderFunctionArgs<AppLoadContext>;
 
 /**
  * A function that handles data mutations for a route.
