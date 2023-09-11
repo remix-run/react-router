@@ -50,8 +50,6 @@ export const cssSideEffectImportsPlugin = (
   return {
     name: pluginName,
     setup: async (build) => {
-      let postcssProcessor = await getCachedPostcssProcessor(ctx);
-
       build.onLoad(
         { filter: allJsFilesFilter, namespace: "file" },
         async (args) => {
@@ -131,6 +129,8 @@ export const cssSideEffectImportsPlugin = (
 
       build.onLoad({ filter: /\.css$/, namespace }, async (args) => {
         let absolutePath = path.resolve(ctx.config.rootDirectory, args.path);
+        let postcssProcessor = await getCachedPostcssProcessor(ctx);
+
         return {
           contents: postcssProcessor
             ? await postcssProcessor({ path: absolutePath })

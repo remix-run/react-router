@@ -44,9 +44,6 @@ export function cssFilePlugin(ctx: Context): esbuild.Plugin {
         target,
       } = build.initialOptions;
 
-      // eslint-disable-next-line prefer-let/prefer-let -- Avoid needing to repeatedly check for null since const can't be reassigned
-      const postcssProcessor = await getPostcssProcessor(ctx);
-
       build.onLoad({ filter: /\.css$/ }, async (args) => {
         let cacheKey = `css-file:${args.path}`;
         let {
@@ -59,6 +56,9 @@ export function cssFilePlugin(ctx: Context): esbuild.Plugin {
         } = await ctx.fileWatchCache.getOrSet(cacheKey, async () => {
           let fileDependencies = new Set([args.path]);
           let globDependencies = new Set<string>();
+
+          // eslint-disable-next-line prefer-let/prefer-let -- Avoid needing to repeatedly check for null since const can't be reassigned
+          const postcssProcessor = await getPostcssProcessor(ctx);
 
           let { metafile, outputFiles, warnings, errors } = await esbuild.build(
             {

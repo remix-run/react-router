@@ -28,8 +28,6 @@ export const cssModulesPlugin = (
   return {
     name: pluginName,
     setup: async (build: PluginBuild) => {
-      let postcssPlugins = await loadPostcssPlugins({ config });
-
       build.onResolve(
         { filter: cssModulesFilter, namespace: "file" },
         async (args) => {
@@ -59,6 +57,8 @@ export const cssModulesPlugin = (
 
             let fileDependencies = new Set<string>([absolutePath]);
             let globDependencies = new Set<string>();
+
+            let postcssPlugins = await loadPostcssPlugins({ config });
 
             let { css: compiledCss, messages } = await postcss([
               ...postcssPlugins,
