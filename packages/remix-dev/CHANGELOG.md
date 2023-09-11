@@ -1,5 +1,15 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.10
+
+### Patch Changes
+
+- [REMOVE] Fix TS error in entry.server.tsx to make PassThrough body a ReadableStream ([#7361](https://github.com/remix-run/remix/pull/7361))
+- Surface errors when PostCSS config is invalid ([#7391](https://github.com/remix-run/remix/pull/7391))
+- [REMOVE] make `DataFunctionArgs` a type alias ([#7362](https://github.com/remix-run/remix/pull/7362))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.10`
+
 ## 2.0.0-pre.9
 
 ### Patch Changes
