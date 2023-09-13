@@ -1325,10 +1325,14 @@ function useScrollRestoration({
           storageKey || SCROLL_RESTORATION_STORAGE_KEY,
           JSON.stringify(savedScrollPositions)
         );
-        window.history.scrollRestoration = "auto";
       } catch (error) {
-        console.warn("Failed to record scroll position in session storage. Scroll restoration will not work.", error);
+        warning(
+          false,
+          "Failed to save scroll positions in sessionStorage, <ScrollRestoration /> will not work properly."
+        );
+        console.warn(error);
       }
+      window.history.scrollRestoration = "auto";
     }, [storageKey, getKey, navigation.state, location, matches])
   );
 

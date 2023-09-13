@@ -14,7 +14,9 @@ import getHtml from "../../react-router/__tests__/utils/getHtml";
 
 describe(`ScrollRestoration`, () => {
   it("restores the scroll position for a page when re-visited", () => {
-    const consoleWarnMock = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleWarnMock = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
 
     let testWindow = getWindowImpl("/base");
     const mockScroll = jest.fn();
@@ -28,7 +30,9 @@ describe(`ScrollRestoration`, () => {
             return (
               <>
                 <Outlet />
-                <ScrollRestoration getKey={(location) => "test1-" + location.pathname} />
+                <ScrollRestoration
+                  getKey={(location) => "test1-" + location.pathname}
+                />
               </>
             );
           },
@@ -119,7 +123,9 @@ describe(`ScrollRestoration`, () => {
   });
 
   it("fails gracefully if sessionStorage is not available", () => {
-    const consoleWarnMock = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const consoleWarnMock = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
 
     let testWindow = getWindowImpl("/base");
     const mockScroll = jest.fn();
@@ -127,7 +133,7 @@ describe(`ScrollRestoration`, () => {
 
     jest.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
       throw new Error("denied");
-    })
+    });
 
     let router = createBrowserRouter(
       [
@@ -137,7 +143,9 @@ describe(`ScrollRestoration`, () => {
             return (
               <>
                 <Outlet />
-                <ScrollRestoration getKey={(location) => "test2-" + location.pathname} />
+                <ScrollRestoration
+                  getKey={(location) => "test2-" + location.pathname}
+                />
               </>
             );
           },
@@ -172,8 +180,9 @@ describe(`ScrollRestoration`, () => {
     ]);
 
     expect(consoleWarnMock).toHaveBeenCalledWith(
-      expect.stringContaining("Scroll restoration will not work"),
-      expect.anything(),
+      expect.stringContaining(
+        "Failed to save scroll positions in sessionStorage"
+      )
     );
 
     consoleWarnMock.mockRestore();
@@ -184,13 +193,23 @@ const testPages = [
   {
     index: true,
     Component() {
-      return <p>On page 1<br /><Link to="/page">Go to page 2</Link></p>;
+      return (
+        <p>
+          On page 1<br />
+          <Link to="/page">Go to page 2</Link>
+        </p>
+      );
     },
   },
   {
     path: "page",
     Component() {
-      return <p>On page 2<br /><Link to="/">Go to page 1</Link></p>;
+      return (
+        <p>
+          On page 2<br />
+          <Link to="/">Go to page 1</Link>
+        </p>
+      );
     },
   },
 ];
