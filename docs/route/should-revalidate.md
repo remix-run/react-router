@@ -5,6 +5,32 @@ new: true
 
 # `shouldRevalidate`
 
+<details>
+  <summary>Type declaration</summary>
+
+```ts
+interface ShouldRevalidateFunction {
+  (args: ShouldRevalidateFunctionArgs): boolean;
+}
+
+interface ShouldRevalidateFunctionArgs {
+  currentUrl: URL;
+  currentParams: AgnosticDataRouteMatch["params"];
+  nextUrl: URL;
+  nextParams: AgnosticDataRouteMatch["params"];
+  formMethod?: Submission["formMethod"];
+  formAction?: Submission["formAction"];
+  formEncType?: Submission["formEncType"];
+  text?: Submission["text"];
+  formData?: Submission["formData"];
+  json?: Submission["json"];
+  actionResult?: any;
+  defaultShouldRevalidate: boolean;
+}
+```
+
+</details>
+
 This function allows you opt-out of revalidation for a route's loader as an optimization.
 
 <docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
@@ -52,27 +78,6 @@ If you define `shouldRevalidate` on a route, it will first check the function be
 Note that this is only for data that has already been loaded, is currently rendered, and will continue to be rendered at the new URL. Data for new routes and fetchers at the new URL will always be fetched initially.
 
 <docs-warning>Using this API risks your UI getting out of sync with your data, use with caution!</docs-warning>
-
-## Type Declaration
-
-```ts
-interface ShouldRevalidateFunction {
-  (args: {
-    currentUrl: URL;
-    currentParams: AgnosticDataRouteMatch["params"];
-    nextUrl: URL;
-    nextParams: AgnosticDataRouteMatch["params"];
-    formMethod?: Submission["formMethod"];
-    formAction?: Submission["formAction"];
-    formEncType?: Submission["formEncType"];
-    formData?: Submission["formData"];
-    json?: Submission["json"];
-    text?: Submission["text"];
-    actionResult?: DataResult;
-    defaultShouldRevalidate: boolean;
-  }): boolean;
-}
-```
 
 [action]: ./action
 [form]: ../components/form

@@ -1,5 +1,5 @@
 import type { Location, Path, To } from "./history";
-import { warning, invariant, parsePath } from "./history";
+import { invariant, parsePath, warning } from "./history";
 
 /**
  * Map of routeId -> data returned from a loader/action/error
@@ -137,21 +137,27 @@ export type Submission =
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
  */
-interface DataFunctionArgs {
+interface DataFunctionArgs<Context> {
   request: Request;
   params: Params;
-  context?: any;
+  context?: Context;
 }
+
+// TODO: (v7) Change the defaults from any to unknown in and remove Remix wrappers:
+//   ActionFunction, ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs
+//   Also, make them a type alias instead of an interface
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs extends DataFunctionArgs {}
+export interface LoaderFunctionArgs<Context = any>
+  extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs extends DataFunctionArgs {}
+export interface ActionFunctionArgs<Context = any>
+  extends DataFunctionArgs<Context> {}
 
 /**
  * Loaders and actions can return anything except `undefined` (`null` is a
@@ -163,15 +169,37 @@ type DataFunctionValue = Response | NonNullable<unknown> | null;
 /**
  * Route loader function signature
  */
-export interface LoaderFunction {
-  (args: LoaderFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
+export interface LoaderFunction<Context = any> {
+  (args: LoaderFunctionArgs<Context>):
+    | Promise<DataFunctionValue>
+    | DataFunctionValue;
 }
 
 /**
  * Route action function signature
  */
-export interface ActionFunction {
-  (args: ActionFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
+export interface ActionFunction<Context = any> {
+  (args: ActionFunctionArgs<Context>):
+    | Promise<DataFunctionValue>
+    | DataFunctionValue;
+}
+
+/**
+ * Arguments passed to shouldRevalidate function
+ */
+export interface ShouldRevalidateFunctionArgs {
+  currentUrl: URL;
+  currentParams: AgnosticDataRouteMatch["params"];
+  nextUrl: URL;
+  nextParams: AgnosticDataRouteMatch["params"];
+  formMethod?: Submission["formMethod"];
+  formAction?: Submission["formAction"];
+  formEncType?: Submission["formEncType"];
+  text?: Submission["text"];
+  formData?: Submission["formData"];
+  json?: Submission["json"];
+  actionResult?: any;
+  defaultShouldRevalidate: boolean;
 }
 
 /**
@@ -182,20 +210,7 @@ export interface ActionFunction {
  * have to re-run based on the data models that were potentially mutated.
  */
 export interface ShouldRevalidateFunction {
-  (args: {
-    currentUrl: URL;
-    currentParams: AgnosticDataRouteMatch["params"];
-    nextUrl: URL;
-    nextParams: AgnosticDataRouteMatch["params"];
-    formMethod?: Submission["formMethod"];
-    formAction?: Submission["formAction"];
-    formEncType?: Submission["formEncType"];
-    text?: Submission["text"];
-    formData?: Submission["formData"];
-    json?: Submission["json"];
-    actionResult?: DataResult;
-    defaultShouldRevalidate: boolean;
-  }): boolean;
+  (args: ShouldRevalidateFunctionArgs): boolean;
 }
 
 /**
@@ -345,10 +360,10 @@ type PathParam<Path extends string> =
       _PathParam<Path>;
 
 // Attempt to parse the given string segment. If it fails, then just return the
-// plain string type as a default fallback. Otherwise return the union of the
+// plain string type as a default fallback. Otherwise, return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
-  // if could not find path params, fallback to `string`
+  // if you could not find path params, fallback to `string`
   [PathParam<Segment>] extends [never] ? string : PathParam<Segment>;
 
 /**
@@ -392,7 +407,7 @@ function isIndexRoute(
   return route.index === true;
 }
 
-// Walk the route tree generating unique IDs where necessary so we are working
+// Walk the route tree generating unique IDs where necessary, so we are working
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
@@ -485,6 +500,28 @@ export function matchRoutes<
   return matches;
 }
 
+export interface UIMatch<Data = unknown, Handle = unknown> {
+  id: string;
+  pathname: string;
+  params: AgnosticRouteMatch["params"];
+  data: Data;
+  handle: Handle;
+}
+
+export function convertRouteMatchToUiMatch(
+  match: AgnosticDataRouteMatch,
+  loaderData: RouteData
+): UIMatch {
+  let { route, pathname, params } = match;
+  return {
+    id: route.id,
+    pathname,
+    params,
+    data: loaderData[route.id],
+    handle: route.handle,
+  };
+}
+
 interface RouteMeta<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 > {
@@ -537,7 +574,7 @@ function flattenRoutes<
     let path = joinPaths([parentPath, meta.relativePath]);
     let routesMeta = parentsMeta.concat(meta);
 
-    // Add the children before adding this route to the array so we traverse the
+    // Add the children before adding this route to the array, so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
     if (route.children && route.children.length > 0) {
@@ -614,10 +651,10 @@ function explodeOptionalSegments(path: string): string[] {
   let result: string[] = [];
 
   // All child paths with the prefix.  Do this for all children before the
-  // optional version for all children so we get consistent ordering where the
+  // optional version for all children, so we get consistent ordering where the
   // parent optional aspect is preferred as required.  Otherwise, we can get
   // child sections interspersed where deeper optional segments are higher than
-  // parent optional segments, where for example, /:two would explodes _earlier_
+  // parent optional segments, where for example, /:two would explode _earlier_
   // then /:one.  By always including the parent as required _for all children_
   // first, we avoid this issue
   result.push(
@@ -626,7 +663,7 @@ function explodeOptionalSegments(path: string): string[] {
     )
   );
 
-  // Then if this is an optional value, add all child versions without
+  // Then, if this is an optional value, add all child versions without
   if (isOptional) {
     result.push(...restExploded);
   }
@@ -942,7 +979,7 @@ function compilePath(
     regexpSource += "\\/*$";
   } else if (path !== "" && path !== "/") {
     // If our path is non-empty and contains anything beyond an initial slash,
-    // then we have _some_ form of path in our regex so we should expect to
+    // then we have _some_ form of path in our regex, so we should expect to
     // match only if we find the end of this path segment.  Look for an optional
     // non-captured trailing slash (to match a portion of the URL) or the end
     // of the path (if we've matched to the end).  We used to do this with a
@@ -1500,12 +1537,12 @@ export const redirectDocument: RedirectFunction = (url, init) => {
  * @private
  * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
  */
-export class ErrorResponse {
+export class ErrorResponseImpl {
   status: number;
   statusText: string;
   data: any;
-  error?: Error;
-  internal: boolean;
+  private error?: Error;
+  private internal: boolean;
 
   constructor(
     status: number,
@@ -1524,6 +1561,11 @@ export class ErrorResponse {
     }
   }
 }
+
+// We don't want the class exported since usage of it at runtime is an
+// implementation detail, but we do want to export the shape so folks can
+// build their own abstractions around instances via isRouteErrorResponse()
+export type ErrorResponse = InstanceType<typeof ErrorResponseImpl>;
 
 /**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx

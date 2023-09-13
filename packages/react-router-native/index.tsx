@@ -27,6 +27,7 @@ export type {
   unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  ErrorResponse,
   Fetcher,
   Hash,
   IndexRouteObject,
@@ -62,7 +63,9 @@ export type {
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   To,
+  UIMatch,
 } from "react-router";
 export {
   AbortedDeferredError,

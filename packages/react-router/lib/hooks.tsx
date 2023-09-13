@@ -12,9 +12,13 @@ import type {
   Router as RemixRouter,
   RevalidationState,
   To,
+  UIMatch,
 } from "@remix-run/router";
 import {
+  IDLE_BLOCKER,
   Action as NavigationType,
+  UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -23,26 +27,24 @@ import {
   parsePath,
   resolveTo,
   stripBasename,
-  IDLE_BLOCKER,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
+  DataRouteMatch,
   NavigateOptions,
   RouteContextObject,
   RouteMatch,
   RouteObject,
-  DataRouteMatch,
 } from "./context";
 import {
+  AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
   RouteErrorContext,
-  AwaitContext,
 } from "./context";
 
 /**
@@ -834,25 +836,12 @@ export function useRevalidator() {
  * Returns the active route matches, useful for accessing loaderData for
  * parent/child routes or the route "handle" property
  */
-export function useMatches() {
+export function useMatches(): UIMatch[] {
   let { matches, loaderData } = useDataRouterState(
     DataRouterStateHook.UseMatches
   );
   return React.useMemo(
-    () =>
-      matches.map((match) => {
-        let { pathname, params } = match;
-        // Note: This structure matches that created by createUseMatchesMatch
-        // in the @remix-run/router , so if you change this please also change
-        // that :)  Eventually we'll DRY this up
-        return {
-          id: match.route.id,
-          pathname,
-          params,
-          data: loaderData[match.route.id] as unknown,
-          handle: match.route.handle as unknown,
-        };
-      }),
+    () => matches.map((m) => convertRouteMatchToUiMatch(m, loaderData)),
     [matches, loaderData]
   );
 }
