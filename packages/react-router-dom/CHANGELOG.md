@@ -1,5 +1,17 @@
 # `react-router-dom`
 
+## 6.16.0
+
+### Minor Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.9.0`
+  - `react-router@6.16.0`
+
+### Patch Changes
+
+- Properly encode rendered URIs in server rendering to avoid hydration errors ([#10769](https://github.com/remix-run/react-router/pull/10769))
+
 ## 6.15.0
 
 ### Minor Changes

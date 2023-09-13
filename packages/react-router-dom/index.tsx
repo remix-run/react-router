@@ -130,6 +130,7 @@ export type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   To,
+  UIMatch,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -1217,6 +1218,8 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   submit: FetcherSubmitFunction;
   load: (href: string) => void;
 };
+
+// TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
 
 /**
  * Interacts with route loaders and actions without causing a navigation. Great

@@ -137,21 +137,27 @@ export type Submission =
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
  */
-interface DataFunctionArgs {
+interface DataFunctionArgs<Context> {
   request: Request;
   params: Params;
-  context?: any;
+  context?: Context;
 }
+
+// TODO: (v7) Change the defaults from any to unknown in and remove Remix wrappers:
+//   ActionFunction, ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs
+//   Also, make them a type alias instead of an interface
 
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs extends DataFunctionArgs {}
+export interface LoaderFunctionArgs<Context = any>
+  extends DataFunctionArgs<Context> {}
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs extends DataFunctionArgs {}
+export interface ActionFunctionArgs<Context = any>
+  extends DataFunctionArgs<Context> {}
 
 /**
  * Loaders and actions can return anything except `undefined` (`null` is a
@@ -163,15 +169,19 @@ type DataFunctionValue = Response | NonNullable<unknown> | null;
 /**
  * Route loader function signature
  */
-export interface LoaderFunction {
-  (args: LoaderFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
+export interface LoaderFunction<Context = any> {
+  (args: LoaderFunctionArgs<Context>):
+    | Promise<DataFunctionValue>
+    | DataFunctionValue;
 }
 
 /**
  * Route action function signature
  */
-export interface ActionFunction {
-  (args: ActionFunctionArgs): Promise<DataFunctionValue> | DataFunctionValue;
+export interface ActionFunction<Context = any> {
+  (args: ActionFunctionArgs<Context>):
+    | Promise<DataFunctionValue>
+    | DataFunctionValue;
 }
 
 /**
@@ -350,10 +360,10 @@ type PathParam<Path extends string> =
       _PathParam<Path>;
 
 // Attempt to parse the given string segment. If it fails, then just return the
-// plain string type as a default fallback. Otherwise return the union of the
+// plain string type as a default fallback. Otherwise, return the union of the
 // parsed string literals that were referenced as dynamic segments in the route.
 export type ParamParseKey<Segment extends string> =
-  // if could not find path params, fallback to `string`
+  // if you could not find path params, fallback to `string`
   [PathParam<Segment>] extends [never] ? string : PathParam<Segment>;
 
 /**
@@ -397,7 +407,7 @@ function isIndexRoute(
   return route.index === true;
 }
 
-// Walk the route tree generating unique IDs where necessary so we are working
+// Walk the route tree generating unique IDs where necessary, so we are working
 // solely with AgnosticDataRouteObject's within the Router
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
@@ -490,6 +500,28 @@ export function matchRoutes<
   return matches;
 }
 
+export interface UIMatch<Data = unknown, Handle = unknown> {
+  id: string;
+  pathname: string;
+  params: AgnosticRouteMatch["params"];
+  data: Data;
+  handle: Handle;
+}
+
+export function convertRouteMatchToUiMatch(
+  match: AgnosticDataRouteMatch,
+  loaderData: RouteData
+): UIMatch {
+  let { route, pathname, params } = match;
+  return {
+    id: route.id,
+    pathname,
+    params,
+    data: loaderData[route.id],
+    handle: route.handle,
+  };
+}
+
 interface RouteMeta<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 > {
@@ -542,7 +574,7 @@ function flattenRoutes<
     let path = joinPaths([parentPath, meta.relativePath]);
     let routesMeta = parentsMeta.concat(meta);
 
-    // Add the children before adding this route to the array so we traverse the
+    // Add the children before adding this route to the array, so we traverse the
     // route tree depth-first and child routes appear before their parents in
     // the "flattened" version.
     if (route.children && route.children.length > 0) {
@@ -619,10 +651,10 @@ function explodeOptionalSegments(path: string): string[] {
   let result: string[] = [];
 
   // All child paths with the prefix.  Do this for all children before the
-  // optional version for all children so we get consistent ordering where the
+  // optional version for all children, so we get consistent ordering where the
   // parent optional aspect is preferred as required.  Otherwise, we can get
   // child sections interspersed where deeper optional segments are higher than
-  // parent optional segments, where for example, /:two would explodes _earlier_
+  // parent optional segments, where for example, /:two would explode _earlier_
   // then /:one.  By always including the parent as required _for all children_
   // first, we avoid this issue
   result.push(
@@ -631,7 +663,7 @@ function explodeOptionalSegments(path: string): string[] {
     )
   );
 
-  // Then if this is an optional value, add all child versions without
+  // Then, if this is an optional value, add all child versions without
   if (isOptional) {
     result.push(...restExploded);
   }
@@ -947,7 +979,7 @@ function compilePath(
     regexpSource += "\\/*$";
   } else if (path !== "" && path !== "/") {
     // If our path is non-empty and contains anything beyond an initial slash,
-    // then we have _some_ form of path in our regex so we should expect to
+    // then we have _some_ form of path in our regex, so we should expect to
     // match only if we find the end of this path segment.  Look for an optional
     // non-captured trailing slash (to match a portion of the URL) or the end
     // of the path (if we've matched to the end).  We used to do this with a
