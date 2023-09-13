@@ -1,5 +1,14 @@
 # `@remix-run/serve`
 
+## 2.0.0-pre.11
+
+### Patch Changes
+
+- Update remix-serve usage error message to support ESM projects ([#7400](https://github.com/remix-run/remix/pull/7400))
+- Updated dependencies:
+  - `@remix-run/node@2.0.0-pre.11`
+  - `@remix-run/express@2.0.0-pre.11`
+
 ## 2.0.0-pre.10
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 2.0.0-pre.11
+
+### Patch Changes
+
+- [Remove] Fix AppLoadContext ([#7403](https://github.com/remix-run/remix/pull/7403))
+
 ## 2.0.0-pre.10
 
 ## 2.0.0-pre.9
