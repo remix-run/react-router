@@ -1,41 +1,16 @@
 # `react-router-dom`
 
-## 6.16.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.9.0-pre.2`
-  - `react-router@6.16.0-pre.2`
-
-## 6.16.0-pre.1
-
-### Patch Changes
-
-- In order to move towards stricter TypeScript support in the future, we're aiming to replace current usages of `any` with `unknown` on exposed typings for user-provided data. To do this in Remix v2 without introducing breaking changes in React Router v6, we have added generics to a number of shared types. These continue to default to `any` in React Router and are overridden with `unknown` in Remix. In React Router v7 we plan to move these to `unknown` as a breakjing change. ([#10843](https://github.com/remix-run/react-router/pull/10843))
-
-  - `Location` now accepts a generic for the `location.state` value
-  - `ActionFunctionArgs`/`ActionFunction`/`LoaderFunctionArgs`/`LoaderFunction` now accept a generic for the `context` parameter (only used in SSR usages via `createStaticHandler`)
-  - The return type of `useMatches` (now exported as `UIMatch`) accepts generics for `match.data` and `match.handle` - both of which were already set to `unknown`
-
-- Updated dependencies:
-  - `react-router@6.16.0-pre.1`
-  - `@remix-run/router@1.9.0-pre.1`
-
-## 6.16.0-pre.0
+## 6.16.0
 
 ### Minor Changes
 
-- Removed internal API only required for the Remix v1 back-compat layer and no longer needed in Remix v2 (`_isFetchActionRedirect`, `_hasFetcherDoneAnything`) ([#10715](https://github.com/remix-run/react-router/pull/10715))
+- Updated dependencies:
+  - `@remix-run/router@1.9.0`
+  - `react-router@6.16.0`
 
 ### Patch Changes
 
-- Proeprly encode rendered URIs in server rendering to avoid hydration errors ([#10769](https://github.com/remix-run/react-router/pull/10769))
-- Move the `@private` class export `ErrorResponse` to an `UNSAFE_ErrorResponseImpl` export since it is an implementation detail and there should be no construction of `ErrorResponse` instances in userland. This frees us up to export a `type ErrorResponse` which correlates to an instance of the class via `InstanceType`. Userland code should only ever be using `ErrorResponse` as a type and should be type-narrowing via `isRouteErrorResponse`. ([#10811](https://github.com/remix-run/react-router/pull/10811))
-- Export `ShouldRevalidateFunctionArgs` interface ([#10797](https://github.com/remix-run/react-router/pull/10797))
-- Updated dependencies:
-  - `@remix-run/router@1.9.0-pre.0`
-  - `react-router@6.16.0-pre.0`
+- Properly encode rendered URIs in server rendering to avoid hydration errors ([#10769](https://github.com/remix-run/react-router/pull/10769))
 
 ## 6.15.0
 
