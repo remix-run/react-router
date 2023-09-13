@@ -37,7 +37,7 @@ async function run() {
 
   if (!buildPathArg) {
     console.error(`
-  Usage: remix-serve <build-dir>`);
+  Usage: remix-serve <server-build-path> - e.g. remix-serve build/index.js`);
     process.exit(1);
   }
 
