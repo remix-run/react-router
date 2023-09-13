@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 2.0.0-pre.12
+
+### Patch Changes
+
+- [Remove] Update to stable `web-std-io` and `react-router` releases ([#7406](https://github.com/remix-run/remix/pull/7406))
+
 ## 2.0.0-pre.11
 
 ### Patch Changes
