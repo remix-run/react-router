@@ -1328,9 +1328,8 @@ function useScrollRestoration({
       } catch (error) {
         warning(
           false,
-          "Failed to save scroll positions in sessionStorage, <ScrollRestoration /> will not work properly."
+          `Failed to save scroll positions in sessionStorage, <ScrollRestoration /> will not work properly (${error}).`
         );
-        console.warn(error);
       }
       window.history.scrollRestoration = "auto";
     }, [storageKey, getKey, navigation.state, location, matches])
