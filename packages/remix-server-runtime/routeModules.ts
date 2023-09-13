@@ -20,7 +20,9 @@ export interface RouteModules<RouteModule> {
 // RR also doesn't export DataFunctionArgs, so we extend the two interfaces here
 // even tough they're identical under the hood
 export type DataFunctionArgs = RRActionFunctionArgs<AppLoadContext> &
-  RRLoaderFunctionArgs<AppLoadContext>;
+  RRLoaderFunctionArgs<AppLoadContext> & {
+    context: AppLoadContext;
+  };
 
 /**
  * A function that handles data mutations for a route.
