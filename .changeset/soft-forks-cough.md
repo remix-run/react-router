@@ -2,4 +2,4 @@
 "react-router-dom": patch
 ---
 
-Gracefully handle cases where sessionStorage is unavailable when using ScrollRestoration
+Log a warning and fail gracefully in `ScrollRestoration` when `sessionStorage` is unavailable
