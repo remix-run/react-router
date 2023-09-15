@@ -568,18 +568,29 @@ export async function readConfig(
       "unstable_postcss",
       "unstable_tailwind",
       "unstable_vanillaExtract",
-      "v2_dev",
       "v2_errorBoundary",
       "v2_headers",
       "v2_meta",
       "v2_normalizeFormMethod",
       "v2_routeConvention",
-    ] as const;
+    ];
+
+    if ("v2_dev" in userFlags) {
+      if (userFlags.v2_dev === true) {
+        deprecatedFlags.push("v2_dev");
+      } else {
+        logger.warn("The `v2_dev` future flag is obsolete.", {
+          details: [
+            "Move your dev options from `future.v2_dev` to `dev` within your `remix.config.js` file",
+          ],
+        });
+      }
+    }
 
     let obsoleteFlags = deprecatedFlags.filter((f) => f in userFlags);
     if (obsoleteFlags.length > 0) {
       logger.warn(
-        `⚠️ REMIX FUTURE CHANGE: the following Remix future flags are now obsolete ` +
+        `The following Remix future flags are now obsolete ` +
           `and can be removed from your remix.config.js file:\n` +
           obsoleteFlags.map((f) => `- ${f}\n`).join("")
       );
