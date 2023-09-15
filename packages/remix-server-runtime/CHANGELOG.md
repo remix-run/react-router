@@ -1,5 +1,64 @@
 # `@remix-run/server-runtime`
 
+## 2.0.0
+
+### Major Changes
+
+- Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
+- The route `meta` API now defaults to the new "V2 Meta" API ([#6958](https://github.com/remix-run/remix/pull/6958))
+  - Please refer to the ([docs](https://remix.run/docs/en/2.0.0/route/meta) and [Preparing for V2](https://remix.run/docs/en/2.0.0/start/v2#route-meta) guide for more information.
+- Promote the `future.v2_dev` flag in `remix.config.js` to a root level `dev` config ([#7002](https://github.com/remix-run/remix/pull/7002))
+- Remove `v2_errorBoundary` flag and `CatchBoundary` implementation ([#6906](https://github.com/remix-run/remix/pull/6906))
+- Remove `v2_normalizeFormMethod` future flag - all `formMethod` values will be normalized in v2 ([#6875](https://github.com/remix-run/remix/pull/6875))
+- Remove `v2_routeConvention` flag - the flat route file convention is now standard ([#6969](https://github.com/remix-run/remix/pull/6969))
+- Remove `v2_headers` flag - it is now the default behavior to use the deepest `headers` function in the route tree ([#6979](https://github.com/remix-run/remix/pull/6979))
+- Remove `imagesizes` & `imagesrcset` properties from `HtmlLinkDescriptor`, `LinkDescriptor` & `PrefetchPageDescriptor` types ([#6936](https://github.com/remix-run/remix/pull/6936))
+- Removed/adjusted types to prefer `unknown` over `any` and to align with underlying React Router types ([#7319](https://github.com/remix-run/remix/pull/7319), [#7354](https://github.com/remix-run/remix/pull/7354)):
+  - Renamed the `useMatches()` return type from `RouteMatch` to `UIMatch`
+  - Renamed `LoaderArgs`/`ActionArgs` to `LoaderFunctionArgs`/`ActionFunctionArgs`
+  - `AppData` changed from `any` to `unknown`
+  - `Location["state"]` (`useLocation.state`) changed from `any` to `unknown`
+  - `UIMatch["data"]` (`useMatches()[i].data`) changed from `any` to `unknown`
+  - `UIMatch["handle"]` (`useMatches()[i].handle`) changed from `{ [k: string]: any }` to `unknown`
+  - `Fetcher["data"]` (`useFetcher().data`) changed from `any` to `unknown`
+  - `MetaMatch.handle` (used in `meta()`) changed from `any` to `unknown`
+  - `AppData`/`RouteHandle` are no longer exported as they are just aliases for `unknown`
+- Remove deprecated `REMIX_DEV_HTTP_ORIGIN` env var - use `REMIX_DEV_ORIGIN` instead ([#6963](https://github.com/remix-run/remix/pull/6963))
+- Removed support for "magic exports" from the `remix` package. This package can be removed from your `package.json` and you should update all imports to use the source `@remix-run/*` packages: ([#6895](https://github.com/remix-run/remix/pull/6895))
+
+  ```diff
+  - import type { ActionArgs } from "remix";
+  - import { json, useLoaderData } from "remix";
+  + import type { ActionArgs } from "@remix-run/node";
+  + import { json } from "@remix-run/node";
+  + import { useLoaderData } from "@remix-run/react";
+  ```
+
+### Minor Changes
+
+- Update Remix to use React Router `route.lazy` for module loading ([#7133](https://github.com/remix-run/remix/pull/7133))
+- Detect built mode via `build.mode` ([#6964](https://github.com/remix-run/remix/pull/6964))
+  - Prevents mode mismatch between built Remix server entry and user-land server
+  - Additionally, all runtimes (including non-Node runtimes) can use `build.mode` to determine if HMR should be performed.
+- Re-export the new `redirectDocument` method from React Router ([#7040](https://github.com/remix-run/remix/pull/7040), [#6842](https://github.com/remix-run/remix/pull/6842)) ([#7040](https://github.com/remix-run/remix/pull/7040))
+
+### Patch Changes
+
+- Export proper `ErrorResponse` type for usage alongside `isRouteErrorResponse` ([#7244](https://github.com/remix-run/remix/pull/7244))
+- Fix `destroySession` for sessions using a `maxAge` cookie ([#7252](https://github.com/remix-run/remix/pull/7252))
+  - The data in the cookie was always properly destroyed but when using `maxAge`, the cookie itself wasn't deleted because `Max-Age` takes precedence over `Expires` in the cookie spec
+- Ensure `maxAge`/`expires` options passed to `commitSession` take precedence over the original `cookie.expires` value ([#6598](https://github.com/remix-run/remix/pull/6598), [#7374](https://github.com/remix-run/remix/pull/7374))
+- Fix `handleError` method to correctly receive `ErrorResponse` instances on `?_data` and resource route requests ([#7211](https://github.com/remix-run/remix/pull/7211))
+  - It now receives the `ErrorResponse` instance the same way a document request would
+  - Users can leverage `isRouteErrorResponse` to detect these error instances and log accordingly
+- Update `createMemorySessionStorage` to use an internal hash value instead of an integer for the session `id` ([#7227](https://github.com/remix-run/remix/pull/7227))
+- Fix false-positive resource route classification on document requests for routes that only export an `ErrorBoundary` ([#7155](https://github.com/remix-run/remix/pull/7155))
+- Correctly infer deferred types for top-level promises ([#7104](https://github.com/remix-run/remix/pull/7104))
+- Construct `Request` with `duplex` option ([#7234](https://github.com/remix-run/remix/pull/7234))
+- Updated dependencies:
+  - [`react-router-dom@6.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.16.0)
+  - [`@remix-run/router@1.9.0`](https://github.com/remix-run/react-router/blob/main/packages/router/CHANGELOG.md#190)
+
 ## 1.19.3
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%401.19.3) for an overview of all changes in v1.19.3.

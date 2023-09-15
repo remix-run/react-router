@@ -1,6 +1,14 @@
-import type { AgnosticRouteMatch, Location, Params } from "@remix-run/router";
+import type {
+  ActionFunction as RRActionFunction,
+  ActionFunctionArgs as RRActionFunctionArgs,
+  AgnosticRouteMatch,
+  LoaderFunction as RRLoaderFunction,
+  LoaderFunctionArgs as RRLoaderFunctionArgs,
+  Location,
+  Params,
+} from "@remix-run/router";
 
-import type { AppLoadContext, AppData } from "./data";
+import type { AppData, AppLoadContext } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "./serialize";
 
@@ -8,34 +16,31 @@ export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule;
 }
 
-/**
- * The arguments passed to ActionFunction and LoaderFunction.
- *
- * Note this is almost identical to React Router's version but over there the
- * context is optional since it's only there during static handler invocations.
- * Keeping Remix's own definition for now so it can differentiate between
- * client/server
- */
-export interface DataFunctionArgs {
-  request: Request;
-  context: AppLoadContext;
-  params: Params;
-}
-
-export type LoaderArgs = DataFunctionArgs;
-
-export type ActionArgs = DataFunctionArgs;
+// Context is always provided in Remix, and typed for module augmentation support.
+// RR also doesn't export DataFunctionArgs, so we extend the two interfaces here
+// even tough they're identical under the hood
+export type DataFunctionArgs = RRActionFunctionArgs<AppLoadContext> &
+  RRLoaderFunctionArgs<AppLoadContext> & {
+    context: AppLoadContext;
+  };
 
 /**
  * A function that handles data mutations for a route.
  */
-export interface ActionFunction {
-  (args: DataFunctionArgs):
-    | Promise<Response>
-    | Response
-    | Promise<AppData>
-    | AppData;
-}
+export type ActionFunction = (
+  args: DataFunctionArgs
+) => ReturnType<RRActionFunction>;
+
+export type ActionFunctionArgs = DataFunctionArgs;
+
+/**
+ * A function that loads data for a route.
+ */
+export type LoaderFunction = (
+  args: DataFunctionArgs
+) => ReturnType<RRLoaderFunction>;
+
+export type LoaderFunctionArgs = DataFunctionArgs;
 
 export type HeadersArgs = {
   loaderHeaders: Headers;
@@ -58,17 +63,6 @@ export interface HeadersFunction {
  */
 export interface LinksFunction {
   (): LinkDescriptor[];
-}
-
-/**
- * A function that loads data for a route.
- */
-export interface LoaderFunction {
-  (args: DataFunctionArgs):
-    | Promise<Response>
-    | Response
-    | Promise<AppData>
-    | AppData;
 }
 
 /**
@@ -148,7 +142,7 @@ interface ServerRuntimeMetaMatch<
   id: RouteId;
   pathname: AgnosticRouteMatch["pathname"];
   data: Loader extends LoaderFunction ? SerializeFrom<Loader> : unknown;
-  handle?: unknown;
+  handle?: RouteHandle;
   params: AgnosticRouteMatch["params"];
   meta: ServerRuntimeMetaDescriptor[];
   error?: unknown;
@@ -203,7 +197,7 @@ type LdJsonValue = LdJsonPrimitive | LdJsonObject | LdJsonArray;
 /**
  * An arbitrary object that is associated with a route.
  */
-export type RouteHandle = any;
+export type RouteHandle = unknown;
 
 export interface EntryRouteModule {
   ErrorBoundary?: any; // Weakly typed because server-runtime is not React-aware

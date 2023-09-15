@@ -68,11 +68,6 @@ export function vanillaExtractPlugin(
 
       let root = config.appDirectory;
 
-      let postcssProcessor = await getPostcssProcessor({
-        config,
-        postcssContext: { vanillaExtract: true },
-      });
-
       // Resolve virtual CSS files first to avoid resolving the same
       // file multiple times since this filter is more specific and
       // doesn't require a file system lookup.
@@ -120,6 +115,11 @@ export function vanillaExtractPlugin(
           let compiler = getCompiler(root, options.mode);
           let { css, filePath } = compiler.getCssForFile(relativeFilePath);
           let resolveDir = dirname(resolve(root, filePath));
+
+          let postcssProcessor = await getPostcssProcessor({
+            config,
+            postcssContext: { vanillaExtract: true },
+          });
 
           if (postcssProcessor) {
             css = (

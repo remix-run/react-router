@@ -30,6 +30,11 @@ test.describe("compiler", () => {
               ...getDependenciesToBundle("esm-only-exports-pkg"),
               ...getDependenciesToBundle("esm-only-nested-exports-pkg"),
             ],
+            browserNodeBuiltinsPolyfill: {
+              modules: {
+                path: true,
+              },
+            },
           };
         `,
         "app/fake.server.ts": js`

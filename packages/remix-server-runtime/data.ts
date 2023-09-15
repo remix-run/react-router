@@ -13,7 +13,9 @@ import type {
 
 /**
  * An object of unknown type for route loaders and actions provided by the
- * server's `getLoadContext()` function.
+ * server's `getLoadContext()` function.  This is defined as an empty interface
+ * specifically so apps can leverage declaration merging to augment this type
+ * globally: https://www.typescriptlang.org/docs/handbook/declaration-merging.html
  */
 export interface AppLoadContext {
   [key: string]: unknown;
@@ -21,10 +23,8 @@ export interface AppLoadContext {
 
 /**
  * Data for a route that was returned from a `loader()`.
- *
- * Note: This moves to unknown in ReactRouter and eventually likely in Remix
  */
-export type AppData = any;
+export type AppData = unknown;
 
 export async function callRouteActionRR({
   loadContext,

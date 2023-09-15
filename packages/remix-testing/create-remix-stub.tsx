@@ -1,11 +1,11 @@
 import * as React from "react";
 import {
   UNSAFE_convertRoutesToDataRoutes,
-  type ActionFunctionArgs,
   type HydrationState,
   type InitialEntry,
-  type LoaderFunctionArgs,
   type Router,
+  type ActionFunctionArgs as RRActionFunctionArgs,
+  type LoaderFunctionArgs as RRLoaderFunctionArgs,
 } from "@remix-run/router";
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
 import type {
@@ -160,10 +160,10 @@ function processRoutes(
       Component: route.Component,
       ErrorBoundary: route.ErrorBoundary,
       action: action
-        ? (args: ActionFunctionArgs) => action!({ ...args, context })
+        ? (args: RRActionFunctionArgs) => action!({ ...args, context })
         : undefined,
       loader: loader
-        ? (args: LoaderFunctionArgs) => loader!({ ...args, context })
+        ? (args: RRLoaderFunctionArgs) => loader!({ ...args, context })
         : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,

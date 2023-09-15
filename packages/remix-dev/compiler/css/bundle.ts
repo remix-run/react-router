@@ -6,9 +6,9 @@ import postcssDiscardDuplicates from "postcss-discard-duplicates";
 
 import type { Context } from "../context";
 
-export async function write(ctx: Context, outputFiles: esbuild.OutputFile[]) {
+export let write = async (ctx: Context, outputFiles: esbuild.OutputFile[]) => {
   let cssBundleFile = outputFiles.find((outputFile) =>
-    isCssBundleFile(ctx, outputFile, ".css")
+    isBundle(ctx, outputFile, ".css")
   );
   if (!cssBundleFile) return;
 
@@ -23,7 +23,7 @@ export async function write(ctx: Context, outputFiles: esbuild.OutputFile[]) {
     to: cssBundlePath,
     map: ctx.options.sourcemap && {
       prev: outputFiles.find((outputFile) =>
-        isCssBundleFile(ctx, outputFile, ".css.map")
+        isBundle(ctx, outputFile, ".css.map")
       )?.text,
       inline: false,
       annotation: false,
@@ -45,45 +45,16 @@ export async function write(ctx: Context, outputFiles: esbuild.OutputFile[]) {
         await fse.writeFile(asset.path, asset.contents);
       }),
   ]);
-}
+};
 
-function isCssBundleFile(
+export let isBundle = (
   ctx: Context,
   outputFile: esbuild.OutputFile,
   extension: ".css" | ".css.map"
-): boolean {
+): boolean => {
   return (
     path.dirname(outputFile.path) === ctx.config.assetsBuildDirectory &&
     path.basename(outputFile.path).startsWith("css-bundle") &&
     outputFile.path.endsWith(extension)
   );
-}
-
-type GroupedCssBundleFiles = {
-  css?: esbuild.OutputFile;
-  sourceMap?: esbuild.OutputFile;
-  assets: esbuild.OutputFile[];
 };
-
-export function groupCssBundleFiles(
-  ctx: Context,
-  files: esbuild.OutputFile[]
-): GroupedCssBundleFiles {
-  let groupedFiles: GroupedCssBundleFiles = {
-    css: undefined,
-    sourceMap: undefined,
-    assets: [],
-  };
-
-  for (let file of files) {
-    if (isCssBundleFile(ctx, file, ".css")) {
-      groupedFiles.css = file;
-    } else if (isCssBundleFile(ctx, file, ".css.map")) {
-      groupedFiles.sourceMap = file;
-    } else {
-      groupedFiles.assets.push(file);
-    }
-  }
-
-  return groupedFiles;
-}

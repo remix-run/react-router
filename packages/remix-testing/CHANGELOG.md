@@ -1,5 +1,43 @@
 # `@remix-run/testing`
 
+## 2.0.0
+
+### Major Changes
+
+- Drop React 17 support ([#7121](https://github.com/remix-run/remix/pull/7121))
+- Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
+- Remove `v2_normalizeFormMethod` future flag - all `formMethod` values will be normalized in v2 ([#6875](https://github.com/remix-run/remix/pull/6875))
+- Remove `v2_routeConvention` flag - the flat route file convention is now standard ([#6969](https://github.com/remix-run/remix/pull/6969))
+- Remove `v2_headers` flag - it is now the default behavior to use the deepest `headers` function in the route tree ([#6979](https://github.com/remix-run/remix/pull/6979))
+- Remove `v2_errorBoundary` flag and `CatchBoundary` implementation ([#6906](https://github.com/remix-run/remix/pull/6906))
+- The route `meta` API now defaults to the new "V2 Meta" API ([#6958](https://github.com/remix-run/remix/pull/6958))
+  - Please refer to the ([docs](https://remix.run/docs/en/2.0.0/route/meta) and [Preparing for V2](https://remix.run/docs/en/2.0.0/start/v2#route-meta) guide for more information.
+- Promote the `future.v2_dev` flag in `remix.config.js` to a root level `dev` config ([#7002](https://github.com/remix-run/remix/pull/7002))
+- Removed support for "magic exports" from the `remix` package. This package can be removed from your `package.json` and you should update all imports to use the source `@remix-run/*` packages: ([#6895](https://github.com/remix-run/remix/pull/6895))
+
+  ```diff
+  - import type { ActionArgs } from "remix";
+  - import { json, useLoaderData } from "remix";
+  + import type { ActionArgs } from "@remix-run/node";
+  + import { json } from "@remix-run/node";
+  + import { useLoaderData } from "@remix-run/react";
+  ```
+
+### Minor Changes
+
+- `unstable_createRemixStub` now supports adding `meta`/`links` functions on stubbed Remix routes ([#7186](https://github.com/remix-run/remix/pull/7186))
+  - ⚠️ `unstable_createRemixStub` no longer supports the `element`/`errorElement` properties on routes. You must use `Component`/`ErrorBoundary` to match what you would export from a Remix route module.
+- Update Remix to use React Router `route.lazy` for module loading ([#7133](https://github.com/remix-run/remix/pull/7133))
+
+### Patch Changes
+
+- Fix types for `StubRouteObject` `children` property ([#7098](https://github.com/remix-run/remix/pull/7098))
+- Updated dependencies:
+  - `@remix-run/react@2.0.0`
+  - `@remix-run/node@2.0.0`
+  - [`react-router-dom@6.16.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.16.0)
+  - [`@remix-run/router@1.9.0`](https://github.com/remix-run/react-router/blob/main/packages/router/CHANGELOG.md#190)
+
 ## 1.19.3
 
 ### Patch Changes

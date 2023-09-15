@@ -64,7 +64,14 @@ export async function loadPostcssPlugins({
 
       plugins.push(...postcssConfig.plugins);
     } catch (err) {
-      // If they don't have a PostCSS config, just ignore it.
+      // If they don't have a PostCSS config, just ignore it,
+      // otherwise rethrow the error.
+      if (
+        err instanceof Error &&
+        !/No PostCSS Config found/i.test(err.message)
+      ) {
+        throw err;
+      }
     }
   }
 
