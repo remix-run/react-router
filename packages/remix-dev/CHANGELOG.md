@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 2.0.0-pre.13
+
+### Patch Changes
+
+- Warn if `future.v2_dev` is set ([#7427](https://github.com/remix-run/remix/pull/7427))
+
+  Prompt user to delete it if its set to `true` or move it to `dev` if its an object.
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.0-pre.13`
+
 ## 2.0.0-pre.12
 
 ### Patch Changes
