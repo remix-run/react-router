@@ -1,153 +1,50 @@
 # `@remix-run/serve`
 
-## 2.0.0-pre.13
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.0.0-pre.13`
-  - `@remix-run/node@2.0.0-pre.13`
-
-## 2.0.0-pre.12
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.12`
-  - `@remix-run/express@2.0.0-pre.12`
-
-## 2.0.0-pre.11
-
-### Patch Changes
-
-- Update remix-serve usage error message to support ESM projects ([#7400](https://github.com/remix-run/remix/pull/7400))
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.11`
-  - `@remix-run/express@2.0.0-pre.11`
-
-## 2.0.0-pre.10
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.0.0-pre.10`
-  - `@remix-run/node@2.0.0-pre.10`
-
-## 2.0.0-pre.9
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.9`
-  - `@remix-run/express@2.0.0-pre.9`
-
-## 2.0.0-pre.8
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.8`
-  - `@remix-run/express@2.0.0-pre.8`
-
-## 2.0.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.7`
-  - `@remix-run/express@2.0.0-pre.7`
-
-## 2.0.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.6`
-  - `@remix-run/express@2.0.0-pre.6`
-
-## 2.0.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.5`
-  - `@remix-run/express@2.0.0-pre.5`
-
-## 2.0.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.0.0-pre.4`
-  - `@remix-run/node@2.0.0-pre.4`
-
-## 2.0.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.0.0-pre.3`
-  - `@remix-run/node@2.0.0-pre.3`
-
-## 2.0.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.0.0-pre.2`
-  - `@remix-run/node@2.0.0-pre.2`
-
-## 2.0.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.0.0-pre.1`
-  - `@remix-run/node@2.0.0-pre.1`
-
-## 2.0.0-pre.0
+## 2.0.0
 
 ### Major Changes
 
-- `remix-serve` picks an open port if 3000 is taken ([#7278](https://github.com/remix-run/remix/pull/7278))
-
+- `remix-serve` now picks an open port if 3000 is taken ([#7278](https://github.com/remix-run/remix/pull/7278))
   - If `PORT` env var is set, `remix-serve` will use that port
   - Otherwise, `remix-serve` picks an open port (3000 unless that is already taken)
-
-- integrate manual mode in remix-serve ([#7231](https://github.com/remix-run/remix/pull/7231))
+- Integrate manual mode in `remix-serve` ([#7231](https://github.com/remix-run/remix/pull/7231))
 - Remove undocumented `createApp` Node API ([#7229](https://github.com/remix-run/remix/pull/7229))
-
-  `remix-serve` should a CLI, not a library
-
+  - `remix-serve` is a CLI, not a library
 - Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
-- promote config.future.v2_dev to config.dev ([#7002](https://github.com/remix-run/remix/pull/7002))
-- Default to serverModuleFormat esm, and update remix-serve to use dynamic import to support esm and cjs build outputs. ([#6949](https://github.com/remix-run/remix/pull/6949))
-- For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server. If you are using `remix-serve`, nothing is required. If you are using your own app server, you will need to install the globals yourself. ([#7009](https://github.com/remix-run/remix/pull/7009))
+- Promote the `future.v2_dev` flag in `remix.config.js` to a root level `dev` config ([#7002](https://github.com/remix-run/remix/pull/7002))
+- Default to `serverModuleFormat: "esm"` and update `remix-serve` to use dynamic import to support ESM and CJS build outputs ([#6949](https://github.com/remix-run/remix/pull/6949))
+- Preserve dynamic imports in `remix-serve` for external bundle ([#7173](https://github.com/remix-run/remix/pull/7173))
+- For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
 
-  ```js filename=server.js
-  import { installGlobals } from "@remix-run/node";
+  - If you are using `remix-serve`, nothing is required
+  - If you are using your own app server, you will need to install the globals yourself
 
-  installGlobals();
-  ```
+    ```js filename=server.js
+    import { installGlobals } from "@remix-run/node";
 
-  source-map-support is now a responsibility of the app server. If you are using `remix-serve`, nothing is required. If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
+    installGlobals();
+    ```
 
-  ```sh
-  npm i source-map-support
-  ```
+- `source-map-support` is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
 
-  ```js filename=server.js
-  import sourceMapSupport from "source-map-support";
-  sourceMapSupport.install();
-  ```
+  - If you are using `remix-serve`, nothing is required
+  - If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
 
-- Preserve dynamic imports in remix-serve for external bundle ([#7173](https://github.com/remix-run/remix/pull/7173))
+    ```sh
+    npm i source-map-support
+    ```
+
+    ```js filename=server.js
+    import sourceMapSupport from "source-map-support";
+    sourceMapSupport.install();
+    ```
 
 ### Patch Changes
 
+- Update `remix-serve` usage error message to support ESM projects ([#7400](https://github.com/remix-run/remix/pull/7400))
 - Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.0`
-  - `@remix-run/express@2.0.0-pre.0`
+  - `@remix-run/node@2.0.0`
+  - `@remix-run/express@2.0.0`
 
 ## 1.19.3
 

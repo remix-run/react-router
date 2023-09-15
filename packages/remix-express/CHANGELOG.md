@@ -1,127 +1,44 @@
 # `@remix-run/express`
 
-## 2.0.0-pre.13
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.13`
-
-## 2.0.0-pre.12
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.12`
-
-## 2.0.0-pre.11
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.11`
-
-## 2.0.0-pre.10
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.10`
-
-## 2.0.0-pre.9
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.9`
-
-## 2.0.0-pre.8
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.8`
-
-## 2.0.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.7`
-
-## 2.0.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.6`
-
-## 2.0.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.5`
-
-## 2.0.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.4`
-
-## 2.0.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.3`
-
-## 2.0.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.2`
-
-## 2.0.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.1`
-
-## 2.0.0-pre.0
+## 2.0.0
 
 ### Major Changes
 
 - Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
-- For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server. If you are using `remix-serve`, nothing is required. If you are using your own app server, you will need to install the globals yourself. ([#7009](https://github.com/remix-run/remix/pull/7009))
+- For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
 
-  ```js filename=server.js
-  import { installGlobals } from "@remix-run/node";
+  - If you are using `remix-serve`, nothing is required
+  - If you are using your own app server, you will need to install the globals yourself
 
-  installGlobals();
-  ```
+    ```js filename=server.js
+    import { installGlobals } from "@remix-run/node";
 
-  source-map-support is now a responsibility of the app server. If you are using `remix-serve`, nothing is required. If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
+    installGlobals();
+    ```
 
-  ```sh
-  npm i source-map-support
-  ```
+- `source-map-support` is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
 
-  ```js filename=server.js
-  import sourceMapSupport from "source-map-support";
-  sourceMapSupport.install();
-  ```
+  - If you are using `remix-serve`, nothing is required
+  - If you are using your own app server, you will need to install [`source-map-support`](https://www.npmjs.com/package/source-map-support) yourself.
+
+    ```sh
+    npm i source-map-support
+    ```
+
+    ```js filename=server.js
+    import sourceMapSupport from "source-map-support";
+    sourceMapSupport.install();
+    ```
 
 ### Patch Changes
 
-- - Switch to `headers.entries()` instead of non-spec-compliant `headers.raw()` in `sendRemixResponse` ([#7150](https://github.com/remix-run/remix/pull/7150))
-  - Update to `@remix-run/web-fetch@4.3.7`
-- remove references to fetch polyfills in node and arc adapters ([#7230](https://github.com/remix-run/remix/pull/7230))
+- Switch to `headers.entries()` instead of non-spec-compliant `headers.raw()` in `sendRemixResponse` ([#7150](https://github.com/remix-run/remix/pull/7150))
+- Remove references to fetch polyfills in node and arc adapters ([#7230](https://github.com/remix-run/remix/pull/7230))
 - Updated dependencies:
-  - `@remix-run/node@2.0.0-pre.0`
+  - `@remix-run/node@2.0.0`
+  - `@remix-run/web-fetch@4.4.0`
+  - `@remix-run/web-file@3.1.0`
+  - `@remix-run/web-stream@1.1.0`
 
 ## 1.19.3
 
