@@ -1533,11 +1533,17 @@ export const redirectDocument: RedirectFunction = (url, init) => {
   return response;
 };
 
+export interface ErrorResponse {
+  status: number;
+  statusText: string;
+  data: any;
+}
+
 /**
  * @private
  * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
  */
-export class ErrorResponseImpl {
+export class ErrorResponseImpl implements ErrorResponse {
   status: number;
   statusText: string;
   data: any;
@@ -1561,11 +1567,6 @@ export class ErrorResponseImpl {
     }
   }
 }
-
-// We don't want the class exported since usage of it at runtime is an
-// implementation detail, but we do want to export the shape so folks can
-// build their own abstractions around instances via isRouteErrorResponse()
-export type ErrorResponse = InstanceType<typeof ErrorResponseImpl>;
 
 /**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx
