@@ -68,8 +68,8 @@ type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 
 /**
- * Users can specify either lowercase or uppercase form methods on <Form>,
- * useSubmit(), <fetcher.Form>, etc.
+ * Users can specify either lowercase or uppercase form methods on `<Form>`,
+ * useSubmit(), `<fetcher.Form>`, etc.
  */
 export type HTMLFormMethod = LowerCaseFormMethod | UpperCaseFormMethod;
 

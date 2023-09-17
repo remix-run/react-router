@@ -512,7 +512,7 @@ const isBrowser =
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
- * The public API for rendering a history-aware <a>.
+ * The public API for rendering a history-aware `<a>`.
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -623,7 +623,7 @@ export interface NavLinkProps
 }
 
 /**
- * A <Link> wrapper that knows if it's "active" or not.
+ * A `<Link>` wrapper that knows if it's "active" or not.
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(

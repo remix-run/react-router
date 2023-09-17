@@ -82,7 +82,7 @@ export function useHref(
 }
 
 /**
- * Returns true if this component is a descendant of a <Router>.
+ * Returns true if this component is a descendant of a `<Router>`.
  *
  * @see https://reactrouter.com/hooks/use-in-router-context
  */
@@ -124,7 +124,7 @@ export function useNavigationType(): NavigationType {
 /**
  * Returns a PathMatch object if the given pattern matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
- * <NavLink>.
+ * `<NavLink>`.
  *
  * @see https://reactrouter.com/hooks/use-match
  */
@@ -172,7 +172,7 @@ function useIsomorphicLayoutEffect(
 }
 
 /**
- * Returns an imperative method for changing the location. Used by <Link>s, but
+ * Returns an imperative method for changing the location. Used by `<Link>`s, but
  * may also be used by other elements to change the location.
  *
  * @see https://reactrouter.com/hooks/use-navigate
@@ -270,7 +270,7 @@ export function useOutletContext<Context = unknown>(): Context {
 
 /**
  * Returns the element for the child route at this level of the route
- * hierarchy. Used internally by <Outlet> to render child routes.
+ * hierarchy. Used internally by `<Outlet>` to render child routes.
  *
  * @see https://reactrouter.com/hooks/use-outlet
  */
@@ -331,7 +331,7 @@ export function useResolvedPath(
 /**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route
- * elements in the tree must render an <Outlet> to render their child route's
+ * elements in the tree must render an `<Outlet>` to render their child route's
  * element.
  *
  * @see https://reactrouter.com/hooks/use-routes
@@ -903,7 +903,7 @@ export function useRouteError(): unknown {
 }
 
 /**
- * Returns the happy-path data from the nearest ancestor <Await /> value
+ * Returns the happy-path data from the nearest ancestor `<Await />` value
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
@@ -911,7 +911,7 @@ export function useAsyncValue(): unknown {
 }
 
 /**
- * Returns the error from the nearest ancestor <Await /> value
+ * Returns the error from the nearest ancestor `<Await />` value
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
