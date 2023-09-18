@@ -42,6 +42,7 @@ async function run() {
   }
 
   let buildPath = path.resolve(buildPathArg);
+  let versionPath = path.resolve(buildPath, "..", "version.txt");
 
   async function reimportServer() {
     let stat = fs.statSync(buildPath);
@@ -60,7 +61,7 @@ async function run() {
     }
 
     chokidar
-      .watch(buildPath, { ignoreInitial: true })
+      .watch(versionPath, { ignoreInitial: true })
       .on("add", handleServerUpdate)
       .on("change", handleServerUpdate);
 
