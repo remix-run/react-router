@@ -137,7 +137,7 @@ export interface AppConfig {
   serverMinify?: boolean;
 
   /**
-   * The output format of the server build. Defaults to "cjs".
+   * The output format of the server build. Defaults to "esm".
    */
   serverModuleFormat?: ServerModuleFormat;
 
@@ -310,7 +310,7 @@ export interface RemixConfig {
   serverMode: ServerMode;
 
   /**
-   * The output format of the server build. Defaults to "cjs".
+   * The output format of the server build. Defaults to "esm".
    */
   serverModuleFormat: ServerModuleFormat;
 
