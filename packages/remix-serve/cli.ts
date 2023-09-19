@@ -45,6 +45,12 @@ async function run() {
   let versionPath = path.resolve(buildPath, "..", "version.txt");
 
   async function reimportServer() {
+    Object.keys(require.cache).forEach((key) => {
+      if (key.startsWith(buildPath)) {
+        delete require.cache[key];
+      }
+    });
+
     let stat = fs.statSync(buildPath);
 
     // use a timestamp query parameter to bust the import cache
