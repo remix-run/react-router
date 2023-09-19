@@ -10,10 +10,12 @@ import type {
   RouterSubscriber,
   To,
   TrackedPromise,
+  ViewTransitionFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
+  UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
   createMemoryHistory,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
@@ -97,6 +99,11 @@ export interface RouterProviderProps {
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
 
+// FIXME: Remove
+function LOG(...args: any[]) {
+  console.debug(new Date().toISOString(), ...args);
+}
+
 /**
  * Given a Remix Router instance, render the appropriate UI
  */
@@ -108,33 +115,72 @@ export function RouterProvider({
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
-  let { v7_startTransition, unstable_startViewTransition } = future || {};
+  let { v7_startTransition } = future || {};
   let setState = React.useCallback<RouterSubscriber>(
-    (newState: RouterState, { isCompletedNavigation }) => {
-      let useStartViewTransition =
-        unstable_startViewTransition &&
-        typeof document.startViewTransition === "function" &&
-        isCompletedNavigation;
-
-      if (v7_startTransition && startTransitionImpl) {
-        if (useStartViewTransition) {
-          document.startViewTransition(() =>
-            ReactDOM.flushSync(() =>
-              startTransitionImpl(() => setStateImpl(newState))
-            )
-          );
-        } else {
+    (newState: RouterState, { completedNavigation }) => {
+      // Simple update for non-completeNavigation updates
+      if (!completedNavigation) {
+        if (v7_startTransition && startTransitionImpl) {
           startTransitionImpl(() => setStateImpl(newState));
-        }
-      } else {
-        if (useStartViewTransition) {
-          document.startViewTransition(() => setStateImpl(newState));
         } else {
           setStateImpl(newState);
         }
+        return;
       }
+
+      // Simple updates also if we're not using startViewTransition()
+      if (
+        typeof document.startViewTransition !== "function" ||
+        completedNavigation.viewTransitions == null
+      ) {
+        if (v7_startTransition && startTransitionImpl) {
+          startTransitionImpl(() => setStateImpl(newState));
+        } else {
+          setStateImpl(newState);
+        }
+        return;
+      }
+
+      LOG("calling processActiveViewTransition()");
+      let cbs: ((t: ViewTransition) => void)[] = [];
+      for (let fn of completedNavigation.viewTransitions) {
+        let cb = fn({
+          currentLocation: completedNavigation?.prevLocation,
+          nextLocation: newState.location,
+        });
+        if (cb) {
+          cbs.push(cb);
+        }
+      }
+      LOG("calling document.startViewTransition()");
+      let transition = document.startViewTransition(() => {
+        // LOG("calling flushSync()");
+        // ReactDOM.flushSync(() => {
+        if (v7_startTransition && startTransitionImpl) {
+          LOG("calling React.startTransition()");
+          startTransitionImpl(() => {
+            LOG("calling flushSync()");
+            ReactDOM.flushSync(() => {
+              LOG("calling setState()");
+              setStateImpl(newState);
+            });
+          });
+        } else {
+          LOG("calling flushSync()");
+          ReactDOM.flushSync(() => {
+            LOG("calling setState()");
+            setStateImpl(newState);
+          });
+        }
+        // });
+
+        // dom is updated
+
+        LOG("calling cb(transition)");
+        cbs.forEach((cb) => cb(transition));
+      });
     },
-    [setStateImpl, v7_startTransition, unstable_startViewTransition]
+    [setStateImpl, v7_startTransition]
   );
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 

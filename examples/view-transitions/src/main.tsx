@@ -8,18 +8,36 @@ import {
   Link,
   Outlet,
   RouterProvider,
+  unstable_useViewTransition,
   useLoaderData,
   useLocation,
   useNavigation,
+  useParams,
 } from "react-router-dom";
 import "./index.css";
+
+const images = [
+  "https://remix.run/blog-images/headers/the-future-is-now.jpg",
+  "https://remix.run/blog-images/headers/waterfall.jpg",
+  "https://remix.run/blog-images/headers/webpack.png",
+  "https://remix.run/blog-images/headers/remix-conf.jpg",
+];
+
+// FIXME: Remove
+function LOG(...args: any[]) {
+  console.debug(new Date().toISOString(), ...args);
+}
 
 const router = createBrowserRouter(
   [
     {
       path: "/",
       Component() {
+        // turn on basic view transitions for the whole app
+        unstable_useViewTransition();
+
         let navigation = useNavigation();
+
         return (
           <>
             {navigation.state !== "idle" ? (
@@ -78,13 +96,8 @@ const router = createBrowserRouter(
               <>
                 <h1>Defer {data.value}</h1>
                 <p>Critical Data: {data.critical}</p>
-                {/*
-                  use a key on then suspense boundary to trigger a fallback
-                  on location changes
-                */}
                 <React.Suspense
                   fallback={<p>Suspense boundary in the route...</p>}
-                  key={useLocation().key}
                 >
                   <Await resolve={data.lazy}>
                     {(value) => <p>Lazy Data: {value}</p>}
@@ -127,6 +140,109 @@ const router = createBrowserRouter(
             );
           },
         },
+        {
+          path: "images",
+          Component() {
+            // Animate list image into detail image
+            unstable_useViewTransition(({ nextLocation }) => {
+              // TODO: Should we be able to return false here to opt out of
+              // calling startViewTransition?
+              if (!/^\/images\/\d+$/.test(nextLocation.pathname)) {
+                return;
+              }
+
+              LOG("before dom update");
+              let anchor = document.querySelector(
+                `.image-list a[href="${nextLocation.pathname}"]`
+              );
+              let title = anchor?.previousElementSibling!;
+              let img = anchor?.firstElementChild!;
+              // @ts-ignore
+              title.style.viewTransitionName = "image-title";
+              // @ts-ignore
+              img.style.viewTransitionName = "image-expand";
+
+              return (transition) => {
+                LOG("after dom update", transition);
+                transition.ready.finally(() => {
+                  LOG("transition ready");
+                });
+                transition.finished.finally(() => {
+                  LOG("transition finished");
+                  // @ts-ignore
+                  title.style.viewTransitionName = "";
+                  // @ts-ignore
+                  img.style.viewTransitionName = "";
+                });
+              };
+            });
+
+            return (
+              <div className="image-list">
+                <h1>Image List</h1>
+                <div>
+                  {images.map((src, idx) => {
+                    return (
+                      <div key={src}>
+                        <p>Image Number {idx}</p>
+                        <Link to={`/images/${idx}`}>
+                          <img src={src} alt={`Img ${idx}`} />
+                        </Link>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          },
+        },
+        {
+          path: "images/:id",
+          Component() {
+            let params = useParams();
+
+            // Animate detail image into list image
+            unstable_useViewTransition(({ currentLocation, nextLocation }) => {
+              // TODO: Should we be able to return false here to opt out of
+              // calling startViewTransition?
+              if (!/^\/images$/.test(nextLocation.pathname)) {
+                return;
+              }
+
+              LOG("before dom update");
+
+              return (transition) => {
+                LOG("after dom update", transition);
+                let anchor = document.querySelector(
+                  `.image-list a[href="${currentLocation.pathname}"]`
+                );
+                let title = anchor?.previousElementSibling!;
+                let img = anchor?.firstElementChild!;
+                // @ts-ignore
+                title.style.viewTransitionName = "image-title";
+                // @ts-ignore
+                img.style.viewTransitionName = "image-expand";
+                transition.ready.finally(() => {
+                  LOG("transition ready");
+                });
+                transition.finished.finally(() => {
+                  LOG("transition finished");
+                  // @ts-ignore
+                  title.style.viewTransitionName = "";
+                  // @ts-ignore
+                  img.style.viewTransitionName = "";
+                });
+              };
+            });
+
+            return (
+              <div className="image-detail">
+                <h1>Image Number {params.id}</h1>
+                <img src={images[Number(params.id)]} alt={`${params.id}`} />
+              </div>
+            );
+          },
+        },
       ],
     },
   ],
@@ -156,6 +272,7 @@ ReactDOMClient.createRoot(rootElement).render(
 );
 
 function Nav() {
+  let value = Math.round(Math.random() * 100);
   return (
     <nav>
       <ul>
@@ -163,7 +280,7 @@ function Nav() {
           <Link to="/">Home</Link>
           <ul>
             <li>
-              ✅ The / route has no loader is should be an immediate/synchronous
+              The / route has no loader is should be an immediate/synchronous
               transition
             </li>
           </ul>
@@ -172,27 +289,24 @@ function Nav() {
           <Link to="/loader">Loader Delay</Link>
           <ul>
             <li>
-              ✅ The /loader route has a 1 second loader delay, and updates the
-              DOM synchronously upon completion
+              The /loader route has a 1 second loader delay, and updates the DOM
+              synchronously upon completion
             </li>
           </ul>
         </li>
         <li>
-          <Link to="/defer">Deferred Data</Link>
+          <Link to="/images">Image Gallery Example</Link>
+        </li>
+        <li>
+          <Link to={`/defer?value=${value}`}>Deferred Data</Link>
           <ul>
             <li>
               The /defer route has a a 500ms loader delay with a 1s defer call
               that will Suspend in the destination route
             </li>
             <li>
-              ✅ It also uses a location-based key on the suspense boundary so
-              revalidations will trigger a fresh fallback. Click this link again
-              while on the page to see this behavior (requires
-              v7_fallbackOnDeferRevalidation: true)
-            </li>
-            <li>
-              ❌ Without the key on the suspense boundary, it will animate in
-              the current boundary on top of itself
+              Due to flushSync, it will always re-fallback on navigations - even
+              without a key on the suspense boundary
             </li>
           </ul>
         </li>
@@ -205,11 +319,15 @@ function Nav() {
             </li>
             <li>
               ❌ This is where things go awry because without a boundary the
-              usage of React.startTransition causes React to freeze the current
-              UI in place so we animate the current page and then the updates
-              snap in. This is where I think React needs to be involved since
-              they decide when it's finally OK to update the DOM inside
-              startTransition
+              usage of React.startTransition() causes React to freeze the
+              current UI in place so we animate the current page and then the
+              updates snap in.
+            </li>
+            <li>
+              Either (1) react needs to be involved here so we know when the DOM
+              has finally updates or (2) users should not be opting-into
+              startViewTransition when navigating to routes that suspend without
+              a boundary
             </li>
           </ul>
         </li>

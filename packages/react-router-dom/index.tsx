@@ -42,6 +42,7 @@ import type {
   HydrationState,
   Router as RemixRouter,
   V7_FormMethod,
+  ViewTransitionFunction,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -897,6 +898,7 @@ enum DataRouterHook {
   UseSubmit = "useSubmit",
   UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
+  UseViewTransition = "useViewTransition",
 }
 
 enum DataRouterStateHook {
@@ -1494,5 +1496,30 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 }
 
 export { usePrompt as unstable_usePrompt };
+
+let viewTransitionId = 0;
+
+export function useViewTransition(fn?: boolean | ViewTransitionFunction): void {
+  let { router } = useDataRouterContext(DataRouterHook.UseViewTransition);
+  let transitionFunction = React.useMemo<
+    ViewTransitionFunction | undefined
+  >(() => {
+    if (typeof fn == "function") {
+      return (arg) => fn(arg);
+    } else if (fn !== false) {
+      return () => {};
+    }
+  }, [fn]);
+
+  React.useEffect(() => {
+    let key = String(++viewTransitionId);
+    let deleteTransitionFn = transitionFunction
+      ? router.addViewTransition(key, transitionFunction)
+      : () => {};
+    return () => deleteTransitionFn();
+  }, [router, transitionFunction]);
+}
+
+export { useViewTransition as unstable_useViewTransition };
 
 //#endregion

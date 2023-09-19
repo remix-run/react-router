@@ -226,6 +226,14 @@ export interface Router {
   /**
    * @internal
    * PRIVATE - DO NOT USE
+   * @param key The identifier for the transition
+   * @param opts The view transition options
+   */
+  addViewTransition(key: string, opts: ViewTransitionFunction): () => void;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
    *
    * HMR needs to pass in-flight route updates to React Router
    * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
@@ -340,6 +348,16 @@ export interface FutureConfig {
   v7_fallbackOnDeferRevalidation: boolean;
 }
 
+type ViewTransition = {
+  finished: Promise<void>;
+  ready: Promise<void>;
+};
+
+export type ViewTransitionFunction = (args: {
+  currentLocation: Location;
+  nextLocation: Location;
+}) => void | ((transition: ViewTransition) => void | Promise<void>);
+
 /**
  * Initialization options for createRouter
  */
@@ -354,6 +372,7 @@ export interface RouterInit {
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
+  viewTransition?: ViewTransitionFunction;
   window?: Window;
 }
 
@@ -393,7 +412,15 @@ export interface StaticHandler {
  * Subscriber function signature for changes to router state
  */
 export interface RouterSubscriber {
-  (state: RouterState, opts: { isCompletedNavigation: boolean }): void;
+  (
+    state: RouterState,
+    opts: {
+      completedNavigation?: {
+        prevLocation: Location;
+        viewTransitions?: IterableIterator<ViewTransitionFunction>;
+      };
+    }
+  ): void;
 }
 
 /**
@@ -816,6 +843,12 @@ export function createRouter(init: RouterInit): Router {
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
 
+  // Pending viewTransition options from current UI renders
+  let pendingViewTransitionOpts: Map<string, ViewTransitionFunction> = new Map<
+    string,
+    ViewTransitionFunction
+  >();
+
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
@@ -965,12 +998,23 @@ export function createRouter(init: RouterInit): Router {
     newState: Partial<RouterState>,
     isCompletedNavigation = false
   ): void {
+    let prevLocation = state.location;
     state = {
       ...state,
       ...newState,
     };
     subscribers.forEach((subscriber) =>
-      subscriber(state, { isCompletedNavigation })
+      subscriber(state, {
+        completedNavigation: isCompletedNavigation
+          ? {
+              prevLocation,
+              viewTransitions:
+                pendingViewTransitionOpts.size > 0
+                  ? pendingViewTransitionOpts.values()
+                  : undefined,
+            }
+          : undefined,
+      })
     );
   }
 
@@ -2502,6 +2546,15 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
+  function addViewTransition(key: string, fn: ViewTransitionFunction) {
+    console.log("adding view transition", key);
+    pendingViewTransitionOpts.set(key, fn);
+    return () => {
+      console.log("removing view transition", key);
+      pendingViewTransitionOpts.delete(key);
+    };
+  }
+
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
     manifest = {};
     inFlightDataRoutes = convertRoutesToDataRoutes(
@@ -2537,6 +2590,7 @@ export function createRouter(init: RouterInit): Router {
     dispose,
     getBlocker,
     deleteBlocker,
+    addViewTransition,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with

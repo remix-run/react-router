@@ -36,11 +36,48 @@
 }
 
 ::view-transition-old(content) {
-  animation: 500ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
-    500ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+  /* animation: 500ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
+    500ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left; */
 }
 
 ::view-transition-new(content) {
-  animation: 500ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
-    500ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+  /* animation: 500ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
+    500ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right; */
+}
+
+.image-list > div {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 10px;
+}
+
+.image-list img {
+  max-width: 100%;
+  contain: layout;
+}
+
+.image-detail img {
+  max-width: 100%;
+  view-transition-name: image-expand;
+  contain: layout;
+}
+
+::view-transition-old(image-expand),
+::view-transition-new(image-expand) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.image-list p {
+  width: fit-content;
+}
+
+.image-detail h1 {
+  view-transition-name: image-title;
+  width: fit-content;
+}
+
+::view-transition-old(image-title),
+::view-transition-new(image-title) {
 }
