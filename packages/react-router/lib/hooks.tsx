@@ -13,7 +13,6 @@ import type {
   RevalidationState,
   To,
   UIMatch,
-  ViewTransitionFunction,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,

@@ -198,7 +198,7 @@ export interface SubmitOptions {
   /**
    * Allow submissions to enable view transitions
    */
-  viewTransition?: boolean | ViewTransitionFunction;
+  unstable_viewTransition?: boolean | ViewTransitionFunction;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([

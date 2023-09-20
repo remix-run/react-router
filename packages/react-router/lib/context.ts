@@ -95,7 +95,7 @@ export interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  viewTransition?: boolean | ViewTransitionFunction;
+  unstable_viewTransition?: boolean | ViewTransitionFunction;
 }
 
 /**
