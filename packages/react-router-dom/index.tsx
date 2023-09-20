@@ -503,7 +503,7 @@ export interface LinkProps
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
-  unstable_viewTransition?: boolean | ViewTransitionFunction;
+  viewTransition?: boolean | ViewTransitionFunction;
 }
 
 const isBrowser =
@@ -527,7 +527,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       to,
       preventScrollReset,
-      unstable_viewTransition,
+      viewTransition,
       ...rest
     },
     ref
@@ -577,7 +577,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       preventScrollReset,
       relative,
-      unstable_viewTransition,
+      viewTransition,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -787,7 +787,7 @@ export interface FormProps extends FetcherFormProps {
   /**
    * Boolean/function to enable/disable view transitions
    */
-  unstable_viewTransition?: boolean | ViewTransitionFunction;
+  viewTransition?: boolean | ViewTransitionFunction;
 }
 
 /**
@@ -831,7 +831,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit,
       relative,
       preventScrollReset,
-      unstable_viewTransition,
+      viewTransition,
       ...props
     },
     forwardedRef
@@ -857,7 +857,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         state,
         relative,
         preventScrollReset,
-        unstable_viewTransition,
+        viewTransition,
       });
     };
 
@@ -947,14 +947,14 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state,
     preventScrollReset,
     relative,
-    unstable_viewTransition,
+    viewTransition,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
-    unstable_viewTransition?: boolean | ViewTransitionFunction;
+    viewTransition?: boolean | ViewTransitionFunction;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -973,12 +973,13 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
+        debugger;
         navigate(to, {
           replace,
           state,
           preventScrollReset,
           relative,
-          unstable_viewTransition,
+          viewTransition,
         });
       }
     },
@@ -992,7 +993,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       to,
       preventScrollReset,
       relative,
-      unstable_viewTransition,
+      viewTransition,
     ]
   );
 }
@@ -1117,7 +1118,7 @@ export function useSubmit(): SubmitFunction {
 
       router.navigate(options.action || action, {
         preventScrollReset: options.preventScrollReset,
-        unstable_viewTransition: options.unstable_viewTransition,
+        viewTransition: options.viewTransition,
         formData,
         body,
         formMethod: options.method || (method as HTMLFormMethod),

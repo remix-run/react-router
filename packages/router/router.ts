@@ -375,7 +375,7 @@ export interface RouterInit {
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
-  unstable_viewTransition?: ViewTransitionFunction;
+  viewTransition?: ViewTransitionFunction;
   window?: Window;
 }
 
@@ -454,7 +454,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
-  unstable_viewTransition?: boolean | ViewTransitionFunction;
+  viewTransition?: boolean | ViewTransitionFunction;
 };
 
 // Only allowed for submission navigations
@@ -1244,7 +1244,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
-      unstable_viewTransition: opts && opts.unstable_viewTransition,
+      viewTransition: opts && opts.viewTransition,
     });
   }
 
@@ -1294,7 +1294,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError?: ErrorResponseImpl;
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
-      unstable_viewTransition?: boolean | ViewTransitionFunction;
+      viewTransition?: boolean | ViewTransitionFunction;
       replace?: boolean;
     }
   ): Promise<void> {
@@ -1313,8 +1313,8 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     pendingNavigationViewTransition =
-      opts && opts.unstable_viewTransition != null
-        ? opts.unstable_viewTransition
+      opts && typeof opts.viewTransition !== "undefined"
+        ? opts?.viewTransition
         : null;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
