@@ -1499,7 +1499,7 @@ export { usePrompt as unstable_usePrompt };
 
 let viewTransitionId = 0;
 
-export function useViewTransition(
+export function useViewTransitions(
   viewTransition?: boolean | ViewTransitionFunction
 ): void {
   let { router } = useDataRouterContext(DataRouterHook.UseViewTransition);
@@ -1516,6 +1516,6 @@ export function useViewTransition(
   }, [router, viewTransition]);
 }
 
-export { useViewTransition as unstable_useViewTransition };
+export { useViewTransitions as unstable_useViewTransitions };
 
 //#endregion
