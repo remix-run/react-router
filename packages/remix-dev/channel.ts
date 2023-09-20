@@ -9,7 +9,7 @@ export type Type<V, E = unknown> = {
   result: Promise<Result<V, E>>;
 };
 
-export const create = <V, E = unknown>(): Type<V> => {
+export const create = <V, E = unknown>(): Type<V, E> => {
   let _resolve: Resolve<{ ok: true; value: V }>;
   let _reject: Reject;
 
