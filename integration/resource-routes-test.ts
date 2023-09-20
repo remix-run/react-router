@@ -247,7 +247,7 @@ test.describe("loader in an app", async () => {
     await app.goto("/");
     await app.clickSubmitButton("/no-action");
     let html = await app.getHtml();
-    expect(html).toMatch("Application Error");
+    expect(html).toMatch("405 Method Not Allowed");
     expect(logs[0]).toContain(
       'Route "routes/no-action" does not have an action'
     );

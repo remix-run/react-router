@@ -95,6 +95,18 @@ test.describe("actions", () => {
             return <div id="${REDIRECT_TARGET}">${PAGE_TEXT}</div>
           }
         `,
+
+        "app/routes/no-action.tsx": js`
+          import { Form } from "@remix-run/react";
+
+          export default function Component() {
+            return (
+              <Form method="post">
+                <button type="submit">Submit without action</button>
+              </Form>
+            );
+          }
+        `,
       },
     });
 
@@ -143,6 +155,22 @@ test.describe("actions", () => {
     await page.click("button[type=submit]");
     await page.waitForSelector("#action-text");
     await page.waitForSelector(`#text:has-text("${SUBMITTED_VALUE}")`);
+  });
+
+  test("throws a 405 when no action exists", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto(`/no-action`);
+    await page.click("button[type=submit]");
+    await page.waitForSelector(`h1:has-text("405 Method Not Allowed")`);
+    expect(logs.length).toBe(2);
+    expect(logs[0]).toMatch('Route "routes/no-action" does not have an action');
+    // logs[1] is the raw ErrorResponse instance from the boundary but playwright
+    // seems to just log the name of the constructor, which in the minified code
+    // is meaningless so we don't bother asserting
+
+    // The rest of the tests in this suite assert no logs, so clear this out to
+    // avoid failures in afterEach
+    logs = [];
   });
 
   test("properly encodes form data for request.text() usage", async ({
