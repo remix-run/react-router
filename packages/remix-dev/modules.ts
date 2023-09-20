@@ -69,12 +69,12 @@ declare module "*.jpg" {
   export default asset;
 }
 declare module "*.md" {
-  import "mdx/types";
+  import "mdx";
   export let attributes: any;
   export let filename: string;
 }
 declare module "*.mdx" {
-  import "mdx/types";
+  import "mdx";
   export let attributes: any;
   export let filename: string;
 }
