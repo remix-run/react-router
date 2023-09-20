@@ -503,7 +503,6 @@ export interface LinkProps
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
-  viewTransition?: boolean | ViewTransitionFunction;
 }
 
 const isBrowser =
@@ -527,7 +526,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       to,
       preventScrollReset,
-      viewTransition,
       ...rest
     },
     ref
@@ -577,7 +575,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       preventScrollReset,
       relative,
-      viewTransition,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -783,11 +780,6 @@ export interface FormProps extends FetcherFormProps {
    * State object to add to the history stack entry for this navigation
    */
   state?: any;
-
-  /**
-   * Boolean/function to enable/disable view transitions
-   */
-  viewTransition?: boolean | ViewTransitionFunction;
 }
 
 /**
@@ -831,7 +823,6 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit,
       relative,
       preventScrollReset,
-      viewTransition,
       ...props
     },
     forwardedRef
@@ -857,7 +848,6 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         state,
         relative,
         preventScrollReset,
-        viewTransition,
       });
     };
 
@@ -947,14 +937,12 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state,
     preventScrollReset,
     relative,
-    viewTransition,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
-    viewTransition?: boolean | ViewTransitionFunction;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -973,14 +961,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        debugger;
-        navigate(to, {
-          replace,
-          state,
-          preventScrollReset,
-          relative,
-          viewTransition,
-        });
+        navigate(to, { replace, state, preventScrollReset, relative });
       }
     },
     [
@@ -993,7 +974,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       to,
       preventScrollReset,
       relative,
-      viewTransition,
     ]
   );
 }
@@ -1118,7 +1098,6 @@ export function useSubmit(): SubmitFunction {
 
       router.navigate(options.action || action, {
         preventScrollReset: options.preventScrollReset,
-        viewTransition: options.viewTransition,
         formData,
         body,
         formMethod: options.method || (method as HTMLFormMethod),

@@ -10,7 +10,6 @@ import {
   RouterProvider,
   unstable_useViewTransition,
   useLoaderData,
-  useLocation,
   useNavigation,
   useParams,
 } from "react-router-dom";

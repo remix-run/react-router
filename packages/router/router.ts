@@ -375,7 +375,6 @@ export interface RouterInit {
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
-  viewTransition?: ViewTransitionFunction;
   window?: Window;
 }
 
@@ -454,7 +453,6 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
-  viewTransition?: boolean | ViewTransitionFunction;
 };
 
 // Only allowed for submission navigations
@@ -851,10 +849,6 @@ export function createRouter(init: RouterInit): Router {
   let pendingViewTransitionOpts: Map<string, boolean | ViewTransitionFunction> =
     new Map<string, ViewTransitionFunction>();
 
-  // Pending viewTransition from the active navigation
-  let pendingNavigationViewTransition: null | boolean | ViewTransitionFunction =
-    null;
-
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
@@ -1009,18 +1003,10 @@ export function createRouter(init: RouterInit): Router {
       ...state,
       ...newState,
     };
-    let viewTransitions: Array<boolean | ViewTransitionFunction> | undefined;
-    if (pendingViewTransitionOpts.size > 0) {
-      viewTransitions = Array.from(pendingViewTransitionOpts.values());
-    }
-
-    if (pendingNavigationViewTransition != null) {
-      if (viewTransitions) {
-        viewTransitions.push(pendingNavigationViewTransition);
-      } else {
-        viewTransitions = [];
-      }
-    }
+    let viewTransitions =
+      pendingViewTransitionOpts.size > 0
+        ? Array.from(pendingViewTransitionOpts.values())
+        : undefined;
 
     subscribers.forEach((subscriber) =>
       subscriber(state, {
@@ -1135,7 +1121,6 @@ export function createRouter(init: RouterInit): Router {
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
     pendingPreventScrollReset = false;
-    pendingNavigationViewTransition = null;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -1244,7 +1229,6 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
-      viewTransition: opts && opts.viewTransition,
     });
   }
 
@@ -1294,7 +1278,6 @@ export function createRouter(init: RouterInit): Router {
       pendingError?: ErrorResponseImpl;
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
-      viewTransition?: boolean | ViewTransitionFunction;
       replace?: boolean;
     }
   ): Promise<void> {
@@ -1311,11 +1294,6 @@ export function createRouter(init: RouterInit): Router {
     // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
-
-    pendingNavigationViewTransition =
-      opts && typeof opts.viewTransition !== "undefined"
-        ? opts?.viewTransition
-        : null;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
@@ -2234,9 +2212,6 @@ export function createRouter(init: RouterInit): Router {
         },
         // Preserve this flag across redirects)
         preventScrollReset: pendingPreventScrollReset,
-        // Note we specifically do not preserve pendingNavigationViewTransition
-        // across redirects - those should be handled via useViewTransition()
-        // because they're indirectly triggered
       });
     } else {
       // If we have a navigation submission, we will preserve it through the
@@ -2251,9 +2226,6 @@ export function createRouter(init: RouterInit): Router {
         fetcherSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
-        // Note we specifically do not preserve pendingNavigationViewTransition
-        // across redirects - those should be handled via useViewTransition()
-        // because they're indirectly triggered
       });
     }
   }
