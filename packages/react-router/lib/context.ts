@@ -12,6 +12,7 @@ import type {
   StaticHandlerContext,
   To,
   TrackedPromise,
+  ViewTransitionFunction,
 } from "@remix-run/router";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
@@ -94,6 +95,7 @@ export interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
+  viewTransition?: boolean | ViewTransitionFunction;
 }
 
 /**

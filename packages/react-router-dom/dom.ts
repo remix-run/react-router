@@ -2,6 +2,7 @@ import type {
   FormEncType,
   HTMLFormMethod,
   RelativeRoutingType,
+  ViewTransitionFunction,
 } from "@remix-run/router";
 import { stripBasename, UNSAFE_warning as warning } from "@remix-run/router";
 
@@ -193,6 +194,11 @@ export interface SubmitOptions {
    * navigation when using the <ScrollRestoration> component
    */
   preventScrollReset?: boolean;
+
+  /**
+   * Allow submissions to enable view transitions
+   */
+  viewTransition?: boolean | ViewTransitionFunction;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([

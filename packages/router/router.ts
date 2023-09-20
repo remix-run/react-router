@@ -229,7 +229,10 @@ export interface Router {
    * @param key The identifier for the transition
    * @param opts The view transition options
    */
-  addViewTransition(key: string, opts: ViewTransitionFunction): () => void;
+  addViewTransition(
+    key: string,
+    opts: boolean | ViewTransitionFunction
+  ): () => void;
 
   /**
    * @internal
@@ -417,7 +420,7 @@ export interface RouterSubscriber {
     opts: {
       completedNavigation?: {
         prevLocation: Location;
-        viewTransitions?: IterableIterator<ViewTransitionFunction>;
+        viewTransitions?: Array<boolean | ViewTransitionFunction>;
       };
     }
   ): void;
@@ -451,6 +454,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
+  viewTransition?: boolean | ViewTransitionFunction;
 };
 
 // Only allowed for submission navigations
@@ -844,10 +848,12 @@ export function createRouter(init: RouterInit): Router {
   let pendingNavigationController: AbortController | null;
 
   // Pending viewTransition options from current UI renders
-  let pendingViewTransitionOpts: Map<string, ViewTransitionFunction> = new Map<
-    string,
-    ViewTransitionFunction
-  >();
+  let pendingViewTransitionOpts: Map<string, boolean | ViewTransitionFunction> =
+    new Map<string, ViewTransitionFunction>();
+
+  // Pending viewTransition from the active navigation
+  let pendingNavigationViewTransition: null | boolean | ViewTransitionFunction =
+    null;
 
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
@@ -1003,15 +1009,25 @@ export function createRouter(init: RouterInit): Router {
       ...state,
       ...newState,
     };
+    let viewTransitions: Array<boolean | ViewTransitionFunction> | undefined;
+    if (pendingViewTransitionOpts.size > 0) {
+      viewTransitions = Array.from(pendingViewTransitionOpts.values());
+    }
+
+    if (pendingNavigationViewTransition != null) {
+      if (viewTransitions) {
+        viewTransitions.push(pendingNavigationViewTransition);
+      } else {
+        viewTransitions = [];
+      }
+    }
+
     subscribers.forEach((subscriber) =>
       subscriber(state, {
         completedNavigation: isCompletedNavigation
           ? {
               prevLocation,
-              viewTransitions:
-                pendingViewTransitionOpts.size > 0
-                  ? pendingViewTransitionOpts.values()
-                  : undefined,
+              viewTransitions,
             }
           : undefined,
       })
@@ -1119,6 +1135,7 @@ export function createRouter(init: RouterInit): Router {
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
     pendingPreventScrollReset = false;
+    pendingNavigationViewTransition = null;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -1227,6 +1244,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
+      viewTransition: opts && opts.viewTransition,
     });
   }
 
@@ -1276,6 +1294,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError?: ErrorResponseImpl;
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
+      viewTransition?: boolean | ViewTransitionFunction;
       replace?: boolean;
     }
   ): Promise<void> {
@@ -1292,6 +1311,11 @@ export function createRouter(init: RouterInit): Router {
     // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
+
+    pendingNavigationViewTransition =
+      opts && typeof opts.viewTransition !== "undefined"
+        ? opts?.viewTransition
+        : null;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
@@ -2208,8 +2232,11 @@ export function createRouter(init: RouterInit): Router {
           ...activeSubmission,
           formAction: redirect.location,
         },
-        // Preserve this flag across redirects
+        // Preserve this flag across redirects)
         preventScrollReset: pendingPreventScrollReset,
+        // Note we specifically do not preserve pendingNavigationViewTransition
+        // across redirects - those should be handled via useViewTransition()
+        // because they're indirectly triggered
       });
     } else {
       // If we have a navigation submission, we will preserve it through the
@@ -2224,6 +2251,9 @@ export function createRouter(init: RouterInit): Router {
         fetcherSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
+        // Note we specifically do not preserve pendingNavigationViewTransition
+        // across redirects - those should be handled via useViewTransition()
+        // because they're indirectly triggered
       });
     }
   }
@@ -2546,13 +2576,12 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
-  function addViewTransition(key: string, fn: ViewTransitionFunction) {
-    console.log("adding view transition", key);
-    pendingViewTransitionOpts.set(key, fn);
-    return () => {
-      console.log("removing view transition", key);
-      pendingViewTransitionOpts.delete(key);
-    };
+  function addViewTransition(
+    key: string,
+    viewTransition: boolean | ViewTransitionFunction
+  ) {
+    pendingViewTransitionOpts.set(key, viewTransition);
+    return () => pendingViewTransitionOpts.delete(key);
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
@@ -3145,7 +3174,7 @@ export function getStaticContextFromError(
 }
 
 function isSubmissionNavigation(
-  opts: RouterNavigateOptions
+  opts: BaseNavigateOrFetchOptions
 ): opts is SubmissionNavigateOptions {
   return (
     opts != null &&
@@ -3229,7 +3258,7 @@ function normalizeNavigateOptions(
   normalizeFormMethod: boolean,
   isFetcher: boolean,
   path: string,
-  opts?: RouterNavigateOptions
+  opts?: BaseNavigateOrFetchOptions
 ): {
   path: string;
   submission?: Submission;

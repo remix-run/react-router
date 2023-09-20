@@ -33,8 +33,11 @@ const router = createBrowserRouter(
     {
       path: "/",
       Component() {
+        let [enableViewTransitions, setEnableViewTransitions] =
+          React.useState(true);
+
         // turn on basic view transitions for the whole app
-        unstable_useViewTransition();
+        unstable_useViewTransition(enableViewTransitions);
 
         let navigation = useNavigation();
 
@@ -45,6 +48,14 @@ const router = createBrowserRouter(
             ) : null}
             <Nav />
             <div className="content">
+              <button
+                onClick={() => setEnableViewTransitions(!enableViewTransitions)}
+              >
+                {enableViewTransitions
+                  ? "Disable view startViewTransition"
+                  : "Enable startViewTransition"}
+              </button>
+              <br />
               <Outlet />
             </div>
           </>
@@ -77,12 +88,11 @@ const router = createBrowserRouter(
           path: "defer",
           async loader({ request }) {
             let value = new URL(request.url).searchParams.get("value") || "";
-            await new Promise((r) => setTimeout(r, 500));
             return defer({
               value,
               critical: "CRITICAL PATH DATA " + value,
               lazy: new Promise((r) =>
-                setTimeout(() => r("LAZY DATA " + value), 2500)
+                setTimeout(() => r("LAZY DATA " + value), 1000)
               ),
             });
           },
@@ -111,7 +121,6 @@ const router = createBrowserRouter(
           path: "defer-no-boundary",
           async loader({ request }) {
             let value = new URL(request.url).searchParams.get("value") || "";
-            await new Promise((r) => setTimeout(r, 500));
             return defer({
               value,
               critical: "CRITICAL PATH DATA - NO BOUNDARY " + value,
@@ -263,9 +272,6 @@ ReactDOMClient.createRoot(rootElement).render(
       future={{
         // Wrap all state updates in React.startTransition()
         v7_startTransition: true,
-        // Wrap all completed navigation state updates in
-        // document.startViewTransition()
-        unstable_startViewTransition: true,
       }}
     />
   </React.StrictMode>
@@ -301,8 +307,8 @@ function Nav() {
           <Link to={`/defer?value=${value}`}>Deferred Data</Link>
           <ul>
             <li>
-              The /defer route has a a 500ms loader delay with a 1s defer call
-              that will Suspend in the destination route
+              The /defer route has 1s defer call that will Suspend in the
+              destination route
             </li>
             <li>
               Due to flushSync, it will always re-fallback on navigations - even
@@ -314,20 +320,23 @@ function Nav() {
           <Link to="/defer-no-boundary">Deferred Data (without boundary)</Link>
           <ul>
             <li>
-              The /defer-no-boundary route has a a 500ms loader delay with a 1s
-              defer call without a Suspense boundary in the destination route
+              The /defer-no-boundary route has a 1s defer call without a
+              Suspense boundary in the destination route
+            </li>
+            <li>❌ This is where things go wrong</li>
+            <li>
+              Calling React.flushSync inside React.startTransition breaks the
+              "freezing" of the UI since suspending UI doesn't seem to know it's
+              inside of startTransition anymore. This makes some sense since
+              they're sort of inherently opposites
             </li>
             <li>
-              ❌ This is where things go awry because without a boundary the
-              usage of React.startTransition() causes React to freeze the
-              current UI in place so we animate the current page and then the
-              updates snap in.
+              However, we need to call React.flushSync inside
+              document.startViewTransition for more complex animations
             </li>
             <li>
-              Either (1) react needs to be involved here so we know when the DOM
-              has finally updates or (2) users should not be opting-into
-              startViewTransition when navigating to routes that suspend without
-              a boundary
+              So do we just disable startTransition if startViewTransitions have
+              been enabled? We still get the same error...
             </li>
           </ul>
         </li>

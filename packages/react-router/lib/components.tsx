@@ -10,12 +10,10 @@ import type {
   RouterSubscriber,
   To,
   TrackedPromise,
-  ViewTransitionFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
-  UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
   createMemoryHistory,
   UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
@@ -66,7 +64,6 @@ declare global {
 
 export interface FutureConfig {
   v7_startTransition: boolean;
-  unstable_startViewTransition: boolean;
 }
 
 export interface RouterProviderProps {
@@ -118,20 +115,12 @@ export function RouterProvider({
   let { v7_startTransition } = future || {};
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState, { completedNavigation }) => {
-      // Simple update for non-completeNavigation updates
-      if (!completedNavigation) {
-        if (v7_startTransition && startTransitionImpl) {
-          startTransitionImpl(() => setStateImpl(newState));
-        } else {
-          setStateImpl(newState);
-        }
-        return;
-      }
-
-      // Simple updates also if we're not using startViewTransition()
+      // Simple update for non-completeNavigation/non-startViewTransition()
       if (
+        !completedNavigation ||
         typeof document.startViewTransition !== "function" ||
-        completedNavigation.viewTransitions == null
+        completedNavigation.viewTransitions == null ||
+        completedNavigation.viewTransitions.some((t) => t === false)
       ) {
         if (v7_startTransition && startTransitionImpl) {
           startTransitionImpl(() => setStateImpl(newState));
@@ -141,21 +130,29 @@ export function RouterProvider({
         return;
       }
 
-      LOG("calling processActiveViewTransition()");
-      let cbs: ((t: ViewTransition) => void)[] = [];
-      for (let fn of completedNavigation.viewTransitions) {
-        let cb = fn({
-          currentLocation: completedNavigation?.prevLocation,
-          nextLocation: newState.location,
-        });
-        if (cb) {
-          cbs.push(cb);
-        }
-      }
+      let viewTransitions = Array.from(completedNavigation.viewTransitions);
+      LOG("calling pre-dom-update functions. Num:", viewTransitions.length);
+      let callbacks = viewTransitions.map((fn) =>
+        typeof fn === "function"
+          ? fn({
+              currentLocation: completedNavigation?.prevLocation,
+              nextLocation: newState.location,
+            })
+          : undefined
+      );
+
       LOG("calling document.startViewTransition()");
       let transition = document.startViewTransition(() => {
-        // LOG("calling flushSync()");
-        // ReactDOM.flushSync(() => {
+        // TODO: AFACT startViewTransition/startTransition/flushSync simply don't
+        // play nicely together
+        // - document.startViewTransition needs React.flushSync for more advanced animations)
+        // - React.flushSync breaks React.startTransition "freezing" behavior if the
+        //   destination route suspends without a boundary
+        //
+        // So we can just warn users and say "if you use a transition on navigations
+        // to suspending routes without a boundary, then you are out of luck and things
+        // will break."  We can't even just not call startTransition since it will
+        // still throw the same error
         if (v7_startTransition && startTransitionImpl) {
           LOG("calling React.startTransition()");
           startTransitionImpl(() => {
@@ -172,12 +169,9 @@ export function RouterProvider({
             setStateImpl(newState);
           });
         }
-        // });
 
-        // dom is updated
-
-        LOG("calling cb(transition)");
-        cbs.forEach((cb) => cb(transition));
+        LOG("calling post-dom-update callbacks");
+        callbacks.forEach((cb) => cb && cb(transition));
       });
     },
     [setStateImpl, v7_startTransition]
