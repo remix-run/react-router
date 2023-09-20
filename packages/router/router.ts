@@ -359,7 +359,7 @@ type ViewTransition = {
 export type ViewTransitionFunction = (args: {
   currentLocation: Location;
   nextLocation: Location;
-}) => void | ((transition: ViewTransition) => void | Promise<void>);
+}) => void | boolean | ((transition: ViewTransition) => void | Promise<void>);
 
 /**
  * Initialization options for createRouter

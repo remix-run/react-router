@@ -115,31 +115,51 @@ export function RouterProvider({
   let { v7_startTransition } = future || {};
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState, { completedNavigation }) => {
-      // Simple update for non-completeNavigation/non-startViewTransition()
-      if (
-        !completedNavigation ||
-        typeof document.startViewTransition !== "function" ||
-        completedNavigation.viewTransitions == null ||
-        completedNavigation.viewTransitions.some((t) => t === false)
-      ) {
+      function updateDomSimple() {
         if (v7_startTransition && startTransitionImpl) {
           startTransitionImpl(() => setStateImpl(newState));
         } else {
           setStateImpl(newState);
         }
+      }
+
+      // Simple update for non-completeNavigation/non-startViewTransition navs
+      if (
+        !completedNavigation ||
+        completedNavigation.viewTransitions == null ||
+        typeof document.startViewTransition !== "function"
+      ) {
+        updateDomSimple();
         return;
       }
 
-      let viewTransitions = Array.from(completedNavigation.viewTransitions);
-      LOG("calling pre-dom-update functions. Num:", viewTransitions.length);
-      let callbacks = viewTransitions.map((fn) =>
-        typeof fn === "function"
-          ? fn({
-              currentLocation: completedNavigation?.prevLocation,
-              nextLocation: newState.location,
-            })
-          : undefined
+      // Run user-provided functions, short circuiting on false
+      LOG(
+        "calling pre-dom-update functions. Num:",
+        completedNavigation.viewTransitions.length
       );
+      let callbacks: Array<(t: ViewTransition) => void | Promise<void>> = [];
+      for (let viewTransition of completedNavigation.viewTransitions) {
+        if (viewTransition === false) {
+          LOG("user opted out of startViewTransition with explicit false");
+          updateDomSimple();
+          return;
+        }
+        if (typeof viewTransition === "function") {
+          let callback = viewTransition({
+            currentLocation: completedNavigation?.prevLocation,
+            nextLocation: newState.location,
+          });
+          if (callback === false) {
+            LOG("user opted out of startViewTransition with returned false");
+            updateDomSimple();
+            return;
+          }
+          if (typeof callback === "function") {
+            callbacks.push(callback);
+          }
+        }
+      }
 
       LOG("calling document.startViewTransition()");
       let transition = document.startViewTransition(() => {
@@ -161,6 +181,10 @@ export function RouterProvider({
               LOG("calling setState()");
               setStateImpl(newState);
             });
+            LOG("calling post-dom-update callbacks");
+            callbacks.forEach(
+              (cb) => typeof cb === "function" && cb && cb(transition)
+            );
           });
         } else {
           LOG("calling flushSync()");
@@ -168,10 +192,11 @@ export function RouterProvider({
             LOG("calling setState()");
             setStateImpl(newState);
           });
+          LOG("calling post-dom-update callbacks");
+          callbacks.forEach(
+            (cb) => typeof cb === "function" && cb && cb(transition)
+          );
         }
-
-        LOG("calling post-dom-update callbacks");
-        callbacks.forEach((cb) => cb && cb(transition));
       });
     },
     [setStateImpl, v7_startTransition]

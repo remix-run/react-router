@@ -8,7 +8,7 @@ import {
   Link,
   Outlet,
   RouterProvider,
-  unstable_unstable_useViewTransitions,
+  unstable_useViewTransitions,
   useLoaderData,
   useNavigation,
   useParams,
@@ -36,7 +36,7 @@ const router = createBrowserRouter(
           React.useState(true);
 
         // turn on basic view transitions for the whole app
-        unstable_unstable_useViewTransitions(enableViewTransitions);
+        unstable_useViewTransitions(enableViewTransitions);
 
         let navigation = useNavigation();
 
@@ -152,7 +152,7 @@ const router = createBrowserRouter(
           path: "images",
           Component() {
             // Animate list image into detail image
-            unstable_unstable_useViewTransitions(({ nextLocation }) => {
+            unstable_useViewTransitions(({ nextLocation }) => {
               // TODO: Should we be able to return false here to opt out of
               // calling startViewTransition?
               if (!/^\/images\/\d+$/.test(nextLocation.pathname)) {
@@ -210,40 +210,38 @@ const router = createBrowserRouter(
             let params = useParams();
 
             // Animate detail image into list image
-            unstable_unstable_useViewTransitions(
-              ({ currentLocation, nextLocation }) => {
-                // TODO: Should we be able to return false here to opt out of
-                // calling startViewTransition?
-                if (!/^\/images$/.test(nextLocation.pathname)) {
-                  return;
-                }
-
-                LOG("before dom update");
-
-                return (transition) => {
-                  LOG("after dom update", transition);
-                  let anchor = document.querySelector(
-                    `.image-list a[href="${currentLocation.pathname}"]`
-                  );
-                  let title = anchor?.previousElementSibling!;
-                  let img = anchor?.firstElementChild!;
-                  // @ts-ignore
-                  title.style.viewTransitionName = "image-title";
-                  // @ts-ignore
-                  img.style.viewTransitionName = "image-expand";
-                  transition.ready.finally(() => {
-                    LOG("transition ready");
-                  });
-                  transition.finished.finally(() => {
-                    LOG("transition finished");
-                    // @ts-ignore
-                    title.style.viewTransitionName = "";
-                    // @ts-ignore
-                    img.style.viewTransitionName = "";
-                  });
-                };
+            unstable_useViewTransitions(({ currentLocation, nextLocation }) => {
+              // TODO: Should we be able to return false here to opt out of
+              // calling startViewTransition?
+              if (!/^\/images$/.test(nextLocation.pathname)) {
+                return;
               }
-            );
+
+              LOG("before dom update");
+
+              return (transition) => {
+                LOG("after dom update", transition);
+                let anchor = document.querySelector(
+                  `.image-list a[href="${currentLocation.pathname}"]`
+                );
+                let title = anchor?.previousElementSibling!;
+                let img = anchor?.firstElementChild!;
+                // @ts-ignore
+                title.style.viewTransitionName = "image-title";
+                // @ts-ignore
+                img.style.viewTransitionName = "image-expand";
+                transition.ready.finally(() => {
+                  LOG("transition ready");
+                });
+                transition.finished.finally(() => {
+                  LOG("transition finished");
+                  // @ts-ignore
+                  title.style.viewTransitionName = "";
+                  // @ts-ignore
+                  img.style.viewTransitionName = "";
+                });
+              };
+            });
 
             return (
               <div className="image-detail">
