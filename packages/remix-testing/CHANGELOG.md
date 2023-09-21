@@ -1,12 +1,12 @@
 # `@remix-run/testing`
 
-## 2.0.1-pre.0
+## 2.0.1
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@remix-run/react@2.0.1-pre.0`
-  - `@remix-run/node@2.0.1-pre.0`
+  - `@remix-run/react@2.0.1`
+  - `@remix-run/node@2.0.1`
 
 ## 2.0.0
 

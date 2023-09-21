@@ -1,22 +1,25 @@
 # `@remix-run/node`
 
-## 2.0.1-pre.0
+## 2.0.1
 
 ### Patch Changes
 
-- Update to latest version of `@remix-run/web-fetch` ([#7477](https://github.com/remix-run/remix/pull/7477))
 - Switch from `crypto.randomBytes` to `crypto.webcrypto.getRandomValues` for file session storage ID generation ([#7203](https://github.com/remix-run/remix/pull/7203))
-- Use native `Blob` cleass instead of polyfill ([#7217](https://github.com/remix-run/remix/pull/7217))
+- Use native `Blob` class instead of polyfill ([#7217](https://github.com/remix-run/remix/pull/7217))
 - Updated dependencies:
-  - `@remix-run/server-runtime@2.0.1-pre.0`
+  - `@remix-run/server-runtime@2.0.1`
+  - [`@remix-run/web-fetch@4.4.1`](https://github.com/remix-run/web-std-io/releases/tag/%40remix-run%2Fweb-fetch%404.4.1)
 
 ## 2.0.0
 
 ### Major Changes
 
 - Require Node >=18.0.0 ([#6939](https://github.com/remix-run/remix/pull/6939))
+
 - Stop exporting the `fetch` API in favor of using the version in the global scope - which can be polyfilled via `installGlobals` ([#7293](https://github.com/remix-run/remix/pull/7293))
+
 - Removed/adjusted types to prefer `unknown` over `any` and to align with underlying React Router types ([#7319](https://github.com/remix-run/remix/pull/7319), [#7354](https://github.com/remix-run/remix/pull/7354)):
+
   - Renamed the `useMatches()` return type from `RouteMatch` to `UIMatch`
   - Renamed `LoaderArgs`/`ActionArgs` to `LoaderFunctionArgs`/`ActionFunctionArgs`
   - `AppData` changed from `any` to `unknown`
@@ -26,8 +29,11 @@
   - `Fetcher["data"]` (`useFetcher().data`) changed from `any` to `unknown`
   - `MetaMatch.handle` (used in `meta()`) changed from `any` to `unknown`
   - `AppData`/`RouteHandle` are no longer exported as they are just aliases for `unknown`
+
 - The route `meta` API now defaults to the new "V2 Meta" API ([#6958](https://github.com/remix-run/remix/pull/6958))
+
   - Please refer to the ([docs](https://remix.run/docs/en/2.0.0/route/meta) and [Preparing for V2](https://remix.run/docs/en/2.0.0/start/v2#route-meta) guide for more information.
+
 - For preparation of using Node's built in fetch implementation, installing the fetch globals is now a responsibility of the app server ([#7009](https://github.com/remix-run/remix/pull/7009))
 
   - If you are using `remix-serve`, nothing is required
