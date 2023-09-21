@@ -1,5 +1,16 @@
 # `@remix-run/dev`
 
+## 2.0.1
+
+### Patch Changes
+
+- Fix types for MDX files when using pnpm ([#7491](https://github.com/remix-run/remix/pull/7491))
+- Update `getDependenciesToBundle` to handle ESM packages without main exports ([#7272](https://github.com/remix-run/remix/pull/7272))
+  - Note that these packages must expose `package.json` in their `exports` field so that their path can be resolved
+- Fix server builds where `serverBuildPath` extension is `.cjs` ([#7180](https://github.com/remix-run/remix/pull/7180))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.1`
+
 ## 2.0.0
 
 ### Major Changes
@@ -33,8 +44,8 @@
 - Remove deprecated `--scheme`/`scheme` and `--host`/`host` cli args/flags - use `REMIX_DEV_ORIGIN` instead ([#6962](https://github.com/remix-run/remix/pull/6962))
 - Promote the `future.v2_dev` flag in `remix.config.js` to a root level `dev` config ([#7002](https://github.com/remix-run/remix/pull/7002))
 - Remove `browserBuildDirectory` config option ([#6900](https://github.com/remix-run/remix/pull/6900))
-- Remove `serverBuildDirectory` config option ([#6897](https://github.com/remix-run/remix/pull/- Remove `codemod` command ([#6918](https://github.com/remix-run/remix/pull/6918))
-  6897))
+- Remove `serverBuildDirectory` config option (\[#6897]\(<https://github.com/remix-run/remix/pull/-> Remove `codemod` command ([#6918](https://github.com/remix-run/remix/pull/6918))
+  6897\))
 - Removed support for "magic exports" from the `remix` package. This package can be removed from your `package.json` and you should update all imports to use the source `@remix-run/*` packages: ([#6895](https://github.com/remix-run/remix/pull/6895))
 
   ```diff
@@ -74,11 +85,16 @@
 ### Patch Changes
 
 - Fix importing of PNGs, SVGs, and other assets from packages in `node_modules` ([#6813](https://github.com/remix-run/remix/pull/6813), [#7182](https://github.com/remix-run/remix/pull/7182))
+
 - Decouple the `@remix-run/dev` package from the contents of the `@remix-run/css-bundle` package. ([#6982](https://github.com/remix-run/remix/pull/6982))
+
   - The contents of the `@remix-run/css-bundle` package are now entirely managed by the Remix compiler
   - Even though it's still recommended that your Remix dependencies all share the same version, this change ensures that there are no runtime errors when upgrading `@remix-run/dev` without upgrading `@remix-run/css-bundle`
+
 - Allow non-development modes for `remix watch` ([#7117](https://github.com/remix-run/remix/pull/7117))
+
 - Stop `remix dev` when `esbuild` is not running ([#7158](https://github.com/remix-run/remix/pull/7158))
+
 - Do not interpret JSX in `.ts` files ([#7306](https://github.com/remix-run/remix/pull/7306))
 
   - While JSX is supported in `.js` files for compatibility with existing apps and libraries,
@@ -106,25 +122,41 @@
     ```
 
 - Enhance obsolete flag warning for `future.v2_dev` if it was an object, and prompt users to lift it to the root `dev` config ([#7427](https://github.com/remix-run/remix/pull/7427))
+
 - Allow decorators in app code ([#7176](https://github.com/remix-run/remix/pull/7176))
+
 - Allow JSX in `.js` files during HMR ([#7112](https://github.com/remix-run/remix/pull/7112))
+
 - Kill app server when remix dev terminates ([#7280](https://github.com/remix-run/remix/pull/7280))
+
 - Support dependencies that import polyfill packages for Node built-ins via a trailing slash (e.g. importing the `buffer` package with `var Buffer = require('buffer/').Buffer` as recommended in their README) ([#7198](https://github.com/remix-run/remix/pull/7198))
+
   - These imports were previously marked as external
   - This meant that they were left as dynamic imports in the client bundle and would throw a runtime error in the browser (e.g. `Dynamic require of "buffer/" is not supported`)
+
 - Surface errors when PostCSS config is invalid ([#7391](https://github.com/remix-run/remix/pull/7391))
+
 - Restart dev server when Remix config changes ([#7269](https://github.com/remix-run/remix/pull/7269))
+
 - Remove outdated ESM import warnings ([#6916](https://github.com/remix-run/remix/pull/6916))
+
   - Most of the time these warnings were false positives.
   - Instead, we now rely on built-in Node warnings for ESM imports.
+
 - Do not trigger rebuilds when `.DS_Store` changes ([#7172](https://github.com/remix-run/remix/pull/7172))
+
 - Remove warnings for stabilized flags: ([#6905](https://github.com/remix-run/remix/pull/6905))
+
   - `unstable_cssSideEffectImports`
   - `unstable_cssModules`
   - `unstable_vanillaExtract`
+
 - Allow any mode (`NODE_ENV`) ([#7113](https://github.com/remix-run/remix/pull/7113))
+
 - Replace the deprecated [`xdm`](https://github.com/wooorm/xdm) package with [`@mdx-js/mdx`](https://github.com/mdx-js/mdx) ([#4054](https://github.com/remix-run/remix/pull/4054))
+
 - Write a `version.txt` sentinel file _after_ server build is completely written ([#7299](https://github.com/remix-run/remix/pull/7299))
+
 - Updated dependencies:
   - `@remix-run/server-runtime@2.0.0`
 

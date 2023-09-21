@@ -1,5 +1,9 @@
 # `@remix-run/server-runtime`
 
+## 2.0.1
+
+No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%402.0.1) for an overview of all changes in v2.0.1.
+
 ## 2.0.0
 
 ### Major Changes
