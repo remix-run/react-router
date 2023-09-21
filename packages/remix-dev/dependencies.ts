@@ -40,6 +40,17 @@ export function getDependenciesToBundle(...pkg: string[]): string[] {
   return Array.from(aggregatedDeps);
 }
 
+interface ErrorWithCode extends Error {
+  code: string;
+}
+
+function isErrorWithCode(error: unknown): error is ErrorWithCode {
+  return (
+    error instanceof Error &&
+    typeof (error as NodeJS.ErrnoException).code === "string"
+  );
+}
+
 function getPackageDependenciesRecursive(
   pkg: string,
   aggregatedDeps: Set<string>,
@@ -47,7 +58,18 @@ function getPackageDependenciesRecursive(
 ): void {
   visitedPackages.add(pkg);
 
-  let pkgPath = require.resolve(pkg);
+  let pkgPath: string;
+  try {
+    pkgPath = require.resolve(pkg);
+  } catch (err) {
+    if (isErrorWithCode(err) && err.code === "ERR_PACKAGE_PATH_NOT_EXPORTED") {
+      // Handle packages without main exports.
+      // They at least need to have package.json exported.
+      pkgPath = require.resolve(`${pkg}/package.json`);
+    } else {
+      throw err;
+    }
+  }
   let lastIndexOfPackageName = pkgPath.lastIndexOf(pkg);
   if (lastIndexOfPackageName !== -1) {
     pkgPath = pkgPath.substring(0, lastIndexOfPackageName);

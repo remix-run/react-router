@@ -128,7 +128,7 @@ describe("remix CLI", () => {
           Run your project locally in development:
 
             $ remix dev
-            $ remix dev -c \\"node ./server.js\\"
+            $ remix dev -c "node ./server.js"
 
           Start your server separately and watch for changes:
 

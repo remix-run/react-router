@@ -1,11 +1,11 @@
 import {
+  File as NodeFile,
   fetch as nodeFetch,
   FormData as NodeFormData,
   Headers as NodeHeaders,
   Request as NodeRequest,
   Response as NodeResponse,
 } from "@remix-run/web-fetch";
-import { Blob as NodeBlob, File as NodeFile } from "@remix-run/web-file";
 import {
   ByteLengthQueuingStrategy as NodeByteLengthQueuingStrategy,
   CountQueuingStrategy as NodeCountQueuingStrategy,
@@ -29,7 +29,6 @@ declare global {
     }
 
     interface Global {
-      Blob: typeof Blob;
       File: typeof File;
 
       Headers: typeof Headers;
@@ -45,7 +44,6 @@ declare global {
 }
 
 export function installGlobals() {
-  global.Blob = NodeBlob;
   global.File = NodeFile;
 
   global.Headers = NodeHeaders as typeof Headers;

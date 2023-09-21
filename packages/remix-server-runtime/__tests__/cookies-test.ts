@@ -96,7 +96,7 @@ describe("cookies", () => {
     let value = await cookie.parse(getCookieFromSetCookie(setCookie));
 
     expect(value).toMatchInlineSnapshot(`
-      Object {
+      {
         "hello": "mjackson",
       }
     `);
@@ -123,7 +123,7 @@ describe("cookies", () => {
     let value = await cookie.parse(getCookieFromSetCookie(setCookie));
 
     expect(value).toMatchInlineSnapshot(`
-      Object {
+      {
         "hello": "mjackson",
       }
     `);
