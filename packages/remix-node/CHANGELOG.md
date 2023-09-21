@@ -1,5 +1,15 @@
 # `@remix-run/node`
 
+## 2.0.1-pre.0
+
+### Patch Changes
+
+- Update to latest version of `@remix-run/web-fetch` ([#7477](https://github.com/remix-run/remix/pull/7477))
+- Switch from `crypto.randomBytes` to `crypto.webcrypto.getRandomValues` for file session storage ID generation ([#7203](https://github.com/remix-run/remix/pull/7203))
+- Use native `Blob` cleass instead of polyfill ([#7217](https://github.com/remix-run/remix/pull/7217))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.0.1-pre.0`
+
 ## 2.0.0
 
 ### Major Changes

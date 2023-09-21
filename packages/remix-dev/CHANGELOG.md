@@ -1,5 +1,19 @@
 # `@remix-run/dev`
 
+## 2.0.1-pre.0
+
+### Patch Changes
+
+- Fix types for MDX files when using pnpm ([#7491](https://github.com/remix-run/remix/pull/7491))
+- Update `getDependenciesToBundle` to handle ESM packages without main exports. Note that these packages must expose `package.json` in their `exports` field so that their path can be resolved. ([#7272](https://github.com/remix-run/remix/pull/7272))
+- Fix server builds where serverBuildPath extension is `.cjs`. ([#7180](https://github.com/remix-run/remix/pull/7180))
+
+  Fix a bug that caused the server build file to be emitted into the assets directory if the value of `serverBuildPath` ended in `.cjs`.
+
+- Updated dependencies:
+  - `@remix-run/serve@2.0.1-pre.0`
+  - `@remix-run/server-runtime@2.0.1-pre.0`
+
 ## 2.0.0
 
 ### Major Changes
