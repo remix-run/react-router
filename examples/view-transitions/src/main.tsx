@@ -6,8 +6,10 @@ import {
   defer,
   json,
   Link,
+  NavLink,
   Outlet,
   RouterProvider,
+  unstable_useViewTransition,
   unstable_useViewTransitions,
   useLoaderData,
   useNavigation,
@@ -36,7 +38,8 @@ const router = createBrowserRouter(
           React.useState(true);
 
         // turn on basic view transitions for the whole app
-        unstable_useViewTransitions(enableViewTransitions);
+        //unstable_useViewTransitions(enableViewTransitions);
+        unstable_useViewTransition("/loader");
 
         let navigation = useNavigation();
 
@@ -152,53 +155,72 @@ const router = createBrowserRouter(
           path: "images",
           Component() {
             // Animate list image into detail image
-            unstable_useViewTransitions(({ nextLocation }) => {
-              // TODO: Should we be able to return false here to opt out of
-              // calling startViewTransition?
-              if (!/^\/images\/\d+$/.test(nextLocation.pathname)) {
-                return;
-              }
+            // unstable_useViewTransitions(({ nextLocation }) => {
+            //   // TODO: Should we be able to return false here to opt out of
+            //   // calling startViewTransition?
+            //   if (!/^\/images\/\d+$/.test(nextLocation.pathname)) {
+            //     return false;
+            //   }
 
-              LOG("before dom update");
-              let anchor = document.querySelector(
-                `.image-list a[href="${nextLocation.pathname}"]`
-              );
-              let title = anchor?.previousElementSibling!;
-              let img = anchor?.firstElementChild!;
-              // @ts-ignore
-              title.style.viewTransitionName = "image-title";
-              // @ts-ignore
-              img.style.viewTransitionName = "image-expand";
+            //   LOG("before dom update");
+            //   let anchor = document.querySelector(
+            //     `.image-list a[href="${nextLocation.pathname}"]`
+            //   );
+            //   let title = anchor?.previousElementSibling!;
+            //   let img = anchor?.firstElementChild!;
+            //   // @ts-ignore
+            //   title.style.viewTransitionName = "image-title";
+            //   // @ts-ignore
+            //   img.style.viewTransitionName = "image-expand";
 
-              return (transition) => {
-                LOG("after dom update", transition);
-                transition.ready.finally(() => {
-                  LOG("transition ready");
-                });
-                transition.finished.finally(() => {
-                  LOG("transition finished");
-                  // @ts-ignore
-                  title.style.viewTransitionName = "";
-                  // @ts-ignore
-                  img.style.viewTransitionName = "";
-                });
-              };
-            });
+            //   return (transition) => {
+            //     LOG("after dom update", transition);
+            //     transition.ready.finally(() => {
+            //       LOG("transition ready");
+            //     });
+            //     transition.finished.finally(() => {
+            //       LOG("transition finished");
+            //       // @ts-ignore
+            //       title.style.viewTransitionName = "";
+            //       // @ts-ignore
+            //       img.style.viewTransitionName = "";
+            //     });
+            //   };
+            // });
 
             return (
               <div className="image-list">
                 <h1>Image List</h1>
                 <div>
-                  {images.map((src, idx) => {
-                    return (
-                      <div key={src}>
-                        <p>Image Number {idx}</p>
-                        <Link to={`/images/${idx}`}>
-                          <img src={src} alt={`Img ${idx}`} />
-                        </Link>
-                      </div>
-                    );
-                  })}
+                  {images.map((src, idx) => (
+                    <React.Fragment key={src}>
+                      {/* <NavImage key={src} src={src} idx={idx} /> */}
+                      <NavLink to={`/images/${idx}`} unstable_viewTransition>
+                        {({ isTransitioning }) => (
+                          <>
+                            <p
+                              style={{
+                                viewTransitionName: isTransitioning
+                                  ? "image-title"
+                                  : "",
+                              }}
+                            >
+                              Image Number {idx}
+                            </p>
+                            <img
+                              src={src}
+                              alt={`Img ${idx}`}
+                              style={{
+                                viewTransitionName: isTransitioning
+                                  ? "image-expand"
+                                  : "",
+                              }}
+                            />
+                          </>
+                        )}
+                      </NavLink>
+                    </React.Fragment>
+                  ))}
                 </div>
               </div>
             );
@@ -209,39 +231,39 @@ const router = createBrowserRouter(
           Component() {
             let params = useParams();
 
-            // Animate detail image into list image
-            unstable_useViewTransitions(({ currentLocation, nextLocation }) => {
-              // TODO: Should we be able to return false here to opt out of
-              // calling startViewTransition?
-              if (!/^\/images$/.test(nextLocation.pathname)) {
-                return;
-              }
+            // // Animate detail image into list image
+            // unstable_useViewTransitions(({ currentLocation, nextLocation }) => {
+            //   // TODO: Should we be able to return false here to opt out of
+            //   // calling startViewTransition?
+            //   if (!/^\/images$/.test(nextLocation.pathname)) {
+            //     return false;
+            //   }
 
-              LOG("before dom update");
+            //   LOG("before dom update");
 
-              return (transition) => {
-                LOG("after dom update", transition);
-                let anchor = document.querySelector(
-                  `.image-list a[href="${currentLocation.pathname}"]`
-                );
-                let title = anchor?.previousElementSibling!;
-                let img = anchor?.firstElementChild!;
-                // @ts-ignore
-                title.style.viewTransitionName = "image-title";
-                // @ts-ignore
-                img.style.viewTransitionName = "image-expand";
-                transition.ready.finally(() => {
-                  LOG("transition ready");
-                });
-                transition.finished.finally(() => {
-                  LOG("transition finished");
-                  // @ts-ignore
-                  title.style.viewTransitionName = "";
-                  // @ts-ignore
-                  img.style.viewTransitionName = "";
-                });
-              };
-            });
+            //   return (transition) => {
+            //     LOG("after dom update", transition);
+            //     let anchor = document.querySelector(
+            //       `.image-list a[href="${currentLocation.pathname}"]`
+            //     );
+            //     let title = anchor?.previousElementSibling!;
+            //     let img = anchor?.firstElementChild!;
+            //     // @ts-ignore
+            //     title.style.viewTransitionName = "image-title";
+            //     // @ts-ignore
+            //     img.style.viewTransitionName = "image-expand";
+            //     transition.ready.finally(() => {
+            //       LOG("transition ready");
+            //     });
+            //     transition.finished.finally(() => {
+            //       LOG("transition finished");
+            //       // @ts-ignore
+            //       title.style.viewTransitionName = "";
+            //       // @ts-ignore
+            //       img.style.viewTransitionName = "";
+            //     });
+            //   };
+            // });
 
             return (
               <div className="image-detail">
@@ -262,6 +284,29 @@ const router = createBrowserRouter(
     },
   }
 );
+
+function NavImage({ src, idx }: { src: string; idx: number }) {
+  let href = `/images/${idx}`;
+  let vt = unstable_useViewTransition(href);
+  return (
+    <div>
+      <p
+        style={{ viewTransitionName: vt.isTransitioning ? "image-title" : "" }}
+      >
+        Image Number {idx}
+      </p>
+      <Link to={href}>
+        <img
+          src={src}
+          alt={`Img ${idx}`}
+          style={{
+            viewTransitionName: vt.isTransitioning ? "image-expand" : "",
+          }}
+        />
+      </Link>
+    </div>
+  );
+}
 
 const rootElement = document.getElementById("root") as HTMLElement;
 ReactDOMClient.createRoot(rootElement).render(
@@ -291,7 +336,7 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <Link to="/loader">Loader Delay</Link>
+          <NavLink to="/loader">Loader Delay</NavLink>
           <ul>
             <li>
               The /loader route has a 1 second loader delay, and updates the DOM

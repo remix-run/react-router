@@ -26,6 +26,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
+  UNSAFE_ViewTransitionContext as ViewTransitionContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRouteId as useRouteId,
 } from "react-router";
@@ -602,25 +603,22 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
+type NavLinkRenderProps = {
+  isActive: boolean;
+  isPending: boolean;
+  isTransitioning: boolean;
+};
+
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
-  children?:
-    | React.ReactNode
-    | ((props: { isActive: boolean; isPending: boolean }) => React.ReactNode);
+  children?: React.ReactNode | ((props: NavLinkRenderProps) => React.ReactNode);
   caseSensitive?: boolean;
-  className?:
-    | string
-    | ((props: {
-        isActive: boolean;
-        isPending: boolean;
-      }) => string | undefined);
+  className?: string | ((props: NavLinkRenderProps) => string | undefined);
   end?: boolean;
   style?:
     | React.CSSProperties
-    | ((props: {
-        isActive: boolean;
-        isPending: boolean;
-      }) => React.CSSProperties | undefined);
+    | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
+  unstable_viewTransition?: boolean;
 }
 
 /**
@@ -635,6 +633,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       end = false,
       style: styleProp,
       to,
+      unstable_viewTransition,
       children,
       ...rest
     },
@@ -644,6 +643,8 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
+    // debugger;
+    let vt = useViewTransition(unstable_viewTransition ? path : undefined);
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -675,11 +676,17 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
           nextLocationPathname.startsWith(toPathname) &&
           nextLocationPathname.charAt(toPathname.length) === "/"));
 
+    let renderProps = {
+      isActive,
+      isPending,
+      isTransitioning: vt.isTransitioning,
+    };
+
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
     let className: string | undefined;
     if (typeof classNameProp === "function") {
-      className = classNameProp({ isActive, isPending });
+      className = classNameProp(renderProps);
     } else {
       // If the className prop is not a function, we use a default `active`
       // class for <NavLink />s that are active. In v5 `active` was the default
@@ -690,15 +697,14 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         classNameProp,
         isActive ? "active" : null,
         isPending ? "pending" : null,
+        vt.isTransitioning ? "transitioning" : null,
       ]
         .filter(Boolean)
         .join(" ");
     }
 
     let style =
-      typeof styleProp === "function"
-        ? styleProp({ isActive, isPending })
-        : styleProp;
+      typeof styleProp === "function" ? styleProp(renderProps) : styleProp;
 
     return (
       <Link
@@ -709,9 +715,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         style={style}
         to={to}
       >
-        {typeof children === "function"
-          ? children({ isActive, isPending })
-          : children}
+        {typeof children === "function" ? children(renderProps) : children}
       </Link>
     );
   }
@@ -898,6 +902,7 @@ enum DataRouterHook {
   UseSubmit = "useSubmit",
   UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
+  UseViewTransitions = "useViewTransitions",
   UseViewTransition = "useViewTransition",
 }
 
@@ -1499,10 +1504,22 @@ export { usePrompt as unstable_usePrompt };
 
 let viewTransitionId = 0;
 
-export function useViewTransitions(
+/**
+ * Global hook to enable view transitions in your application.  Accepts a function
+ * that allows you the ability to make read/write to the DOM right _before_ the
+ * transition DOM update.  You may return a callback function from this that will
+ * be called right _after_ the DOM update and will be provided the `transition`
+ * object returned from document.startViewTransition().
+ *
+ * If you return false from your function, then this specific hook will not enable
+ * view transitions (but other hook invocations still may)
+ *
+ * @param viewTransition Optional function to determine
+ */
+function useViewTransitions(
   viewTransition?: boolean | ViewTransitionFunction
 ): void {
-  let { router } = useDataRouterContext(DataRouterHook.UseViewTransition);
+  let { router } = useDataRouterContext(DataRouterHook.UseViewTransitions);
 
   React.useEffect(() => {
     let key = String(++viewTransitionId);
@@ -1517,5 +1534,46 @@ export function useViewTransitions(
 }
 
 export { useViewTransitions as unstable_useViewTransitions };
+
+/**
+ * Localized version of useViewTransitions to enable view transitions for a
+ * specific destination href. Returns an isTransitioning value that you can
+ * leverage to render CSS classes or viewTransitionName styles onto your elements
+ *
+ * @param href The destination href you wish to enable view transitions for
+ * @returns
+ */
+function useViewTransition(to?: To) {
+  // TODO: Not working yet
+  let [isFirstRender, setIsFirstRender] = React.useState(true);
+  let vtContext = React.useContext(ViewTransitionContext);
+  let href = to == null ? null : typeof to === "string" ? to : createPath(to);
+
+  let shouldTransition = React.useCallback<ViewTransitionFunction>(
+    ({ currentLocation, nextLocation }) =>
+      href != null &&
+      ((isFirstRender && createPath(currentLocation) === href) ||
+        (!isFirstRender && createPath(nextLocation) === href)),
+    [href, isFirstRender]
+  );
+
+  useViewTransitions(shouldTransition);
+
+  React.useLayoutEffect(() => {
+    console.log("runing effect");
+    setIsFirstRender(false);
+  }, []);
+
+  console.log(to, JSON.stringify(vtContext), isFirstRender);
+
+  return {
+    isTransitioning:
+      vtContext.isTransitioning &&
+      ((isFirstRender && createPath(vtContext.currentLocation) === href) ||
+        (!isFirstRender && createPath(vtContext.nextLocation) === href)),
+  };
+}
+
+export { useViewTransition as unstable_useViewTransition };
 
 //#endregion

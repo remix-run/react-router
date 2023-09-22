@@ -31,6 +31,7 @@ import type {
   NonIndexRouteObject,
   RouteMatch,
   RouteObject,
+  ViewTransitionContextObject,
 } from "./context";
 import {
   AwaitContext,
@@ -39,6 +40,7 @@ import {
   LocationContext,
   NavigationContext,
   RouteContext,
+  ViewTransitionContext,
 } from "./context";
 import {
   _renderMatches,
@@ -112,6 +114,9 @@ export function RouterProvider({
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
+  let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
   let { v7_startTransition } = future || {};
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState, { completedNavigation }) => {
@@ -127,7 +132,9 @@ export function RouterProvider({
       if (
         !completedNavigation ||
         completedNavigation.viewTransitions == null ||
-        typeof document.startViewTransition !== "function"
+        typeof document.startViewTransition !== "function" ||
+        completedNavigation.viewTransitions.length === 0 ||
+        completedNavigation.viewTransitions.every((vt) => vt === false)
       ) {
         updateDomSimple();
         return;
@@ -138,28 +145,31 @@ export function RouterProvider({
         "calling pre-dom-update functions. Num:",
         completedNavigation.viewTransitions.length
       );
-      let callbacks: Array<(t: ViewTransition) => void | Promise<void>> = [];
-      for (let viewTransition of completedNavigation.viewTransitions) {
-        if (viewTransition === false) {
-          LOG("user opted out of startViewTransition with explicit false");
-          updateDomSimple();
-          return;
-        }
-        if (typeof viewTransition === "function") {
-          let callback = viewTransition({
-            currentLocation: completedNavigation?.prevLocation,
-            nextLocation: newState.location,
-          });
-          if (callback === false) {
-            LOG("user opted out of startViewTransition with returned false");
-            updateDomSimple();
-            return;
-          }
-          if (typeof callback === "function") {
-            callbacks.push(callback);
-          }
-        }
+      let callbacks = completedNavigation.viewTransitions.map((vt) =>
+        typeof vt === "function"
+          ? vt({
+              currentLocation: completedNavigation?.prevLocation,
+              nextLocation: newState.location,
+            })
+          : vt
+      );
+
+      if (callbacks.every((cb) => cb === false)) {
+        LOG("user opted out of startViewTransition with returned false");
+        updateDomSimple();
+        return;
       }
+
+      // FIXME: Make this defensive for React 17!
+      LOG("flushSync(() => setVtContext({ isTransitioning: true }))");
+      ReactDOM.flushSync(() => {
+        setVtContext({
+          isTransitioning: true,
+          historyAction: newState.historyAction,
+          currentLocation: completedNavigation.prevLocation,
+          nextLocation: newState.location,
+        });
+      });
 
       LOG("calling document.startViewTransition()");
       let transition = document.startViewTransition(() => {
@@ -177,22 +187,41 @@ export function RouterProvider({
           LOG("calling React.startTransition()");
           startTransitionImpl(() => {
             LOG("calling flushSync()");
+            // FIXME: Make this defensive for React 17!
             ReactDOM.flushSync(() => {
               LOG("calling setState()");
               setStateImpl(newState);
             });
             LOG("calling post-dom-update callbacks");
+            console.log(
+              "p tags",
+              Array.from(document.querySelectorAll("p")).map(
+                // @ts-ignore
+                (p) => p.style.viewTransitionName
+              )
+            );
+            // FIXME: Make this defensive for React 17!
+            LOG("flushSync(() => setVtContext({ isTransitioning: false }))");
+            ReactDOM.flushSync(() => {
+              setVtContext({ isTransitioning: false });
+            });
             callbacks.forEach(
               (cb) => typeof cb === "function" && cb && cb(transition)
             );
           });
         } else {
           LOG("calling flushSync()");
+          // FIXME: Make this defensive for React 17!
           ReactDOM.flushSync(() => {
             LOG("calling setState()");
             setStateImpl(newState);
           });
           LOG("calling post-dom-update callbacks");
+          // FIXME: Make this defensive for React 17!
+          LOG("flushSync(() => setVtContext({ isTransitioning: false }))");
+          ReactDOM.flushSync(() => {
+            setVtContext({ isTransitioning: false });
+          });
           callbacks.forEach(
             (cb) => typeof cb === "function" && cb && cb(transition)
           );
@@ -244,18 +273,20 @@ export function RouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <Router
-            basename={basename}
-            location={state.location}
-            navigationType={state.historyAction}
-            navigator={navigator}
-          >
-            {state.initialized ? (
-              <DataRoutes routes={router.routes} state={state} />
-            ) : (
-              fallbackElement
-            )}
-          </Router>
+          <ViewTransitionContext.Provider value={vtContext}>
+            <Router
+              basename={basename}
+              location={state.location}
+              navigationType={state.historyAction}
+              navigator={navigator}
+            >
+              {state.initialized ? (
+                <DataRoutes routes={router.routes} state={state} />
+              ) : (
+                fallbackElement
+              )}
+            </Router>
+          </ViewTransitionContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}
