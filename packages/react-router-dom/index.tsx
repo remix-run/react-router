@@ -7,12 +7,12 @@ import type {
   FutureConfig,
   Location,
   NavigateOptions,
+  NavigationType,
   RelativeRoutingType,
   RouteObject,
   To,
 } from "react-router";
 import {
-  NavigationType,
   Router,
   createPath,
   useHref,
@@ -54,6 +54,8 @@ import {
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
+  matchRoutes,
+  matchPath,
 } from "@remix-run/router";
 
 import type {
@@ -203,6 +205,7 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_ViewTransitionContext,
   UNSAFE_useRouteId,
 } from "react-router";
 //#endregion
@@ -643,7 +646,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
-    let vt = useViewTransition(unstable_viewTransition ? path : undefined);
+    let isTransitioning = useViewTransition(
+      unstable_viewTransition ? path : undefined
+    );
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -678,7 +683,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let renderProps = {
       isActive,
       isPending,
-      isTransitioning: vt.isTransitioning,
+      isTransitioning,
     };
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
@@ -696,7 +701,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         classNameProp,
         isActive ? "active" : null,
         isPending ? "pending" : null,
-        vt.isTransitioning ? "transitioning" : null,
+        isTransitioning ? "transitioning" : null,
       ]
         .filter(Boolean)
         .join(" ");
@@ -1554,19 +1559,12 @@ function useViewTransition(to?: To) {
   // prior time?  Router could store key tuples that opted into transitions on
   // PUSH/REPLACE and then automatically opt-in on POP for the reverse?
   let shouldTransition = React.useCallback<ViewTransitionFunction>(
-    ({ historyAction, currentLocation, nextLocation }) => {
+    ({ nextLocation }) => {
       if (href == null) {
         // TODO: Add subtree matching
         return true;
-      } else if (historyAction === NavigationType.Pop) {
-        // If we're handling a POP, we want to match against the location we're
-        // popping from, not the one we're navigating to since it's the reverse
-        // of the original link click.  We can't leverage useLocation for this
-        // because on the initial render of the POP location, it's already the
-        // next location
-        return createPath(currentLocation) === href;
       } else {
-        return createPath(nextLocation) === href;
+        return matchPath(href, nextLocation.pathname) != null;
       }
     },
     [href]
@@ -1574,12 +1572,33 @@ function useViewTransition(to?: To) {
 
   useViewTransitions(shouldTransition);
 
-  return {
-    isTransitioning:
-      vtContext.isTransitioning && shouldTransition(vtContext) === true,
-  };
+  return vtContext.isTransitioning && shouldTransition(vtContext) === true;
 }
 
 export { useViewTransition as unstable_useViewTransition };
+
+function useViewTransitionFrom(from?: To) {
+  let vtContext = React.useContext(ViewTransitionContext);
+  let href =
+    from == null ? null : typeof from === "string" ? from : createPath(from);
+
+  let shouldTransition = React.useCallback<ViewTransitionFunction>(
+    ({ currentLocation }) => {
+      if (href == null) {
+        // TODO: Add subtree matching
+        return true;
+      } else {
+        return matchPath(href, currentLocation.pathname) != null;
+      }
+    },
+    [href]
+  );
+
+  useViewTransitions(shouldTransition);
+
+  return vtContext.isTransitioning && shouldTransition(vtContext) === true;
+}
+
+export { useViewTransitionFrom as unstable_useViewTransitionFrom };
 
 //#endregion

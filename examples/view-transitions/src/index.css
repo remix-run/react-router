@@ -63,8 +63,11 @@
 
 .image-detail img {
   max-width: 100%;
-  view-transition-name: image-expand;
   contain: layout;
+}
+
+.image-detail.transitioning img {
+  view-transition-name: image-expand;
 }
 
 ::view-transition-old(image-expand),
@@ -82,6 +85,9 @@
 }
 
 .image-detail h1 {
-  view-transition-name: image-title;
   width: fit-content;
+}
+
+.image-detail.transitioning h1 {
+  view-transition-name: image-title;
 }

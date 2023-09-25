@@ -357,7 +357,6 @@ type ViewTransition = {
 };
 
 export type ViewTransitionFunction = (args: {
-  historyAction: HistoryAction;
   currentLocation: Location;
   nextLocation: Location;
 }) => void | boolean | ((transition: ViewTransition) => void | Promise<void>);
@@ -412,8 +411,8 @@ export interface StaticHandler {
 }
 
 type ViewTransitionOpts = {
-  historyAction: HistoryAction;
-  prevLocation: Location;
+  currentLocation: Location;
+  nextLocation: Location;
   callbacks: ReturnType<ViewTransitionFunction>[];
 };
 
@@ -1103,38 +1102,56 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let viewTransitions: (boolean | ViewTransitionFunction)[] | undefined;
+    let viewTransitionArgs: Parameters<ViewTransitionFunction>[0] | undefined;
     let completedNavigationOpts: ViewTransitionOpts | undefined;
 
+    let getTransitionKey = (a: Location, b: Location) =>
+      [a.key, b.key].join("-");
+
     if (pendingAction === HistoryAction.Pop) {
-      let transitionKey = [state.location.key, location.key].join("-");
-      viewTransitions = appliedViewTransitionFunctions.get(transitionKey);
-      // TODO: execute viewTransitions here with proper current/next based on
-      // if we matched a forward pop or back pop
-    } else if (pendingViewTransitionFunctions.size > 0) {
-      viewTransitions = Array.from(pendingViewTransitionFunctions.values());
-      let backTransitionKey = [location.key, state.location.key].join("-");
-      appliedViewTransitionFunctions.set(backTransitionKey, viewTransitions);
+      let backwardKey = getTransitionKey(location, state.location);
+      if (appliedViewTransitionFunctions.has(backwardKey)) {
+        LOG(
+          "matched backwards POP",
+          location.pathname,
+          state.location.pathname
+        );
+        viewTransitions = appliedViewTransitionFunctions.get(backwardKey);
+        viewTransitionArgs = {
+          currentLocation: location,
+          nextLocation: state.location,
+        };
+      }
     }
 
-    if (viewTransitions) {
+    if (!viewTransitions && pendingViewTransitionFunctions.size > 0) {
+      viewTransitions = Array.from(pendingViewTransitionFunctions.values());
+      if (pendingAction === HistoryAction.Pop) {
+        LOG("matched forwards POP", state.location.pathname, location.pathname);
+      } else {
+        LOG("matched PUSH/REPLACE", state.location.pathname, location.pathname);
+      }
+      viewTransitionArgs = {
+        currentLocation: state.location,
+        nextLocation: location,
+      };
+      let transitionKey = getTransitionKey(state.location, location);
+      appliedViewTransitionFunctions.set(transitionKey, viewTransitions);
+    }
+
+    if (viewTransitions && viewTransitionArgs) {
       // Run user-provided functions, short circuiting on false
       LOG("calling pre-dom-update functions");
+      let vtArgs = viewTransitionArgs;
       let callbacks = viewTransitions.map((vt) =>
-        typeof vt === "function"
-          ? vt({
-              historyAction: pendingAction,
-              currentLocation: state.location,
-              nextLocation: location,
-            })
-          : vt
+        typeof vt === "function" ? vt(vtArgs!) : vt
       );
 
       if (callbacks.some((cb) => cb !== false)) {
         // Transitions are enabled by at least one function returning a non-false
         // value (undefined, true, or callback function)
         completedNavigationOpts = {
-          historyAction: pendingAction,
-          prevLocation: state.location,
+          ...viewTransitionArgs,
           callbacks,
         };
       } else {

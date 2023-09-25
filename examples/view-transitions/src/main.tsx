@@ -10,6 +10,7 @@ import {
   Outlet,
   RouterProvider,
   unstable_useViewTransition,
+  unstable_useViewTransitionFrom,
   useLoaderData,
   useNavigation,
   useParams,
@@ -35,7 +36,6 @@ const router = createBrowserRouter(
       Component() {
         // turn on basic view transitions for the whole app
         unstable_useViewTransition();
-        // unstable_useViewTransition("/loader");
 
         let navigation = useNavigation();
 
@@ -165,8 +165,13 @@ const router = createBrowserRouter(
           path: "images/:id",
           Component() {
             let params = useParams();
+            let isTransitioning = unstable_useViewTransitionFrom("/images");
             return (
-              <div className="image-detail">
+              <div
+                className={`image-detail ${
+                  isTransitioning ? "transitioning" : ""
+                }`}
+              >
                 <h1>Image Number {params.id}</h1>
                 <img src={images[Number(params.id)]} alt={`${params.id}`} />
               </div>

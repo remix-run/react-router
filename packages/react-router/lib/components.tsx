@@ -158,9 +158,8 @@ export function RouterProvider({
       flushSyncSafe(() => {
         setVtContext({
           isTransitioning: true,
-          historyAction: newState.historyAction,
-          currentLocation: viewTransitionOpts.prevLocation,
-          nextLocation: newState.location,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
         });
       });
 
