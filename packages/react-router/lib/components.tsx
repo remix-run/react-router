@@ -97,6 +97,24 @@ export interface RouterProviderProps {
 */
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
+const FLUSH_SYNC = "flushSync";
+const flushSyncImpl = ReactDOM[FLUSH_SYNC];
+
+function flushSyncSafe(cb: () => void) {
+  if (flushSyncImpl) {
+    flushSyncImpl(cb);
+  } else {
+    cb();
+  }
+}
+
+function startTransitionSafe(cb: () => void) {
+  if (startTransitionImpl) {
+    startTransitionImpl(cb);
+  } else {
+    cb();
+  }
+}
 
 // FIXME: Remove
 function LOG(...args: any[]) {
@@ -119,95 +137,57 @@ export function RouterProvider({
   });
   let { v7_startTransition } = future || {};
   let setState = React.useCallback<RouterSubscriber>(
-    (newState: RouterState, { completedNavigation }) => {
-      function maybeStartTransition(cb: () => void) {
-        if (v7_startTransition && startTransitionImpl) {
-          startTransitionImpl(cb);
-        } else {
-          cb();
-        }
-      }
-
+    (newState: RouterState, { viewTransitionOpts }) => {
       // Simple update for non-completeNavigation/non-startViewTransition navs
       if (
-        !completedNavigation ||
-        completedNavigation.viewTransitions == null ||
-        typeof document.startViewTransition !== "function" ||
-        completedNavigation.viewTransitions.length === 0 ||
-        completedNavigation.viewTransitions.every((vt) => vt === false)
+        !viewTransitionOpts ||
+        typeof document.startViewTransition !== "function"
       ) {
-        LOG("no transitions to apply");
-        maybeStartTransition(() => setStateImpl(newState));
+        LOG("updating state without startViewTransition");
+        if (v7_startTransition) {
+          startTransitionSafe(() => setStateImpl(newState));
+        } else {
+          setStateImpl(newState);
+        }
         return;
       }
 
-      // TODO: Can the execution of these lift up into the router?  We should
-      // have better control over which ones to execute there I think and can
-      // hopefully do better POP-key/location matching
-
-      // Run user-provided functions, short circuiting on false
-      LOG(
-        "calling pre-dom-update functions. Num:",
-        completedNavigation.viewTransitions.length
-      );
-      let callbacks = completedNavigation.viewTransitions.map((vt) =>
-        typeof vt === "function"
-          ? vt({
-              historyAction: newState.historyAction,
-              currentLocation: completedNavigation?.prevLocation,
-              nextLocation: newState.location,
-            })
-          : vt
-      );
-
-      if (callbacks.every((cb) => cb === false)) {
-        LOG("user opted out of startViewTransition with returned false");
-        maybeStartTransition(() => setStateImpl(newState));
-        return;
-      }
-
-      // FIXME: Make this defensive for React 17!
+      // Flush a ViewTransitionContext update to apply classes/styles to the
+      // DOM prior to startViewTransition()
       LOG("flushSync(() => setVtContext({ isTransitioning: true }))");
-      ReactDOM.flushSync(() => {
+      flushSyncSafe(() => {
         setVtContext({
           isTransitioning: true,
           historyAction: newState.historyAction,
-          currentLocation: completedNavigation.prevLocation,
+          currentLocation: viewTransitionOpts.prevLocation,
           nextLocation: newState.location,
         });
       });
 
+      // Synchronously update the DOM for the new route inside startViewTransition()
+      // Note: startViewTransition/startTransition/flushSync don't
+      // play nicely together so we don't call startTransition when view
+      // transitions are enabled.  document.startViewTransition needs
+      // React.flushSync for more advanced animations, and React.flushSync
+      // breaks React.startTransition "freezing" behavior if the destination
+      // route suspends without a boundary.
+      // TODO: We should add something to the docs to indicate this
       LOG("calling document.startViewTransition()");
       let transition = document.startViewTransition(() => {
-        // Note: startViewTransition/startTransition/flushSync don't
-        // play nicely together so we don't call startTransition when view
-        // transitions are enabled.
-        // - document.startViewTransition needs React.flushSync for more advanced animations)
-        // - React.flushSync breaks React.startTransition "freezing" behavior if the
-        //   destination route suspends without a boundary
-        //
-        // TODO: We should add something to the docs to indicate this
-
-        // Synchronously update the DOM with the new route
-        // FIXME: Make this defensive for React 17!
-        ReactDOM.flushSync(() => {
-          LOG("calling setState()");
-          setStateImpl(newState);
-        });
+        // Update DOM
+        LOG("flushSync(() => setStateImpl(newState))");
+        flushSyncSafe(() => setStateImpl(newState));
 
         // Run the post-DOM-update callbacks with the transition
-        callbacks.forEach(
+        viewTransitionOpts.callbacks.forEach(
           (cb) => typeof cb === "function" && cb && cb(transition)
         );
 
         // Cleanup DOM after the transitions completes
         LOG("waiting on transition.finished to unset isTransitioning");
         transition.finished.finally(() => {
-          // FIXME: Make this defensive for React 17!
           LOG("flushSync(() => setVtContext({ isTransitioning: false }))");
-          ReactDOM.flushSync(() => {
-            setVtContext({ isTransitioning: false });
-          });
+          flushSyncSafe(() => setVtContext({ isTransitioning: false }));
         });
       });
     },

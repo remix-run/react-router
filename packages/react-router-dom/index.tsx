@@ -1532,8 +1532,6 @@ function useViewTransitions(
   }, [router, viewTransition]);
 }
 
-export { useViewTransitions as unstable_useViewTransitions };
-
 /**
  * Localized version of useViewTransitions to enable view transitions for a
  * specific destination href. Returns an isTransitioning value that you can

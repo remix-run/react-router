@@ -348,7 +348,7 @@ export type HydrationState = Partial<
 export interface FutureConfig {
   v7_normalizeFormMethod: boolean;
   v7_prependBasename: boolean;
-  v7_fallbackOnDeferRevalidation: boolean;
+  unstable_fallbackOnDeferRevalidation: boolean;
 }
 
 type ViewTransition = {
@@ -411,10 +411,10 @@ export interface StaticHandler {
   ): Promise<any>;
 }
 
-type CompletedNavigationOpts = {
+type ViewTransitionOpts = {
   historyAction: HistoryAction;
   prevLocation: Location;
-  viewTransitions?: Array<boolean | ViewTransitionFunction>;
+  callbacks: ReturnType<ViewTransitionFunction>[];
 };
 
 /**
@@ -424,7 +424,7 @@ export interface RouterSubscriber {
   (
     state: RouterState,
     opts: {
-      completedNavigation?: CompletedNavigationOpts;
+      viewTransitionOpts?: ViewTransitionOpts;
     }
   ): void;
 }
@@ -778,7 +778,7 @@ export function createRouter(init: RouterInit): Router {
   let future: FutureConfig = {
     v7_normalizeFormMethod: false,
     v7_prependBasename: false,
-    v7_fallbackOnDeferRevalidation: false,
+    unstable_fallbackOnDeferRevalidation: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -1008,15 +1008,20 @@ export function createRouter(init: RouterInit): Router {
   // Update our state and notify the calling context of the change
   function updateState(
     newState: Partial<RouterState>,
-    completedNavigation?: CompletedNavigationOpts
+    viewTransitionOpts?: ViewTransitionOpts
   ): void {
     state = {
       ...state,
       ...newState,
     };
     subscribers.forEach((subscriber) =>
-      subscriber(state, { completedNavigation })
+      subscriber(state, { viewTransitionOpts })
     );
+  }
+
+  // FIXME: Remove
+  function LOG(...args: any[]) {
+    console.debug(new Date().toISOString(), ...args);
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -1098,6 +1103,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let viewTransitions: (boolean | ViewTransitionFunction)[] | undefined;
+    let completedNavigationOpts: ViewTransitionOpts | undefined;
 
     if (pendingAction === HistoryAction.Pop) {
       let transitionKey = [state.location.key, location.key].join("-");
@@ -1108,6 +1114,32 @@ export function createRouter(init: RouterInit): Router {
       viewTransitions = Array.from(pendingViewTransitionFunctions.values());
       let backTransitionKey = [location.key, state.location.key].join("-");
       appliedViewTransitionFunctions.set(backTransitionKey, viewTransitions);
+    }
+
+    if (viewTransitions) {
+      // Run user-provided functions, short circuiting on false
+      LOG("calling pre-dom-update functions");
+      let callbacks = viewTransitions.map((vt) =>
+        typeof vt === "function"
+          ? vt({
+              historyAction: pendingAction,
+              currentLocation: state.location,
+              nextLocation: location,
+            })
+          : vt
+      );
+
+      if (callbacks.some((cb) => cb !== false)) {
+        // Transitions are enabled by at least one function returning a non-false
+        // value (undefined, true, or callback function)
+        completedNavigationOpts = {
+          historyAction: pendingAction,
+          prevLocation: state.location,
+          callbacks,
+        };
+      } else {
+        LOG("user opted out of startViewTransition with returned false");
+      }
     }
 
     updateState(
@@ -1127,11 +1159,7 @@ export function createRouter(init: RouterInit): Router {
         preventScrollReset,
         blockers,
       },
-      {
-        historyAction: pendingAction,
-        prevLocation: state.location,
-        viewTransitions,
-      }
+      completedNavigationOpts
     );
 
     // Reset stateful navigation vars
@@ -2296,7 +2324,7 @@ export function createRouter(init: RouterInit): Router {
       // avoid re-triggering fallbacks.  Users can opt out of this behavior via
       // the flag and handle fallbacks with startTransition and Suspense keys
       // themselves
-      future.v7_fallbackOnDeferRevalidation
+      future.unstable_fallbackOnDeferRevalidation
         ? null
         : resolveDeferredResults(
             currentMatches,
