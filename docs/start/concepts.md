@@ -125,9 +125,11 @@ window.addEventListener("popstate", () => {
 
 But that only fires when the user clicks the back or forward buttons. There is no event for when the programmer called `window.history.pushState` or `window.history.replaceState`.
 
-That's where a React Router specific `history` object comes into play. It provides a way to "listen for [URL](#url)" changes whether the [history action](#history-actions) is **push**, **pop**, or **replace**.
+That's where a React Router specific `history` object comes into play. It provides a way to "listen for [URL](#url)" changes whether the [history action](#history-actions) is **push**, **pop**, or **replace**. If you need to use this feature you'll need to use the @remix-run/router package, as this does not come with react-router-dom. An alternative that may work for you is to import createBrowserHistory from the history peer-dependency.
 
 ```js
+import { createBrowserHistory } from "@remix-run/router";
+
 let history = createBrowserHistory();
 history.listen(({ location, action }) => {
   // this is called whenever new locations come in
