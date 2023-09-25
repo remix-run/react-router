@@ -357,6 +357,7 @@ type ViewTransition = {
 };
 
 export type ViewTransitionFunction = (args: {
+  historyAction: HistoryAction;
   currentLocation: Location;
   nextLocation: Location;
 }) => void | boolean | ((transition: ViewTransition) => void | Promise<void>);
@@ -410,6 +411,12 @@ export interface StaticHandler {
   ): Promise<any>;
 }
 
+type CompletedNavigationOpts = {
+  historyAction: HistoryAction;
+  prevLocation: Location;
+  viewTransitions?: Array<boolean | ViewTransitionFunction>;
+};
+
 /**
  * Subscriber function signature for changes to router state
  */
@@ -417,10 +424,7 @@ export interface RouterSubscriber {
   (
     state: RouterState,
     opts: {
-      completedNavigation?: {
-        prevLocation: Location;
-        viewTransitions?: Array<boolean | ViewTransitionFunction>;
-      };
+      completedNavigation?: CompletedNavigationOpts;
     }
   ): void;
 }
@@ -846,8 +850,16 @@ export function createRouter(init: RouterInit): Router {
   let pendingNavigationController: AbortController | null;
 
   // Pending viewTransition options from current UI renders
-  let pendingViewTransitionOpts: Map<string, boolean | ViewTransitionFunction> =
-    new Map<string, ViewTransitionFunction>();
+  let pendingViewTransitionFunctions: Map<
+    string,
+    boolean | ViewTransitionFunction
+  > = new Map<string, boolean | ViewTransitionFunction>();
+
+  // Pending viewTransition options from current UI renders
+  let appliedViewTransitionFunctions: Map<
+    string,
+    (boolean | ViewTransitionFunction)[]
+  > = new Map<string, (boolean | ViewTransitionFunction)[]>();
 
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
@@ -996,27 +1008,14 @@ export function createRouter(init: RouterInit): Router {
   // Update our state and notify the calling context of the change
   function updateState(
     newState: Partial<RouterState>,
-    isCompletedNavigation = false
+    completedNavigation?: CompletedNavigationOpts
   ): void {
-    let prevLocation = state.location;
     state = {
       ...state,
       ...newState,
     };
-    let viewTransitions =
-      pendingViewTransitionOpts.size > 0
-        ? Array.from(pendingViewTransitionOpts.values())
-        : undefined;
-
     subscribers.forEach((subscriber) =>
-      subscriber(state, {
-        completedNavigation: isCompletedNavigation
-          ? {
-              prevLocation,
-              viewTransitions,
-            }
-          : undefined,
-      })
+      subscriber(state, { completedNavigation })
     );
   }
 
@@ -1098,6 +1097,19 @@ export function createRouter(init: RouterInit): Router {
       init.history.replace(location, location.state);
     }
 
+    let viewTransitions: (boolean | ViewTransitionFunction)[] | undefined;
+
+    if (pendingAction === HistoryAction.Pop) {
+      let transitionKey = [state.location.key, location.key].join("-");
+      viewTransitions = appliedViewTransitionFunctions.get(transitionKey);
+      // TODO: execute viewTransitions here with proper current/next based on
+      // if we matched a forward pop or back pop
+    } else if (pendingViewTransitionFunctions.size > 0) {
+      viewTransitions = Array.from(pendingViewTransitionFunctions.values());
+      let backTransitionKey = [location.key, state.location.key].join("-");
+      appliedViewTransitionFunctions.set(backTransitionKey, viewTransitions);
+    }
+
     updateState(
       {
         ...newState, // matches, errors, fetchers go through as-is
@@ -1115,7 +1127,11 @@ export function createRouter(init: RouterInit): Router {
         preventScrollReset,
         blockers,
       },
-      true
+      {
+        historyAction: pendingAction,
+        prevLocation: state.location,
+        viewTransitions,
+      }
     );
 
     // Reset stateful navigation vars
@@ -2552,8 +2568,8 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     viewTransition: boolean | ViewTransitionFunction
   ) {
-    pendingViewTransitionOpts.set(key, viewTransition);
-    return () => pendingViewTransitionOpts.delete(key);
+    pendingViewTransitionFunctions.set(key, viewTransition);
+    return () => pendingViewTransitionFunctions.delete(key);
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {

@@ -7,12 +7,12 @@ import type {
   FutureConfig,
   Location,
   NavigateOptions,
-  NavigationType,
   RelativeRoutingType,
   RouteObject,
   To,
 } from "react-router";
 import {
+  NavigationType,
   Router,
   createPath,
   useHref,
@@ -643,7 +643,6 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
-    // debugger;
     let vt = useViewTransition(unstable_viewTransition ? path : undefined);
 
     let toPathname = navigator.encodeLocation
@@ -1544,33 +1543,42 @@ export { useViewTransitions as unstable_useViewTransitions };
  * @returns
  */
 function useViewTransition(to?: To) {
-  // TODO: Not working yet
-  let [isFirstRender, setIsFirstRender] = React.useState(true);
   let vtContext = React.useContext(ViewTransitionContext);
   let href = to == null ? null : typeof to === "string" ? to : createPath(to);
 
+  // This function has to use point-in-time passed-in values if we want it to
+  // work on POP navigations because we store off this function to be executed
+  // on the POP, and we need to call it _before_ the render so we can't leverage
+  // useLocation/useNavigation or vtContext in the POP flow since it runs before
+  // we've setState for those to render the new DOM.
+  //
+  // On pop - maybe we remove the ability to opt-out if we know we ran one the
+  // prior time?  Router could store key tuples that opted into transitions on
+  // PUSH/REPLACE and then automatically opt-in on POP for the reverse?
   let shouldTransition = React.useCallback<ViewTransitionFunction>(
-    ({ currentLocation, nextLocation }) =>
-      href != null &&
-      ((isFirstRender && createPath(currentLocation) === href) ||
-        (!isFirstRender && createPath(nextLocation) === href)),
-    [href, isFirstRender]
+    ({ historyAction, currentLocation, nextLocation }) => {
+      if (href == null) {
+        // TODO: Add subtree matching
+        return true;
+      } else if (historyAction === NavigationType.Pop) {
+        // If we're handling a POP, we want to match against the location we're
+        // popping from, not the one we're navigating to since it's the reverse
+        // of the original link click.  We can't leverage useLocation for this
+        // because on the initial render of the POP location, it's already the
+        // next location
+        return createPath(currentLocation) === href;
+      } else {
+        return createPath(nextLocation) === href;
+      }
+    },
+    [href]
   );
 
   useViewTransitions(shouldTransition);
 
-  React.useLayoutEffect(() => {
-    console.log("runing effect");
-    setIsFirstRender(false);
-  }, []);
-
-  console.log(to, JSON.stringify(vtContext), isFirstRender);
-
   return {
     isTransitioning:
-      vtContext.isTransitioning &&
-      ((isFirstRender && createPath(vtContext.currentLocation) === href) ||
-        (!isFirstRender && createPath(vtContext.nextLocation) === href)),
+      vtContext.isTransitioning && shouldTransition(vtContext) === true,
   };
 }
 

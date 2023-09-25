@@ -34,12 +34,9 @@ const router = createBrowserRouter(
     {
       path: "/",
       Component() {
-        let [enableViewTransitions, setEnableViewTransitions] =
-          React.useState(true);
-
         // turn on basic view transitions for the whole app
-        //unstable_useViewTransitions(enableViewTransitions);
-        unstable_useViewTransition("/loader");
+        unstable_useViewTransition();
+        // unstable_useViewTransition("/loader");
 
         let navigation = useNavigation();
 
@@ -50,14 +47,6 @@ const router = createBrowserRouter(
             ) : null}
             <Nav />
             <div className="content">
-              <button
-                onClick={() => setEnableViewTransitions(!enableViewTransitions)}
-              >
-                {enableViewTransitions
-                  ? "Disable view startViewTransition"
-                  : "Enable startViewTransition"}
-              </button>
-              <br />
               <Outlet />
             </div>
           </>
@@ -193,33 +182,34 @@ const router = createBrowserRouter(
                 <h1>Image List</h1>
                 <div>
                   {images.map((src, idx) => (
-                    <React.Fragment key={src}>
-                      {/* <NavImage key={src} src={src} idx={idx} /> */}
-                      <NavLink to={`/images/${idx}`} unstable_viewTransition>
-                        {({ isTransitioning }) => (
-                          <>
-                            <p
-                              style={{
-                                viewTransitionName: isTransitioning
-                                  ? "image-title"
-                                  : "",
-                              }}
-                            >
-                              Image Number {idx}
-                            </p>
-                            <img
-                              src={src}
-                              alt={`Img ${idx}`}
-                              style={{
-                                viewTransitionName: isTransitioning
-                                  ? "image-expand"
-                                  : "",
-                              }}
-                            />
-                          </>
-                        )}
-                      </NavLink>
-                    </React.Fragment>
+                    <NavLink
+                      key={src}
+                      to={`/images/${idx}`}
+                      unstable_viewTransition
+                    >
+                      {({ isTransitioning }) => (
+                        <>
+                          <p
+                            style={{
+                              viewTransitionName: isTransitioning
+                                ? "image-title"
+                                : "",
+                            }}
+                          >
+                            Image Number {idx}
+                          </p>
+                          <img
+                            src={src}
+                            alt={`Img ${idx}`}
+                            style={{
+                              viewTransitionName: isTransitioning
+                                ? "image-expand"
+                                : "",
+                            }}
+                          />
+                        </>
+                      )}
+                    </NavLink>
                   ))}
                 </div>
               </div>
@@ -336,7 +326,7 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <NavLink to="/loader">Loader Delay</NavLink>
+          <Link to="/loader">Loader Delay</Link>
           <ul>
             <li>
               The /loader route has a 1 second loader delay, and updates the DOM
