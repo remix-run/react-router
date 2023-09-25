@@ -1533,11 +1533,11 @@ export const redirectDocument: RedirectFunction = (url, init) => {
   return response;
 };
 
-export interface ErrorResponse {
+export type ErrorResponse = {
   status: number;
   statusText: string;
   data: any;
-}
+};
 
 /**
  * @private
