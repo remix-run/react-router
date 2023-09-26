@@ -56,6 +56,7 @@ import {
   UNSAFE_warning as warning,
   matchRoutes,
   matchPath,
+  parsePath,
 } from "@remix-run/router";
 
 import type {
@@ -647,7 +648,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
     let isTransitioning = useViewTransition(
-      unstable_viewTransition ? path : undefined
+      unstable_viewTransition ? path : false
     );
 
     let toPathname = navigator.encodeLocation
@@ -1518,6 +1519,17 @@ let viewTransitionId = 0;
  * If you return false from your function, then this specific hook will not enable
  * view transitions (but other hook invocations still may)
  *
+ * @example
+ * useViewTransitions(() => {
+ *   // before dom update
+ *   return (transition) => {
+ *     // after dom update
+ *     transition.finished.finally(() => {
+ *       // after animation
+ *     })
+ *   };
+ * })
+ *
  * @param viewTransition Optional function to determine
  */
 function useViewTransitions(
@@ -1538,16 +1550,24 @@ function useViewTransitions(
 }
 
 /**
- * Localized version of useViewTransitions to enable view transitions for a
+ * Localized version of useViewTransition to enable view transitions for a
  * specific destination href. Returns an isTransitioning value that you can
  * leverage to render CSS classes or viewTransitionName styles onto your elements
  *
  * @param href The destination href you wish to enable view transitions for
  * @returns
  */
-function useViewTransition(to?: To) {
+function useViewTransitionImpl(isFrom: boolean, location?: To | boolean) {
   let vtContext = React.useContext(ViewTransitionContext);
-  let href = to == null ? null : typeof to === "string" ? to : createPath(to);
+  let href =
+    typeof location === "boolean"
+      ? location
+      : location == null
+      ? null
+      : typeof location === "string"
+      ? location
+      : // TODO: Handle relative paths here?
+        location.pathname || "";
 
   // This function has to use point-in-time passed-in values if we want it to
   // work on POP navigations because we store off this function to be executed
@@ -1559,15 +1579,18 @@ function useViewTransition(to?: To) {
   // prior time?  Router could store key tuples that opted into transitions on
   // PUSH/REPLACE and then automatically opt-in on POP for the reverse?
   let shouldTransition = React.useCallback<ViewTransitionFunction>(
-    ({ nextLocation }) => {
-      if (href == null) {
+    ({ currentLocation, nextLocation }) => {
+      if (href === false) {
+        return href;
+      } else if (typeof href === "string") {
+        let { pathname } = isFrom ? currentLocation : nextLocation;
+        return matchPath(href, pathname) != null;
+      } else {
         // TODO: Add subtree matching
         return true;
-      } else {
-        return matchPath(href, nextLocation.pathname) != null;
       }
     },
-    [href]
+    [isFrom, href]
   );
 
   useViewTransitions(shouldTransition);
@@ -1575,28 +1598,35 @@ function useViewTransition(to?: To) {
   return vtContext.isTransitioning && shouldTransition(vtContext) === true;
 }
 
+/**
+ * Enable view transitions for a specific destination href. Returns an
+ * isTransitioning value that you can leverage to render CSS classes or
+ * viewTransitionName styles onto your elements.
+ *
+ * @param [to=false] The destination href you wish to enable view transitions
+ *                   for, or true/false to enable.disable for the route sub-tree
+ * @returns
+ */
+function useViewTransition(to?: To | boolean) {
+  return useViewTransitionImpl(false, to);
+}
+
 export { useViewTransition as unstable_useViewTransition };
 
-function useViewTransitionFrom(from?: To) {
-  let vtContext = React.useContext(ViewTransitionContext);
-  let href =
-    from == null ? null : typeof from === "string" ? from : createPath(from);
-
-  let shouldTransition = React.useCallback<ViewTransitionFunction>(
-    ({ currentLocation }) => {
-      if (href == null) {
-        // TODO: Add subtree matching
-        return true;
-      } else {
-        return matchPath(href, currentLocation.pathname) != null;
-      }
-    },
-    [href]
-  );
-
-  useViewTransitions(shouldTransition);
-
-  return vtContext.isTransitioning && shouldTransition(vtContext) === true;
+/**
+ * Enable view transitions from a specific source href. Returns an
+ * isTransitioning value that you can leverage to render CSS classes or
+ * viewTransitionName styles onto your elements.
+ *
+ * @param [from=false] The source href you wish to enable view transitions
+ *                     for, or true/false to enable.disable for the route sub-tree
+ * @returns
+ */
+function useViewTransitionFrom(from?: To | boolean) {
+  // TODO: Needed at the moment to be able to conditionally turn on the image
+  // detail transition only when coming from /images so iut doesn't take control
+  // when navigating /images/:id -> /home, etc.
+  return useViewTransitionImpl(true, from);
 }
 
 export { useViewTransitionFrom as unstable_useViewTransitionFrom };

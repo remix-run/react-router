@@ -155,6 +155,7 @@ const router = createBrowserRouter(
                       <p>Image Number {idx}</p>
                       <img src={src} alt={`Img ${idx}`} />
                     </NavLink>
+                    // <NavImage key={src} src={src} idx={idx} />
                   ))}
                 </div>
               </div>
@@ -189,6 +190,24 @@ const router = createBrowserRouter(
     },
   }
 );
+
+function NavImage({ src, idx }: { src: string; idx: number }) {
+  let href = `/images/${idx}`;
+  let isTransitioning = unstable_useViewTransition(href);
+  console.log(href, isTransitioning);
+  return (
+    <NavLink to={href}>
+      <p style={{ viewTransitionName: isTransitioning ? "image-title" : "" }}>
+        Image Number {idx}
+      </p>
+      <img
+        src={src}
+        alt={`Img ${idx}`}
+        style={{ viewTransitionName: isTransitioning ? "image-expand" : "" }}
+      />
+    </NavLink>
+  );
+}
 
 const rootElement = document.getElementById("root") as HTMLElement;
 ReactDOMClient.createRoot(rootElement).render(
