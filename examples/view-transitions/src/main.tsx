@@ -83,14 +83,14 @@ const router = createBrowserRouter(
             return json({ message: "ACTION DATA" });
           },
           Component() {
-            let data = useActionData() as { message: string };
+            let data = useActionData() as { message: string } | undefined;
             React.useEffect(() => {
               document.title = "Action";
             }, []);
             return (
               <>
                 <h1>Action Page</h1>
-                <p>Action Data: {data.message}</p>
+                <p>Action Data: {data?.message}</p>
               </>
             );
           },
@@ -214,16 +214,11 @@ const router = createBrowserRouter(
           path: "images/:id",
           Component() {
             let params = useParams();
-            // Conditionally apply the transition styles only when navigating _to_
-            // this route.  If we apply them statically, clicking back to the home
-            // page from this view leaves the image stuck during the animation
-            // since it has no corresponding element to shrink into
-            let vt = unstable_useViewTransitionState(".");
             React.useEffect(() => {
               document.title = "Image " + params.id;
             }, [params.id]);
             return (
-              <div className={`image-detail ${vt ? "transitioning" : ""}`}>
+              <div className={`image-detail`}>
                 <h1>Image Number {params.id}</h1>
                 <img src={images[Number(params.id)]} alt={`${params.id}`} />
               </div>

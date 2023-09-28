@@ -1069,17 +1069,16 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let viewTransitionOpts: ViewTransitionOpts | undefined;
-    let key = (a: Location, b: Location) => [a.key, b.key].join("-");
 
     // For POP navigations, we enable transitions if iff they were enabled on
     // the original navigation
     if (pendingAction === HistoryAction.Pop) {
-      if (appliedViewTransitions.has(key(location, state.location))) {
+      if (appliedViewTransitions.has(location.key)) {
         // POP backward - reversing a navigation that enabled transitions
         viewTransitionOpts = {
           nextLocation: state.location,
         };
-      } else if (appliedViewTransitions.has(key(state.location, location))) {
+      } else if (appliedViewTransitions.has(state.location.key)) {
         // POP forward - replaying a navigation that enabled transitions
         viewTransitionOpts = {
           nextLocation: location,
@@ -1087,7 +1086,7 @@ export function createRouter(init: RouterInit): Router {
       }
     } else if (pendingViewTransitionEnabled) {
       // Store the applied transition on PUSH/REPLACE
-      let transitionKey = key(state.location, location);
+      let transitionKey = state.location.key;
       appliedViewTransitions.add(transitionKey);
       viewTransitionOpts = {
         nextLocation: location,

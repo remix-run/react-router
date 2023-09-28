@@ -66,11 +66,10 @@
   contain: layout;
 }
 
-.image-detail.transitioning img {
+.image-detail img {
   view-transition-name: image-expand;
 }
 
-::view-transition-old(image-expand),
 ::view-transition-new(image-expand) {
   animation: none;
   mix-blend-mode: normal;
@@ -88,6 +87,6 @@
   width: fit-content;
 }
 
-.image-detail.transitioning h1 {
+.image-detail h1 {
   view-transition-name: image-title;
 }
