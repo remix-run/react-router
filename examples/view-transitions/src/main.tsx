@@ -98,18 +98,13 @@ const router = createBrowserRouter(
         {
           path: "defer",
           async loader({ request }) {
-            let value = new URL(request.url).searchParams.get("value") || "";
             return defer({
-              value,
-              critical: "CRITICAL PATH DATA " + value,
-              lazy: new Promise((r) =>
-                setTimeout(() => r("LAZY DATA " + value), 1000)
-              ),
+              critical: "CRITICAL PATH DATA",
+              lazy: new Promise((r) => setTimeout(() => r("LAZY DATA"), 1000)),
             });
           },
           Component() {
             let data = useLoaderData() as {
-              value: string;
               critical: string;
               lazy: Promise<string>;
             };
@@ -118,7 +113,7 @@ const router = createBrowserRouter(
             }, []);
             return (
               <>
-                <h1>Defer {data.value}</h1>
+                <h1>Defer</h1>
                 <p>Critical Data: {data.critical}</p>
                 <React.Suspense
                   fallback={<p>Suspense boundary in the route...</p>}
@@ -272,7 +267,6 @@ ReactDOMClient.createRoot(rootElement).render(
 function Nav() {
   let navigate = useNavigate();
   let submit = useSubmit();
-  let value = Math.round(Math.random() * 100);
   return (
     <nav>
       <ul>
@@ -345,7 +339,7 @@ function Nav() {
           </Link>
         </li>
         <li>
-          <Link to={`/defer?value=${value}`} unstable_viewTransition>
+          <Link to={`/defer`} unstable_viewTransition>
             Deferred Data
           </Link>
           <ul>
