@@ -337,7 +337,6 @@ export type HydrationState = Partial<
 export interface FutureConfig {
   v7_normalizeFormMethod: boolean;
   v7_prependBasename: boolean;
-  unstable_fallbackOnDeferRevalidation: boolean;
 }
 
 /**
@@ -755,7 +754,6 @@ export function createRouter(init: RouterInit): Router {
   let future: FutureConfig = {
     v7_normalizeFormMethod: false,
     v7_prependBasename: false,
-    unstable_fallbackOnDeferRevalidation: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -2276,20 +2274,14 @@ export function createRouter(init: RouterInit): Router {
     let fetcherResults = results.slice(matchesToLoad.length);
 
     await Promise.all([
-      // By default, route deferred data is resolved if it's a revalidation to
-      // avoid re-triggering fallbacks.  Users can opt out of this behavior via
-      // the flag and handle fallbacks with startTransition and Suspense keys
-      // themselves
-      future.unstable_fallbackOnDeferRevalidation
-        ? null
-        : resolveDeferredResults(
-            currentMatches,
-            matchesToLoad,
-            loaderResults,
-            loaderResults.map(() => request.signal),
-            false,
-            state.loaderData
-          ),
+      resolveDeferredResults(
+        currentMatches,
+        matchesToLoad,
+        loaderResults,
+        loaderResults.map(() => request.signal),
+        false,
+        state.loaderData
+      ),
       // Fetchers do not support deferred and always resolve
       resolveDeferredResults(
         currentMatches,
