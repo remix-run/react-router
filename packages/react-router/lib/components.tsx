@@ -141,11 +141,6 @@ class Deferred<T> {
   }
 }
 
-// FIXME: Remove
-function LOG(...args: any[]) {
-  console.debug(new Date().toISOString(), ...args);
-}
-
 /**
  * Given a Remix Router instance, render the appropriate UI
  */
@@ -165,8 +160,6 @@ export function RouterProvider({
   let [transition, setTransition] = React.useState<any>();
   let { v7_startTransition } = future || {};
 
-  LOG("render", state.location.pathname);
-
   let optInStartTransition = React.useCallback(
     (cb: () => void) => {
       if (v7_startTransition) {
@@ -180,14 +173,12 @@ export function RouterProvider({
 
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState, { viewTransitionOpts }) => {
-      LOG("subscriber callback", newState.location.pathname);
       if (
         viewTransitionOpts &&
         typeof document.startViewTransition === "function"
       ) {
         // If this is a completed navigation update with opted-in view transitions,
         // kick off a transition via the ViewTransitionContext
-        LOG("setVtContext({ isTransitioning: true })");
         setPendingState(newState);
         setVtContext({
           isTransitioning: true,
@@ -209,9 +200,7 @@ export function RouterProvider({
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
-    LOG("create deferred effect");
     if (vtContext.isTransitioning) {
-      LOG("creating deferred");
       setRenderDfd(new Deferred<void>());
     }
   }, [vtContext.isTransitioning]);
@@ -220,19 +209,15 @@ export function RouterProvider({
   // DOM and then wait on the Deferred to resolve (indicating the DOM update has
   // happened)
   React.useEffect(() => {
-    LOG("startViewTransition effect");
     if (renderDfd && pendingState) {
       let promise = renderDfd.promise;
       let newState = pendingState;
-      LOG("transition = document.startViewTransition()");
       let transition = document.startViewTransition(async () => {
-        LOG("React.startTransition(() => setTransition()/setState())");
         optInStartTransition(() => {
           setTransition(transition);
           setStateImpl(newState);
         });
         await promise;
-        LOG("done with view transition");
       });
 
       // TODO: Handle interrupted transitions with transition.skipTransition()
@@ -242,18 +227,14 @@ export function RouterProvider({
   // When the new location finally renders and is committed to the DOM, this
   // effect will run to resolve the transition
   React.useEffect(() => {
-    LOG("resolve deferred effect");
     if (
       renderDfd &&
       pendingState &&
       state.location.key === pendingState.location.key
     ) {
       transition.finished.finally(() => {
-        // TODO: Is this enough to not need the view transition callback functions?
-        LOG("setVtContext({ isTransitioning: false })");
         setVtContext({ isTransitioning: false });
       });
-      LOG("deferred.resolve()");
       renderDfd.resolve();
       setRenderDfd(undefined);
       setTransition(undefined);
