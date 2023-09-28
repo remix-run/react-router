@@ -56,7 +56,7 @@ export interface FutureConfig {
 export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
 }
 
 /**
