@@ -191,7 +191,6 @@ export function RouterProvider({
         setPendingState(newState);
         setVtContext({
           isTransitioning: true,
-          currentLocation: viewTransitionOpts.currentLocation,
           nextLocation: viewTransitionOpts.nextLocation,
         });
       } else {

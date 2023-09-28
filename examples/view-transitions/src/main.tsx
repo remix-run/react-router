@@ -179,7 +179,11 @@ const router = createBrowserRouter(
                 <div>
                   {images.map((src, idx) => (
                     // Adds 'transitioning' class to the <a> during the transition
-                    <NavLink key={src} to={`/images/${idx}`}>
+                    <NavLink
+                      key={src}
+                      to={`/images/${idx}`}
+                      unstable_viewTransition
+                    >
                       <p>Image Number {idx}</p>
                       <img src={src} alt={`Img ${idx}`} />
                     </NavLink>
@@ -278,7 +282,9 @@ function Nav() {
     <nav>
       <ul>
         <li>
-          <Link to="/">Home</Link>
+          <Link to="/" unstable_viewTransition>
+            Home
+          </Link>
           <ul>
             <li>
               The / route has no loader is should be an immediate/synchronous
@@ -310,6 +316,7 @@ function Nav() {
             method="post"
             action="/action"
             style={{ display: "inline-block" }}
+            unstable_viewTransition
           >
             <button type="submit" style={{ display: "inline-block" }}>
               Action with delay
@@ -338,7 +345,9 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <Link to="/images">Image Gallery Example</Link>
+          <Link to="/images" unstable_viewTransition>
+            Image Gallery Example
+          </Link>
         </li>
         <li>
           <Link to={`/defer?value=${value}`} unstable_viewTransition>

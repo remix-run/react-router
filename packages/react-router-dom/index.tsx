@@ -1538,14 +1538,10 @@ function useViewTransitionState(
 ) {
   let vtContext = React.useContext(ViewTransitionContext);
   let path = useResolvedPath(to, { relative: opts.relative });
-  if (!vtContext.isTransitioning) {
-    return false;
-  }
-  let isTransitioning =
+  return (
     vtContext.isTransitioning &&
-    matchPath(path.pathname, vtContext.nextLocation.pathname) != null;
-  console.log("isTransitioning", path.pathname, isTransitioning);
-  return isTransitioning;
+    matchPath(path.pathname, vtContext.nextLocation.pathname) != null
+  );
 }
 
 export { useViewTransitionState as unstable_useViewTransitionState };

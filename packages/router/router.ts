@@ -390,7 +390,6 @@ export interface StaticHandler {
 }
 
 type ViewTransitionOpts = {
-  currentLocation: Location;
   nextLocation: Location;
 };
 
@@ -1078,13 +1077,11 @@ export function createRouter(init: RouterInit): Router {
       if (appliedViewTransitions.has(key(location, state.location))) {
         // POP backward - reversing a navigation that enabled transitions
         viewTransitionOpts = {
-          currentLocation: location,
           nextLocation: state.location,
         };
       } else if (appliedViewTransitions.has(key(state.location, location))) {
         // POP forward - replaying a navigation that enabled transitions
         viewTransitionOpts = {
-          currentLocation: state.location,
           nextLocation: location,
         };
       }
@@ -1093,7 +1090,6 @@ export function createRouter(init: RouterInit): Router {
       let transitionKey = key(state.location, location);
       appliedViewTransitions.add(transitionKey);
       viewTransitionOpts = {
-        currentLocation: state.location,
         nextLocation: location,
       };
     }

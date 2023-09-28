@@ -91,7 +91,6 @@ export type ViewTransitionContextObject =
     }
   | {
       isTransitioning: true;
-      currentLocation: Location;
       nextLocation: Location;
     };
 
