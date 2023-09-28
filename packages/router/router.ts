@@ -226,17 +226,6 @@ export interface Router {
   /**
    * @internal
    * PRIVATE - DO NOT USE
-   * @param key The identifier for the transition
-   * @param opts The view transition options
-   */
-  addViewTransition(
-    key: string,
-    opts: boolean | ViewTransitionFunction
-  ): () => void;
-
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
    *
    * HMR needs to pass in-flight route updates to React Router
    * TODO: Replace this with granular route update APIs (addRoute, updateRoute, deleteRoute)
@@ -351,16 +340,6 @@ export interface FutureConfig {
   unstable_fallbackOnDeferRevalidation: boolean;
 }
 
-type ViewTransition = {
-  finished: Promise<void>;
-  ready: Promise<void>;
-};
-
-export type ViewTransitionFunction = (args: {
-  currentLocation: Location;
-  nextLocation: Location;
-}) => void | boolean | ((transition: ViewTransition) => void | Promise<void>);
-
 /**
  * Initialization options for createRouter
  */
@@ -413,7 +392,6 @@ export interface StaticHandler {
 type ViewTransitionOpts = {
   currentLocation: Location;
   nextLocation: Location;
-  callbacks: ReturnType<ViewTransitionFunction>[];
 };
 
 /**
@@ -456,6 +434,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
+  unstable_viewTransition?: boolean;
 };
 
 // Only allowed for submission navigations
@@ -848,17 +827,11 @@ export function createRouter(init: RouterInit): Router {
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
 
-  // Pending viewTransition options from current UI renders
-  let pendingViewTransitionFunctions: Map<
-    string,
-    boolean | ViewTransitionFunction
-  > = new Map<string, boolean | ViewTransitionFunction>();
+  // Should the current navigation enable document.startViewTransition?
+  let pendingViewTransitionEnabled = false;
 
-  // Pending viewTransition options from current UI renders
-  let appliedViewTransitionFunctions: Map<
-    string,
-    (boolean | ViewTransitionFunction)[]
-  > = new Map<string, (boolean | ViewTransitionFunction)[]>();
+  // Store applied view transitions so we can apply them on POP
+  let appliedViewTransitions: Set<string> = new Set<string>();
 
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
@@ -1018,11 +991,6 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
-  // FIXME: Remove
-  function LOG(...args: any[]) {
-    console.debug(new Date().toISOString(), ...args);
-  }
-
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
   // and setting state.[historyAction/location/matches] to the new route.
   // - Location is a required param
@@ -1101,62 +1069,33 @@ export function createRouter(init: RouterInit): Router {
       init.history.replace(location, location.state);
     }
 
-    let viewTransitions: (boolean | ViewTransitionFunction)[] | undefined;
-    let viewTransitionArgs: Parameters<ViewTransitionFunction>[0] | undefined;
-    let completedNavigationOpts: ViewTransitionOpts | undefined;
+    let viewTransitionOpts: ViewTransitionOpts | undefined;
+    let key = (a: Location, b: Location) => [a.key, b.key].join("-");
 
-    let getTransitionKey = (a: Location, b: Location) =>
-      [a.key, b.key].join("-");
-
+    // For POP navigations, we enable transitions if iff they were enabled on
+    // the original navigation
     if (pendingAction === HistoryAction.Pop) {
-      let backwardKey = getTransitionKey(location, state.location);
-      if (appliedViewTransitionFunctions.has(backwardKey)) {
-        LOG(
-          "matched backwards POP",
-          location.pathname,
-          state.location.pathname
-        );
-        viewTransitions = appliedViewTransitionFunctions.get(backwardKey);
-        viewTransitionArgs = {
+      if (appliedViewTransitions.has(key(location, state.location))) {
+        // POP backward - reversing a navigation that enabled transitions
+        viewTransitionOpts = {
           currentLocation: location,
           nextLocation: state.location,
         };
+      } else if (appliedViewTransitions.has(key(state.location, location))) {
+        // POP forward - replaying a navigation that enabled transitions
+        viewTransitionOpts = {
+          currentLocation: state.location,
+          nextLocation: location,
+        };
       }
-    }
-
-    if (!viewTransitions && pendingViewTransitionFunctions.size > 0) {
-      viewTransitions = Array.from(pendingViewTransitionFunctions.values());
-      if (pendingAction === HistoryAction.Pop) {
-        LOG("matched forwards POP", state.location.pathname, location.pathname);
-      } else {
-        LOG("matched PUSH/REPLACE", state.location.pathname, location.pathname);
-      }
-      viewTransitionArgs = {
+    } else if (pendingViewTransitionEnabled) {
+      // Store the applied transition on PUSH/REPLACE
+      let transitionKey = key(state.location, location);
+      appliedViewTransitions.add(transitionKey);
+      viewTransitionOpts = {
         currentLocation: state.location,
         nextLocation: location,
       };
-      let transitionKey = getTransitionKey(state.location, location);
-      appliedViewTransitionFunctions.set(transitionKey, viewTransitions);
-    }
-
-    if (viewTransitions && viewTransitionArgs) {
-      // Run user-provided functions, short circuiting on false
-      LOG("calling pre-dom-update functions");
-      let vtArgs = viewTransitionArgs;
-      let callbacks = viewTransitions.map((vt) =>
-        typeof vt === "function" ? vt(vtArgs!) : vt
-      );
-
-      if (callbacks.some((cb) => cb !== false)) {
-        // Transitions are enabled by at least one function returning a non-false
-        // value (undefined, true, or callback function)
-        completedNavigationOpts = {
-          ...viewTransitionArgs,
-          callbacks,
-        };
-      } else {
-        LOG("user opted out of startViewTransition with returned false");
-      }
     }
 
     updateState(
@@ -1176,12 +1115,13 @@ export function createRouter(init: RouterInit): Router {
         preventScrollReset,
         blockers,
       },
-      completedNavigationOpts
+      viewTransitionOpts
     );
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
     pendingPreventScrollReset = false;
+    pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -1290,6 +1230,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
+      enableViewTransition: opts && opts.unstable_viewTransition,
     });
   }
 
@@ -1340,6 +1281,7 @@ export function createRouter(init: RouterInit): Router {
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
       replace?: boolean;
+      enableViewTransition?: boolean;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1355,6 +1297,8 @@ export function createRouter(init: RouterInit): Router {
     // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
+
+    pendingViewTransitionEnabled = (opts && opts.enableViewTransition) === true;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
@@ -2609,14 +2553,6 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
-  function addViewTransition(
-    key: string,
-    viewTransition: boolean | ViewTransitionFunction
-  ) {
-    pendingViewTransitionFunctions.set(key, viewTransition);
-    return () => pendingViewTransitionFunctions.delete(key);
-  }
-
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
     manifest = {};
     inFlightDataRoutes = convertRoutesToDataRoutes(
@@ -2652,7 +2588,6 @@ export function createRouter(init: RouterInit): Router {
     dispose,
     getBlocker,
     deleteBlocker,
-    addViewTransition,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with

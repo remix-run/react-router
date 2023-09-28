@@ -111,6 +111,7 @@ export interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
+  unstable_viewTransition?: boolean;
 }
 
 /**

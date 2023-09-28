@@ -27,7 +27,6 @@ import type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  ViewTransitionFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -173,7 +172,6 @@ export type {
   UIMatch,
   Blocker as unstable_Blocker,
   BlockerFunction as unstable_BlockerFunction,
-  ViewTransitionFunction,
 };
 export {
   AbortedDeferredError,

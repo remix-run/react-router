@@ -335,9 +335,6 @@ export function createStaticRouter(
     deleteBlocker() {
       throw msg("deleteBlocker");
     },
-    addViewTransition() {
-      throw msg("addViewTransition");
-    },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
     _internalSetRoutes() {

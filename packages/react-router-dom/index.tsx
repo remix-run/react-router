@@ -43,7 +43,6 @@ import type {
   HydrationState,
   Router as RemixRouter,
   V7_FormMethod,
-  ViewTransitionFunction,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -54,9 +53,7 @@ import {
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
-  matchRoutes,
   matchPath,
-  parsePath,
 } from "@remix-run/router";
 
 import type {
@@ -508,6 +505,7 @@ export interface LinkProps
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
+  unstable_viewTransition?: boolean;
 }
 
 const isBrowser =
@@ -531,6 +529,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       to,
       preventScrollReset,
+      unstable_viewTransition,
       ...rest
     },
     ref
@@ -580,6 +579,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       preventScrollReset,
       relative,
+      unstable_viewTransition,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -647,9 +647,8 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
-    let isTransitioning = useViewTransition(
-      unstable_viewTransition ? path : false
-    );
+    let isTransitioning =
+      useViewTransitionState(path) && unstable_viewTransition === true;
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -719,6 +718,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         style={style}
         to={to}
+        unstable_viewTransition={unstable_viewTransition}
       >
         {typeof children === "function" ? children(renderProps) : children}
       </Link>
@@ -789,6 +789,11 @@ export interface FormProps extends FetcherFormProps {
    * State object to add to the history stack entry for this navigation
    */
   state?: any;
+
+  /**
+   * Enable view transitions on this Form navigation
+   */
+  unstable_viewTransition?: boolean;
 }
 
 /**
@@ -832,6 +837,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit,
       relative,
       preventScrollReset,
+      unstable_viewTransition,
       ...props
     },
     forwardedRef
@@ -857,6 +863,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         state,
         relative,
         preventScrollReset,
+        unstable_viewTransition,
       });
     };
 
@@ -907,8 +914,8 @@ enum DataRouterHook {
   UseSubmit = "useSubmit",
   UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
-  UseViewTransitions = "useViewTransitions",
-  UseViewTransition = "useViewTransition",
+  useViewTransitionStates = "useViewTransitionStates",
+  useViewTransitionState = "useViewTransitionState",
 }
 
 enum DataRouterStateHook {
@@ -947,12 +954,14 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state,
     preventScrollReset,
     relative,
+    unstable_viewTransition,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
+    unstable_viewTransition?: boolean;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -971,7 +980,13 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, { replace, state, preventScrollReset, relative });
+        navigate(to, {
+          replace,
+          state,
+          preventScrollReset,
+          relative,
+          unstable_viewTransition,
+        });
       }
     },
     [
@@ -984,6 +999,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       to,
       preventScrollReset,
       relative,
+      unstable_viewTransition,
     ]
   );
 }
@@ -1115,6 +1131,7 @@ export function useSubmit(): SubmitFunction {
         replace: options.replace,
         state: options.state,
         fromRouteId: currentRouteId,
+        unstable_viewTransition: options.unstable_viewTransition,
       });
     },
     [router, basename, currentRouteId]
@@ -1507,128 +1524,30 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 
 export { usePrompt as unstable_usePrompt };
 
-let viewTransitionId = 0;
-
 /**
- * Global hook to enable view transitions in your application.  Accepts a function
- * that allows you the ability to make read/write to the DOM right _before_ the
- * transition DOM update.  You may return a callback function from this that will
- * be called right _after_ the DOM update and will be provided the `transition`
- * object returned from document.startViewTransition().
+ * Return a boolean indicating if there is an active view transition to the
+ * given href.  You can use this value to render CSS classes or viewTransitionName
+ * styles onto your elements
  *
- * If you return false from your function, then this specific hook will not enable
- * view transitions (but other hook invocations still may)
- *
- * @example
- * useViewTransitions(() => {
- *   // before dom update
- *   return (transition) => {
- *     // after dom update
- *     transition.finished.finally(() => {
- *       // after animation
- *     })
- *   };
- * })
- *
- * @param viewTransition Optional function to determine
+ * @param href The destination href
+ * @param [opts.relative] Relative routing type ("route" | "path")
  */
-function useViewTransitions(
-  viewTransition?: boolean | ViewTransitionFunction
-): void {
-  let { router } = useDataRouterContext(DataRouterHook.UseViewTransitions);
-
-  React.useEffect(() => {
-    let key = String(++viewTransitionId);
-    let deleteTransitionFn = router.addViewTransition(
-      key,
-      typeof viewTransition === "boolean"
-        ? viewTransition
-        : viewTransition || true
-    );
-    return () => deleteTransitionFn();
-  }, [router, viewTransition]);
-}
-
-/**
- * Localized version of useViewTransition to enable view transitions for a
- * specific destination href. Returns an isTransitioning value that you can
- * leverage to render CSS classes or viewTransitionName styles onto your elements
- *
- * @param href The destination href you wish to enable view transitions for
- * @returns
- */
-function useViewTransitionImpl(isFrom: boolean, location?: To | boolean) {
+function useViewTransitionState(
+  to: To,
+  opts: { relative?: RelativeRoutingType } = {}
+) {
   let vtContext = React.useContext(ViewTransitionContext);
-  let href =
-    typeof location === "boolean"
-      ? location
-      : location == null
-      ? null
-      : typeof location === "string"
-      ? location
-      : // TODO: Handle relative paths here?
-        location.pathname || "";
-
-  // This function has to use point-in-time passed-in values if we want it to
-  // work on POP navigations because we store off this function to be executed
-  // on the POP, and we need to call it _before_ the render so we can't leverage
-  // useLocation/useNavigation or vtContext in the POP flow since it runs before
-  // we've setState for those to render the new DOM.
-  //
-  // On pop - maybe we remove the ability to opt-out if we know we ran one the
-  // prior time?  Router could store key tuples that opted into transitions on
-  // PUSH/REPLACE and then automatically opt-in on POP for the reverse?
-  let shouldTransition = React.useCallback<ViewTransitionFunction>(
-    ({ currentLocation, nextLocation }) => {
-      if (href === false) {
-        return href;
-      } else if (typeof href === "string") {
-        let { pathname } = isFrom ? currentLocation : nextLocation;
-        return matchPath(href, pathname) != null;
-      } else {
-        // TODO: Add subtree matching
-        return true;
-      }
-    },
-    [isFrom, href]
-  );
-
-  useViewTransitions(shouldTransition);
-
-  return vtContext.isTransitioning && shouldTransition(vtContext) === true;
+  let path = useResolvedPath(to, { relative: opts.relative });
+  if (!vtContext.isTransitioning) {
+    return false;
+  }
+  let isTransitioning =
+    vtContext.isTransitioning &&
+    matchPath(path.pathname, vtContext.nextLocation.pathname) != null;
+  console.log("isTransitioning", path.pathname, isTransitioning);
+  return isTransitioning;
 }
 
-/**
- * Enable view transitions for a specific destination href. Returns an
- * isTransitioning value that you can leverage to render CSS classes or
- * viewTransitionName styles onto your elements.
- *
- * @param [to=false] The destination href you wish to enable view transitions
- *                   for, or true/false to enable.disable for the route sub-tree
- * @returns
- */
-function useViewTransition(to?: To | boolean) {
-  return useViewTransitionImpl(false, to);
-}
-
-export { useViewTransition as unstable_useViewTransition };
-
-/**
- * Enable view transitions from a specific source href. Returns an
- * isTransitioning value that you can leverage to render CSS classes or
- * viewTransitionName styles onto your elements.
- *
- * @param [from=false] The source href you wish to enable view transitions
- *                     for, or true/false to enable.disable for the route sub-tree
- * @returns
- */
-function useViewTransitionFrom(from?: To | boolean) {
-  // TODO: Needed at the moment to be able to conditionally turn on the image
-  // detail transition only when coming from /images so iut doesn't take control
-  // when navigating /images/:id -> /home, etc.
-  return useViewTransitionImpl(true, from);
-}
-
-export { useViewTransitionFrom as unstable_useViewTransitionFrom };
+export { useViewTransitionState as unstable_useViewTransitionState };
 
 //#endregion

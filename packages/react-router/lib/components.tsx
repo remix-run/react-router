@@ -116,6 +116,31 @@ function startTransitionSafe(cb: () => void) {
   }
 }
 
+class Deferred<T> {
+  status: "pending" | "resolved" | "rejected" = "pending";
+  promise: Promise<T>;
+  // @ts-expect-error - no initializer
+  resolve: (value: T) => void;
+  // @ts-expect-error - no initializer
+  reject: (reason?: unknown) => void;
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = (value) => {
+        if (this.status === "pending") {
+          this.status = "resolved";
+          resolve(value);
+        }
+      };
+      this.reject = (reason) => {
+        if (this.status === "pending") {
+          this.status = "rejected";
+          reject(reason);
+        }
+      };
+    });
+  }
+}
+
 // FIXME: Remove
 function LOG(...args: any[]) {
   console.debug(new Date().toISOString(), ...args);
@@ -129,70 +154,113 @@ export function RouterProvider({
   router,
   future,
 }: RouterProviderProps): React.ReactElement {
-  // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
+  let [pendingState, setPendingState] = React.useState<RouterState | null>(
+    null
+  );
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
   });
+  let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
+  let [transition, setTransition] = React.useState<any>();
   let { v7_startTransition } = future || {};
+
+  LOG("render", state.location.pathname);
+
+  let optInStartTransition = React.useCallback(
+    (cb: () => void) => {
+      if (v7_startTransition) {
+        startTransitionSafe(cb);
+      } else {
+        cb();
+      }
+    },
+    [v7_startTransition]
+  );
+
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState, { viewTransitionOpts }) => {
-      // Simple update for non-completeNavigation/non-startViewTransition navs
+      LOG("subscriber callback", newState.location.pathname);
       if (
-        !viewTransitionOpts ||
-        typeof document.startViewTransition !== "function"
+        viewTransitionOpts &&
+        typeof document.startViewTransition === "function"
       ) {
-        LOG("updating state without startViewTransition");
-        if (v7_startTransition) {
-          startTransitionSafe(() => setStateImpl(newState));
-        } else {
-          setStateImpl(newState);
-        }
-        return;
-      }
-
-      // Flush a ViewTransitionContext update to apply classes/styles to the
-      // DOM prior to startViewTransition()
-      LOG("flushSync(() => setVtContext({ isTransitioning: true }))");
-      flushSyncSafe(() => {
+        // If this is a completed navigation update with opted-in view transitions,
+        // kick off a transition via the ViewTransitionContext
+        LOG("setVtContext({ isTransitioning: true })");
+        setPendingState(newState);
         setVtContext({
           isTransitioning: true,
           currentLocation: viewTransitionOpts.currentLocation,
           nextLocation: viewTransitionOpts.nextLocation,
         });
-      });
-
-      // Synchronously update the DOM for the new route inside startViewTransition()
-      // Note: startViewTransition/startTransition/flushSync don't
-      // play nicely together so we don't call startTransition when view
-      // transitions are enabled.  document.startViewTransition needs
-      // React.flushSync for more advanced animations, and React.flushSync
-      // breaks React.startTransition "freezing" behavior if the destination
-      // route suspends without a boundary.
-      // TODO: We should add something to the docs to indicate this
-      LOG("calling document.startViewTransition()");
-      let transition = document.startViewTransition(() => {
-        // Update DOM
-        LOG("flushSync(() => setStateImpl(newState))");
-        flushSyncSafe(() => setStateImpl(newState));
-
-        // Run the post-DOM-update callbacks with the transition
-        viewTransitionOpts.callbacks.forEach(
-          (cb) => typeof cb === "function" && cb && cb(transition)
-        );
-
-        // Cleanup DOM after the transitions completes
-        LOG("waiting on transition.finished to unset isTransitioning");
-        transition.finished.finally(() => {
-          LOG("flushSync(() => setVtContext({ isTransitioning: false }))");
-          flushSyncSafe(() => setVtContext({ isTransitioning: false }));
-        });
-      });
+      } else {
+        // Otherwise just setState and be done with it
+        optInStartTransition(() => setStateImpl(newState));
+        return;
+      }
     },
-    [setStateImpl, v7_startTransition]
+    [optInStartTransition]
   );
+
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  // When we start a view transition, create a Deferred we can use for the
+  // eventual "completed" render
+  React.useEffect(() => {
+    LOG("create deferred effect");
+    if (vtContext.isTransitioning) {
+      LOG("creating deferred");
+      setRenderDfd(new Deferred<void>());
+    }
+  }, [vtContext.isTransitioning]);
+
+  // Once the deferred is created, kick off startViewTransition() to update the
+  // DOM and then wait on the Deferred to resolve (indicating the DOM update has
+  // happened)
+  React.useEffect(() => {
+    LOG("startViewTransition effect");
+    if (renderDfd && pendingState) {
+      let promise = renderDfd.promise;
+      let newState = pendingState;
+      LOG("transition = document.startViewTransition()");
+      let transition = document.startViewTransition(async () => {
+        LOG("React.startTransition(() => setTransition()/setState())");
+        optInStartTransition(() => {
+          setTransition(transition);
+          setStateImpl(newState);
+        });
+        await promise;
+        LOG("done with view transition");
+      });
+
+      // TODO: Handle interrupted transitions with transition.skipTransition()
+    }
+  }, [optInStartTransition, pendingState, renderDfd]);
+
+  // When the new location finally renders and is committed to the DOM, this
+  // effect will run to resolve the transition
+  React.useEffect(() => {
+    LOG("resolve deferred effect");
+    if (
+      renderDfd &&
+      pendingState &&
+      state.location.key === pendingState.location.key
+    ) {
+      transition.finished.finally(() => {
+        // TODO: Is this enough to not need the view transition callback functions?
+        LOG("setVtContext({ isTransitioning: false })");
+        setVtContext({ isTransitioning: false });
+      });
+      LOG("deferred.resolve()");
+      renderDfd.resolve();
+      setRenderDfd(undefined);
+      setTransition(undefined);
+      setPendingState(null);
+    }
+  }, [renderDfd, transition, state.location, pendingState]);
 
   let navigator = React.useMemo((): Navigator => {
     return {

@@ -4,16 +4,20 @@ import {
   Await,
   createBrowserRouter,
   defer,
+  Form,
   json,
   Link,
   NavLink,
   Outlet,
   RouterProvider,
-  unstable_useViewTransition,
-  unstable_useViewTransitionFrom,
+  unstable_useViewTransitionState,
+  useActionData,
   useLoaderData,
+  useLocation,
+  useNavigate,
   useNavigation,
   useParams,
+  useSubmit,
 } from "react-router-dom";
 import "./index.css";
 
@@ -24,19 +28,11 @@ const images = [
   "https://remix.run/blog-images/headers/remix-conf.jpg",
 ];
 
-// FIXME: Remove
-function LOG(...args: any[]) {
-  console.debug(new Date().toISOString(), ...args);
-}
-
 const router = createBrowserRouter(
   [
     {
       path: "/",
       Component() {
-        // turn on basic view transitions for the whole app
-        unstable_useViewTransition();
-
         let navigation = useNavigation();
 
         return (
@@ -55,6 +51,9 @@ const router = createBrowserRouter(
         {
           index: true,
           Component() {
+            React.useEffect(() => {
+              document.title = "Home";
+            }, []);
             return <h1>Home</h1>;
           },
         },
@@ -66,10 +65,32 @@ const router = createBrowserRouter(
           },
           Component() {
             let data = useLoaderData() as { message: string };
+            React.useEffect(() => {
+              document.title = "Loader";
+            }, []);
             return (
               <>
-                <h1>Test</h1>
+                <h1>Loader Page</h1>
                 <p>Loader Data: {data.message}</p>
+              </>
+            );
+          },
+        },
+        {
+          path: "action",
+          async action() {
+            await new Promise((r) => setTimeout(r, 1000));
+            return json({ message: "ACTION DATA" });
+          },
+          Component() {
+            let data = useActionData() as { message: string };
+            React.useEffect(() => {
+              document.title = "Action";
+            }, []);
+            return (
+              <>
+                <h1>Action Page</h1>
+                <p>Action Data: {data.message}</p>
               </>
             );
           },
@@ -92,12 +113,16 @@ const router = createBrowserRouter(
               critical: string;
               lazy: Promise<string>;
             };
+            React.useEffect(() => {
+              document.title = "Defer";
+            }, []);
             return (
               <>
                 <h1>Defer {data.value}</h1>
                 <p>Critical Data: {data.critical}</p>
                 <React.Suspense
                   fallback={<p>Suspense boundary in the route...</p>}
+                  key={useLocation().key}
                 >
                   <Await resolve={data.lazy}>
                     {(value) => <p>Lazy Data: {value}</p>}
@@ -126,6 +151,9 @@ const router = createBrowserRouter(
               critical: string;
               lazy: Promise<string>;
             };
+            React.useEffect(() => {
+              document.title = "Defer (No Boundary)";
+            }, []);
             return (
               <>
                 <h1>Defer No Boundary {data.value}</h1>
@@ -142,19 +170,35 @@ const router = createBrowserRouter(
         {
           path: "images",
           Component() {
+            React.useEffect(() => {
+              document.title = "Images";
+            }, []);
             return (
               <div className="image-list">
                 <h1>Image List</h1>
                 <div>
                   {images.map((src, idx) => (
-                    <NavLink
-                      key={src}
-                      to={`/images/${idx}`}
-                      unstable_viewTransition
-                    >
+                    // Adds 'transitioning' class to the <a> during the transition
+                    <NavLink key={src} to={`/images/${idx}`}>
                       <p>Image Number {idx}</p>
                       <img src={src} alt={`Img ${idx}`} />
                     </NavLink>
+
+                    // Render prop approach similar to isActive/isPending
+                    // <NavLink
+                    //   key={src}
+                    //   to={`/images/${idx}`}
+                    //   unstable_viewTransition
+                    // >
+                    //   {({ isTransitioning }) => (
+                    //     <div className={isTransitioning ? "transitioning" : ""}>
+                    //       <p>Image Number {idx}</p>
+                    //       <img src={src} alt={`Img ${idx}`} />
+                    //     </div>
+                    //   )}
+                    // </NavLink>
+
+                    // Manual hook based approach
                     // <NavImage key={src} src={src} idx={idx} />
                   ))}
                 </div>
@@ -166,13 +210,16 @@ const router = createBrowserRouter(
           path: "images/:id",
           Component() {
             let params = useParams();
-            let isTransitioning = unstable_useViewTransitionFrom("/images");
+            // Conditionally apply the transition styles only when navigating _to_
+            // this route.  If we apply them statically, clicking back to the home
+            // page from this view leaves the image stuck during the animation
+            // since it has no corresponding element to shrink into
+            let vt = unstable_useViewTransitionState(".");
+            React.useEffect(() => {
+              document.title = "Image " + params.id;
+            }, [params.id]);
             return (
-              <div
-                className={`image-detail ${
-                  isTransitioning ? "transitioning" : ""
-                }`}
-              >
+              <div className={`image-detail ${vt ? "transitioning" : ""}`}>
                 <h1>Image Number {params.id}</h1>
                 <img src={images[Number(params.id)]} alt={`${params.id}`} />
               </div>
@@ -193,19 +240,20 @@ const router = createBrowserRouter(
 
 function NavImage({ src, idx }: { src: string; idx: number }) {
   let href = `/images/${idx}`;
-  let isTransitioning = unstable_useViewTransition(href);
-  console.log(href, isTransitioning);
+  let vt = unstable_useViewTransitionState(href);
   return (
-    <NavLink to={href}>
-      <p style={{ viewTransitionName: isTransitioning ? "image-title" : "" }}>
-        Image Number {idx}
-      </p>
-      <img
-        src={src}
-        alt={`Img ${idx}`}
-        style={{ viewTransitionName: isTransitioning ? "image-expand" : "" }}
-      />
-    </NavLink>
+    <>
+      <Link to={href} unstable_viewTransition>
+        <p style={{ viewTransitionName: vt ? "image-title" : "" }}>
+          Image Number {idx}
+        </p>
+        <img
+          src={src}
+          alt={`Img ${idx}`}
+          style={{ viewTransitionName: vt ? "image-expand" : "" }}
+        />
+      </Link>
+    </>
   );
 }
 
@@ -223,6 +271,8 @@ ReactDOMClient.createRoot(rootElement).render(
 );
 
 function Nav() {
+  let navigate = useNavigate();
+  let submit = useSubmit();
   let value = Math.round(Math.random() * 100);
   return (
     <nav>
@@ -237,7 +287,17 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <Link to="/loader">Loader Delay</Link>
+          <Link to="/loader" unstable_viewTransition>
+            Loader with delay
+          </Link>{" "}
+          <button
+            style={{ display: "inline-block" }}
+            onClick={() =>
+              navigate("/loader", { unstable_viewTransition: true })
+            }
+          >
+            via useNavigate
+          </button>
           <ul>
             <li>
               The /loader route has a 1 second loader delay, and updates the DOM
@@ -246,42 +306,61 @@ function Nav() {
           </ul>
         </li>
         <li>
-          <Link to="/images">Image Gallery Example</Link>
-        </li>
-        <li>
-          <Link to={`/defer?value=${value}`}>Deferred Data</Link>
+          <Form
+            method="post"
+            action="/action"
+            style={{ display: "inline-block" }}
+          >
+            <button type="submit" style={{ display: "inline-block" }}>
+              Action with delay
+            </button>
+          </Form>{" "}
+          <button
+            style={{ display: "inline-block" }}
+            onClick={() =>
+              submit(
+                {},
+                {
+                  method: "post",
+                  action: "/action",
+                  unstable_viewTransition: true,
+                }
+              )
+            }
+          >
+            via useSubmit
+          </button>
           <ul>
             <li>
-              The /defer route has 1s defer call that will Suspend in the
-              destination route
-            </li>
-            <li>
-              Due to flushSync, it will always re-fallback on navigations - even
-              without a key on the suspense boundary
+              The /action route has a 1 second action delay, and updates the DOM
+              synchronously upon completion
             </li>
           </ul>
         </li>
         <li>
-          <Link to="/defer-no-boundary">Deferred Data (without boundary)</Link>
+          <Link to="/images">Image Gallery Example</Link>
+        </li>
+        <li>
+          <Link to={`/defer?value=${value}`} unstable_viewTransition>
+            Deferred Data
+          </Link>
           <ul>
             <li>
-              The /defer-no-boundary route has a 1s defer call without a
-              Suspense boundary in the destination route
+              The /defer route has 1s defer call that suspends and has it's own
+              Suspense boundary
             </li>
-            <li>❌ This is where things go wrong</li>
+          </ul>
+        </li>
+        <li>
+          <Link to="/defer-no-boundary" unstable_viewTransition>
+            Deferred Data (without boundary)
+          </Link>
+          <ul>
             <li>
-              Calling React.flushSync inside React.startTransition breaks the
-              "freezing" of the UI since suspending UI doesn't seem to know it's
-              inside of startTransition anymore. This makes some sense since
-              they're sort of inherently opposites
-            </li>
-            <li>
-              However, we need to call React.flushSync inside
-              document.startViewTransition for more complex animations
-            </li>
-            <li>
-              So do we just disable startTransition if startViewTransitions have
-              been enabled? We still get the same error...
+              The /defer-no-boundary route has a 1s defer that suspends without
+              a Suspense boundary in the destination route. This relies on
+              React.startTransition to "freeze" the current UI until the
+              deferred data resolves
             </li>
           </ul>
         </li>
