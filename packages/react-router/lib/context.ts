@@ -87,7 +87,6 @@ if (__DEV__) {
 export type ViewTransitionContextObject =
   | {
       isTransitioning: false;
-      location?: undefined;
     }
   | {
       isTransitioning: true;

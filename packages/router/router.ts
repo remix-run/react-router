@@ -2208,7 +2208,7 @@ export function createRouter(init: RouterInit): Router {
           ...activeSubmission,
           formAction: redirect.location,
         },
-        // Preserve this flag across redirects)
+        // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
     } else {
@@ -2282,7 +2282,6 @@ export function createRouter(init: RouterInit): Router {
         false,
         state.loaderData
       ),
-      // Fetchers do not support deferred and always resolve
       resolveDeferredResults(
         currentMatches,
         fetchersToLoad.map((f) => f.match),
