@@ -99,16 +99,6 @@ export interface RouterProviderProps {
 */
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
-const FLUSH_SYNC = "flushSync";
-const flushSyncImpl = ReactDOM[FLUSH_SYNC];
-
-function flushSyncSafe(cb: () => void) {
-  if (flushSyncImpl) {
-    flushSyncImpl(cb);
-  } else {
-    cb();
-  }
-}
 
 function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
