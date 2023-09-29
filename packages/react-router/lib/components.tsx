@@ -143,11 +143,6 @@ class Deferred<T> {
   }
 }
 
-// FIXME: Remove
-function LOG(...args: any[]) {
-  console.debug(new Date().toISOString(), ...args);
-}
-
 /**
  * Given a Remix Router instance, render the appropriate UI
  */
@@ -182,35 +177,29 @@ export function RouterProvider({
 
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState, { viewTransitionOpts }) => {
-      // Mid-navigation state update, or startViewTransition isn't available
       if (
         !viewTransitionOpts ||
         typeof document.startViewTransition !== "function"
       ) {
+        // Mid-navigation state update, or startViewTransition isn't available
         optInStartTransition(() => setStateImpl(newState));
-        return;
-      }
-
-      // Interrupting an in-progress transition, cancel and let everything flush
-      // out, and then kick off a new transition from the interruption state
-      if (transition && renderDfd) {
-        LOG("❌ navigation interrupted");
+      } else if (transition && renderDfd) {
+        // Interrupting an in-progress transition, cancel and let everything flush
+        // out, and then kick off a new transition from the interruption state
         renderDfd.resolve();
         transition.skipTransition();
         setInterruption({
           state: newState,
           location: viewTransitionOpts.nextLocation,
         });
-        return;
+      } else {
+        // Completed navigation update with opted-in view transitions, let 'er rip
+        setPendingState(newState);
+        setVtContext({
+          isTransitioning: true,
+          nextLocation: viewTransitionOpts.nextLocation,
+        });
       }
-
-      // Completed navigation update with opted-in view transitions, let 'er rip
-      LOG("setting pendingState and vtContext.isTransitioning=true");
-      setPendingState(newState);
-      setVtContext({
-        isTransitioning: true,
-        nextLocation: viewTransitionOpts.nextLocation,
-      });
     },
     [optInStartTransition, transition, renderDfd]
   );
@@ -223,7 +212,6 @@ export function RouterProvider({
   // eventual "completed" render
   React.useEffect(() => {
     if (vtContext.isTransitioning) {
-      LOG("creating deferred");
       setRenderDfd(new Deferred<void>());
     }
   }, [vtContext.isTransitioning]);
@@ -233,17 +221,13 @@ export function RouterProvider({
   // happened)
   React.useEffect(() => {
     if (renderDfd && pendingState) {
-      let renderPromise = renderDfd.promise;
       let newState = pendingState;
-      LOG("transition = document.startViewTransition()");
+      let renderPromise = renderDfd.promise;
       let transition = document.startViewTransition(async () => {
-        LOG("optInStartTransition(() => setStateImpl(newState))");
         optInStartTransition(() => setStateImpl(newState));
         await renderPromise;
-        LOG("view transition dom update complete, starting animation");
       });
       transition.finished.finally(() => {
-        LOG("cleaning up renderDfd/transition/pendingState/vtContext");
         setRenderDfd(undefined);
         setTransition(undefined);
         setPendingState(undefined);
@@ -261,7 +245,6 @@ export function RouterProvider({
       pendingState &&
       state.location.key === pendingState.location.key
     ) {
-      LOG("deferred.resolve()");
       renderDfd.resolve();
     }
   }, [renderDfd, transition, state.location, pendingState]);
@@ -270,7 +253,6 @@ export function RouterProvider({
   // the active transition, let it cleanup, then kick it off again here
   React.useEffect(() => {
     if (!vtContext.isTransitioning && interruption) {
-      LOG("starting view transition after interruption");
       setPendingState(interruption.state);
       setVtContext({
         isTransitioning: true,
