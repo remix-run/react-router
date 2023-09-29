@@ -70,7 +70,8 @@
   view-transition-name: image-expand;
 }
 
-::view-transition-new(image-expand) {
+::view-transition-old(image-expand):not(:only-child),
+::view-transition-new(image-expand):not(:only-child) {
   animation: none;
   mix-blend-mode: normal;
 }

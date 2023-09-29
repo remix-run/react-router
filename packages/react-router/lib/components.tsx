@@ -56,6 +56,8 @@ import {
 interface ViewTransition {
   finished: Promise<void>;
   ready: Promise<void>;
+  updateCallbackDone: Promise<void>;
+  skipTransition(): void;
 }
 
 declare global {
@@ -155,17 +157,17 @@ export function RouterProvider({
   future,
 }: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
-  let [pendingState, setPendingState] = React.useState<RouterState | null>(
-    null
-  );
+  let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
   });
   let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
-  let [transition, setTransition] = React.useState<any>();
+  let [transition, setTransition] = React.useState<ViewTransition>();
+  let [interruption, setInterruption] = React.useState<{
+    state: RouterState;
+    location: Location;
+  }>();
   let { v7_startTransition } = future || {};
-
-  LOG("render", state.location.pathname);
 
   let optInStartTransition = React.useCallback(
     (cb: () => void) => {
@@ -180,26 +182,37 @@ export function RouterProvider({
 
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState, { viewTransitionOpts }) => {
-      LOG("subscriber callback", newState.location.pathname);
+      // Mid-navigation state update, or startViewTransition isn't available
       if (
-        viewTransitionOpts &&
-        typeof document.startViewTransition === "function"
+        !viewTransitionOpts ||
+        typeof document.startViewTransition !== "function"
       ) {
-        // If this is a completed navigation update with opted-in view transitions,
-        // kick off a transition via the ViewTransitionContext
-        LOG("setVtContext({ isTransitioning: true })");
-        setPendingState(newState);
-        setVtContext({
-          isTransitioning: true,
-          nextLocation: viewTransitionOpts.nextLocation,
-        });
-      } else {
-        // Otherwise just setState and be done with it
         optInStartTransition(() => setStateImpl(newState));
         return;
       }
+
+      // Interrupting an in-progress transition, cancel and let everything flush
+      // out, and then kick off a new transition from the interruption state
+      if (transition && renderDfd) {
+        LOG("❌ navigation interrupted");
+        renderDfd.resolve();
+        transition.skipTransition();
+        setInterruption({
+          state: newState,
+          location: viewTransitionOpts.nextLocation,
+        });
+        return;
+      }
+
+      // Completed navigation update with opted-in view transitions, let 'er rip
+      LOG("setting pendingState and vtContext.isTransitioning=true");
+      setPendingState(newState);
+      setVtContext({
+        isTransitioning: true,
+        nextLocation: viewTransitionOpts.nextLocation,
+      });
     },
-    [optInStartTransition]
+    [optInStartTransition, transition, renderDfd]
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -209,7 +222,6 @@ export function RouterProvider({
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
-    LOG("create deferred effect");
     if (vtContext.isTransitioning) {
       LOG("creating deferred");
       setRenderDfd(new Deferred<void>());
@@ -220,46 +232,53 @@ export function RouterProvider({
   // DOM and then wait on the Deferred to resolve (indicating the DOM update has
   // happened)
   React.useEffect(() => {
-    LOG("startViewTransition effect");
     if (renderDfd && pendingState) {
-      let promise = renderDfd.promise;
+      let renderPromise = renderDfd.promise;
       let newState = pendingState;
       LOG("transition = document.startViewTransition()");
       let transition = document.startViewTransition(async () => {
-        LOG("React.startTransition(() => setTransition()/setState())");
-        optInStartTransition(() => {
-          setTransition(transition);
-          setStateImpl(newState);
-        });
-        await promise;
-        LOG("done with view transition");
+        LOG("optInStartTransition(() => setStateImpl(newState))");
+        optInStartTransition(() => setStateImpl(newState));
+        await renderPromise;
+        LOG("view transition dom update complete, starting animation");
       });
-
-      // TODO: Handle interrupted transitions with transition.skipTransition()
+      transition.finished.finally(() => {
+        LOG("cleaning up renderDfd/transition/pendingState/vtContext");
+        setRenderDfd(undefined);
+        setTransition(undefined);
+        setPendingState(undefined);
+        setVtContext({ isTransitioning: false });
+      });
+      setTransition(transition);
     }
   }, [optInStartTransition, pendingState, renderDfd]);
 
   // When the new location finally renders and is committed to the DOM, this
   // effect will run to resolve the transition
   React.useEffect(() => {
-    LOG("resolve deferred effect");
     if (
       renderDfd &&
       pendingState &&
       state.location.key === pendingState.location.key
     ) {
-      transition.finished.finally(() => {
-        // TODO: Is this enough to not need the view transition callback functions?
-        LOG("setVtContext({ isTransitioning: false })");
-        setVtContext({ isTransitioning: false });
-      });
       LOG("deferred.resolve()");
       renderDfd.resolve();
-      setRenderDfd(undefined);
-      setTransition(undefined);
-      setPendingState(null);
     }
   }, [renderDfd, transition, state.location, pendingState]);
+
+  // If we get interrupted with a new navigation during a transition, we skip
+  // the active transition, let it cleanup, then kick it off again here
+  React.useEffect(() => {
+    if (!vtContext.isTransitioning && interruption) {
+      LOG("starting view transition after interruption");
+      setPendingState(interruption.state);
+      setVtContext({
+        isTransitioning: true,
+        nextLocation: interruption.location,
+      });
+      setInterruption(undefined);
+    }
+  }, [vtContext.isTransitioning, interruption]);
 
   let navigator = React.useMemo((): Navigator => {
     return {

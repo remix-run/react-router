@@ -828,7 +828,10 @@ export function createRouter(init: RouterInit): Router {
   let pendingViewTransitionEnabled = false;
 
   // Store applied view transitions so we can apply them on POP
-  let appliedViewTransitions: Set<string> = new Set<string>();
+  let appliedViewTransitions: Map<string, Set<string>> = new Map<
+    string,
+    Set<string>
+  >();
 
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
@@ -1068,24 +1071,32 @@ export function createRouter(init: RouterInit): Router {
 
     let viewTransitionOpts: ViewTransitionOpts | undefined;
 
-    // For POP navigations, we enable transitions if iff they were enabled on
-    // the original navigation
+    // TODO: Store off appliedViewTransitions in sessionStorage to be restored
+
+    // On POP, enable transitions if they were enabled on the original navigation
     if (pendingAction === HistoryAction.Pop) {
-      if (appliedViewTransitions.has(location.key)) {
-        // POP backward - reversing a navigation that enabled transitions
-        viewTransitionOpts = {
-          nextLocation: state.location,
-        };
-      } else if (appliedViewTransitions.has(state.location.key)) {
-        // POP forward - replaying a navigation that enabled transitions
+      // Forward takes precedence so they behave like the original navigation
+      let priorNavs = appliedViewTransitions.get(state.location.key);
+      if (priorNavs && priorNavs.has(location.key)) {
         viewTransitionOpts = {
           nextLocation: location,
+        };
+      } else if (appliedViewTransitions.has(location.key)) {
+        // If we don't have a previous forward nav, assume we're popping back to
+        // the new location and enable if that location previously enabled
+        viewTransitionOpts = {
+          nextLocation: state.location,
         };
       }
     } else if (pendingViewTransitionEnabled) {
       // Store the applied transition on PUSH/REPLACE
-      let transitionKey = state.location.key;
-      appliedViewTransitions.add(transitionKey);
+      let toKeys = appliedViewTransitions.get(state.location.key);
+      if (toKeys) {
+        toKeys.add(location.key);
+      } else {
+        toKeys = new Set<string>([location.key]);
+        appliedViewTransitions.set(state.location.key, toKeys);
+      }
       viewTransitionOpts = {
         nextLocation: location,
       };
