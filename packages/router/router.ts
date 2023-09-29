@@ -700,6 +700,8 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
 
+const TRANSITIONS_STORAGE_KEY = "remix-router-transitions";
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -833,6 +835,9 @@ export function createRouter(init: RouterInit): Router {
     Set<string>
   >();
 
+  // Cleanup function for persisting applied transitions to sessionStorage
+  let removePageHideEventListener: (() => void) | null = null;
+
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
@@ -948,6 +953,17 @@ export function createRouter(init: RouterInit): Router {
       }
     );
 
+    if (isBrowser) {
+      // FIXME: This feels gross.  How can we cleanup the lines between
+      // scrollRestoration/appliedTransitions persistance?
+      restoreAppliedTransitions(routerWindow, appliedViewTransitions);
+      let _saveAppliedTransitions = () =>
+        persistAppliedTransitions(routerWindow, appliedViewTransitions);
+      routerWindow.addEventListener("pagehide", _saveAppliedTransitions);
+      removePageHideEventListener = () =>
+        routerWindow.removeEventListener("pagehide", _saveAppliedTransitions);
+    }
+
     // Kick off initial data load if needed.  Use Pop to avoid modifying history
     // Note we don't do any handling of lazy here.  For SPA's it'll get handled
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
@@ -964,6 +980,9 @@ export function createRouter(init: RouterInit): Router {
   function dispose() {
     if (unlistenHistory) {
       unlistenHistory();
+    }
+    if (removePageHideEventListener) {
+      removePageHideEventListener();
     }
     subscribers.clear();
     pendingNavigationController && pendingNavigationController.abort();
@@ -1070,8 +1089,6 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let viewTransitionOpts: ViewTransitionOpts | undefined;
-
-    // TODO: Store off appliedViewTransitions in sessionStorage to be restored
 
     // On POP, enable transitions if they were enabled on the original navigation
     if (pendingAction === HistoryAction.Pop) {
@@ -4557,4 +4574,49 @@ function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
   };
   return fetcher;
 }
+
+function restoreAppliedTransitions(
+  _window: Window,
+  transitions: Map<string, Set<string>>
+) {
+  try {
+    let sessionPositions = _window.sessionStorage.getItem(
+      TRANSITIONS_STORAGE_KEY
+    );
+    if (sessionPositions) {
+      let json = JSON.parse(sessionPositions);
+      for (let [k, v] of Object.entries(json || {})) {
+        if (v && Array.isArray(v)) {
+          transitions.set(k, new Set(v || []));
+        }
+      }
+    }
+  } catch (e) {
+    // no-op, use default empty object
+  }
+}
+
+function persistAppliedTransitions(
+  _window: Window,
+  transitions: Map<string, Set<string>>
+) {
+  if (transitions.size > 0) {
+    let json: Record<string, string[]> = {};
+    for (let [k, v] of transitions) {
+      json[k] = [...v];
+    }
+    try {
+      _window.sessionStorage.setItem(
+        TRANSITIONS_STORAGE_KEY,
+        JSON.stringify(json)
+      );
+    } catch (error) {
+      warning(
+        false,
+        `Failed to save applied view transitions in sessionStorage (${error}).`
+      );
+    }
+  }
+}
+
 //#endregion
