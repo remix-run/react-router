@@ -316,7 +316,7 @@ function setup({
         loader: undefined,
         action: undefined,
         children: undefined,
-        id: r.id,
+        id: r.id || "unknown-route-id",
       };
       if (r.lazy) {
         // @ts-expect-error
@@ -4840,7 +4840,7 @@ describe("a router", () => {
       });
       expect(t.router.state).toMatchObject({
         errors: {
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/junk"'),
@@ -4882,7 +4882,7 @@ describe("a router", () => {
       t.navigate("/junk");
       expect(t.router.state).toMatchObject({
         errors: {
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/junk"'),
