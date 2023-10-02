@@ -19,7 +19,6 @@ import {
   createStaticHandler,
   defer,
   UNSAFE_DEFERRED_SYMBOL,
-  ErrorResponse,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
   json,
@@ -34,10 +33,12 @@ import type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteObject,
   DeferredData,
+  ShouldRevalidateFunctionArgs,
   TrackedPromise,
 } from "../utils";
 import {
   AbortedDeferredError,
+  ErrorResponseImpl,
   isRouteErrorResponse,
   stripBasename,
 } from "../utils";
@@ -1860,7 +1861,7 @@ describe("a router", () => {
       router.navigate("/params/aValue/bValue");
       await tick();
       expect(rootLoader.mock.calls.length).toBe(1);
-      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {
@@ -1870,7 +1871,8 @@ describe("a router", () => {
         nextUrl: expect.URL("http://localhost/params/aValue/bValue"),
         defaultShouldRevalidate: false,
         actionResult: undefined,
-      });
+      };
+      expect(shouldRevalidate.mock.calls[0][0]).toMatchObject(expectedArg);
       rootLoader.mockClear();
       shouldRevalidate.mockClear();
 
@@ -1924,7 +1926,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
@@ -1934,7 +1936,8 @@ describe("a router", () => {
         formAction: "/child",
         formEncType: "application/x-www-form-urlencoded",
         actionResult: "ACTION",
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
       // @ts-expect-error
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
@@ -1977,7 +1980,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
         currentUrl: expect.URL("http://localhost/child"),
         nextParams: {},
@@ -1987,7 +1990,8 @@ describe("a router", () => {
         formAction: "/child",
         formEncType: "application/x-www-form-urlencoded",
         actionResult: undefined,
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
       // @ts-expect-error
       expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
 
@@ -2022,7 +2026,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
         formMethod: "post",
         formAction: "/",
         formEncType: "application/json",
@@ -2030,7 +2034,8 @@ describe("a router", () => {
         formData: undefined,
         json: { key: "value" },
         actionResult: "ACTION",
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
 
       router.dispose();
     });
@@ -2063,7 +2068,7 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       // @ts-expect-error
       let arg = shouldRevalidate.mock.calls[0][0];
-      expect(arg).toMatchObject({
+      let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
         formMethod: "post",
         formAction: "/",
         formEncType: "text/plain",
@@ -2071,7 +2076,8 @@ describe("a router", () => {
         formData: undefined,
         json: undefined,
         actionResult: "ACTION",
-      });
+      };
+      expect(arg).toMatchObject(expectedArg);
 
       router.dispose();
     });
@@ -2672,7 +2678,7 @@ describe("a router", () => {
         root: "ROOT",
       });
       expect(t.router.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
@@ -2701,7 +2707,7 @@ describe("a router", () => {
 
       t.navigate("/not-found");
       expect(t.router.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
@@ -2748,7 +2754,7 @@ describe("a router", () => {
         root: "ROOT*",
       });
       expect(t.router.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/not-found"'),
@@ -4028,7 +4034,7 @@ describe("a router", () => {
           formData: createFormData({ gosh: "dang" }),
         });
         expect(t.router.state.errors).toEqual({
-          child: new ErrorResponse(
+          child: new ErrorResponseImpl(
             405,
             "Method Not Allowed",
             new Error(
@@ -4088,7 +4094,7 @@ describe("a router", () => {
         });
         expect(t.router.state.actionData).toBe(null);
         expect(t.router.state.errors).toEqual({
-          grandchild: new ErrorResponse(
+          grandchild: new ErrorResponseImpl(
             405,
             "Method Not Allowed",
             new Error(
@@ -4807,7 +4813,7 @@ describe("a router", () => {
         navigation: IDLE_NAVIGATION,
         loaderData: {},
         errors: {
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/junk"'),
@@ -5036,7 +5042,7 @@ describe("a router", () => {
         search: "",
       });
       expect(t.router.state.errors).toEqual({
-        tasks: new ErrorResponse(
+        tasks: new ErrorResponseImpl(
           405,
           "Method Not Allowed",
           new Error('Invalid request method "HEAD"'),
@@ -5076,7 +5082,7 @@ describe("a router", () => {
         search: "",
       });
       expect(t.router.state.errors).toEqual({
-        tasks: new ErrorResponse(
+        tasks: new ErrorResponseImpl(
           405,
           "Method Not Allowed",
           new Error('Invalid request method "OPTIONS"'),
@@ -5988,7 +5994,7 @@ describe("a router", () => {
         },
         actionData: null,
         errors: {
-          tasks: new ErrorResponse(400, "Bad Request", "broken"),
+          tasks: new ErrorResponseImpl(400, "Bad Request", "broken"),
         },
       });
     });
@@ -6023,7 +6029,7 @@ describe("a router", () => {
         },
         actionData: null,
         errors: {
-          tasks: new ErrorResponse(400, "Bad Request", { key: "value" }),
+          tasks: new ErrorResponseImpl(400, "Bad Request", { key: "value" }),
         },
       });
     });
@@ -6058,7 +6064,7 @@ describe("a router", () => {
         },
         actionData: null,
         errors: {
-          tasks: new ErrorResponse(400, "Bad Request", { key: "value" }),
+          tasks: new ErrorResponseImpl(400, "Bad Request", { key: "value" }),
         },
       });
     });
@@ -6636,7 +6642,7 @@ describe("a router", () => {
       });
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
-          "root": ErrorResponse {
+          "root": ErrorResponseImpl {
             "data": "Error: Unable to encode submission body",
             "error": [Error: Unable to encode submission body],
             "internal": true,
@@ -6659,7 +6665,7 @@ describe("a router", () => {
       });
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
-          "root": ErrorResponse {
+          "root": ErrorResponseImpl {
             "data": "Error: Unable to encode submission body",
             "error": [Error: Unable to encode submission body],
             "internal": true,
@@ -7151,6 +7157,115 @@ describe("a router", () => {
       await A.actions.child.redirectReturn(url);
       expect(t.window.location.assign).toHaveBeenCalledWith(url);
       expect(t.window.location.replace).not.toHaveBeenCalled();
+    });
+
+    it("preserves action revalidation across multiple redirects", async () => {
+      let t = setup({
+        initialEntries: ["/action"],
+        routes: [
+          {
+            id: "action",
+            path: "/action",
+            loader: true,
+            children: [
+              {
+                id: "index",
+                index: true,
+                action: true,
+                loader: true,
+              },
+              {
+                id: "one",
+                path: "1",
+                loader: true,
+              },
+              {
+                path: "2",
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            action: "ACTION 0",
+          },
+        },
+      });
+
+      let A = await t.navigate("/action?index", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+
+      let B = await A.actions.index.redirectReturn("/action/1");
+      await B.loaders.action.resolve("ACTION 1");
+      let C = await B.loaders.one.redirectReturn("/action/2");
+      await C.loaders.action.resolve("ACTION 2");
+
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/action/2",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          action: "ACTION 2",
+        },
+      });
+    });
+
+    it("preserves X-Remix-Revalidate revalidation across multiple redirects", async () => {
+      let t = setup({
+        initialEntries: ["/loader"],
+        routes: [
+          {
+            id: "loader",
+            path: "/loader",
+            loader: true,
+            children: [
+              {
+                id: "index",
+                index: true,
+              },
+              {
+                id: "one",
+                path: "1",
+                loader: true,
+              },
+              {
+                id: "two",
+                path: "2",
+                loader: true,
+              },
+              {
+                path: "3",
+              },
+            ],
+          },
+        ],
+        hydrationData: {
+          loaderData: {
+            loader: "LOADER 0",
+          },
+        },
+      });
+
+      let A = await t.navigate("/loader/1");
+      let B = await A.loaders.one.redirectReturn("/loader/2", undefined, {
+        "X-Remix-Revalidate": "true",
+      });
+      await B.loaders.loader.resolve("LOADER 3");
+      let C = await B.loaders.two.redirectReturn("/loader/3");
+      await C.loaders.loader.resolve("LOADER 3");
+
+      expect(t.router.state).toMatchObject({
+        location: {
+          pathname: "/loader/3",
+        },
+        navigation: IDLE_NAVIGATION,
+        loaderData: {
+          loader: "LOADER 3",
+        },
+      });
     });
 
     describe("redirect status code handling", () => {
@@ -8835,7 +8950,6 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
           data: undefined,
-          " _hasFetcherDoneAnything ": true,
         });
 
         await dfd.resolve("DATA");
@@ -8845,7 +8959,6 @@ describe("a router", () => {
           formEncType: undefined,
           formData: undefined,
           data: "DATA",
-          " _hasFetcherDoneAnything ": true,
         });
 
         expect(router._internalFetchControllers.size).toBe(0);
@@ -9055,7 +9168,7 @@ describe("a router", () => {
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(400, undefined, ""),
+          root: new ErrorResponseImpl(400, undefined, ""),
         });
       });
 
@@ -9068,7 +9181,7 @@ describe("a router", () => {
         await A.loaders.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(400, undefined, ""),
+          root: new ErrorResponseImpl(400, undefined, ""),
         });
       });
 
@@ -9081,7 +9194,7 @@ describe("a router", () => {
         await A.actions.foo.reject(new Response(null, { status: 400 }));
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(400, undefined, ""),
+          root: new ErrorResponseImpl(400, undefined, ""),
         });
       });
 
@@ -9107,7 +9220,7 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             405,
             "Method Not Allowed",
             new Error(
@@ -9136,7 +9249,7 @@ describe("a router", () => {
         });
         expect(A.fetcher).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             400,
             "Bad Request",
             new Error("Unable to encode submission body"),
@@ -9185,7 +9298,7 @@ describe("a router", () => {
         await t.fetch("/not-found", "key2", "wit");
         expect(t.router.getFetcher("key2")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9210,7 +9323,7 @@ describe("a router", () => {
         });
         expect(t.router.getFetcher("key4")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          wit: new ErrorResponse(
+          wit: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9221,7 +9334,7 @@ describe("a router", () => {
         await t.fetch("/not-found", "key5", "wit");
         expect(t.router.getFetcher("key5")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          wit: new ErrorResponse(
+          wit: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9243,7 +9356,7 @@ describe("a router", () => {
         await t.fetch("/not-found", "key7", "witout");
         expect(t.router.getFetcher("key7")).toBe(IDLE_FETCHER);
         expect(t.router.state.errors).toEqual({
-          root: new ErrorResponse(
+          root: new ErrorResponseImpl(
             404,
             "Not Found",
             new Error('No route matches URL "/not-found"'),
@@ -9374,7 +9487,6 @@ describe("a router", () => {
           formAction: undefined,
           formEncType: undefined,
           formData: undefined,
-          " _hasFetcherDoneAnything ": true,
         });
         expect(t.router.state.historyAction).toBe("PUSH");
         expect(t.router.state.location.pathname).toBe("/bar");
@@ -9614,12 +9726,12 @@ describe("a router", () => {
 
           await A.actions.foo.reject(new Response(null, { status: 400 }));
           expect(t.router.state.errors).toEqual({
-            root: new ErrorResponse(400, undefined, ""),
+            root: new ErrorResponseImpl(400, undefined, ""),
           });
 
           await B.actions.foo.resolve("B");
           expect(t.router.state.errors).toEqual({
-            root: new ErrorResponse(400, undefined, ""),
+            root: new ErrorResponseImpl(400, undefined, ""),
           });
 
           await B.loaders.root.resolve(null);
@@ -9652,7 +9764,7 @@ describe("a router", () => {
 
           await B.actions.foo.reject(new Response(null, { status: 400 }));
           expect(t.router.state.errors).toEqual({
-            root: new ErrorResponse(400, undefined, ""),
+            root: new ErrorResponseImpl(400, undefined, ""),
           });
         });
       });
@@ -11390,7 +11502,7 @@ describe("a router", () => {
         await t.fetch("/parent");
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: No route matches URL "/parent"",
               "error": [Error: No route matches URL "/parent"],
               "internal": true,
@@ -11425,7 +11537,7 @@ describe("a router", () => {
         await t.fetch("/parent?index");
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: No route matches URL "/parent?index"",
               "error": [Error: No route matches URL "/parent?index"],
               "internal": true,
@@ -11462,7 +11574,7 @@ describe("a router", () => {
         });
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: You made a POST request to "/parent" but did not provide an \`action\` for route "parent", so there is no way to handle the request.",
               "error": [Error: You made a POST request to "/parent" but did not provide an \`action\` for route "parent", so there is no way to handle the request.],
               "internal": true,
@@ -11499,7 +11611,7 @@ describe("a router", () => {
         });
         expect(t.router.state.errors).toMatchInlineSnapshot(`
           {
-            "parent": ErrorResponse {
+            "parent": ErrorResponseImpl {
               "data": "Error: You made a POST request to "/parent?index" but did not provide an \`action\` for route "parent", so there is no way to handle the request.",
               "error": [Error: You made a POST request to "/parent?index" but did not provide an \`action\` for route "parent", so there is no way to handle the request.],
               "internal": true,
@@ -12413,7 +12525,7 @@ describe("a router", () => {
         },
       });
       expect(t.router.state.errors).toEqual({
-        parent: new ErrorResponse(400, "Bad Request", "broken", false),
+        parent: new ErrorResponseImpl(400, "Bad Request", "broken", false),
       });
 
       await parentDfd.resolve("Yep!");
@@ -12519,7 +12631,7 @@ describe("a router", () => {
         b: "B LOADER",
       });
       expect(t.router.state.errors).toEqual({
-        bChild: new ErrorResponse(400, "Bad Request", "broken", false),
+        bChild: new ErrorResponseImpl(400, "Bad Request", "broken", false),
       });
     });
 
@@ -13810,6 +13922,45 @@ describe("a router", () => {
         );
         consoleWarn.mockReset();
       });
+
+      it("handles errors thrown from static loaders before lazy has completed", async () => {
+        let consoleWarn = jest.spyOn(console, "warn");
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              children: [
+                {
+                  id: "lazy",
+                  path: "lazy",
+                  loader: true,
+                  lazy: true,
+                },
+              ],
+            },
+          ],
+        });
+
+        let A = await t.navigate("/lazy");
+
+        await A.loaders.lazy.reject("STATIC LOADER ERROR");
+        expect(t.router.state.navigation.state).toBe("loading");
+
+        // We shouldn't bubble the loader error until after this resolves
+        // so we know if it has a boundary or not
+        await A.lazy.lazy.resolve({
+          hasErrorBoundary: true,
+        });
+        expect(t.router.state.location.pathname).toBe("/lazy");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.loaderData).toEqual({});
+        expect(t.router.state.errors).toEqual({
+          lazy: "STATIC LOADER ERROR",
+        });
+
+        consoleWarn.mockReset();
+      });
     });
 
     describe("interruptions", () => {
@@ -14918,7 +15069,7 @@ describe("a router", () => {
           loaderData: {},
           actionData: null,
           errors: {
-            index: new ErrorResponse(
+            index: new ErrorResponseImpl(
               404,
               "Not Found",
               new Error('No route matches URL "/not/found"'),
@@ -15056,34 +15207,11 @@ describe("a router", () => {
         let { query } = createStaticHandler([
           {
             id: "root",
-            path: "/",
+            path: "/path",
             loader: () => dfd.promise,
           },
         ]);
-        let request = createRequest("/", { signal: controller.signal });
-        let e;
-        try {
-          let contextPromise = query(request);
-          controller.abort();
-          // This should resolve even though we never resolved the loader
-          await contextPromise;
-        } catch (_e) {
-          e = _e;
-        }
-        expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
-      });
-
-      it("should handle aborted submit requests", async () => {
-        let dfd = createDeferred();
-        let controller = new AbortController();
-        let { query } = createStaticHandler([
-          {
-            id: "root",
-            path: "/",
-            action: () => dfd.promise,
-          },
-        ]);
-        let request = createSubmitRequest("/", {
+        let request = createRequest("/path?key=value", {
           signal: controller.signal,
         });
         let e;
@@ -15095,7 +15223,36 @@ describe("a router", () => {
         } catch (_e) {
           e = _e;
         }
-        expect(e).toMatchInlineSnapshot(`[Error: query() call aborted]`);
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query() call aborted: GET http://localhost/path?key=value]`
+        );
+      });
+
+      it("should handle aborted submit requests", async () => {
+        let dfd = createDeferred();
+        let controller = new AbortController();
+        let { query } = createStaticHandler([
+          {
+            id: "root",
+            path: "/path",
+            action: () => dfd.promise,
+          },
+        ]);
+        let request = createSubmitRequest("/path?key=value", {
+          signal: controller.signal,
+        });
+        let e;
+        try {
+          let contextPromise = query(request);
+          controller.abort();
+          // This should resolve even though we never resolved the loader
+          await contextPromise;
+        } catch (_e) {
+          e = _e;
+        }
+        expect(e).toMatchInlineSnapshot(
+          `[Error: query() call aborted: POST http://localhost/path?key=value]`
+        );
       });
 
       it("should assign signals to requests by default (per the", async () => {
@@ -15120,7 +15277,7 @@ describe("a router", () => {
           actionData: null,
           loaderData: {},
           errors: {
-            root: new ErrorResponse(
+            root: new ErrorResponseImpl(
               405,
               "Method Not Allowed",
               new Error(
@@ -15147,7 +15304,7 @@ describe("a router", () => {
           actionData: null,
           loaderData: {},
           errors: {
-            root: new ErrorResponse(
+            root: new ErrorResponseImpl(
               405,
               "Method Not Allowed",
               new Error('Invalid request method "OPTIONS"'),
@@ -15424,7 +15581,7 @@ describe("a router", () => {
           });
           expect(context.activeDeferreds).toEqual(null);
           expect(context.errors).toEqual({
-            parent: new ErrorResponse(
+            parent: new ErrorResponseImpl(
               400,
               "Bad Request",
               new Error("defer() is not supported in actions"),
@@ -16361,11 +16518,11 @@ describe("a router", () => {
         let { queryRoute } = createStaticHandler([
           {
             id: "root",
-            path: "/",
+            path: "/path",
             loader: () => dfd.promise,
           },
         ]);
-        let request = createRequest("/", {
+        let request = createRequest("/path?key=value", {
           signal: controller.signal,
         });
         let e;
@@ -16377,7 +16534,9 @@ describe("a router", () => {
         } catch (_e) {
           e = _e;
         }
-        expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        expect(e).toMatchInlineSnapshot(
+          `[Error: queryRoute() call aborted: GET http://localhost/path?key=value]`
+        );
       });
 
       it("should handle aborted submit requests", async () => {
@@ -16386,11 +16545,11 @@ describe("a router", () => {
         let { queryRoute } = createStaticHandler([
           {
             id: "root",
-            path: "/",
+            path: "/path",
             action: () => dfd.promise,
           },
         ]);
-        let request = createSubmitRequest("/", {
+        let request = createSubmitRequest("/path?key=value", {
           signal: controller.signal,
         });
         let e;
@@ -16402,7 +16561,9 @@ describe("a router", () => {
         } catch (_e) {
           e = _e;
         }
-        expect(e).toMatchInlineSnapshot(`[Error: queryRoute() call aborted]`);
+        expect(e).toMatchInlineSnapshot(
+          `[Error: queryRoute() call aborted: POST http://localhost/path?key=value]`
+        );
       });
 
       it("should assign signals to requests by default (per the spec)", async () => {
@@ -16529,7 +16690,7 @@ describe("a router", () => {
           } catch (e) {
             // eslint-disable-next-line jest/no-conditional-expect
             expect(e).toEqual(
-              new ErrorResponse(
+              new ErrorResponseImpl(
                 400,
                 "Bad Request",
                 new Error("defer() is not supported in actions"),
@@ -16982,7 +17143,7 @@ describe("a router", () => {
       expect(currentRouter.state.fetchers.get("key")?.data).toBe(undefined);
       expect(currentRouter.state.errors).toMatchInlineSnapshot(`
         {
-          "root": ErrorResponse {
+          "root": ErrorResponseImpl {
             "data": "Error: No route matches URL "/foo"",
             "error": [Error: No route matches URL "/foo"],
             "internal": true,
@@ -17076,7 +17237,7 @@ describe("a router", () => {
       // Fetcher should have been revalidated but theown a 404 wince the route was removed
       expect(currentRouter.state.fetchers.get("key")?.data).toBe(undefined);
       expect(currentRouter.state.errors).toEqual({
-        root: new ErrorResponse(
+        root: new ErrorResponseImpl(
           404,
           "Not Found",
           new Error('No route matches URL "/foo"'),

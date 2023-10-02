@@ -27,6 +27,7 @@ export type {
   unstable_BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  ErrorResponse,
   Fetcher,
   Hash,
   IndexRouteObject,
@@ -62,7 +63,9 @@ export type {
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
   To,
+  UIMatch,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -143,7 +146,7 @@ export {
 export interface NativeRouterProps extends MemoryRouterProps {}
 
 /**
- * A <Router> that runs on React Native.
+ * A `<Router>` that runs on React Native.
  */
 export function NativeRouter(props: NativeRouterProps) {
   return <MemoryRouter {...props} />;
@@ -159,7 +162,7 @@ export interface LinkProps extends TouchableHighlightProps {
 }
 
 /**
- * A <TouchableHighlight> that navigates to a different URL when touched.
+ * A `<TouchableHighlight>` that navigates to a different URL when touched.
  */
 export function Link({
   onPress,

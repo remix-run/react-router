@@ -1,52 +1,52 @@
-import * as React from "react";
 import type {
-  TrackedPromise,
   InitialEntry,
+  LazyRouteFunction,
   Location,
   MemoryHistory,
-  Router as RemixRouter,
-  To,
-  LazyRouteFunction,
   RelativeRoutingType,
+  Router as RemixRouter,
   RouterState,
+  To,
+  TrackedPromise,
 } from "@remix-run/router";
 import {
-  Action as NavigationType,
   AbortedDeferredError,
+  Action as NavigationType,
   createMemoryHistory,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
   stripBasename,
   UNSAFE_warning as warning,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
 } from "@remix-run/router";
+import * as React from "react";
 
 import type {
   DataRouteObject,
   IndexRouteObject,
-  RouteMatch,
-  RouteObject,
   Navigator,
   NonIndexRouteObject,
+  RouteMatch,
+  RouteObject,
 } from "./context";
 import {
-  LocationContext,
-  NavigationContext,
+  AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  AwaitContext,
+  LocationContext,
+  NavigationContext,
   RouteContext,
 } from "./context";
 import {
+  _renderMatches,
   useAsyncValue,
   useInRouterContext,
+  useLocation,
   useNavigate,
   useOutlet,
   useRoutes,
-  _renderMatches,
   useRoutesImpl,
-  useLocation,
 } from "./hooks";
 
 export interface FutureConfig {
@@ -184,7 +184,7 @@ export interface MemoryRouterProps {
 }
 
 /**
- * A <Router> that stores all entries in memory.
+ * A `<Router>` that stores all entries in memory.
  *
  * @see https://reactrouter.com/router-components/memory-router
  */
@@ -368,9 +368,9 @@ export interface RouterProps {
 /**
  * Provides location context for the rest of the app.
  *
- * Note: You usually won't render a <Router> directly. Instead, you'll render a
- * router that is more specific to your environment such as a <BrowserRouter>
- * in web browsers or a <StaticRouter> for server rendering.
+ * Note: You usually won't render a `<Router>` directly. Instead, you'll render a
+ * router that is more specific to your environment such as a `<BrowserRouter>`
+ * in web browsers or a `<StaticRouter>` for server rendering.
  *
  * @see https://reactrouter.com/router-components/router
  */
@@ -451,7 +451,7 @@ export interface RoutesProps {
 }
 
 /**
- * A container for a nested tree of <Route> elements that renders the branch
+ * A container for a nested tree of `<Route>` elements that renders the branch
  * that best matches the current location.
  *
  * @see https://reactrouter.com/components/routes
@@ -593,7 +593,7 @@ class AwaitErrorBoundary extends React.Component<
 
 /**
  * @private
- * Indirection to leverage useAsyncValue for a render-prop API on <Await>
+ * Indirection to leverage useAsyncValue for a render-prop API on `<Await>`
  */
 function ResolveAwait({
   children,
