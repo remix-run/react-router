@@ -310,13 +310,13 @@ function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: AgnosticRouteObject = {
+      let enhancedRoute: AgnosticDataRouteObject = {
         ...r,
         lazy: undefined,
         loader: undefined,
         action: undefined,
         children: undefined,
-        id: r.id || "unknown-route-id",
+        id: r.id || `route-${guid++}`,
       };
       if (r.lazy) {
         // @ts-expect-error
