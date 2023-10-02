@@ -16,7 +16,7 @@ declare function RouterProvider(
 interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: Router;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
 }
 ```
 
