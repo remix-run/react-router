@@ -309,13 +309,13 @@ function setup({
   // active navigation loader/action
   function enhanceRoutes(_routes: TestRouteObject[]) {
     return _routes.map((r) => {
-      let enhancedRoute: AgnosticDataRouteObject = {
+      let enhancedRoute: AgnosticRouteObject = {
         ...r,
         lazy: undefined,
         loader: undefined,
         action: undefined,
         children: undefined,
-        id: r.id || `route-${guid++}`,
+        id: r.id,
       };
       if (r.lazy) {
         // @ts-expect-error
@@ -4814,6 +4814,85 @@ describe("a router", () => {
             true
           ),
         },
+      });
+    });
+
+    it("handles 404 routes when the root route contains a path (initialization)", () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/path",
+            children: [
+              {
+                index: true,
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/junk"],
+      });
+      expect(t.router.state).toMatchObject({
+        errors: {
+          root: new ErrorResponse(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/junk"'),
+            true
+          ),
+        },
+        initialized: true,
+        location: {
+          pathname: "/junk",
+        },
+        matches: [
+          {
+            route: {
+              id: "root",
+            },
+          },
+        ],
+      });
+    });
+
+    it("handles 404 routes when the root route contains a path (navigation)", () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/path",
+            children: [
+              {
+                index: true,
+              },
+            ],
+          },
+        ],
+        initialEntries: ["/path"],
+      });
+      expect(t.router.state).toMatchObject({
+        errors: null,
+      });
+      t.navigate("/junk");
+      expect(t.router.state).toMatchObject({
+        errors: {
+          root: new ErrorResponse(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/junk"'),
+            true
+          ),
+        },
+        location: {
+          pathname: "/junk",
+        },
+        matches: [
+          {
+            route: {
+              id: "root",
+            },
+          },
+        ],
       });
     });
 
