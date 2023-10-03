@@ -612,6 +612,98 @@ describe("createMemoryRouter", () => {
     `);
   });
 
+  it("shows fallbackElement for route loaders on navigation", async () => {
+    let barDefer = createDeferred();
+    let router = createMemoryRouter(
+      createRoutesFromElements(
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<Foo />} />
+          <Route path="bar" loader={() => barDefer.promise} element={<Bar />} />
+        </Route>
+      ),
+      { initialEntries: ["/foo"] }
+    );
+    let { container } = render(
+      <RouterProvider
+        router={router}
+        showFallbackOnLoading
+        fallbackElement={<FallbackElement />}
+      />
+    );
+
+    function Layout() {
+      let navigation = useNavigation();
+      return (
+        <div>
+          <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+          <p>{navigation.state}</p>
+          <Outlet />
+        </div>
+      );
+    }
+
+    function FallbackElement() {
+      return <p>Loading...</p>;
+    }
+
+    function Foo() {
+      return <h1>Foo</h1>;
+    }
+
+    function Bar() {
+      let data = useLoaderData() as { message: string };
+      return <h1>{data?.message}</h1>;
+    }
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <div>
+          <a
+            href="/bar"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <h1>
+            Foo
+          </h1>
+        </div>
+      </div>"
+    `);
+
+    fireEvent.click(screen.getByText("Link to Bar"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Loading...
+        </p>
+      </div>"
+    `);
+
+    barDefer.resolve({ message: "Bar Loader" });
+    await waitFor(() => screen.getByText("idle"));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <div>
+          <a
+            href="/bar"
+          >
+            Link to Bar
+          </a>
+          <p>
+            idle
+          </p>
+          <h1>
+            Bar Loader
+          </h1>
+        </div>
+      </div>"
+    `);
+  });
+
   it("executes route actions/loaders on submission navigations", async () => {
     let barDefer = createDeferred();
     let barActionDefer = createDeferred();

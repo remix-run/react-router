@@ -54,6 +54,7 @@ export interface FutureConfig {
 }
 
 export interface RouterProviderProps {
+  showFallbackOnLoading?: boolean;
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
   future?: Partial<FutureConfig>;
@@ -87,6 +88,7 @@ const startTransitionImpl = React[START_TRANSITION];
  * Given a Remix Router instance, render the appropriate UI
  */
 export function RouterProvider({
+  showFallbackOnLoading = false,
   fallbackElement,
   router,
   future,
@@ -152,7 +154,8 @@ export function RouterProvider({
             navigationType={state.historyAction}
             navigator={navigator}
           >
-            {state.initialized ? (
+            {state.initialized &&
+            (!showFallbackOnLoading || state.navigation.state !== "loading") ? (
               <DataRoutes routes={router.routes} state={state} />
             ) : (
               fallbackElement

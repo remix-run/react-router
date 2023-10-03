@@ -14,6 +14,7 @@ declare function RouterProvider(
 ): React.ReactElement;
 
 interface RouterProviderProps {
+  showFallbackOnLoading?: boolean;
   fallbackElement?: React.ReactNode;
   router: Router;
   future?: Partial<FutureConfig>;
@@ -64,6 +65,18 @@ If you are not server rendering your app, `createBrowserRouter` will initiate al
 ```tsx
 <RouterProvider
   router={router}
+  fallbackElement={<SpinnerOfDoom />}
+/>
+```
+
+## `showFallbackOnLoading`
+
+It will show `fallbackElement` between navigations if destination has a loader.
+
+```tsx
+<RouterProvider
+  router={router}
+  showFallbackOnLoading
   fallbackElement={<SpinnerOfDoom />}
 />
 ```
