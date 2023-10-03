@@ -218,6 +218,11 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
+
+  /**
+   * This value is passed to the `requestContext` property in your loader/action functions.
+   */
+  requestContext?: unknown;
 }
 
 export function createBrowserRouter(
@@ -234,6 +239,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    requestContext: opts?.requestContext,
   }).initialize();
 }
 
@@ -251,6 +257,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    requestContext: opts?.requestContext,
   }).initialize();
 }
 

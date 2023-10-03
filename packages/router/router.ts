@@ -354,6 +354,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
+  requestContext?: unknown;
 }
 
 /**
@@ -865,6 +866,8 @@ export function createRouter(init: RouterInit): Router {
   // Flag to ignore the next history update, so we can revert the URL change on
   // a POP navigation that was blocked by the user without touching router state
   let ignoreNextHistoryUpdate = false;
+
+  let requestContext = init.requestContext;
 
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
@@ -1387,7 +1390,8 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        basename
+        basename,
+        { requestContext }
       );
 
       if (request.signal.aborted) {
@@ -2193,7 +2197,8 @@ export function createRouter(init: RouterInit): Router {
           matches,
           manifest,
           mapRouteProperties,
-          basename
+          basename,
+          { requestContext }
         )
       ),
       ...fetchersToLoad.map((f) => {
@@ -2205,7 +2210,8 @@ export function createRouter(init: RouterInit): Router {
             f.matches,
             manifest,
             mapRouteProperties,
-            basename
+            basename,
+            { requestContext }
           );
         } else {
           let error: ErrorResult = {
