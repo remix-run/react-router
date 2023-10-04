@@ -149,7 +149,41 @@ The `reloadDocument` property can be used to skip client side routing and let th
 
 ## `unstable_viewTransition`
 
-The `unstable_viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state].
+The `unstable_viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`:
+
+```jsx
+<Link to={to} unstable_viewTransition>
+```
+
+If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state]:
+
+```jsx
+function ImageLink(to) {
+  let isTransitioning = unstable_useViewTransitionState(to);
+  return (
+    <Link to={to} unstable_viewTransition>
+      <p
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-title"
+            : "",
+        }}
+      >
+        Image Number {idx}
+      </p>
+      <img
+        src={src}
+        alt={`Img ${idx}`}
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-expand"
+            : "",
+        }}
+      />
+    </Link>
+  );
+}
+```
 
 <docs-warn>
 Please note that this API is marked unstable and may be subject to breaking changes without a major release.
