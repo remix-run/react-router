@@ -144,6 +144,33 @@ a.transitioning img {
 
 You may also use the `className`/`style` props or the render props passed to `children` to further customize based on the `isTransitioning` value.
 
+```jsx
+<NavLink to={to} unstable_viewTransition>
+  {({ isTransitioning }) => (
+    <>
+      <p
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-title"
+            : "",
+        }}
+      >
+        Image Number {idx}
+      </p>
+      <img
+        src={src}
+        alt={`Img ${idx}`}
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-expand"
+            : "",
+        }}
+      />
+    </>
+  )}
+</NavLink>
+```
+
 <docs-warn>
 Please note that this API is marked unstable and may be subject to breaking changes without a major release.
 </docs-warn>
