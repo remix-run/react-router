@@ -389,6 +389,7 @@ export interface StaticHandler {
 }
 
 type ViewTransitionOpts = {
+  currentLocation: Location;
   nextLocation: Location;
 };
 
@@ -1093,28 +1094,31 @@ export function createRouter(init: RouterInit): Router {
     // On POP, enable transitions if they were enabled on the original navigation
     if (pendingAction === HistoryAction.Pop) {
       // Forward takes precedence so they behave like the original navigation
-      let priorNavs = appliedViewTransitions.get(state.location.key);
-      if (priorNavs && priorNavs.has(location.key)) {
+      let priorPaths = appliedViewTransitions.get(state.location.pathname);
+      if (priorPaths && priorPaths.has(location.pathname)) {
         viewTransitionOpts = {
+          currentLocation: state.location,
           nextLocation: location,
         };
-      } else if (appliedViewTransitions.has(location.key)) {
+      } else if (appliedViewTransitions.has(location.pathname)) {
         // If we don't have a previous forward nav, assume we're popping back to
         // the new location and enable if that location previously enabled
         viewTransitionOpts = {
+          currentLocation: location,
           nextLocation: state.location,
         };
       }
     } else if (pendingViewTransitionEnabled) {
       // Store the applied transition on PUSH/REPLACE
-      let toKeys = appliedViewTransitions.get(state.location.key);
-      if (toKeys) {
-        toKeys.add(location.key);
+      let toPaths = appliedViewTransitions.get(state.location.pathname);
+      if (toPaths) {
+        toPaths.add(location.pathname);
       } else {
-        toKeys = new Set<string>([location.key]);
-        appliedViewTransitions.set(state.location.key, toKeys);
+        toPaths = new Set<string>([location.pathname]);
+        appliedViewTransitions.set(state.location.pathname, toPaths);
       }
       viewTransitionOpts = {
+        currentLocation: state.location,
         nextLocation: location,
       };
     }

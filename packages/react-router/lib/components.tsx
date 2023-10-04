@@ -150,7 +150,8 @@ export function RouterProvider({
   let [transition, setTransition] = React.useState<ViewTransition>();
   let [interruption, setInterruption] = React.useState<{
     state: RouterState;
-    location: Location;
+    currentLocation: Location;
+    nextLocation: Location;
   }>();
   let { v7_startTransition } = future || {};
 
@@ -180,13 +181,15 @@ export function RouterProvider({
         transition.skipTransition();
         setInterruption({
           state: newState,
-          location: viewTransitionOpts.nextLocation,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
         });
       } else {
         // Completed navigation update with opted-in view transitions, let 'er rip
         setPendingState(newState);
         setVtContext({
           isTransitioning: true,
+          currentLocation: viewTransitionOpts.currentLocation,
           nextLocation: viewTransitionOpts.nextLocation,
         });
       }
@@ -246,7 +249,8 @@ export function RouterProvider({
       setPendingState(interruption.state);
       setVtContext({
         isTransitioning: true,
-        nextLocation: interruption.location,
+        currentLocation: interruption.currentLocation,
+        nextLocation: interruption.nextLocation,
       });
       setInterruption(undefined);
     }
