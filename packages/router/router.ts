@@ -9,6 +9,7 @@ import {
 } from "./history";
 import type {
   ActionFunction,
+  ActionFunctionArgs,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   AgnosticRouteObject,
@@ -22,6 +23,7 @@ import type {
   HTMLFormMethod,
   ImmutableRouteKey,
   LoaderFunction,
+  LoaderFunctionArgs,
   MapRoutePropertiesFunction,
   MutationFormMethod,
   RedirectResult,
@@ -3617,8 +3619,25 @@ async function callLoaderOrAction(
     let abortPromise = new Promise((_, r) => (reject = r));
     onReject = () => reject();
     request.signal.addEventListener("abort", onReject);
+
+    let runHandlerAndMaybeAbortDeferreds = async (
+      handler: ActionFunction | LoaderFunction,
+      args: LoaderFunctionArgs | ActionFunctionArgs
+    ) => {
+      // Since we Promise.race the handler against the request signal, if the
+      // request is aborted we never get access to the returned value from the
+      // handler.  If we get a defer() instance _after_ we've already aborted
+      // the request, we should proxy that cancellation along so the defer()
+      // controller also aborts.
+      let result = await handler(args);
+      if (args.request.signal.aborted && isDeferredData(result)) {
+        result.cancel();
+      }
+      return result;
+    };
+
     return Promise.race([
-      handler({
+      runHandlerAndMaybeAbortDeferreds(handler, {
         request,
         params: match.params,
         context: opts.requestContext,
@@ -3791,6 +3810,17 @@ async function callLoaderOrAction(
   }
 
   if (isDeferredData(result)) {
+    if (request.signal.aborted) {
+      // Don't think this is technically possible since we race the loader
+      // against the request signal and we would short circuit via the error path
+      // above on interruption. Included to be safe though :)
+      result.cancel();
+    } else {
+      // Abort the defer() instance if we abort while waiting on other loaders
+      // from this navigation
+      let deferResult = result;
+      request.signal.addEventListener("abort", () => deferResult.cancel());
+    }
     return {
       type: ResultType.deferred,
       deferredData: result,
