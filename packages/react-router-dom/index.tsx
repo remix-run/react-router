@@ -648,7 +648,11 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
     let isTransitioning =
-      useViewTransitionState(path) && unstable_viewTransition === true;
+      routerState != null &&
+      // Conditional usage is OK here because the usage of a data router is static
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useViewTransitionState(path) &&
+      unstable_viewTransition === true;
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
