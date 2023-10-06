@@ -962,10 +962,10 @@ function compilePath(
     path
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
-      .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/\/:(\w+)/g, (_: string, paramName: string) => {
+      .replace(/[\\.*+^${}|()[\]]/g, "\\$&") // Escape special regex chars
+      .replace(/\/:(\w+)(\??)/g, (_: string, paramName: string, optional: string) => {
         paramNames.push(paramName);
-        return "/([^\\/]+)";
+        return `/${optional}([^\\/]+)${optional}`;
       });
 
   if (path.endsWith("*")) {
