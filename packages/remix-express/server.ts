@@ -118,6 +118,10 @@ export async function sendRemixResponse(
     res.append(key, value);
   }
 
+  if (nodeResponse.headers.get("Content-Type")?.match(/text\/event-stream/i)) {
+    res.flushHeaders();
+  }
+
   if (nodeResponse.body) {
     await writeReadableStreamToWritable(nodeResponse.body, res);
   } else {
