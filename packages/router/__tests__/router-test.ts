@@ -17699,7 +17699,7 @@ describe("a router", () => {
           navigation: IDLE_NAVIGATION,
           location: expect.objectContaining({ pathname: "/a" }),
         }),
-        { viewTransitionOpts: undefined }
+        { unstable_viewTransitionOpts: undefined }
       );
 
       // PUSH /a -> /b - w/ transition
@@ -17710,7 +17710,7 @@ describe("a router", () => {
           location: expect.objectContaining({ pathname: "/b" }),
         }),
         {
-          viewTransitionOpts: {
+          unstable_viewTransitionOpts: {
             currentLocation: expect.objectContaining({ pathname: "/a" }),
             nextLocation: expect.objectContaining({ pathname: "/b" }),
           },
@@ -17725,7 +17725,7 @@ describe("a router", () => {
           location: expect.objectContaining({ pathname: "/a" }),
         }),
         {
-          viewTransitionOpts: {
+          unstable_viewTransitionOpts: {
             // Args reversed on POP so same hooks apply
             currentLocation: expect.objectContaining({ pathname: "/a" }),
             nextLocation: expect.objectContaining({ pathname: "/b" }),
@@ -17740,7 +17740,7 @@ describe("a router", () => {
           navigation: IDLE_NAVIGATION,
           location: expect.objectContaining({ pathname: "/" }),
         }),
-        { viewTransitionOpts: undefined }
+        { unstable_viewTransitionOpts: undefined }
       );
 
       unsubscribe();

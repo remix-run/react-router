@@ -167,7 +167,10 @@ export function RouterProvider({
   );
 
   let setState = React.useCallback<RouterSubscriber>(
-    (newState: RouterState, { viewTransitionOpts }) => {
+    (
+      newState: RouterState,
+      { unstable_viewTransitionOpts: viewTransitionOpts }
+    ) => {
       if (
         !viewTransitionOpts ||
         router.window == null ||

@@ -408,7 +408,7 @@ export interface RouterSubscriber {
   (
     state: RouterState,
     opts: {
-      viewTransitionOpts?: ViewTransitionOpts;
+      unstable_viewTransitionOpts?: ViewTransitionOpts;
     }
   ): void;
 }
@@ -1015,7 +1015,7 @@ export function createRouter(init: RouterInit): Router {
       ...newState,
     };
     subscribers.forEach((subscriber) =>
-      subscriber(state, { viewTransitionOpts })
+      subscriber(state, { unstable_viewTransitionOpts: viewTransitionOpts })
     );
   }
 
