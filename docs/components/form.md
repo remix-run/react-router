@@ -11,7 +11,7 @@ new: true
 ```tsx
 declare function Form(props: FormProps): React.ReactElement;
 
-export interface LinkProps
+interface FormProps
   extends React.FormHTMLAttributes<HTMLFormElement> {
   method?: "get" | "post" | "put" | "patch" | "delete";
   encType?:
@@ -19,21 +19,13 @@ export interface LinkProps
     | "multipart/form-data"
     | "text/plain";
   action?: string;
-  relative?: "route" | "path";
-  preventScrollReset?: boolean;
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  preventScrollReset?: boolean;
+  relative?: "route" | "path";
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
   unstable_viewTransition?: boolean;
-}
-
-type To = string | Partial<Path>;
-
-interface Path {
-  pathname: string;
-  search: string;
-  hash: string;
 }
 ```
 

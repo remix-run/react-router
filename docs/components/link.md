@@ -12,17 +12,17 @@ title: Link
 ```tsx
 declare function Link(props: LinkProps): React.ReactElement;
 
-export interface LinkProps
+interface LinkProps
   extends Omit<
     React.AnchorHTMLAttributes<HTMLAnchorElement>,
     "href"
   > {
-  replace?: boolean;
-  state?: any;
   to: To;
-  reloadDocument?: boolean;
   preventScrollReset?: boolean;
   relative?: "route" | "path";
+  reloadDocument?: boolean;
+  replace?: boolean;
+  state?: any;
   unstable_viewTransition?: boolean;
 }
 
