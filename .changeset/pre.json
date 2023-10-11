@@ -8,5 +8,11 @@
     "react-router-native": "6.16.0",
     "@remix-run/router": "1.9.0"
   },
-  "changesets": []
+  "changesets": [
+    "404-root-with-path",
+    "error-response-type",
+    "partial-future-config",
+    "soft-forks-cough",
+    "start-view-transition"
+  ]
 }
