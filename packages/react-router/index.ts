@@ -89,6 +89,7 @@ import {
   LocationContext,
   NavigationContext,
   RouteContext,
+  ViewTransitionContext,
 } from "./lib/context";
 import type { NavigateFunction } from "./lib/hooks";
 import {
@@ -308,6 +309,7 @@ export {
   LocationContext as UNSAFE_LocationContext,
   NavigationContext as UNSAFE_NavigationContext,
   RouteContext as UNSAFE_RouteContext,
+  ViewTransitionContext as UNSAFE_ViewTransitionContext,
   mapRouteProperties as UNSAFE_mapRouteProperties,
   useRouteId as UNSAFE_useRouteId,
   useRoutesImpl as UNSAFE_useRoutesImpl,

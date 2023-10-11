@@ -26,6 +26,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
+  UNSAFE_ViewTransitionContext as ViewTransitionContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRouteId as useRouteId,
 } from "react-router";
@@ -52,6 +53,7 @@ import {
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
+  matchPath,
 } from "@remix-run/router";
 
 import type {
@@ -201,6 +203,7 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
+  UNSAFE_ViewTransitionContext,
   UNSAFE_useRouteId,
 } from "react-router";
 //#endregion
@@ -234,6 +237,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    window: opts?.window,
   }).initialize();
 }
 
@@ -251,6 +255,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    window: opts?.window,
   }).initialize();
 }
 
@@ -502,6 +507,7 @@ export interface LinkProps
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
+  unstable_viewTransition?: boolean;
 }
 
 const isBrowser =
@@ -525,6 +531,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       to,
       preventScrollReset,
+      unstable_viewTransition,
       ...rest
     },
     ref
@@ -574,6 +581,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       preventScrollReset,
       relative,
+      unstable_viewTransition,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -601,25 +609,22 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
+type NavLinkRenderProps = {
+  isActive: boolean;
+  isPending: boolean;
+  isTransitioning: boolean;
+};
+
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
-  children?:
-    | React.ReactNode
-    | ((props: { isActive: boolean; isPending: boolean }) => React.ReactNode);
+  children?: React.ReactNode | ((props: NavLinkRenderProps) => React.ReactNode);
   caseSensitive?: boolean;
-  className?:
-    | string
-    | ((props: {
-        isActive: boolean;
-        isPending: boolean;
-      }) => string | undefined);
+  className?: string | ((props: NavLinkRenderProps) => string | undefined);
   end?: boolean;
   style?:
     | React.CSSProperties
-    | ((props: {
-        isActive: boolean;
-        isPending: boolean;
-      }) => React.CSSProperties | undefined);
+    | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
+  unstable_viewTransition?: boolean;
 }
 
 /**
@@ -634,6 +639,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       end = false,
       style: styleProp,
       to,
+      unstable_viewTransition,
       children,
       ...rest
     },
@@ -643,6 +649,12 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
+    let isTransitioning =
+      routerState != null &&
+      // Conditional usage is OK here because the usage of a data router is static
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useViewTransitionState(path) &&
+      unstable_viewTransition === true;
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -674,11 +686,17 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
           nextLocationPathname.startsWith(toPathname) &&
           nextLocationPathname.charAt(toPathname.length) === "/"));
 
+    let renderProps = {
+      isActive,
+      isPending,
+      isTransitioning,
+    };
+
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
     let className: string | undefined;
     if (typeof classNameProp === "function") {
-      className = classNameProp({ isActive, isPending });
+      className = classNameProp(renderProps);
     } else {
       // If the className prop is not a function, we use a default `active`
       // class for <NavLink />s that are active. In v5 `active` was the default
@@ -689,15 +707,14 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         classNameProp,
         isActive ? "active" : null,
         isPending ? "pending" : null,
+        isTransitioning ? "transitioning" : null,
       ]
         .filter(Boolean)
         .join(" ");
     }
 
     let style =
-      typeof styleProp === "function"
-        ? styleProp({ isActive, isPending })
-        : styleProp;
+      typeof styleProp === "function" ? styleProp(renderProps) : styleProp;
 
     return (
       <Link
@@ -707,10 +724,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         style={style}
         to={to}
+        unstable_viewTransition={unstable_viewTransition}
       >
-        {typeof children === "function"
-          ? children({ isActive, isPending })
-          : children}
+        {typeof children === "function" ? children(renderProps) : children}
       </Link>
     );
   }
@@ -779,6 +795,11 @@ export interface FormProps extends FetcherFormProps {
    * State object to add to the history stack entry for this navigation
    */
   state?: any;
+
+  /**
+   * Enable view transitions on this Form navigation
+   */
+  unstable_viewTransition?: boolean;
 }
 
 /**
@@ -822,6 +843,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit,
       relative,
       preventScrollReset,
+      unstable_viewTransition,
       ...props
     },
     forwardedRef
@@ -847,6 +869,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         state,
         relative,
         preventScrollReset,
+        unstable_viewTransition,
       });
     };
 
@@ -897,6 +920,8 @@ enum DataRouterHook {
   UseSubmit = "useSubmit",
   UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
+  useViewTransitionStates = "useViewTransitionStates",
+  useViewTransitionState = "useViewTransitionState",
 }
 
 enum DataRouterStateHook {
@@ -935,12 +960,14 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state,
     preventScrollReset,
     relative,
+    unstable_viewTransition,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
+    unstable_viewTransition?: boolean;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -959,7 +986,13 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, { replace, state, preventScrollReset, relative });
+        navigate(to, {
+          replace,
+          state,
+          preventScrollReset,
+          relative,
+          unstable_viewTransition,
+        });
       }
     },
     [
@@ -972,6 +1005,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       to,
       preventScrollReset,
       relative,
+      unstable_viewTransition,
     ]
   );
 }
@@ -1103,6 +1137,7 @@ export function useSubmit(): SubmitFunction {
         replace: options.replace,
         state: options.state,
         fromRouteId: currentRouteId,
+        unstable_viewTransition: options.unstable_viewTransition,
       });
     },
     [router, basename, currentRouteId]
@@ -1494,5 +1529,53 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 }
 
 export { usePrompt as unstable_usePrompt };
+
+/**
+ * Return a boolean indicating if there is an active view transition to the
+ * given href.  You can use this value to render CSS classes or viewTransitionName
+ * styles onto your elements
+ *
+ * @param href The destination href
+ * @param [opts.relative] Relative routing type ("route" | "path")
+ */
+function useViewTransitionState(
+  to: To,
+  opts: { relative?: RelativeRoutingType } = {}
+) {
+  let vtContext = React.useContext(ViewTransitionContext);
+  let { basename } = useDataRouterContext(
+    DataRouterHook.useViewTransitionState
+  );
+  let path = useResolvedPath(to, { relative: opts.relative });
+  if (vtContext.isTransitioning) {
+    let currentPath =
+      stripBasename(vtContext.currentLocation.pathname, basename) ||
+      vtContext.currentLocation.pathname;
+    let nextPath =
+      stripBasename(vtContext.nextLocation.pathname, basename) ||
+      vtContext.nextLocation.pathname;
+
+    // Transition is active if we're going to or coming from the indicated
+    // destination.  This ensures that other PUSH navigations that reverse
+    // an indicated transition apply.  I.e., on the list view you have:
+    //
+    //   <NavLink to="/details/1" unstable_viewTransition>
+    //
+    // If you click the breadcrumb back to the list view:
+    //
+    //   <NavLink to="/list" unstable_viewTransition>
+    //
+    // We should apply the transition because it's indicated as active going
+    // from /list -> /details/1 and therefore should be active on the reverse
+    // (even though this isn't strictly a POP reverse)
+    return (
+      matchPath(path.pathname, nextPath) != null ||
+      matchPath(path.pathname, currentPath) != null
+    );
+  }
+  return false;
+}
+
+export { useViewTransitionState as unstable_useViewTransitionState };
 
 //#endregion

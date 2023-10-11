@@ -17762,6 +17762,70 @@ describe("a router", () => {
       expect(router.state.matches[0].route.path).toBe("/path");
     });
   });
+
+  describe("view transitions", () => {
+    it("only enables view transitions when specified for the navigation", () => {
+      let t = setup({
+        routes: [{ path: "/" }, { path: "/a" }, { path: "/b" }],
+      });
+      let spy = jest.fn();
+      let unsubscribe = t.router.subscribe(spy);
+
+      // PUSH / -> /a - w/o transition
+      t.navigate("/a");
+      expect(spy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          navigation: IDLE_NAVIGATION,
+          location: expect.objectContaining({ pathname: "/a" }),
+        }),
+        { unstable_viewTransitionOpts: undefined }
+      );
+
+      // PUSH /a -> /b - w/ transition
+      t.navigate("/b", { unstable_viewTransition: true });
+      expect(spy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          navigation: IDLE_NAVIGATION,
+          location: expect.objectContaining({ pathname: "/b" }),
+        }),
+        {
+          unstable_viewTransitionOpts: {
+            currentLocation: expect.objectContaining({ pathname: "/a" }),
+            nextLocation: expect.objectContaining({ pathname: "/b" }),
+          },
+        }
+      );
+
+      // POP /b -> /a - w/ transition (cached from above)
+      t.navigate(-1);
+      expect(spy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          navigation: IDLE_NAVIGATION,
+          location: expect.objectContaining({ pathname: "/a" }),
+        }),
+        {
+          unstable_viewTransitionOpts: {
+            // Args reversed on POP so same hooks apply
+            currentLocation: expect.objectContaining({ pathname: "/a" }),
+            nextLocation: expect.objectContaining({ pathname: "/b" }),
+          },
+        }
+      );
+
+      // POP /a -> / - No transition
+      t.navigate(-1);
+      expect(spy).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          navigation: IDLE_NAVIGATION,
+          location: expect.objectContaining({ pathname: "/" }),
+        }),
+        { unstable_viewTransitionOpts: undefined }
+      );
+
+      unsubscribe();
+      t.router.dispose();
+    });
+  });
 });
 
 // We use a slightly modified version of createDeferred here that incoudes the

@@ -300,6 +300,9 @@ export function createStaticRouter(
     get routes() {
       return dataRoutes;
     },
+    get window() {
+      return undefined;
+    },
     initialize() {
       throw msg("initialize");
     },

@@ -4,7 +4,11 @@ title: NavLink
 
 # `<NavLink>`
 
-A `<NavLink>` is a special kind of `<Link>` that knows whether or not it is "active" or "pending". This is useful when building a navigation menu, such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected. It also provides useful context for assistive technology like screen readers.
+A `<NavLink>` is a special kind of `<Link>` that knows whether or not it is "active", "pending", or "transitioning". This is useful in a few different scenarios:
+
+- When building a navigation menu, such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected
+- It provides useful context for assistive technology like screen readers
+- It provides a "transitioning" value to give you finer-grained control over [View Transitions][view-transitions]
 
 ```tsx
 import { NavLink } from "react-router-dom";
@@ -42,8 +46,12 @@ The `className` prop works like a normal className, but you can also pass it a f
 ```tsx
 <NavLink
   to="/messages"
-  className={({ isActive, isPending }) =>
-    isPending ? "pending" : isActive ? "active" : ""
+  className={({ isActive, isPending, isTransitioning }) =>
+    [
+      isPending ? "pending" : "",
+      isActive ? "active" : "",
+      isTransitioning ? "transitioning" : "",
+    ].join(" ")
   }
 >
   Messages
@@ -57,10 +65,11 @@ The `style` prop works like a normal style prop, but you can also pass it a func
 ```tsx
 <NavLink
   to="/messages"
-  style={({ isActive, isPending }) => {
+  style={({ isActive, isPending, isTransitioning }) => {
     return {
       fontWeight: isActive ? "bold" : "",
       color: isPending ? "red" : "black",
+      viewTransitionName: isTransitioning ? "slide" : "",
     };
   }}
 >
@@ -74,7 +83,7 @@ You can pass a render prop as children to customize the content of the `<NavLink
 
 ```tsx
 <NavLink to="/tasks">
-  {({ isActive, isPending }) => (
+  {({ isActive, isPending, isTransitioning }) => (
     <span className={isActive ? "active" : ""}>Tasks</span>
   )}
 </NavLink>
@@ -112,4 +121,60 @@ When a `NavLink` is active it will automatically apply `<a aria-current="page">`
 
 The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
 
+## `unstable_viewTransition`
+
+The `unstable_viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. By default, during the transition a `transitioning` class will be added to the `<a>` element that you can use to customize the view transition.
+
+```css
+a.transitioning p {
+  view-transition-name: "image-title";
+}
+
+a.transitioning img {
+  view-transition-name: "image-expand";
+}
+```
+
+```jsx
+<NavLink to={to} unstable_viewTransition>
+  <p>Image Number {idx}</p>
+  <img src={src} alt={`Img ${idx}`} />
+</NavLink>
+```
+
+You may also use the `className`/`style` props or the render props passed to `children` to further customize based on the `isTransitioning` value.
+
+```jsx
+<NavLink to={to} unstable_viewTransition>
+  {({ isTransitioning }) => (
+    <>
+      <p
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-title"
+            : "",
+        }}
+      >
+        Image Number {idx}
+      </p>
+      <img
+        src={src}
+        alt={`Img ${idx}`}
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-expand"
+            : "",
+        }}
+      />
+    </>
+  )}
+</NavLink>
+```
+
+<docs-warn>
+Please note that this API is marked unstable and may be subject to breaking changes without a major release.
+</docs-warn>
+
 [aria-current]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current
+[view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
+[use-view-transition-state]: ../hooks//use-view-transition-state

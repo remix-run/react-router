@@ -12,7 +12,7 @@ title: Link
 ```tsx
 declare function Link(props: LinkProps): React.ReactElement;
 
-interface LinkProps
+export interface LinkProps
   extends Omit<
     React.AnchorHTMLAttributes<HTMLAnchorElement>,
     "href"
@@ -23,6 +23,7 @@ interface LinkProps
   reloadDocument?: boolean;
   preventScrollReset?: boolean;
   relative?: "route" | "path";
+  unstable_viewTransition?: boolean;
 }
 
 type To = string | Partial<Path>;
@@ -146,8 +147,52 @@ let { state } = useLocation();
 
 The `reloadDocument` property can be used to skip client side routing and let the browser handle the transition normally (as if it were an `<a href>`).
 
+## `unstable_viewTransition`
+
+The `unstable_viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`:
+
+```jsx
+<Link to={to} unstable_viewTransition>
+```
+
+If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state]:
+
+```jsx
+function ImageLink(to) {
+  let isTransitioning = unstable_useViewTransitionState(to);
+  return (
+    <Link to={to} unstable_viewTransition>
+      <p
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-title"
+            : "",
+        }}
+      >
+        Image Number {idx}
+      </p>
+      <img
+        src={src}
+        alt={`Img ${idx}`}
+        style={{
+          viewTransitionName: isTransitioning
+            ? "image-expand"
+            : "",
+        }}
+      />
+    </Link>
+  );
+}
+```
+
+<docs-warn>
+Please note that this API is marked unstable and may be subject to breaking changes without a major release.
+</docs-warn>
+
 [link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
 [history-replace-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState
 [history-push-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/pushState
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
+[use-view-transition-state]: ../hooks//use-view-transition-state
+[view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
