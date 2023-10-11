@@ -170,7 +170,8 @@ export function RouterProvider({
     (newState: RouterState, { viewTransitionOpts }) => {
       if (
         !viewTransitionOpts ||
-        typeof document.startViewTransition !== "function"
+        router.window == null ||
+        typeof router.window.document.startViewTransition !== "function"
       ) {
         // Mid-navigation state update, or startViewTransition isn't available
         optInStartTransition(() => setStateImpl(newState));
@@ -194,7 +195,7 @@ export function RouterProvider({
         });
       }
     },
-    [optInStartTransition, transition, renderDfd]
+    [optInStartTransition, transition, renderDfd, router.window]
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -213,10 +214,10 @@ export function RouterProvider({
   // DOM and then wait on the Deferred to resolve (indicating the DOM update has
   // happened)
   React.useEffect(() => {
-    if (renderDfd && pendingState) {
+    if (renderDfd && pendingState && router.window) {
       let newState = pendingState;
       let renderPromise = renderDfd.promise;
-      let transition = document.startViewTransition(async () => {
+      let transition = router.window.document.startViewTransition(async () => {
         optInStartTransition(() => setStateImpl(newState));
         await renderPromise;
       });
@@ -228,7 +229,7 @@ export function RouterProvider({
       });
       setTransition(transition);
     }
-  }, [optInStartTransition, pendingState, renderDfd]);
+  }, [optInStartTransition, pendingState, renderDfd, router.window]);
 
   // When the new location finally renders and is committed to the DOM, this
   // effect will run to resolve the transition

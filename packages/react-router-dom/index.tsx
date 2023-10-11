@@ -237,6 +237,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    window: opts?.window,
   }).initialize();
 }
 
@@ -254,6 +255,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    window: opts?.window,
   }).initialize();
 }
 

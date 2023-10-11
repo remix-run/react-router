@@ -84,6 +84,14 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * Return the window associated with the router
+   */
+  get window(): RouterInit["window"];
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Initialize the router, including adding history listeners and kicking off
    * initial data fetches.  Returns a function to cleanup listeners and abort
    * any in-progress loads
@@ -2590,6 +2598,9 @@ export function createRouter(init: RouterInit): Router {
     },
     get routes() {
       return dataRoutes;
+    },
+    get window() {
+      return routerWindow;
     },
     initialize,
     subscribe,
