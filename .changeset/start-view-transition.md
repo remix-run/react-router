@@ -8,7 +8,7 @@ Add support for the [View Transitions API](https://developer.mozilla.org/en-US/d
 
 The simplest approach to enabling a View Transition in your React Router app is via the new `<Link unstable_viewTransition>` prop. This will cause the navigation DOM update to be wrapped in `document.startViewTransition` which will enable transitions for the DOM update. Without any additional CSS styles, you'll get a basic cross-fade animation for your page.
 
-If you need to apply more fine-grained styles for your animations, you can leverage the `unstable_useViewTransitionState` hook which will tell you when a transition is ion progress and you can use that to apply classes or styles:
+If you need to apply more fine-grained styles for your animations, you can leverage the `unstable_useViewTransitionState` hook which will tell you when a transition is in progress and you can use that to apply classes or styles:
 
 ```jsx
 function ImageLink(to, src, alt) {
@@ -40,5 +40,7 @@ a.transitioning img {
   <img src={src} alt={alt} />
 </NavLink>
 ```
+
+For an example usage of View Transitions with React Router, check out [our fork](https://github.com/brophdawg11/react-router-records) of the [Astro Records](https://github.com/Charca/astro-records) demo.
 
 For more information on using the View Transitions API, please refer to the [Smooth and simple transitions with the View Transitions API](https://developer.chrome.com/docs/web-platform/view-transitions/) guide from the Google Chrome team.
