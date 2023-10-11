@@ -21,8 +21,7 @@
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie": "^0.4.1",
     "set-cookie-parser": "^2.4.8",
-    "source-map": "^0.7.3",
-    "type-fest": "^4.0.0"
+    "source-map": "^0.7.3"
   },
   "devDependencies": {
     "@types/set-cookie-parser": "^2.4.1",
