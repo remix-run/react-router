@@ -1,0 +1,18 @@
+{
+  "mode": "pre",
+  "tag": "pre",
+  "initialVersions": {
+    "react-router": "6.16.0",
+    "react-router-dom": "6.16.0",
+    "react-router-dom-v5-compat": "6.16.0",
+    "react-router-native": "6.16.0",
+    "@remix-run/router": "1.9.0"
+  },
+  "changesets": [
+    "404-root-with-path",
+    "error-response-type",
+    "partial-future-config",
+    "soft-forks-cough",
+    "start-view-transition"
+  ]
+}

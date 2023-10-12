@@ -153,13 +153,16 @@ The `unstable_viewTransition` prop enables a [View Transition][view-transitions]
 
 ```jsx
 <Link to={to} unstable_viewTransition>
+  Click me
+</Link>
 ```
 
-If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state]:
+If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state] hook (or check out the `transitioning` class and `isTransitioning` render prop in [NavLink][navlink]):
 
 ```jsx
 function ImageLink(to) {
-  let isTransitioning = unstable_useViewTransitionState(to);
+  const isTransitioning =
+    unstable_useViewTransitionState(to);
   return (
     <Link to={to} unstable_viewTransition>
       <p
@@ -185,9 +188,9 @@ function ImageLink(to) {
 }
 ```
 
-<docs-warn>
-Please note that this API is marked unstable and may be subject to breaking changes without a major release.
-</docs-warn>
+<docs-warning>`unstable_viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
+
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
 
 [link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
@@ -196,3 +199,5 @@ Please note that this API is marked unstable and may be subject to breaking chan
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
 [use-view-transition-state]: ../hooks//use-view-transition-state
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
+[picking-a-router]: ../routers/picking-a-router
+[navlink]: ./nav-link

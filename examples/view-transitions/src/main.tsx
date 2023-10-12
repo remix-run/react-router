@@ -223,6 +223,7 @@ const router = createBrowserRouter([
   },
 ]);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function NavImage({ src, idx }: { src: string; idx: number }) {
   let href = `/images/${idx}`;
   let vt = unstable_useViewTransitionState(href);
