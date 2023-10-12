@@ -100,6 +100,42 @@ let currentRouter: Router | null = null;
 // A set of to-be-garbage-collected Deferred's to clean up at the end of a test
 let gcDfds = new Set<ReturnType<typeof createDeferred>>();
 
+// Reusable routes for a simple tasks app, for test cases that don't want
+// to create their own more complex routes
+export const TASK_ROUTES: TestRouteObject[] = [
+  {
+    id: "root",
+    path: "/",
+    loader: true,
+    hasErrorBoundary: true,
+    children: [
+      {
+        id: "index",
+        index: true,
+        loader: true,
+      },
+      {
+        id: "tasks",
+        path: "tasks",
+        loader: true,
+        action: true,
+        hasErrorBoundary: true,
+      },
+      {
+        id: "tasksId",
+        path: "tasks/:id",
+        loader: true,
+        action: true,
+        hasErrorBoundary: true,
+      },
+      {
+        id: "noLoader",
+        path: "no-loader",
+      },
+    ],
+  },
+];
+
 type SetupOpts = {
   routes: TestRouteObject[];
   basename?: string;
