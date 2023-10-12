@@ -4,12 +4,15 @@
  */
 import * as React from "react";
 import type {
+  DataRouteObject,
   FutureConfig,
   Location,
   NavigateOptions,
   NavigationType,
+  Navigator,
   RelativeRoutingType,
   RouteObject,
+  RouterProviderProps,
   To,
 } from "react-router";
 import {
@@ -26,9 +29,9 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
-  UNSAFE_ViewTransitionContext as ViewTransitionContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRouteId as useRouteId,
+  UNSAFE_useRoutesImpl as useRoutesImpl,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -43,6 +46,8 @@ import type {
   HydrationState,
   Router as RemixRouter,
   V7_FormMethod,
+  RouterState,
+  RouterSubscriber,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -143,7 +148,6 @@ export {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createMemoryRouter,
   createPath,
@@ -210,6 +214,9 @@ export {
 
 declare global {
   var __staticRouterHydrationData: HydrationState | undefined;
+  interface Document {
+    startViewTransition(cb: () => Promise<void> | void): ViewTransition;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -321,6 +328,29 @@ function deserializeErrors(
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
+//#region Contexts
+////////////////////////////////////////////////////////////////////////////////
+
+type ViewTransitionContextObject =
+  | {
+      isTransitioning: false;
+    }
+  | {
+      isTransitioning: true;
+      currentLocation: Location;
+      nextLocation: Location;
+    };
+
+const ViewTransitionContext = React.createContext<ViewTransitionContextObject>({
+  isTransitioning: false,
+});
+if (__DEV__) {
+  ViewTransitionContext.displayName = "ViewTransition";
+}
+
+//#endregion
+
+////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -347,6 +377,245 @@ function deserializeErrors(
 */
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
+
+function startTransitionSafe(cb: () => void) {
+  if (startTransitionImpl) {
+    startTransitionImpl(cb);
+  } else {
+    cb();
+  }
+}
+
+interface ViewTransition {
+  finished: Promise<void>;
+  ready: Promise<void>;
+  updateCallbackDone: Promise<void>;
+  skipTransition(): void;
+}
+
+class Deferred<T> {
+  status: "pending" | "resolved" | "rejected" = "pending";
+  promise: Promise<T>;
+  // @ts-expect-error - no initializer
+  resolve: (value: T) => void;
+  // @ts-expect-error - no initializer
+  reject: (reason?: unknown) => void;
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = (value) => {
+        if (this.status === "pending") {
+          this.status = "resolved";
+          resolve(value);
+        }
+      };
+      this.reject = (reason) => {
+        if (this.status === "pending") {
+          this.status = "rejected";
+          reject(reason);
+        }
+      };
+    });
+  }
+}
+
+/**
+ * Given a Remix Router instance, render the appropriate UI
+ */
+export function RouterProvider({
+  fallbackElement,
+  router,
+  future,
+}: RouterProviderProps): React.ReactElement {
+  let [state, setStateImpl] = React.useState(router.state);
+  let [pendingState, setPendingState] = React.useState<RouterState>();
+  let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
+  let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
+  let [transition, setTransition] = React.useState<ViewTransition>();
+  let [interruption, setInterruption] = React.useState<{
+    state: RouterState;
+    currentLocation: Location;
+    nextLocation: Location;
+  }>();
+  let { v7_startTransition } = future || {};
+
+  let optInStartTransition = React.useCallback(
+    (cb: () => void) => {
+      if (v7_startTransition) {
+        startTransitionSafe(cb);
+      } else {
+        cb();
+      }
+    },
+    [v7_startTransition]
+  );
+
+  let setState = React.useCallback<RouterSubscriber>(
+    (
+      newState: RouterState,
+      { unstable_viewTransitionOpts: viewTransitionOpts }
+    ) => {
+      if (
+        !viewTransitionOpts ||
+        router.window == null ||
+        typeof router.window.document.startViewTransition !== "function"
+      ) {
+        // Mid-navigation state update, or startViewTransition isn't available
+        optInStartTransition(() => setStateImpl(newState));
+      } else if (transition && renderDfd) {
+        // Interrupting an in-progress transition, cancel and let everything flush
+        // out, and then kick off a new transition from the interruption state
+        renderDfd.resolve();
+        transition.skipTransition();
+        setInterruption({
+          state: newState,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
+        });
+      } else {
+        // Completed navigation update with opted-in view transitions, let 'er rip
+        setPendingState(newState);
+        setVtContext({
+          isTransitioning: true,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
+        });
+      }
+    },
+    [optInStartTransition, transition, renderDfd, router.window]
+  );
+
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  // When we start a view transition, create a Deferred we can use for the
+  // eventual "completed" render
+  React.useEffect(() => {
+    if (vtContext.isTransitioning) {
+      setRenderDfd(new Deferred<void>());
+    }
+  }, [vtContext.isTransitioning]);
+
+  // Once the deferred is created, kick off startViewTransition() to update the
+  // DOM and then wait on the Deferred to resolve (indicating the DOM update has
+  // happened)
+  React.useEffect(() => {
+    if (renderDfd && pendingState && router.window) {
+      let newState = pendingState;
+      let renderPromise = renderDfd.promise;
+      let transition = router.window.document.startViewTransition(async () => {
+        optInStartTransition(() => setStateImpl(newState));
+        await renderPromise;
+      });
+      transition.finished.finally(() => {
+        setRenderDfd(undefined);
+        setTransition(undefined);
+        setPendingState(undefined);
+        setVtContext({ isTransitioning: false });
+      });
+      setTransition(transition);
+    }
+  }, [optInStartTransition, pendingState, renderDfd, router.window]);
+
+  // When the new location finally renders and is committed to the DOM, this
+  // effect will run to resolve the transition
+  React.useEffect(() => {
+    if (
+      renderDfd &&
+      pendingState &&
+      state.location.key === pendingState.location.key
+    ) {
+      renderDfd.resolve();
+    }
+  }, [renderDfd, transition, state.location, pendingState]);
+
+  // If we get interrupted with a new navigation during a transition, we skip
+  // the active transition, let it cleanup, then kick it off again here
+  React.useEffect(() => {
+    if (!vtContext.isTransitioning && interruption) {
+      setPendingState(interruption.state);
+      setVtContext({
+        isTransitioning: true,
+        currentLocation: interruption.currentLocation,
+        nextLocation: interruption.nextLocation,
+      });
+      setInterruption(undefined);
+    }
+  }, [vtContext.isTransitioning, interruption]);
+
+  let navigator = React.useMemo((): Navigator => {
+    return {
+      createHref: router.createHref,
+      encodeLocation: router.encodeLocation,
+      go: (n) => router.navigate(n),
+      push: (to, state, opts) =>
+        router.navigate(to, {
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+      replace: (to, state, opts) =>
+        router.navigate(to, {
+          replace: true,
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+    };
+  }, [router]);
+
+  let basename = router.basename || "/";
+
+  let dataRouterContext = React.useMemo(
+    () => ({
+      router,
+      navigator,
+      static: false,
+      basename,
+    }),
+    [router, navigator, basename]
+  );
+
+  // The fragment and {null} here are important!  We need them to keep React 18's
+  // useId happy when we are server-rendering since we may have a <script> here
+  // containing the hydrated server-side staticContext (from StaticRouterProvider).
+  // useId relies on the component tree structure to generate deterministic id's
+  // so we need to ensure it remains the same on the client even though
+  // we don't need the <script> tag
+  return (
+    <>
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={state}>
+          <ViewTransitionContext.Provider value={vtContext}>
+            <Router
+              basename={basename}
+              location={state.location}
+              navigationType={state.historyAction}
+              navigator={navigator}
+            >
+              {state.initialized ? (
+                <DataRoutes routes={router.routes} state={state} />
+              ) : (
+                fallbackElement
+              )}
+            </Router>
+          </ViewTransitionContext.Provider>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
+      {null}
+    </>
+  );
+}
+
+function DataRoutes({
+  routes,
+  state,
+}: {
+  routes: DataRouteObject[];
+  state: RouterState;
+}): React.ReactElement | null {
+  return useRoutesImpl(routes, undefined, state);
+}
 
 export interface BrowserRouterProps {
   basename?: string;
