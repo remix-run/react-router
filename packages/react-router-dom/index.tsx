@@ -1812,6 +1812,13 @@ function useViewTransitionState(
   opts: { relative?: RelativeRoutingType } = {}
 ) {
   let vtContext = React.useContext(ViewTransitionContext);
+
+  invariant(
+    vtContext != null,
+    "`unstable_useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+      "Did you accidentally import `RouterProvider` from `react-router`?"
+  );
+
   let { basename } = useDataRouterContext(
     DataRouterHook.useViewTransitionState
   );
