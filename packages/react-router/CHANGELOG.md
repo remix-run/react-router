@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.17.0-pre.1
+
+### Patch Changes
+
+- [REMOVE] fix lint issues ([#10930](https://github.com/remix-run/react-router/pull/10930))
+
 ## 6.17.0-pre.0
 
 ### Minor Changes
