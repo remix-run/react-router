@@ -188,9 +188,9 @@ function ImageLink(to) {
 }
 ```
 
-<docs-warn>
-Please note that this API is marked unstable and may be subject to breaking changes without a major release.
-</docs-warn>
+<docs-warning>`unstable_viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
+
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
 
 [link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
@@ -199,3 +199,4 @@ Please note that this API is marked unstable and may be subject to breaking chan
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
 [use-view-transition-state]: ../hooks//use-view-transition-state
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
+[picking-a-router]: ../routers/picking-a-router
