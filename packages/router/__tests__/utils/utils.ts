@@ -76,3 +76,18 @@ export function findRouteById(
 
   return foundRoute;
 }
+
+export function createRequest(path: string, opts?: RequestInit) {
+  return new Request(`http://localhost${path}`, opts);
+}
+
+export function createSubmitRequest(path: string, opts?: RequestInit) {
+  let searchParams = new URLSearchParams();
+  searchParams.append("key", "value");
+
+  return createRequest(path, {
+    method: "post",
+    body: searchParams,
+    ...opts,
+  });
+}

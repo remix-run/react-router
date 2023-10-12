@@ -21,9 +21,7 @@ import {
 // Private API
 import type {
   AgnosticRouteObject,
-  DeferredData,
   ShouldRevalidateFunctionArgs,
-  TrackedPromise,
 } from "../utils";
 import {
   AbortedDeferredError,
@@ -31,9 +29,21 @@ import {
   isRouteErrorResponse,
 } from "../utils";
 
-import type { TestRouteObject } from "./utils/setup-data-router";
-import { cleanup, createDeferred, setup } from "./utils/setup-data-router";
-import { createFormData, findRouteById, invariant, tick } from "./utils/utils";
+import {
+  deferredData,
+  trackedPromise,
+  urlMatch,
+} from "./utils/custom-matchers";
+import type { TestRouteObject } from "./utils/data-router-setup";
+import { cleanup, createDeferred, setup } from "./utils/data-router-setup";
+import {
+  createFormData,
+  createRequest,
+  createSubmitRequest,
+  findRouteById,
+  invariant,
+  tick,
+} from "./utils/utils";
 
 ///////////////////////////////////////////////////////////////////////////////
 //#region Types and Utils
@@ -58,86 +68,9 @@ declare global {
 }
 
 expect.extend({
-  // Custom matcher for asserting against URLs
-  URL(received, url) {
-    return {
-      message: () => `expected URL ${received.toString()} to equal URL ${url}`,
-      pass: received instanceof URL && received.toString() === url,
-    };
-  },
-  // Custom matcher for asserting deferred promise results for static handler
-  //  - expect(val).deferredData(false) => Unresolved promise
-  //  - expect(val).deferredData(false) => Resolved promise
-  //  - expect(val).deferredData(false, 201, { 'x-custom': 'yes' })
-  //      => Unresolved promise with status + headers
-  //  - expect(val).deferredData(true, 201, { 'x-custom': 'yes' })
-  //      => Resolved promise with status + headers
-  deferredData(received, done, status = 200, headers = {}) {
-    let deferredData = received as DeferredData;
-
-    return {
-      message: () =>
-        `expected done=${String(
-          done
-        )}/status=${status}/headers=${JSON.stringify(headers)}, ` +
-        `instead got done=${String(deferredData.done)}/status=${
-          deferredData.init!.status || 200
-        }/headers=${JSON.stringify(
-          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
-        )}`,
-      pass:
-        deferredData.done === done &&
-        (deferredData.init!.status || 200) === status &&
-        JSON.stringify(
-          Object.fromEntries(new Headers(deferredData.init!.headers).entries())
-        ) === JSON.stringify(headers),
-    };
-  },
-  // Custom matcher for asserting deferred promise results inside of `toEqual()`
-  //  - expect.trackedPromise()                  =>  pending promise
-  //  - expect.trackedPromise(value)             =>  promise resolved with `value`
-  //  - expect.trackedPromise(null, error)       =>  promise rejected with `error`
-  //  - expect.trackedPromise(null, null, true)  =>  promise aborted
-  trackedPromise(received, data, error, aborted = false) {
-    let promise = received as TrackedPromise;
-    let isTrackedPromise =
-      promise instanceof Promise && promise._tracked === true;
-
-    if (data != null) {
-      let dataMatches = promise._data === data;
-      return {
-        message: () => `expected ${received} to be a resolved deferred`,
-        pass: isTrackedPromise && dataMatches,
-      };
-    }
-
-    if (error != null) {
-      let errorMatches =
-        error instanceof Error
-          ? promise._error.toString() === error.toString()
-          : promise._error === error;
-      return {
-        message: () => `expected ${received} to be a rejected deferred`,
-        pass: isTrackedPromise && errorMatches,
-      };
-    }
-
-    if (aborted) {
-      let errorMatches = promise._error instanceof AbortedDeferredError;
-      return {
-        message: () => `expected ${received} to be an aborted deferred`,
-        pass: isTrackedPromise && errorMatches,
-      };
-    }
-
-    return {
-      message: () => `expected ${received} to be a pending deferred`,
-      pass:
-        isTrackedPromise &&
-        promise._data === undefined &&
-        promise._error === undefined,
-    };
-  },
+  deferredData,
+  trackedPromise,
+  urlMatch,
 });
 
 function initializeTmTest(init?: {
@@ -150,21 +83,6 @@ function initializeTmTest(init?: {
       loaderData: { root: "ROOT", index: "INDEX" },
     },
     ...(init?.url ? { initialEntries: [init.url] } : {}),
-  });
-}
-
-function createRequest(path: string, opts?: RequestInit) {
-  return new Request(`http://localhost${path}`, opts);
-}
-
-function createSubmitRequest(path: string, opts?: RequestInit) {
-  let searchParams = new URLSearchParams();
-  searchParams.append("key", "value");
-
-  return createRequest(path, {
-    method: "post",
-    body: searchParams,
-    ...opts,
   });
 }
 
@@ -1143,12 +1061,12 @@ describe("a router", () => {
       expect(rootLoader.mock.calls.length).toBe(1);
       let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
-        currentUrl: expect.URL("http://localhost/child"),
+        currentUrl: expect.urlMatch("http://localhost/child"),
         nextParams: {
           a: "aValue",
           b: "bValue",
         },
-        nextUrl: expect.URL("http://localhost/params/aValue/bValue"),
+        nextUrl: expect.urlMatch("http://localhost/params/aValue/bValue"),
         defaultShouldRevalidate: false,
         actionResult: undefined,
       };
@@ -1208,9 +1126,9 @@ describe("a router", () => {
       let arg = shouldRevalidate.mock.calls[0][0];
       let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
-        currentUrl: expect.URL("http://localhost/child"),
+        currentUrl: expect.urlMatch("http://localhost/child"),
         nextParams: {},
-        nextUrl: expect.URL("http://localhost/child"),
+        nextUrl: expect.urlMatch("http://localhost/child"),
         defaultShouldRevalidate: true,
         formMethod: "post",
         formAction: "/child",
@@ -1262,9 +1180,9 @@ describe("a router", () => {
       let arg = shouldRevalidate.mock.calls[0][0];
       let expectedArg: ShouldRevalidateFunctionArgs = {
         currentParams: {},
-        currentUrl: expect.URL("http://localhost/child"),
+        currentUrl: expect.urlMatch("http://localhost/child"),
         nextParams: {},
-        nextUrl: expect.URL("http://localhost/"),
+        nextUrl: expect.urlMatch("http://localhost/"),
         defaultShouldRevalidate: true,
         formMethod: "post",
         formAction: "/child",
@@ -1513,9 +1431,9 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(1);
       expect(shouldRevalidate.mock.calls[0][0]).toMatchObject({
         currentParams: {},
-        currentUrl: expect.URL("http://localhost/"),
+        currentUrl: expect.urlMatch("http://localhost/"),
         nextParams: {},
-        nextUrl: expect.URL("http://localhost/child"),
+        nextUrl: expect.urlMatch("http://localhost/child"),
         defaultShouldRevalidate: false,
       });
       expect(router.state.fetchers.get(key)).toMatchObject({
@@ -1528,9 +1446,9 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(2);
       expect(shouldRevalidate.mock.calls[1][0]).toMatchObject({
         currentParams: {},
-        currentUrl: expect.URL("http://localhost/child"),
+        currentUrl: expect.urlMatch("http://localhost/child"),
         nextParams: {},
-        nextUrl: expect.URL("http://localhost/"),
+        nextUrl: expect.urlMatch("http://localhost/"),
         defaultShouldRevalidate: false,
       });
       expect(router.state.fetchers.get(key)).toMatchObject({
@@ -1552,9 +1470,9 @@ describe("a router", () => {
       expect(shouldRevalidate.mock.calls.length).toBe(3);
       expect(shouldRevalidate.mock.calls[2][0]).toMatchObject({
         currentParams: {},
-        currentUrl: expect.URL("http://localhost/"),
+        currentUrl: expect.urlMatch("http://localhost/"),
         nextParams: {},
-        nextUrl: expect.URL("http://localhost/child"),
+        nextUrl: expect.urlMatch("http://localhost/child"),
         formAction: "/child",
         formData: createFormData({}),
         formEncType: "application/x-www-form-urlencoded",
