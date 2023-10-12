@@ -177,4 +177,3 @@ Please note that this API is marked unstable and may be subject to breaking chan
 
 [aria-current]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
-[use-view-transition-state]: ../hooks//use-view-transition-state

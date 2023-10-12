@@ -153,13 +153,16 @@ The `unstable_viewTransition` prop enables a [View Transition][view-transitions]
 
 ```jsx
 <Link to={to} unstable_viewTransition>
+  Click me
+</Link>
 ```
 
 If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state]:
 
 ```jsx
 function ImageLink(to) {
-  let isTransitioning = unstable_useViewTransitionState(to);
+  const isTransitioning =
+    unstable_useViewTransitionState(to);
   return (
     <Link to={to} unstable_viewTransition>
       <p
