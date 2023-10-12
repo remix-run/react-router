@@ -207,7 +207,6 @@ export {
   UNSAFE_NavigationContext,
   UNSAFE_LocationContext,
   UNSAFE_RouteContext,
-  UNSAFE_ViewTransitionContext,
   UNSAFE_useRouteId,
 } from "react-router";
 //#endregion
@@ -347,6 +346,8 @@ const ViewTransitionContext = React.createContext<ViewTransitionContextObject>({
 if (__DEV__) {
   ViewTransitionContext.displayName = "ViewTransition";
 }
+
+export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 
 //#endregion
 
@@ -1823,33 +1824,34 @@ function useViewTransitionState(
     DataRouterHook.useViewTransitionState
   );
   let path = useResolvedPath(to, { relative: opts.relative });
-  if (vtContext.isTransitioning) {
-    let currentPath =
-      stripBasename(vtContext.currentLocation.pathname, basename) ||
-      vtContext.currentLocation.pathname;
-    let nextPath =
-      stripBasename(vtContext.nextLocation.pathname, basename) ||
-      vtContext.nextLocation.pathname;
-
-    // Transition is active if we're going to or coming from the indicated
-    // destination.  This ensures that other PUSH navigations that reverse
-    // an indicated transition apply.  I.e., on the list view you have:
-    //
-    //   <NavLink to="/details/1" unstable_viewTransition>
-    //
-    // If you click the breadcrumb back to the list view:
-    //
-    //   <NavLink to="/list" unstable_viewTransition>
-    //
-    // We should apply the transition because it's indicated as active going
-    // from /list -> /details/1 and therefore should be active on the reverse
-    // (even though this isn't strictly a POP reverse)
-    return (
-      matchPath(path.pathname, nextPath) != null ||
-      matchPath(path.pathname, currentPath) != null
-    );
+  if (!vtContext.isTransitioning) {
+    return false;
   }
-  return false;
+
+  let currentPath =
+    stripBasename(vtContext.currentLocation.pathname, basename) ||
+    vtContext.currentLocation.pathname;
+  let nextPath =
+    stripBasename(vtContext.nextLocation.pathname, basename) ||
+    vtContext.nextLocation.pathname;
+
+  // Transition is active if we're going to or coming from the indicated
+  // destination.  This ensures that other PUSH navigations that reverse
+  // an indicated transition apply.  I.e., on the list view you have:
+  //
+  //   <NavLink to="/details/1" unstable_viewTransition>
+  //
+  // If you click the breadcrumb back to the list view:
+  //
+  //   <NavLink to="/list" unstable_viewTransition>
+  //
+  // We should apply the transition because it's indicated as active going
+  // from /list -> /details/1 and therefore should be active on the reverse
+  // (even though this isn't strictly a POP reverse)
+  return (
+    matchPath(path.pathname, nextPath) != null ||
+    matchPath(path.pathname, currentPath) != null
+  );
 }
 
 export { useViewTransitionState as unstable_useViewTransitionState };

@@ -34,6 +34,7 @@ import {
   Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_ViewTransitionContext as ViewTransitionContext,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -131,15 +132,17 @@ export function StaticRouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <Router
-            basename={dataRouterContext.basename}
-            location={state.location}
-            navigationType={state.historyAction}
-            navigator={dataRouterContext.navigator}
-            static={dataRouterContext.static}
-          >
-            <DataRoutes routes={router.routes} state={state} />
-          </Router>
+          <ViewTransitionContext.Provider value={{ isTransitioning: false }}>
+            <Router
+              basename={dataRouterContext.basename}
+              location={state.location}
+              navigationType={state.historyAction}
+              navigator={dataRouterContext.navigator}
+              static={dataRouterContext.static}
+            >
+              <DataRoutes routes={router.routes} state={state} />
+            </Router>
+          </ViewTransitionContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {hydrateScript ? (
