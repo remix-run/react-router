@@ -36,7 +36,7 @@ import {
   createRoutesFromElements,
 } from "react-router-dom";
 
-import createDeferred from "../../router/__tests__/utils/createDeferred";
+import { createDeferred } from "../../router/__tests__/utils/utils";
 import getHtml from "../../react-router/__tests__/utils/getHtml";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
