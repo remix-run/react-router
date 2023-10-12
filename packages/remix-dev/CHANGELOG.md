@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.1.0-pre.0
+
+### Patch Changes
+
+- sourcemap takes into account special chars in output file ([#7574](https://github.com/remix-run/remix/pull/7574))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.1.0-pre.0`
+  - `@remix-run/serve@2.1.0-pre.0`
+
 ## 2.0.1
 
 ### Patch Changes
