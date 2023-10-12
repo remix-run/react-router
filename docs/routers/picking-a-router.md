@@ -109,6 +109,7 @@ The following APIs are introduced in React Router 6.4 and will only work when us
 - [`useRouteError`][userouteerror]
 - [`useRouteLoaderData`][userouteloaderdata]
 - [`useSubmit`][usesubmit]
+- `startViewTransition` support on [Link][viewtransition-link] and [useNavigate][viewtransition-navigate]
 
 [createbrowserrouter]: ./create-browser-router
 [createhashrouter]: ./create-hash-router
@@ -142,3 +143,5 @@ The following APIs are introduced in React Router 6.4 and will only work when us
 [userouteerror]: ../hooks/use-route-error
 [userouteloaderdata]: ../hooks/use-route-loader-data
 [usesubmit]: ../hooks/use-submit
+[viewtransition-link]: ../components/link#unstable_viewtransition
+[viewtransition-navigate]: ../hooks/use-navigate#optionsunstable_viewtransition
