@@ -4,14 +4,14 @@ import { urlMatch } from "./utils/custom-matchers";
 import { cleanup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
-interface CustomMatchers<R = jest.Expect> {
+interface CustomMatchers {
   urlMatch(url: string);
 }
 
 declare global {
   namespace jest {
     interface Expect extends CustomMatchers {}
-    interface Matchers<R> extends CustomMatchers<R> {}
+    interface Matchers extends CustomMatchers {}
     interface InverseAsymmetricMatchers extends CustomMatchers {}
   }
 }

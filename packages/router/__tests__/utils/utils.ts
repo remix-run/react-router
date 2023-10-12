@@ -1,4 +1,4 @@
-import { AgnosticDataRouteObject } from "../../utils";
+import type { AgnosticDataRouteObject } from "../../utils";
 
 export async function tick() {
   await new Promise((r) => setTimeout(r, 0));
