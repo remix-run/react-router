@@ -1190,7 +1190,6 @@ enum DataRouterHook {
   UseSubmit = "useSubmit",
   UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
-  useViewTransitionStates = "useViewTransitionStates",
   useViewTransitionState = "useViewTransitionState",
 }
 
