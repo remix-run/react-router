@@ -30,7 +30,8 @@ import { createServerHandoffString } from "./serverHandoff";
 
 export type RequestHandler = (
   request: Request,
-  loadContext?: AppLoadContext
+  loadContext?: AppLoadContext,
+  args?: { criticalCss?: string }
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
@@ -58,7 +59,11 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       }
     });
 
-  return async function requestHandler(request, loadContext = {}) {
+  return async function requestHandler(
+    request,
+    loadContext = {},
+    { criticalCss } = {}
+  ) {
     let url = new URL(request.url);
 
     let matches = matchServerRoutes(routes, url.pathname);
@@ -109,7 +114,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         staticHandler,
         request,
         loadContext,
-        handleError
+        handleError,
+        criticalCss
       );
     }
 
@@ -209,7 +215,8 @@ async function handleDocumentRequestRR(
   staticHandler: StaticHandler,
   request: Request,
   loadContext: AppLoadContext,
-  handleError: (err: unknown) => void
+  handleError: (err: unknown) => void,
+  criticalCss?: string
 ) {
   let context;
   try {
@@ -242,8 +249,10 @@ async function handleDocumentRequestRR(
     manifest: build.assets,
     routeModules: createEntryRouteModules(build.routes),
     staticHandlerContext: context,
+    criticalCss,
     serverHandoffString: createServerHandoffString({
       url: context.location.pathname,
+      criticalCss,
       state: {
         loaderData: context.loaderData,
         actionData: context.actionData,

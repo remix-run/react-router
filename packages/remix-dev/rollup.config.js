@@ -23,7 +23,12 @@ module.exports = function rollup() {
       external(id) {
         return isBareModuleId(id);
       },
-      input: `${sourceDir}/index.ts`,
+      input: [
+        `${sourceDir}/index.ts`,
+        // Since we're using a dynamic require for the Vite plugin, we
+        // need to tell Rollup it's an entry point
+        `${sourceDir}/vite/plugin.ts`,
+      ],
       output: {
         banner: createBanner("@remix-run/dev", version),
         dir: outputDist,
@@ -43,6 +48,7 @@ module.exports = function rollup() {
             { src: `LICENSE.md`, dest: [outputDir, sourceDir] },
             { src: `${sourceDir}/package.json`, dest: [outputDir, outputDist] },
             { src: `${sourceDir}/README.md`, dest: outputDir },
+            { src: `${sourceDir}/vite/static`, dest: `${outputDist}/vite` },
             {
               src: `${sourceDir}/config/defaults`,
               dest: [`${outputDir}/config`, `${outputDist}/config`],

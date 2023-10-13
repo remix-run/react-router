@@ -7,6 +7,7 @@ import type { RouteModules, EntryRouteModule } from "./routeModules";
 export interface EntryContext {
   manifest: AssetsManifest;
   routeModules: RouteModules<EntryRouteModule>;
+  criticalCss?: string;
   serverHandoffString?: string;
   staticHandlerContext: StaticHandlerContext;
   future: FutureConfig;
