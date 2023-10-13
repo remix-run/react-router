@@ -9,6 +9,8 @@ import type {
   Action as NavigationType,
   RelativeRoutingType,
   Router,
+  RouterState,
+  RouterSubscriber,
   StaticHandlerContext,
   To,
   TrackedPromise,
@@ -82,6 +84,13 @@ export const DataRouterStateContext = React.createContext<
 >(null);
 if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
+}
+
+export const DataRouterSubscriberContext = React.createContext<
+  [RouterState, RouterSubscriber] | null
+>(null);
+if (__DEV__) {
+  DataRouterSubscriberContext.displayName = "DataRouterSubscriber";
 }
 
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);

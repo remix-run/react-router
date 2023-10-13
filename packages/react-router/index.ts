@@ -86,6 +86,7 @@ import type {
 import {
   DataRouterContext,
   DataRouterStateContext,
+  DataRouterSubscriberContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -305,6 +306,7 @@ export function createMemoryRouter(
 export {
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  DataRouterSubscriberContext as UNSAFE_DataRouterSubscriberContext,
   LocationContext as UNSAFE_LocationContext,
   NavigationContext as UNSAFE_NavigationContext,
   RouteContext as UNSAFE_RouteContext,
