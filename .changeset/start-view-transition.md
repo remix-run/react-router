@@ -1,6 +1,5 @@
 ---
 "react-router-dom": minor
-"@remix-run/router": minor
 ---
 
 Add support for the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition) via `document.startViewTransition` to enable CSS animated transitions on SPA navigations in your application.
