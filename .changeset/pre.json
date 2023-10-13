@@ -11,6 +11,7 @@
   "changesets": [
     "404-root-with-path",
     "error-response-type",
+    "lift-start-view-transition",
     "mighty-moles-compete",
     "partial-future-config",
     "soft-forks-cough",

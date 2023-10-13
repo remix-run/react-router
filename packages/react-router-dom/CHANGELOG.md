@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.17.0-pre.2
+
+### Patch Changes
+
+- Export a separate `RouterProvider` from `react-router-dom` with `startViewTransition` support ([#10928](https://github.com/remix-run/react-router/pull/10928))
+- Updated dependencies:
+  - `react-router@6.17.0-pre.2`
+
 ## 6.17.0-pre.1
 
 ### Patch Changes
