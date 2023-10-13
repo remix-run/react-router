@@ -4,12 +4,15 @@
  */
 import * as React from "react";
 import type {
+  DataRouteObject,
   FutureConfig,
   Location,
   NavigateOptions,
   NavigationType,
+  Navigator,
   RelativeRoutingType,
   RouteObject,
+  RouterProviderProps,
   To,
 } from "react-router";
 import {
@@ -28,7 +31,7 @@ import {
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRouteId as useRouteId,
-  UNSAFE_DataRouterSubscriberContext as DataRouterSubscriberContext,
+  UNSAFE_useRoutesImpl as useRoutesImpl,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -145,7 +148,6 @@ export {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createMemoryRouter,
   createPath,
@@ -417,20 +419,14 @@ class Deferred<T> {
   }
 }
 
-interface TransitionProviderProps {
-  router: RemixRouter;
-  future?: Partial<FutureConfig>;
-  children: React.ReactNode | React.ReactNode[];
-}
-
 /**
- * Enable support for View Transitions in a RouterProvider
+ * Given a Remix Router instance, render the appropriate UI
  */
-export function TransitionProvider({
+export function RouterProvider({
+  fallbackElement,
   router,
   future,
-  children,
-}: TransitionProviderProps): React.ReactElement {
+}: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
@@ -491,6 +487,10 @@ export function TransitionProvider({
     [optInStartTransition, transition, renderDfd, router.window]
   );
 
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
@@ -546,13 +546,76 @@ export function TransitionProvider({
     }
   }, [vtContext.isTransitioning, interruption]);
 
-  return (
-    <DataRouterSubscriberContext.Provider value={[state, setState]}>
-      <ViewTransitionContext.Provider value={vtContext}>
-        {children}
-      </ViewTransitionContext.Provider>
-    </DataRouterSubscriberContext.Provider>
+  let navigator = React.useMemo((): Navigator => {
+    return {
+      createHref: router.createHref,
+      encodeLocation: router.encodeLocation,
+      go: (n) => router.navigate(n),
+      push: (to, state, opts) =>
+        router.navigate(to, {
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+      replace: (to, state, opts) =>
+        router.navigate(to, {
+          replace: true,
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+    };
+  }, [router]);
+
+  let basename = router.basename || "/";
+
+  let dataRouterContext = React.useMemo(
+    () => ({
+      router,
+      navigator,
+      static: false,
+      basename,
+    }),
+    [router, navigator, basename]
   );
+
+  // The fragment and {null} here are important!  We need them to keep React 18's
+  // useId happy when we are server-rendering since we may have a <script> here
+  // containing the hydrated server-side staticContext (from StaticRouterProvider).
+  // useId relies on the component tree structure to generate deterministic id's
+  // so we need to ensure it remains the same on the client even though
+  // we don't need the <script> tag
+  return (
+    <>
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={state}>
+          <ViewTransitionContext.Provider value={vtContext}>
+            <Router
+              basename={basename}
+              location={state.location}
+              navigationType={state.historyAction}
+              navigator={navigator}
+            >
+              {state.initialized ? (
+                <DataRoutes routes={router.routes} state={state} />
+              ) : (
+                fallbackElement
+              )}
+            </Router>
+          </ViewTransitionContext.Provider>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
+      {null}
+    </>
+  );
+}
+
+function DataRoutes({
+  routes,
+  state,
+}: {
+  routes: DataRouteObject[];
+  state: RouterState;
+}): React.ReactElement | null {
+  return useRoutesImpl(routes, undefined, state);
 }
 
 export interface BrowserRouterProps {

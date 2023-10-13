@@ -19,7 +19,6 @@ import {
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
 import {
-  UNSAFE_DataRouterSubscriberContext as DataRouterSubscriberContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRoutesImpl as useRoutesImpl,
 } from "react-router";
@@ -131,23 +130,21 @@ export function StaticRouterProvider({
 
   return (
     <>
-      <DataRouterSubscriberContext.Provider value={null}>
-        <ViewTransitionContext.Provider value={{ isTransitioning: false }}>
-          <DataRouterContext.Provider value={dataRouterContext}>
-            <DataRouterStateContext.Provider value={state}>
-              <Router
-                basename={dataRouterContext.basename}
-                location={state.location}
-                navigationType={state.historyAction}
-                navigator={dataRouterContext.navigator}
-                static={dataRouterContext.static}
-              >
-                <DataRoutes routes={router.routes} state={state} />
-              </Router>
-            </DataRouterStateContext.Provider>
-          </DataRouterContext.Provider>
-        </ViewTransitionContext.Provider>
-      </DataRouterSubscriberContext.Provider>
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={state}>
+          <ViewTransitionContext.Provider value={{ isTransitioning: false }}>
+            <Router
+              basename={dataRouterContext.basename}
+              location={state.location}
+              navigationType={state.historyAction}
+              navigator={dataRouterContext.navigator}
+              static={dataRouterContext.static}
+            >
+              <DataRoutes routes={router.routes} state={state} />
+            </Router>
+          </ViewTransitionContext.Provider>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
       {hydrateScript ? (
         <script
           suppressHydrationWarning

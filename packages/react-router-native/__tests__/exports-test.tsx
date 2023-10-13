@@ -4,7 +4,6 @@ import * as ReactRouterNative from "react-router-native";
 let nonReExportedKeys = new Set([
   "UNSAFE_mapRouteProperties",
   "UNSAFE_useRoutesImpl",
-  "UNSAFE_DataRouterSubscriberContext",
   "UNSAFE_ViewTransitionContext",
 ]);
 

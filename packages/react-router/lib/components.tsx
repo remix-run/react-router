@@ -35,7 +35,6 @@ import {
   AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
-  DataRouterSubscriberContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -93,35 +92,23 @@ export function RouterProvider({
   router,
   future,
 }: RouterProviderProps): React.ReactElement {
-  let ctx = React.useContext(DataRouterSubscriberContext);
-  let ctxState = ctx ? ctx[0] : null;
-  let ctxSetState = ctx ? ctx[1] : null;
-  let [localState, localSetStateImpl] = React.useState(router.state);
+  let [state, setStateImpl] = React.useState(router.state);
   let { v7_startTransition } = future || {};
 
   let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState) => {
       if (v7_startTransition && startTransitionImpl) {
-        startTransitionImpl(() => localSetStateImpl(newState));
+        startTransitionImpl(() => setStateImpl(newState));
       } else {
-        localSetStateImpl(newState);
+        setStateImpl(newState);
       }
     },
-    [localSetStateImpl, v7_startTransition]
+    [setStateImpl, v7_startTransition]
   );
-
-  // If we're inside a DataRouterSubscriberContext that needs fine-grained
-  // control of the state updates (for startViewTransition), then prefer those
-  // over our own state/setStateImpl
-  let state = ctxState || localState;
-  let subscriber = ctxSetState || setState;
 
   // Need to use a layout effect here so we are subscribed early enough to
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
-  React.useLayoutEffect(
-    () => router.subscribe(subscriber),
-    [router, subscriber]
-  );
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
   let navigator = React.useMemo((): Navigator => {
     return {

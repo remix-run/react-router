@@ -34,7 +34,6 @@ import {
   useMatches,
   useSearchParams,
   createRoutesFromElements,
-  TransitionProvider,
 } from "react-router-dom";
 
 import createDeferred from "../../router/__tests__/utils/createDeferred";
@@ -6007,11 +6006,7 @@ function testDomRouter(
           ],
           { window: testWindow }
         );
-        render(
-          <TransitionProvider router={router}>
-            <RouterProvider router={router} />
-          </TransitionProvider>
-        );
+        render(<RouterProvider router={router} />);
 
         expect(screen.getByText("Home")).toBeDefined();
         fireEvent.click(screen.getByText("/a"));
