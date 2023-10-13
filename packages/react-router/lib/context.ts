@@ -84,22 +84,6 @@ if (__DEV__) {
   DataRouterStateContext.displayName = "DataRouterState";
 }
 
-export type ViewTransitionContextObject =
-  | {
-      isTransitioning: false;
-    }
-  | {
-      isTransitioning: true;
-      currentLocation: Location;
-      nextLocation: Location;
-    };
-
-export const ViewTransitionContext =
-  React.createContext<ViewTransitionContextObject>({ isTransitioning: false });
-if (__DEV__) {
-  ViewTransitionContext.displayName = "ViewTransition";
-}
-
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 if (__DEV__) {
   AwaitContext.displayName = "Await";
