@@ -1,5 +1,13 @@
 # `@remix-run/server-runtime`
 
+## 2.1.0
+
+### Patch Changes
+
+- Emulate types for `JSON.parse(JSON.stringify(x))` in `SerializeFrom` ([#7605](https://github.com/remix-run/remix/pull/7605))
+  - Notably, type fields that are only assignable to `undefined` after serialization are now omitted since `JSON.stringify |> JSON.parse` will omit them -- see test cases for examples
+  - Also fixes type errors when upgrading to v2 from 1.19
+
 ## 2.0.1
 
 No significant changes to this package were made in this release. [See the releases page on GitHub](https://github.com/remix-run/remix/releases/tag/remix%402.0.1) for an overview of all changes in v2.0.1.
