@@ -16,7 +16,7 @@ const enqueueUpdate = debounce(async () => {
     manifest = JSON.parse(JSON.stringify(__remixManifest));
 
     routeUpdates.forEach(async (route) => {
-      manifest[route.id] = route;
+      manifest.routes[route.id] = route;
 
       let imported = await __hmr_import(route.url + "?t=" + Date.now());
       let routeModule = {
