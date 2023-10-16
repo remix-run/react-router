@@ -24,7 +24,7 @@
     "@babel/plugin-syntax-decorators": "^7.22.10",
     "@babel/plugin-syntax-jsx": "^7.21.4",
     "@babel/preset-typescript": "^7.21.5",
-    "@babel/traverse": "^7.21.5",
+    "@babel/traverse": "^7.23.2",
     "@mdx-js/mdx": "^2.3.0",
     "@npmcli/package-json": "^4.0.1",
     "@remix-run/server-runtime": "2.1.0",
