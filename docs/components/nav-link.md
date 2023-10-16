@@ -171,10 +171,9 @@ You may also use the `className`/`style` props or the render props passed to `ch
 </NavLink>
 ```
 
-<docs-warn>
+<docs-warning>
 Please note that this API is marked unstable and may be subject to breaking changes without a major release.
-</docs-warn>
+</docs-warning>
 
 [aria-current]: https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
-[use-view-transition-state]: ../hooks//use-view-transition-state

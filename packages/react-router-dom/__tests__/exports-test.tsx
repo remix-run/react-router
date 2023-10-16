@@ -6,15 +6,22 @@ let nonReExportedKeys = new Set([
   "UNSAFE_useRoutesImpl",
 ]);
 
+let modifiedExports = new Set(["RouterProvider"]);
+
 describe("react-router-dom", () => {
   for (let key in ReactRouter) {
-    if (!nonReExportedKeys.has(key)) {
-      it(`re-exports ${key} from react-router`, () => {
-        expect(ReactRouterDOM[key]).toBe(ReactRouter[key]);
-      });
-    } else {
+    if (nonReExportedKeys.has(key)) {
       it(`does not re-export ${key} from react-router`, () => {
         expect(ReactRouterDOM[key]).toBe(undefined);
+      });
+    } else if (modifiedExports.has(key)) {
+      it(`re-exports a different version of ${key}`, () => {
+        expect(ReactRouterDOM[key]).toBeDefined();
+        expect(ReactRouterDOM[key]).not.toBe(ReactRouter[key]);
+      });
+    } else {
+      it(`re-exports ${key} from react-router`, () => {
+        expect(ReactRouterDOM[key]).toBe(ReactRouter[key]);
       });
     }
   }
