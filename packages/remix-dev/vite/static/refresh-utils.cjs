@@ -159,8 +159,12 @@ function channel() {
   return { promise, resolve, reject };
 }
 
-import.meta.hot.on("remix:hmr-route", async ({ route }) => {
-  routeUpdates.set(route.id, route);
+import.meta.hot.on("remix:hmr", async ({ route }) => {
+  window.__remixClearCriticalCss();
+
+  if (route) {
+    routeUpdates.set(route.id, route);
+  }
 });
 
 exports.__hmr_import = __hmr_import;

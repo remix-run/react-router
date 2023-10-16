@@ -749,20 +749,17 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       async handleHotUpdate({ server, file, modules }) {
         let pluginConfig = await resolvePluginConfig();
         let route = getRoute(pluginConfig, file);
-        if (route) {
-          server.ws.send({
-            type: "custom",
-            event: "remix:hmr-route",
-            data: {
-              route: await getRouteMetadata(
-                pluginConfig,
-                viteChildCompiler,
-                route
-              ),
-            },
-          });
-          return modules;
-        }
+
+        server.ws.send({
+          type: "custom",
+          event: "remix:hmr",
+          data: {
+            route: route
+              ? await getRouteMetadata(pluginConfig, viteChildCompiler, route)
+              : null,
+          },
+        });
+
         return modules;
       },
     },
