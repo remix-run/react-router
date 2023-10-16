@@ -5,6 +5,32 @@ new: true
 
 # `<Form>`
 
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function Form(props: FormProps): React.ReactElement;
+
+interface FormProps
+  extends React.FormHTMLAttributes<HTMLFormElement> {
+  method?: "get" | "post" | "put" | "patch" | "delete";
+  encType?:
+    | "application/x-www-form-urlencoded"
+    | "multipart/form-data"
+    | "text/plain";
+  action?: string;
+  onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  preventScrollReset?: boolean;
+  relative?: "route" | "path";
+  reloadDocument?: boolean;
+  replace?: boolean;
+  state?: any;
+  unstable_viewTransition?: boolean;
+}
+```
+
+</details>
+
 The Form component is a wrapper around a plain HTML [form][htmlform] that emulates the browser for client side routing and data mutations. It is _not_ a form validation/state management library like you might be used to in the React ecosystem (for that, we recommend the browser's built in [HTML Form Validation][formvalidation] and data validation on your backend server).
 
 <docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
@@ -243,6 +269,12 @@ If you are using [`<ScrollRestoration>`][scrollrestoration], this lets you preve
 
 See also: [`<Link preventScrollReset>`][link-preventscrollreset]
 
+## `unstable_viewTransition`
+
+The `unstable_viewTransition` prop enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state].
+
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
+
 # Examples
 
 TODO: More examples
@@ -349,3 +381,5 @@ You can access those values from the `request.url`
 [scrollrestoration]: ./scroll-restoration
 [link-preventscrollreset]: ./link#preventscrollreset
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
+[use-view-transition-state]: ../hooks//use-view-transition-state
+[view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API

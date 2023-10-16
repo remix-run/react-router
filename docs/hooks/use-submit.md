@@ -150,7 +150,7 @@ submit(null, {
 <Form action="/logout" method="post" />;
 ```
 
-Because submissions are navigations, the options may also contain the other navigation related props from [`<Form>`][form] such as `replace`, `state`, `preventScrollReset`, `relative`, etc.
+Because submissions are navigations, the options may also contain the other navigation related props from [`<Form>`][form] such as `replace`, `state`, `preventScrollReset`, `relative`, `unstable_viewTransition` etc.
 
 [pickingarouter]: ../routers/picking-a-router
 [form]: ../components/form

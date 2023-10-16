@@ -1,0 +1,93 @@
+.is-loading {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: lightgrey;
+  padding: 0.5rem;
+}
+
+/* Magicawesomeness */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-from-right {
+  from {
+    transform: translateX(500px);
+  }
+}
+
+@keyframes slide-to-left {
+  to {
+    transform: translateX(-500px);
+  }
+}
+
+.content {
+  view-transition-name: content;
+}
+
+::view-transition-old(content) {
+  animation: 500ms cubic-bezier(0.4, 0, 1, 1) both fade-out,
+    500ms cubic-bezier(0.4, 0, 0.2, 1) both slide-to-left;
+}
+
+::view-transition-new(content) {
+  animation: 500ms cubic-bezier(0, 0, 0.2, 1) 90ms both fade-in,
+    500ms cubic-bezier(0.4, 0, 0.2, 1) both slide-from-right;
+}
+
+.image-list > div {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 10px;
+}
+
+.image-list img {
+  max-width: 100%;
+  contain: layout;
+}
+
+.image-list a.transitioning img {
+  view-transition-name: image-expand;
+}
+
+.image-detail img {
+  max-width: 100%;
+  contain: layout;
+}
+
+.image-detail img {
+  view-transition-name: image-expand;
+}
+
+::view-transition-old(image-expand):not(:only-child),
+::view-transition-new(image-expand):not(:only-child) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.image-list p {
+  width: fit-content;
+}
+
+.image-list a.transitioning p {
+  view-transition-name: image-title;
+}
+
+.image-detail h1 {
+  width: fit-content;
+}
+
+.image-detail h1 {
+  view-transition-name: image-title;
+}

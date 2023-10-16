@@ -69,7 +69,7 @@ export interface StaticRouterProps {
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
- * A <Router> that may not navigate to any other location. This is useful
+ * A `<Router>` that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
 export function StaticRouter({

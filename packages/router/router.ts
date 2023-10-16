@@ -84,6 +84,14 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * Return the window associated with the router
+   */
+  get window(): RouterInit["window"];
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Initialize the router, including adding history listeners and kicking off
    * initial data fetches.  Returns a function to cleanup listeners and abort
    * any in-progress loads
@@ -388,11 +396,21 @@ export interface StaticHandler {
   ): Promise<any>;
 }
 
+type ViewTransitionOpts = {
+  currentLocation: Location;
+  nextLocation: Location;
+};
+
 /**
  * Subscriber function signature for changes to router state
  */
 export interface RouterSubscriber {
-  (state: RouterState): void;
+  (
+    state: RouterState,
+    opts: {
+      unstable_viewTransitionOpts?: ViewTransitionOpts;
+    }
+  ): void;
 }
 
 /**
@@ -423,6 +441,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
+  unstable_viewTransition?: boolean;
 };
 
 // Only allowed for submission navigations
@@ -690,6 +709,8 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
 
+const TRANSITIONS_STORAGE_KEY = "remix-router-transitions";
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -814,6 +835,18 @@ export function createRouter(init: RouterInit): Router {
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
 
+  // Should the current navigation enable document.startViewTransition?
+  let pendingViewTransitionEnabled = false;
+
+  // Store applied view transitions so we can apply them on POP
+  let appliedViewTransitions: Map<string, Set<string>> = new Map<
+    string,
+    Set<string>
+  >();
+
+  // Cleanup function for persisting applied transitions to sessionStorage
+  let removePageHideEventListener: (() => void) | null = null;
+
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
@@ -929,6 +962,17 @@ export function createRouter(init: RouterInit): Router {
       }
     );
 
+    if (isBrowser) {
+      // FIXME: This feels gross.  How can we cleanup the lines between
+      // scrollRestoration/appliedTransitions persistance?
+      restoreAppliedTransitions(routerWindow, appliedViewTransitions);
+      let _saveAppliedTransitions = () =>
+        persistAppliedTransitions(routerWindow, appliedViewTransitions);
+      routerWindow.addEventListener("pagehide", _saveAppliedTransitions);
+      removePageHideEventListener = () =>
+        routerWindow.removeEventListener("pagehide", _saveAppliedTransitions);
+    }
+
     // Kick off initial data load if needed.  Use Pop to avoid modifying history
     // Note we don't do any handling of lazy here.  For SPA's it'll get handled
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
@@ -946,6 +990,9 @@ export function createRouter(init: RouterInit): Router {
     if (unlistenHistory) {
       unlistenHistory();
     }
+    if (removePageHideEventListener) {
+      removePageHideEventListener();
+    }
     subscribers.clear();
     pendingNavigationController && pendingNavigationController.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(key));
@@ -959,12 +1006,17 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Update our state and notify the calling context of the change
-  function updateState(newState: Partial<RouterState>): void {
+  function updateState(
+    newState: Partial<RouterState>,
+    viewTransitionOpts?: ViewTransitionOpts
+  ): void {
     state = {
       ...state,
       ...newState,
     };
-    subscribers.forEach((subscriber) => subscriber(state));
+    subscribers.forEach((subscriber) =>
+      subscriber(state, { unstable_viewTransitionOpts: viewTransitionOpts })
+    );
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -1045,26 +1097,64 @@ export function createRouter(init: RouterInit): Router {
       init.history.replace(location, location.state);
     }
 
-    updateState({
-      ...newState, // matches, errors, fetchers go through as-is
-      actionData,
-      loaderData,
-      historyAction: pendingAction,
-      location,
-      initialized: true,
-      navigation: IDLE_NAVIGATION,
-      revalidation: "idle",
-      restoreScrollPosition: getSavedScrollPosition(
+    let viewTransitionOpts: ViewTransitionOpts | undefined;
+
+    // On POP, enable transitions if they were enabled on the original navigation
+    if (pendingAction === HistoryAction.Pop) {
+      // Forward takes precedence so they behave like the original navigation
+      let priorPaths = appliedViewTransitions.get(state.location.pathname);
+      if (priorPaths && priorPaths.has(location.pathname)) {
+        viewTransitionOpts = {
+          currentLocation: state.location,
+          nextLocation: location,
+        };
+      } else if (appliedViewTransitions.has(location.pathname)) {
+        // If we don't have a previous forward nav, assume we're popping back to
+        // the new location and enable if that location previously enabled
+        viewTransitionOpts = {
+          currentLocation: location,
+          nextLocation: state.location,
+        };
+      }
+    } else if (pendingViewTransitionEnabled) {
+      // Store the applied transition on PUSH/REPLACE
+      let toPaths = appliedViewTransitions.get(state.location.pathname);
+      if (toPaths) {
+        toPaths.add(location.pathname);
+      } else {
+        toPaths = new Set<string>([location.pathname]);
+        appliedViewTransitions.set(state.location.pathname, toPaths);
+      }
+      viewTransitionOpts = {
+        currentLocation: state.location,
+        nextLocation: location,
+      };
+    }
+
+    updateState(
+      {
+        ...newState, // matches, errors, fetchers go through as-is
+        actionData,
+        loaderData,
+        historyAction: pendingAction,
         location,
-        newState.matches || state.matches
-      ),
-      preventScrollReset,
-      blockers,
-    });
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        revalidation: "idle",
+        restoreScrollPosition: getSavedScrollPosition(
+          location,
+          newState.matches || state.matches
+        ),
+        preventScrollReset,
+        blockers,
+      },
+      viewTransitionOpts
+    );
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
     pendingPreventScrollReset = false;
+    pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -1173,6 +1263,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
+      enableViewTransition: opts && opts.unstable_viewTransition,
     });
   }
 
@@ -1223,6 +1314,7 @@ export function createRouter(init: RouterInit): Router {
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
       replace?: boolean;
+      enableViewTransition?: boolean;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1238,6 +1330,8 @@ export function createRouter(init: RouterInit): Router {
     // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
+
+    pendingViewTransitionEnabled = (opts && opts.enableViewTransition) === true;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
@@ -2505,6 +2599,9 @@ export function createRouter(init: RouterInit): Router {
     get routes() {
       return dataRoutes;
     },
+    get window() {
+      return routerWindow;
+    },
     initialize,
     subscribe,
     enableScrollRestoration,
@@ -3074,7 +3171,7 @@ export function getStaticContextFromError(
 }
 
 function isSubmissionNavigation(
-  opts: RouterNavigateOptions
+  opts: BaseNavigateOrFetchOptions
 ): opts is SubmissionNavigateOptions {
   return (
     opts != null &&
@@ -3158,7 +3255,7 @@ function normalizeNavigateOptions(
   normalizeFormMethod: boolean,
   isFetcher: boolean,
   path: string,
-  opts?: RouterNavigateOptions
+  opts?: BaseNavigateOrFetchOptions
 ): {
   path: string;
   submission?: Submission;
@@ -4074,9 +4171,12 @@ function getShortCircuitMatches(routes: AgnosticDataRouteObject[]): {
   route: AgnosticDataRouteObject;
 } {
   // Prefer a root layout route if present, otherwise shim in a route object
-  let route = routes.find((r) => r.index || !r.path || r.path === "/") || {
-    id: `__shim-error-route__`,
-  };
+  let route =
+    routes.length === 1
+      ? routes[0]
+      : routes.find((r) => r.index || !r.path || r.path === "/") || {
+          id: `__shim-error-route__`,
+        };
 
   return {
     matches: [
@@ -4492,4 +4592,49 @@ function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
   };
   return fetcher;
 }
+
+function restoreAppliedTransitions(
+  _window: Window,
+  transitions: Map<string, Set<string>>
+) {
+  try {
+    let sessionPositions = _window.sessionStorage.getItem(
+      TRANSITIONS_STORAGE_KEY
+    );
+    if (sessionPositions) {
+      let json = JSON.parse(sessionPositions);
+      for (let [k, v] of Object.entries(json || {})) {
+        if (v && Array.isArray(v)) {
+          transitions.set(k, new Set(v || []));
+        }
+      }
+    }
+  } catch (e) {
+    // no-op, use default empty object
+  }
+}
+
+function persistAppliedTransitions(
+  _window: Window,
+  transitions: Map<string, Set<string>>
+) {
+  if (transitions.size > 0) {
+    let json: Record<string, string[]> = {};
+    for (let [k, v] of transitions) {
+      json[k] = [...v];
+    }
+    try {
+      _window.sessionStorage.setItem(
+        TRANSITIONS_STORAGE_KEY,
+        JSON.stringify(json)
+      );
+    } catch (error) {
+      warning(
+        false,
+        `Failed to save applied view transitions in sessionStorage (${error}).`
+      );
+    }
+  }
+}
+
 //#endregion

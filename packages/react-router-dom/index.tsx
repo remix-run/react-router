@@ -4,12 +4,15 @@
  */
 import * as React from "react";
 import type {
+  DataRouteObject,
   FutureConfig,
   Location,
   NavigateOptions,
   NavigationType,
+  Navigator,
   RelativeRoutingType,
   RouteObject,
+  RouterProviderProps,
   To,
 } from "react-router";
 import {
@@ -28,6 +31,7 @@ import {
   UNSAFE_RouteContext as RouteContext,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRouteId as useRouteId,
+  UNSAFE_useRoutesImpl as useRoutesImpl,
 } from "react-router";
 import type {
   BrowserHistory,
@@ -42,6 +46,8 @@ import type {
   HydrationState,
   Router as RemixRouter,
   V7_FormMethod,
+  RouterState,
+  RouterSubscriber,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -52,6 +58,7 @@ import {
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
+  matchPath,
 } from "@remix-run/router";
 
 import type {
@@ -141,7 +148,6 @@ export {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createMemoryRouter,
   createPath,
@@ -207,6 +213,9 @@ export {
 
 declare global {
   var __staticRouterHydrationData: HydrationState | undefined;
+  interface Document {
+    startViewTransition(cb: () => Promise<void> | void): ViewTransition;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,6 +243,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    window: opts?.window,
   }).initialize();
 }
 
@@ -251,6 +261,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    window: opts?.window,
   }).initialize();
 }
 
@@ -316,6 +327,31 @@ function deserializeErrors(
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
+//#region Contexts
+////////////////////////////////////////////////////////////////////////////////
+
+type ViewTransitionContextObject =
+  | {
+      isTransitioning: false;
+    }
+  | {
+      isTransitioning: true;
+      currentLocation: Location;
+      nextLocation: Location;
+    };
+
+const ViewTransitionContext = React.createContext<ViewTransitionContextObject>({
+  isTransitioning: false,
+});
+if (__DEV__) {
+  ViewTransitionContext.displayName = "ViewTransition";
+}
+
+export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
+
+//#endregion
+
+////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -342,6 +378,245 @@ function deserializeErrors(
 */
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
+
+function startTransitionSafe(cb: () => void) {
+  if (startTransitionImpl) {
+    startTransitionImpl(cb);
+  } else {
+    cb();
+  }
+}
+
+interface ViewTransition {
+  finished: Promise<void>;
+  ready: Promise<void>;
+  updateCallbackDone: Promise<void>;
+  skipTransition(): void;
+}
+
+class Deferred<T> {
+  status: "pending" | "resolved" | "rejected" = "pending";
+  promise: Promise<T>;
+  // @ts-expect-error - no initializer
+  resolve: (value: T) => void;
+  // @ts-expect-error - no initializer
+  reject: (reason?: unknown) => void;
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = (value) => {
+        if (this.status === "pending") {
+          this.status = "resolved";
+          resolve(value);
+        }
+      };
+      this.reject = (reason) => {
+        if (this.status === "pending") {
+          this.status = "rejected";
+          reject(reason);
+        }
+      };
+    });
+  }
+}
+
+/**
+ * Given a Remix Router instance, render the appropriate UI
+ */
+export function RouterProvider({
+  fallbackElement,
+  router,
+  future,
+}: RouterProviderProps): React.ReactElement {
+  let [state, setStateImpl] = React.useState(router.state);
+  let [pendingState, setPendingState] = React.useState<RouterState>();
+  let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
+  let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
+  let [transition, setTransition] = React.useState<ViewTransition>();
+  let [interruption, setInterruption] = React.useState<{
+    state: RouterState;
+    currentLocation: Location;
+    nextLocation: Location;
+  }>();
+  let { v7_startTransition } = future || {};
+
+  let optInStartTransition = React.useCallback(
+    (cb: () => void) => {
+      if (v7_startTransition) {
+        startTransitionSafe(cb);
+      } else {
+        cb();
+      }
+    },
+    [v7_startTransition]
+  );
+
+  let setState = React.useCallback<RouterSubscriber>(
+    (
+      newState: RouterState,
+      { unstable_viewTransitionOpts: viewTransitionOpts }
+    ) => {
+      if (
+        !viewTransitionOpts ||
+        router.window == null ||
+        typeof router.window.document.startViewTransition !== "function"
+      ) {
+        // Mid-navigation state update, or startViewTransition isn't available
+        optInStartTransition(() => setStateImpl(newState));
+      } else if (transition && renderDfd) {
+        // Interrupting an in-progress transition, cancel and let everything flush
+        // out, and then kick off a new transition from the interruption state
+        renderDfd.resolve();
+        transition.skipTransition();
+        setInterruption({
+          state: newState,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
+        });
+      } else {
+        // Completed navigation update with opted-in view transitions, let 'er rip
+        setPendingState(newState);
+        setVtContext({
+          isTransitioning: true,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
+        });
+      }
+    },
+    [optInStartTransition, transition, renderDfd, router.window]
+  );
+
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  // When we start a view transition, create a Deferred we can use for the
+  // eventual "completed" render
+  React.useEffect(() => {
+    if (vtContext.isTransitioning) {
+      setRenderDfd(new Deferred<void>());
+    }
+  }, [vtContext.isTransitioning]);
+
+  // Once the deferred is created, kick off startViewTransition() to update the
+  // DOM and then wait on the Deferred to resolve (indicating the DOM update has
+  // happened)
+  React.useEffect(() => {
+    if (renderDfd && pendingState && router.window) {
+      let newState = pendingState;
+      let renderPromise = renderDfd.promise;
+      let transition = router.window.document.startViewTransition(async () => {
+        optInStartTransition(() => setStateImpl(newState));
+        await renderPromise;
+      });
+      transition.finished.finally(() => {
+        setRenderDfd(undefined);
+        setTransition(undefined);
+        setPendingState(undefined);
+        setVtContext({ isTransitioning: false });
+      });
+      setTransition(transition);
+    }
+  }, [optInStartTransition, pendingState, renderDfd, router.window]);
+
+  // When the new location finally renders and is committed to the DOM, this
+  // effect will run to resolve the transition
+  React.useEffect(() => {
+    if (
+      renderDfd &&
+      pendingState &&
+      state.location.key === pendingState.location.key
+    ) {
+      renderDfd.resolve();
+    }
+  }, [renderDfd, transition, state.location, pendingState]);
+
+  // If we get interrupted with a new navigation during a transition, we skip
+  // the active transition, let it cleanup, then kick it off again here
+  React.useEffect(() => {
+    if (!vtContext.isTransitioning && interruption) {
+      setPendingState(interruption.state);
+      setVtContext({
+        isTransitioning: true,
+        currentLocation: interruption.currentLocation,
+        nextLocation: interruption.nextLocation,
+      });
+      setInterruption(undefined);
+    }
+  }, [vtContext.isTransitioning, interruption]);
+
+  let navigator = React.useMemo((): Navigator => {
+    return {
+      createHref: router.createHref,
+      encodeLocation: router.encodeLocation,
+      go: (n) => router.navigate(n),
+      push: (to, state, opts) =>
+        router.navigate(to, {
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+      replace: (to, state, opts) =>
+        router.navigate(to, {
+          replace: true,
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+    };
+  }, [router]);
+
+  let basename = router.basename || "/";
+
+  let dataRouterContext = React.useMemo(
+    () => ({
+      router,
+      navigator,
+      static: false,
+      basename,
+    }),
+    [router, navigator, basename]
+  );
+
+  // The fragment and {null} here are important!  We need them to keep React 18's
+  // useId happy when we are server-rendering since we may have a <script> here
+  // containing the hydrated server-side staticContext (from StaticRouterProvider).
+  // useId relies on the component tree structure to generate deterministic id's
+  // so we need to ensure it remains the same on the client even though
+  // we don't need the <script> tag
+  return (
+    <>
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={state}>
+          <ViewTransitionContext.Provider value={vtContext}>
+            <Router
+              basename={basename}
+              location={state.location}
+              navigationType={state.historyAction}
+              navigator={navigator}
+            >
+              {state.initialized ? (
+                <DataRoutes routes={router.routes} state={state} />
+              ) : (
+                fallbackElement
+              )}
+            </Router>
+          </ViewTransitionContext.Provider>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
+      {null}
+    </>
+  );
+}
+
+function DataRoutes({
+  routes,
+  state,
+}: {
+  routes: DataRouteObject[];
+  state: RouterState;
+}): React.ReactElement | null {
+  return useRoutesImpl(routes, undefined, state);
+}
 
 export interface BrowserRouterProps {
   basename?: string;
@@ -502,6 +777,7 @@ export interface LinkProps
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
+  unstable_viewTransition?: boolean;
 }
 
 const isBrowser =
@@ -512,7 +788,7 @@ const isBrowser =
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
- * The public API for rendering a history-aware <a>.
+ * The public API for rendering a history-aware `<a>`.
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -525,6 +801,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       to,
       preventScrollReset,
+      unstable_viewTransition,
       ...rest
     },
     ref
@@ -574,6 +851,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       preventScrollReset,
       relative,
+      unstable_viewTransition,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -601,29 +879,26 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
+type NavLinkRenderProps = {
+  isActive: boolean;
+  isPending: boolean;
+  isTransitioning: boolean;
+};
+
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
-  children?:
-    | React.ReactNode
-    | ((props: { isActive: boolean; isPending: boolean }) => React.ReactNode);
+  children?: React.ReactNode | ((props: NavLinkRenderProps) => React.ReactNode);
   caseSensitive?: boolean;
-  className?:
-    | string
-    | ((props: {
-        isActive: boolean;
-        isPending: boolean;
-      }) => string | undefined);
+  className?: string | ((props: NavLinkRenderProps) => string | undefined);
   end?: boolean;
   style?:
     | React.CSSProperties
-    | ((props: {
-        isActive: boolean;
-        isPending: boolean;
-      }) => React.CSSProperties | undefined);
+    | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
+  unstable_viewTransition?: boolean;
 }
 
 /**
- * A <Link> wrapper that knows if it's "active" or not.
+ * A `<Link>` wrapper that knows if it's "active" or not.
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
@@ -634,6 +909,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       end = false,
       style: styleProp,
       to,
+      unstable_viewTransition,
       children,
       ...rest
     },
@@ -643,6 +919,12 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
     let { navigator } = React.useContext(NavigationContext);
+    let isTransitioning =
+      routerState != null &&
+      // Conditional usage is OK here because the usage of a data router is static
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      useViewTransitionState(path) &&
+      unstable_viewTransition === true;
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -674,11 +956,17 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
           nextLocationPathname.startsWith(toPathname) &&
           nextLocationPathname.charAt(toPathname.length) === "/"));
 
+    let renderProps = {
+      isActive,
+      isPending,
+      isTransitioning,
+    };
+
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
 
     let className: string | undefined;
     if (typeof classNameProp === "function") {
-      className = classNameProp({ isActive, isPending });
+      className = classNameProp(renderProps);
     } else {
       // If the className prop is not a function, we use a default `active`
       // class for <NavLink />s that are active. In v5 `active` was the default
@@ -689,15 +977,14 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         classNameProp,
         isActive ? "active" : null,
         isPending ? "pending" : null,
+        isTransitioning ? "transitioning" : null,
       ]
         .filter(Boolean)
         .join(" ");
     }
 
     let style =
-      typeof styleProp === "function"
-        ? styleProp({ isActive, isPending })
-        : styleProp;
+      typeof styleProp === "function" ? styleProp(renderProps) : styleProp;
 
     return (
       <Link
@@ -707,10 +994,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         style={style}
         to={to}
+        unstable_viewTransition={unstable_viewTransition}
       >
-        {typeof children === "function"
-          ? children({ isActive, isPending })
-          : children}
+        {typeof children === "function" ? children(renderProps) : children}
       </Link>
     );
   }
@@ -779,6 +1065,11 @@ export interface FormProps extends FetcherFormProps {
    * State object to add to the history stack entry for this navigation
    */
   state?: any;
+
+  /**
+   * Enable view transitions on this Form navigation
+   */
+  unstable_viewTransition?: boolean;
 }
 
 /**
@@ -822,6 +1113,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
       submit,
       relative,
       preventScrollReset,
+      unstable_viewTransition,
       ...props
     },
     forwardedRef
@@ -847,6 +1139,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         state,
         relative,
         preventScrollReset,
+        unstable_viewTransition,
       });
     };
 
@@ -897,6 +1190,7 @@ enum DataRouterHook {
   UseSubmit = "useSubmit",
   UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
+  useViewTransitionState = "useViewTransitionState",
 }
 
 enum DataRouterStateHook {
@@ -935,12 +1229,14 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state,
     preventScrollReset,
     relative,
+    unstable_viewTransition,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
+    unstable_viewTransition?: boolean;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -959,7 +1255,13 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
             ? replaceProp
             : createPath(location) === createPath(path);
 
-        navigate(to, { replace, state, preventScrollReset, relative });
+        navigate(to, {
+          replace,
+          state,
+          preventScrollReset,
+          relative,
+          unstable_viewTransition,
+        });
       }
     },
     [
@@ -972,6 +1274,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       to,
       preventScrollReset,
       relative,
+      unstable_viewTransition,
     ]
   );
 }
@@ -1103,6 +1406,7 @@ export function useSubmit(): SubmitFunction {
         replace: options.replace,
         state: options.state,
         fromRouteId: currentRouteId,
+        unstable_viewTransition: options.unstable_viewTransition,
       });
     },
     [router, basename, currentRouteId]
@@ -1323,10 +1627,17 @@ function useScrollRestoration({
         let key = (getKey ? getKey(location, matches) : null) || location.key;
         savedScrollPositions[key] = window.scrollY;
       }
-      sessionStorage.setItem(
-        storageKey || SCROLL_RESTORATION_STORAGE_KEY,
-        JSON.stringify(savedScrollPositions)
-      );
+      try {
+        sessionStorage.setItem(
+          storageKey || SCROLL_RESTORATION_STORAGE_KEY,
+          JSON.stringify(savedScrollPositions)
+        );
+      } catch (error) {
+        warning(
+          false,
+          `Failed to save scroll positions in sessionStorage, <ScrollRestoration /> will not work properly (${error}).`
+        );
+      }
       window.history.scrollRestoration = "auto";
     }, [storageKey, getKey, navigation.state, location, matches])
   );
@@ -1487,5 +1798,61 @@ function usePrompt({ when, message }: { when: boolean; message: string }) {
 }
 
 export { usePrompt as unstable_usePrompt };
+
+/**
+ * Return a boolean indicating if there is an active view transition to the
+ * given href.  You can use this value to render CSS classes or viewTransitionName
+ * styles onto your elements
+ *
+ * @param href The destination href
+ * @param [opts.relative] Relative routing type ("route" | "path")
+ */
+function useViewTransitionState(
+  to: To,
+  opts: { relative?: RelativeRoutingType } = {}
+) {
+  let vtContext = React.useContext(ViewTransitionContext);
+
+  invariant(
+    vtContext != null,
+    "`unstable_useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+      "Did you accidentally import `RouterProvider` from `react-router`?"
+  );
+
+  let { basename } = useDataRouterContext(
+    DataRouterHook.useViewTransitionState
+  );
+  let path = useResolvedPath(to, { relative: opts.relative });
+  if (!vtContext.isTransitioning) {
+    return false;
+  }
+
+  let currentPath =
+    stripBasename(vtContext.currentLocation.pathname, basename) ||
+    vtContext.currentLocation.pathname;
+  let nextPath =
+    stripBasename(vtContext.nextLocation.pathname, basename) ||
+    vtContext.nextLocation.pathname;
+
+  // Transition is active if we're going to or coming from the indicated
+  // destination.  This ensures that other PUSH navigations that reverse
+  // an indicated transition apply.  I.e., on the list view you have:
+  //
+  //   <NavLink to="/details/1" unstable_viewTransition>
+  //
+  // If you click the breadcrumb back to the list view:
+  //
+  //   <NavLink to="/list" unstable_viewTransition>
+  //
+  // We should apply the transition because it's indicated as active going
+  // from /list -> /details/1 and therefore should be active on the reverse
+  // (even though this isn't strictly a POP reverse)
+  return (
+    matchPath(path.pathname, nextPath) != null ||
+    matchPath(path.pathname, currentPath) != null
+  );
+}
+
+export { useViewTransitionState as unstable_useViewTransitionState };
 
 //#endregion

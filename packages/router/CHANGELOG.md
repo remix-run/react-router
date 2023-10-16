@@ -1,5 +1,16 @@
 # `@remix-run/router`
 
+## 1.10.0
+
+### Minor Changes
+
+- Add experimental support for the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition) by allowing users to opt-into view transitions on navigations via the new `unstable_viewTransition` option to `router.navigate` ([#10916](https://github.com/remix-run/react-router/pull/10916))
+
+### Patch Changes
+
+- Allow 404 detection to leverage root route error boundary if path contains a URL segment ([#10852](https://github.com/remix-run/react-router/pull/10852))
+- Fix `ErrorResponse` type to avoid leaking internal field ([#10876](https://github.com/remix-run/react-router/pull/10876))
+
 ## 1.9.0
 
 ### Minor Changes

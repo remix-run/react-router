@@ -85,9 +85,20 @@ function EditContact() {
 }
 ```
 
+## `options.unstable_viewTransition`
+
+The `unstable_viewTransition` option enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state].
+
+<docs-warning>`unstable_viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
+
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
+
 [link]: ../components/link
 [redirect]: ../fetch/redirect
 [loaders]: ../route/loader
 [actions]: ../route/action
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
 [scrollrestoration]: ../components/scroll-restoration
+[use-view-transition-state]: ../hooks//use-view-transition-state
+[view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
+[picking-a-router]: ../routers/picking-a-router

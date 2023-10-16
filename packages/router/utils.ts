@@ -68,8 +68,8 @@ type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 
 /**
- * Users can specify either lowercase or uppercase form methods on <Form>,
- * useSubmit(), <fetcher.Form>, etc.
+ * Users can specify either lowercase or uppercase form methods on `<Form>`,
+ * useSubmit(), `<fetcher.Form>`, etc.
  */
 export type HTMLFormMethod = LowerCaseFormMethod | UpperCaseFormMethod;
 
@@ -1533,11 +1533,21 @@ export const redirectDocument: RedirectFunction = (url, init) => {
   return response;
 };
 
+export type ErrorResponse = {
+  status: number;
+  statusText: string;
+  data: any;
+};
+
 /**
  * @private
  * Utility class we use to hold auto-unwrapped 4xx/5xx Response bodies
+ *
+ * We don't export the class for public use since it's an implementation
+ * detail, but we export the interface above so folks can build their own
+ * abstractions around instances via isRouteErrorResponse()
  */
-export class ErrorResponseImpl {
+export class ErrorResponseImpl implements ErrorResponse {
   status: number;
   statusText: string;
   data: any;
@@ -1561,11 +1571,6 @@ export class ErrorResponseImpl {
     }
   }
 }
-
-// We don't want the class exported since usage of it at runtime is an
-// implementation detail, but we do want to export the shape so folks can
-// build their own abstractions around instances via isRouteErrorResponse()
-export type ErrorResponse = InstanceType<typeof ErrorResponseImpl>;
 
 /**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx

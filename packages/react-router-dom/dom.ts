@@ -193,6 +193,11 @@ export interface SubmitOptions {
    * navigation when using the <ScrollRestoration> component
    */
   preventScrollReset?: boolean;
+
+  /**
+   * Enable view transitions on this submission navigation
+   */
+  unstable_viewTransition?: boolean;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([

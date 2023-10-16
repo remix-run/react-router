@@ -6,6 +6,7 @@ import type {
   RelativeRoutingType,
   Router as RemixRouter,
   RouterState,
+  RouterSubscriber,
   To,
   TrackedPromise,
 } from "@remix-run/router";
@@ -56,7 +57,7 @@ export interface FutureConfig {
 export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -91,18 +92,22 @@ export function RouterProvider({
   router,
   future,
 }: RouterProviderProps): React.ReactElement {
-  // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   let [state, setStateImpl] = React.useState(router.state);
   let { v7_startTransition } = future || {};
-  let setState = React.useCallback(
+
+  let setState = React.useCallback<RouterSubscriber>(
     (newState: RouterState) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
-        : setStateImpl(newState);
+      if (v7_startTransition && startTransitionImpl) {
+        startTransitionImpl(() => setStateImpl(newState));
+      } else {
+        setStateImpl(newState);
+      }
     },
     [setStateImpl, v7_startTransition]
   );
+
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
   let navigator = React.useMemo((): Navigator => {
@@ -184,7 +189,7 @@ export interface MemoryRouterProps {
 }
 
 /**
- * A <Router> that stores all entries in memory.
+ * A `<Router>` that stores all entries in memory.
  *
  * @see https://reactrouter.com/router-components/memory-router
  */
@@ -368,9 +373,9 @@ export interface RouterProps {
 /**
  * Provides location context for the rest of the app.
  *
- * Note: You usually won't render a <Router> directly. Instead, you'll render a
- * router that is more specific to your environment such as a <BrowserRouter>
- * in web browsers or a <StaticRouter> for server rendering.
+ * Note: You usually won't render a `<Router>` directly. Instead, you'll render a
+ * router that is more specific to your environment such as a `<BrowserRouter>`
+ * in web browsers or a `<StaticRouter>` for server rendering.
  *
  * @see https://reactrouter.com/router-components/router
  */
@@ -451,7 +456,7 @@ export interface RoutesProps {
 }
 
 /**
- * A container for a nested tree of <Route> elements that renders the branch
+ * A container for a nested tree of `<Route>` elements that renders the branch
  * that best matches the current location.
  *
  * @see https://reactrouter.com/components/routes
@@ -593,7 +598,7 @@ class AwaitErrorBoundary extends React.Component<
 
 /**
  * @private
- * Indirection to leverage useAsyncValue for a render-prop API on <Await>
+ * Indirection to leverage useAsyncValue for a render-prop API on `<Await>`
  */
 function ResolveAwait({
   children,
