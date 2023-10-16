@@ -1,5 +1,15 @@
 # `react-router`
 
+## 6.17.0
+
+### Patch Changes
+
+- Export a separate `RouterProvider` from `react-router-dom` with `startViewTransition` support ([#10928](https://github.com/remix-run/react-router/pull/10928))
+- [REMOVE] fix lint issues ([#10930](https://github.com/remix-run/react-router/pull/10930))
+- Fix `RouterProvider` `future` prop type to be a `Partial<FutureConfig>` so that not all flags must be specified ([#10900](https://github.com/remix-run/react-router/pull/10900))
+- Updated dependencies:
+  - `@remix-run/router@1.10.0`
+
 ## 6.17.0-pre.2
 
 ### Patch Changes
