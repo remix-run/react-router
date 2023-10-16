@@ -1,5 +1,13 @@
 # `@remix-run/express`
 
+## 2.1.0
+
+### Patch Changes
+
+- Flush headers for `text/event-stream` responses ([#7619](https://github.com/remix-run/remix/pull/7619))
+- Updated dependencies:
+  - `@remix-run/node@2.1.0`
+
 ## 2.0.1
 
 ### Patch Changes
