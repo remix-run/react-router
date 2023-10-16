@@ -1,26 +1,17 @@
 # `@remix-run/testing`
 
-## 2.1.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Stable router version ([#7677](https://github.com/remix-run/remix/pull/7677))
-- Updated dependencies:
-  - `@remix-run/react@2.1.0-pre.1`
-  - `@remix-run/node@2.1.0-pre.1`
-
-## 2.1.0-pre.0
+## 2.1.0
 
 ### Minor Changes
 
-- Remove the `unstable_` prefix from `createRemixStub`. After real-world experience, we're confident in the API and ready to commit to it. ([#7647](https://github.com/remix-run/remix/pull/7647))
-  - Note: This involves 1 small breaking change. The `<RemixStub remixConfigFuture>` prop has been renamed to `<RemixStub future>`
+- Remove the `unstable_` prefix from `createRemixStub` - after real-world experience, we're confident in the API and ready to commit to it ([#7647](https://github.com/remix-run/remix/pull/7647))
+  - **Note**: This involves 1 small breaking change. The `<RemixStub remixConfigFuture>` prop has been renamed to `<RemixStub future>`
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@remix-run/react@2.1.0-pre.0`
-  - `@remix-run/node@2.1.0-pre.0`
+  - `@remix-run/react@2.1.0`
+  - `@remix-run/node@2.1.0`
 
 ## 2.0.1
 
