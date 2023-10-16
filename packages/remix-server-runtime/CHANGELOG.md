@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 2.1.0-pre.1
+
+### Patch Changes
+
+- [REMOVE] Stable router version ([#7677](https://github.com/remix-run/remix/pull/7677))
+
 ## 2.1.0-pre.0
 
 ### Patch Changes
