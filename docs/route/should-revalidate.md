@@ -31,7 +31,7 @@ interface ShouldRevalidateFunctionArgs {
 
 </details>
 
-This function allows you opt-out of revalidation for a route's loader as an optimization.
+This function allows you opt-out of revalidation for a route's [loader][loader] as an optimization.
 
 <docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
 
@@ -41,11 +41,16 @@ There are several instances where data is revalidated, keeping your UI in sync w
 - After an [`action`][action] is called from a [`<fetcher.Form>`][fetcher]
 - After an [`action`][action] is called from [`useSubmit`][usesubmit]
 - After an [`action`][action] is called from a [`fetcher.submit`][fetcher]
+- When an explicit revalidation is triggered via [`useRevalidator`][userevalidator]
 - When the [URL params][params] change for an already rendered route
 - When the URL Search params change
 - When navigating to the same URL as the current URL
 
 If you define `shouldRevalidate` on a route, it will first check the function before calling the route loader for new data. If the function returns `false`, then the loader _will not_ be called and the existing data for that loader will persist on the page.
+
+<docs-info>
+Fetcher loads also revalidate, but because they load a specific URL, they don't have to worry about the URL-driven revalidation scenarios above.  Fetcher loads only revalidate by default after action submissions and explicit revalidation requests.
+</docs-info>
 
 ```jsx lines=[5-9,14-15,21-22]
 <Route
@@ -84,6 +89,6 @@ Note that this is only for data that has already been loaded, is currently rende
 [fetcher]: ../hooks/use-fetcher
 [usesubmit]: ../hooks/use-submit
 [loader]: ./loader
-[useloaderdata]: ../hooks/use-loader-data
 [params]: ./route#dynamic-segments
 [pickingarouter]: ../routers/picking-a-router
+[userevalidator]: ../hooks/use-revalidator
