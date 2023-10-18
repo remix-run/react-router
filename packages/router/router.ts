@@ -872,6 +872,8 @@ export function createRouter(init: RouterInit): Router {
   let fetchControllers = new Map<string, AbortController>();
 
   // Keys for persisted fetchers
+  // - `false` means it was submitted with `persist:true`
+  // - `true` value means a deletion was requested during submission
   let persistedFetchers = new Map<string, boolean>();
 
   // Track loads based on the order in which they started
