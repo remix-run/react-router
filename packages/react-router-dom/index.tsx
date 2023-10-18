@@ -1506,10 +1506,14 @@ export function useFormAction(
   return createPath(path);
 }
 
-function createFetcherForm(fetcherKey: string, routeId: string) {
+function createFetcherForm(
+  fetcherKey: string,
+  routeId: string,
+  persist: boolean
+) {
   let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
     (props, ref) => {
-      let submit = useSubmitFetcher(fetcherKey, routeId);
+      let submit = useSubmitFetcher(fetcherKey, routeId, persist);
       return <FormImpl {...props} ref={ref} submit={submit} />;
     }
   );
@@ -1552,16 +1556,16 @@ export function useFetcher<TData = any>({
   let fetcherKey = key ? key : _fetcherKey;
   let [Form] = React.useState(() => {
     invariant(routeId, `No routeId available for fetcher.Form()`);
-    return createFetcherForm(fetcherKey, routeId);
+    return createFetcherForm(fetcherKey, routeId, persist === true);
   });
   let [load] = React.useState(() => (href: string) => {
     invariant(router, "No router available for fetcher.load()");
     invariant(routeId, "No routeId available for fetcher.load()");
     router.fetch(fetcherKey, routeId, href);
   });
-  let submit = useSubmitFetcher(fetcherKey, routeId);
+  let submit = useSubmitFetcher(fetcherKey, routeId, persist === true);
 
-  let fetcher = router.getFetcher<TData>(fetcherKey, persist);
+  let fetcher = router.getFetcher<TData>(fetcherKey);
 
   let fetcherWithComponents = React.useMemo(
     () => ({
