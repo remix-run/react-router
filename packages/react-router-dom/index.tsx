@@ -1552,7 +1552,7 @@ export function useFetcher<TData = any>({
     `useFetcher can only be used on routes that contain a unique "id"`
   );
 
-  let [_fetcherKey] = React.useState(() => String(++fetcherId));
+  let [_fetcherKey] = React.useState(() => `__${String(++fetcherId)}`);
   let fetcherKey = key ? key : _fetcherKey;
   let [Form] = React.useState(() => {
     invariant(routeId, `No routeId available for fetcher.Form()`);
