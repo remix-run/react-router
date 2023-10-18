@@ -45,7 +45,7 @@ import * as React from "react";
 import { useSearchParams } from "react-router-dom";
 
 function App() {
-  let [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   function handleSubmit(event) {
     event.preventDefault();
