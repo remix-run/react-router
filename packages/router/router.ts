@@ -1023,8 +1023,8 @@ export function createRouter(init: RouterInit): Router {
       let newFetchers = newState.fetchers;
       newFetchers.forEach((fetcher, key) => {
         if (persistedFetchers.get(key) && fetcher.state === "idle") {
-          newState.fetchers?.delete(key);
-          persistedFetchers.delete(key);
+          cleanupFetcher(key, fetcher);
+          newFetchers.delete(key);
         }
       });
     }
@@ -2384,15 +2384,7 @@ export function createRouter(init: RouterInit): Router {
     });
   }
 
-  function deleteFetcher(key: string): void {
-    let fetcher = state.fetchers.get(key);
-
-    if (persistedFetchers.has(key) && fetcher && fetcher.state !== "idle") {
-      // Mark for deletion on completion
-      persistedFetchers.set(key, true);
-      return;
-    }
-
+  function cleanupFetcher(key: string, fetcher: Fetcher | undefined): void {
     // Don't abort the controller if this is a deletion of a fetcher.submit()
     // in it's loading phase since - we don't want to abort the corresponding
     // revalidation and want them to complete and land
@@ -2406,6 +2398,18 @@ export function createRouter(init: RouterInit): Router {
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
     persistedFetchers.delete(key);
+  }
+
+  function deleteFetcher(key: string): void {
+    let fetcher = state.fetchers.get(key);
+
+    if (persistedFetchers.has(key) && fetcher && fetcher.state !== "idle") {
+      // Mark for deletion on completion
+      persistedFetchers.set(key, true);
+      return;
+    }
+
+    cleanupFetcher(key, fetcher);
     state.fetchers.delete(key);
   }
 
