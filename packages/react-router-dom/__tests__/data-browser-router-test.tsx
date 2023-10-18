@@ -5469,7 +5469,6 @@ function testDomRouter(
           fireEvent.click(screen.getByText("Go to /page"));
           await waitFor(() => screen.getByText("Page"));
           expect(getHtml(container)).toMatch("Num fetchers: 1");
-          expect(getHtml(container)).toMatch("Page");
 
           // Resolve after the navigation - trigger cleanup
           dfd.resolve("FETCH");
@@ -5543,7 +5542,6 @@ function testDomRouter(
           fireEvent.click(screen.getByText("Go to /page"));
           await waitFor(() => screen.getByText("Page (1)"));
           expect(getHtml(container)).toMatch("Num fetchers: 1");
-          expect(getHtml(container)).toMatch("Page (1)");
 
           // Resolve after the navigation and revalidation
           dfd.resolve("FETCH");
@@ -5702,6 +5700,68 @@ function testDomRouter(
 
           // Resolve after the navigation - no-op due to load interruption
           dfd.resolve("FETCH");
+        });
+
+        it("submitting fetcher.Form's w/persist are cleaned up on completion", async () => {
+          let dfd = createDeferred();
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component() {
+                  let fetchers = useFetchers();
+                  return (
+                    <>
+                      <pre>{`Num fetchers: ${fetchers.length}`}</pre>
+                      <Link to="/page">Go to /page</Link>
+                      <Outlet />
+                    </>
+                  );
+                },
+                children: [
+                  {
+                    index: true,
+                    Component() {
+                      let fetcher = useFetcher({ persist: true });
+                      return (
+                        <fetcher.Form method="post" action="/fetch">
+                          <button type="submit">
+                            {`Submit (${fetcher.state})`}
+                          </button>
+                        </fetcher.Form>
+                      );
+                    },
+                  },
+                  {
+                    path: "page",
+                    Component() {
+                      return <h1>Page</h1>;
+                    },
+                  },
+                ],
+              },
+              {
+                path: "/fetch",
+                action: () => dfd.promise,
+              },
+            ],
+            { window: getWindow("/") }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(getHtml(container)).toMatch("Num fetchers: 0");
+
+          fireEvent.click(screen.getByText("Submit (idle)"));
+          expect(getHtml(container)).toMatch("Num fetchers: 1");
+          expect(getHtml(container)).toMatch("Submit (submitting)");
+
+          fireEvent.click(screen.getByText("Go to /page"));
+          await waitFor(() => screen.getByText("Page"));
+          expect(getHtml(container)).toMatch("Num fetchers: 1");
+
+          // Resolve after the navigation and revalidation
+          dfd.resolve("FETCH");
+          await waitFor(() => screen.getByText("Num fetchers: 0"));
         });
       });
 
