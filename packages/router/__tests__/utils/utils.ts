@@ -28,11 +28,11 @@ export function isRedirect(result: any) {
   );
 }
 
-export function createDeferred() {
+export function createDeferred<T = any>() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
-  let promise = new Promise((res, rej) => {
-    resolve = async (val: any) => {
+  let promise = new Promise<T>((res, rej) => {
+    resolve = async (val: T) => {
       res(val);
       try {
         await promise;

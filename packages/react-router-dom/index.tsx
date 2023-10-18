@@ -1418,7 +1418,8 @@ export function useSubmit(): SubmitFunction {
  */
 function useSubmitFetcher(
   fetcherKey: string,
-  fetcherRouteId: string
+  fetcherRouteId: string,
+  persist: boolean
 ): FetcherSubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmitFetcher);
   let { basename } = React.useContext(NavigationContext);
@@ -1442,9 +1443,10 @@ function useSubmitFetcher(
         body,
         formMethod: options.method || (method as HTMLFormMethod),
         formEncType: options.encType || (encType as FormEncType),
+        persist,
       });
     },
-    [router, basename, fetcherKey, fetcherRouteId]
+    [router, basename, fetcherKey, fetcherRouteId, persist]
   );
 }
 
@@ -1531,7 +1533,10 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  * Interacts with route loaders and actions without causing a navigation. Great
  * for any interaction that stays on the same page.
  */
-export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
+export function useFetcher<TData = any>({
+  key,
+  persist,
+}: { key?: string; persist?: boolean } = {}): FetcherWithComponents<TData> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
 
   let route = React.useContext(RouteContext);
@@ -1543,7 +1548,8 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     `useFetcher can only be used on routes that contain a unique "id"`
   );
 
-  let [fetcherKey] = React.useState(() => String(++fetcherId));
+  let [_fetcherKey] = React.useState(() => String(++fetcherId));
+  let fetcherKey = key ? key : _fetcherKey;
   let [Form] = React.useState(() => {
     invariant(routeId, `No routeId available for fetcher.Form()`);
     return createFetcherForm(fetcherKey, routeId);
@@ -1555,7 +1561,7 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
   });
   let submit = useSubmitFetcher(fetcherKey, routeId);
 
-  let fetcher = router.getFetcher<TData>(fetcherKey);
+  let fetcher = router.getFetcher<TData>(fetcherKey, persist);
 
   let fetcherWithComponents = React.useMemo(
     () => ({
