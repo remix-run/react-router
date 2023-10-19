@@ -190,15 +190,6 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
-   * Get/create a fetcher for the given key
-   * @param key
-   */
-  getFetcher<TData = any>(key: string): Fetcher<TData>;
-
-  /**
-   * @internal
-   * PRIVATE - DO NOT USE
-   *
    * Delete the fetcher for a given key
    * @param key
    */
@@ -478,10 +469,7 @@ type LoadFetchOptions = BaseNavigateOrFetchOptions;
 /**
  * Options for a fetch() submission
  */
-type SubmitFetchOptions = BaseNavigateOrFetchOptions &
-  BaseSubmissionOptions & {
-    persist?: boolean;
-  };
+type SubmitFetchOptions = BaseNavigateOrFetchOptions & BaseSubmissionOptions;
 
 /**
  * Options to pass to fetch()
@@ -871,11 +859,6 @@ export function createRouter(init: RouterInit): Router {
   // AbortControllers for any in-flight fetchers
   let fetchControllers = new Map<string, AbortController>();
 
-  // Keys for persisted fetchers
-  // - `false` means it was submitted with `persist:true`
-  // - `true` value means a deletion was requested during submission
-  let persistedFetchers = new Map<string, boolean>();
-
   // Track loads based on the order in which they started
   let incrementingLoadId = 0;
 
@@ -1018,17 +1001,6 @@ export function createRouter(init: RouterInit): Router {
     newState: Partial<RouterState>,
     viewTransitionOpts?: ViewTransitionOpts
   ): void {
-    // If we're updating fetchers, delete any persisted ones that returned to idle
-    if (newState.fetchers) {
-      let newFetchers = newState.fetchers;
-      newFetchers.forEach((fetcher, key) => {
-        if (persistedFetchers.get(key) && fetcher.state === "idle") {
-          cleanupFetcher(key, fetcher);
-          newFetchers.delete(key);
-        }
-      });
-    }
-
     state = {
       ...state,
       ...newState,
@@ -1036,6 +1008,15 @@ export function createRouter(init: RouterInit): Router {
     subscribers.forEach((subscriber) =>
       subscriber(state, { unstable_viewTransitionOpts: viewTransitionOpts })
     );
+
+    // Remove idle fetchers from state since we only care about in-flight fetchers.
+    // We keep fetchLoadeMatches around for revalidations purposes.
+    // The React layer persists the data for completed fetchers.
+    state.fetchers.forEach((fetcher, key) => {
+      if (fetcher.state === "idle") {
+        state.fetchers.delete(key);
+      }
+    });
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -1743,10 +1724,6 @@ export function createRouter(init: RouterInit): Router {
     };
   }
 
-  function getFetcher<TData = any>(key: string): Fetcher<TData> {
-    return state.fetchers.get(key) || IDLE_FETCHER;
-  }
-
   // Trigger a fetcher load/submit for the given fetcher key
   function fetch(
     key: string,
@@ -1802,10 +1779,6 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      // Mark this fetcher as persisted, but not deleted
-      if ((opts as SubmitFetchOptions).persist) {
-        persistedFetchers.set(key, false);
-      }
       handleFetcherAction(key, routeId, path, match, matches, submission);
       return;
     }
@@ -1813,7 +1786,6 @@ export function createRouter(init: RouterInit): Router {
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, { routeId, path });
-    persistedFetchers.delete(key);
     handleFetcherLoader(key, routeId, path, match, matches, submission);
   }
 
@@ -2384,7 +2356,9 @@ export function createRouter(init: RouterInit): Router {
     });
   }
 
-  function cleanupFetcher(key: string, fetcher: Fetcher | undefined): void {
+  function deleteFetcher(key: string): void {
+    let fetcher = state.fetchers.get(key);
+
     // Don't abort the controller if this is a deletion of a fetcher.submit()
     // in it's loading phase since - we don't want to abort the corresponding
     // revalidation and want them to complete and land
@@ -2397,27 +2371,7 @@ export function createRouter(init: RouterInit): Router {
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
-    persistedFetchers.delete(key);
-  }
-
-  function deleteFetcher(key: string): void {
-    let fetcher = state.fetchers.get(key);
-
-    if (persistedFetchers.has(key) && fetcher && fetcher.state !== "idle") {
-      // Mark for deletion on completion
-      persistedFetchers.set(key, true);
-      return;
-    }
-
-    cleanupFetcher(key, fetcher);
     state.fetchers.delete(key);
-  }
-
-  function deleteFetcherAndUpdateState(key: string): void {
-    deleteFetcher(key);
-    updateState({
-      fetchers: new Map(state.fetchers),
-    });
   }
 
   function abortFetcher(key: string) {
@@ -2429,8 +2383,8 @@ export function createRouter(init: RouterInit): Router {
 
   function markFetchersDone(keys: string[]) {
     for (let key of keys) {
-      let fetcher = getFetcher(key);
-      let doneFetcher = getDoneFetcher(fetcher.data);
+      let fetcher = state.fetchers.get(key);
+      let doneFetcher = getDoneFetcher(fetcher ? fetcher.data : undefined);
       state.fetchers.set(key, doneFetcher);
     }
   }
@@ -2653,8 +2607,7 @@ export function createRouter(init: RouterInit): Router {
     // hash-aware URLs in DOM paths
     createHref: (to: To) => init.history.createHref(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
-    getFetcher,
-    deleteFetcher: deleteFetcherAndUpdateState,
+    deleteFetcher,
     dispose,
     getBlocker,
     deleteBlocker,

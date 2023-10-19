@@ -59,6 +59,7 @@ import {
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
   matchPath,
+  IDLE_FETCHER,
 } from "@remix-run/router";
 
 import type {
@@ -349,6 +350,20 @@ if (__DEV__) {
 
 export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 
+// TODO: (v7) Change the useFetcher data from `any` to `unknown`
+type FetchersContextObject = {
+  data: Map<string, any>;
+  register: (key: string) => void;
+  unregister: (key: string) => void;
+};
+
+const FetchersContext = React.createContext<FetchersContextObject | null>(null);
+if (__DEV__) {
+  FetchersContext.displayName = "Fetchers";
+}
+
+export { FetchersContext as UNSAFE_FetchersContext };
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -439,6 +454,43 @@ export function RouterProvider({
     currentLocation: Location;
     nextLocation: Location;
   }>();
+  let fetcherRefs = React.useRef<Map<string, number>>(new Map());
+  let fetcherData = React.useRef<Map<string, any>>(new Map());
+
+  let registerFetcher = React.useCallback((key: string) => {
+    let count = fetcherRefs.current.get(key);
+    if (count == null) {
+      fetcherRefs.current.set(key, 1);
+    } else {
+      fetcherRefs.current.set(key, count + 1);
+    }
+  }, []);
+
+  let unregisterFetcher = React.useCallback(
+    (key: string) => {
+      let count = fetcherRefs.current.get(key);
+      if (count == null || count <= 1) {
+        fetcherRefs.current.delete(key);
+        fetcherData.current.delete(key);
+      } else {
+        fetcherRefs.current.set(key, count - 1);
+      }
+    },
+    [fetcherData]
+  );
+
+  let fetcherContext = React.useMemo<FetchersContextObject>(
+    () => ({
+      data: fetcherData.current,
+      register: registerFetcher,
+      unregister: unregisterFetcher,
+    }),
+    [registerFetcher, unregisterFetcher]
+  );
+
+  // console.log("fetcherRefs", fetcherRefs.current);
+  // console.log("fetcherData", fetcherData.current);
+
   let { v7_startTransition } = future || {};
 
   let optInStartTransition = React.useCallback(
@@ -457,6 +509,12 @@ export function RouterProvider({
       newState: RouterState,
       { unstable_viewTransitionOpts: viewTransitionOpts }
     ) => {
+      newState.fetchers.forEach((fetcher, key) => {
+        if (fetcher.data !== undefined) {
+          fetcherData.current.set(key, fetcher.data);
+        }
+      });
+
       if (
         !viewTransitionOpts ||
         router.window == null ||
@@ -587,20 +645,22 @@ export function RouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <ViewTransitionContext.Provider value={vtContext}>
-            <Router
-              basename={basename}
-              location={state.location}
-              navigationType={state.historyAction}
-              navigator={navigator}
-            >
-              {state.initialized ? (
-                <DataRoutes routes={router.routes} state={state} />
-              ) : (
-                fallbackElement
-              )}
-            </Router>
-          </ViewTransitionContext.Provider>
+          <FetchersContext.Provider value={fetcherContext}>
+            <ViewTransitionContext.Provider value={vtContext}>
+              <Router
+                basename={basename}
+                location={state.location}
+                navigationType={state.historyAction}
+                navigator={navigator}
+              >
+                {state.initialized ? (
+                  <DataRoutes routes={router.routes} state={state} />
+                ) : (
+                  fallbackElement
+                )}
+              </Router>
+            </ViewTransitionContext.Provider>
+          </FetchersContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}
@@ -1194,6 +1254,7 @@ enum DataRouterHook {
 }
 
 enum DataRouterStateHook {
+  UseFetcher = "useFetcher",
   UseFetchers = "useFetchers",
   UseScrollRestoration = "useScrollRestoration",
 }
@@ -1413,43 +1474,6 @@ export function useSubmit(): SubmitFunction {
   );
 }
 
-/**
- * Returns the implementation for fetcher.submit
- */
-function useSubmitFetcher(
-  fetcherKey: string,
-  fetcherRouteId: string,
-  persist: boolean
-): FetcherSubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmitFetcher);
-  let { basename } = React.useContext(NavigationContext);
-
-  return React.useCallback<FetcherSubmitFunction>(
-    (target, options = {}) => {
-      validateClientSideSubmission();
-
-      let { action, method, encType, formData, body } = getFormSubmissionInfo(
-        target,
-        basename
-      );
-
-      invariant(
-        fetcherRouteId != null,
-        "No routeId available for useFetcher()"
-      );
-      router.fetch(fetcherKey, fetcherRouteId, options.action || action, {
-        preventScrollReset: options.preventScrollReset,
-        formData,
-        body,
-        formMethod: options.method || (method as HTMLFormMethod),
-        formEncType: options.encType || (encType as FormEncType),
-        persist,
-      });
-    },
-    [router, basename, fetcherKey, fetcherRouteId, persist]
-  );
-}
-
 // v7: Eventually we should deprecate this entirely in favor of using the
 // router method directly?
 export function useFormAction(
@@ -1506,27 +1530,12 @@ export function useFormAction(
   return createPath(path);
 }
 
-function createFetcherForm(
-  fetcherKey: string,
-  routeId: string,
-  persist: boolean
-) {
-  let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
-    (props, ref) => {
-      let submit = useSubmitFetcher(fetcherKey, routeId, persist);
-      return <FormImpl {...props} ref={ref} submit={submit} />;
-    }
-  );
-  if (__DEV__) {
-    FetcherForm.displayName = "fetcher.Form";
-  }
-  return FetcherForm;
-}
-
 let fetcherId = 0;
 
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
-  Form: ReturnType<typeof createFetcherForm>;
+  Form: React.ForwardRefExoticComponent<
+    FetcherFormProps & React.RefAttributes<HTMLFormElement>
+  >;
   submit: FetcherSubmitFunction;
   load: (href: string) => void;
 };
@@ -1539,58 +1548,88 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  */
 export function useFetcher<TData = any>({
   key,
-  persist,
-}: { key?: string; persist?: boolean } = {}): FetcherWithComponents<TData> {
-  let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-
+}: { key?: string } = {}): FetcherWithComponents<TData> {
+  let { router, basename } = useDataRouterContext(DataRouterHook.UseFetcher);
+  let state = useDataRouterState(DataRouterStateHook.UseFetcher);
+  let fetchersCtx = React.useContext(FetchersContext);
   let route = React.useContext(RouteContext);
-  invariant(route, `useFetcher must be used inside a RouteContext`);
-
   let routeId = route.matches[route.matches.length - 1]?.route.id;
+  let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
+  if (!fetcherKey) {
+    setFetcherKey(`__${String(++fetcherId)}__`);
+  }
+
+  invariant(fetchersCtx, `useFetcher must be used inside a FetchersContext`);
+  invariant(route, `useFetcher must be used inside a RouteContext`);
   invariant(
     routeId != null,
     `useFetcher can only be used on routes that contain a unique "id"`
   );
 
-  let [_fetcherKey] = React.useState(() => `__${String(++fetcherId)}`);
-  let fetcherKey = key ? key : _fetcherKey;
-  let [Form] = React.useState(() => {
-    invariant(routeId, `No routeId available for fetcher.Form()`);
-    return createFetcherForm(fetcherKey, routeId, persist === true);
-  });
-  let [load] = React.useState(() => (href: string) => {
-    invariant(router, "No router available for fetcher.load()");
-    invariant(routeId, "No routeId available for fetcher.load()");
-    router.fetch(fetcherKey, routeId, href);
-  });
-  let submit = useSubmitFetcher(fetcherKey, routeId, persist === true);
+  let { data, register, unregister } = fetchersCtx;
 
-  let fetcher = router.getFetcher<TData>(fetcherKey);
+  // Register/deregister with FetchersContext
+  React.useEffect(() => {
+    register(fetcherKey);
+    return () => unregister(fetcherKey);
+  }, [fetcherKey, register, unregister]);
 
-  let fetcherWithComponents = React.useMemo(
-    () => ({
+  // Fetcher additions
+  let load = React.useCallback(
+    (href: string) => {
+      router.fetch(fetcherKey, routeId!, href);
+    },
+    [fetcherKey, routeId, router]
+  );
+
+  let submit = React.useCallback<FetcherSubmitFunction>(
+    (target, options = {}) => {
+      validateClientSideSubmission();
+
+      let { action, method, encType, formData, body } = getFormSubmissionInfo(
+        target,
+        basename
+      );
+
+      invariant(routeId != null, "No routeId available for useFetcher()");
+
+      router.fetch(fetcherKey, routeId, options.action || action, {
+        preventScrollReset: options.preventScrollReset,
+        formData,
+        body,
+        formMethod: options.method || (method as HTMLFormMethod),
+        formEncType: options.encType || (encType as FormEncType),
+      });
+    },
+    [basename, routeId, fetcherKey, router]
+  );
+
+  let Form = React.useMemo(() => {
+    let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
+      (props, ref) => {
+        return <FormImpl {...props} ref={ref} submit={submit} />;
+      }
+    );
+    if (__DEV__) {
+      FetcherForm.displayName = "fetcher.Form";
+    }
+    return FetcherForm;
+  }, [submit]);
+
+  return React.useMemo(() => {
+    // Prefer the fetcher from `state` not `router.state` since DataRouterContext
+    // is memoized so this ensures we update on fetcher state updates
+    let fetcher = fetcherKey
+      ? state.fetchers.get(fetcherKey) || IDLE_FETCHER
+      : IDLE_FETCHER;
+    return {
       Form,
       submit,
       load,
       ...fetcher,
-    }),
-    [fetcher, Form, submit, load]
-  );
-
-  React.useEffect(() => {
-    // Is this busted when the React team gets real weird and calls effects
-    // twice on mount?  We really just need to garbage collect here when this
-    // fetcher is no longer around.
-    return () => {
-      if (!router) {
-        console.warn(`No router available to clean up from useFetcher()`);
-        return;
-      }
-      router.deleteFetcher(fetcherKey);
+      data: data.get(fetcherKey),
     };
-  }, [router, fetcherKey]);
-
-  return fetcherWithComponents;
+  }, [Form, data, fetcherKey, load, state.fetchers, submit]);
 }
 
 /**
