@@ -1,5 +1,0 @@
----
-"@remix-run/router": minor
----
-
-Add a new `opts.persist` option for `router.fetch` submission calls that will delay the cleanup of the fetcher until it returns to an `idle` state

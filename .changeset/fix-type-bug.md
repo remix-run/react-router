@@ -2,4 +2,5 @@
 "@remix-run/router": patch
 ---
 
-Fixed a bug in the `Router` `getFetcher`/`deleteFetcher` type definition which incorrectly specified `key` as an optional parameter
+- Remove the internal `router.getFetcher` API
+- Fix `router.deleteFetcher` type definition which incorrectly specified `key` as an optional parameter
