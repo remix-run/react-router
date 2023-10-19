@@ -326,9 +326,6 @@ export function createStaticRouter(
     },
     createHref,
     encodeLocation,
-    getFetcher() {
-      return IDLE_FETCHER;
-    },
     deleteFetcher() {
       throw msg("deleteFetcher");
     },
