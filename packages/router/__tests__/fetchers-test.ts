@@ -100,6 +100,11 @@ describe("fetchers", () => {
       });
 
       let key = "key";
+      let fetcherData;
+      router.subscribe(
+        (state) => (fetcherData = state.fetchers.get(key)?.data)
+      );
+
       router.fetch(key, "root", "/");
       expect(router.state.fetchers.get(key)).toEqual({
         state: "loading",
@@ -110,13 +115,8 @@ describe("fetchers", () => {
       });
 
       await dfd.resolve("DATA");
-      expect(router.state.fetchers.get(key)).toEqual({
-        state: "idle",
-        formMethod: undefined,
-        formEncType: undefined,
-        formData: undefined,
-        data: "DATA",
-      });
+      expect(router.state.fetchers.get(key)).toBeUndefined();
+      expect(fetcherData).toBe("DATA");
 
       expect(router._internalFetchControllers.size).toBe(0);
     });
@@ -148,8 +148,6 @@ describe("fetchers", () => {
       await B.loaders.foo.resolve("B DATA");
       expect(B.fetcher.state).toBe("idle");
       expect(B.fetcher.data).toBe("B DATA");
-
-      expect(A.fetcher).toBe(B.fetcher);
     });
 
     it("loader submission fetch", async () => {
@@ -261,20 +259,14 @@ describe("fetchers", () => {
   });
 
   describe("fetcher removal", () => {
-    it("gives an idle fetcher before submission", async () => {
-      let t = initializeTest();
-      let fetcher = t.router.getFetcher("randomKey");
-      expect(fetcher).toBe(IDLE_FETCHER);
-    });
-
     it("removes fetchers", async () => {
       let t = initializeTest();
       let A = await t.fetch("/foo");
       await A.loaders.foo.resolve("A");
-      expect(t.router.getFetcher(A.key).data).toBe("A");
+      expect(t.fetcherData.get(A.key)).toBe("A");
 
       t.router.deleteFetcher(A.key);
-      expect(t.router.getFetcher(A.key)).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get(A.key)).toBeUndefined();
     });
 
     it("cleans up abort controllers", async () => {
@@ -323,7 +315,7 @@ describe("fetchers", () => {
       let t = initializeTest();
       let A = await t.fetch("/foo");
       await A.loaders.foo.reject(new Response(null, { status: 400 }));
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new ErrorResponseImpl(400, undefined, ""),
       });
@@ -336,7 +328,7 @@ describe("fetchers", () => {
         formData: createFormData({ key: "value" }),
       });
       await A.loaders.foo.reject(new Response(null, { status: 400 }));
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new ErrorResponseImpl(400, undefined, ""),
       });
@@ -349,7 +341,7 @@ describe("fetchers", () => {
         formData: createFormData({ key: "value" }),
       });
       await A.actions.foo.reject(new Response(null, { status: 400 }));
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new ErrorResponseImpl(400, undefined, ""),
       });
@@ -375,7 +367,7 @@ describe("fetchers", () => {
         formMethod: "post",
         formData: createFormData({ key: "value" }),
       });
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new ErrorResponseImpl(
           405,
@@ -404,7 +396,7 @@ describe("fetchers", () => {
         body: "not json",
         formEncType: "application/json",
       });
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new ErrorResponseImpl(
           400,
@@ -447,13 +439,13 @@ describe("fetchers", () => {
       // If the routeId is not an active match, errors bubble to the root
       let A = await t.fetch("/error", "key1", "wit");
       await A.loaders.error.reject(new Error("Kaboom!"));
-      expect(t.router.getFetcher("key1")).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get("key1")).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new Error("Kaboom!"),
       });
 
       await t.fetch("/not-found", "key2", "wit");
-      expect(t.router.getFetcher("key2")).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get("key2")).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new ErrorResponseImpl(
           404,
@@ -469,7 +461,7 @@ describe("fetchers", () => {
 
       let C = await t.fetch("/error", "key3", "wit");
       await C.loaders.error.reject(new Error("Kaboom!"));
-      expect(t.router.getFetcher("key3")).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get("key3")).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         wit: new Error("Kaboom!"),
       });
@@ -478,7 +470,7 @@ describe("fetchers", () => {
         formMethod: "post",
         formData: createFormData({ key: "value" }),
       });
-      expect(t.router.getFetcher("key4")).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get("key4")).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         wit: new ErrorResponseImpl(
           404,
@@ -489,7 +481,7 @@ describe("fetchers", () => {
       });
 
       await t.fetch("/not-found", "key5", "wit");
-      expect(t.router.getFetcher("key5")).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get("key5")).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         wit: new ErrorResponseImpl(
           404,
@@ -505,13 +497,13 @@ describe("fetchers", () => {
 
       let E = await t.fetch("/error", "key6", "witout");
       await E.loaders.error.reject(new Error("Kaboom!"));
-      expect(t.router.getFetcher("key6")).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get("key6")).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new Error("Kaboom!"),
       });
 
       await t.fetch("/not-found", "key7", "witout");
-      expect(t.router.getFetcher("key7")).toBe(IDLE_FETCHER);
+      expect(t.router.state.fetchers.get("key7")).toBeUndefined();
       expect(t.router.state.errors).toEqual({
         root: new ErrorResponseImpl(
           404,
@@ -528,7 +520,7 @@ describe("fetchers", () => {
       let t = initializeTest();
       let A = await t.fetch("/foo");
       await A.loaders.foo.reject(new Error("Kaboom!"));
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new Error("Kaboom!"),
       });
@@ -541,7 +533,7 @@ describe("fetchers", () => {
         formData: createFormData({ key: "value" }),
       });
       await A.loaders.foo.reject(new Error("Kaboom!"));
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new Error("Kaboom!"),
       });
@@ -554,7 +546,7 @@ describe("fetchers", () => {
         formData: createFormData({ key: "value" }),
       });
       await A.actions.foo.reject(new Error("Kaboom!"));
-      expect(A.fetcher).toBe(IDLE_FETCHER);
+      expect(A.fetcher.state).toBe("idle");
       expect(t.router.state.errors).toEqual({
         root: new Error("Kaboom!"),
       });
@@ -569,7 +561,7 @@ describe("fetchers", () => {
       let A = await t.fetch("/foo");
 
       let B = await A.loaders.foo.redirect("/bar");
-      expect(t.router.getFetcher(A.key)).toBe(A.fetcher);
+      expect(t.router.state.fetchers.get(A.key)?.state).toBe("loading");
       expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/bar");
 
@@ -595,7 +587,7 @@ describe("fetchers", () => {
       });
 
       let B = await A.loaders.foo.redirect("/bar");
-      expect(t.router.getFetcher(A.key)).toBe(A.fetcher);
+      expect(t.router.state.fetchers.get(A.key)?.state).toBe("loading");
       expect(t.router.state.navigation.state).toBe("loading");
       expect(t.router.state.navigation.location?.pathname).toBe("/bar");
 
@@ -748,14 +740,14 @@ describe("fetchers", () => {
           formData: createFormData({ key: "value" }),
         });
         await A.actions.foo.resolve("A ACTION");
-        expect(t.router.getFetcher(key).data).toBe("A ACTION");
+        expect(t.fetcherData.get(key)).toBe("A ACTION");
 
         let B = await t.fetch("/foo", key, {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
         });
         expect(A.loaders.foo.signal.aborted).toBe(true);
-        expect(t.router.getFetcher(key).data).toBe("A ACTION");
+        expect(t.fetcherData.get(key)).toBe("A ACTION");
 
         await A.loaders.root.resolve("A ROOT LOADER");
         await A.loaders.foo.resolve("A LOADER");
@@ -768,10 +760,10 @@ describe("fetchers", () => {
         expect(B.actions.foo.signal.aborted).toBe(true);
 
         await B.actions.foo.resolve("B ACTION");
-        expect(t.router.getFetcher(key).data).toBe("A ACTION");
+        expect(t.fetcherData.get(key)).toBe("A ACTION");
 
         await C.actions.foo.resolve("C ACTION");
-        expect(t.router.getFetcher(key).data).toBe("C ACTION");
+        expect(t.fetcherData.get(key)).toBe("C ACTION");
 
         await B.loaders.root.resolve("B ROOT LOADER");
         await B.loaders.foo.resolve("B LOADER");
@@ -779,7 +771,7 @@ describe("fetchers", () => {
 
         await C.loaders.root.resolve("C ROOT LOADER");
         await C.loaders.foo.resolve("C LOADER");
-        expect(t.router.getFetcher(key).data).toBe("C ACTION");
+        expect(t.fetcherData.get(key)).toBe("C ACTION");
         expect(t.router.state.loaderData.foo).toBe("C LOADER");
       });
     });
@@ -805,7 +797,7 @@ describe("fetchers", () => {
 
         await Ak1.actions.foo.resolve("A ACTION");
         await Bk2.actions.foo.resolve("B ACTION");
-        expect(t.router.getFetcher(k2).data).toBe("B ACTION");
+        expect(t.fetcherData.get(k2)).toBe("B ACTION");
 
         let Ck1 = await t.fetch("/foo", k1, {
           formMethod: "post",
@@ -826,7 +818,7 @@ describe("fetchers", () => {
         await Ck1.loaders.root.resolve("C ROOT LOADER");
         await Ck1.loaders.foo.resolve("C LOADER");
 
-        expect(t.router.getFetcher(k1).data).toBe("C ACTION");
+        expect(t.fetcherData.get(k1)).toBe("C ACTION");
         expect(t.router.state.loaderData.foo).toBe("C LOADER");
       });
     });
@@ -1323,7 +1315,7 @@ describe("fetchers", () => {
         });
         await A.actions.foo.resolve("A ACTION");
         expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
-        expect(t.router.state.fetchers.get(key)?.data).toBe("A ACTION");
+        expect(t.fetcherData.get(key)).toBe("A ACTION");
         // Interrupting the actionReload should cause the next load to call all loaders
         let B = await t.navigate("/bar");
         await B.loaders.root.resolve("ROOT*");
@@ -1337,8 +1329,8 @@ describe("fetchers", () => {
             bar: "BAR",
           },
         });
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(key)?.data).toBe("A ACTION");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
+        expect(t.fetcherData.get(key)).toBe("A ACTION");
       });
 
       it("forces all loaders to revalidate on interrupted fetcher submissionRedirect", async () => {
@@ -1362,8 +1354,8 @@ describe("fetchers", () => {
             bar: "BAR",
           },
         });
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
+        expect(t.fetcherData.get(key)).toBeUndefined();
       });
     });
 
@@ -1381,7 +1373,7 @@ describe("fetchers", () => {
 
         // The fetcher loader redirect should be ignored
         await A.loaders.foo.redirect("/baz");
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
 
         await B.loaders.bar.resolve("BAR");
         expect(t.router.state).toMatchObject({
@@ -1392,7 +1384,7 @@ describe("fetchers", () => {
             bar: "BAR",
           },
         });
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
         expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
       });
     });
@@ -1412,7 +1404,7 @@ describe("fetchers", () => {
 
         // This redirect should be ignored
         await A.actions.foo.redirect("/baz");
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
 
         await B.loaders.root.resolve("ROOT*");
         await B.loaders.bar.resolve("BAR");
@@ -1424,7 +1416,7 @@ describe("fetchers", () => {
             bar: "BAR",
           },
         });
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
         expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
       });
 
@@ -1465,14 +1457,14 @@ describe("fetchers", () => {
 
         // This redirect should be ignored
         await A.actions.foo.redirect("/baz");
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
 
         expect(t.router.state).toMatchObject({
           navigation: IDLE_NAVIGATION,
           location: { pathname: "/bar" },
           loaderData: {},
         });
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
         expect(t.router.state.fetchers.get(key)?.data).toBeUndefined();
       });
     });
@@ -1513,8 +1505,8 @@ describe("fetchers", () => {
             bar: "BAR",
           },
         });
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(key)?.data).toBe("FOO");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
+        expect(t.fetcherData.get(key)).toBe("FOO");
       });
 
       it("processes second fetcher load redirect after interruption by normal POST navigation", async () => {
@@ -1566,7 +1558,7 @@ describe("fetchers", () => {
             foobar: "FOOBAR",
           },
         });
-        expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(key)).toBeUndefined();
         expect(t.router.state.fetchers.get(key)?.data).toBe(undefined);
       });
     });
@@ -1599,7 +1591,7 @@ describe("fetchers", () => {
           navigation: { location: { pathname: "/baz" } },
           location: { pathname: "/" },
         });
-        expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(keyA)).toBeUndefined();
         expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
 
         // Resolve the navigation loader
@@ -1612,8 +1604,8 @@ describe("fetchers", () => {
             baz: "BAZ",
           },
         });
-        expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
-        expect(t.router.state.fetchers.get(keyB)?.state).toBe("idle");
+        expect(t.router.state.fetchers.get(keyA)).toBeUndefined();
+        expect(t.router.state.fetchers.get(keyB)).toBeUndefined();
       });
     });
   });
@@ -1650,10 +1642,8 @@ describe("fetchers", () => {
       await C.loaders.root.resolve("ROOT*");
       await C.loaders.tasks.resolve("TASKS LOADER");
       await C.loaders.tasksId.resolve("TASKS ID*");
-      expect(t.router.state.fetchers.get(key1)).toMatchObject({
-        state: "idle",
-        data: "TASKS ID*",
-      });
+      expect(t.router.state.fetchers.get(key1)).toBeUndefined();
+      expect(t.fetcherData.get(key1)).toEqual("TASKS ID*");
 
       // If a fetcher does a submission, it unsets the revalidation aspect
       let D = await t.fetch("/tasks/3", key1, {
@@ -1663,10 +1653,8 @@ describe("fetchers", () => {
       await D.actions.tasksId.resolve("TASKS 3");
       await D.loaders.root.resolve("ROOT**");
       await D.loaders.tasks.resolve("TASKS**");
-      expect(t.router.state.fetchers.get(key1)).toMatchObject({
-        state: "idle",
-        data: "TASKS 3",
-      });
+      expect(t.router.state.fetchers.get(key1)).toBeUndefined();
+      expect(t.fetcherData.get(key1)).toEqual("TASKS 3");
 
       let E = await t.navigate("/tasks", {
         formMethod: "post",
@@ -1677,10 +1665,8 @@ describe("fetchers", () => {
       await E.actions.tasks.resolve("TASKS***");
 
       // Remains the same state as it was after the submission
-      expect(t.router.state.fetchers.get(key1)).toMatchObject({
-        state: "idle",
-        data: "TASKS 3",
-      });
+      expect(t.router.state.fetchers.get(key1)).toBeUndefined();
+      expect(t.fetcherData.get(key1)).toEqual("TASKS 3");
     });
 
     it("revalidates fetchers on action redirects", async () => {
@@ -1712,10 +1698,8 @@ describe("fetchers", () => {
       await D.loaders.root.resolve("ROOT*");
       await D.loaders.index.resolve("INDEX*");
       await D.loaders.tasksId.resolve("TASKS ID*");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS ID*",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS ID*");
     });
 
     it("revalidates fetchers on action errors", async () => {
@@ -1745,10 +1729,8 @@ describe("fetchers", () => {
       // Resolve navigation loaders + fetcher loader
       await C.loaders.root.resolve("ROOT*");
       await C.loaders.tasksId.resolve("TASKS ID*");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS ID*",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS ID*");
     });
 
     it("does not revalidate fetchers on searchParams changes", async () => {
@@ -1766,10 +1748,8 @@ describe("fetchers", () => {
 
       let A = await t.fetch("/?index", key);
       await A.loaders.index.resolve("FETCH 1");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "FETCH 1",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("FETCH 1");
 
       let B = await t.navigate("/tasks/1?key=value", undefined, ["index"]);
       await B.loaders.root.resolve("ROOT 2");
@@ -1778,10 +1758,8 @@ describe("fetchers", () => {
         root: "ROOT 2",
         tasksId: "TASK 2",
       });
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "FETCH 1",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("FETCH 1");
       expect(B.loaders.index.stub).not.toHaveBeenCalled();
     });
 
@@ -1800,10 +1778,8 @@ describe("fetchers", () => {
 
       let A = await t.fetch("/?index", key);
       await A.loaders.index.resolve("FETCH 1");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "FETCH 1",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("FETCH 1");
 
       let B = await t.navigate("/tasks/1", undefined, ["index"]);
       await B.loaders.root.resolve("ROOT 2");
@@ -1812,10 +1788,8 @@ describe("fetchers", () => {
         root: "ROOT 2",
         tasksId: "TASK 2",
       });
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "FETCH 1",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("FETCH 1");
       expect(B.loaders.index.stub).not.toHaveBeenCalled();
     });
 
@@ -1829,10 +1803,8 @@ describe("fetchers", () => {
 
       let A = await t.fetch("/", key);
       await A.loaders.root.resolve("ROOT FETCH");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "ROOT FETCH",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("ROOT FETCH");
 
       let B = await t.navigate("/tasks");
       await B.loaders.tasks.resolve("TASKS");
@@ -1840,10 +1812,8 @@ describe("fetchers", () => {
         root: "ROOT",
         tasks: "TASKS",
       });
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "ROOT FETCH",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("ROOT FETCH");
     });
 
     it("respects shouldRevalidate for the fetcher route", async () => {
@@ -1880,19 +1850,23 @@ describe("fetchers", () => {
           loaderData: { root: count },
         },
       });
+      let fetcherData;
+      router.subscribe((state) => {
+        if (state.fetchers.get(key)?.data) {
+          fetcherData = state.fetchers.get(key)?.data;
+        }
+      });
 
       expect(router.state.loaderData).toMatchObject({
         root: 0,
       });
-      expect(router.getFetcher(key)).toBe(IDLE_FETCHER);
+      expect(router.state.fetchers.get(key)).toBeUndefined();
 
       // Fetch from a different route
       router.fetch(key, "root", "/fetch");
       await tick();
-      expect(router.getFetcher(key)).toMatchObject({
-        state: "idle",
-        data: 1,
-      });
+      expect(router.state.fetchers.get(key)).toBeUndefined();
+      expect(fetcherData).toBe(1);
 
       // Post to the current route
       router.navigate("/two/three", {
@@ -1903,10 +1877,8 @@ describe("fetchers", () => {
       expect(router.state.loaderData).toMatchObject({
         root: 2,
       });
-      expect(router.getFetcher(key)).toMatchObject({
-        state: "idle",
-        data: 1,
-      });
+      expect(router.state.fetchers.get(key)).toBeUndefined();
+      expect(fetcherData).toBe(1);
       expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
         {
           "actionResult": null,
@@ -1951,10 +1923,8 @@ describe("fetchers", () => {
 
       let A = await t.fetch("/tasks/1", key);
       await A.loaders.tasksId.resolve("ROOT FETCH");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "ROOT FETCH",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("ROOT FETCH");
 
       let B = await t.navigate("/tasks", {
         formMethod: "post",
@@ -1992,10 +1962,8 @@ describe("fetchers", () => {
       // Load a fetcher
       let A = await t.fetch("/tasks/1", key);
       await A.loaders.tasksId.resolve("TASKS ID");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS ID",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS ID");
 
       // Submit a fetcher, leaves loaded fetcher untouched
       let C = await t.fetch("/tasks", actionKey, {
@@ -2003,10 +1971,8 @@ describe("fetchers", () => {
         formData: createFormData({}),
       });
       t.shimHelper(C.loaders, "fetch", "loader", "tasksId");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS ID",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS ID");
       expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
         state: "submitting",
       });
@@ -2016,8 +1982,8 @@ describe("fetchers", () => {
       await C.actions.tasks.resolve("TASKS ACTION");
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "loading",
-        data: "TASKS ID",
       });
+      expect(t.fetcherData.get(key)).toBe("TASKS ID");
       expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
         state: "loading",
         data: "TASKS ACTION",
@@ -2032,14 +1998,10 @@ describe("fetchers", () => {
         root: "ROOT*",
         index: "INDEX*",
       });
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS ID*",
-      });
-      expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
-        state: "idle",
-        data: "TASKS ACTION",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS ID*");
+      expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
+      expect(t.fetcherData.get(actionKey)).toEqual("TASKS ACTION");
     });
 
     it("does not revalidate fetchers initiated from removed routes", async () => {
@@ -2054,10 +2016,8 @@ describe("fetchers", () => {
       // Trigger a fetch from the index route
       let A = await t.fetch("/tasks/1", key, "index");
       await A.loaders.tasksId.resolve("TASKS");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS");
 
       // Navigate such that the index route will be removed
       let B = await t.navigate("/tasks", {
@@ -2070,10 +2030,8 @@ describe("fetchers", () => {
 
       // Fetcher should remain in an idle state since it's calling route is
       // being removed
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS");
 
       // Resolve navigation loaders
       await B.loaders.root.resolve("ROOT*");
@@ -2082,10 +2040,8 @@ describe("fetchers", () => {
       expect(t.router.state.location.pathname).toBe("/tasks");
 
       // Fetcher never got called
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "TASKS",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("TASKS");
     });
 
     it("cancels in-flight fetcher.loads on action submission and forces reload", async () => {
@@ -2138,18 +2094,14 @@ describe("fetchers", () => {
       let keyA = "a";
       let A = await t.fetch("/fetch-a", keyA);
       await A.loaders.fetchA.resolve("A");
-      expect(t.router.state.fetchers.get(keyA)).toMatchObject({
-        state: "idle",
-        data: "A",
-      });
+      expect(t.router.state.fetchers.get(keyA)).toBeUndefined();
+      expect(t.fetcherData.get(keyA)).toEqual("A");
 
       let keyB = "b";
       let B = await t.fetch("/fetch-b", keyB);
       await B.loaders.fetchB.resolve("B");
-      expect(t.router.state.fetchers.get(keyB)).toMatchObject({
-        state: "idle",
-        data: "B",
-      });
+      expect(t.router.state.fetchers.get(keyB)).toBeUndefined();
+      expect(t.fetcherData.get(keyB)).toEqual("B");
 
       // Fetch again for B
       let B2 = await t.fetch("/fetch-b", keyB);
@@ -2177,7 +2129,7 @@ describe("fetchers", () => {
       expect(B.loaders.fetchB.signal.aborted).toBe(false);
       expect(B2.loaders.fetchB.signal.aborted).toBe(true);
       expect(C.loaders.fetchC.signal.aborted).toBe(true);
-      expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+      expect(t.router.state.fetchers.get(keyA)).toBeUndefined();
       expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
       expect(t.router.state.fetchers.get(keyC)?.state).toBe("loading");
       await B.loaders.fetchB.resolve("B"); // ignored due to abort
@@ -2186,7 +2138,7 @@ describe("fetchers", () => {
       // Resolve the action
       await D.actions.action.resolve("ACTION");
       expect(t.router.state.navigation.state).toBe("loading");
-      expect(t.router.state.fetchers.get(keyA)?.state).toBe("idle");
+      expect(t.router.state.fetchers.get(keyA)).toBeUndefined();
       expect(t.router.state.fetchers.get(keyB)?.state).toBe("loading");
       expect(t.router.state.fetchers.get(keyC)?.state).toBe("loading");
 
@@ -2194,18 +2146,12 @@ describe("fetchers", () => {
       await D.loaders.fetchB.resolve("B2");
       await D.loaders.fetchC.resolve("C");
       expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.fetchers.get(keyA)).toMatchObject({
-        state: "idle",
-        data: "A",
-      });
-      expect(t.router.state.fetchers.get(keyB)).toMatchObject({
-        state: "idle",
-        data: "B2",
-      });
-      expect(t.router.state.fetchers.get(keyC)).toMatchObject({
-        state: "idle",
-        data: "C",
-      });
+      expect(t.router.state.fetchers.get(keyA)).toBeUndefined();
+      expect(t.fetcherData.get(keyA)).toEqual("A");
+      expect(t.router.state.fetchers.get(keyB)).toBeUndefined();
+      expect(t.fetcherData.get(keyB)).toEqual("B2");
+      expect(t.router.state.fetchers.get(keyC)).toBeUndefined();
+      expect(t.fetcherData.get(keyC)).toEqual("C");
     });
 
     it("does not cancel pending action navigation on deletion of revalidating fetcher", async () => {
@@ -2233,8 +2179,8 @@ describe("fetchers", () => {
       // Fetcher should go back into a loading state
       expect(t.router.state.fetchers.get(key1)).toMatchObject({
         state: "loading",
-        data: "TASKS 1",
       });
+      expect(t.fetcherData.get(key1)).toBe("TASKS 1");
 
       // Delete fetcher in the middle of the revalidation
       t.router.deleteFetcher(key1);
@@ -2279,8 +2225,8 @@ describe("fetchers", () => {
       // Fetcher should go back into a loading state
       expect(t.router.state.fetchers.get(key1)).toMatchObject({
         state: "loading",
-        data: "TASKS 1",
       });
+      expect(t.fetcherData.get(key1)).toBe("TASKS 1");
 
       // Delete fetcher in the middle of the revalidation
       t.router.deleteFetcher(key1);
@@ -2320,10 +2266,8 @@ describe("fetchers", () => {
       let C = await t.revalidate();
 
       // Fetcher should not go back into a loading state since it's a revalidation
-      expect(t.router.state.fetchers.get(key1)).toMatchObject({
-        state: "idle",
-        data: "TASKS 1",
-      });
+      expect(t.router.state.fetchers.get(key1)).toBeUndefined();
+      expect(t.fetcherData.get(key1)).toEqual("TASKS 1");
 
       // Delete fetcher in the middle of the revalidation
       t.router.deleteFetcher(key1);
@@ -2367,8 +2311,8 @@ describe("fetchers", () => {
       await C.actions.tasks.resolve("TASKS ACTION");
       expect(t.router.state.fetchers.get(key)).toMatchObject({
         state: "loading",
-        data: "TASKS ID",
       });
+      expect(t.fetcherData.get(key)).toBe("TASKS ID");
       expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
         state: "loading",
         data: "TASKS ACTION",
@@ -2387,10 +2331,8 @@ describe("fetchers", () => {
         index: "INDEX*",
       });
       expect(t.router.state.fetchers.get(key)).toBe(undefined);
-      expect(t.router.state.fetchers.get(actionKey)).toMatchObject({
-        state: "idle",
-        data: "TASKS ACTION",
-      });
+      expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
+      expect(t.fetcherData.get(actionKey)).toEqual("TASKS ACTION");
     });
 
     it("handles revalidating fetcher when the triggering fetcher is deleted", async () => {
@@ -2446,10 +2388,8 @@ describe("fetchers", () => {
       await B.loaders.fetch.resolve("FETCH*");
 
       expect(t.router.state.loaderData).toEqual({ home: "HOME*" });
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "FETCH*",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("FETCH*");
       expect(t.router.state.fetchers.get(actionKey)).toBeUndefined();
     });
 
@@ -2508,10 +2448,8 @@ describe("fetchers", () => {
       // Complete the navigation
       await B.loaders.fetch.resolve("B");
       expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "B",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("B");
       expect(spy).not.toHaveBeenCalled();
     });
 
@@ -2551,15 +2489,13 @@ describe("fetchers", () => {
       expect(A.loaders.fetch.signal.aborted).toBe(false);
 
       await A.loaders.fetch.resolve("A");
-      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
 
       // Complete the navigation
       await B.loaders.page.resolve("PAGE");
       expect(t.router.state.navigation.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)).toMatchObject({
-        state: "idle",
-        data: "A",
-      });
+      expect(t.router.state.fetchers.get(key)).toBeUndefined();
+      expect(t.fetcherData.get(key)).toEqual("A");
       expect(spy).not.toHaveBeenCalled();
     });
   });
@@ -2596,11 +2532,11 @@ describe("fetchers", () => {
       // fetcher.load()
       let A = await t.fetch("/parent", key);
       await A.loaders.parent.resolve("PARENT LOADER");
-      expect(t.router.getFetcher(key).data).toBe("PARENT LOADER");
+      expect(t.fetcherData.get(key)).toBe("PARENT LOADER");
 
       let B = await t.fetch("/parent?index", key);
       await B.loaders.index.resolve("INDEX LOADER");
-      expect(t.router.getFetcher(key).data).toBe("INDEX LOADER");
+      expect(t.fetcherData.get(key)).toBe("INDEX LOADER");
 
       // fetcher.submit({}, { method: 'get' })
       let C = await t.fetch("/parent", key, {
@@ -2608,14 +2544,14 @@ describe("fetchers", () => {
         formData: createFormData({}),
       });
       await C.loaders.parent.resolve("PARENT LOADER");
-      expect(t.router.getFetcher(key).data).toBe("PARENT LOADER");
+      expect(t.fetcherData.get(key)).toBe("PARENT LOADER");
 
       let D = await t.fetch("/parent?index", key, {
         formMethod: "get",
         formData: createFormData({}),
       });
       await D.loaders.index.resolve("INDEX LOADER");
-      expect(t.router.getFetcher(key).data).toBe("INDEX LOADER");
+      expect(t.fetcherData.get(key)).toBe("INDEX LOADER");
 
       // fetcher.submit({}, { method: 'post' })
       let E = await t.fetch("/parent", key, {
@@ -2623,14 +2559,14 @@ describe("fetchers", () => {
         formData: createFormData({}),
       });
       await E.actions.parent.resolve("PARENT ACTION");
-      expect(t.router.getFetcher(key).data).toBe("PARENT ACTION");
+      expect(t.fetcherData.get(key)).toBe("PARENT ACTION");
 
       let F = await t.fetch("/parent?index", key, {
         formMethod: "post",
         formData: createFormData({}),
       });
       await F.actions.index.resolve("INDEX ACTION");
-      expect(t.router.getFetcher(key).data).toBe("INDEX ACTION");
+      expect(t.fetcherData.get(key)).toBe("INDEX ACTION");
     });
 
     it("throws a 404 ErrorResponse without ?index and parent route has no loader", async () => {
@@ -2665,7 +2601,7 @@ describe("fetchers", () => {
           },
         }
       `);
-      expect(t.router.getFetcher(key).data).toBe(undefined);
+      expect(t.fetcherData.get(key)).toBe(undefined);
     });
 
     it("throws a 404 ErrorResponse with ?index and index route has no loader", async () => {
@@ -2700,7 +2636,7 @@ describe("fetchers", () => {
           },
         }
       `);
-      expect(t.router.getFetcher(key).data).toBe(undefined);
+      expect(t.fetcherData.get(key)).toBe(undefined);
     });
 
     it("throws a 405 ErrorResponse without ?index and parent route has no action", async () => {
@@ -2737,7 +2673,7 @@ describe("fetchers", () => {
           },
         }
       `);
-      expect(t.router.getFetcher(key).data).toBe(undefined);
+      expect(t.fetcherData.get(key)).toBe(undefined);
     });
 
     it("throws a 405 ErrorResponse with ?index and index route has no action", async () => {
@@ -2774,7 +2710,7 @@ describe("fetchers", () => {
           },
         }
       `);
-      expect(t.router.getFetcher(key).data).toBe(undefined);
+      expect(t.fetcherData.get(key)).toBe(undefined);
     });
   });
 
