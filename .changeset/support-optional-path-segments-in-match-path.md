@@ -1,6 +1,5 @@
 ---
-"react-router": patch
-"@remix-run/router": patch
+"@remix-run/router": minor
 ---
 
-Added support for optional path segments in `matchPath`
+Add support for optional path segments in `matchPath`
