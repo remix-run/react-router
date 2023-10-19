@@ -2511,10 +2511,17 @@ describe("a router", () => {
       });
       router.initialize();
 
+      let fetcherData;
+      router.subscribe((state) => {
+        if (state.fetchers.get("key")?.data) {
+          fetcherData = state.fetchers.get("key")?.data;
+        }
+      });
+
       let key = "key";
       router.fetch(key, "root", "/foo");
       await fooDfd.resolve("FOO");
-      expect(router.state.fetchers.get("key")?.data).toBe("FOO");
+      expect(fetcherData).toBe("FOO");
 
       let rootDfd2 = createDeferred();
       let newRoutes: AgnosticDataRouteObject[] = [
@@ -2615,10 +2622,17 @@ describe("a router", () => {
       });
       router.initialize();
 
+      let fetcherData;
+      router.subscribe((state) => {
+        if (state.fetchers.get("key")?.data) {
+          fetcherData = state.fetchers.get("key")?.data;
+        }
+      });
+
       let key = "key";
       router.fetch(key, "root", "/foo");
       await fooDfd.resolve("FOO");
-      expect(router.state.fetchers.get("key")?.data).toBe("FOO");
+      expect(fetcherData).toBe("FOO");
 
       let rootDfd2 = createDeferred();
       let newRoutes: AgnosticDataRouteObject[] = [
@@ -2659,7 +2673,7 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({
         root: "ROOT*",
       });
-      // Fetcher should have been revalidated but theown a 404 wince the route was removed
+      // Fetcher should have been revalidated but thrown a 404 since the route was removed
       expect(router.state.fetchers.get("key")?.data).toBe(undefined);
       expect(router.state.errors).toEqual({
         root: new ErrorResponseImpl(

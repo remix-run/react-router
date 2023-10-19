@@ -1,5 +1,5 @@
 import { createMemoryHistory } from "../history";
-import { createRouter } from "../router";
+import { RouterState, createRouter } from "../router";
 import { AbortedDeferredError, ErrorResponseImpl, defer } from "../utils";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
 import { cleanup, createDeferred, setup } from "./utils/data-router-setup";
@@ -1379,12 +1379,10 @@ describe("deferred data", () => {
     });
 
     await dfd.resolve("2");
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: {
-        critical: "1",
-        lazy: "2",
-      },
+    expect(t.router.state.fetchers.get(key)).toBeUndefined();
+    expect(t.fetcherData.get(key)).toEqual({
+      critical: "1",
+      lazy: "2",
     });
 
     // Trigger a revalidation for the same fetcher
@@ -1397,21 +1395,17 @@ describe("deferred data", () => {
         lazy: dfd2.promise,
       })
     );
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: {
-        critical: "1",
-        lazy: "2",
-      },
+    expect(t.router.state.fetchers.get(key)).toBeUndefined();
+    expect(t.fetcherData.get(key)).toEqual({
+      critical: "1",
+      lazy: "2",
     });
 
     await dfd2.resolve("4");
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: {
-        critical: "3",
-        lazy: "4",
-      },
+    expect(t.router.state.fetchers.get(key)).toBeUndefined();
+    expect(t.fetcherData.get(key)).toEqual({
+      critical: "3",
+      lazy: "4",
     });
   });
 
@@ -1500,12 +1494,10 @@ describe("deferred data", () => {
     await dfd2.resolve("4");
     await loaderPromise1;
     await loaderPromise2;
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: {
-        critical: "3",
-        lazy: "4",
-      },
+    expect(t.router.state.fetchers.get(key)).toBeUndefined();
+    expect(t.fetcherData.get(key)).toEqual({
+      critical: "3",
+      lazy: "4",
     });
   });
 
@@ -1624,10 +1616,8 @@ describe("deferred data", () => {
         lazy: expect.trackedPromise("Yep!"),
       },
     });
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "ACTION",
-    });
+    expect(t.router.state.fetchers.get(key)).toBeUndefined();
+    expect(t.fetcherData.get(key)).toBe("ACTION");
   });
 
   it("differentiates between navigation and fetcher deferreds on cancellations", async () => {
@@ -1652,6 +1642,13 @@ describe("deferred data", () => {
           root: { value: -1 },
         },
       },
+    });
+
+    let fetcherData;
+    router.subscribe((state) => {
+      if (state.fetchers.get(key)?.data) {
+        fetcherData = state.fetchers.get(key)?.data;
+      }
     });
 
     // navigate to root, kicking off a reload of the root loader
@@ -1692,10 +1689,8 @@ describe("deferred data", () => {
     expect(router.state.loaderData).toEqual({
       root: { value: expect.trackedPromise(2) },
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: { value: 3 },
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toEqual({ value: 3 });
 
     // Assert that both the route loader and fetcher loader were aborted
     expect(signals[0].aborted).toBe(true); // initial route

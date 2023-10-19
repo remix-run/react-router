@@ -541,12 +541,18 @@ describe("shouldRevalidate", () => {
     await tick();
 
     let key = "key";
+
+    let fetcherData;
+    router.subscribe((state) => {
+      if (state.fetchers.get(key)?.data) {
+        fetcherData = state.fetchers.get(key)?.data;
+      }
+    });
+
     router.fetch(key, "root", "/fetch");
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe("FETCH 1");
     expect(shouldRevalidate.mock.calls.length).toBe(0);
 
     // Normal navigations should trigger fetcher shouldRevalidate with
@@ -561,10 +567,8 @@ describe("shouldRevalidate", () => {
       nextUrl: expect.urlMatch("http://localhost/child"),
       defaultShouldRevalidate: false,
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe("FETCH 1");
 
     router.navigate("/");
     await tick();
@@ -576,10 +580,8 @@ describe("shouldRevalidate", () => {
       nextUrl: expect.urlMatch("http://localhost/"),
       defaultShouldRevalidate: false,
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe("FETCH 1");
 
     // Submission navigations should trigger fetcher shouldRevalidate with
     // defaultShouldRevalidate=true
@@ -588,10 +590,8 @@ describe("shouldRevalidate", () => {
       formData: createFormData({}),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe("FETCH 1");
     expect(shouldRevalidate.mock.calls.length).toBe(3);
     expect(shouldRevalidate.mock.calls[2][0]).toMatchObject({
       currentParams: {},
@@ -639,15 +639,21 @@ describe("shouldRevalidate", () => {
     await tick();
 
     let key = "key";
+
+    let fetcherData;
+    router.subscribe((state) => {
+      if (state.fetchers.get(key)?.data) {
+        fetcherData = state.fetchers.get(key)?.data;
+      }
+    });
+
     router.fetch(key, "root", "/fetch", {
       formMethod: "post",
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH",
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe("FETCH");
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
@@ -702,15 +708,20 @@ describe("shouldRevalidate", () => {
     await tick();
 
     let key = "key";
+    let fetcherData;
+    router.subscribe((state) => {
+      if (state.fetchers.get(key)?.data) {
+        fetcherData = state.fetchers.get(key)?.data;
+      }
+    });
+
     router.fetch(key, "root", "/fetch", {
       formMethod: "post",
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: undefined,
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe(undefined);
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
@@ -817,16 +828,20 @@ describe("shouldRevalidate", () => {
     await tick();
 
     let key = "key";
+    let fetcherData;
+    router.subscribe((state) => {
+      if (state.fetchers.get(key)?.data) {
+        fetcherData = state.fetchers.get(key)?.data;
+      }
+    });
 
     router.fetch(key, "root", "/fetch", {
       formMethod: "post",
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe("FETCH 1");
     expect(router.state.loaderData).toMatchObject({
       index: "INDEX",
     });
@@ -836,10 +851,8 @@ describe("shouldRevalidate", () => {
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 2",
-    });
+    expect(router.state.fetchers.get(key)).toBeUndefined();
+    expect(fetcherData).toBe("FETCH 2");
     expect(router.state.loaderData).toMatchObject({
       index: "INDEX",
     });

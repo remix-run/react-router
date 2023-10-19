@@ -16,6 +16,7 @@ import {
   matchRoutes,
   redirect,
   parsePath,
+  IDLE_FETCHER,
 } from "../../index";
 
 // Private API
@@ -320,6 +321,15 @@ export function setup({
     window: testWindow,
   }).initialize();
 
+  let fetcherData = new Map<string, any>();
+  currentRouter.subscribe((state) => {
+    state.fetchers.forEach((fetcher, key) => {
+      if (fetcher.data) {
+        fetcherData.set(key, fetcher.data);
+      }
+    });
+  });
+
   function getRouteHelpers(
     routeId: string,
     navigationId: number,
@@ -489,7 +499,11 @@ export function setup({
         navigationId,
         get fetcher() {
           invariant(currentRouter, "No currentRouter available");
-          return currentRouter.getFetcher(key);
+          let fetcher = currentRouter.state.fetchers.get(key) || IDLE_FETCHER;
+          return {
+            ...fetcher,
+            data: fetcherData.get(key),
+          };
         },
         lazy: {},
         loaders: {},
@@ -544,7 +558,11 @@ export function setup({
       navigationId,
       get fetcher() {
         invariant(currentRouter, "No currentRouter available");
-        return currentRouter.getFetcher(key);
+        let fetcher = currentRouter.state.fetchers.get(key) || IDLE_FETCHER;
+        return {
+          ...fetcher,
+          data: fetcherData.get(key),
+        };
       },
       lazy: lazyHelpers,
       loaders: loaderHelpers,
@@ -727,6 +745,7 @@ export function setup({
     window: testWindow,
     history,
     router: currentRouter,
+    fetcherData,
     navigate,
     fetch,
     revalidate,
