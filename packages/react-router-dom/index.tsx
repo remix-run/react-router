@@ -352,7 +352,7 @@ export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 
 // TODO: (v7) Change the useFetcher data from `any` to `unknown`
 type FetchersContextObject = {
-  data: Map<string, any>;
+  fetcherData: Map<string, any>;
   register: (key: string) => void;
   unregister: (key: string) => void;
 };
@@ -1286,7 +1286,7 @@ function useFetcherDataLayer() {
 
   let fetcherContext = React.useMemo<FetchersContextObject>(
     () => ({
-      data: fetcherData.current,
+      fetcherData: fetcherData.current,
       register: registerFetcher,
       unregister: unregisterFetcher,
     }),
@@ -1582,7 +1582,7 @@ export function useFetcher<TData = any>({
 }: { key?: string } = {}): FetcherWithComponents<TData> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let state = useDataRouterState(DataRouterStateHook.UseFetcher);
-  let fetchersCtx = React.useContext(FetchersContext);
+  let fetchersContext = React.useContext(FetchersContext);
   let route = React.useContext(RouteContext);
   let routeId = route.matches[route.matches.length - 1]?.route.id;
   let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
@@ -1590,14 +1590,17 @@ export function useFetcher<TData = any>({
     setFetcherKey(getUniqueFetcherId());
   }
 
-  invariant(fetchersCtx, `useFetcher must be used inside a FetchersContext`);
+  invariant(
+    fetchersContext,
+    `useFetcher must be used inside a FetchersContext`
+  );
   invariant(route, `useFetcher must be used inside a RouteContext`);
   invariant(
     routeId != null,
     `useFetcher can only be used on routes that contain a unique "id"`
   );
 
-  let { data, register, unregister } = fetchersCtx;
+  let { fetcherData, register, unregister } = fetchersContext;
 
   // Register/deregister with FetchersContext
   React.useEffect(() => {
@@ -1605,7 +1608,7 @@ export function useFetcher<TData = any>({
     return () => unregister(fetcherKey);
   }, [fetcherKey, register, unregister]);
 
-  // Fetcher additions
+  // Fetcher additions (load)
   let load = React.useCallback(
     (href: string) => {
       invariant(routeId, `fetcher.load routeId unavailable`);
@@ -1614,6 +1617,7 @@ export function useFetcher<TData = any>({
     [fetcherKey, routeId, router]
   );
 
+  // Fetcher additions (submit)
   let submitImpl = useSubmit();
   let submit = React.useCallback<FetcherSubmitFunction>(
     (target, opts) => {
@@ -1625,7 +1629,6 @@ export function useFetcher<TData = any>({
     },
     [fetcherKey, submitImpl]
   );
-
   let Form = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
       (props, ref) => {
@@ -1646,18 +1649,18 @@ export function useFetcher<TData = any>({
     return FetcherForm;
   }, [fetcherKey, submit]);
 
+  // Exposed stateful fetcher with data from FetchersContext
+  let data = fetcherData.get(fetcherKey);
   return React.useMemo(() => {
     // Prefer the fetcher from `state` not `router.state` since DataRouterContext
     // is memoized so this ensures we update on fetcher state updates
-    let fetcher = fetcherKey
-      ? state.fetchers.get(fetcherKey) || IDLE_FETCHER
-      : IDLE_FETCHER;
+    let fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
     return {
+      ...fetcher,
       Form,
       submit,
       load,
-      ...fetcher,
-      data: data.get(fetcherKey),
+      data,
     };
   }, [Form, data, fetcherKey, load, state.fetchers, submit]);
 }
