@@ -5821,6 +5821,202 @@ function testDomRouter(
       });
     });
 
+    describe("<Form navigate={false}>", () => {
+      function setupTest(
+        method: "get" | "post",
+        navigate: boolean,
+        renderFetcher = false
+      ) {
+        let loaderDefer = createDeferred();
+        let actionDefer = createDeferred();
+
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              async action({ request }) {
+                let resolvedValue = await actionDefer.promise;
+                let formData = await request.formData();
+                return `${resolvedValue}:${formData.get("test")}`;
+              },
+              loader: () => loaderDefer.promise,
+              Component() {
+                let data = useLoaderData() as string;
+                let actionData = useActionData() as string | undefined;
+                let location = useLocation();
+                let navigation = useNavigation();
+                let fetchers = useFetchers();
+                return (
+                  <div>
+                    <Form
+                      method={method}
+                      navigate={navigate}
+                      fetcherKey={renderFetcher ? "my-key" : undefined}
+                    >
+                      <input name="test" value="value" />
+                      <button type="submit">Submit Form</button>
+                    </Form>
+                    <pre>
+                      {[
+                        location.key,
+                        navigation.state,
+                        data,
+                        actionData,
+                        fetchers.map((f) => `${f.state}:${f.data}`),
+                      ].join(",")}
+                    </pre>
+                    <Outlet />
+                  </div>
+                );
+              },
+              ...(renderFetcher
+                ? {
+                    children: [
+                      {
+                        index: true,
+                        Component() {
+                          let fetcher = useFetcher({ key: "my-key" });
+                          return (
+                            <pre>{`fetcher:${fetcher.state}:${fetcher.data}`}</pre>
+                          );
+                        },
+                      },
+                    ],
+                  }
+                : {}),
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: { loaderData: { "0": "INIT" } },
+          }
+        );
+
+        let { container } = render(<RouterProvider router={router} />);
+
+        return { container, loaderDefer, actionDefer };
+      }
+
+      it('defaults to a navigation on <Form method="get">', async () => {
+        let { container, loaderDefer } = setupTest("get", true);
+
+        expect(getHtml(container)).toMatch("default,idle,INIT,,");
+
+        fireEvent.click(screen.getByText("Submit Form"));
+        await waitFor(() => screen.getByText("default,loading,INIT,,"));
+
+        loaderDefer.resolve("LOADER");
+        await waitFor(() => screen.getByText(/idle,LOADER,/));
+        // Navigation changes the location key
+        expect(getHtml(container)).not.toMatch("default");
+      });
+
+      it('defaults to a navigation on <Form method="post">', async () => {
+        let { container, loaderDefer, actionDefer } = setupTest("post", true);
+
+        expect(getHtml(container)).toMatch("default,idle,INIT,,");
+
+        fireEvent.click(screen.getByText("Submit Form"));
+        await waitFor(() => screen.getByText("default,submitting,INIT,,"));
+
+        actionDefer.resolve("ACTION");
+        await waitFor(() =>
+          screen.getByText("default,loading,INIT,ACTION:value,")
+        );
+
+        loaderDefer.resolve("LOADER");
+        await waitFor(() => screen.getByText(/idle,LOADER,ACTION:value/));
+        // Navigation changes the location key
+        expect(getHtml(container)).not.toMatch("default");
+      });
+
+      it('uses a fetcher for <Form method="get" navigate={false}>', async () => {
+        let { container, loaderDefer } = setupTest("get", false);
+
+        expect(getHtml(container)).toMatch("default,idle,INIT,,");
+
+        fireEvent.click(screen.getByText("Submit Form"));
+        // Fetcher does not trigger useNavigation
+        await waitFor(() =>
+          screen.getByText("default,idle,INIT,,loading:undefined")
+        );
+
+        loaderDefer.resolve("LOADER");
+        // Fetcher does not change the location key.  Because no useFetcher()
+        // accessed this key, the fetcher/data doesn't stick around
+        await waitFor(() => screen.getByText("default,idle,INIT,,"));
+      });
+
+      it('uses a fetcher for <Form method="post" navigate={false}>', async () => {
+        let { container, loaderDefer, actionDefer } = setupTest("post", false);
+
+        expect(getHtml(container)).toMatch("default,idle,INIT,");
+
+        fireEvent.click(screen.getByText("Submit Form"));
+        // Fetcher does not trigger useNavigation
+        await waitFor(() =>
+          screen.getByText("default,idle,INIT,,submitting:undefined")
+        );
+
+        actionDefer.resolve("ACTION");
+        await waitFor(() =>
+          screen.getByText("default,idle,INIT,,loading:ACTION:value")
+        );
+
+        loaderDefer.resolve("LOADER");
+        // Fetcher does not change the location key.  Because no useFetcher()
+        // accessed this key, the fetcher/data doesn't stick around
+        await waitFor(() => screen.getByText("default,idle,LOADER,,"));
+      });
+
+      it('uses a fetcher for <Form method="get" navigate={false} fetcherKey>', async () => {
+        let { container, loaderDefer } = setupTest("get", false, true);
+
+        expect(getHtml(container)).toMatch("default,idle,INIT,,");
+
+        fireEvent.click(screen.getByText("Submit Form"));
+        // Fetcher does not trigger useNavigation
+        await waitFor(() =>
+          screen.getByText("default,idle,INIT,,loading:undefined")
+        );
+        expect(getHtml(container)).toMatch("fetcher:loading:undefined");
+
+        loaderDefer.resolve("LOADER");
+        // Fetcher does not change the location key.  Because no useFetcher()
+        // accessed this key, the fetcher/data doesn't stick around
+        await waitFor(() => screen.getByText("default,idle,INIT,,"));
+        expect(getHtml(container)).toMatch("fetcher:idle:LOADER");
+      });
+
+      it('uses a fetcher for <Form method="post" navigate={false} fetcherKey>', async () => {
+        let { container, loaderDefer, actionDefer } = setupTest(
+          "post",
+          false,
+          true
+        );
+
+        expect(getHtml(container)).toMatch("default,idle,INIT,");
+
+        fireEvent.click(screen.getByText("Submit Form"));
+        // Fetcher does not trigger useNavigation
+        await waitFor(() =>
+          screen.getByText("default,idle,INIT,,submitting:undefined")
+        );
+
+        actionDefer.resolve("ACTION");
+        await waitFor(() =>
+          screen.getByText("default,idle,INIT,,loading:ACTION:value")
+        );
+        expect(getHtml(container)).toMatch("fetcher:loading:ACTION:value");
+
+        loaderDefer.resolve("LOADER");
+        // Fetcher does not change the location key.  Because no useFetcher()
+        // accessed this key, the fetcher/data doesn't stick around
+        await waitFor(() => screen.getByText("default,idle,LOADER,,"));
+        expect(getHtml(container)).toMatch("fetcher:idle:ACTION:value");
+      });
+    });
+
     describe("errors", () => {
       it("renders hydration errors on leaf elements", async () => {
         let router = createTestRouter(
