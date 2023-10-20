@@ -5862,7 +5862,7 @@ function testDomRouter(
                         navigation.state,
                         data,
                         actionData,
-                        fetchers.map((f) => `${f.state}:${f.data}`),
+                        fetchers.map((f) => f.state),
                       ].join(",")}
                     </pre>
                     <Outlet />
@@ -5937,9 +5937,7 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Submit Form"));
         // Fetcher does not trigger useNavigation
-        await waitFor(() =>
-          screen.getByText("default,idle,INIT,,loading:undefined")
-        );
+        await waitFor(() => screen.getByText("default,idle,INIT,,loading"));
 
         loaderDefer.resolve("LOADER");
         // Fetcher does not change the location key.  Because no useFetcher()
@@ -5954,14 +5952,10 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Submit Form"));
         // Fetcher does not trigger useNavigation
-        await waitFor(() =>
-          screen.getByText("default,idle,INIT,,submitting:undefined")
-        );
+        await waitFor(() => screen.getByText("default,idle,INIT,,submitting"));
 
         actionDefer.resolve("ACTION");
-        await waitFor(() =>
-          screen.getByText("default,idle,INIT,,loading:ACTION:value")
-        );
+        await waitFor(() => screen.getByText("default,idle,INIT,,loading"));
 
         loaderDefer.resolve("LOADER");
         // Fetcher does not change the location key.  Because no useFetcher()
@@ -5976,9 +5970,7 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Submit Form"));
         // Fetcher does not trigger useNavigation
-        await waitFor(() =>
-          screen.getByText("default,idle,INIT,,loading:undefined")
-        );
+        await waitFor(() => screen.getByText("default,idle,INIT,,loading"));
         expect(getHtml(container)).toMatch("fetcher:loading:undefined");
 
         loaderDefer.resolve("LOADER");
@@ -5999,14 +5991,10 @@ function testDomRouter(
 
         fireEvent.click(screen.getByText("Submit Form"));
         // Fetcher does not trigger useNavigation
-        await waitFor(() =>
-          screen.getByText("default,idle,INIT,,submitting:undefined")
-        );
+        await waitFor(() => screen.getByText("default,idle,INIT,,submitting"));
 
         actionDefer.resolve("ACTION");
-        await waitFor(() =>
-          screen.getByText("default,idle,INIT,,loading:ACTION:value")
-        );
+        await waitFor(() => screen.getByText("default,idle,INIT,,loading"));
         expect(getHtml(container)).toMatch("fetcher:loading:ACTION:value");
 
         loaderDefer.resolve("LOADER");

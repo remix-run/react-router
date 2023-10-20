@@ -1262,7 +1262,6 @@ if (__DEV__) {
 enum DataRouterHook {
   UseScrollRestoration = "useScrollRestoration",
   UseSubmit = "useSubmit",
-  UseSubmitFetcher = "useSubmitFetcher",
   UseFetcher = "useFetcher",
   useViewTransitionState = "useViewTransitionState",
 }
@@ -1661,9 +1660,12 @@ export function useFetcher<TData = any>({
  * Provides all fetchers currently on the page. Useful for layouts and parent
  * routes that need to provide pending/optimistic UI regarding the fetch.
  */
-export function useFetchers(): Fetcher[] {
+export function useFetchers(): Omit<Fetcher, "data">[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);
-  return [...state.fetchers.values()];
+  return [...state.fetchers.values()].map((fetcher) => {
+    let { data, ...rest } = fetcher;
+    return rest;
+  });
 }
 
 const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
