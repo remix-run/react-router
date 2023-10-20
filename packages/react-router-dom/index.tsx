@@ -454,42 +454,7 @@ export function RouterProvider({
     currentLocation: Location;
     nextLocation: Location;
   }>();
-  let fetcherRefs = React.useRef<Map<string, number>>(new Map());
-  let fetcherData = React.useRef<Map<string, any>>(new Map());
-
-  let registerFetcher = React.useCallback((key: string) => {
-    let count = fetcherRefs.current.get(key);
-    if (count == null) {
-      fetcherRefs.current.set(key, 1);
-    } else {
-      fetcherRefs.current.set(key, count + 1);
-    }
-  }, []);
-
-  let unregisterFetcher = React.useCallback(
-    (key: string) => {
-      let count = fetcherRefs.current.get(key);
-      if (count == null || count <= 1) {
-        fetcherRefs.current.delete(key);
-        fetcherData.current.delete(key);
-      } else {
-        fetcherRefs.current.set(key, count - 1);
-      }
-    },
-    [fetcherData]
-  );
-
-  let fetcherContext = React.useMemo<FetchersContextObject>(
-    () => ({
-      data: fetcherData.current,
-      register: registerFetcher,
-      unregister: unregisterFetcher,
-    }),
-    [registerFetcher, unregisterFetcher]
-  );
-
-  // console.log("fetcherRefs", fetcherRefs.current);
-  // console.log("fetcherData", fetcherData.current);
+  let { fetcherContext, fetcherData } = useFetcherDataLayer();
 
   let { v7_startTransition } = future || {};
 
@@ -542,7 +507,7 @@ export function RouterProvider({
         });
       }
     },
-    [optInStartTransition, transition, renderDfd, router.window]
+    [router.window, transition, renderDfd, fetcherData, optInStartTransition]
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -1288,6 +1253,47 @@ function useDataRouterState(hookName: DataRouterStateHook) {
   let state = React.useContext(DataRouterStateContext);
   invariant(state, getDataRouterConsoleError(hookName));
   return state;
+}
+
+function useFetcherDataLayer() {
+  let fetcherRefs = React.useRef<Map<string, number>>(new Map());
+  let fetcherData = React.useRef<Map<string, any>>(new Map());
+
+  let registerFetcher = React.useCallback(
+    (key: string) => {
+      let count = fetcherRefs.current.get(key);
+      if (count == null) {
+        fetcherRefs.current.set(key, 1);
+      } else {
+        fetcherRefs.current.set(key, count + 1);
+      }
+    },
+    [fetcherRefs]
+  );
+
+  let unregisterFetcher = React.useCallback(
+    (key: string) => {
+      let count = fetcherRefs.current.get(key);
+      if (count == null || count <= 1) {
+        fetcherRefs.current.delete(key);
+        fetcherData.current.delete(key);
+      } else {
+        fetcherRefs.current.set(key, count - 1);
+      }
+    },
+    [fetcherData, fetcherRefs]
+  );
+
+  let fetcherContext = React.useMemo<FetchersContextObject>(
+    () => ({
+      data: fetcherData.current,
+      register: registerFetcher,
+      unregister: unregisterFetcher,
+    }),
+    [fetcherData, registerFetcher, unregisterFetcher]
+  );
+
+  return { fetcherContext, fetcherData };
 }
 
 /**
