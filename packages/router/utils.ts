@@ -903,7 +903,7 @@ export function matchPath<
     pattern = { path: pattern, caseSensitive: false, end: true };
   }
 
-  let [matcher, paramNames] = compilePath(
+  let [matcher, compiledParams] = compilePath(
     pattern.path,
     pattern.caseSensitive,
     pattern.end
@@ -915,8 +915,8 @@ export function matchPath<
   let matchedPathname = match[0];
   let pathnameBase = matchedPathname.replace(/(.)\/+$/, "$1");
   let captureGroups = match.slice(1);
-  let params: Params = paramNames.reduce<Mutable<Params>>(
-    (memo, paramName, index) => {
+  let params: Params = compiledParams.reduce<Mutable<Params>>(
+    (memo, { paramName, isOptional }, index) => {
       // We need to compute the pathnameBase here using the raw splat value
       // instead of using params["*"] later because it will be decoded then
       if (paramName === "*") {
@@ -926,10 +926,12 @@ export function matchPath<
           .replace(/(.)\/+$/, "$1");
       }
 
-      memo[paramName] = safelyDecodeURIComponent(
-        captureGroups[index] || "",
-        paramName
-      );
+      const value = captureGroups[index];
+      if (isOptional && !value) {
+        memo[paramName] = undefined;
+      } else {
+        memo[paramName] = safelyDecodeURIComponent(value || "", paramName);
+      }
       return memo;
     },
     {}
@@ -943,11 +945,13 @@ export function matchPath<
   };
 }
 
+type CompiledPathParam = { paramName: string; isOptional?: boolean };
+
 function compilePath(
   path: string,
   caseSensitive = false,
   end = true
-): [RegExp, string[]] {
+): [RegExp, CompiledPathParam[]] {
   warning(
     path === "*" || !path.endsWith("*") || path.endsWith("/*"),
     `Route path "${path}" will be treated as if it were ` +
@@ -956,20 +960,20 @@ function compilePath(
       `please change the route path to "${path.replace(/\*$/, "/*")}".`
   );
 
-  let paramNames: string[] = [];
+  let params: CompiledPathParam[] = [];
   let regexpSource =
     "^" +
     path
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
-      .replace(/[\\.*+^$?{}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/\/:(\w+)/g, (_: string, paramName: string) => {
-        paramNames.push(paramName);
-        return "/([^\\/]+)";
+      .replace(/[\\.*+^${}|()[\]]/g, "\\$&") // Escape special regex chars
+      .replace(/\/:(\w+)(\?)?/g, (_: string, paramName: string, isOptional) => {
+        params.push({ paramName, isOptional: isOptional != null });
+        return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
       });
 
   if (path.endsWith("*")) {
-    paramNames.push("*");
+    params.push({ paramName: "*" });
     regexpSource +=
       path === "*" || path === "/*"
         ? "(.*)$" // Already matched the initial /, just match the rest
@@ -992,7 +996,7 @@ function compilePath(
 
   let matcher = new RegExp(regexpSource, caseSensitive ? undefined : "i");
 
-  return [matcher, paramNames];
+  return [matcher, params];
 }
 
 function safelyDecodeURI(value: string) {
