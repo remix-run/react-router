@@ -404,6 +404,21 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         return {
           appType: "custom",
           experimental: { hmrPartialAccept: true },
+          optimizeDeps: {
+            include: [
+              // pre-bundle React dependencies to avoid React duplicates,
+              // even if React dependencies are not direct dependencies
+              // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
+              "react",
+              `react/jsx-runtime`,
+              `react/jsx-dev-runtime`,
+              "react-dom/client",
+            ],
+          },
+          resolve: {
+            // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
+            dedupe: ["react", "react-dom"],
+          },
           ...(viteCommand === "build" && {
             base: pluginConfig.publicPath,
             build: {

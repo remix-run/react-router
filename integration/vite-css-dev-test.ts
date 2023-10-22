@@ -32,9 +32,6 @@ test.describe("Vite CSS dev", () => {
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
           export default defineConfig({
-            optimizeDeps: {
-              include: ["react", "react-dom/client"],
-            },
             server: {
               port: ${devPort},
               strictPort: true,
