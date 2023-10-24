@@ -461,6 +461,13 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
 
         viteChildCompiler = await createViteDevServer({
           ...viteUserConfig,
+          server: {
+            ...viteUserConfig.server,
+            // when parent compiler runs in middleware mode to support
+            // custom servers, we don't want the child compiler also
+            // run in middleware mode as that will cause websocket port conflicts
+            middlewareMode: false,
+          },
           configFile: false,
           envFile: false,
           plugins: [
@@ -852,8 +859,10 @@ function getRoute(
   pluginConfig: ResolvedRemixVitePluginConfig,
   file: string
 ): Route | undefined {
-  if (!file.startsWith(pluginConfig.appDirectory)) return;
-  let routePath = path.relative(pluginConfig.appDirectory, file);
+  if (!file.startsWith(viteNormalizePath(pluginConfig.appDirectory))) return;
+  let routePath = viteNormalizePath(
+    path.relative(pluginConfig.appDirectory, file)
+  );
   let route = Object.values(pluginConfig.routes).find(
     (r) => r.file === routePath
   );
