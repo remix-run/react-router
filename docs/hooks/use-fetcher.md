@@ -60,15 +60,37 @@ Fetchers have a lot of built-in behavior:
 - Handles uncaught errors by rendering the nearest `errorElement` (just like a normal navigation from `<Link>` or `<Form>`)
 - Will redirect the app if your action/loader being called returns a redirect (just like a normal navigation from `<Link>` or `<Form>`)
 
-## `fetcher.state`
+## Options
 
-You can know the state of the fetcher with `fetcher.state`. It will be one of:
+### `key`
 
-- **idle** - nothing is being fetched.
-- **submitting** - A route action is being called due to a fetcher submission using POST, PUT, PATCH, or DELETE
-- **loading** - The fetcher is calling a loader (from a `fetcher.load`) or is being revalidated after a separate submission or `useRevalidator` call
+By default, `useFetcher` generate a unique fetcher scoped to that component (however, it may be looked up in [`useFetchers()`][use_fetchers] while in-flight). If you want to identify a fetcher with your own key such that you can access it from elsewhere in your app, you can do that with the `key` option:
 
-## `fetcher.Form`
+```tsx
+function AddToBagButton() {
+  const fetcher = useFetcher({ key: "add-to-bag" });
+  return <fetcher.Form method="post">...</fetcher.Form>;
+}
+
+// Then, up in the header...
+function CartCount({ count }) {
+  const fetcher = useFetcher({ key: "add-to-bag" });
+  const inFlightCount = Number(
+    fetcher.formData?.get("quantity") || 0
+  );
+  const optimisticCount = count + inFlightCount;
+  return (
+    <>
+      <BagIcon />
+      <span>{optimisticCount}</span>
+    </>
+  );
+}
+```
+
+## Components
+
+### `fetcher.Form`
 
 Just like `<Form>` except it doesn't cause a navigation. <small>(You'll get over the dot in JSX ... we hope!)</small>
 
@@ -82,6 +104,8 @@ function SomeComponent() {
   );
 }
 ```
+
+## Methods
 
 ## `fetcher.load()`
 
@@ -140,7 +164,17 @@ If you want to submit to an index route, use the [`?index` param][indexsearchpar
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
 
-## `fetcher.data`
+## Properties
+
+### `fetcher.state`
+
+You can know the state of the fetcher with `fetcher.state`. It will be one of:
+
+- **idle** - nothing is being fetched.
+- **submitting** - A route action is being called due to a fetcher submission using POST, PUT, PATCH, or DELETE
+- **loading** - The fetcher is calling a loader (from a `fetcher.load`) or is being revalidated after a separate submission or `useRevalidator` call
+
+### `fetcher.data`
 
 The returned data from the loader or action is stored here. Once the data is set, it persists on the fetcher even through reloads and resubmissions.
 
@@ -171,7 +205,7 @@ function ProductDetails({ product }) {
 }
 ```
 
-## `fetcher.formData`
+### `fetcher.formData`
 
 When using `<fetcher.Form>` or `fetcher.submit()`, the form data is available to build optimistic UI.
 
@@ -204,15 +238,15 @@ function TaskCheckbox({ task }) {
 }
 ```
 
-## `fetcher.json`
+### `fetcher.json`
 
 When using `fetcher.submit(data, { formEncType: "application/json" })`, the submitted JSON is available via `fetcher.json`.
 
-## `fetcher.text`
+### `fetcher.text`
 
 When using `fetcher.submit(data, { formEncType: "text/plain" })`, the submitted text is available via `fetcher.text`.
 
-## `fetcher.formAction`
+### `fetcher.formAction`
 
 Tells you the action url the form is being submitted to.
 
@@ -223,7 +257,7 @@ Tells you the action url the form is being submitted to.
 fetcher.formAction; // "mark-as-read"
 ```
 
-## `fetcher.formMethod`
+### `fetcher.formMethod`
 
 Tells you the method of the form being submitted: get, post, put, patch, or delete.
 
