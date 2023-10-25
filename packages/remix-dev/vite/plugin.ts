@@ -520,6 +520,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         vite.httpServer?.on("listening", () => {
           setTimeout(showUnstableWarning, 50);
         });
+        // Let user servers handle SSR requests in middleware mode
+        if (vite.config.server.middlewareMode) return;
         return () => {
           vite.middlewares.use(async (req, res, next) => {
             try {
