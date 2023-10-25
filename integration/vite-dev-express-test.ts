@@ -15,7 +15,7 @@ test.beforeAll(async () => {
   projectDir = await createFixtureProject({
     compiler: "vite",
     files: {
-      "vite.config.mjs": js`
+      "vite.config.ts": js`
         import { defineConfig } from "vite";
         import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
