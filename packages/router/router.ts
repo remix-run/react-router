@@ -193,7 +193,7 @@ export interface Router {
    * Get/create a fetcher for the given key
    * @param key
    */
-  getFetcher<TData = any>(key?: string): Fetcher<TData>;
+  getFetcher<TData = any>(key: string): Fetcher<TData>;
 
   /**
    * @internal
@@ -202,7 +202,7 @@ export interface Router {
    * Delete the fetcher for a given key
    * @param key
    */
-  deleteFetcher(key?: string): void;
+  deleteFetcher(key: string): void;
 
   /**
    * @internal
