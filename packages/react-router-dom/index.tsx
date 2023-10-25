@@ -644,7 +644,7 @@ function DataRoutes({
 export interface BrowserRouterProps {
   basename?: string;
   children?: React.ReactNode;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
   window?: Window;
 }
 
@@ -693,7 +693,7 @@ export function BrowserRouter({
 export interface HashRouterProps {
   basename?: string;
   children?: React.ReactNode;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
   window?: Window;
 }
 

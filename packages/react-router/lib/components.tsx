@@ -185,7 +185,7 @@ export interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
 }
 
 /**

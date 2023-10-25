@@ -343,6 +343,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
+  v7_fetcherCleanup: boolean;
   v7_normalizeFormMethod: boolean;
   v7_prependBasename: boolean;
 }
@@ -763,6 +764,7 @@ export function createRouter(init: RouterInit): Router {
   let basename = init.basename || "/";
   // Config driven behavior flags
   let future: FutureConfig = {
+    v7_fetcherCleanup: false,
     v7_normalizeFormMethod: false,
     v7_prependBasename: false,
     ...init.future,
@@ -884,6 +886,10 @@ export function createRouter(init: RouterInit): Router {
 
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
+
+  // Fetchers that have requested a delete when using v7_fetcherCleanup,
+  // they'll be officially removed after they return to idle
+  let deletedFetchers = new Set<string>();
 
   // Store DeferredData instances for active route matches.  When a
   // route loader returns defer() we stick one in here.  Then, when a nested
@@ -1017,6 +1023,24 @@ export function createRouter(init: RouterInit): Router {
     subscribers.forEach((subscriber) =>
       subscriber(state, { unstable_viewTransitionOpts: viewTransitionOpts })
     );
+
+    // Remove idle fetchers from state since we only care about in-flight fetchers.
+    if (future.v7_fetcherCleanup) {
+      state.fetchers.forEach((fetcher, key) => {
+        if (fetcher.state === "idle") {
+          if (deletedFetchers.has(key)) {
+            // If the fetcher has unmounted and called router.deleteFetcher(),
+            // we can totally delete the fetcher
+            deleteFetcher(key);
+          } else {
+            // Otherwise, it must still be mounted in the UI so we just remove
+            // it from state now that we've handed off the data to the React
+            // layer.  Things such as fetchLoadMatches remain for revalidation.
+            state.fetchers.delete(key);
+          }
+        }
+      });
+    }
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -2009,7 +2033,7 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, doneFetcher);
     }
 
-    let didAbortFetchLoads = abortStaleFetchLoads(loadId);
+    abortStaleFetchLoads(loadId);
 
     // If we are currently in a navigation loading state and this fetcher is
     // more recent than the navigation, we want the newer data so abort the
@@ -2039,9 +2063,7 @@ export function createRouter(init: RouterInit): Router {
           matches,
           errors
         ),
-        ...(didAbortFetchLoads || revalidatingFetchers.length > 0
-          ? { fetchers: new Map(state.fetchers) }
-          : {}),
+        fetchers: new Map(state.fetchers),
       });
       isRevalidationRequired = false;
     }
@@ -2376,7 +2398,17 @@ export function createRouter(init: RouterInit): Router {
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
+    deletedFetchers.delete(key);
     state.fetchers.delete(key);
+  }
+
+  function deleteFetcherAndUpdateState(key: string): void {
+    if (future.v7_fetcherCleanup) {
+      deletedFetchers.add(key);
+    } else {
+      deleteFetcher(key);
+    }
+    updateState({ fetchers: new Map(state.fetchers) });
   }
 
   function abortFetcher(key: string) {
@@ -2613,7 +2645,7 @@ export function createRouter(init: RouterInit): Router {
     createHref: (to: To) => init.history.createHref(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
-    deleteFetcher,
+    deleteFetcher: deleteFetcherAndUpdateState,
     dispose,
     getBlocker,
     deleteBlocker,
