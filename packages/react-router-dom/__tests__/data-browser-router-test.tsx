@@ -5213,6 +5213,37 @@ function testDomRouter(
             screen.getByText("1, idle/FETCH 2, idle/FETCH 2")
           );
         });
+
+        it("exposes fetcher keys via useFetchers", async () => {
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                loader: () => "FETCH",
+                Component() {
+                  let fetcher1 = useFetcher();
+                  let fetcher2 = useFetcher({ key: "my-key" });
+                  let fetchers = useFetchers();
+                  React.useEffect(() => {
+                    if (fetcher1.state === "idle" && !fetcher1.data) {
+                      fetcher1.load("/");
+                    }
+                    if (fetcher2.state === "idle" && !fetcher2.data) {
+                      fetcher2.load("/");
+                    }
+                  }, [fetcher1, fetcher2]);
+                  return <pre>{fetchers.map((f) => f.key).join(",")}</pre>;
+                },
+              },
+            ],
+            { window: getWindow("/") }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+          expect(container.innerHTML).not.toMatch(/__\d+__,my-key/);
+          await waitFor(() =>
+            expect(container.innerHTML).toMatch(/__\d+__,my-key/)
+          );
+        });
       });
 
       describe("<Form navigate={false}>", () => {

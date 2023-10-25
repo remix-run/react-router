@@ -1380,7 +1380,7 @@ function validateClientSideSubmission() {
 }
 
 let fetcherId = 0;
-let getUniqueFetcherId = () => String(++fetcherId);
+let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 
 /**
  * Returns a function that may be used to programmatically submit a form (or
@@ -1580,9 +1580,12 @@ export function useFetcher<TData = any>({
  * Provides all fetchers currently on the page. Useful for layouts and parent
  * routes that need to provide pending/optimistic UI regarding the fetch.
  */
-export function useFetchers(): Fetcher[] {
+export function useFetchers(): (Fetcher & { key: string })[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);
-  return [...state.fetchers.values()];
+  return Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
+    ...fetcher,
+    key,
+  }));
 }
 
 const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
