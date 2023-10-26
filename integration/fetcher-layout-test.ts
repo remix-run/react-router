@@ -31,7 +31,7 @@ test.beforeAll(async () => {
           return (
             <div>
               <h1>Layout</h1>
-              <button onClick={invokeFetcher}>Invoke Fetcher</button>
+              <button id="layout-fetcher" onClick={invokeFetcher}>Invoke Fetcher</button>
               {!!fetcher.data && <p id="layout-fetcher-data">{fetcher.data}</p>}
               <Outlet />
             </div>
@@ -118,7 +118,7 @@ test.beforeAll(async () => {
           return (
             <div>
               <h1>Layout</h1>
-              <button onClick={invokeFetcher}>Invoke Fetcher</button>
+              <button id="layout-fetcher" onClick={invokeFetcher}>Invoke Fetcher</button>
               {!!fetcher.data && <p id="layout-fetcher-data">{fetcher.data}</p>}
               <Outlet />
             </div>
@@ -194,7 +194,7 @@ test("fetcher calls layout route action when at index route", async ({
 }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action");
-  await app.clickElement("button");
+  await app.clickElement("#layout-fetcher");
   await page.waitForSelector("#layout-fetcher-data");
   let dataElement = await app.getElement("#layout-fetcher-data");
   expect(dataElement.text()).toBe("layout action data");
@@ -207,7 +207,7 @@ test("fetcher calls layout route loader when at index route", async ({
 }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader");
-  await app.clickElement("button");
+  await app.clickElement("#layout-fetcher");
   await page.waitForSelector("#layout-fetcher-data");
   let dataElement = await app.getElement("#layout-fetcher-data");
   expect(dataElement.text()).toBe("layout loader data");
@@ -242,7 +242,7 @@ test("fetcher calls layout route action when at paramaterized route", async ({
 }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action/foo");
-  await app.clickElement("button");
+  await app.clickElement("#layout-fetcher");
   await page.waitForSelector("#layout-fetcher-data");
   let dataElement = await app.getElement("#layout-fetcher-data");
   expect(dataElement.text()).toBe("layout action data");
@@ -250,18 +250,18 @@ test("fetcher calls layout route action when at paramaterized route", async ({
   expect(dataElement.text()).toBe("foo");
 });
 
-test("fetcher calls layout route loader when at paramaterized route", async ({
+test("fetcher calls layout route loader when at parameterized route", async ({
   page,
 }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader/foo");
-  await app.clickElement("button");
+  await app.clickElement("#layout-fetcher");
   await page.waitForSelector("#layout-fetcher-data");
   let dataElement = await app.getElement("#layout-fetcher-data");
   expect(dataElement.text()).toBe("layout loader data");
 });
 
-test("fetcher calls paramaterized route route action", async ({ page }) => {
+test("fetcher calls parameterized route route action", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-action/foo");
   await app.clickElement("#param-fetcher");
@@ -272,7 +272,7 @@ test("fetcher calls paramaterized route route action", async ({ page }) => {
   expect(dataElement.text()).toBe("foo");
 });
 
-test("fetcher calls paramaterized route route loader", async ({ page }) => {
+test("fetcher calls parameterized route route loader", async ({ page }) => {
   let app = new PlaywrightFixture(appFixture, page);
   await app.goto("/layout-loader/foo");
   await app.clickElement("#param-fetcher");

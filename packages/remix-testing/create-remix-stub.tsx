@@ -103,7 +103,9 @@ export function createRemixStub(
 
     if (routerRef.current == null) {
       remixContextRef.current = {
-        future: { ...future },
+        future: {
+          v3_fetcherPersist: future?.v3_fetcherPersist === true,
+        },
         manifest: {
           routes: {},
           entry: { imports: [], module: "" },

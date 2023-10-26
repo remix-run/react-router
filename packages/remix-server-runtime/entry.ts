@@ -14,7 +14,9 @@ export interface EntryContext {
   serializeError(error: Error): SerializedError;
 }
 
-export interface FutureConfig {}
+export interface FutureConfig {
+  v3_fetcherPersist: boolean;
+}
 
 export interface AssetsManifest {
   entry: {

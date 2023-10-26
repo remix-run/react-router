@@ -37,6 +37,7 @@ import { replaceImportSpecifier } from "./replace-import-specifier";
 const supportedRemixConfigKeys = [
   "appDirectory",
   "assetsBuildDirectory",
+  "future",
   "ignoredRouteFiles",
   "publicPath",
   "routes",
@@ -245,7 +246,9 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         serverBuildPath,
         serverModuleFormat,
         relativeAssetsBuildDirectory,
-        future: {},
+        future: {
+          v3_fetcherPersist: options.future?.v3_fetcherPersist === true,
+        },
       };
     };
 
