@@ -349,6 +349,20 @@ if (__DEV__) {
 
 export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 
+// TODO: (v7) Change the useFetcher data from `any` to `unknown`
+type FetchersContextObject = {
+  fetcherData: Map<string, any>;
+  register: (key: string) => void;
+  unregister: (key: string) => void;
+};
+
+const FetchersContext = React.createContext<FetchersContextObject | null>(null);
+if (__DEV__) {
+  FetchersContext.displayName = "Fetchers";
+}
+
+export { FetchersContext as UNSAFE_FetchersContext };
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -427,6 +441,7 @@ export function RouterProvider({
   router,
   future,
 }: RouterProviderProps): React.ReactElement {
+  let { fetcherContext, fetcherData } = useFetcherDataLayer();
   let [state, setStateImpl] = React.useState(router.state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
@@ -457,6 +472,12 @@ export function RouterProvider({
       newState: RouterState,
       { unstable_viewTransitionOpts: viewTransitionOpts }
     ) => {
+      newState.fetchers.forEach((fetcher, key) => {
+        if (fetcher.data !== undefined) {
+          fetcherData.current.set(key, fetcher.data);
+        }
+      });
+
       if (
         !viewTransitionOpts ||
         router.window == null ||
@@ -484,7 +505,7 @@ export function RouterProvider({
         });
       }
     },
-    [optInStartTransition, transition, renderDfd, router.window]
+    [router.window, transition, renderDfd, fetcherData, optInStartTransition]
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -587,20 +608,22 @@ export function RouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <ViewTransitionContext.Provider value={vtContext}>
-            <Router
-              basename={basename}
-              location={state.location}
-              navigationType={state.historyAction}
-              navigator={navigator}
-            >
-              {state.initialized ? (
-                <DataRoutes routes={router.routes} state={state} />
-              ) : (
-                fallbackElement
-              )}
-            </Router>
-          </ViewTransitionContext.Provider>
+          <FetchersContext.Provider value={fetcherContext}>
+            <ViewTransitionContext.Provider value={vtContext}>
+              <Router
+                basename={basename}
+                location={state.location}
+                navigationType={state.historyAction}
+                navigator={navigator}
+              >
+                {state.initialized ? (
+                  <DataRoutes routes={router.routes} state={state} />
+                ) : (
+                  fallbackElement
+                )}
+              </Router>
+            </ViewTransitionContext.Provider>
+          </FetchersContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {null}
@@ -1198,6 +1221,8 @@ enum DataRouterStateHook {
   UseScrollRestoration = "useScrollRestoration",
 }
 
+// Internal hooks
+
 function getDataRouterConsoleError(
   hookName: DataRouterHook | DataRouterStateHook
 ) {
@@ -1215,6 +1240,49 @@ function useDataRouterState(hookName: DataRouterStateHook) {
   invariant(state, getDataRouterConsoleError(hookName));
   return state;
 }
+
+function useFetcherDataLayer() {
+  let fetcherRefs = React.useRef<Map<string, number>>(new Map());
+  let fetcherData = React.useRef<Map<string, any>>(new Map());
+
+  let registerFetcher = React.useCallback(
+    (key: string) => {
+      let count = fetcherRefs.current.get(key);
+      if (count == null) {
+        fetcherRefs.current.set(key, 1);
+      } else {
+        fetcherRefs.current.set(key, count + 1);
+      }
+    },
+    [fetcherRefs]
+  );
+
+  let unregisterFetcher = React.useCallback(
+    (key: string) => {
+      let count = fetcherRefs.current.get(key);
+      if (count == null || count <= 1) {
+        fetcherRefs.current.delete(key);
+        fetcherData.current.delete(key);
+      } else {
+        fetcherRefs.current.set(key, count - 1);
+      }
+    },
+    [fetcherData, fetcherRefs]
+  );
+
+  let fetcherContext = React.useMemo<FetchersContextObject>(
+    () => ({
+      fetcherData: fetcherData.current,
+      register: registerFetcher,
+      unregister: unregisterFetcher,
+    }),
+    [fetcherData, registerFetcher, unregisterFetcher]
+  );
+
+  return { fetcherContext, fetcherData };
+}
+
+// External hooks
 
 /**
  * Handles the click behavior for router `<Link>` components. This is useful if
@@ -1499,20 +1567,41 @@ export function useFetcher<TData = any>({
   key,
 }: { key?: string } = {}): FetcherWithComponents<TData> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
+  let fetchersContext = React.useContext(FetchersContext);
   let route = React.useContext(RouteContext);
-  invariant(route, `useFetcher must be used inside a RouteContext`);
-
   let routeId = route.matches[route.matches.length - 1]?.route.id;
+
+  invariant(
+    fetchersContext,
+    `useFetcher must be used inside a FetchersContext`
+  );
+  invariant(route, `useFetcher must be used inside a RouteContext`);
   invariant(
     routeId != null,
     `useFetcher can only be used on routes that contain a unique "id"`
   );
 
+  // Fetcher key handling
   let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
   if (!fetcherKey) {
     setFetcherKey(getUniqueFetcherId());
   }
 
+  // Registration/cleanup
+  let { fetcherData, register, unregister } = fetchersContext;
+  React.useEffect(() => {
+    register(fetcherKey);
+    return () => {
+      unregister(fetcherKey);
+      if (!router) {
+        console.warn(`No router available to clean up from useFetcher()`);
+        return;
+      }
+      router.deleteFetcher(fetcherKey);
+    };
+  }, [router, fetcherKey, register, unregister]);
+
+  // Fetcher additions
   let load = React.useCallback(
     (href: string) => {
       invariant(router, "No router available for fetcher.load()");
@@ -1521,8 +1610,6 @@ export function useFetcher<TData = any>({
     },
     [fetcherKey, routeId, router]
   );
-
-  // Fetcher additions (submit)
   let submitImpl = useSubmit();
   let submit = React.useCallback<FetcherSubmitFunction>(
     (target, opts) => {
@@ -1548,30 +1635,19 @@ export function useFetcher<TData = any>({
     return FetcherForm;
   }, [fetcherKey]);
 
+  // Exposed FetcherWithComponents
   let fetcher = router.getFetcher<TData>(fetcherKey);
-
+  let data = fetcherData.get(fetcherKey);
   let fetcherWithComponents = React.useMemo(
     () => ({
       Form: FetcherForm,
       submit,
       load,
       ...fetcher,
+      data,
     }),
-    [fetcher, FetcherForm, submit, load]
+    [FetcherForm, submit, load, fetcher, data]
   );
-
-  React.useEffect(() => {
-    // Is this busted when the React team gets real weird and calls effects
-    // twice on mount?  We really just need to garbage collect here when this
-    // fetcher is no longer around.
-    return () => {
-      if (!router) {
-        console.warn(`No router available to clean up from useFetcher()`);
-        return;
-      }
-      router.deleteFetcher(fetcherKey);
-    };
-  }, [router, fetcherKey]);
 
   return fetcherWithComponents;
 }
