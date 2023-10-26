@@ -66,7 +66,7 @@ const router = createBrowserRouter(routes, {
 | Flag                     | Description                                                           |
 | ------------------------ | --------------------------------------------------------------------- |
 | `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
-| `v7_fetcherCleanup`      | Delay active fetcher cleanup until they return to an `idle` state     |
+| `v7_fetcherPersist`      | Delay active fetcher cleanup until they return to an `idle` state     |
 
 ### React Router Future Flags
 

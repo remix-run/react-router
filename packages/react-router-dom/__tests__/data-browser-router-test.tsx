@@ -5382,7 +5382,7 @@ function testDomRouter(
           });
         });
 
-        describe("v7_fetcherCleanup=true", () => {
+        describe("v7_fetcherPersist=true", () => {
           it("loading fetchers persist until completion", async () => {
             let dfd = createDeferred();
             let router = createTestRouter(
@@ -5424,7 +5424,7 @@ function testDomRouter(
                   loader: () => dfd.promise,
                 },
               ],
-              { window: getWindow("/"), future: { v7_fetcherCleanup: true } }
+              { window: getWindow("/"), future: { v7_fetcherPersist: true } }
             );
             let { container } = render(<RouterProvider router={router} />);
 
@@ -5493,7 +5493,7 @@ function testDomRouter(
                   action: () => dfd.promise,
                 },
               ],
-              { window: getWindow("/"), future: { v7_fetcherCleanup: true } }
+              { window: getWindow("/"), future: { v7_fetcherPersist: true } }
             );
             let { container } = render(<RouterProvider router={router} />);
 
@@ -5566,7 +5566,7 @@ function testDomRouter(
                   action: () => dfd.promise,
                 },
               ],
-              { window: getWindow("/"), future: { v7_fetcherCleanup: true } }
+              { window: getWindow("/"), future: { v7_fetcherPersist: true } }
             );
             let { container } = render(<RouterProvider router={router} />);
 
@@ -5640,7 +5640,7 @@ function testDomRouter(
                   action: () => dfd.promise,
                 },
               ],
-              { window: getWindow("/"), future: { v7_fetcherCleanup: true } }
+              { window: getWindow("/"), future: { v7_fetcherPersist: true } }
             );
             let { container } = render(<RouterProvider router={router} />);
 
@@ -5705,7 +5705,7 @@ function testDomRouter(
                   action: () => dfd.promise,
                 },
               ],
-              { window: getWindow("/"), future: { v7_fetcherCleanup: true } }
+              { window: getWindow("/"), future: { v7_fetcherPersist: true } }
             );
             let { container } = render(<RouterProvider router={router} />);
 
