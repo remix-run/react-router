@@ -1050,6 +1050,16 @@ export interface FetcherFormProps
 
 export interface FormProps extends FetcherFormProps {
   /**
+   * Indicate a specific fetcherKey to use when using navigate=false
+   */
+  fetcherKey?: string;
+
+  /**
+   * navigate=false will use a fetcher instead of a navigation
+   */
+  navigate?: boolean;
+
+  /**
    * Forces a full document navigation instead of a fetch.
    */
   reloadDocument?: boolean;
@@ -1072,23 +1082,6 @@ export interface FormProps extends FetcherFormProps {
   unstable_viewTransition?: boolean;
 }
 
-/**
- * A `@remix-run/router`-aware `<form>`. It behaves like a normal form except
- * that the interaction with the server is with `fetch` instead of new document
- * requests, allowing components to add nicer UX to the page as the form is
- * submitted and returns with data.
- */
-export const Form = React.forwardRef<HTMLFormElement, FormProps>(
-  (props, ref) => {
-    let submit = useSubmit();
-    return <FormImpl {...props} submit={submit} ref={ref} />;
-  }
-);
-
-if (__DEV__) {
-  Form.displayName = "Form";
-}
-
 type HTMLSubmitEvent = React.BaseSyntheticEvent<
   SubmitEvent,
   Event,
@@ -1097,20 +1090,23 @@ type HTMLSubmitEvent = React.BaseSyntheticEvent<
 
 type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
-interface FormImplProps extends FormProps {
-  submit: SubmitFunction | FetcherSubmitFunction;
-}
-
-const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
+/**
+ * A `@remix-run/router`-aware `<form>`. It behaves like a normal form except
+ * that the interaction with the server is with `fetch` instead of new document
+ * requests, allowing components to add nicer UX to the page as the form is
+ * submitted and returns with data.
+ */
+export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
     {
+      fetcherKey,
+      navigate,
       reloadDocument,
       replace,
       state,
       method = defaultMethod,
       action,
       onSubmit,
-      submit,
       relative,
       preventScrollReset,
       unstable_viewTransition,
@@ -1118,9 +1114,11 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
     },
     forwardedRef
   ) => {
+    let submit = useSubmit();
+    let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
-    let formAction = useFormAction(action, { relative });
+
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
       if (event.defaultPrevented) return;
@@ -1134,7 +1132,9 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
         method;
 
       submit(submitter || event.currentTarget, {
+        fetcherKey,
         method: submitMethod,
+        navigate,
         replace,
         state,
         relative,
@@ -1156,7 +1156,7 @@ const FormImpl = React.forwardRef<HTMLFormElement, FormImplProps>(
 );
 
 if (__DEV__) {
-  FormImpl.displayName = "FormImpl";
+  Form.displayName = "Form";
 }
 
 export interface ScrollRestorationProps {
@@ -1379,6 +1379,9 @@ function validateClientSideSubmission() {
   }
 }
 
+let fetcherId = 0;
+let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
+
 /**
  * Returns a function that may be used to programmatically submit a form (or
  * some arbitrary data) to the server.
@@ -1397,54 +1400,30 @@ export function useSubmit(): SubmitFunction {
         basename
       );
 
-      router.navigate(options.action || action, {
-        preventScrollReset: options.preventScrollReset,
-        formData,
-        body,
-        formMethod: options.method || (method as HTMLFormMethod),
-        formEncType: options.encType || (encType as FormEncType),
-        replace: options.replace,
-        state: options.state,
-        fromRouteId: currentRouteId,
-        unstable_viewTransition: options.unstable_viewTransition,
-      });
+      if (options.navigate === false) {
+        let key = options.fetcherKey || getUniqueFetcherId();
+        router.fetch(key, currentRouteId, options.action || action, {
+          preventScrollReset: options.preventScrollReset,
+          formData,
+          body,
+          formMethod: options.method || (method as HTMLFormMethod),
+          formEncType: options.encType || (encType as FormEncType),
+        });
+      } else {
+        router.navigate(options.action || action, {
+          preventScrollReset: options.preventScrollReset,
+          formData,
+          body,
+          formMethod: options.method || (method as HTMLFormMethod),
+          formEncType: options.encType || (encType as FormEncType),
+          replace: options.replace,
+          state: options.state,
+          fromRouteId: currentRouteId,
+          unstable_viewTransition: options.unstable_viewTransition,
+        });
+      }
     },
     [router, basename, currentRouteId]
-  );
-}
-
-/**
- * Returns the implementation for fetcher.submit
- */
-function useSubmitFetcher(
-  fetcherKey: string,
-  fetcherRouteId: string
-): FetcherSubmitFunction {
-  let { router } = useDataRouterContext(DataRouterHook.UseSubmitFetcher);
-  let { basename } = React.useContext(NavigationContext);
-
-  return React.useCallback<FetcherSubmitFunction>(
-    (target, options = {}) => {
-      validateClientSideSubmission();
-
-      let { action, method, encType, formData, body } = getFormSubmissionInfo(
-        target,
-        basename
-      );
-
-      invariant(
-        fetcherRouteId != null,
-        "No routeId available for useFetcher()"
-      );
-      router.fetch(fetcherKey, fetcherRouteId, options.action || action, {
-        preventScrollReset: options.preventScrollReset,
-        formData,
-        body,
-        formMethod: options.method || (method as HTMLFormMethod),
-        formEncType: options.encType || (encType as FormEncType),
-      });
-    },
-    [router, basename, fetcherKey, fetcherRouteId]
   );
 }
 
@@ -1502,23 +1481,10 @@ export function useFormAction(
   return createPath(path);
 }
 
-function createFetcherForm(fetcherKey: string, routeId: string) {
-  let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
-    (props, ref) => {
-      let submit = useSubmitFetcher(fetcherKey, routeId);
-      return <FormImpl {...props} ref={ref} submit={submit} />;
-    }
-  );
-  if (__DEV__) {
-    FetcherForm.displayName = "fetcher.Form";
-  }
-  return FetcherForm;
-}
-
-let fetcherId = 0;
-
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
-  Form: ReturnType<typeof createFetcherForm>;
+  Form: React.ForwardRefExoticComponent<
+    FetcherFormProps & React.RefAttributes<HTMLFormElement>
+  >;
   submit: FetcherSubmitFunction;
   load: (href: string) => void;
 };
@@ -1529,9 +1495,10 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
  * Interacts with route loaders and actions without causing a navigation. Great
  * for any interaction that stays on the same page.
  */
-export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
+export function useFetcher<TData = any>({
+  key,
+}: { key?: string } = {}): FetcherWithComponents<TData> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
-
   let route = React.useContext(RouteContext);
   invariant(route, `useFetcher must be used inside a RouteContext`);
 
@@ -1541,28 +1508,56 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
     `useFetcher can only be used on routes that contain a unique "id"`
   );
 
-  let [fetcherKey] = React.useState(() => String(++fetcherId));
-  let [Form] = React.useState(() => {
-    invariant(routeId, `No routeId available for fetcher.Form()`);
-    return createFetcherForm(fetcherKey, routeId);
-  });
-  let [load] = React.useState(() => (href: string) => {
-    invariant(router, "No router available for fetcher.load()");
-    invariant(routeId, "No routeId available for fetcher.load()");
-    router.fetch(fetcherKey, routeId, href);
-  });
-  let submit = useSubmitFetcher(fetcherKey, routeId);
+  let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
+  if (!fetcherKey) {
+    setFetcherKey(getUniqueFetcherId());
+  }
+
+  let load = React.useCallback(
+    (href: string) => {
+      invariant(router, "No router available for fetcher.load()");
+      invariant(routeId, "No routeId available for fetcher.load()");
+      router.fetch(fetcherKey, routeId, href);
+    },
+    [fetcherKey, routeId, router]
+  );
+
+  // Fetcher additions (submit)
+  let submitImpl = useSubmit();
+  let submit = React.useCallback<FetcherSubmitFunction>(
+    (target, opts) => {
+      submitImpl(target, {
+        ...opts,
+        navigate: false,
+        fetcherKey,
+      });
+    },
+    [fetcherKey, submitImpl]
+  );
+  let FetcherForm = React.useMemo(() => {
+    let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
+      (props, ref) => {
+        return (
+          <Form {...props} navigate={false} fetcherKey={fetcherKey} ref={ref} />
+        );
+      }
+    );
+    if (__DEV__) {
+      FetcherForm.displayName = "fetcher.Form";
+    }
+    return FetcherForm;
+  }, [fetcherKey]);
 
   let fetcher = router.getFetcher<TData>(fetcherKey);
 
   let fetcherWithComponents = React.useMemo(
     () => ({
-      Form,
+      Form: FetcherForm,
       submit,
       load,
       ...fetcher,
     }),
-    [fetcher, Form, submit, load]
+    [fetcher, FetcherForm, submit, load]
   );
 
   React.useEffect(() => {
@@ -1585,9 +1580,12 @@ export function useFetcher<TData = any>(): FetcherWithComponents<TData> {
  * Provides all fetchers currently on the page. Useful for layouts and parent
  * routes that need to provide pending/optimistic UI regarding the fetch.
  */
-export function useFetchers(): Fetcher[] {
+export function useFetchers(): (Fetcher & { key: string })[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);
-  return [...state.fetchers.values()];
+  return Array.from(state.fetchers.entries()).map(([key, fetcher]) => ({
+    ...fetcher,
+    key,
+  }));
 }
 
 const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
