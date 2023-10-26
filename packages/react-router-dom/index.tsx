@@ -59,6 +59,7 @@ import {
   UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
   matchPath,
+  IDLE_FETCHER,
 } from "@remix-run/router";
 
 import type {
@@ -1217,6 +1218,7 @@ enum DataRouterHook {
 }
 
 enum DataRouterStateHook {
+  UseFetcher = "useFetcher",
   UseFetchers = "useFetchers",
   UseScrollRestoration = "useScrollRestoration",
 }
@@ -1567,6 +1569,7 @@ export function useFetcher<TData = any>({
   key,
 }: { key?: string } = {}): FetcherWithComponents<TData> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
+  let state = useDataRouterState(DataRouterStateHook.UseFetcher);
   let fetchersContext = React.useContext(FetchersContext);
   let route = React.useContext(RouteContext);
   let routeId = route.matches[route.matches.length - 1]?.route.id;
@@ -1592,11 +1595,11 @@ export function useFetcher<TData = any>({
   React.useEffect(() => {
     register(fetcherKey);
     return () => {
+      // Unregister from ref counting for the data layer
       unregister(fetcherKey);
-      if (!router) {
-        console.warn(`No router available to clean up from useFetcher()`);
-        return;
-      }
+      // Tell the router we've unmounted - if v7_fetcherPersist is enabled this
+      // will not delete immediately but instead queue up a delete after the
+      // fetcher returns to an `idle` state
       router.deleteFetcher(fetcherKey);
     };
   }, [router, fetcherKey, register, unregister]);
@@ -1604,12 +1607,12 @@ export function useFetcher<TData = any>({
   // Fetcher additions
   let load = React.useCallback(
     (href: string) => {
-      invariant(router, "No router available for fetcher.load()");
       invariant(routeId, "No routeId available for fetcher.load()");
       router.fetch(fetcherKey, routeId, href);
     },
     [fetcherKey, routeId, router]
   );
+
   let submitImpl = useSubmit();
   let submit = React.useCallback<FetcherSubmitFunction>(
     (target, opts) => {
@@ -1621,6 +1624,7 @@ export function useFetcher<TData = any>({
     },
     [fetcherKey, submitImpl]
   );
+
   let FetcherForm = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
       (props, ref) => {
@@ -1636,7 +1640,7 @@ export function useFetcher<TData = any>({
   }, [fetcherKey]);
 
   // Exposed FetcherWithComponents
-  let fetcher = router.getFetcher<TData>(fetcherKey);
+  let fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
   let data = fetcherData.get(fetcherKey);
   let fetcherWithComponents = React.useMemo(
     () => ({
