@@ -8,5 +8,13 @@
     "react-router-native": "6.17.0",
     "@remix-run/router": "1.10.0"
   },
-  "changesets": []
+  "changesets": [
+    "fetcher-cleanup",
+    "fetcher-data",
+    "fetcher-key",
+    "fix-get-delete-fetcher-types",
+    "fix-router-future-prop",
+    "form-navigate-false",
+    "support-optional-path-segments-in-match-path"
+  ]
 }
