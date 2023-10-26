@@ -343,7 +343,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  v7_fetcherCleanup: boolean;
+  v7_fetcherPersist: boolean;
   v7_normalizeFormMethod: boolean;
   v7_prependBasename: boolean;
 }
@@ -764,7 +764,7 @@ export function createRouter(init: RouterInit): Router {
   let basename = init.basename || "/";
   // Config driven behavior flags
   let future: FutureConfig = {
-    v7_fetcherCleanup: false,
+    v7_fetcherPersist: false,
     v7_normalizeFormMethod: false,
     v7_prependBasename: false,
     ...init.future,
@@ -887,7 +887,7 @@ export function createRouter(init: RouterInit): Router {
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
 
-  // Fetchers that have requested a delete when using v7_fetcherCleanup,
+  // Fetchers that have requested a delete when using v7_fetcherPersist,
   // they'll be officially removed after they return to idle
   let deletedFetchers = new Set<string>();
 
@@ -1025,7 +1025,7 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Remove idle fetchers from state since we only care about in-flight fetchers.
-    if (future.v7_fetcherCleanup) {
+    if (future.v7_fetcherPersist) {
       state.fetchers.forEach((fetcher, key) => {
         if (fetcher.state === "idle") {
           if (deletedFetchers.has(key)) {
@@ -2403,7 +2403,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function deleteFetcherAndUpdateState(key: string): void {
-    if (future.v7_fetcherCleanup) {
+    if (future.v7_fetcherPersist) {
       deletedFetchers.add(key);
     } else {
       deleteFetcher(key);
