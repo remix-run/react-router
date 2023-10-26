@@ -101,7 +101,33 @@ describe("useResolvedPath", () => {
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <pre>
-          {"pathname":"/users","search":"","hash":""}
+          {"pathname":"/users/mj","search":"","hash":""}
+        </pre>
+      `);
+    });
+  });
+
+  describe("in a param route", () => {
+    it("resolves . to the route path", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/mj"]}>
+            <Routes>
+              <Route path="/users">
+                <Route
+                  path=":username"
+                  element={<ShowResolvedPath path="." />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users/mj","search":"","hash":""}
         </pre>
       `);
     });

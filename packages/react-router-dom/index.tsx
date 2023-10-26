@@ -1466,12 +1466,13 @@ export function useFormAction(
   let [match] = routeContext.matches.slice(-1);
   // Shallow clone path so we can modify it below, otherwise we modify the
   // object referenced by useMemo inside useResolvedPath
-  let path = { ...useResolvedPath(action ? action : ".", { relative }) };
+  let currentPath = match.pathname.replace(/\/$/, "");
+  let path = {
+    ...useResolvedPath(action ? action : currentPath, { relative }),
+  };
 
-  // Previously we set the default action to ".". The problem with this is that
-  // `useResolvedPath(".")` excludes search params of the resolved URL. This is
-  // the intended behavior of when "." is specifically provided as
-  // the form action, but inconsistent w/ browsers when the action is omitted.
+  // If no action was specified, browsers will persist current search params
+  // when determining the path, so match that behavior
   // https://github.com/remix-run/remix/issues/927
   let location = useLocation();
   if (action == null) {

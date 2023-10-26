@@ -2653,6 +2653,46 @@ function testDomRouter(
             "/foo/bar"
           );
         });
+
+        it("does not include dynamic parameters from a parent layout route", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo" element={<ActionEmptyComponent />}>
+                  <Route path=":param" element={<h1>Param</h1>} />
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
+
+        it("does not include splat parameters from a parent layout route", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo" element={<ActionEmptyComponent />}>
+                  <Route path="*" element={<h1>Splat</h1>} />
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar/baz/qux"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
       });
 
       describe("index routes", () => {
@@ -2895,7 +2935,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo?a=1"
+            "/foo/bar?a=1"
           );
         });
 
@@ -2915,7 +2955,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo/bar"
           );
         });
 
@@ -2935,7 +2975,45 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo/bar"
+          );
+        });
+
+        it("includes splat portion of path when no action is specified (inline splat)", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="*" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar/baz"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar/baz"
+          );
+        });
+
+        it("includes splat portion of path when no action is specified (nested splat)", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo/*" element={<NoActionComponent />} />
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar/baz"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar/baz"
           );
         });
       });

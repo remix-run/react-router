@@ -313,7 +313,9 @@ export function useResolvedPath(
   let { pathname: locationPathname } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+    getPathContributingMatches(matches).map((match, idx) =>
+      idx === matches.length - 1 ? match.pathname : match.pathnameBase
+    )
   );
 
   return React.useMemo(
