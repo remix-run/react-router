@@ -1457,20 +1457,18 @@ export function useFormAction(
   let { basename } = React.useContext(NavigationContext);
   let routeContext = React.useContext(RouteContext);
   invariant(routeContext, "useFormAction must be used inside a RouteContext");
-  let location = useLocation();
 
   let [match] = routeContext.matches.slice(-1);
   // Shallow clone path so we can modify it below, otherwise we modify the
   // object referenced by useMemo inside useResolvedPath
-  let path = {
-    ...useResolvedPath(action != null ? action : location.pathname, {
-      relative,
-    }),
-  };
+  let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
-  // If no action was specified, browsers will persist current search params
-  // when determining the path, so match that behavior
+  // Previously we set the default action to ".". The problem with this is that
+  // `useResolvedPath(".")` excludes search params of the resolved URL. This is
+  // the intended behavior of when "." is specifically provided as
+  // the form action, but inconsistent w/ browsers when the action is omitted.
   // https://github.com/remix-run/remix/issues/927
+  let location = useLocation();
   if (action == null) {
     // Safe to write to this directly here since if action was undefined, we
     // would have called useResolvedPath(".") which will never include a search
