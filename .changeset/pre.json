@@ -12,6 +12,7 @@
     "fetcher-cleanup",
     "fetcher-data",
     "fetcher-key",
+    "fetcher-ref-count",
     "fix-get-delete-fetcher-types",
     "fix-router-future-prop",
     "form-navigate-false",
