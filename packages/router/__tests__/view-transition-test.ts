@@ -19,7 +19,7 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/a" }),
       }),
-      { unstable_viewTransitionOpts: undefined }
+      expect.objectContaining({ unstable_viewTransitionOpts: undefined })
     );
 
     // PUSH /a -> /b - w/ transition
@@ -29,12 +29,12 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/b" }),
       }),
-      {
+      expect.objectContaining({
         unstable_viewTransitionOpts: {
           currentLocation: expect.objectContaining({ pathname: "/a" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
         },
-      }
+      })
     );
 
     // POP /b -> /a - w/ transition (cached from above)
@@ -44,13 +44,13 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/a" }),
       }),
-      {
+      expect.objectContaining({
         unstable_viewTransitionOpts: {
           // Args reversed on POP so same hooks apply
           currentLocation: expect.objectContaining({ pathname: "/a" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
         },
-      }
+      })
     );
 
     // POP /a -> / - No transition
@@ -60,7 +60,7 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/" }),
       }),
-      { unstable_viewTransitionOpts: undefined }
+      expect.objectContaining({ unstable_viewTransitionOpts: undefined })
     );
 
     unsubscribe();
