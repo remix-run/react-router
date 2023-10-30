@@ -409,6 +409,7 @@ export interface RouterSubscriber {
   (
     state: RouterState,
     opts: {
+      deletedFetchers: string[];
       unstable_viewTransitionOpts?: ViewTransitionOpts;
     }
   ): void;
@@ -887,6 +888,9 @@ export function createRouter(init: RouterInit): Router {
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
 
+  // Ref-count mounted fetchers so we know when it's ok to clean them up
+  let activeFetchers = new Map<string, number>();
+
   // Fetchers that have requested a delete when using v7_fetcherPersist,
   // they'll be officially removed after they return to idle
   let deletedFetchers = new Set<string>();
@@ -1020,26 +1024,38 @@ export function createRouter(init: RouterInit): Router {
       ...state,
       ...newState,
     };
-    subscribers.forEach((subscriber) =>
-      subscriber(state, { unstable_viewTransitionOpts: viewTransitionOpts })
-    );
 
-    // Remove idle fetchers from state since we only care about in-flight fetchers.
+    // Prep fetcher cleanup so we can tell the UI which fetcher data entries
+    // can be removed
+    let completedFetchers: string[] = [];
+    let deletedFetchersKeys: string[] = [];
+
     if (future.v7_fetcherPersist) {
       state.fetchers.forEach((fetcher, key) => {
         if (fetcher.state === "idle") {
           if (deletedFetchers.has(key)) {
-            // If the fetcher has unmounted and called router.deleteFetcher(),
-            // we can totally delete the fetcher
-            deleteFetcher(key);
+            // Unmounted from the UI and can be totally removed
+            deletedFetchersKeys.push(key);
           } else {
-            // Otherwise, it must still be mounted in the UI so we just remove
-            // it from state now that we've handed off the data to the React
-            // layer.  Things such as fetchLoadMatches remain for revalidation.
-            state.fetchers.delete(key);
+            // Returned to idle but still mounted in the UI, so semi-remains for
+            // revalidations and such
+            completedFetchers.push(key);
           }
         }
       });
+    }
+
+    subscribers.forEach((subscriber) =>
+      subscriber(state, {
+        deletedFetchers: deletedFetchersKeys,
+        unstable_viewTransitionOpts: viewTransitionOpts,
+      })
+    );
+
+    // Remove idle fetchers from state since we only care about in-flight fetchers.
+    if (future.v7_fetcherPersist) {
+      completedFetchers.forEach((key) => state.fetchers.delete(key));
+      deletedFetchersKeys.forEach((key) => deleteFetcher(key));
     }
   }
 
@@ -1749,6 +1765,14 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
+    if (future.v7_fetcherPersist) {
+      activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
+      // If this fetcher was previously marked for deletion, unmark it since we
+      // have a new instance
+      if (deletedFetchers.has(key)) {
+        deletedFetchers.delete(key);
+      }
+    }
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
@@ -1868,11 +1892,17 @@ export function createRouter(init: RouterInit): Router {
     );
 
     if (fetchRequest.signal.aborted) {
-      // We can delete this so long as we weren't aborted by ou our own fetcher
+      // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
       if (fetchControllers.get(key) === abortController) {
         fetchControllers.delete(key);
       }
+      return;
+    }
+
+    if (deletedFetchers.has(key)) {
+      state.fetchers.set(key, getDoneFetcher(undefined));
+      updateState({ fetchers: new Map(state.fetchers) });
       return;
     }
 
@@ -2127,6 +2157,12 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    if (deletedFetchers.has(key)) {
+      state.fetchers.set(key, getDoneFetcher(undefined));
+      updateState({ fetchers: new Map(state.fetchers) });
+      return;
+    }
+
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
       if (pendingNavigationLoadId > originatingLoadId) {
@@ -2145,17 +2181,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Process any non-redirect errors thrown
     if (isErrorResult(result)) {
-      let boundaryMatch = findNearestBoundary(state.matches, routeId);
-      state.fetchers.delete(key);
-      // TODO: In remix, this would reset to IDLE_NAVIGATION if it was a catch -
-      // do we need to behave any differently with our non-redirect errors?
-      // What if it was a non-redirect Response?
-      updateState({
-        fetchers: new Map(state.fetchers),
-        errors: {
-          [boundaryMatch.route.id]: result.error,
-        },
-      });
+      setFetcherError(key, routeId, result.error);
       return;
     }
 
@@ -2404,7 +2430,13 @@ export function createRouter(init: RouterInit): Router {
 
   function deleteFetcherAndUpdateState(key: string): void {
     if (future.v7_fetcherPersist) {
-      deletedFetchers.add(key);
+      let count = (activeFetchers.get(key) || 0) - 1;
+      if (count <= 0) {
+        activeFetchers.delete(key);
+        deletedFetchers.add(key);
+      } else {
+        activeFetchers.set(key, count);
+      }
     } else {
       deleteFetcher(key);
     }
