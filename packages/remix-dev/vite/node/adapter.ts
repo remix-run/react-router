@@ -199,7 +199,7 @@ export let createRequestHandler = (
   let handler = createBaseRequestHandler(build, mode);
   return async (req: IncomingMessage, res: ServerResponse) => {
     let request = createRequest(req);
-    let response = await handler(request, {}, { criticalCss });
+    let response = await handler(request, {}, { __criticalCss: criticalCss });
     handleNodeResponse(response, res);
   };
 };

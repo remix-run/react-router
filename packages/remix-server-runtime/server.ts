@@ -32,7 +32,12 @@ import { createServerHandoffString } from "./serverHandoff";
 export type RequestHandler = (
   request: Request,
   loadContext?: AppLoadContext,
-  args?: { criticalCss?: string }
+  args?: {
+    /**
+     * @private This is an internal API intended for use by the Remix Vite plugin in dev mode
+     */
+    __criticalCss?: string;
+  }
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
@@ -78,7 +83,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   return async function requestHandler(
     request,
     loadContext = {},
-    { criticalCss } = {}
+    { __criticalCss: criticalCss } = {}
   ) {
     _build = typeof build === "function" ? await build() : build;
     if (typeof build === "function") {
