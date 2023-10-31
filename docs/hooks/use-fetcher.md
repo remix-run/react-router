@@ -64,9 +64,9 @@ Fetchers have a lot of built-in behavior:
 
 ### `key`
 
-By default, `useFetcher` generate a unique fetcher scoped to that component (however, it may be looked up in [`useFetchers()`][use_fetchers] while in-flight). If you want to identify a fetcher with your own key such that you can access it from elsewhere in your app, you can do that with the `key` option:
+By default, `useFetcher` generate a unique fetcher scoped to that component (however, it may be looked up in [`useFetchers()`][use-fetchers] while in-flight). If you want to identify a fetcher with your own `key` such that you can access it from elsewhere in your app, you can do that with the `key` option:
 
-```tsx
+```tsx lines=[2,8]
 function AddToBagButton() {
   const fetcher = useFetcher({ key: "add-to-bag" });
   return <fetcher.Form method="post">...</fetcher.Form>;
@@ -277,4 +277,5 @@ fetcher.formMethod; // "post"
 [link]: ../components/link
 [form]: ../components/form
 [api-development-strategy]: ../guides/api-development-strategy
-[use-submit]: ./use-submit.md
+[use-submit]: ./use-submit
+[use-fetchers]: ./use-fetchers

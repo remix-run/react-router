@@ -1,14 +1,6 @@
 # `react-router-dom`
 
-## 6.18.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.11.0-pre.1`
-  - `react-router@6.18.0-pre.1`
-
-## 6.18.0-pre.0
+## 6.18.0
 
 ### Minor Changes
 
@@ -24,10 +16,10 @@
 ### Patch Changes
 
 - Adds a fetcher context to `RouterProvider` that holds completed fetcher data, in preparation for the upcoming future flag that will change the fetcher persistence/cleanup behavior ([#10961](https://github.com/remix-run/react-router/pull/10961))
-- Fix the `future`prop on `BrowserRouter`, `HashRouter` and `MemoryRouter` so that it accepts a `Partial<FutureConfig>` instead of requiring all flags to be included. ([#10962](https://github.com/remix-run/react-router/pull/10962))
+- Fix the `future` prop on `BrowserRouter`, `HashRouter` and `MemoryRouter` so that it accepts a `Partial<FutureConfig>` instead of requiring all flags to be included. ([#10962](https://github.com/remix-run/react-router/pull/10962))
 - Updated dependencies:
-  - `@remix-run/router@1.11.0-pre.0`
-  - `react-router@6.18.0-pre.0`
+  - `@remix-run/router@1.11.0`
+  - `react-router@6.18.0`
 
 ## 6.17.0
 
