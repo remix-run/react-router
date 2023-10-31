@@ -1,5 +1,107 @@
 # `react-router-dom`
 
+## 6.18.0
+
+### Minor Changes
+
+- Add support for manual fetcher key specification via `useFetcher({ key: string })` so you can access the same fetcher instance from different components in your application without prop-drilling ([RFC](https://github.com/remix-run/remix/discussions/7698)) ([#10960](https://github.com/remix-run/react-router/pull/10960))
+
+  - Fetcher keys are now also exposed on the fetchers returned from `useFetchers` so that they can be looked up by `key`
+
+- Add `navigate`/`fetcherKey` params/props to `useSumbit`/`Form` to support kicking off a fetcher submission under the hood with an optionally user-specified `key` ([#10960](https://github.com/remix-run/react-router/pull/10960))
+
+  - Invoking a fetcher in this way is ephemeral and stateless
+  - If you need to access the state of one of these fetchers, you will need to leverage `useFetcher({ key })` to look it up elsewhere
+
+### Patch Changes
+
+- Adds a fetcher context to `RouterProvider` that holds completed fetcher data, in preparation for the upcoming future flag that will change the fetcher persistence/cleanup behavior ([#10961](https://github.com/remix-run/react-router/pull/10961))
+- Fix the `future` prop on `BrowserRouter`, `HashRouter` and `MemoryRouter` so that it accepts a `Partial<FutureConfig>` instead of requiring all flags to be included. ([#10962](https://github.com/remix-run/react-router/pull/10962))
+- Updated dependencies:
+  - `@remix-run/router@1.11.0`
+  - `react-router@6.18.0`
+
+## 6.17.0
+
+### Minor Changes
+
+- Add experimental support for the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition) via `document.startViewTransition` to enable CSS animated transitions on SPA navigations in your application. ([#10916](https://github.com/remix-run/react-router/pull/10916))
+
+  The simplest approach to enabling a View Transition in your React Router app is via the new `<Link unstable_viewTransition>` prop. This will cause the navigation DOM update to be wrapped in `document.startViewTransition` which will enable transitions for the DOM update. Without any additional CSS styles, you'll get a basic cross-fade animation for your page.
+
+  If you need to apply more fine-grained styles for your animations, you can leverage the `unstable_useViewTransitionState` hook which will tell you when a transition is in progress and you can use that to apply classes or styles:
+
+  ```jsx
+  function ImageLink(to, src, alt) {
+    let isTransitioning = unstable_useViewTransitionState(to);
+    return (
+      <Link to={to} unstable_viewTransition>
+        <img
+          src={src}
+          alt={alt}
+          style={{
+            viewTransitionName: isTransitioning ? "image-expand" : "",
+          }}
+        />
+      </Link>
+    );
+  }
+  ```
+
+  You can also use the `<NavLink unstable_viewTransition>` shorthand which will manage the hook usage for you and automatically add a `transitioning` class to the `<a>` during the transition:
+
+  ```css
+  a.transitioning img {
+    view-transition-name: "image-expand";
+  }
+  ```
+
+  ```jsx
+  <NavLink to={to} unstable_viewTransition>
+    <img src={src} alt={alt} />
+  </NavLink>
+  ```
+
+  For an example usage of View Transitions with React Router, check out [our fork](https://github.com/brophdawg11/react-router-records) of the [Astro Records](https://github.com/Charca/astro-records) demo.
+
+  For more information on using the View Transitions API, please refer to the [Smooth and simple transitions with the View Transitions API](https://developer.chrome.com/docs/web-platform/view-transitions/) guide from the Google Chrome team.
+
+  Please note, that because the `ViewTransition` API is a DOM API, we now export a specific `RouterProvider` from `react-router-dom` with this functionality. If you are importing `RouterProvider` from `react-router`, then it will not support view transitions. ([#10928](https://github.com/remix-run/react-router/pull/10928)
+
+### Patch Changes
+
+- Log a warning and fail gracefully in `ScrollRestoration` when `sessionStorage` is unavailable ([#10848](https://github.com/remix-run/react-router/pull/10848))
+- Updated dependencies:
+  - `@remix-run/router@1.10.0`
+  - `react-router@6.17.0`
+
+## 6.16.0
+
+### Minor Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.9.0`
+  - `react-router@6.16.0`
+
+### Patch Changes
+
+- Properly encode rendered URIs in server rendering to avoid hydration errors ([#10769](https://github.com/remix-run/react-router/pull/10769))
+
+## 6.15.0
+
+### Minor Changes
+
+- Add's a new `redirectDocument()` function which allows users to specify that a redirect from a `loader`/`action` should trigger a document reload (via `window.location`) instead of attempting to navigate to the redirected location via React Router ([#10705](https://github.com/remix-run/react-router/pull/10705))
+
+### Patch Changes
+
+- Fixes an edge-case affecting web extensions in Firefox that use `URLSearchParams` and the `useSearchParams` hook. ([#10620](https://github.com/remix-run/react-router/pull/10620))
+- Do not include hash in `useFormAction()` for unspecified actions since it cannot be determined on the server and causes hydration issues ([#10758](https://github.com/remix-run/react-router/pull/10758))
+- Reorder effects in `unstable_usePrompt` to avoid throwing an exception if the prompt is unblocked and a navigation is performed synchronously ([#10687](https://github.com/remix-run/react-router/pull/10687), [#10718](https://github.com/remix-run/react-router/pull/10718))
+- Updated dependencies:
+  - `@remix-run/router@1.8.0`
+  - `react-router@6.15.0`
+
 ## 6.14.2
 
 ### Patch Changes

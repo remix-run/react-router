@@ -9,7 +9,7 @@ When exceptions are thrown in [loaders][loader], [actions][action], or component
 
 <docs-info>If you do not wish to specify a React element (i.e., `errorElement={<MyErrorBoundary />}`) you may specify an `ErrorBoundary` component instead (i.e., `ErrorBoundary={MyErrorBoundary}`) and React Router will call `createElement` for you internally.</docs-info>
 
-<docs-error>This feature only works if using a data router like [`createBrowserRouter`][createbrowserrouter]</docs-error>
+<docs-warning>This feature only works if using a data router, see [Picking a Router][pickingarouter]</docs-warning>
 
 ```tsx
 <Route

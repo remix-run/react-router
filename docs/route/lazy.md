@@ -22,7 +22,7 @@ let routes = createRoutesFromElements(
 );
 ```
 
-Then in your lazy route modules, export the properties you want defined for the route:
+Then in your lazy route modules, export the properties you want defined for the route (`loader`, `Component`, `ErrorBoundary`):
 
 ```jsx
 export async function loader({ request }) {
@@ -58,6 +58,10 @@ export function ErrorBoundary() {
 // If you want to customize the component display name in React dev tools:
 ErrorBoundary.displayName = "SampleErrorBoundary";
 ```
+
+<docs-info>
+Note that there's no `default` export in this lazy-loaded file.  That's because `default` is not a valid key on a route object.  These files generally should only export keys you would define on a route object, such as `loader`, `action`, `Component`, `ErrorBoundary`, etc.  All exports will be spread directly on the route object unless you manually return an object from `lazy`.
+</docs-info>
 
 ## Statically Defined Properties
 

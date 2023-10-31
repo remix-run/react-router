@@ -245,6 +245,53 @@ describe("matchPath", () => {
   });
 });
 
+describe("matchPath optional segments", () => {
+  it("should match when optional segment is provided", () => {
+    const match = matchPath("/:lang?/user/:id", "/en/user/123");
+    expect(match).toMatchObject({ params: { lang: "en", id: "123" } });
+  });
+
+  it("should match when optional segment is *not* provided", () => {
+    const match = matchPath("/:lang?/user/:id", "/user/123");
+    expect(match).toMatchObject({ params: { lang: undefined, id: "123" } });
+  });
+
+  it("should match when middle optional segment is provided", () => {
+    const match = matchPath("/user/:lang?/:id", "/user/en/123");
+    expect(match).toMatchObject({ params: { lang: "en", id: "123" } });
+  });
+
+  it("should match when middle optional segment is *not* provided", () => {
+    const match = matchPath("/user/:lang?/:id", "/user/123");
+    expect(match).toMatchObject({ params: { lang: undefined, id: "123" } });
+  });
+
+  it("should match when end optional segment is provided", () => {
+    const match = matchPath("/user/:id/:lang?", "/user/123/en");
+    expect(match).toMatchObject({ params: { lang: "en", id: "123" } });
+  });
+
+  it("should match when end optional segment is *not* provided", () => {
+    const match = matchPath("/user/:id/:lang?", "/user/123");
+    expect(match).toMatchObject({ params: { lang: undefined, id: "123" } });
+  });
+
+  it("should match multiple optional segments and none are provided", () => {
+    const match = matchPath("/:lang?/user/:id?", "/user");
+    expect(match).toMatchObject({ params: { lang: undefined, id: undefined } });
+  });
+
+  it("should match multiple optional segments and one is provided", () => {
+    const match = matchPath("/:lang?/user/:id?", "/en/user");
+    expect(match).toMatchObject({ params: { lang: "en", id: undefined } });
+  });
+
+  it("should match multiple optional segments and all are provided", () => {
+    const match = matchPath("/:lang?/user/:id?", "/en/user/123");
+    expect(match).toMatchObject({ params: { lang: "en", id: "123" } });
+  });
+});
+
 describe("matchPath *", () => {
   it("matches the root URL", () => {
     expect(matchPath("*", "/")).toMatchObject({

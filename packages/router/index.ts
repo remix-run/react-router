@@ -9,12 +9,12 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
-  LazyRouteFunction,
-  TrackedPromise,
+  ErrorResponse,
   FormEncType,
   FormMethod,
   HTMLFormMethod,
   JsonFunction,
+  LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
   ParamParseKey,
@@ -23,12 +23,14 @@ export type {
   PathPattern,
   RedirectFunction,
   ShouldRevalidateFunction,
+  ShouldRevalidateFunctionArgs,
+  TrackedPromise,
+  UIMatch,
   V7_FormMethod,
 } from "./utils";
 
 export {
   AbortedDeferredError,
-  ErrorResponse,
   defer,
   generatePath,
   getToPathname,
@@ -39,6 +41,7 @@ export {
   matchRoutes,
   normalizePathname,
   redirect,
+  redirectDocument,
   resolvePath,
   resolveTo,
   stripBasename,
@@ -61,9 +64,9 @@ export type {
 export {
   Action,
   createBrowserHistory,
-  createPath,
   createHashHistory,
   createMemoryHistory,
+  createPath,
   parsePath,
 } from "./history";
 
@@ -80,7 +83,9 @@ export * from "./router";
 export type { RouteManifest as UNSAFE_RouteManifest } from "./utils";
 export {
   DeferredData as UNSAFE_DeferredData,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
+  convertRouteMatchToUiMatch as UNSAFE_convertRouteMatchToUiMatch,
   getPathContributingMatches as UNSAFE_getPathContributingMatches,
 } from "./utils";
 

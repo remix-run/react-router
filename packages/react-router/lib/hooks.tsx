@@ -12,9 +12,13 @@ import type {
   Router as RemixRouter,
   RevalidationState,
   To,
+  UIMatch,
 } from "@remix-run/router";
 import {
+  IDLE_BLOCKER,
   Action as NavigationType,
+  UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -23,26 +27,24 @@ import {
   parsePath,
   resolveTo,
   stripBasename,
-  IDLE_BLOCKER,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
 
 import type {
+  DataRouteMatch,
   NavigateOptions,
   RouteContextObject,
   RouteMatch,
   RouteObject,
-  DataRouteMatch,
 } from "./context";
 import {
+  AwaitContext,
   DataRouterContext,
   DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
   RouteErrorContext,
-  AwaitContext,
 } from "./context";
 
 /**
@@ -80,7 +82,7 @@ export function useHref(
 }
 
 /**
- * Returns true if this component is a descendant of a <Router>.
+ * Returns true if this component is a descendant of a `<Router>`.
  *
  * @see https://reactrouter.com/hooks/use-in-router-context
  */
@@ -122,7 +124,7 @@ export function useNavigationType(): NavigationType {
 /**
  * Returns a PathMatch object if the given pattern matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
- * <NavLink>.
+ * `<NavLink>`.
  *
  * @see https://reactrouter.com/hooks/use-match
  */
@@ -170,7 +172,7 @@ function useIsomorphicLayoutEffect(
 }
 
 /**
- * Returns an imperative method for changing the location. Used by <Link>s, but
+ * Returns an imperative method for changing the location. Used by `<Link>`s, but
  * may also be used by other elements to change the location.
  *
  * @see https://reactrouter.com/hooks/use-navigate
@@ -268,7 +270,7 @@ export function useOutletContext<Context = unknown>(): Context {
 
 /**
  * Returns the element for the child route at this level of the route
- * hierarchy. Used internally by <Outlet> to render child routes.
+ * hierarchy. Used internally by `<Outlet>` to render child routes.
  *
  * @see https://reactrouter.com/hooks/use-outlet
  */
@@ -329,7 +331,7 @@ export function useResolvedPath(
 /**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route
- * elements in the tree must render an <Outlet> to render their child route's
+ * elements in the tree must render an `<Outlet>` to render their child route's
  * element.
  *
  * @see https://reactrouter.com/hooks/use-routes
@@ -821,35 +823,25 @@ export function useNavigation() {
 export function useRevalidator() {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
   let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
-  return {
-    revalidate: dataRouterContext.router.revalidate,
-    state: state.revalidation,
-  };
+  return React.useMemo(
+    () => ({
+      revalidate: dataRouterContext.router.revalidate,
+      state: state.revalidation,
+    }),
+    [dataRouterContext.router.revalidate, state.revalidation]
+  );
 }
 
 /**
  * Returns the active route matches, useful for accessing loaderData for
  * parent/child routes or the route "handle" property
  */
-export function useMatches() {
+export function useMatches(): UIMatch[] {
   let { matches, loaderData } = useDataRouterState(
     DataRouterStateHook.UseMatches
   );
   return React.useMemo(
-    () =>
-      matches.map((match) => {
-        let { pathname, params } = match;
-        // Note: This structure matches that created by createUseMatchesMatch
-        // in the @remix-run/router , so if you change this please also change
-        // that :)  Eventually we'll DRY this up
-        return {
-          id: match.route.id,
-          pathname,
-          params,
-          data: loaderData[match.route.id] as unknown,
-          handle: match.route.handle as unknown,
-        };
-      }),
+    () => matches.map((m) => convertRouteMatchToUiMatch(m, loaderData)),
     [matches, loaderData]
   );
 }
@@ -911,7 +903,7 @@ export function useRouteError(): unknown {
 }
 
 /**
- * Returns the happy-path data from the nearest ancestor <Await /> value
+ * Returns the happy-path data from the nearest ancestor `<Await />` value
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
@@ -919,7 +911,7 @@ export function useAsyncValue(): unknown {
 }
 
 /**
- * Returns the error from the nearest ancestor <Await /> value
+ * Returns the error from the nearest ancestor `<Await />` value
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);

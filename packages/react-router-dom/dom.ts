@@ -97,13 +97,18 @@ export function getSearchParamsForLocation(
   let searchParams = createSearchParams(locationSearch);
 
   if (defaultSearchParams) {
-    for (let key of defaultSearchParams.keys()) {
+    // Use `defaultSearchParams.forEach(...)` here instead of iterating of
+    // `defaultSearchParams.keys()` to work-around a bug in Firefox related to
+    // web extensions. Relevant Bugzilla tickets:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1414602
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1023984
+    defaultSearchParams.forEach((_, key) => {
       if (!searchParams.has(key)) {
         defaultSearchParams.getAll(key).forEach((value) => {
           searchParams.append(key, value);
         });
       }
-    }
+    });
   }
 
   return searchParams;
@@ -165,6 +170,16 @@ export interface SubmitOptions {
   encType?: FormEncType;
 
   /**
+   * Indicate a specific fetcherKey to use when using navigate=false
+   */
+  fetcherKey?: string;
+
+  /**
+   * navigate=false will use a fetcher instead of a navigation
+   */
+  navigate?: boolean;
+
+  /**
    * Set `true` to replace the current entry in the browser's history stack
    * instead of creating a new one (i.e. stay on "the same page"). Defaults
    * to `false`.
@@ -188,6 +203,11 @@ export interface SubmitOptions {
    * navigation when using the <ScrollRestoration> component
    */
   preventScrollReset?: boolean;
+
+  /**
+   * Enable view transitions on this submission navigation
+   */
+  unstable_viewTransition?: boolean;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([
