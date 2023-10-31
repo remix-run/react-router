@@ -111,6 +111,8 @@ export function StaticRouterProvider({
     basename: context.basename || "/",
   };
 
+  let fetchersContext = new Map();
+
   let hydrateScript = "";
 
   if (hydrate !== false) {
@@ -133,13 +135,7 @@ export function StaticRouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider
-            value={{
-              fetcherData: new Map<string, any>(),
-              register: () => {},
-              unregister: () => {},
-            }}
-          >
+          <FetchersContext.Provider value={fetchersContext}>
             <ViewTransitionContext.Provider value={{ isTransitioning: false }}>
               <Router
                 basename={dataRouterContext.basename}
