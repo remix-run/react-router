@@ -37,5 +37,38 @@ function App() {
   );
 }
 ```
+more context
+
+Main.tsx
+
+```tsx
+    import { Link } from 'react-router-dom'
+
+    const Main = () => {
+
+      return (
+        <Link to="/page" state={statefulInfo: 'info'}>Page</Link>
+      )
+    }
+
+```
+
+Page.tsx
+
+```tsx
+   import { useLocation } from 'react-router-dom'
+
+    const Page = () => {
+      const location = useLocation()
+      {/*
+          {pathname: "/Page", search: "", hash: "", state: {statefulInfo: 'info'}, key: "default"}
+           this is the object saved in location you can use it 
+      */}
+      const path = location.pathname
+      return (
+        <Link to="..">Page</Link>
+      )
+    }
+```
 
 [location]: ../utils/location
