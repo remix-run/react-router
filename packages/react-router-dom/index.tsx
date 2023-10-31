@@ -24,7 +24,7 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
-  unstable_useBlocker as useBlocker,
+  useBlocker,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
@@ -48,6 +48,7 @@ import type {
   V7_FormMethod,
   RouterState,
   RouterSubscriber,
+  BlockerFunction,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -168,7 +169,7 @@ export {
   useActionData,
   useAsyncError,
   useAsyncValue,
-  unstable_useBlocker,
+  useBlocker,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -1810,7 +1811,13 @@ function usePageHide(
  * very incorrectly in some cases) across browsers if user click addition
  * back/forward navigations while the confirm is open.  Use at your own risk.
  */
-function usePrompt({ when, message }: { when: boolean; message: string }) {
+function usePrompt({
+  when,
+  message,
+}: {
+  when: boolean | BlockerFunction;
+  message: string;
+}) {
   let blocker = useBlocker(when);
 
   React.useEffect(() => {

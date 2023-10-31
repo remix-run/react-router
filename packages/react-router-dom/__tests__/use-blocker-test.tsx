@@ -9,7 +9,7 @@ import {
   NavLink,
   Outlet,
   RouterProvider,
-  unstable_useBlocker as useBlocker,
+  useBlocker,
   useNavigate,
 } from "../index";
 

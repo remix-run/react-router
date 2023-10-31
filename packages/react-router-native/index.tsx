@@ -96,7 +96,7 @@ export {
   useActionData,
   useAsyncError,
   useAsyncValue,
-  unstable_useBlocker,
+  useBlocker,
   useHref,
   useInRouterContext,
   useLoaderData,

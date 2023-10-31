@@ -197,7 +197,7 @@ export {
   redirectDocument,
   renderMatches,
   resolvePath,
-  useBlocker as unstable_useBlocker,
+  useBlocker,
   useActionData,
   useAsyncError,
   useAsyncValue,
