@@ -170,6 +170,16 @@ export interface SubmitOptions {
   encType?: FormEncType;
 
   /**
+   * Indicate a specific fetcherKey to use when using navigate=false
+   */
+  fetcherKey?: string;
+
+  /**
+   * navigate=false will use a fetcher instead of a navigation
+   */
+  navigate?: boolean;
+
+  /**
    * Set `true` to replace the current entry in the browser's history stack
    * instead of creating a new one (i.e. stay on "the same page"). Defaults
    * to `false`.
@@ -193,6 +203,11 @@ export interface SubmitOptions {
    * navigation when using the <ScrollRestoration> component
    */
   preventScrollReset?: boolean;
+
+  /**
+   * Enable view transitions on this submission navigation
+   */
+  unstable_viewTransition?: boolean;
 }
 
 const supportedFormEncTypes: Set<FormEncType> = new Set([

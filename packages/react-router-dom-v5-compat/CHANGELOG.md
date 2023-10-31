@@ -1,5 +1,41 @@
 # `react-router-dom-v5-compat`
 
+## 6.18.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.18.0`
+  - `react-router@6.18.0`
+
+## 6.17.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.17.0`
+  - `react-router@6.17.0`
+
+## 6.16.0
+
+### Minor Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.16.0`
+  - `react-router@6.16.0`
+
+## 6.15.0
+
+### Minor Changes
+
+- Add's a new `redirectDocument()` function which allows users to specify that a redirect from a `loader`/`action` should trigger a document reload (via `window.location`) instead of attempting to navigate to the redirected location via React Router ([#10705](https://github.com/remix-run/react-router/pull/10705))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.15.0`
+  - `react-router@6.15.0`
+
 ## 6.14.2
 
 ### Patch Changes

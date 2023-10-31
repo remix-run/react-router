@@ -34,6 +34,8 @@ import {
   Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+  UNSAFE_FetchersContext as FetchersContext,
+  UNSAFE_ViewTransitionContext as ViewTransitionContext,
 } from "react-router-dom";
 
 export interface StaticRouterProps {
@@ -43,7 +45,7 @@ export interface StaticRouterProps {
 }
 
 /**
- * A <Router> that may not navigate to any other location. This is useful
+ * A `<Router>` that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
  */
 export function StaticRouter({
@@ -109,6 +111,8 @@ export function StaticRouterProvider({
     basename: context.basename || "/",
   };
 
+  let fetchersContext = new Map();
+
   let hydrateScript = "";
 
   if (hydrate !== false) {
@@ -131,15 +135,19 @@ export function StaticRouterProvider({
     <>
       <DataRouterContext.Provider value={dataRouterContext}>
         <DataRouterStateContext.Provider value={state}>
-          <Router
-            basename={dataRouterContext.basename}
-            location={state.location}
-            navigationType={state.historyAction}
-            navigator={dataRouterContext.navigator}
-            static={dataRouterContext.static}
-          >
-            <DataRoutes routes={router.routes} state={state} />
-          </Router>
+          <FetchersContext.Provider value={fetchersContext}>
+            <ViewTransitionContext.Provider value={{ isTransitioning: false }}>
+              <Router
+                basename={dataRouterContext.basename}
+                location={state.location}
+                navigationType={state.historyAction}
+                navigator={dataRouterContext.navigator}
+                static={dataRouterContext.static}
+              >
+                <DataRoutes routes={router.routes} state={state} />
+              </Router>
+            </ViewTransitionContext.Provider>
+          </FetchersContext.Provider>
         </DataRouterStateContext.Provider>
       </DataRouterContext.Provider>
       {hydrateScript ? (
@@ -300,6 +308,9 @@ export function createStaticRouter(
     get routes() {
       return dataRoutes;
     },
+    get window() {
+      return undefined;
+    },
     initialize() {
       throw msg("initialize");
     },
@@ -348,14 +359,18 @@ function createHref(to: To) {
 }
 
 function encodeLocation(to: To): Path {
-  // Locations should already be encoded on the server, so just return as-is
-  let path = typeof to === "string" ? parsePath(to) : to;
+  let href = typeof to === "string" ? to : createPath(to);
+  let encoded = ABSOLUTE_URL_REGEX.test(href)
+    ? new URL(href)
+    : new URL(href, "http://localhost");
   return {
-    pathname: path.pathname || "",
-    search: path.search || "",
-    hash: path.hash || "",
+    pathname: encoded.pathname,
+    search: encoded.search,
+    hash: encoded.hash,
   };
 }
+
+const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 // This utility is based on https://github.com/zertosh/htmlescape
 // License: https://github.com/zertosh/htmlescape/blob/0527ca7156a524d256101bb310a9f970f63078ad/LICENSE

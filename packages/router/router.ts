@@ -8,35 +8,36 @@ import {
   warning,
 } from "./history";
 import type {
-  DataResult,
-  DeferredData,
+  ActionFunction,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
+  AgnosticRouteObject,
+  DataResult,
+  DeferredData,
   DeferredResult,
+  DetectErrorBoundaryFunction,
   ErrorResult,
   FormEncType,
   FormMethod,
-  DetectErrorBoundaryFunction,
+  HTMLFormMethod,
+  ImmutableRouteKey,
+  LoaderFunction,
+  MapRoutePropertiesFunction,
+  MutationFormMethod,
   RedirectResult,
   RouteData,
-  AgnosticRouteObject,
+  RouteManifest,
+  ShouldRevalidateFunctionArgs,
   Submission,
   SuccessResult,
-  AgnosticRouteMatch,
-  ShouldRevalidateFunction,
-  RouteManifest,
-  ImmutableRouteKey,
-  ActionFunction,
-  LoaderFunction,
-  V7_MutationFormMethod,
+  UIMatch,
   V7_FormMethod,
-  HTMLFormMethod,
-  MutationFormMethod,
-  MapRoutePropertiesFunction,
+  V7_MutationFormMethod,
 } from "./utils";
 import {
-  ErrorResponse,
+  ErrorResponseImpl,
   ResultType,
+  convertRouteMatchToUiMatch,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
   immutableRouteKeys,
@@ -78,6 +79,14 @@ export interface Router {
    * Return the routes for this router instance
    */
   get routes(): AgnosticDataRouteObject[];
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Return the window associated with the router
+   */
+  get window(): RouterInit["window"];
 
   /**
    * @internal
@@ -184,7 +193,7 @@ export interface Router {
    * Get/create a fetcher for the given key
    * @param key
    */
-  getFetcher<TData = any>(key?: string): Fetcher<TData>;
+  getFetcher<TData = any>(key: string): Fetcher<TData>;
 
   /**
    * @internal
@@ -193,7 +202,7 @@ export interface Router {
    * Delete the fetcher for a given key
    * @param key
    */
-  deleteFetcher(key?: string): void;
+  deleteFetcher(key: string): void;
 
   /**
    * @internal
@@ -334,6 +343,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
+  v7_fetcherPersist: boolean;
   v7_normalizeFormMethod: boolean;
   v7_prependBasename: boolean;
 }
@@ -387,19 +397,22 @@ export interface StaticHandler {
   ): Promise<any>;
 }
 
+type ViewTransitionOpts = {
+  currentLocation: Location;
+  nextLocation: Location;
+};
+
 /**
  * Subscriber function signature for changes to router state
  */
 export interface RouterSubscriber {
-  (state: RouterState): void;
-}
-
-interface UseMatchesMatch {
-  id: string;
-  pathname: string;
-  params: AgnosticRouteMatch["params"];
-  data: unknown;
-  handle: unknown;
+  (
+    state: RouterState,
+    opts: {
+      deletedFetchers: string[];
+      unstable_viewTransitionOpts?: ViewTransitionOpts;
+    }
+  ): void;
 }
 
 /**
@@ -407,7 +420,7 @@ interface UseMatchesMatch {
  * for a given location
  */
 export interface GetScrollRestorationKeyFunction {
-  (location: Location, matches: UseMatchesMatch[]): string | null;
+  (location: Location, matches: UIMatch[]): string | null;
 }
 
 /**
@@ -430,6 +443,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
+  unstable_viewTransition?: boolean;
 };
 
 // Only allowed for submission navigations
@@ -526,7 +540,6 @@ type FetcherStates<TData = any> = {
     formData: undefined;
     json: undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Loading: {
     state: "loading";
@@ -537,7 +550,6 @@ type FetcherStates<TData = any> = {
     formData: Submission["formData"] | undefined;
     json: Submission["json"] | undefined;
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
   Submitting: {
     state: "submitting";
@@ -548,7 +560,6 @@ type FetcherStates<TData = any> = {
     formData: Submission["formData"];
     json: Submission["json"];
     data: TData | undefined;
-    " _hasFetcherDoneAnything "?: boolean;
   };
 };
 
@@ -700,6 +711,8 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
 
+const TRANSITIONS_STORAGE_KEY = "remix-router-transitions";
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -752,6 +765,7 @@ export function createRouter(init: RouterInit): Router {
   let basename = init.basename || "/";
   // Config driven behavior flags
   let future: FutureConfig = {
+    v7_fetcherPersist: false,
     v7_normalizeFormMethod: false,
     v7_prependBasename: false,
     ...init.future,
@@ -824,6 +838,18 @@ export function createRouter(init: RouterInit): Router {
   // AbortController for the active navigation
   let pendingNavigationController: AbortController | null;
 
+  // Should the current navigation enable document.startViewTransition?
+  let pendingViewTransitionEnabled = false;
+
+  // Store applied view transitions so we can apply them on POP
+  let appliedViewTransitions: Map<string, Set<string>> = new Map<
+    string,
+    Set<string>
+  >();
+
+  // Cleanup function for persisting applied transitions to sessionStorage
+  let removePageHideEventListener: (() => void) | null = null;
+
   // We use this to avoid touching history in completeNavigation if a
   // revalidation is entirely uninterrupted
   let isUninterruptedRevalidation = false;
@@ -861,6 +887,13 @@ export function createRouter(init: RouterInit): Router {
 
   // Most recent href/match for fetcher.load calls for fetchers
   let fetchLoadMatches = new Map<string, FetchLoadMatch>();
+
+  // Ref-count mounted fetchers so we know when it's ok to clean them up
+  let activeFetchers = new Map<string, number>();
+
+  // Fetchers that have requested a delete when using v7_fetcherPersist,
+  // they'll be officially removed after they return to idle
+  let deletedFetchers = new Set<string>();
 
   // Store DeferredData instances for active route matches.  When a
   // route loader returns defer() we stick one in here.  Then, when a nested
@@ -939,6 +972,17 @@ export function createRouter(init: RouterInit): Router {
       }
     );
 
+    if (isBrowser) {
+      // FIXME: This feels gross.  How can we cleanup the lines between
+      // scrollRestoration/appliedTransitions persistance?
+      restoreAppliedTransitions(routerWindow, appliedViewTransitions);
+      let _saveAppliedTransitions = () =>
+        persistAppliedTransitions(routerWindow, appliedViewTransitions);
+      routerWindow.addEventListener("pagehide", _saveAppliedTransitions);
+      removePageHideEventListener = () =>
+        routerWindow.removeEventListener("pagehide", _saveAppliedTransitions);
+    }
+
     // Kick off initial data load if needed.  Use Pop to avoid modifying history
     // Note we don't do any handling of lazy here.  For SPA's it'll get handled
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
@@ -956,6 +1000,9 @@ export function createRouter(init: RouterInit): Router {
     if (unlistenHistory) {
       unlistenHistory();
     }
+    if (removePageHideEventListener) {
+      removePageHideEventListener();
+    }
     subscribers.clear();
     pendingNavigationController && pendingNavigationController.abort();
     state.fetchers.forEach((_, key) => deleteFetcher(key));
@@ -969,12 +1016,47 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Update our state and notify the calling context of the change
-  function updateState(newState: Partial<RouterState>): void {
+  function updateState(
+    newState: Partial<RouterState>,
+    viewTransitionOpts?: ViewTransitionOpts
+  ): void {
     state = {
       ...state,
       ...newState,
     };
-    subscribers.forEach((subscriber) => subscriber(state));
+
+    // Prep fetcher cleanup so we can tell the UI which fetcher data entries
+    // can be removed
+    let completedFetchers: string[] = [];
+    let deletedFetchersKeys: string[] = [];
+
+    if (future.v7_fetcherPersist) {
+      state.fetchers.forEach((fetcher, key) => {
+        if (fetcher.state === "idle") {
+          if (deletedFetchers.has(key)) {
+            // Unmounted from the UI and can be totally removed
+            deletedFetchersKeys.push(key);
+          } else {
+            // Returned to idle but still mounted in the UI, so semi-remains for
+            // revalidations and such
+            completedFetchers.push(key);
+          }
+        }
+      });
+    }
+
+    subscribers.forEach((subscriber) =>
+      subscriber(state, {
+        deletedFetchers: deletedFetchersKeys,
+        unstable_viewTransitionOpts: viewTransitionOpts,
+      })
+    );
+
+    // Remove idle fetchers from state since we only care about in-flight fetchers.
+    if (future.v7_fetcherPersist) {
+      completedFetchers.forEach((key) => state.fetchers.delete(key));
+      deletedFetchersKeys.forEach((key) => deleteFetcher(key));
+    }
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -1055,26 +1137,64 @@ export function createRouter(init: RouterInit): Router {
       init.history.replace(location, location.state);
     }
 
-    updateState({
-      ...newState, // matches, errors, fetchers go through as-is
-      actionData,
-      loaderData,
-      historyAction: pendingAction,
-      location,
-      initialized: true,
-      navigation: IDLE_NAVIGATION,
-      revalidation: "idle",
-      restoreScrollPosition: getSavedScrollPosition(
+    let viewTransitionOpts: ViewTransitionOpts | undefined;
+
+    // On POP, enable transitions if they were enabled on the original navigation
+    if (pendingAction === HistoryAction.Pop) {
+      // Forward takes precedence so they behave like the original navigation
+      let priorPaths = appliedViewTransitions.get(state.location.pathname);
+      if (priorPaths && priorPaths.has(location.pathname)) {
+        viewTransitionOpts = {
+          currentLocation: state.location,
+          nextLocation: location,
+        };
+      } else if (appliedViewTransitions.has(location.pathname)) {
+        // If we don't have a previous forward nav, assume we're popping back to
+        // the new location and enable if that location previously enabled
+        viewTransitionOpts = {
+          currentLocation: location,
+          nextLocation: state.location,
+        };
+      }
+    } else if (pendingViewTransitionEnabled) {
+      // Store the applied transition on PUSH/REPLACE
+      let toPaths = appliedViewTransitions.get(state.location.pathname);
+      if (toPaths) {
+        toPaths.add(location.pathname);
+      } else {
+        toPaths = new Set<string>([location.pathname]);
+        appliedViewTransitions.set(state.location.pathname, toPaths);
+      }
+      viewTransitionOpts = {
+        currentLocation: state.location,
+        nextLocation: location,
+      };
+    }
+
+    updateState(
+      {
+        ...newState, // matches, errors, fetchers go through as-is
+        actionData,
+        loaderData,
+        historyAction: pendingAction,
         location,
-        newState.matches || state.matches
-      ),
-      preventScrollReset,
-      blockers,
-    });
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        revalidation: "idle",
+        restoreScrollPosition: getSavedScrollPosition(
+          location,
+          newState.matches || state.matches
+        ),
+        preventScrollReset,
+        blockers,
+      },
+      viewTransitionOpts
+    );
 
     // Reset stateful navigation vars
     pendingAction = HistoryAction.Pop;
     pendingPreventScrollReset = false;
+    pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -1183,6 +1303,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
+      enableViewTransition: opts && opts.unstable_viewTransition,
     });
   }
 
@@ -1229,10 +1350,11 @@ export function createRouter(init: RouterInit): Router {
       submission?: Submission;
       fetcherSubmission?: Submission;
       overrideNavigation?: Navigation;
-      pendingError?: ErrorResponse;
+      pendingError?: ErrorResponseImpl;
       startUninterruptedRevalidation?: boolean;
       preventScrollReset?: boolean;
       replace?: boolean;
+      enableViewTransition?: boolean;
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1248,6 +1370,8 @@ export function createRouter(init: RouterInit): Router {
     // and track whether we should reset scroll on completion
     saveScrollPosition(state.location, state.matches);
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
+
+    pendingViewTransitionEnabled = (opts && opts.enableViewTransition) === true;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
@@ -1641,6 +1765,14 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
+    if (future.v7_fetcherPersist) {
+      activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
+      // If this fetcher was previously marked for deletion, unmark it since we
+      // have a new instance
+      if (deletedFetchers.has(key)) {
+        deletedFetchers.delete(key);
+      }
+    }
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
 
@@ -1760,11 +1892,17 @@ export function createRouter(init: RouterInit): Router {
     );
 
     if (fetchRequest.signal.aborted) {
-      // We can delete this so long as we weren't aborted by ou our own fetcher
+      // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
       if (fetchControllers.get(key) === abortController) {
         fetchControllers.delete(key);
       }
+      return;
+    }
+
+    if (deletedFetchers.has(key)) {
+      state.fetchers.set(key, getDoneFetcher(undefined));
+      updateState({ fetchers: new Map(state.fetchers) });
       return;
     }
 
@@ -1786,8 +1924,7 @@ export function createRouter(init: RouterInit): Router {
         updateState({ fetchers: new Map(state.fetchers) });
 
         return startRedirectNavigation(state, actionResult, {
-          submission,
-          isFetchActionRedirect: true,
+          fetcherSubmission: submission,
         });
       }
     }
@@ -1926,7 +2063,7 @@ export function createRouter(init: RouterInit): Router {
       state.fetchers.set(key, doneFetcher);
     }
 
-    let didAbortFetchLoads = abortStaleFetchLoads(loadId);
+    abortStaleFetchLoads(loadId);
 
     // If we are currently in a navigation loading state and this fetcher is
     // more recent than the navigation, we want the newer data so abort the
@@ -1956,9 +2093,7 @@ export function createRouter(init: RouterInit): Router {
           matches,
           errors
         ),
-        ...(didAbortFetchLoads || revalidatingFetchers.length > 0
-          ? { fetchers: new Map(state.fetchers) }
-          : {}),
+        fetchers: new Map(state.fetchers),
       });
       isRevalidationRequired = false;
     }
@@ -2022,6 +2157,12 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
+    if (deletedFetchers.has(key)) {
+      state.fetchers.set(key, getDoneFetcher(undefined));
+      updateState({ fetchers: new Map(state.fetchers) });
+      return;
+    }
+
     // If the loader threw a redirect Response, start a new REPLACE navigation
     if (isRedirectResult(result)) {
       if (pendingNavigationLoadId > originatingLoadId) {
@@ -2040,17 +2181,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Process any non-redirect errors thrown
     if (isErrorResult(result)) {
-      let boundaryMatch = findNearestBoundary(state.matches, routeId);
-      state.fetchers.delete(key);
-      // TODO: In remix, this would reset to IDLE_NAVIGATION if it was a catch -
-      // do we need to behave any differently with our non-redirect errors?
-      // What if it was a non-redirect Response?
-      updateState({
-        fetchers: new Map(state.fetchers),
-        errors: {
-          [boundaryMatch.route.id]: result.error,
-        },
-      });
+      setFetcherError(key, routeId, result.error);
       return;
     }
 
@@ -2086,27 +2217,21 @@ export function createRouter(init: RouterInit): Router {
     redirect: RedirectResult,
     {
       submission,
+      fetcherSubmission,
       replace,
-      isFetchActionRedirect,
     }: {
       submission?: Submission;
+      fetcherSubmission?: Submission;
       replace?: boolean;
-      isFetchActionRedirect?: boolean;
     } = {}
   ) {
     if (redirect.revalidate) {
       isRevalidationRequired = true;
     }
 
-    let redirectLocation = createLocation(
-      state.location,
-      redirect.location,
-      // TODO: This can be removed once we get rid of useTransition in Remix v2
-      {
-        _isRedirect: true,
-        ...(isFetchActionRedirect ? { _isFetchActionRedirect: true } : {}),
-      }
-    );
+    let redirectLocation = createLocation(state.location, redirect.location, {
+      _isRedirect: true,
+    });
     invariant(
       redirectLocation,
       "Expected a location on the redirect navigation"
@@ -2146,12 +2271,21 @@ export function createRouter(init: RouterInit): Router {
 
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
-    let activeSubmission =
-      submission || getSubmissionFromNavigation(state.navigation);
+    let { formMethod, formAction, formEncType } = state.navigation;
+    if (
+      !submission &&
+      !fetcherSubmission &&
+      formMethod &&
+      formAction &&
+      formEncType
+    ) {
+      submission = getSubmissionFromNavigation(state.navigation);
+    }
 
     // If this was a 307/308 submission we want to preserve the HTTP method and
     // re-submit the GET/POST/PUT/PATCH/DELETE as a submission navigation to the
     // redirected location
+    let activeSubmission = submission || fetcherSubmission;
     if (
       redirectPreserveMethodStatusCodes.has(redirect.status) &&
       activeSubmission &&
@@ -2165,23 +2299,17 @@ export function createRouter(init: RouterInit): Router {
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
-    } else if (isFetchActionRedirect) {
-      // For a fetch action redirect, we kick off a new loading navigation
-      // without the fetcher submission, but we send it along for shouldRevalidate
-      await startNavigation(redirectHistoryAction, redirectLocation, {
-        overrideNavigation: getLoadingNavigation(redirectLocation),
-        fetcherSubmission: activeSubmission,
-        // Preserve this flag across redirects
-        preventScrollReset: pendingPreventScrollReset,
-      });
     } else {
-      // If we have a submission, we will preserve it through the redirect navigation
+      // If we have a navigation submission, we will preserve it through the
+      // redirect navigation
       let overrideNavigation = getLoadingNavigation(
         redirectLocation,
-        activeSubmission
+        submission
       );
       await startNavigation(redirectHistoryAction, redirectLocation, {
         overrideNavigation,
+        // Send fetcher submissions through for shouldRevalidate
+        fetcherSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
       });
@@ -2296,7 +2424,23 @@ export function createRouter(init: RouterInit): Router {
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
+    deletedFetchers.delete(key);
     state.fetchers.delete(key);
+  }
+
+  function deleteFetcherAndUpdateState(key: string): void {
+    if (future.v7_fetcherPersist) {
+      let count = (activeFetchers.get(key) || 0) - 1;
+      if (count <= 0) {
+        activeFetchers.delete(key);
+        deletedFetchers.add(key);
+      } else {
+        activeFetchers.set(key, count);
+      }
+    } else {
+      deleteFetcher(key);
+    }
+    updateState({ fetchers: new Map(state.fetchers) });
   }
 
   function abortFetcher(key: string) {
@@ -2468,7 +2612,7 @@ export function createRouter(init: RouterInit): Router {
     if (getScrollRestorationKey) {
       let key = getScrollRestorationKey(
         location,
-        matches.map((m) => createUseMatchesMatch(m, state.loaderData))
+        matches.map((m) => convertRouteMatchToUiMatch(m, state.loaderData))
       );
       return key || location.key;
     }
@@ -2519,6 +2663,9 @@ export function createRouter(init: RouterInit): Router {
     get routes() {
       return dataRoutes;
     },
+    get window() {
+      return routerWindow;
+    },
     initialize,
     subscribe,
     enableScrollRestoration,
@@ -2530,7 +2677,7 @@ export function createRouter(init: RouterInit): Router {
     createHref: (to: To) => init.history.createHref(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
-    deleteFetcher,
+    deleteFetcher: deleteFetcherAndUpdateState,
     dispose,
     getBlocker,
     deleteBlocker,
@@ -2850,7 +2997,9 @@ export function createStaticHandler(
 
       if (request.signal.aborted) {
         let method = isRouteRequest ? "queryRoute" : "query";
-        throw new Error(`${method}() call aborted`);
+        throw new Error(
+          `${method}() call aborted: ${request.method} ${request.url}`
+        );
       }
     }
 
@@ -3018,7 +3167,9 @@ export function createStaticHandler(
 
     if (request.signal.aborted) {
       let method = isRouteRequest ? "queryRoute" : "query";
-      throw new Error(`${method}() call aborted`);
+      throw new Error(
+        `${method}() call aborted: ${request.method} ${request.url}`
+      );
     }
 
     // Process and commit output from loaders
@@ -3084,7 +3235,7 @@ export function getStaticContextFromError(
 }
 
 function isSubmissionNavigation(
-  opts: RouterNavigateOptions
+  opts: BaseNavigateOrFetchOptions
 ): opts is SubmissionNavigateOptions {
   return (
     opts != null &&
@@ -3168,11 +3319,11 @@ function normalizeNavigateOptions(
   normalizeFormMethod: boolean,
   isFetcher: boolean,
   path: string,
-  opts?: RouterNavigateOptions
+  opts?: BaseNavigateOrFetchOptions
 ): {
   path: string;
   submission?: Submission;
-  error?: ErrorResponse;
+  error?: ErrorResponseImpl;
 } {
   // Return location verbatim on non-submission navigations
   if (!opts || !isSubmissionNavigation(opts)) {
@@ -3513,7 +3664,7 @@ function isNewRouteInstance(
 
 function shouldRevalidateLoader(
   loaderMatch: AgnosticDataRouteMatch,
-  arg: Parameters<ShouldRevalidateFunction>[0]
+  arg: ShouldRevalidateFunctionArgs
 ) {
   if (loaderMatch.route.shouldRevalidate) {
     let routeChoice = loaderMatch.route.shouldRevalidate(arg);
@@ -3643,10 +3794,19 @@ async function callLoaderOrAction(
     if (match.route.lazy) {
       if (handler) {
         // Run statically defined handler in parallel with lazy()
+        let handlerError;
         let values = await Promise.all([
-          runHandler(handler),
+          // If the handler throws, don't let it immediately bubble out,
+          // since we need to let the lazy() execution finish so we know if this
+          // route has a boundary that can handle the error
+          runHandler(handler).catch((e) => {
+            handlerError = e;
+          }),
           loadLazyRouteModule(match.route, mapRouteProperties, manifest),
         ]);
+        if (handlerError) {
+          throw handlerError;
+        }
         result = values[0];
       } else {
         // Load lazy route module, then run any returned handler
@@ -3774,7 +3934,7 @@ async function callLoaderOrAction(
     if (resultType === ResultType.error) {
       return {
         type: resultType,
-        error: new ErrorResponse(status, result.statusText, data),
+        error: new ErrorResponseImpl(status, result.statusText, data),
         headers: result.headers,
       };
     }
@@ -4075,9 +4235,12 @@ function getShortCircuitMatches(routes: AgnosticDataRouteObject[]): {
   route: AgnosticDataRouteObject;
 } {
   // Prefer a root layout route if present, otherwise shim in a route object
-  let route = routes.find((r) => r.index || !r.path || r.path === "/") || {
-    id: `__shim-error-route__`,
-  };
+  let route =
+    routes.length === 1
+      ? routes[0]
+      : routes.find((r) => r.index || !r.path || r.path === "/") || {
+          id: `__shim-error-route__`,
+        };
 
   return {
     matches: [
@@ -4139,7 +4302,7 @@ function getInternalRouterError(
     }
   }
 
-  return new ErrorResponse(
+  return new ErrorResponseImpl(
     status || 500,
     statusText,
     new Error(errorMessage),
@@ -4326,22 +4489,6 @@ function hasNakedIndexQuery(search: string): boolean {
   return new URLSearchParams(search).getAll("index").some((v) => v === "");
 }
 
-// Note: This should match the format exported by useMatches, so if you change
-// this please also change that :)  Eventually we'll DRY this up
-function createUseMatchesMatch(
-  match: AgnosticDataRouteMatch,
-  loaderData: RouteData
-): UseMatchesMatch {
-  let { route, pathname, params } = match;
-  return {
-    id: route.id,
-    pathname,
-    params,
-    data: loaderData[route.id] as unknown,
-    handle: route.handle as unknown,
-  };
-}
-
 function getTargetMatch(
   matches: AgnosticDataRouteMatch[],
   location: Location | string
@@ -4462,7 +4609,6 @@ function getLoadingFetcher(
       json: submission.json,
       text: submission.text,
       data,
-      " _hasFetcherDoneAnything ": true,
     };
     return fetcher;
   } else {
@@ -4475,7 +4621,6 @@ function getLoadingFetcher(
       json: undefined,
       text: undefined,
       data,
-      " _hasFetcherDoneAnything ": true,
     };
     return fetcher;
   }
@@ -4494,7 +4639,6 @@ function getSubmittingFetcher(
     json: submission.json,
     text: submission.text,
     data: existingFetcher ? existingFetcher.data : undefined,
-    " _hasFetcherDoneAnything ": true,
   };
   return fetcher;
 }
@@ -4509,8 +4653,52 @@ function getDoneFetcher(data: Fetcher["data"]): FetcherStates["Idle"] {
     json: undefined,
     text: undefined,
     data,
-    " _hasFetcherDoneAnything ": true,
   };
   return fetcher;
 }
+
+function restoreAppliedTransitions(
+  _window: Window,
+  transitions: Map<string, Set<string>>
+) {
+  try {
+    let sessionPositions = _window.sessionStorage.getItem(
+      TRANSITIONS_STORAGE_KEY
+    );
+    if (sessionPositions) {
+      let json = JSON.parse(sessionPositions);
+      for (let [k, v] of Object.entries(json || {})) {
+        if (v && Array.isArray(v)) {
+          transitions.set(k, new Set(v || []));
+        }
+      }
+    }
+  } catch (e) {
+    // no-op, use default empty object
+  }
+}
+
+function persistAppliedTransitions(
+  _window: Window,
+  transitions: Map<string, Set<string>>
+) {
+  if (transitions.size > 0) {
+    let json: Record<string, string[]> = {};
+    for (let [k, v] of transitions) {
+      json[k] = [...v];
+    }
+    try {
+      _window.sessionStorage.setItem(
+        TRANSITIONS_STORAGE_KEY,
+        JSON.stringify(json)
+      );
+    } catch (error) {
+      warning(
+        false,
+        `Failed to save applied view transitions in sessionStorage (${error}).`
+      );
+    }
+  }
+}
+
 //#endregion

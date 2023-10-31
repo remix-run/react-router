@@ -49,15 +49,18 @@ export interface Path {
   hash: string;
 }
 
+// TODO: (v7) Change the Location generic default from `any` to `unknown` and
+// remove Remix `useLocation` wrapper.
+
 /**
  * An entry in a history stack. A location contains information about the
  * URL path, as well as possibly some arbitrary state and a key.
  */
-export interface Location extends Path {
+export interface Location<State = any> extends Path {
   /**
    * A value of arbitrary data associated with this location.
    */
-  state: any;
+  state: State;
 
   /**
    * A unique string associated with this location. May be used to safely store
@@ -97,8 +100,8 @@ export interface Listener {
 
 /**
  * Describes a location that is the destination of some navigation, either via
- * `history.push` or `history.replace`. May be either a URL or the pieces of a
- * URL path.
+ * `history.push` or `history.replace`. This may be either a URL or the pieces
+ * of a URL path.
  */
 export type To = string | Partial<Path>;
 
@@ -500,7 +503,7 @@ export function warning(cond: any, message: string) {
     try {
       // Welcome to debugging history!
       //
-      // This error is thrown as a convenience so you can more easily
+      // This error is thrown as a convenience, so you can more easily
       // find the source for a warning that appears in the console by
       // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
