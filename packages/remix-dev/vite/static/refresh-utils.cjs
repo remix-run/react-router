@@ -15,7 +15,7 @@ const enqueueUpdate = debounce(async () => {
   if (routeUpdates.size > 0) {
     manifest = JSON.parse(JSON.stringify(__remixManifest));
 
-    routeUpdates.forEach(async (route) => {
+    for (let route of routeUpdates.values()) {
       manifest.routes[route.id] = route;
 
       let imported = await __hmr_import(route.url + "?t=" + Date.now());
@@ -32,7 +32,7 @@ const enqueueUpdate = debounce(async () => {
           : imported.ErrorBoundary,
       };
       window.__remixRouteModules[route.id] = routeModule;
-    });
+    }
 
     let needsRevalidation = new Set(
       Array.from(routeUpdates.values())

@@ -98,6 +98,8 @@ test.beforeAll(async () => {
         // imports
         import { useState, useEffect } from "react";
 
+        export const meta = () => [{ title: "HMR updated title: 0" }]
+
         // loader
 
         export default function IndexRoute() {
@@ -141,6 +143,7 @@ test("Vite custom server HMR & HDR", async ({ page }) => {
 
   // setup: browser state
   let hmrStatus = page.locator("#index [data-hmr]");
+  await expect(page).toHaveTitle("HMR updated title: 0");
   await expect(hmrStatus).toHaveText("HMR updated: 0");
   let input = page.locator("#index input");
   await expect(input).toBeVisible();
@@ -148,9 +151,12 @@ test("Vite custom server HMR & HDR", async ({ page }) => {
 
   // route: HMR
   await edit("app/routes/_index.tsx", (contents) =>
-    contents.replace("HMR updated: 0", "HMR updated: 1")
+    contents
+      .replace("HMR updated title: 0", "HMR updated title: 1")
+      .replace("HMR updated: 0", "HMR updated: 1")
   );
   await page.waitForLoadState("networkidle");
+  await expect(page).toHaveTitle("HMR updated title: 1");
   await expect(hmrStatus).toHaveText("HMR updated: 1");
   await expect(input).toHaveValue("stateful");
 
