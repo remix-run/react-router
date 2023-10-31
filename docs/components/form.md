@@ -20,6 +20,8 @@ interface FormProps
     | "text/plain";
   action?: string;
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  fetcherKey?: string;
+  navigate?: boolean;
   preventScrollReset?: boolean;
   relative?: "route" | "path";
   reloadDocument?: boolean;
