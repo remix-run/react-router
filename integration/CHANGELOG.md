@@ -1,6 +1,6 @@
 # integration-tests
 
-## 0.0.0-pre.0
+## 0.0.0
 
 ### Minor Changes
 

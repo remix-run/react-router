@@ -1,26 +1,14 @@
 # `@remix-run/server-runtime`
 
-## 2.2.0-pre.4
-
-## 2.2.0-pre.3
-
-## 2.2.0-pre.2
-
-## 2.2.0-pre.1
-
-## 2.2.0-pre.0
+## 2.2.0
 
 ### Minor Changes
 
 - Unstable Vite support for Node-based Remix apps ([#7590](https://github.com/remix-run/remix/pull/7590))
-
   - `remix build` 👉 `vite build && vite build --ssr`
   - `remix dev` 👉 `vite dev`
-
-  Other runtimes (e.g. Deno, Cloudflare) not yet supported.
-  Custom server (e.g. Express) not yet supported.
-
-  See "Future > Vite" in the Remix Docs for details.
+  - Other runtimes (e.g. Deno, Cloudflare) not yet supported.
+  - See "Future > Vite" in the Remix Docs for details
 
 ## 2.1.0
 
