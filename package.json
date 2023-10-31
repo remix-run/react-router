@@ -85,7 +85,8 @@
   },
   "tags": [
     "react",
-    "router"
+    "router",
+	"testing"
   ],
   "keywords": [
     "react",
