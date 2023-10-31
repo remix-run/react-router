@@ -106,6 +106,26 @@ describe("NavLink", () => {
       expect(anchor.props.className).toMatch("active");
     });
 
+    it("when the current URL has a trailing slash", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/home/"]}>
+            <Routes>
+              <Route
+                path="/home"
+                element={<NavLink to="/home/">Home</NavLink>}
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      let anchor = renderer.root.findByType("a");
+
+      expect(anchor.props.className).toMatch("active");
+    });
+
     it("applies its className correctly when provided as a function", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
@@ -458,31 +478,6 @@ describe("NavLink", () => {
       let anchor = renderer.root.findByType("a");
       expect(anchor.props.className).toMatch("active");
     });
-    
-    it("does not apply the default 'active' className to the underlying <a> when at root'/'", ()=>{
-      let renderer: TestRenderer.ReactTestRenderer;
-      TestRenderer.act(() => {
-        renderer = TestRenderer.create(
-          <MemoryRouter initialEntries={["/"]}>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <div>
-                    <NavLink to="child">Child</NavLink>
-                    <Outlet />
-                  </div>
-                }
-              >
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        );
-      });
-
-      let anchor = renderer.root.findByType("a");
-      expect(anchor.props.className).not.toMatch("active");
-    });
 
     describe("when end=true", () => {
       it("does not apply the default 'active' className to the underlying <a>", () => {
@@ -512,6 +507,68 @@ describe("NavLink", () => {
         let anchor = renderer.root.findByType("a");
 
         expect(anchor.props.className).not.toMatch("active");
+      });
+
+      it("Handles trailing slashes accordingly when the URL does not have a trailing slash", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/home"]}>
+              <Routes>
+                <Route
+                  path="home"
+                  element={
+                    <div>
+                      <NavLink to="/home" end>
+                        Home
+                      </NavLink>
+                      <NavLink to="/home/" end>
+                        Home
+                      </NavLink>
+                      <Outlet />
+                    </div>
+                  }
+                >
+                  <Route path="child" element={<div>Child</div>} />
+                </Route>
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        let anchors = renderer.root.findAllByType("a");
+        expect(anchors.map((a) => a.props.className)).toEqual(["active", ""]);
+      });
+
+      it("Handles trailing slashes accordingly when the URL has a trailing slash", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/home/"]}>
+              <Routes>
+                <Route
+                  path="home"
+                  element={
+                    <div>
+                      <NavLink to="/home" end>
+                        Home
+                      </NavLink>
+                      <NavLink to="/home/" end>
+                        Home
+                      </NavLink>
+                      <Outlet />
+                    </div>
+                  }
+                >
+                  <Route path="child" element={<div>Child</div>} />
+                </Route>
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        let anchors = renderer.root.findAllByType("a");
+        expect(anchors.map((a) => a.props.className)).toEqual(["", "active"]);
       });
     });
   });

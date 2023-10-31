@@ -963,13 +963,21 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         : null;
       toPathname = toPathname.toLowerCase();
     }
-    const endSlashPosition = (toPathname.length > 1 && toPathname[toPathname.length - 1] === "/") ? toPathname.length - 1 : toPathname.length;
+
+    // If the `to` has a trailing slash, look at that exact spot.  Otherwise,
+    // we're looking for a slash _after_ what's in `to`.  For example:
+    //
+    // <NavLink to="/users"> and <NavLink to="/users/">
+    // both want to look for a / at index 6 to match URL `/users/matt`
+    const endSlashPosition =
+      toPathname !== "/" && toPathname.endsWith("/")
+        ? toPathname.length - 1
+        : toPathname.length;
     let isActive =
       locationPathname === toPathname ||
       (!end &&
-        locationPathname.startsWith(toPathname) && 
-            locationPathname.charAt(endSlashPosition) === "/" 
-      );
+        locationPathname.startsWith(toPathname) &&
+        locationPathname.charAt(endSlashPosition) === "/");
 
     let isPending =
       nextLocationPathname != null &&
