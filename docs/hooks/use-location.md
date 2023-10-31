@@ -10,22 +10,16 @@ title: useLocation
 ```tsx
 declare function useLocation(): Location;
 
-  interface Location extends Path {
-    state: any;
-    key: Key;
-    path: string; //Added path property to location interface
-  }
-
-  // Definition of the Path and Key interfaces 
-  interface Path {
-   pathname: string;
-   search: string;
-   hash: string;
-  }
-
- interface Key {
+interface Location<State = any> extends Path {
+  state: State;
   key: string;
- } 
+}
+
+interface Path {
+  pathname: string;
+  search: string;
+  hash: string;
+}
 ```
 
 </details>
