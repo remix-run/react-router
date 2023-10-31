@@ -114,6 +114,14 @@ const router = createBrowserRouter(routes, {
 });
 ```
 
+The following future flags are currently available:
+
+| Flag                     | Description                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| `v7_fetcherPersist`      | Delay active fetcher cleanup until they return to an `idle` state     |
+| `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
+| `v7_prependBasename`     | Prepend the router basename to navigate/fetch paths                   |
+
 ## `window`
 
 Useful for environments like browser devtool plugins or testing to use a different window than the global `window`.
@@ -121,10 +129,7 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [loader]: ../route/loader
 [action]: ../route/action
 [fetcher]: ../hooks/use-fetcher
-[browser-router]: ./browser-router
-[form]: ../components/form
 [route]: ../route/route
-[routes]: ../components/routes
 [historyapi]: https://developer.mozilla.org/en-US/docs/Web/API/History
 [api-development-strategy]: ../guides/api-development-strategy
 [remixing-react-router]: https://remix.run/blog/remixing-react-router

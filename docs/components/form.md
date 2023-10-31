@@ -20,6 +20,8 @@ interface FormProps
     | "text/plain";
   action?: string;
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+  fetcherKey?: string;
+  navigate?: boolean;
   preventScrollReset?: boolean;
   relative?: "route" | "path";
   reloadDocument?: boolean;
@@ -197,6 +199,14 @@ function Project() {
 
 As you can see, both forms submit to the same route but you can use the `request.method` to branch on what you intend to do. After the actions completes, the `loader` will be revalidated and the UI will automatically synchronize with the new data.
 
+## `navigate`
+
+You can tell the form to skip the navigation and use a [fetcher][usefetcher] internally by specifying `<Form navigate={false}>`. This is essentially a shorthand for `useFetcher()` + `<fetcher.Form>` where you don't care about the resulting data and only want to kick off a submission and access the pending state via [`useFetchers()`][usefetchers].
+
+## `fetcherKey`
+
+When using a non-navigating `Form`, you may also optionally specify your own fetcher key to use via `<Form navigate={false} fetcherKey="my-key">`.
+
 ## `replace`
 
 Instructs the form to replace the current entry in the history stack, instead of pushing the new entry.
@@ -367,6 +377,7 @@ You can access those values from the `request.url`
 [useactiondata]: ../hooks/use-action-data
 [formdata]: https://developer.mozilla.org/en-US/docs/Web/API/FormData
 [usefetcher]: ../hooks/use-fetcher
+[usefetchers]: ../hooks/use-fetchers
 [htmlform]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
 [htmlformaction]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-action
 [htmlform-method]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form#attr-method

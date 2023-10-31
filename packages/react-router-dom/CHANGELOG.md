@@ -1,5 +1,26 @@
 # `react-router-dom`
 
+## 6.18.0
+
+### Minor Changes
+
+- Add support for manual fetcher key specification via `useFetcher({ key: string })` so you can access the same fetcher instance from different components in your application without prop-drilling ([RFC](https://github.com/remix-run/remix/discussions/7698)) ([#10960](https://github.com/remix-run/react-router/pull/10960))
+
+  - Fetcher keys are now also exposed on the fetchers returned from `useFetchers` so that they can be looked up by `key`
+
+- Add `navigate`/`fetcherKey` params/props to `useSumbit`/`Form` to support kicking off a fetcher submission under the hood with an optionally user-specified `key` ([#10960](https://github.com/remix-run/react-router/pull/10960))
+
+  - Invoking a fetcher in this way is ephemeral and stateless
+  - If you need to access the state of one of these fetchers, you will need to leverage `useFetcher({ key })` to look it up elsewhere
+
+### Patch Changes
+
+- Adds a fetcher context to `RouterProvider` that holds completed fetcher data, in preparation for the upcoming future flag that will change the fetcher persistence/cleanup behavior ([#10961](https://github.com/remix-run/react-router/pull/10961))
+- Fix the `future` prop on `BrowserRouter`, `HashRouter` and `MemoryRouter` so that it accepts a `Partial<FutureConfig>` instead of requiring all flags to be included. ([#10962](https://github.com/remix-run/react-router/pull/10962))
+- Updated dependencies:
+  - `@remix-run/router@1.11.0`
+  - `react-router@6.18.0`
+
 ## 6.17.0
 
 ### Minor Changes

@@ -30,7 +30,7 @@ import {
   useRouteLoaderData,
 } from "react-router";
 
-import createDeferred from "../../router/__tests__/utils/createDeferred";
+import { createDeferred } from "../../router/__tests__/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
 

@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.18.0
+
+### Patch Changes
+
+- Fix the `future` prop on `BrowserRouter`, `HashRouter` and `MemoryRouter` so that it accepts a `Partial<FutureConfig>` instead of requiring all flags to be included. ([#10962](https://github.com/remix-run/react-router/pull/10962))
+- Updated dependencies:
+  - `@remix-run/router@1.11.0`
+
 ## 6.17.0
 
 ### Patch Changes
