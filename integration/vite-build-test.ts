@@ -1,4 +1,7 @@
+import * as path from "node:path";
 import { test, expect } from "@playwright/test";
+import shell from "shelljs";
+import glob from "glob";
 
 import {
   createAppFixture,
@@ -51,13 +54,25 @@ test.describe("Vite build", () => {
         `,
         "app/routes/_index.tsx": js`
           import { useState, useEffect } from "react";
+          import { json } from "@remix-run/node";
+
+          import { serverOnly1, serverOnly2 } from "../utils.server";
+
+          export const loader = () => {
+            return json({ serverOnly1 })
+          }
+
+          export const action = () => {
+            console.log(serverOnly2)
+            return null
+          }
 
           export default function() {
             const [mounted, setMounted] = useState(false);
             useEffect(() => {
               setMounted(true);
             }, []);
-            
+
             return (
               <>
                 <h2>Index</h2>
@@ -65,6 +80,24 @@ test.describe("Vite build", () => {
               </>
             );
           }
+        `,
+        "app/routes/resource.ts": js`
+          import { json } from "@remix-run/node";
+
+          import { serverOnly1, serverOnly2 } from "../utils.server";
+
+          export const loader = () => {
+            return json({ serverOnly1 })
+          }
+
+          export const action = () => {
+            console.log(serverOnly2)
+            return null
+          }
+        `,
+        "app/utils.server.ts": js`
+          export const serverOnly1 = "SERVER_ONLY_1"
+          export const serverOnly2 = "SERVER_ONLY_2"
         `,
       },
     });
@@ -74,6 +107,25 @@ test.describe("Vite build", () => {
 
   test.afterAll(() => {
     appFixture.close();
+  });
+
+  test("server code is removed from client assets", async () => {
+    let publicBuildDir = path.join(fixture.projectDir, "public/build");
+
+    // detect client asset files
+    let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
+      cwd: publicBuildDir,
+      absolute: true,
+    });
+
+    // grep for server-only values in client assets
+    let result = shell
+      .grep("-l", /SERVER_ONLY_1|SERVER_ONLY_2/, assetFiles)
+      .stdout.trim()
+      .split("\n")
+      .filter((line) => line.length > 0);
+
+    expect(result).toHaveLength(0);
   });
 
   test("server renders matching routes", async () => {

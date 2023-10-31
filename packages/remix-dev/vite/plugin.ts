@@ -632,20 +632,6 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
 
         let serverExports = ["loader", "action", "headers"];
 
-        let routeExports = await getRouteModuleExports(
-          viteChildCompiler,
-          pluginConfig,
-          route.file
-        );
-
-        // ignore resource routes that only have server exports
-        // note: resource routes for fullstack components don't need a `default` export
-        // but still need their server exports removed
-        let browserExports = routeExports.filter(
-          (x) => !serverExports.includes(x)
-        );
-        if (browserExports.length === 0) return;
-
         return {
           code: removeExports(code, serverExports),
           map: null,
