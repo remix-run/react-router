@@ -1,5 +1,15 @@
 # `@remix-run/express`
 
+## 2.2.0
+
+### Patch Changes
+
+- Allow the `@remix-run/express` adapter to work behind a proxy when using `app.enable('trust proxy')` ([#7323](https://github.com/remix-run/remix/pull/7323))
+  - Previously, this used `req.get('host')` to construct the Remix `Request`, but that does not respect `X-Forwarded-Host`
+  - This now uses `req.hostname` which will respect `X-Forwarded-Host`
+- Updated dependencies:
+  - `@remix-run/node@2.2.0`
+
 ## 2.1.0
 
 ### Patch Changes

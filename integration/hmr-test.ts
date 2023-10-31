@@ -5,7 +5,6 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 import execa from "execa";
 import getPort from "get-port";
-import pidtree from "pidtree";
 
 import type { FixtureInit } from "./helpers/create-fixture.js";
 import {
@@ -14,6 +13,7 @@ import {
   js,
   json,
 } from "./helpers/create-fixture.js";
+import { killtree } from "./helpers/killtree.js";
 
 test.setTimeout(150_000);
 
@@ -709,59 +709,4 @@ let deps = (packages: string[]): Record<string, string> => {
   return Object.fromEntries(
     packages.map((pkg) => [pkg, "0.0.0-local-version"])
   );
-};
-
-let isWindows = process.platform === "win32";
-
-let kill = async (pid: number) => {
-  if (!isAlive(pid)) return;
-  if (isWindows) {
-    await execa("taskkill", ["/F", "/PID", pid.toString()]).catch((error) => {
-      // taskkill 128 -> the process is already dead
-      if (error.exitCode === 128) return;
-      if (/There is no running instance of the task./.test(error.message))
-        return;
-      console.warn(error.message);
-    });
-    return;
-  }
-  await execa("kill", ["-9", pid.toString()]).catch((error) => {
-    // process is already dead
-    if (/No such process/.test(error.message)) return;
-    console.warn(error.message);
-  });
-};
-
-let isAlive = (pid: number) => {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
-
-let killtree = async (pid: number) => {
-  let descendants = await pidtree(pid).catch(() => undefined);
-  if (descendants === undefined) return;
-  let pids = [pid, ...descendants];
-
-  await Promise.all(pids.map(kill));
-
-  return new Promise<void>((resolve, reject) => {
-    let check = setInterval(() => {
-      pids = pids.filter(isAlive);
-      if (pids.length === 0) {
-        clearInterval(check);
-        resolve();
-      }
-    }, 50);
-
-    setTimeout(() => {
-      clearInterval(check);
-      reject(
-        new Error("Timeout: Processes did not exit within the specified time.")
-      );
-    }, 2000);
-  });
 };

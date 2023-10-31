@@ -29,6 +29,7 @@ export interface EntryRoute extends Route {
   hasLoader: boolean;
   hasErrorBoundary: boolean;
   imports?: string[];
+  css?: string[];
   module: string;
   parentId?: string;
 }

@@ -7,13 +7,16 @@ import type { RouteModules, EntryRouteModule } from "./routeModules";
 export interface EntryContext {
   manifest: AssetsManifest;
   routeModules: RouteModules<EntryRouteModule>;
+  criticalCss?: string;
   serverHandoffString?: string;
   staticHandlerContext: StaticHandlerContext;
   future: FutureConfig;
   serializeError(error: Error): SerializedError;
 }
 
-export interface FutureConfig {}
+export interface FutureConfig {
+  v3_fetcherPersist: boolean;
+}
 
 export interface AssetsManifest {
   entry: {

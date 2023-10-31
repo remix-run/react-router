@@ -1,5 +1,21 @@
 # `@remix-run/testing`
 
+## 2.2.0
+
+### Minor Changes
+
+- Unstable Vite support for Node-based Remix apps ([#7590](https://github.com/remix-run/remix/pull/7590))
+  - `remix build` 👉 `vite build && vite build --ssr`
+  - `remix dev` 👉 `vite dev`
+  - Other runtimes (e.g. Deno, Cloudflare) not yet supported.
+  - See "Future > Vite" in the Remix Docs for details
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/react@2.2.0`
+  - `@remix-run/node@2.2.0`
+
 ## 2.1.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "integration-tests",
-  "version": "0.0.0-local-version",
+  "version": "0.0.0",
   "private": true,
   "description": "deps needed for integration tests",
   "type": "module",
