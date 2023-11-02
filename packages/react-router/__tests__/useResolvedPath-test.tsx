@@ -85,7 +85,7 @@ describe("useResolvedPath", () => {
   });
 
   describe("in a splat route", () => {
-    it("resolves . to the route path", () => {
+    it("resolves . to the route path (nested splat)", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
@@ -105,18 +105,123 @@ describe("useResolvedPath", () => {
         </pre>
       `);
     });
-  });
 
-  describe("in a param route", () => {
-    it("resolves . to the route path", () => {
+    it("resolves .. to the route path (nested splat)", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
           <MemoryRouter initialEntries={["/users/mj"]}>
             <Routes>
               <Route path="/users">
+                <Route path="*" element={<ShowResolvedPath path=".." />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users","search":"","hash":""}
+        </pre>
+      `);
+    });
+
+    it("resolves . to the route path (inline splat)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/name/mj"]}>
+            <Routes>
+              <Route path="/users">
+                <Route path="name/*" element={<ShowResolvedPath path="." />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users/name/mj","search":"","hash":""}
+        </pre>
+      `);
+    });
+
+    it("resolves .. to the route path (inline splat)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/name/mj"]}>
+            <Routes>
+              <Route path="/users">
+                <Route path="name/*" element={<ShowResolvedPath path=".." />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users","search":"","hash":""}
+        </pre>
+      `);
+    });
+  });
+
+  describe("in a param route", () => {
+    it("resolves . to the route path (nested param)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/mj"]}>
+            <Routes>
+              <Route path="/users">
+                <Route path=":name" element={<ShowResolvedPath path="." />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users/mj","search":"","hash":""}
+        </pre>
+      `);
+    });
+
+    it("resolves .. to the parent route (nested param)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/mj"]}>
+            <Routes>
+              <Route path="/users">
+                <Route path=":name" element={<ShowResolvedPath path=".." />} />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users","search":"","hash":""}
+        </pre>
+      `);
+    });
+
+    it("resolves . to the route path (inline param)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/name/mj"]}>
+            <Routes>
+              <Route path="/users">
                 <Route
-                  path=":username"
+                  path="name/:name"
                   element={<ShowResolvedPath path="." />}
                 />
               </Route>
@@ -127,7 +232,31 @@ describe("useResolvedPath", () => {
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <pre>
-          {"pathname":"/users/mj","search":"","hash":""}
+          {"pathname":"/users/name/mj","search":"","hash":""}
+        </pre>
+      `);
+    });
+
+    it("resolves .. to the parent route (inline param)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/name/mj"]}>
+            <Routes>
+              <Route path="/users">
+                <Route
+                  path="name/:name"
+                  element={<ShowResolvedPath path=".." />}
+                />
+              </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users","search":"","hash":""}
         </pre>
       `);
     });
