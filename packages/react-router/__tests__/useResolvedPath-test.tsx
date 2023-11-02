@@ -106,7 +106,7 @@ describe("useResolvedPath", () => {
       `);
     });
 
-    it("resolves .. to the route path (nested splat)", () => {
+    it("resolves .. to the parent route path (nested splat)", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
@@ -148,7 +148,7 @@ describe("useResolvedPath", () => {
       `);
     });
 
-    it("resolves .. to the route path (inline splat)", () => {
+    it("resolves .. to the parent route path (inline splat)", () => {
       let renderer: TestRenderer.ReactTestRenderer;
       TestRenderer.act(() => {
         renderer = TestRenderer.create(
@@ -157,6 +157,58 @@ describe("useResolvedPath", () => {
               <Route path="/users">
                 <Route path="name/*" element={<ShowResolvedPath path=".." />} />
               </Route>
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users","search":"","hash":""}
+        </pre>
+      `);
+    });
+
+    it("resolves . to the route path (descendant route)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/mj"]}>
+            <Routes>
+              <Route
+                path="/users/*"
+                element={
+                  <Routes>
+                    <Route path="mj" element={<ShowResolvedPath path="." />} />
+                  </Routes>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        );
+      });
+
+      expect(renderer.toJSON()).toMatchInlineSnapshot(`
+        <pre>
+          {"pathname":"/users/mj","search":"","hash":""}
+        </pre>
+      `);
+    });
+
+    it("resolves .. to the parent route path (descendant route)", () => {
+      let renderer: TestRenderer.ReactTestRenderer;
+      TestRenderer.act(() => {
+        renderer = TestRenderer.create(
+          <MemoryRouter initialEntries={["/users/mj"]}>
+            <Routes>
+              <Route
+                path="/users/*"
+                element={
+                  <Routes>
+                    <Route path="mj" element={<ShowResolvedPath path=".." />} />
+                  </Routes>
+                }
+              />
             </Routes>
           </MemoryRouter>
         );
