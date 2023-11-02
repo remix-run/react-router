@@ -73,6 +73,7 @@ let serverManifestId = VirtualModule.id("server-manifest");
 let browserManifestId = VirtualModule.id("browser-manifest");
 let remixReactProxyId = VirtualModule.id("remix-react-proxy");
 let hmrRuntimeId = VirtualModule.id("hmr-runtime");
+let injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
 
 const normalizePath = (p: string) => {
   let unixPath = p.replace(/[\\/]+/g, "/").replace(/^([a-zA-Z]+:|\.\/)/, "");
@@ -689,19 +690,30 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             'export const LiveReload = process.env.NODE_ENV !== "development" ? () => null : ',
             '() => createElement("script", {',
             ' type: "module",',
-            " suppressHydrationWarning: true,",
-            " dangerouslySetInnerHTML: { __html: `",
-            `   import RefreshRuntime from "${VirtualModule.url(
-              hmrRuntimeId
-            )}"`,
-            "   RefreshRuntime.injectIntoGlobalHook(window)",
-            "   window.$RefreshReg$ = () => {}",
-            "   window.$RefreshSig$ = () => (type) => type",
-            "   window.__vite_plugin_react_preamble_installed__ = true",
-            " `}",
+            " async: true,",
+            ` src: "${VirtualModule.url(injectHmrRuntimeId)}"`,
             "});",
           ].join("\n");
         }
+      },
+    },
+    {
+      name: "remix-inject-hmr-runtime",
+      enforce: "pre",
+      resolveId(id) {
+        if (id === injectHmrRuntimeId)
+          return VirtualModule.resolve(injectHmrRuntimeId);
+      },
+      async load(id) {
+        if (id !== VirtualModule.resolve(injectHmrRuntimeId)) return;
+
+        return [
+          `import RefreshRuntime from "${hmrRuntimeId}"`,
+          "RefreshRuntime.injectIntoGlobalHook(window)",
+          "window.$RefreshReg$ = () => {}",
+          "window.$RefreshSig$ = () => (type) => type",
+          "window.__vite_plugin_react_preamble_installed__ = true",
+        ].join("\n");
       },
     },
     {

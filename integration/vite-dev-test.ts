@@ -59,20 +59,28 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/_index.tsx": js`
-          import { useState, useEffect } from "react";
+          import { Suspense } from "react";
+          import { defer } from "@remix-run/node";
+          import { Await, useLoaderData } from "@remix-run/react";
+
+          export function loader() {
+            let deferred = new Promise((resolve) => {
+              setTimeout(() => resolve(true), 1000)
+            });
+            return defer({ deferred });
+          }
 
           export default function IndexRoute() {
-            const [mounted, setMounted] = useState(false);
-            useEffect(() => {
-              setMounted(true);
-            }, []);
+            const { deferred } = useLoaderData<typeof loader>();
 
             return (
               <div id="index">
                 <h2 data-title>Index</h2>
                 <input />
-                <p data-mounted>Mounted: {mounted ? "yes" : "no"}</p>
                 <p data-hmr>HMR updated: no</p>
+                <Suspense fallback={<p data-defer>Defer finished: no</p>}>
+                  <Await resolve={deferred}>{() => <p data-defer>Defer finished: yes</p>}</Await>
+                </Suspense>
               </div>
             );
           }
@@ -161,12 +169,19 @@ test.describe("Vite dev", () => {
   });
 
   test("renders matching routes", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
     await page.goto(`http://localhost:${devPort}/`, {
       waitUntil: "networkidle",
     });
+
+    // Ensure no errors on page load
+    expect(pageErrors).toEqual([]);
+
     await expect(page.locator("#index [data-title]")).toHaveText("Index");
-    await expect(page.locator("#index [data-mounted]")).toHaveText(
-      "Mounted: yes"
+    await expect(page.locator("#index [data-defer]")).toHaveText(
+      "Defer finished: yes"
     );
 
     let hmrStatus = page.locator("#index [data-hmr]");
@@ -188,12 +203,20 @@ test.describe("Vite dev", () => {
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("HMR updated: yes");
     await expect(input).toHaveValue("stateful");
+
+    // Ensure no errors after HMR
+    expect(pageErrors).toEqual([]);
   });
 
   test("handles multiple set-cookie headers", async ({ page }) => {
+    let pageErrors: Error[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
     await page.goto(`http://localhost:${devPort}/set-cookies`, {
       waitUntil: "networkidle",
     });
+
+    expect(pageErrors).toEqual([]);
 
     // Ensure we redirected
     expect(new URL(page.url()).pathname).toBe("/get-cookies");
