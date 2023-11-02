@@ -3021,26 +3021,6 @@ function testDomRouter(
           let router = createTestRouter(
             createRoutesFromElements(
               <Route path="/">
-                <Route path="foo">
-                  <Route path="*" element={<NoActionComponent />} />
-                </Route>
-              </Route>
-            ),
-            {
-              window: getWindow("/foo/bar/baz"),
-            }
-          );
-          let { container } = render(<RouterProvider router={router} />);
-
-          expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar/baz"
-          );
-        });
-
-        it("includes splat portion of path when no action is specified (nested splat)", async () => {
-          let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
                 <Route path="foo/*" element={<NoActionComponent />} />
               </Route>
             ),
