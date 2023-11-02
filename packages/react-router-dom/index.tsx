@@ -1466,10 +1466,7 @@ export function useFormAction(
   let [match] = routeContext.matches.slice(-1);
   // Shallow clone path so we can modify it below, otherwise we modify the
   // object referenced by useMemo inside useResolvedPath
-  let currentPath = match.pathname.replace(/\/$/, "");
-  let path = {
-    ...useResolvedPath(action ? action : currentPath, { relative }),
-  };
+  let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
   // If no action was specified, browsers will persist current search params
   // when determining the path, so match that behavior

@@ -2916,6 +2916,44 @@ function testDomRouter(
             "/foo/bar"
           );
         });
+
+        it("includes param portion of path when no action is specified (inline splat)", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("includes splat portion of path when no action is specified (nested splat)", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo/:param" element={<NoActionComponent />} />
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
       });
 
       describe("splat routes", () => {
