@@ -84,5 +84,4 @@ function ImportantForm() {
 }
 ```
 
-[beforeunload]: https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event
 [window-confirm]: https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm
