@@ -200,10 +200,18 @@ const showUnstableWarning = () => {
   );
 };
 
+const getViteMajor = () => {
+  let vitePkg = require("vite/package.json");
+
+  return parseInt(vitePkg.version.split(".")[0]!);
+};
+
 export type RemixVitePlugin = (
   options?: RemixVitePluginOptions
 ) => VitePlugin[];
 export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
+  let isViteGTEv5 = getViteMajor() >= 5;
+
   let viteCommand: ResolvedViteConfig["command"];
   let viteUserConfig: ViteUserConfig;
 
@@ -300,9 +308,14 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
 
   let createBuildManifest = async (): Promise<Manifest> => {
     let pluginConfig = await resolvePluginConfig();
+
+    let viteManifestPath = isViteGTEv5
+      ? path.join(".vite", "manifest.json")
+      : "manifest.json";
+
     let viteManifest = JSON.parse(
       await fs.readFile(
-        path.resolve(pluginConfig.assetsBuildDirectory, "manifest.json"),
+        path.resolve(pluginConfig.assetsBuildDirectory, viteManifestPath),
         "utf-8"
       )
     ) as ViteManifest;
