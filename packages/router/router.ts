@@ -644,6 +644,7 @@ interface FetcherMetaData {
   // it if a fresher one lands
   reloadId: number | null;
   redirected: boolean;
+  // Most recent href/match for fetcher.load calls for fetchers
   loadMatches: FetchLoadMatch | null;
   numMounted: number;
   deleted: boolean;
@@ -896,9 +897,6 @@ export function createRouter(init: RouterInit): Router {
 
   // Fetchers that triggered redirect navigations
   let fetchRedirectIds = new Set<string>();
-
-  // Most recent href/match for fetcher.load calls for fetchers
-  let fetchLoadMatches = new Map<string, FetchLoadMatch>();
 
   // Ref-count mounted fetchers so we know when it's ok to clean them up
   let activeFetchers = new Map<string, number>();
@@ -1619,7 +1617,7 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
-      fetchLoadMatches,
+      fetcherMetaData,
       fetchRedirectIds,
       routesToUse,
       basename,
@@ -1846,7 +1844,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
-    fetchLoadMatches.set(key, { routeId, path });
+    fetcherMeta.loadMatches = { routeId, path };
     handleFetcherLoader(
       key,
       routeId,
@@ -1870,7 +1868,7 @@ export function createRouter(init: RouterInit): Router {
     submission: Submission
   ) {
     interruptActiveLoads();
-    fetchLoadMatches.delete(key);
+    fetcherMeta.loadMatches = null;
 
     if (!match.route.action && !match.route.lazy) {
       let error = getInternalRouterError(405, {
@@ -1988,7 +1986,7 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
-      fetchLoadMatches,
+      fetcherMetaData,
       fetchRedirectIds,
       routesToUse,
       basename,
@@ -2410,8 +2408,8 @@ export function createRouter(init: RouterInit): Router {
     cancelledDeferredRoutes.push(...cancelActiveDeferreds());
 
     // Abort in-flight fetcher loads
-    fetchLoadMatches.forEach((_, key) => {
-      if (fetchControllers.has(key)) {
+    fetcherMetaData.forEach((fetcherMeta, key) => {
+      if (fetcherMeta.loadMatches && fetchControllers.has(key)) {
         cancelledFetcherLoads.push(key);
         abortFetcher(key);
       }
@@ -2477,7 +2475,6 @@ export function createRouter(init: RouterInit): Router {
     ) {
       abortFetcher(key);
     }
-    fetchLoadMatches.delete(key);
     fetchRedirectIds.delete(key);
     deletedFetchers.delete(key);
     fetcherMetaData.delete(key);
@@ -3543,7 +3540,7 @@ function getMatchesToLoad(
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
-  fetchLoadMatches: Map<string, FetchLoadMatch>,
+  fetcherMetaData: Map<string, FetcherMetaData>,
   fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
@@ -3608,9 +3605,11 @@ function getMatchesToLoad(
 
   // Pick fetcher.loads that need to be revalidated
   let revalidatingFetchers: RevalidatingFetcher[] = [];
-  fetchLoadMatches.forEach((f, key) => {
-    // Don't revalidate if fetcher won't be present in the subsequent render
-    if (!matches.some((m) => m.route.id === f.routeId)) {
+  fetcherMetaData.forEach((fetcherMeta, key) => {
+    // Don't revalidate if this fetcher didn't load() or if the fetcher won't
+    // be present in the subsequent render
+    let f = fetcherMeta.loadMatches;
+    if (!f || !matches.some((m) => m.route.id === f!.routeId)) {
       return;
     }
 
