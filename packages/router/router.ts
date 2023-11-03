@@ -643,6 +643,7 @@ interface FetcherMetaData {
   // loadId for the revalidation triggered by this fetcher, so we can abort
   // it if a fresher one lands
   reloadId: number | null;
+  // Did this fetcher trigger a redirect navigation?
   redirected: boolean;
   // Most recent href/match for fetcher.load calls for fetchers
   loadMatches: FetchLoadMatch | null;
@@ -894,9 +895,6 @@ export function createRouter(init: RouterInit): Router {
   let pendingNavigationLoadId = -1;
 
   let fetcherMetaData = new Map<string, FetcherMetaData>();
-
-  // Fetchers that triggered redirect navigations
-  let fetchRedirectIds = new Set<string>();
 
   // Ref-count mounted fetchers so we know when it's ok to clean them up
   let activeFetchers = new Map<string, number>();
@@ -1618,7 +1616,6 @@ export function createRouter(init: RouterInit): Router {
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
       fetcherMetaData,
-      fetchRedirectIds,
       routesToUse,
       basename,
       pendingActionData,
@@ -1727,12 +1724,11 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       if (redirect.idx >= matchesToLoad.length) {
-        // If this redirect came from a fetcher make sure we mark it in
-        // fetchRedirectIds so it doesn't get revalidated on the next set of
-        // loader executions
+        // If this redirect came from a fetcher, mark it so it doesn't get
+        // revalidated on the next set of loader executions
         let fetcherKey =
           revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
-        fetchRedirectIds.add(fetcherKey);
+        getFetcherMeta(fetcherKey).redirected = true;
       }
       await startRedirectNavigation(state, redirect.result, { replace });
       return { shortCircuited: true };
@@ -1934,7 +1930,7 @@ export function createRouter(init: RouterInit): Router {
         updateState({ fetchers: new Map(state.fetchers) });
         return;
       } else {
-        fetchRedirectIds.add(key);
+        fetcherMeta.redirected = true;
         let loadingFetcher = getLoadingFetcher(submission);
         state.fetchers.set(key, loadingFetcher);
         updateState({ fetchers: new Map(state.fetchers) });
@@ -1987,7 +1983,6 @@ export function createRouter(init: RouterInit): Router {
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
       fetcherMetaData,
-      fetchRedirectIds,
       routesToUse,
       basename,
       { [match.route.id]: actionResult.data },
@@ -2050,12 +2045,11 @@ export function createRouter(init: RouterInit): Router {
     let redirect = findRedirect(results);
     if (redirect) {
       if (redirect.idx >= matchesToLoad.length) {
-        // If this redirect came from a fetcher make sure we mark it in
-        // fetchRedirectIds so it doesn't get revalidated on the next set of
-        // loader executions
+        // If this redirect came from a fetcher, mark it so it doesn't get
+        // revalidated on the next set of loader executions
         let fetcherKey =
           revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
-        fetchRedirectIds.add(fetcherKey);
+        getFetcherMeta(fetcherKey).redirected = true;
       }
       return startRedirectNavigation(state, redirect.result);
     }
@@ -2190,7 +2184,7 @@ export function createRouter(init: RouterInit): Router {
         updateState({ fetchers: new Map(state.fetchers) });
         return;
       } else {
-        fetchRedirectIds.add(key);
+        fetcherMeta.redirected = true;
         await startRedirectNavigation(state, result);
         return;
       }
@@ -2445,6 +2439,12 @@ export function createRouter(init: RouterInit): Router {
     return fetcherMeta;
   }
 
+  function getFetcherMeta(key: string) {
+    let fetcherMeta = fetcherMetaData.get(key);
+    invariant(fetcherMeta, `No fetcherMeta for key: ${key}`);
+    return fetcherMeta;
+  }
+
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
     let fetcherMeta = initFetcherMeta(key);
     if (future.v7_fetcherPersist) {
@@ -2475,7 +2475,6 @@ export function createRouter(init: RouterInit): Router {
     ) {
       abortFetcher(key);
     }
-    fetchRedirectIds.delete(key);
     deletedFetchers.delete(key);
     fetcherMetaData.delete(key);
     state.fetchers.delete(key);
@@ -2514,13 +2513,15 @@ export function createRouter(init: RouterInit): Router {
   function markFetchRedirectsDone(): boolean {
     let doneKeys = [];
     let updatedFetchers = false;
-    for (let key of fetchRedirectIds) {
-      let fetcher = state.fetchers.get(key);
-      invariant(fetcher, `Expected fetcher: ${key}`);
-      if (fetcher.state === "loading") {
-        fetchRedirectIds.delete(key);
-        doneKeys.push(key);
-        updatedFetchers = true;
+    for (let [key, fetcherMeta] of fetcherMetaData) {
+      if (fetcherMeta.redirected) {
+        let fetcher = state.fetchers.get(key);
+        invariant(fetcher, `Expected fetcher: ${key}`);
+        if (fetcher.state === "loading") {
+          fetcherMeta.redirected = false;
+          doneKeys.push(key);
+          updatedFetchers = true;
+        }
       }
     }
     markFetchersDone(doneKeys);
@@ -3541,7 +3542,6 @@ function getMatchesToLoad(
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
   fetcherMetaData: Map<string, FetcherMetaData>,
-  fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
   pendingActionData?: RouteData,
@@ -3638,7 +3638,7 @@ function getMatchesToLoad(
     let fetcherMatch = getTargetMatch(fetcherMatches, f.path);
 
     let shouldRevalidate = false;
-    if (fetchRedirectIds.has(key)) {
+    if (fetcherMeta.redirected) {
       // Never trigger a revalidation of an actively redirecting fetcher
       shouldRevalidate = false;
     } else if (cancelledFetcherLoads.includes(key)) {
