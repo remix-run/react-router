@@ -246,7 +246,7 @@ export interface Router {
    *
    * Internal fetch AbortControllers accessed by unit tests
    */
-  _internalFetchControllers: Map<string, AbortController>;
+  get _internalFetchControllers(): Map<string, AbortController>;
 
   /**
    * @internal
@@ -638,6 +638,7 @@ interface FetchLoadMatch {
 }
 
 interface FetcherMetaData {
+  // AbortController if this fetcher is in-flight
   controller: AbortController | null;
   // Was this fetcher load cancelled by an action navigation and requires revalidation?
   loadCancelled: boolean;
@@ -879,9 +880,6 @@ export function createRouter(init: RouterInit): Router {
   // Use this internal array to capture routes that require revalidation due
   // to a cancelled deferred on action submission
   let cancelledDeferredRoutes: string[] = [];
-
-  // AbortControllers for any in-flight fetchers
-  let fetchControllers = new Map<string, AbortController>();
 
   // Track loads based on the order in which they started
   let incrementingLoadId = 0;
@@ -1664,14 +1662,17 @@ export function createRouter(init: RouterInit): Router {
     }
 
     revalidatingFetchers.forEach((rf) => {
-      if (fetchControllers.has(rf.key)) {
-        abortFetcher(rf.key);
-      }
-      if (rf.controller) {
-        // Fetchers use an independent AbortController so that aborting a fetcher
-        // (via deleteFetcher) does not abort the triggering navigation that
-        // triggered the revalidation
-        fetchControllers.set(rf.key, rf.controller);
+      let fetcherMeta = fetcherMetaData.get(rf.key);
+      if (fetcherMeta) {
+        if (fetcherMeta.controller) {
+          abortFetcher(rf.key);
+        }
+        if (rf.controller) {
+          // Fetchers use an independent AbortController so that aborting a fetcher
+          // (via deleteFetcher) does not abort the triggering navigation that
+          // triggered the revalidation
+          fetcherMeta.controller = rf.controller;
+        }
       }
     });
 
@@ -1707,7 +1708,12 @@ export function createRouter(init: RouterInit): Router {
         abortPendingFetchRevalidations
       );
     }
-    revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
+    revalidatingFetchers.forEach((rf) => {
+      let fetcherMeta = fetcherMetaData.get(rf.key);
+      if (fetcherMeta) {
+        fetcherMeta.controller = null;
+      }
+    });
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(results);
@@ -1775,7 +1781,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let fetcherMeta = initFetcherMeta(key);
-    if (fetchControllers.has(key)) abortFetcher(key);
+    if (fetcherMeta.controller) abortFetcher(key);
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(
@@ -1879,7 +1885,7 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal,
       submission
     );
-    fetchControllers.set(key, abortController);
+    fetcherMeta.controller = abortController;
 
     let originatingLoadId = incrementingLoadId;
     let actionResult = await callLoaderOrAction(
@@ -1895,8 +1901,8 @@ export function createRouter(init: RouterInit): Router {
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
-      if (fetchControllers.get(key) === abortController) {
-        fetchControllers.delete(key);
+      if (fetcherMeta.controller === abortController) {
+        fetcherMeta.controller = null;
       }
       return;
     }
@@ -1908,7 +1914,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (isRedirectResult(actionResult)) {
-      fetchControllers.delete(key);
+      fetcherMeta.controller = null;
       if (pendingNavigationLoadId > originatingLoadId) {
         // A new navigation was kicked off after our action started, so that
         // should take precedence over this redirect navigation.  We already
@@ -1990,11 +1996,14 @@ export function createRouter(init: RouterInit): Router {
           existingFetcher ? existingFetcher.data : undefined
         );
         state.fetchers.set(staleKey, revalidatingFetcher);
-        if (fetchControllers.has(staleKey)) {
-          abortFetcher(staleKey);
-        }
-        if (rf.controller) {
-          fetchControllers.set(staleKey, rf.controller);
+        let staleFetcherMeta = fetcherMetaData.get(staleKey);
+        if (staleFetcherMeta) {
+          if (staleFetcherMeta.controller) {
+            abortFetcher(staleKey);
+          }
+          if (rf.controller) {
+            staleFetcherMeta.controller = rf.controller;
+          }
         }
       });
 
@@ -2027,8 +2036,13 @@ export function createRouter(init: RouterInit): Router {
     );
 
     fetcherMeta.reloadId = null;
-    fetchControllers.delete(key);
-    revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
+    fetcherMeta.controller = null;
+    revalidatingFetchers.forEach((r) => {
+      let fetcherMeta = fetcherMetaData.get(r.key);
+      if (fetcherMeta) {
+        fetcherMeta.controller = null;
+      }
+    });
 
     let redirect = findRedirect(results);
     if (redirect) {
@@ -2123,7 +2137,7 @@ export function createRouter(init: RouterInit): Router {
       path,
       abortController.signal
     );
-    fetchControllers.set(key, abortController);
+    fetcherMeta.controller = abortController;
 
     let originatingLoadId = incrementingLoadId;
     let result: DataResult = await callLoaderOrAction(
@@ -2148,8 +2162,8 @@ export function createRouter(init: RouterInit): Router {
 
     // We can delete this so long as we weren't aborted by our our own fetcher
     // re-load which would have put _new_ controller is in fetchControllers
-    if (fetchControllers.get(key) === abortController) {
-      fetchControllers.delete(key);
+    if (fetcherMeta.controller === abortController) {
+      fetcherMeta.controller = null;
     }
 
     if (fetchRequest.signal.aborted) {
@@ -2391,7 +2405,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Abort in-flight fetcher loads
     fetcherMetaData.forEach((fetcherMeta, key) => {
-      if (fetcherMeta.loadMatches && fetchControllers.has(key)) {
+      if (fetcherMeta.loadMatches && fetcherMeta.controller) {
         fetcherMeta.loadCancelled = true;
         abortFetcher(key);
       }
@@ -2451,7 +2465,8 @@ export function createRouter(init: RouterInit): Router {
     // in it's loading phase since - we don't want to abort the corresponding
     // revalidation and want them to complete and land
     if (
-      fetchControllers.has(key) &&
+      fetcherMeta &&
+      fetcherMeta.controller &&
       !(
         fetcher &&
         fetcher.state === "loading" &&
@@ -2476,10 +2491,11 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function abortFetcher(key: string) {
-    let controller = fetchControllers.get(key);
-    invariant(controller, `Expected fetch controller: ${key}`);
-    controller.abort();
-    fetchControllers.delete(key);
+    let fetcherMeta = fetcherMetaData.get(key);
+    invariant(fetcherMeta, `Expected fetcherMeta: ${key}`);
+    invariant(fetcherMeta.controller, `Expected fetch controller: ${key}`);
+    fetcherMeta.controller.abort();
+    fetcherMeta.controller = null;
   }
 
   function markFetchersDone(keys: string[]) {
@@ -2715,7 +2731,15 @@ export function createRouter(init: RouterInit): Router {
     dispose,
     getBlocker,
     deleteBlocker,
-    _internalFetchControllers: fetchControllers,
+    get _internalFetchControllers() {
+      let fetchControllers = new Map<string, AbortController>();
+      fetcherMetaData.forEach((fetcherMeta, key) => {
+        if (fetcherMeta.controller) {
+          fetchControllers.set(key, fetcherMeta.controller);
+        }
+      });
+      return fetchControllers;
+    },
     _internalActiveDeferreds: activeDeferreds,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
     // updating the tree while validating the update algorithm.
