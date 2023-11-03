@@ -36,6 +36,9 @@ test.describe("Vite CSS dev", () => {
               port: ${devPort},
               strictPort: true,
             },
+            optimizeDeps: {
+              include: ["react", "react-dom/client", "@remix-run/react"],
+            },
             plugins: [remix()],
           });
         `,
@@ -60,28 +63,28 @@ test.describe("Vite CSS dev", () => {
             );
           }
         `,
-        "app/routes/_index/styles-bundled.css": css`
+        "app/styles-bundled.css": css`
           .index_bundled {
             background: papayawhip;
             padding: ${TEST_PADDING_VALUE};
           }
         `,
-        "app/routes/_index/styles-linked.css": css`
+        "app/styles-linked.css": css`
           .index_linked {
             background: salmon;
             padding: ${TEST_PADDING_VALUE};
           }
         `,
-        "app/routes/_index/styles.module.css": css`
+        "app/styles.module.css": css`
           .index {
             background: peachpuff;
             padding: ${TEST_PADDING_VALUE};
           }
         `,
-        "app/routes/_index/route.tsx": js`
-          import "./styles-bundled.css";
-          import linkedStyles from "./styles-linked.css?url";
-          import cssModulesStyles from "./styles.module.css";
+        "app/routes/_index.tsx": js`
+          import "../styles-bundled.css";
+          import linkedStyles from "../styles-linked.css?url";
+          import cssModulesStyles from "../styles.module.css";
 
           export function links() {
             return [{ rel: "stylesheet", href: linkedStyles }];
@@ -160,9 +163,16 @@ test.describe("Vite CSS dev", () => {
   test.describe("with JS", () => {
     test.use({ javaScriptEnabled: true });
     test("updates CSS", async ({ page }) => {
+      let pageErrors: unknown[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error));
+
       await page.goto(`http://localhost:${devPort}/`, {
         waitUntil: "networkidle",
       });
+
+      // Ensure no errors on page load
+      expect(pageErrors).toEqual([]);
+
       await expect(page.locator("#index [data-css-modules]")).toHaveCSS(
         "padding",
         TEST_PADDING_VALUE
@@ -177,11 +187,11 @@ test.describe("Vite CSS dev", () => {
       );
 
       let bundledCssContents = await fs.readFile(
-        path.join(projectDir, "app/routes/_index/styles-bundled.css"),
+        path.join(projectDir, "app/styles-bundled.css"),
         "utf8"
       );
       await fs.writeFile(
-        path.join(projectDir, "app/routes/_index/styles-bundled.css"),
+        path.join(projectDir, "app/styles-bundled.css"),
         bundledCssContents.replace(
           TEST_PADDING_VALUE,
           UPDATED_TEST_PADDING_VALUE
@@ -190,11 +200,11 @@ test.describe("Vite CSS dev", () => {
       );
 
       let linkedCssContents = await fs.readFile(
-        path.join(projectDir, "app/routes/_index/styles-linked.css"),
+        path.join(projectDir, "app/styles-linked.css"),
         "utf8"
       );
       await fs.writeFile(
-        path.join(projectDir, "app/routes/_index/styles-linked.css"),
+        path.join(projectDir, "app/styles-linked.css"),
         linkedCssContents.replace(
           TEST_PADDING_VALUE,
           UPDATED_TEST_PADDING_VALUE
@@ -203,11 +213,11 @@ test.describe("Vite CSS dev", () => {
       );
 
       let cssModuleContents = await fs.readFile(
-        path.join(projectDir, "app/routes/_index/styles.module.css"),
+        path.join(projectDir, "app/styles.module.css"),
         "utf8"
       );
       await fs.writeFile(
-        path.join(projectDir, "app/routes/_index/styles.module.css"),
+        path.join(projectDir, "app/styles.module.css"),
         cssModuleContents.replace(
           TEST_PADDING_VALUE,
           UPDATED_TEST_PADDING_VALUE
