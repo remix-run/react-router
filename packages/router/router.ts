@@ -648,8 +648,7 @@ interface FetcherMetaData {
   // Most recent href/match for fetcher.load calls for fetchers
   loadMatches: FetchLoadMatch | null;
   // Ref-count mounted fetchers so we know when it's ok to clean them up
-  numMounted: number;
-  deleted: boolean;
+  numMounted: number | null;
   routeIds: Set<string>;
 }
 
@@ -897,10 +896,6 @@ export function createRouter(init: RouterInit): Router {
 
   let fetcherMetaData = new Map<string, FetcherMetaData>();
 
-  // Fetchers that have requested a delete when using v7_fetcherPersist,
-  // they'll be officially removed after they return to idle
-  let deletedFetchers = new Set<string>();
-
   // Store DeferredData instances for active route matches.  When a
   // route loader returns defer() we stick one in here.  Then, when a nested
   // promise resolves we update loaderData.  If a new navigation starts we
@@ -1039,7 +1034,8 @@ export function createRouter(init: RouterInit): Router {
     if (future.v7_fetcherPersist) {
       state.fetchers.forEach((fetcher, key) => {
         if (fetcher.state === "idle") {
-          if (deletedFetchers.has(key)) {
+          let { numMounted } = getFetcherMeta(key);
+          if (numMounted != null && numMounted <= 0) {
             // Unmounted from the UI and can be totally removed
             deletedFetchersKeys.push(key);
           } else {
@@ -1910,7 +1906,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    if (deletedFetchers.has(key)) {
+    if (fetcherMeta.numMounted != null && fetcherMeta.numMounted <= 0) {
       state.fetchers.set(key, getDoneFetcher(undefined));
       updateState({ fetchers: new Map(state.fetchers) });
       return;
@@ -2166,7 +2162,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    if (deletedFetchers.has(key)) {
+    if (fetcherMeta.numMounted != null && fetcherMeta.numMounted <= 0) {
       state.fetchers.set(key, getDoneFetcher(undefined));
       updateState({ fetchers: new Map(state.fetchers) });
       return;
@@ -2424,10 +2420,9 @@ export function createRouter(init: RouterInit): Router {
     if (!fetcherMeta) {
       fetcherMeta = {
         controller: null,
-        deleted: false,
         loadCancelled: false,
         loadMatches: null,
-        numMounted: 0,
+        numMounted: null,
         redirected: false,
         reloadId: null,
         routeIds: new Set<string>(),
@@ -2446,11 +2441,10 @@ export function createRouter(init: RouterInit): Router {
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
     let fetcherMeta = initFetcherMeta(key);
     if (future.v7_fetcherPersist) {
-      fetcherMeta.numMounted += 1;
-      // If this fetcher was previously marked for deletion, unmark it since we
-      // have a new instance
-      if (deletedFetchers.has(key)) {
-        deletedFetchers.delete(key);
+      if (fetcherMeta.numMounted == null) {
+        fetcherMeta.numMounted = 1;
+      } else {
+        fetcherMeta.numMounted += 1;
       }
     }
     return state.fetchers.get(key) || IDLE_FETCHER;
@@ -2473,18 +2467,14 @@ export function createRouter(init: RouterInit): Router {
     ) {
       abortFetcher(key);
     }
-    deletedFetchers.delete(key);
     fetcherMetaData.delete(key);
     state.fetchers.delete(key);
   }
 
   function deleteFetcherAndUpdateState(key: string): void {
     let fetcherMeta = initFetcherMeta(key);
-    if (future.v7_fetcherPersist) {
+    if (future.v7_fetcherPersist && fetcherMeta.numMounted != null) {
       fetcherMeta.numMounted -= 1;
-      if (fetcherMeta.numMounted <= 0) {
-        deletedFetchers.add(key);
-      }
     } else {
       deleteFetcher(key);
     }
