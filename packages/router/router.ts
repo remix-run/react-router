@@ -647,6 +647,7 @@ interface FetcherMetaData {
   redirected: boolean;
   // Most recent href/match for fetcher.load calls for fetchers
   loadMatches: FetchLoadMatch | null;
+  // Ref-count mounted fetchers so we know when it's ok to clean them up
   numMounted: number;
   deleted: boolean;
   routeIds: Set<string>;
@@ -895,9 +896,6 @@ export function createRouter(init: RouterInit): Router {
   let pendingNavigationLoadId = -1;
 
   let fetcherMetaData = new Map<string, FetcherMetaData>();
-
-  // Ref-count mounted fetchers so we know when it's ok to clean them up
-  let activeFetchers = new Map<string, number>();
 
   // Fetchers that have requested a delete when using v7_fetcherPersist,
   // they'll be officially removed after they return to idle
@@ -2448,7 +2446,7 @@ export function createRouter(init: RouterInit): Router {
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
     let fetcherMeta = initFetcherMeta(key);
     if (future.v7_fetcherPersist) {
-      activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
+      fetcherMeta.numMounted += 1;
       // If this fetcher was previously marked for deletion, unmark it since we
       // have a new instance
       if (deletedFetchers.has(key)) {
@@ -2481,13 +2479,11 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function deleteFetcherAndUpdateState(key: string): void {
+    let fetcherMeta = initFetcherMeta(key);
     if (future.v7_fetcherPersist) {
-      let count = (activeFetchers.get(key) || 0) - 1;
-      if (count <= 0) {
-        activeFetchers.delete(key);
+      fetcherMeta.numMounted -= 1;
+      if (fetcherMeta.numMounted <= 0) {
         deletedFetchers.add(key);
-      } else {
-        activeFetchers.set(key, count);
       }
     } else {
       deleteFetcher(key);
