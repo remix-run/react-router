@@ -151,7 +151,7 @@ export {
   renderMatches,
   resolvePath,
   unstable_HistoryRouter,
-  unstable_useBlocker,
+  useBlocker,
   unstable_usePrompt,
   useActionData,
   useAsyncError,
