@@ -1029,8 +1029,12 @@ export function createRouter(init: RouterInit): Router {
     if (future.v7_fetcherPersist) {
       state.fetchers.forEach((fetcher, key) => {
         if (fetcher.state === "idle") {
-          let { numMounted } = getFetcherMeta(key);
-          if (numMounted != null && numMounted <= 0) {
+          let fetcherMeta = fetcherMetaData.get(key);
+          if (
+            fetcherMeta &&
+            fetcherMeta.numMounted != null &&
+            fetcherMeta.numMounted <= 0
+          ) {
             // Unmounted from the UI and can be totally removed
             deletedFetchersKeys.push(key);
           } else {
@@ -1662,16 +1666,16 @@ export function createRouter(init: RouterInit): Router {
     }
 
     revalidatingFetchers.forEach((rf) => {
-      let fetcherMeta = fetcherMetaData.get(rf.key);
-      if (fetcherMeta) {
-        if (fetcherMeta.controller) {
+      let revalidatingFetcherMeta = fetcherMetaData.get(rf.key);
+      if (revalidatingFetcherMeta) {
+        if (revalidatingFetcherMeta.controller) {
           abortFetcher(rf.key);
         }
         if (rf.controller) {
           // Fetchers use an independent AbortController so that aborting a fetcher
           // (via deleteFetcher) does not abort the triggering navigation that
           // triggered the revalidation
-          fetcherMeta.controller = rf.controller;
+          revalidatingFetcherMeta.controller = rf.controller;
         }
       }
     });
@@ -1709,9 +1713,9 @@ export function createRouter(init: RouterInit): Router {
       );
     }
     revalidatingFetchers.forEach((rf) => {
-      let fetcherMeta = fetcherMetaData.get(rf.key);
-      if (fetcherMeta) {
-        fetcherMeta.controller = null;
+      let revalidatingFetcherMeta = fetcherMetaData.get(rf.key);
+      if (revalidatingFetcherMeta) {
+        revalidatingFetcherMeta.controller = null;
       }
     });
 
@@ -1723,7 +1727,9 @@ export function createRouter(init: RouterInit): Router {
         // revalidated on the next set of loader executions
         let fetcherKey =
           revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
-        getFetcherMeta(fetcherKey).redirected = true;
+        let fetcherMeta = fetcherMetaData.get(fetcherKey);
+        invariant(fetcherMeta, `No fetcherMeta for key: ${fetcherKey}`);
+        fetcherMeta.redirected = true;
       }
       await startRedirectNavigation(state, redirect.result, { replace });
       return { shortCircuited: true };
@@ -2038,9 +2044,9 @@ export function createRouter(init: RouterInit): Router {
     fetcherMeta.reloadId = null;
     fetcherMeta.controller = null;
     revalidatingFetchers.forEach((r) => {
-      let fetcherMeta = fetcherMetaData.get(r.key);
-      if (fetcherMeta) {
-        fetcherMeta.controller = null;
+      let revalidatingFetcherMeta = fetcherMetaData.get(r.key);
+      if (revalidatingFetcherMeta) {
+        revalidatingFetcherMeta.controller = null;
       }
     });
 
@@ -2051,7 +2057,9 @@ export function createRouter(init: RouterInit): Router {
         // revalidated on the next set of loader executions
         let fetcherKey =
           revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
-        getFetcherMeta(fetcherKey).redirected = true;
+        let fetcherMeta = fetcherMetaData.get(fetcherKey);
+        invariant(fetcherMeta, `No fetcherMeta for key: ${fetcherKey}`);
+        fetcherMeta.redirected = true;
       }
       return startRedirectNavigation(state, redirect.result);
     }
@@ -2437,12 +2445,6 @@ export function createRouter(init: RouterInit): Router {
       };
       fetcherMetaData.set(key, fetcherMeta);
     }
-    return fetcherMeta;
-  }
-
-  function getFetcherMeta(key: string) {
-    let fetcherMeta = fetcherMetaData.get(key);
-    invariant(fetcherMeta, `No fetcherMeta for key: ${key}`);
     return fetcherMeta;
   }
 
