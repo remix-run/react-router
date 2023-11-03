@@ -93,7 +93,7 @@ test.describe("Vite dev", () => {
 
           export const loader: LoaderFunction = () => {
             const headers = new Headers();
-          
+
             headers.append(
               "Set-Cookie",
               "first=one; Domain=localhost; Path=/; SameSite=Lax"
@@ -110,12 +110,12 @@ test.describe("Vite dev", () => {
             );
 
             headers.set("location", "http://localhost:${devPort}/get-cookies");
-          
+
             const response = new Response(null, {
               headers,
               status: 302,
             });
-          
+
             return response;
           };
         `,
@@ -132,6 +132,15 @@ test.describe("Vite dev", () => {
               <div id="get-cookies">
                 <h2 data-title>Get Cookies</h2>
                 <p data-cookies>{cookies}</p>
+              </div>
+            );
+          }
+        `,
+        "app/routes/jsx.jsx": js`
+          export default function JsxRoute() {
+            return (
+              <div id="jsx">
+                <p data-hmr>HMR updated: no</p>
               </div>
             );
           }
@@ -227,6 +236,33 @@ test.describe("Vite dev", () => {
     await expect(page.locator("#get-cookies [data-cookies]")).toHaveText(
       "first=one; second=two; third=three"
     );
+  });
+
+  test("handles JSX in .jsx file without React import", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    await page.goto(`http://localhost:${devPort}/jsx`, {
+      waitUntil: "networkidle",
+    });
+    expect(pageErrors).toEqual([]);
+
+    let hmrStatus = page.locator("#jsx [data-hmr]");
+    await expect(hmrStatus).toHaveText("HMR updated: no");
+
+    let indexRouteContents = await fs.readFile(
+      path.join(projectDir, "app/routes/jsx.jsx"),
+      "utf8"
+    );
+    await fs.writeFile(
+      path.join(projectDir, "app/routes/jsx.jsx"),
+      indexRouteContents.replace("HMR updated: no", "HMR updated: yes"),
+      "utf8"
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hmrStatus).toHaveText("HMR updated: yes");
+
+    expect(pageErrors).toEqual([]);
   });
 });
 

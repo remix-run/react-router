@@ -432,6 +432,10 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
               "react-dom/client",
             ],
           },
+          esbuild: {
+            jsx: "automatic",
+            jsxDev: viteCommand !== "build",
+          },
           resolve: {
             // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
             dedupe: ["react", "react-dom"],
