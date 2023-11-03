@@ -637,6 +637,19 @@ interface FetchLoadMatch {
   path: string;
 }
 
+interface FetcherMetaData {
+  controller: AbortController | null;
+  loadCancelled: boolean;
+  // loadId for the revalidation triggered by this fetcher, so we can abort
+  // it if a fresher one lands
+  reloadId: number | null;
+  redirected: boolean;
+  loadMatches: FetchLoadMatch | null;
+  numMounted: number;
+  deleted: boolean;
+  routeIds: Set<string>;
+}
+
 /**
  * Identified fetcher.load() calls that need to be revalidated
  */
@@ -879,8 +892,7 @@ export function createRouter(init: RouterInit): Router {
   // navigation
   let pendingNavigationLoadId = -1;
 
-  // Fetchers that triggered data reloads as a result of their actions
-  let fetchReloadIds = new Map<string, number>();
+  let fetcherMetaData = new Map<string, FetcherMetaData>();
 
   // Fetchers that triggered redirect navigations
   let fetchRedirectIds = new Set<string>();
@@ -1764,18 +1776,6 @@ export function createRouter(init: RouterInit): Router {
     };
   }
 
-  function getFetcher<TData = any>(key: string): Fetcher<TData> {
-    if (future.v7_fetcherPersist) {
-      activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
-      // If this fetcher was previously marked for deletion, unmark it since we
-      // have a new instance
-      if (deletedFetchers.has(key)) {
-        deletedFetchers.delete(key);
-      }
-    }
-    return state.fetchers.get(key) || IDLE_FETCHER;
-  }
-
   // Trigger a fetcher load/submit for the given fetcher key
   function fetch(
     key: string,
@@ -1791,6 +1791,7 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
+    let fetcherMeta = initFetcherMeta(key);
     if (fetchControllers.has(key)) abortFetcher(key);
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -1831,14 +1832,30 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      handleFetcherAction(key, routeId, path, match, matches, submission);
+      handleFetcherAction(
+        key,
+        routeId,
+        path,
+        match,
+        matches,
+        fetcherMeta,
+        submission
+      );
       return;
     }
 
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, { routeId, path });
-    handleFetcherLoader(key, routeId, path, match, matches, submission);
+    handleFetcherLoader(
+      key,
+      routeId,
+      path,
+      match,
+      matches,
+      fetcherMeta,
+      submission
+    );
   }
 
   // Call the action for the matched fetcher.submit(), and then handle redirects,
@@ -1849,6 +1866,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
+    fetcherMeta: FetcherMetaData,
     submission: Submission
   ) {
     interruptActiveLoads();
@@ -1956,7 +1974,7 @@ export function createRouter(init: RouterInit): Router {
     invariant(matches, "Didn't find any matches after fetcher action");
 
     let loadId = ++incrementingLoadId;
-    fetchReloadIds.set(key, loadId);
+    fetcherMeta.reloadId = loadId;
 
     let loadFetcher = getLoadingFetcher(submission, actionResult.data);
     state.fetchers.set(key, loadFetcher);
@@ -2027,7 +2045,7 @@ export function createRouter(init: RouterInit): Router {
       abortPendingFetchRevalidations
     );
 
-    fetchReloadIds.delete(key);
+    fetcherMeta.reloadId = null;
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
@@ -2106,6 +2124,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
+    fetcherMeta: FetcherMetaData,
     submission?: Submission
   ) {
     let existingFetcher = state.fetchers.get(key);
@@ -2410,21 +2429,58 @@ export function createRouter(init: RouterInit): Router {
     });
   }
 
+  function initFetcherMeta(key: string) {
+    let fetcherMeta = fetcherMetaData.get(key);
+    if (!fetcherMeta) {
+      fetcherMeta = {
+        controller: null,
+        deleted: false,
+        loadCancelled: false,
+        loadMatches: null,
+        numMounted: 0,
+        redirected: false,
+        reloadId: null,
+        routeIds: new Set<string>(),
+      };
+      fetcherMetaData.set(key, fetcherMeta);
+    }
+    return fetcherMeta;
+  }
+
+  function getFetcher<TData = any>(key: string): Fetcher<TData> {
+    let fetcherMeta = initFetcherMeta(key);
+    if (future.v7_fetcherPersist) {
+      activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
+      // If this fetcher was previously marked for deletion, unmark it since we
+      // have a new instance
+      if (deletedFetchers.has(key)) {
+        deletedFetchers.delete(key);
+      }
+    }
+    return state.fetchers.get(key) || IDLE_FETCHER;
+  }
+
   function deleteFetcher(key: string): void {
     let fetcher = state.fetchers.get(key);
+    let fetcherMeta = fetcherMetaData.get(key);
     // Don't abort the controller if this is a deletion of a fetcher.submit()
     // in it's loading phase since - we don't want to abort the corresponding
     // revalidation and want them to complete and land
     if (
       fetchControllers.has(key) &&
-      !(fetcher && fetcher.state === "loading" && fetchReloadIds.has(key))
+      !(
+        fetcher &&
+        fetcher.state === "loading" &&
+        fetcherMeta &&
+        fetcherMeta.reloadId != null
+      )
     ) {
       abortFetcher(key);
     }
     fetchLoadMatches.delete(key);
-    fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
     deletedFetchers.delete(key);
+    fetcherMetaData.delete(key);
     state.fetchers.delete(key);
   }
 
@@ -2452,8 +2508,8 @@ export function createRouter(init: RouterInit): Router {
 
   function markFetchersDone(keys: string[]) {
     for (let key of keys) {
-      let fetcher = getFetcher(key);
-      let doneFetcher = getDoneFetcher(fetcher.data);
+      let fetcher = state.fetchers.get(key);
+      let doneFetcher = getDoneFetcher(fetcher ? fetcher.data : undefined);
       state.fetchers.set(key, doneFetcher);
     }
   }
@@ -2476,13 +2532,13 @@ export function createRouter(init: RouterInit): Router {
 
   function abortStaleFetchLoads(landedId: number): boolean {
     let yeetedKeys = [];
-    for (let [key, id] of fetchReloadIds) {
-      if (id < landedId) {
+    for (let [key, fetcherMeta] of fetcherMetaData) {
+      if (fetcherMeta.reloadId != null && fetcherMeta.reloadId < landedId) {
         let fetcher = state.fetchers.get(key);
         invariant(fetcher, `Expected fetcher: ${key}`);
         if (fetcher.state === "loading") {
           abortFetcher(key);
-          fetchReloadIds.delete(key);
+          fetcherMeta.reloadId = null;
           yeetedKeys.push(key);
         }
       }
