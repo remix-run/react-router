@@ -639,6 +639,7 @@ interface FetchLoadMatch {
 
 interface FetcherMetaData {
   controller: AbortController | null;
+  // Was this fetcher load cancelled by an action navigation and requires revalidation?
   loadCancelled: boolean;
   // loadId for the revalidation triggered by this fetcher, so we can abort
   // it if a fresher one lands
@@ -878,10 +879,6 @@ export function createRouter(init: RouterInit): Router {
   // Use this internal array to capture routes that require revalidation due
   // to a cancelled deferred on action submission
   let cancelledDeferredRoutes: string[] = [];
-
-  // Use this internal array to capture fetcher loads that were cancelled by an
-  // action navigation and require revalidation
-  let cancelledFetcherLoads: string[] = [];
 
   // AbortControllers for any in-flight fetchers
   let fetchControllers = new Map<string, AbortController>();
@@ -1200,7 +1197,6 @@ export function createRouter(init: RouterInit): Router {
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
-    cancelledFetcherLoads = [];
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -1608,7 +1604,6 @@ export function createRouter(init: RouterInit): Router {
       location,
       isRevalidationRequired,
       cancelledDeferredRoutes,
-      cancelledFetcherLoads,
       fetcherMetaData,
       routesToUse,
       basename,
@@ -1975,7 +1970,6 @@ export function createRouter(init: RouterInit): Router {
       nextLocation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
-      cancelledFetcherLoads,
       fetcherMetaData,
       routesToUse,
       basename,
@@ -2398,7 +2392,7 @@ export function createRouter(init: RouterInit): Router {
     // Abort in-flight fetcher loads
     fetcherMetaData.forEach((fetcherMeta, key) => {
       if (fetcherMeta.loadMatches && fetchControllers.has(key)) {
-        cancelledFetcherLoads.push(key);
+        fetcherMeta.loadCancelled = true;
         abortFetcher(key);
       }
     });
@@ -3526,7 +3520,6 @@ function getMatchesToLoad(
   location: Location,
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
-  cancelledFetcherLoads: string[],
   fetcherMetaData: Map<string, FetcherMetaData>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
@@ -3627,7 +3620,7 @@ function getMatchesToLoad(
     if (fetcherMeta.redirected) {
       // Never trigger a revalidation of an actively redirecting fetcher
       shouldRevalidate = false;
-    } else if (cancelledFetcherLoads.includes(key)) {
+    } else if (fetcherMeta.loadCancelled) {
       // Always revalidate if the fetcher was cancelled
       shouldRevalidate = true;
     } else if (
