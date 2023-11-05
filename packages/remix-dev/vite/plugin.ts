@@ -222,6 +222,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
     | { isSsrBuild: true; getManifest: () => Promise<Manifest> };
 
   let viteChildCompiler: ViteDevServer | null = null;
+  let cachedPluginConfig: ResolvedRemixVitePluginConfig | undefined;
 
   let resolvePluginConfig =
     async (): Promise<ResolvedRemixVitePluginConfig> => {
@@ -417,6 +418,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         viteCommand = viteConfigEnv.command;
 
         let pluginConfig = await resolvePluginConfig();
+        cachedPluginConfig = pluginConfig;
 
         return {
           appType: "custom",
@@ -541,27 +543,41 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         vite.httpServer?.on("listening", () => {
           setTimeout(showUnstableWarning, 50);
         });
+
+        // We cache the pluginConfig here to make sure we're only invalidating virtual modules when necessary.
+        // This requires a separate cache from `cachedPluginConfig`, which is updated by remix-hmr-updates. If
+        // we shared the cache, it would already be refreshed by remix-hmr-updates at this point, and we'd
+        // have no way of comparing against the cache to know if the virtual modules need to be invalidated.
+        let previousPluginConfig: ResolvedRemixVitePluginConfig | undefined;
+
         // Let user servers handle SSR requests in middleware mode
         if (vite.config.server.middlewareMode) return;
         return () => {
           vite.middlewares.use(async (req, res, next) => {
             try {
-              // Invalidate all virtual modules
-              vmods.forEach((vmod) => {
-                let mod = vite.moduleGraph.getModuleById(
-                  VirtualModule.resolve(vmod)
-                );
+              let pluginConfig = await resolvePluginConfig();
 
-                if (mod) {
-                  vite.moduleGraph.invalidateModule(mod);
-                }
-              });
+              if (
+                JSON.stringify(pluginConfig) !==
+                JSON.stringify(previousPluginConfig)
+              ) {
+                previousPluginConfig = pluginConfig;
 
+                // Invalidate all virtual modules
+                vmods.forEach((vmod) => {
+                  let mod = vite.moduleGraph.getModuleById(
+                    VirtualModule.resolve(vmod)
+                  );
+
+                  if (mod) {
+                    vite.moduleGraph.invalidateModule(mod);
+                  }
+                });
+              }
               let { url } = req;
-              let [pluginConfig, build] = await Promise.all([
-                resolvePluginConfig(),
-                vite.ssrLoadModule(serverEntryId) as Promise<ServerBuild>,
-              ]);
+              let build = await (vite.ssrLoadModule(
+                serverEntryId
+              ) as Promise<ServerBuild>);
 
               let handle = createRequestHandler(build, {
                 mode: "development",
@@ -643,7 +659,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       async transform(code, id, options) {
         if (options?.ssr) return;
 
-        let pluginConfig = await resolvePluginConfig();
+        let pluginConfig = cachedPluginConfig || (await resolvePluginConfig());
 
         let route = getRoute(pluginConfig, id);
         if (!route) return;
@@ -780,7 +796,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         code = result.code!;
         let refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
         if (refreshContentRE.test(code)) {
-          let pluginConfig = await resolvePluginConfig();
+          let pluginConfig =
+            cachedPluginConfig || (await resolvePluginConfig());
           code = addRefreshWrapper(pluginConfig, code, id);
         }
         return { code, map: result.map };
@@ -790,6 +807,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       name: "remix-hmr-updates",
       async handleHotUpdate({ server, file, modules }) {
         let pluginConfig = await resolvePluginConfig();
+        // Update the config cache any time there is a file change
+        cachedPluginConfig = pluginConfig;
         let route = getRoute(pluginConfig, file);
 
         server.ws.send({
