@@ -168,6 +168,20 @@ describe("cookies", () => {
     expect(setCookie2).toContain("Path=/about");
   });
 
+  it("supports the Priority attribute", async () => {
+    let cookie = createCookie("my-cookie");
+
+    let setCookie = await cookie.serialize("hello world");
+    expect(setCookie).not.toContain("Priority");
+
+    let cookie2 = createCookie("my-cookie2");
+
+    let setCookie2 = await cookie2.serialize("hello world", {
+      priority: "high",
+    });
+    expect(setCookie2).toContain("Priority=High");
+  });
+
   describe("warnings when providing options you may not want to", () => {
     let spy = spyConsole();
 
