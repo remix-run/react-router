@@ -402,6 +402,9 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
     return {
       version: String(Math.random()),
       url: VirtualModule.url(browserManifestId),
+      hmr: {
+        runtime: VirtualModule.url(injectHmrRuntimeId),
+      },
       entry: {
         module: resolveFileUrl(pluginConfig, pluginConfig.entryClientFilePath),
         imports: [],
@@ -709,9 +712,9 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             'export * from "@remix-run/react";',
             'export const LiveReload = process.env.NODE_ENV !== "development" ? () => null : ',
             '() => createElement("script", {',
-            ' type: "module",',
-            " async: true,",
-            ` src: "${VirtualModule.url(injectHmrRuntimeId)}"`,
+            "  dangerouslySetInnerHTML: { ",
+            "    __html: `window.__remixLiveReloadEnabled = true`",
+            "  }",
             "});",
           ].join("\n");
         }
@@ -864,11 +867,10 @@ const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof 
 let prevRefreshReg;
 let prevRefreshSig;
 
-if (import.meta.hot && !inWebWorker) {
+if (import.meta.hot && !inWebWorker && window.__remixLiveReloadEnabled) {
   if (!window.__vite_plugin_react_preamble_installed__) {
     throw new Error(
-      "@vitejs/plugin-react can't detect preamble. Something is wrong. " +
-      "See https://github.com/vitejs/vite-plugin-react/pull/11#discussion_r430879201"
+      "Remix Vite plugin can't detect preamble. Something is wrong."
     );
   }
 
@@ -881,7 +883,7 @@ if (import.meta.hot && !inWebWorker) {
 }`.replace(/\n+/g, "");
 
 const REACT_REFRESH_FOOTER = `
-if (import.meta.hot && !inWebWorker) {
+if (import.meta.hot && !inWebWorker && window.__remixLiveReloadEnabled) {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
   RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {

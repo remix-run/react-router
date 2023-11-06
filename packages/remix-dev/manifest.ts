@@ -20,7 +20,7 @@ export type Manifest = {
     };
   };
   hmr?: {
-    timestamp: number;
+    timestamp?: number;
     runtime: string;
   };
 };

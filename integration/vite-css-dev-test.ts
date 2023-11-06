@@ -56,8 +56,8 @@ test.describe("Vite CSS dev", () => {
                   <div id="content">
                     <Outlet />
                   </div>
-                  <LiveReload />
                   <Scripts />
+                  <LiveReload />
                 </body>
               </html>
             );

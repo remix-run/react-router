@@ -87,8 +87,8 @@ test.beforeAll(async () => {
                   <h1>Root</h1>
                   <Outlet />
                 </div>
-                <LiveReload />
                 <Scripts />
+                <LiveReload />
               </body>
             </html>
           );
