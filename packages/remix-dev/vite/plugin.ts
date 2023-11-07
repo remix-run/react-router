@@ -805,7 +805,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             allowAwaitOutsideFunction: true,
             plugins: ["jsx", "typescript"],
           },
-          plugins: ["react-refresh/babel"],
+          plugins: [require("react-refresh/babel")],
           sourceMaps: true,
         });
         if (result === null) return;
