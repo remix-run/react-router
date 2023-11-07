@@ -85,12 +85,13 @@ const resolveFileUrl = (
   filePath: string
 ) => {
   let relativePath = path.relative(rootDirectory, filePath);
+  let isWithinRoot =
+    !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
 
-  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
-    throw new Error(
-      `Cannot resolve asset path "${filePath}" outside of root directory "${rootDirectory}".`
-    );
-  }
+  // Vite will prevent serving files outside of the workspace
+  // unless user explictly opts in with `server.fs.allow`
+  // https://vitejs.dev/config/server-options.html#server-fs-allow
+  if (!isWithinRoot) return `/@fs` + filePath;
 
   return `/${normalizePath(relativePath)}`;
 };
