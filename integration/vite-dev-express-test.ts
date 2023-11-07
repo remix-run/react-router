@@ -24,9 +24,6 @@ test.beforeAll(async () => {
             hmr: {
               port: ${hmrPort}
             }
-          },          
-          optimizeDeps: {
-            include: ["react", "react-dom/client", "@remix-run/react"],
           },
           plugins: [remix()],
         });

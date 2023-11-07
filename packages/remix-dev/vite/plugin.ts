@@ -429,13 +429,20 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           experimental: { hmrPartialAccept: true },
           optimizeDeps: {
             include: [
-              // pre-bundle React dependencies to avoid React duplicates,
-              // even if React dependencies are not direct dependencies
+              // Pre-bundle React dependencies to avoid React duplicates,
+              // even if React dependencies are not direct dependencies.
               // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
               "react",
-              `react/jsx-runtime`,
-              `react/jsx-dev-runtime`,
+              "react/jsx-runtime",
+              "react/jsx-dev-runtime",
               "react-dom/client",
+
+              // Pre-bundle Remix dependencies to avoid Remix router duplicates.
+              // Our remix-remix-react-proxy plugin does not process default client and
+              // server entry files since those come from within `node_modules`.
+              // That means that before Vite pre-bundles dependencies (e.g. first time dev server is run)
+              // mismatching Remix routers cause `Error: You must render this element inside a <Remix> element`.
+              "@remix-run/react",
             ],
           },
           esbuild: {
@@ -443,8 +450,14 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             jsxDev: viteCommand !== "build",
           },
           resolve: {
-            // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
-            dedupe: ["react", "react-dom"],
+            dedupe: [
+              // https://react.dev/warnings/invalid-hook-call-warning#duplicate-react
+              "react",
+              "react-dom",
+
+              // see description for `@remix-run/react` in `optimizeDeps.include`
+              "@remix-run/react",
+            ],
           },
           ...(viteCommand === "build" && {
             base: pluginConfig.publicPath,

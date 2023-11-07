@@ -36,9 +36,6 @@ test.describe("Vite CSS dev", () => {
               port: ${devPort},
               strictPort: true,
             },
-            optimizeDeps: {
-              include: ["react", "react-dom/client", "@remix-run/react"],
-            },
             plugins: [remix()],
           });
         `,
