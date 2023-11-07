@@ -49,6 +49,7 @@ import type {
   RouterState,
   RouterSubscriber,
   BlockerFunction,
+  FetchStrategy,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -229,6 +230,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
+  fetchStrategy?: FetchStrategy;
 }
 
 export function createBrowserRouter(

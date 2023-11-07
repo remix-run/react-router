@@ -339,6 +339,23 @@ export type HydrationState = Partial<
   Pick<RouterState, "loaderData" | "actionData" | "errors">
 >;
 
+export interface DefaultCallLoaderOrActionFunction {
+  (
+    type: "loader" | "action",
+    match: AgnosticDataRouteMatch
+  ): Promise<DataResult>;
+}
+
+export interface FetchStrategyArgs {
+  defaultCallLoaderOrAction: DefaultCallLoaderOrActionFunction;
+  matchesToLoad: AgnosticDataRouteMatch[];
+  request: Request;
+}
+
+export interface FetchStrategy {
+  (args: FetchStrategyArgs): Promise<DataResult[]>;
+}
+
 /**
  * Future flags to toggle new feature behavior
  */
@@ -363,6 +380,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
+  fetchStrategy?: FetchStrategy;
 }
 
 /**
@@ -733,6 +751,7 @@ export function createRouter(init: RouterInit): Router {
     typeof routerWindow.document !== "undefined" &&
     typeof routerWindow.document.createElement !== "undefined";
   const isServer = !isBrowser;
+  const fetchStrategy = init.fetchStrategy;
 
   invariant(
     init.routes.length > 0,
@@ -2326,40 +2345,85 @@ export function createRouter(init: RouterInit): Router {
     // Call all navigation loaders and revalidating fetcher loaders in parallel,
     // then slice off the results into separate arrays so we can handle them
     // accordingly
-    let results = await Promise.all([
-      ...matchesToLoad.map((match) =>
-        callLoaderOrAction(
-          "loader",
-          request,
-          match,
-          matches,
-          manifest,
-          mapRouteProperties,
-          basename
-        )
-      ),
-      ...fetchersToLoad.map((f) => {
-        if (f.matches && f.match && f.controller) {
-          return callLoaderOrAction(
-            "loader",
-            createClientSideRequest(init.history, f.path, f.controller.signal),
-            f.match,
-            f.matches,
-            manifest,
-            mapRouteProperties,
-            basename
-          );
-        } else {
-          let error: ErrorResult = {
-            type: ResultType.error,
-            error: getInternalRouterError(404, { pathname: f.path }),
-          };
-          return error;
-        }
-      }),
-    ]);
-    let loaderResults = results.slice(0, matchesToLoad.length);
-    let fetcherResults = results.slice(matchesToLoad.length);
+    let results = fetchStrategy
+      ? await Promise.all([
+          // TODO: Batch fetchers?
+          ...fetchersToLoad.map((f) => {
+            if (f.matches && f.match && f.controller) {
+              return callLoaderOrAction(
+                "loader",
+                createClientSideRequest(
+                  init.history,
+                  f.path,
+                  f.controller.signal
+                ),
+                f.match,
+                f.matches,
+                manifest,
+                mapRouteProperties,
+                basename
+              );
+            } else {
+              let error: ErrorResult = {
+                type: ResultType.error,
+                error: getInternalRouterError(404, { pathname: f.path }),
+              };
+              return error;
+            }
+          }),
+          ...(await fetchStrategy({
+            defaultCallLoaderOrAction: (type, match) =>
+              callLoaderOrAction(
+                type,
+                request,
+                match,
+                matches,
+                manifest,
+                mapRouteProperties,
+                basename
+              ),
+            matchesToLoad,
+            request,
+          })),
+        ])
+      : await Promise.all([
+          ...fetchersToLoad.map((f) => {
+            if (f.matches && f.match && f.controller) {
+              return callLoaderOrAction(
+                "loader",
+                createClientSideRequest(
+                  init.history,
+                  f.path,
+                  f.controller.signal
+                ),
+                f.match,
+                f.matches,
+                manifest,
+                mapRouteProperties,
+                basename
+              );
+            } else {
+              let error: ErrorResult = {
+                type: ResultType.error,
+                error: getInternalRouterError(404, { pathname: f.path }),
+              };
+              return error;
+            }
+          }),
+          ...matchesToLoad.map((match) =>
+            callLoaderOrAction(
+              "loader",
+              request,
+              match,
+              matches,
+              manifest,
+              mapRouteProperties,
+              basename
+            )
+          ),
+        ]);
+    let fetcherResults = results.slice(0, fetchersToLoad.length);
+    let loaderResults = results.slice(fetchersToLoad.length);
 
     await Promise.all([
       resolveDeferredResults(

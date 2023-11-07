@@ -9,6 +9,7 @@ import type {
   Router,
   RouterNavigateOptions,
   FutureConfig,
+  FetchStrategy,
 } from "../../index";
 import {
   createMemoryHistory,
@@ -143,6 +144,7 @@ type SetupOpts = {
   initialIndex?: number;
   hydrationData?: HydrationState;
   future?: FutureConfig;
+  fetchStrategy?: FetchStrategy;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
@@ -177,6 +179,7 @@ export function setup({
   initialIndex,
   hydrationData,
   future,
+  fetchStrategy,
 }: SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
@@ -317,6 +320,7 @@ export function setup({
     routes: enhanceRoutes(routes),
     hydrationData,
     future,
+    fetchStrategy,
     window: testWindow,
   }).initialize();
 

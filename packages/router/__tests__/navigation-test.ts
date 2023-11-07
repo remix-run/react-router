@@ -1,13 +1,27 @@
-import type { HydrationState } from "../index";
+import type { FetchStrategy, HydrationState } from "../index";
 import { json } from "../index";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
+
+let fetchStrategy: FetchStrategy;
+beforeEach(() => {
+  fetchStrategy = jest.fn(
+    ({ defaultCallLoaderOrAction, matchesToLoad, request }) => {
+      const type =
+        request.method !== "GET" ? ("action" as const) : ("loader" as const);
+      return Promise.all(
+        matchesToLoad.map((m) => defaultCallLoaderOrAction(type, m))
+      );
+    }
+  );
+});
 
 function initializeTest(init?: {
   url?: string;
   hydrationData?: HydrationState;
 }) {
   return setup({
+    fetchStrategy,
     routes: [
       {
         path: "",
@@ -75,6 +89,7 @@ describe("navigations", () => {
           "root": "ROOT",
         }
       `);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("allows `null` as a valid data value", async () => {
@@ -85,6 +100,7 @@ describe("navigations", () => {
         root: "ROOT",
         foo: null,
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("unwraps non-redirect json Responses", async () => {
@@ -102,6 +118,7 @@ describe("navigations", () => {
         root: "ROOT",
         foo: { key: "value" },
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("unwraps non-redirect json Responses (json helper)", async () => {
@@ -112,6 +129,7 @@ describe("navigations", () => {
         root: "ROOT",
         foo: { key: "value" },
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("unwraps non-redirect text Responses", async () => {
@@ -122,6 +140,7 @@ describe("navigations", () => {
         root: "ROOT",
         foo: "FOO",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("does not fetch unchanging layout data", async () => {
@@ -130,6 +149,7 @@ describe("navigations", () => {
       await A.loaders.foo.resolve("FOO");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
       expect(t.router.state.loaderData.root).toBe("ROOT");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("reloads all routes on search changes", async () => {
@@ -151,6 +171,7 @@ describe("navigations", () => {
         root: "ROOT2",
         foo: "2",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("does not reload all routes when search does not change", async () => {
@@ -176,6 +197,7 @@ describe("navigations", () => {
         root: "ROOT1",
         foobar: "2",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("reloads only routes with changed params", async () => {
@@ -196,6 +218,7 @@ describe("navigations", () => {
         root: "ROOT",
         param: "two",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("reloads all routes on refresh", async () => {
@@ -218,6 +241,7 @@ describe("navigations", () => {
         root: "ROOT2",
         param: "2",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("does not run loaders on hash change only navigations (no hash -> hash)", async () => {
@@ -250,6 +274,7 @@ describe("navigations", () => {
       let A = await t.navigate("/foo#bar");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
       expect(A.loaders.foo.stub.mock.calls.length).toBe(1);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("runs loaders on hash removal navigations (same path)", async () => {
@@ -258,6 +283,7 @@ describe("navigations", () => {
       let A = await t.navigate("/");
       expect(A.loaders.root.stub.mock.calls.length).toBe(1);
       expect(A.loaders.index.stub.mock.calls.length).toBe(1);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("runs loaders on hash removal navigations (nested path)", async () => {
@@ -266,6 +292,7 @@ describe("navigations", () => {
       let A = await t.navigate("/foo");
       expect(A.loaders.root.stub.mock.calls.length).toBe(0);
       expect(A.loaders.foo.stub.mock.calls.length).toBe(1);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it('does not load anything on hash change only empty <Form method="get"> navigations', async () => {
@@ -291,6 +318,7 @@ describe("navigations", () => {
         root: "ROOT 2",
         index: "INDEX 2",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it('runs action/loaders on hash change only <Form method="post"> navigations', async () => {
@@ -320,6 +348,7 @@ describe("navigations", () => {
         root: "ROOT 2",
         foo: "B",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("sets all right states on hash change only", async () => {
@@ -341,6 +370,7 @@ describe("navigations", () => {
         root: "ROOT",
         foo: "A",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("redirects from loaders (throw)", async () => {
@@ -367,6 +397,7 @@ describe("navigations", () => {
         root: "ROOT",
         baz: "B",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("redirects from loaders (return)", async () => {
@@ -393,6 +424,7 @@ describe("navigations", () => {
         root: "ROOT",
         baz: "B",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("reloads all routes if X-Remix-Revalidate was set in a loader redirect header", async () => {
@@ -422,6 +454,7 @@ describe("navigations", () => {
         root: "ROOT*",
         bar: "BAR",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("reloads all routes if X-Remix-Revalidate was set in a loader redirect header (chained redirects)", async () => {
@@ -448,6 +481,7 @@ describe("navigations", () => {
         root: "ROOT**",
         baz: "BAZ",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
   });
 
@@ -455,6 +489,7 @@ describe("navigations", () => {
     describe("with an error boundary in the throwing route", () => {
       it("uses the throwing route's error boundary", async () => {
         let t = setup({
+          fetchStrategy,
           routes: [
             {
               path: "/",
@@ -475,10 +510,12 @@ describe("navigations", () => {
         expect(t.router.state.errors).toEqual({
           child: new Error("Kaboom!"),
         });
+        expect(fetchStrategy).toHaveBeenCalled();
       });
 
       it("clears previous loaderData at that route", async () => {
         let t = setup({
+          fetchStrategy,
           routes: [
             {
               path: "/",
@@ -513,12 +550,14 @@ describe("navigations", () => {
         expect(t.router.state.errors).toEqual({
           child: new Error("Kaboom!"),
         });
+        expect(fetchStrategy).toHaveBeenCalled();
       });
     });
 
     describe("with an error boundary above the throwing route", () => {
       it("uses the nearest error boundary", async () => {
         let t = setup({
+          fetchStrategy,
           routes: [
             {
               path: "/",
@@ -540,10 +579,12 @@ describe("navigations", () => {
         expect(t.router.state.errors).toEqual({
           parent: new Error("Kaboom!"),
         });
+        expect(fetchStrategy).toHaveBeenCalled();
       });
 
       it("clears out the error on new locations", async () => {
         let t = setup({
+          fetchStrategy,
           routes: [
             {
               path: "",
@@ -576,11 +617,13 @@ describe("navigations", () => {
         await t.navigate("/");
         expect(t.router.state.loaderData).toEqual({ root: "ROOT" });
         expect(t.router.state.errors).toBe(null);
+        expect(fetchStrategy).toHaveBeenCalled();
       });
     });
 
     it("loads data above error boundary route", async () => {
       let t = setup({
+        fetchStrategy,
         routes: [
           {
             path: "/",
@@ -615,6 +658,7 @@ describe("navigations", () => {
       expect(t.router.state.errors).toEqual({
         b: "Kaboom!",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
   });
 
@@ -671,6 +715,7 @@ describe("navigations", () => {
         root: "ROOT DATA",
         index: "E LOADER",
       });
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations", async () => {
@@ -696,6 +741,7 @@ describe("navigations", () => {
       let E = await t.navigate(-1);
       await E.loaders.index.resolve("INDEX*");
       expect(t.router.state.location.pathname).toEqual("/");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across actions", async () => {
@@ -725,6 +771,7 @@ describe("navigations", () => {
       let D = await t.navigate(-1);
       await D.loaders.foo.resolve("FOO");
       expect(t.router.state.location.pathname).toEqual("/foo");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across actions to new locations", async () => {
@@ -754,6 +801,7 @@ describe("navigations", () => {
       let D = await t.navigate(-1);
       await D.loaders.bar.resolve("BAR");
       expect(t.router.state.location.pathname).toEqual("/bar");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across action errors", async () => {
@@ -783,6 +831,7 @@ describe("navigations", () => {
       let D = await t.navigate(-1);
       await D.loaders.bar.resolve("BAR");
       expect(t.router.state.location.pathname).toEqual("/bar");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across loader redirects", async () => {
@@ -807,6 +856,7 @@ describe("navigations", () => {
       await E.loaders.foo.resolve("FOO");
       expect(t.router.state.location.pathname).toEqual("/foo");
       expect(t.router.state.location.key).toBe(fooKey);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across loader redirects with replace:true", async () => {
@@ -834,6 +884,7 @@ describe("navigations", () => {
       expect(t.router.state.historyAction).toEqual("POP");
       expect(t.router.state.location.pathname).toEqual("/");
       expect(t.router.state.location.key).toBe(indexKey);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across action redirects", async () => {
@@ -870,6 +921,7 @@ describe("navigations", () => {
       expect(t.router.state.location.pathname).toEqual("/bar");
       expect(t.router.state.location.key).toBe(getBarKey);
       expect(t.router.state.location.key).not.toBe(postBarKey);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across action redirects to the same location", async () => {
@@ -906,6 +958,7 @@ describe("navigations", () => {
       expect(t.router.state.location.pathname).toEqual("/foo");
       expect(t.router.state.location.key).toBe(fooKey);
       expect(t.router.state.location.key).not.toBe(postBarKey);
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("navigates correctly using POP navigations across <Form replace> redirects", async () => {
@@ -939,6 +992,7 @@ describe("navigations", () => {
       await E.loaders.foo.resolve("FOO");
       expect(t.router.state.historyAction).toEqual("POP");
       expect(t.router.state.location.pathname).toEqual("/foo");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("should respect explicit replace:false on non-redirected actions to new locations", async () => {
@@ -969,6 +1023,7 @@ describe("navigations", () => {
       await C.loaders.foo.resolve("FOO");
       expect(t.router.state.historyAction).toEqual("POP");
       expect(t.router.state.location.pathname).toEqual("/foo");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("should respect explicit replace:false on non-redirected actions to the same location", async () => {
@@ -1000,6 +1055,7 @@ describe("navigations", () => {
       await C.loaders.foo.resolve("FOO3");
       expect(t.router.state.historyAction).toEqual("POP");
       expect(t.router.state.location.pathname).toEqual("/foo");
+      expect(fetchStrategy).toHaveBeenCalled();
     });
   });
 
@@ -1029,6 +1085,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("get + redirect", async () => {
@@ -1047,6 +1104,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("action submission", async () => {
@@ -1095,6 +1153,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("action submission + redirect", async () => {
@@ -1128,6 +1187,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("loader submission", async () => {
@@ -1152,6 +1212,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
+      expect(fetchStrategy).toHaveBeenCalled();
     });
 
     it("loader submission + redirect", async () => {
@@ -1175,6 +1236,7 @@ describe("navigations", () => {
       expect(navigation.state).toBe("idle");
       expect(navigation.formData).toBeUndefined();
       expect(navigation.location).toBeUndefined();
+      expect(fetchStrategy).toHaveBeenCalled();
     });
   });
 });
