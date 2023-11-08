@@ -221,7 +221,7 @@ export function setup({
             activeActionFetchId,
           ].sort();
           let helperKey = sortedIds
-            .map((id) => `${id}:lazy:${r.id}`)
+            .map((id) => `${id}:lazy:${enhancedRoute.id}`)
             .find((k) => activeHelpers.has(k));
           invariant(helperKey != null, `No helperKey found`);
           let helpers = activeHelpers.get(helperKey);
@@ -239,7 +239,7 @@ export function setup({
             activeLoaderType === "fetch"
               ? activeLoaderFetchId
               : activeLoaderNavigationId;
-          let helperKey = `${activeLoaderType}:${navigationId}:loader:${r.id}`;
+          let helperKey = `${activeLoaderType}:${navigationId}:loader:${enhancedRoute.id}`;
           let helpers = activeHelpers.get(helperKey);
           invariant(helpers, `No helpers found for: ${helperKey}`);
           helpers.stub(args);
@@ -254,7 +254,7 @@ export function setup({
             activeActionType === "fetch"
               ? activeActionFetchId
               : activeActionNavigationId;
-          let helperKey = `${activeActionType}:${navigationId}:action:${r.id}`;
+          let helperKey = `${activeActionType}:${navigationId}:action:${enhancedRoute.id}`;
           let helpers = activeHelpers.get(helperKey);
           invariant(helpers, `No helpers found for: ${helperKey}`);
           helpers.stub(args);
