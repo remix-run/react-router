@@ -1142,6 +1142,11 @@ export interface FetcherFormProps
    * `event.preventDefault()` then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
+
+  /**
+   * Enable flushSync navigation's staten updates
+   */
+  unstable_flushSync?: boolean;
 }
 
 export interface FormProps extends FetcherFormProps {
@@ -1171,11 +1176,6 @@ export interface FormProps extends FetcherFormProps {
    * State object to add to the history stack entry for this navigation
    */
   state?: any;
-
-  /**
-   * Enable flushSync navigation's staten updates
-   */
-  unstable_flushSync?: boolean;
 
   /**
    * Enable view transitions on this Form navigation
@@ -1598,7 +1598,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
     FetcherFormProps & React.RefAttributes<HTMLFormElement>
   >;
   submit: FetcherSubmitFunction;
-  load: (href: string) => void;
+  load: (href: string, opts?: { unstable_flushSync?: boolean }) => void;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
