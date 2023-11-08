@@ -4,6 +4,7 @@ import * as fs from "node:fs/promises";
 import babel from "@babel/core";
 import { type ServerBuild } from "@remix-run/server-runtime";
 import {
+  type Connect,
   type Plugin as VitePlugin,
   type Manifest as ViteManifest,
   type ResolvedConfig as ResolvedViteConfig,
@@ -27,6 +28,7 @@ import {
   resolveConfig,
 } from "../config";
 import { type Manifest } from "../manifest";
+import invariant from "../invariant";
 import { createRequestHandler } from "./node/adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
@@ -567,8 +569,14 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         // have no way of comparing against the cache to know if the virtual modules need to be invalidated.
         let previousPluginConfig: ResolvedRemixVitePluginConfig | undefined;
 
-        // Let user servers handle SSR requests in middleware mode
-        if (vite.config.server.middlewareMode) return;
+        let localsByRequest = new WeakMap<
+          Connect.IncomingMessage,
+          {
+            build: ServerBuild;
+            criticalCss: string | undefined;
+          }
+        >();
+
         return () => {
           vite.middlewares.use(async (req, res, next) => {
             try {
@@ -596,22 +604,59 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
                 serverEntryId
               ) as Promise<ServerBuild>);
 
-              let handle = createRequestHandler(build, {
-                mode: "development",
-                criticalCss: await getStylesForUrl(
-                  vite,
-                  pluginConfig,
-                  cssModulesManifest,
-                  build,
-                  url
-                ),
+              let criticalCss = await getStylesForUrl(
+                vite,
+                pluginConfig,
+                cssModulesManifest,
+                build,
+                url
+              );
+
+              localsByRequest.set(req, {
+                build,
+                criticalCss,
               });
 
-              await handle(req, res);
+              // If the middleware is being used in Express, the "res.locals"
+              // object (https://expressjs.com/en/api.html#res.locals) will be
+              // present. If so, we attach the critical CSS as metadata to the
+              // response object so the Remix Express adapter has access to it.
+              if (
+                "locals" in res &&
+                typeof res.locals === "object" &&
+                res.locals !== null
+              ) {
+                (res.locals as Record<string, any>).__remixDevCriticalCss =
+                  criticalCss;
+              }
+
+              next();
             } catch (error) {
               next(error);
             }
           });
+
+          // Let user servers handle SSR requests in middleware mode,
+          // otherwise the Vite plugin will handle the request
+          if (!vite.config.server.middlewareMode) {
+            vite.middlewares.use(async (req, res, next) => {
+              try {
+                let locals = localsByRequest.get(req);
+                invariant(locals, "No Remix locals found for request");
+
+                let { build, criticalCss } = locals;
+
+                let handle = createRequestHandler(build, {
+                  mode: "development",
+                  criticalCss,
+                });
+
+                await handle(req, res);
+              } catch (error) {
+                next(error);
+              }
+            });
+          }
         };
       },
       async buildEnd() {
