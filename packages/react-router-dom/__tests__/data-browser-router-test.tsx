@@ -5309,6 +5309,77 @@ function testDomRouter(
           );
         });
 
+        it("updates the key if it changes while the fetcher remains mounted", async () => {
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component() {
+                  let fetchers = useFetchers();
+                  let [fetcherKey, setFetcherKey] = React.useState("a");
+                  return (
+                    <>
+                      <ReusedFetcher fetcherKey={fetcherKey} />
+                      <button onClick={() => setFetcherKey("b")}>
+                        Change Key
+                      </button>
+                      <p>Fetchers:</p>
+                      <pre>{JSON.stringify(fetchers)}</pre>
+                    </>
+                  );
+                },
+              },
+              {
+                path: "/echo",
+                loader: ({ request }) => request.url,
+              },
+            ],
+            { window: getWindow("/") }
+          );
+
+          function ReusedFetcher({ fetcherKey }: { fetcherKey: string }) {
+            let fetcher = useFetcher({ key: fetcherKey });
+
+            return (
+              <>
+                <button
+                  onClick={() => fetcher.load(`/echo?fetcherKey=${fetcherKey}`)}
+                >
+                  Load Fetcher
+                </button>
+                <p>{`fetcherKey:${fetcherKey}`}</p>
+                <p>Fetcher:{JSON.stringify(fetcher)}</p>
+              </>
+            );
+          }
+
+          let { container } = render(<RouterProvider router={router} />);
+
+          // Start with idle fetcher 'a'
+          expect(getHtml(container)).toContain('{"Form":{},"state":"idle"}');
+          expect(getHtml(container)).toContain("fetcherKey:a");
+
+          fireEvent.click(screen.getByText("Load Fetcher"));
+          await waitFor(
+            () => screen.getAllByText(/\/echo\?fetcherKey=a/).length > 0
+          );
+
+          // Fetcher 'a' now has data
+          expect(getHtml(container)).toContain(
+            '{"Form":{},"state":"idle","data":"http://localhost/echo?fetcherKey=a"}'
+          );
+          expect(getHtml(container)).toContain(
+            '[{"state":"idle","data":"http://localhost/echo?fetcherKey=a","key":"a"}]'
+          );
+
+          fireEvent.click(screen.getByText("Change Key"));
+          await waitFor(() => screen.getByText("fetcherKey:b"));
+
+          // We should have a new uninitialized/idle fetcher 'b'
+          expect(getHtml(container)).toContain('{"Form":{},"state":"idle"');
+          expect(getHtml(container)).toContain("[]");
+        });
+
         it("exposes fetcher keys via useFetchers", async () => {
           let router = createTestRouter(
             [

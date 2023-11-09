@@ -1551,6 +1551,12 @@ export function useFetcher<TData = any>({
     setFetcherKey(getUniqueFetcherId());
   }
 
+  React.useEffect(() => {
+    if (key && key !== "" && key != fetcherKey) {
+      setFetcherKey(key);
+    }
+  }, [key, fetcherKey]);
+
   // Registration/cleanup
   React.useEffect(() => {
     router.getFetcher(fetcherKey);
