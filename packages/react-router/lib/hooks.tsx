@@ -840,12 +840,12 @@ export function useRevalidator() {
  * Returns the active route matches, useful for accessing loaderData for
  * parent/child routes or the route "handle" property
  */
-export function useMatches(): UIMatch[] {
+export function useMatches<D,H>(): UIMatch<D,H>[] {
   let { matches, loaderData } = useDataRouterState(
     DataRouterStateHook.UseMatches
   );
   return React.useMemo(
-    () => matches.map((m) => convertRouteMatchToUiMatch(m, loaderData)),
+    () => matches.map((m) => convertRouteMatchToUiMatch<D,H>(m, loaderData)),
     [matches, loaderData]
   );
 }

@@ -508,10 +508,10 @@ export interface UIMatch<Data = unknown, Handle = unknown> {
   handle: Handle;
 }
 
-export function convertRouteMatchToUiMatch(
+export function convertRouteMatchToUiMatch<D,H>(
   match: AgnosticDataRouteMatch,
   loaderData: RouteData
-): UIMatch {
+): UIMatch<D,H> {
   let { route, pathname, params } = match;
   return {
     id: route.id,
