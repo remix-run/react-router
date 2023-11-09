@@ -503,6 +503,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
 
         viteChildCompiler = await createViteDevServer({
           ...viteUserConfig,
+          mode: viteConfig.mode,
           server: {
             ...viteUserConfig.server,
             // when parent compiler runs in middleware mode to support

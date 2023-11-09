@@ -26,9 +26,13 @@ test.describe("Vite build", () => {
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
+          import mdx from "@mdx-js/rollup";
 
           export default defineConfig({
-            plugins: [remix()],
+            plugins: [
+              remix(),
+              mdx(),
+            ],
           });
         `,
         "app/root.tsx": js`
@@ -81,6 +85,10 @@ test.describe("Vite build", () => {
             );
           }
         `,
+        "app/utils.server.ts": js`
+          export const serverOnly1 = "SERVER_ONLY_1"
+          export const serverOnly2 = "SERVER_ONLY_2"
+        `,
         "app/routes/resource.ts": js`
           import { json } from "@remix-run/node";
 
@@ -95,9 +103,40 @@ test.describe("Vite build", () => {
             return null
           }
         `,
-        "app/utils.server.ts": js`
-          export const serverOnly1 = "SERVER_ONLY_1"
-          export const serverOnly2 = "SERVER_ONLY_2"
+        "app/routes/mdx.mdx": js`
+          import { useEffect, useState } from "react";
+          import { json } from "@remix-run/node";
+          import { useLoaderData } from "@remix-run/react";
+          
+          import { serverOnly1, serverOnly2 } from "../utils.server";
+
+          export const loader = () => {
+            return json({
+              serverOnly1,
+              content: "MDX route content from loader",
+            })
+          }
+
+          export const action = () => {
+            console.log(serverOnly2)
+            return null
+          }
+
+          export function MdxComponent() {
+            const [mounted, setMounted] = useState(false);
+            useEffect(() => {
+              setMounted(true);
+            }, []);
+            const { content } = useLoaderData();
+            const text = content + (mounted
+              ? ": mounted"
+              : ": not mounted");
+            return <div data-mdx-route>{text}</div>
+          }
+
+          ## MDX Route
+
+          <MdxComponent />
         `,
       },
     });
@@ -145,5 +184,26 @@ test.describe("Vite build", () => {
     expect(await page.locator("#content h3[data-mounted]").textContent()).toBe(
       "Mounted"
     );
+  });
+
+  test("server renders matching MDX routes", async ({ page }) => {
+    let res = await fixture.requestDocument("/mdx");
+    expect(res.status).toBe(200);
+    expect(selectHtml(await res.text(), "[data-mdx-route]")).toBe(
+      `<div data-mdx-route="true">MDX route content from loader: not mounted</div>`
+    );
+  });
+
+  test("hydrates matching MDX routes", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/mdx");
+    await expect(page.locator("[data-mdx-route]")).toContainText(
+      "MDX route content from loader: mounted"
+    );
+
+    expect(pageErrors).toEqual([]);
   });
 });
