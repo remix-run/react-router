@@ -1708,7 +1708,7 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
-    let { results, loaderResults, fetcherResults } =
+    let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
         state.matches,
         matches,
@@ -1733,9 +1733,10 @@ export function createRouter(init: RouterInit): Router {
     revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
-    let redirect = findRedirect(results);
+    let redirect = findRedirect([...loaderResults, ...fetcherResults]);
     if (redirect) {
-      if (redirect.idx >= matchesToLoad.length) {
+      // TODO: Do lookup for redirect against fetchers instead of using the index
+      if (redirect.idx >= loaderResults.length) {
         // If this redirect came from a fetcher make sure we mark it in
         // fetchRedirectIds so it doesn't get revalidated on the next set of
         // loader executions
@@ -2028,7 +2029,7 @@ export function createRouter(init: RouterInit): Router {
       abortPendingFetchRevalidations
     );
 
-    let { results, loaderResults, fetcherResults } =
+    let { loaderResults, fetcherResults } =
       await callLoadersAndMaybeResolveData(
         state.matches,
         matches,
@@ -2050,9 +2051,9 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
-    let redirect = findRedirect(results);
+    let redirect = findRedirect([...loaderResults, ...fetcherResults]);
     if (redirect) {
-      if (redirect.idx >= matchesToLoad.length) {
+      if (redirect.idx >= loaderResults.length) {
         // If this redirect came from a fetcher make sure we mark it in
         // fetchRedirectIds so it doesn't get revalidated on the next set of
         // loader executions
@@ -2443,7 +2444,7 @@ export function createRouter(init: RouterInit): Router {
       ),
     ]);
 
-    return { results, loaderResults, fetcherResults };
+    return { loaderResults, fetcherResults };
   }
 
   function interruptActiveLoads() {
@@ -4153,6 +4154,7 @@ function processRouteLoaderData(
         activeDeferreds.set(id, result.deferredData);
         loaderData[id] = result.deferredData.data;
       } else {
+        console.log("HEREREREE!", result);
         loaderData[id] = result.data;
       }
 
@@ -4528,6 +4530,10 @@ async function resolveDeferredData(
     return;
   }
 
+  console.log({
+    unwrap,
+    result,
+  });
   if (unwrap) {
     try {
       return {
