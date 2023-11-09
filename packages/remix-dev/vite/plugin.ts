@@ -7,6 +7,7 @@ import {
   type Connect,
   type Plugin as VitePlugin,
   type Manifest as ViteManifest,
+  type ManifestChunk,
   type ResolvedConfig as ResolvedViteConfig,
   type ViteDevServer,
   type UserConfig as ViteUserConfig,
@@ -120,7 +121,7 @@ const getHash = (source: BinaryLike, maxLength?: number): string => {
 
 const resolveBuildAssetPaths = (
   pluginConfig: ResolvedRemixVitePluginConfig,
-  manifest: ViteManifest,
+  viteManifest: ViteManifest,
   absoluteFilePath: string
 ): Manifest["entry"] & { css: string[] } => {
   let rootRelativeFilePath = path.relative(
@@ -128,10 +129,10 @@ const resolveBuildAssetPaths = (
     absoluteFilePath
   );
   let manifestKey = normalizePath(rootRelativeFilePath);
-  let manifestEntry = manifest[manifestKey];
+  let entryChunk = viteManifest[manifestKey];
 
-  if (!manifestEntry) {
-    let knownManifestKeys = Object.keys(manifest)
+  if (!entryChunk) {
+    let knownManifestKeys = Object.keys(viteManifest)
       .map((key) => '"' + key + '"')
       .join(", ");
     throw new Error(
@@ -139,18 +140,49 @@ const resolveBuildAssetPaths = (
     );
   }
 
+  let chunks = resolveDependantChunks(viteManifest, entryChunk);
+
   return {
-    module: `${pluginConfig.publicPath}${manifestEntry.file}`,
+    module: `${pluginConfig.publicPath}${entryChunk.file}`,
     imports:
-      manifestEntry.imports?.map((imported) => {
-        return `${pluginConfig.publicPath}${manifest[imported].file}`;
+      dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
+        return `${pluginConfig.publicPath}${viteManifest[imported].file}`;
       }) ?? [],
     css:
-      manifestEntry.css?.map((href) => {
+      dedupe(chunks.flatMap((e) => e.css ?? [])).map((href) => {
         return `${pluginConfig.publicPath}${href}`;
       }) ?? [],
   };
 };
+
+function resolveDependantChunks(
+  viteManifest: ViteManifest,
+  entryChunk: ManifestChunk
+): ManifestChunk[] {
+  let chunks = new Set<ManifestChunk>();
+
+  function walk(chunk: ManifestChunk) {
+    if (chunks.has(chunk)) {
+      return;
+    }
+
+    if (chunk.imports) {
+      for (let importKey of chunk.imports) {
+        walk(viteManifest[importKey]);
+      }
+    }
+
+    chunks.add(chunk);
+  }
+
+  walk(entryChunk);
+
+  return Array.from(chunks);
+}
+
+function dedupe<T>(array: T[]): T[] {
+  return [...new Set(array)];
+}
 
 const writeFileSafe = async (file: string, contents: string): Promise<void> => {
   await fs.mkdir(path.dirname(file), { recursive: true });

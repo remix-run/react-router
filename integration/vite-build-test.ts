@@ -107,7 +107,7 @@ test.describe("Vite build", () => {
           import { useEffect, useState } from "react";
           import { json } from "@remix-run/node";
           import { useLoaderData } from "@remix-run/react";
-          
+
           import { serverOnly1, serverOnly2 } from "../utils.server";
 
           export const loader = () => {
@@ -137,6 +137,32 @@ test.describe("Vite build", () => {
           ## MDX Route
 
           <MdxComponent />
+        `,
+        "app/routes/code-split1.tsx": js`
+          import { CodeSplitComponent } from "../code-split-component";
+
+          export default function CodeSplit1Route() {
+            return <div id="code-split1"><CodeSplitComponent /></div>;
+          }
+        `,
+        "app/routes/code-split2.tsx": js`
+          import { CodeSplitComponent } from "../code-split-component";
+
+          export default function CodeSplit2Route() {
+            return <div id="code-split2"><CodeSplitComponent /></div>;
+          }
+        `,
+        "app/code-split-component.tsx": js`
+          import classes from "./code-split.module.css";
+
+          export function CodeSplitComponent() {
+            return <span className={classes.test}>ok</span>
+          }
+        `,
+        "app/code-split.module.css": js`
+          .test {
+            background-color: rgb(255, 170, 0);
+          }
         `,
       },
     });
@@ -203,6 +229,28 @@ test.describe("Vite build", () => {
     await expect(page.locator("[data-mdx-route]")).toContainText(
       "MDX route content from loader: mounted"
     );
+
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("supports code-split css", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/code-split1");
+    expect(
+      await page
+        .locator("#code-split1 span")
+        .evaluate((e) => window.getComputedStyle(e).backgroundColor)
+    ).toBe("rgb(255, 170, 0)");
+
+    await app.goto("/code-split2");
+    expect(
+      await page
+        .locator("#code-split2 span")
+        .evaluate((e) => window.getComputedStyle(e).backgroundColor)
+    ).toBe("rgb(255, 170, 0)");
 
     expect(pageErrors).toEqual([]);
   });
