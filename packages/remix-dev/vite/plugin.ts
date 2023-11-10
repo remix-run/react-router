@@ -11,6 +11,7 @@ import {
   type ResolvedConfig as ResolvedViteConfig,
   type ViteDevServer,
   type UserConfig as ViteUserConfig,
+  loadEnv as viteLoadEnv,
   normalizePath as viteNormalizePath,
   createServer as createViteDevServer,
 } from "vite";
@@ -457,6 +458,18 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
 
         let pluginConfig = await resolvePluginConfig();
         cachedPluginConfig = pluginConfig;
+
+        Object.assign(
+          process.env,
+          viteLoadEnv(
+            viteConfigEnv.mode,
+            pluginConfig.rootDirectory,
+            // We override default prefix of "VITE_" with a blank string since
+            // we're targeting the server, so we want to load all environment
+            // variables, not just those explicitly marked for the client
+            ""
+          )
+        );
 
         return {
           appType: "custom",

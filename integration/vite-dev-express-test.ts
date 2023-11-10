@@ -117,6 +117,38 @@ test.beforeAll(async () => {
           );
         }
       `,
+      ".env": `
+        ENV_VAR_FROM_DOTENV_FILE=Content from .env file
+      `,
+      "app/routes/dotenv.tsx": js`
+        import { useState, useEffect } from "react";
+        import { json } from "@remix-run/node";
+        import { useLoaderData } from "@remix-run/react";
+
+        export const loader = () => {
+          return json({
+            loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
+          })
+        }
+
+        export default function DotenvRoute() {
+          const { loaderContent } = useLoaderData();
+
+          const [clientContent, setClientContent] = useState('');
+          useEffect(() => {
+            try {
+              setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE shouldn't be available on the client, found: " + process.env.ENV_VAR_FROM_DOTENV_FILE);
+            } catch (err) {
+              setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing");
+            }
+          }, []);
+
+          return <>
+            <div data-dotenv-route-loader-content>{loaderContent}</div>
+            <div data-dotenv-route-client-content>{clientContent}</div>
+          </>
+        }
+      `,
     },
   });
   dev = await node(projectDir, ["./server.mjs"], { port });
@@ -126,185 +158,207 @@ test.afterAll(async () => {
   await kill(dev.pid);
 });
 
-test("Vite custom server HMR & HDR", async ({ page }) => {
-  // setup: initial render
-  await page.goto(`http://localhost:${dev.port}/`, {
-    waitUntil: "networkidle",
-  });
-  await expect(page.locator("#index [data-title]")).toHaveText("Index");
+test.describe("Vite custom Express server", () => {
+  test("handles HMR & HDR", async ({ page }) => {
+    // setup: initial render
+    await page.goto(`http://localhost:${dev.port}/`, {
+      waitUntil: "networkidle",
+    });
+    await expect(page.locator("#index [data-title]")).toHaveText("Index");
 
-  // setup: hydration
-  await expect(page.locator("#index [data-mounted]")).toHaveText(
-    "Mounted: yes"
-  );
+    // setup: hydration
+    await expect(page.locator("#index [data-mounted]")).toHaveText(
+      "Mounted: yes"
+    );
 
-  // setup: browser state
-  let hmrStatus = page.locator("#index [data-hmr]");
-  await expect(page).toHaveTitle("HMR updated title: 0");
-  await expect(hmrStatus).toHaveText("HMR updated: 0");
-  let input = page.locator("#index input");
-  await expect(input).toBeVisible();
-  await input.type("stateful");
+    // setup: browser state
+    let hmrStatus = page.locator("#index [data-hmr]");
+    await expect(page).toHaveTitle("HMR updated title: 0");
+    await expect(hmrStatus).toHaveText("HMR updated: 0");
+    let input = page.locator("#index input");
+    await expect(input).toBeVisible();
+    await input.type("stateful");
 
-  // route: HMR
-  await edit("app/routes/_index.tsx", (contents) =>
-    contents
-      .replace("HMR updated title: 0", "HMR updated title: 1")
-      .replace("HMR updated: 0", "HMR updated: 1")
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(page).toHaveTitle("HMR updated title: 1");
-  await expect(hmrStatus).toHaveText("HMR updated: 1");
-  await expect(input).toHaveValue("stateful");
+    // route: HMR
+    await edit("app/routes/_index.tsx", (contents) =>
+      contents
+        .replace("HMR updated title: 0", "HMR updated title: 1")
+        .replace("HMR updated: 0", "HMR updated: 1")
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(page).toHaveTitle("HMR updated title: 1");
+    await expect(hmrStatus).toHaveText("HMR updated: 1");
+    await expect(input).toHaveValue("stateful");
 
-  // route: add loader
-  await edit("app/routes/_index.tsx", (contents) =>
-    contents
-      .replace(
-        "// imports",
-        `// imports\nimport { json } from "@remix-run/node";\nimport { useLoaderData } from "@remix-run/react"`
-      )
-      .replace(
-        "// loader",
-        `// loader\nexport const loader = ({ context }) => json({ message: "HDR updated: 0", context });`
-      )
-      .replace(
-        "// hooks",
-        "// hooks\nconst { message, context } = useLoaderData<typeof loader>();"
-      )
-      .replace(
-        "{/* elements */}",
-        `{/* elements */}\n<p data-context>{context.value}</p>\n<p data-hdr>{message}</p>`
-      )
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(page.locator("#index [data-context]")).toHaveText("context");
-  let hdrStatus = page.locator("#index [data-hdr]");
-  await expect(hdrStatus).toHaveText("HDR updated: 0");
-  // React Fast Refresh cannot preserve state for a component when hooks are added or removed
-  await expect(input).toHaveValue("");
-  await input.type("stateful");
+    // route: add loader
+    await edit("app/routes/_index.tsx", (contents) =>
+      contents
+        .replace(
+          "// imports",
+          `// imports\nimport { json } from "@remix-run/node";\nimport { useLoaderData } from "@remix-run/react"`
+        )
+        .replace(
+          "// loader",
+          `// loader\nexport const loader = ({ context }) => json({ message: "HDR updated: 0", context });`
+        )
+        .replace(
+          "// hooks",
+          "// hooks\nconst { message, context } = useLoaderData<typeof loader>();"
+        )
+        .replace(
+          "{/* elements */}",
+          `{/* elements */}\n<p data-context>{context.value}</p>\n<p data-hdr>{message}</p>`
+        )
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("#index [data-context]")).toHaveText("context");
+    let hdrStatus = page.locator("#index [data-hdr]");
+    await expect(hdrStatus).toHaveText("HDR updated: 0");
+    // React Fast Refresh cannot preserve state for a component when hooks are added or removed
+    await expect(input).toHaveValue("");
+    await input.type("stateful");
 
-  // route: HDR
-  await edit("app/routes/_index.tsx", (contents) =>
-    contents.replace("HDR updated: 0", "HDR updated: 1")
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(hdrStatus).toHaveText("HDR updated: 1");
-  await expect(input).toHaveValue("stateful");
+    // route: HDR
+    await edit("app/routes/_index.tsx", (contents) =>
+      contents.replace("HDR updated: 0", "HDR updated: 1")
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hdrStatus).toHaveText("HDR updated: 1");
+    await expect(input).toHaveValue("stateful");
 
-  // route: HMR + HDR
-  await edit("app/routes/_index.tsx", (contents) =>
-    contents
-      .replace("HMR updated: 1", "HMR updated: 2")
-      .replace("HDR updated: 1", "HDR updated: 2")
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(hmrStatus).toHaveText("HMR updated: 2");
-  await expect(hdrStatus).toHaveText("HDR updated: 2");
-  await expect(input).toHaveValue("stateful");
+    // route: HMR + HDR
+    await edit("app/routes/_index.tsx", (contents) =>
+      contents
+        .replace("HMR updated: 1", "HMR updated: 2")
+        .replace("HDR updated: 1", "HDR updated: 2")
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hmrStatus).toHaveText("HMR updated: 2");
+    await expect(hdrStatus).toHaveText("HDR updated: 2");
+    await expect(input).toHaveValue("stateful");
 
-  // create new non-route component module
-  await fs.writeFile(
-    path.join(projectDir, "app/component.tsx"),
-    js`
+    // create new non-route component module
+    await fs.writeFile(
+      path.join(projectDir, "app/component.tsx"),
+      js`
     export function MyComponent() {
       return <p data-component>Component HMR: 0</p>;
     }
     `,
-    "utf8"
-  );
-  await edit("app/routes/_index.tsx", (contents) =>
-    contents
-      .replace(
-        "// imports",
-        `// imports\nimport { MyComponent } from "../component";`
-      )
-      .replace("{/* elements */}", "{/* elements */}\n<MyComponent />")
-  );
-  await page.waitForLoadState("networkidle");
-  let component = page.locator("#index [data-component]");
-  await expect(component).toBeVisible();
-  await expect(component).toHaveText("Component HMR: 0");
-  await expect(input).toHaveValue("stateful");
+      "utf8"
+    );
+    await edit("app/routes/_index.tsx", (contents) =>
+      contents
+        .replace(
+          "// imports",
+          `// imports\nimport { MyComponent } from "../component";`
+        )
+        .replace("{/* elements */}", "{/* elements */}\n<MyComponent />")
+    );
+    await page.waitForLoadState("networkidle");
+    let component = page.locator("#index [data-component]");
+    await expect(component).toBeVisible();
+    await expect(component).toHaveText("Component HMR: 0");
+    await expect(input).toHaveValue("stateful");
 
-  // non-route: HMR
-  await edit("app/component.tsx", (contents) =>
-    contents.replace("Component HMR: 0", "Component HMR: 1")
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(component).toHaveText("Component HMR: 1");
-  await expect(input).toHaveValue("stateful");
+    // non-route: HMR
+    await edit("app/component.tsx", (contents) =>
+      contents.replace("Component HMR: 0", "Component HMR: 1")
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(component).toHaveText("Component HMR: 1");
+    await expect(input).toHaveValue("stateful");
 
-  // create new non-route server module
-  await fs.writeFile(
-    path.join(projectDir, "app/indirect-hdr-dep.ts"),
-    js`export const indirect = "indirect 0"`,
-    "utf8"
-  );
-  await fs.writeFile(
-    path.join(projectDir, "app/direct-hdr-dep.ts"),
-    js`
+    // create new non-route server module
+    await fs.writeFile(
+      path.join(projectDir, "app/indirect-hdr-dep.ts"),
+      js`export const indirect = "indirect 0"`,
+      "utf8"
+    );
+    await fs.writeFile(
+      path.join(projectDir, "app/direct-hdr-dep.ts"),
+      js`
       import { indirect } from "./indirect-hdr-dep"
       export const direct = "direct 0 & " + indirect
     `,
-    "utf8"
-  );
-  await edit("app/routes/_index.tsx", (contents) =>
-    contents
-      .replace(
-        "// imports",
-        `// imports\nimport { direct } from "../direct-hdr-dep"`
-      )
-      .replace(
-        `json({ message: "HDR updated: 2", context })`,
-        `json({ message: "HDR updated: " + direct, context })`
-      )
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(hdrStatus).toHaveText("HDR updated: direct 0 & indirect 0");
-  await expect(input).toHaveValue("stateful");
-
-  // non-route: HDR for direct dependency
-  await edit("app/direct-hdr-dep.ts", (contents) =>
-    contents.replace("direct 0 &", "direct 1 &")
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(hdrStatus).toHaveText("HDR updated: direct 1 & indirect 0");
-  await expect(input).toHaveValue("stateful");
-
-  // non-route: HDR for indirect dependency
-  await edit("app/indirect-hdr-dep.ts", (contents) =>
-    contents.replace("indirect 0", "indirect 1")
-  );
-  await page.waitForLoadState("networkidle");
-  await expect(hdrStatus).toHaveText("HDR updated: direct 1 & indirect 1");
-  await expect(input).toHaveValue("stateful");
-
-  // everything everywhere all at once
-  await Promise.all([
-    edit("app/routes/_index.tsx", (contents) =>
+      "utf8"
+    );
+    await edit("app/routes/_index.tsx", (contents) =>
       contents
-        .replace("HMR updated: 2", "HMR updated: 3")
-        .replace("HDR updated: ", "HDR updated: route & ")
-    ),
-    edit("app/component.tsx", (contents) =>
-      contents.replace("Component HMR: 1", "Component HMR: 2")
-    ),
-    edit("app/direct-hdr-dep.ts", (contents) =>
-      contents.replace("direct 1 &", "direct 2 &")
-    ),
-    edit("app/indirect-hdr-dep.ts", (contents) =>
-      contents.replace("indirect 1", "indirect 2")
-    ),
-  ]);
-  await page.waitForLoadState("networkidle");
-  await expect(hmrStatus).toHaveText("HMR updated: 3");
-  await expect(component).toHaveText("Component HMR: 2");
-  await expect(hdrStatus).toHaveText(
-    "HDR updated: route & direct 2 & indirect 2"
-  );
-  await expect(input).toHaveValue("stateful");
+        .replace(
+          "// imports",
+          `// imports\nimport { direct } from "../direct-hdr-dep"`
+        )
+        .replace(
+          `json({ message: "HDR updated: 2", context })`,
+          `json({ message: "HDR updated: " + direct, context })`
+        )
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hdrStatus).toHaveText("HDR updated: direct 0 & indirect 0");
+    await expect(input).toHaveValue("stateful");
+
+    // non-route: HDR for direct dependency
+    await edit("app/direct-hdr-dep.ts", (contents) =>
+      contents.replace("direct 0 &", "direct 1 &")
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hdrStatus).toHaveText("HDR updated: direct 1 & indirect 0");
+    await expect(input).toHaveValue("stateful");
+
+    // non-route: HDR for indirect dependency
+    await edit("app/indirect-hdr-dep.ts", (contents) =>
+      contents.replace("indirect 0", "indirect 1")
+    );
+    await page.waitForLoadState("networkidle");
+    await expect(hdrStatus).toHaveText("HDR updated: direct 1 & indirect 1");
+    await expect(input).toHaveValue("stateful");
+
+    // everything everywhere all at once
+    await Promise.all([
+      edit("app/routes/_index.tsx", (contents) =>
+        contents
+          .replace("HMR updated: 2", "HMR updated: 3")
+          .replace("HDR updated: ", "HDR updated: route & ")
+      ),
+      edit("app/component.tsx", (contents) =>
+        contents.replace("Component HMR: 1", "Component HMR: 2")
+      ),
+      edit("app/direct-hdr-dep.ts", (contents) =>
+        contents.replace("direct 1 &", "direct 2 &")
+      ),
+      edit("app/indirect-hdr-dep.ts", (contents) =>
+        contents.replace("indirect 1", "indirect 2")
+      ),
+    ]);
+    await page.waitForLoadState("networkidle");
+    await expect(hmrStatus).toHaveText("HMR updated: 3");
+    await expect(component).toHaveText("Component HMR: 2");
+    await expect(hdrStatus).toHaveText(
+      "HDR updated: route & direct 2 & indirect 2"
+    );
+    await expect(input).toHaveValue("stateful");
+  });
+
+  test("loads .env file", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    await page.goto(`http://localhost:${dev.port}/dotenv`, {
+      waitUntil: "networkidle",
+    });
+    expect(pageErrors).toEqual([]);
+
+    let loaderContent = page.locator("[data-dotenv-route-loader-content]");
+    await expect(loaderContent).toHaveText("Content from .env file");
+
+    let clientContent = page.locator("[data-dotenv-route-client-content]");
+    await expect(clientContent).toHaveText(
+      "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
+    );
+
+    expect(pageErrors).toEqual([]);
+  });
 });
 
 async function edit(file: string, transform: (contents: string) => string) {

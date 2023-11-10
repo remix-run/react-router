@@ -165,6 +165,38 @@ test.describe("Vite dev", () => {
 
           <MdxComponent />
         `,
+        ".env": `
+          ENV_VAR_FROM_DOTENV_FILE=Content from .env file
+        `,
+        "app/routes/dotenv.tsx": js`
+          import { useState, useEffect } from "react";
+          import { json } from "@remix-run/node";
+          import { useLoaderData } from "@remix-run/react";
+
+          export const loader = () => {
+            return json({
+              loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
+            })
+          }
+
+          export default function DotenvRoute() {
+            const { loaderContent } = useLoaderData();
+
+            const [clientContent, setClientContent] = useState('');
+            useEffect(() => {
+              try {
+                setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE shouldn't be available on the client, found: " + process.env.ENV_VAR_FROM_DOTENV_FILE);
+              } catch (err) {
+                setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing");
+              }
+            }, []);
+
+            return <>
+              <div data-dotenv-route-loader-content>{loaderContent}</div>
+              <div data-dotenv-route-client-content>{clientContent}</div>
+            </>
+          }
+        `,
       },
     });
 
@@ -296,6 +328,26 @@ test.describe("Vite dev", () => {
 
     let mdxContent = page.locator("[data-mdx-route]");
     await expect(mdxContent).toHaveText("MDX route content from loader");
+
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("loads .env file", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    await page.goto(`http://localhost:${devPort}/dotenv`, {
+      waitUntil: "networkidle",
+    });
+    expect(pageErrors).toEqual([]);
+
+    let loaderContent = page.locator("[data-dotenv-route-loader-content]");
+    await expect(loaderContent).toHaveText("Content from .env file");
+
+    let clientContent = page.locator("[data-dotenv-route-client-content]");
+    await expect(clientContent).toHaveText(
+      "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
+    );
 
     expect(pageErrors).toEqual([]);
   });

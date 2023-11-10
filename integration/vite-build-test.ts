@@ -23,6 +23,9 @@ test.describe("Vite build", () => {
           throw new Error("Remix should not access remix.config.js when using Vite");
           export default {};
         `,
+        ".env": `
+          ENV_VAR_FROM_DOTENV_FILE=true
+        `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
@@ -164,6 +167,22 @@ test.describe("Vite build", () => {
             background-color: rgb(255, 170, 0);
           }
         `,
+        "app/routes/dotenv.tsx": js`
+          import { json } from "@remix-run/node";
+          import { useLoaderData } from "@remix-run/react";
+
+          export const loader = () => {
+            return json({
+              loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE ?? '.env file was NOT loaded, which is a good thing',
+            })
+          }
+
+          export default function DotenvRoute() {
+            const { loaderContent } = useLoaderData();
+
+            return <div data-dotenv-route-loader-content>{loaderContent}</div>;
+          }
+        `,
       },
     });
 
@@ -251,6 +270,22 @@ test.describe("Vite build", () => {
         .locator("#code-split2 span")
         .evaluate((e) => window.getComputedStyle(e).backgroundColor)
     ).toBe("rgb(255, 170, 0)");
+
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("doesn't load .env file", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto(`/dotenv`);
+    expect(pageErrors).toEqual([]);
+
+    let loaderContent = page.locator("[data-dotenv-route-loader-content]");
+    await expect(loaderContent).toHaveText(
+      ".env file was NOT loaded, which is a good thing"
+    );
 
     expect(pageErrors).toEqual([]);
   });
