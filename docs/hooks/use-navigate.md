@@ -20,6 +20,8 @@ interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
+  unstable_flushSync?: boolean;
+  unstable_viewTransition?: boolean;
 }
 
 type RelativeRoutingType = "route" | "path";
@@ -85,6 +87,16 @@ function EditContact() {
 }
 ```
 
+## `options.unstable_flushSync`
+
+The `unstable_flushSync` option tells React Router DOM to wrap the initial state update for this navigation in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.
+
+<docs-warning>`unstable_flushSync` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
+
+<docs-warning>`ReactDOM.flushSync` de-optimizes React and can hurt the performance of your app.</docs-warning>
+
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
+
 ## `options.unstable_viewTransition`
 
 The `unstable_viewTransition` option enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state].
@@ -102,3 +114,5 @@ The `unstable_viewTransition` option enables a [View Transition][view-transition
 [use-view-transition-state]: ../hooks//use-view-transition-state
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
 [picking-a-router]: ../routers/picking-a-router
+[flush-sync]: https://react.dev/reference/react-dom/flushSync
+[start-transition]: https://react.dev/reference/react/startTransition

@@ -3,6 +3,7 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import type {
   DataRouteObject,
   FutureConfig,
@@ -338,6 +339,7 @@ type ViewTransitionContextObject =
     }
   | {
       isTransitioning: true;
+      flushSync: boolean;
       currentLocation: Location;
       nextLocation: Location;
     };
@@ -390,10 +392,20 @@ export { FetchersContext as UNSAFE_FetchersContext };
 */
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
+const FLUSH_SYNC = "flushSync";
+const flushSyncImpl = ReactDOM[FLUSH_SYNC];
 
 function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
     startTransitionImpl(cb);
+  } else {
+    cb();
+  }
+}
+
+function flushSyncSafe(cb: () => void) {
+  if (flushSyncImpl) {
+    flushSyncImpl(cb);
   } else {
     cb();
   }
@@ -468,7 +480,11 @@ export function RouterProvider({
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
-      { deletedFetchers, unstable_viewTransitionOpts: viewTransitionOpts }
+      {
+        deletedFetchers,
+        unstable_flushSync: flushSync,
+        unstable_viewTransitionOpts: viewTransitionOpts,
+      }
     ) => {
       deletedFetchers.forEach((key) => fetcherData.current.delete(key));
       newState.fetchers.forEach((fetcher, key) => {
@@ -477,17 +493,62 @@ export function RouterProvider({
         }
       });
 
-      if (
-        !viewTransitionOpts ||
+      let isViewTransitionUnavailable =
         router.window == null ||
-        typeof router.window.document.startViewTransition !== "function"
-      ) {
-        // Mid-navigation state update, or startViewTransition isn't available
-        optInStartTransition(() => setStateImpl(newState));
-      } else if (transition && renderDfd) {
+        typeof router.window.document.startViewTransition !== "function";
+
+      // If this isn't a view transition or it's not available in this browser,
+      // just update and be done with it
+      if (!viewTransitionOpts || isViewTransitionUnavailable) {
+        if (flushSync) {
+          flushSyncSafe(() => setStateImpl(newState));
+        } else {
+          optInStartTransition(() => setStateImpl(newState));
+        }
+        return;
+      }
+
+      // flushSync + startViewTransition
+      if (flushSync) {
+        // Flush through the context to mark DOM elements as transition=ing
+        flushSyncSafe(() => {
+          // Cancel any pending transitions
+          if (transition) {
+            renderDfd && renderDfd.resolve();
+            transition.skipTransition();
+          }
+          setVtContext({
+            isTransitioning: true,
+            flushSync: true,
+            currentLocation: viewTransitionOpts.currentLocation,
+            nextLocation: viewTransitionOpts.nextLocation,
+          });
+        });
+
+        // Update the DOM
+        let t = router.window!.document.startViewTransition(() => {
+          flushSyncSafe(() => setStateImpl(newState));
+        });
+
+        // Clean up after the animation completes
+        t.finished.finally(() => {
+          flushSyncSafe(() => {
+            setRenderDfd(undefined);
+            setTransition(undefined);
+            setPendingState(undefined);
+            setVtContext({ isTransitioning: false });
+          });
+        });
+
+        flushSyncSafe(() => setTransition(t));
+        return;
+      }
+
+      // startTransition + startViewTransition
+      if (transition) {
         // Interrupting an in-progress transition, cancel and let everything flush
         // out, and then kick off a new transition from the interruption state
-        renderDfd.resolve();
+        renderDfd && renderDfd.resolve();
         transition.skipTransition();
         setInterruption({
           state: newState,
@@ -499,6 +560,7 @@ export function RouterProvider({
         setPendingState(newState);
         setVtContext({
           isTransitioning: true,
+          flushSync: false,
           currentLocation: viewTransitionOpts.currentLocation,
           nextLocation: viewTransitionOpts.nextLocation,
         });
@@ -514,10 +576,10 @@ export function RouterProvider({
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
-    if (vtContext.isTransitioning) {
+    if (vtContext.isTransitioning && !vtContext.flushSync) {
       setRenderDfd(new Deferred<void>());
     }
-  }, [vtContext.isTransitioning]);
+  }, [vtContext]);
 
   // Once the deferred is created, kick off startViewTransition() to update the
   // DOM and then wait on the Deferred to resolve (indicating the DOM update has
@@ -559,6 +621,7 @@ export function RouterProvider({
       setPendingState(interruption.state);
       setVtContext({
         isTransitioning: true,
+        flushSync: false,
         currentLocation: interruption.currentLocation,
         nextLocation: interruption.nextLocation,
       });
@@ -916,7 +979,6 @@ export interface NavLinkProps
   style?:
     | React.CSSProperties
     | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
-  unstable_viewTransition?: boolean;
 }
 
 /**
@@ -1444,6 +1506,7 @@ export function useSubmit(): SubmitFunction {
           body,
           formMethod: options.method || (method as HTMLFormMethod),
           formEncType: options.encType || (encType as FormEncType),
+          unstable_flushSync: options.unstable_flushSync,
         });
       } else {
         router.navigate(options.action || action, {
@@ -1455,6 +1518,7 @@ export function useSubmit(): SubmitFunction {
           replace: options.replace,
           state: options.state,
           fromRouteId: currentRouteId,
+          unstable_flushSync: options.unstable_flushSync,
           unstable_viewTransition: options.unstable_viewTransition,
         });
       }
@@ -1520,7 +1584,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
     FetcherFormProps & React.RefAttributes<HTMLFormElement>
   >;
   submit: FetcherSubmitFunction;
-  load: (href: string) => void;
+  load: (href: string, opts?: { unstable_flushSync?: boolean }) => void;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
@@ -1564,9 +1628,9 @@ export function useFetcher<TData = any>({
 
   // Fetcher additions
   let load = React.useCallback(
-    (href: string) => {
+    (href: string, opts?: { unstable_flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
-      router.fetch(fetcherKey, routeId, href);
+      router.fetch(fetcherKey, routeId, href, opts);
     },
     [fetcherKey, routeId, router]
   );

@@ -160,5 +160,15 @@ Because submissions are navigations, the options may also contain the other navi
 - `state`
 - `unstable_viewTransition`
 
+### `options.unstable_flushSync`
+
+The `unstable_flushSync` option tells React Router DOM to wrap the initial state update for this submission in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.
+
+<docs-warning>`ReactDOM.flushSync` de-optimizes React and can hurt the performance of your app.</docs-warning>
+
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
+
 [pickingarouter]: ../routers/picking-a-router
 [form]: ../components/form
+[flush-sync]: https://react.dev/reference/react-dom/flushSync
+[start-transition]: https://react.dev/reference/react/startTransition
