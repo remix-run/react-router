@@ -107,7 +107,7 @@ function SomeComponent() {
 
 ## Methods
 
-## `fetcher.load()`
+## `fetcher.load(href, options)`
 
 Loads data from a route loader.
 
@@ -132,6 +132,12 @@ Although a URL might match multiple nested routes, a `fetcher.load()` call will 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
 
 <docs-info>Any `fetcher.load` calls that are active on the page will be re-executed as part of revalidation (either after a navigation submission, another fetcher submission, or a `useRevalidator()` call)</docs-info>
+
+### `options.unstable_flushSync`
+
+The `unstable_flushSync` option tells React Router DOM to wrap the initial state update for this `fetcher.load` in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.
+
+<docs-warning>`ReactDOM.flushSync` de-optimizes React and can hurt the performance of your app.</docs-warning>
 
 ## `fetcher.submit()`
 
@@ -279,3 +285,5 @@ fetcher.formMethod; // "post"
 [api-development-strategy]: ../guides/api-development-strategy
 [use-submit]: ./use-submit
 [use-fetchers]: ./use-fetchers
+[flush-sync]: https://react.dev/reference/react-dom/flushSync
+[start-transition]: https://react.dev/reference/react/startTransition
