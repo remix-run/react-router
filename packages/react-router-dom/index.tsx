@@ -862,7 +862,6 @@ export interface LinkProps
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   to: To;
-  unstable_flushSync?: boolean;
   unstable_viewTransition?: boolean;
 }
 
@@ -887,7 +886,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       to,
       preventScrollReset,
-      unstable_flushSync,
       unstable_viewTransition,
       ...rest
     },
@@ -938,7 +936,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       preventScrollReset,
       relative,
-      unstable_flushSync,
       unstable_viewTransition,
     });
     function handleClick(
@@ -1142,11 +1139,6 @@ export interface FetcherFormProps
    * `event.preventDefault()` then this form will not do anything.
    */
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
-
-  /**
-   * Enable flushSync navigation's staten updates
-   */
-  unstable_flushSync?: boolean;
 }
 
 export interface FormProps extends FetcherFormProps {
@@ -1210,7 +1202,6 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       onSubmit,
       relative,
       preventScrollReset,
-      unstable_flushSync,
       unstable_viewTransition,
       ...props
     },
@@ -1241,7 +1232,6 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         state,
         relative,
         preventScrollReset,
-        unstable_flushSync,
         unstable_viewTransition,
       });
     };
@@ -1337,7 +1327,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state,
     preventScrollReset,
     relative,
-    unstable_flushSync,
     unstable_viewTransition,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
@@ -1345,7 +1334,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
-    unstable_flushSync?: boolean;
     unstable_viewTransition?: boolean;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
@@ -1370,7 +1358,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           state,
           preventScrollReset,
           relative,
-          unstable_flushSync,
           unstable_viewTransition,
         });
       }
@@ -1385,7 +1372,6 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       to,
       preventScrollReset,
       relative,
-      unstable_flushSync,
       unstable_viewTransition,
     ]
   );

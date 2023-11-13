@@ -12,66 +12,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 
 describe("flushSync", () => {
-  it("wraps Link updates in flushSync when specified", async () => {
-    let router = createBrowserRouter(
-      [
-        {
-          path: "/",
-          Component() {
-            return (
-              <>
-                <h1>Home</h1>
-                <Link to="/about">Go to /about</Link>
-              </>
-            );
-          },
-        },
-        {
-          path: "/about",
-          Component() {
-            return (
-              <>
-                <h1>About</h1>
-                <Link to="/" unstable_flushSync>
-                  Go to /
-                </Link>
-              </>
-            );
-          },
-        },
-      ],
-      {
-        window: getWindowImpl("/"),
-      }
-    );
-    render(
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    );
-
-    // This isn't the best way to test this but it seems that startTransition is
-    // performing sync updates in the test/JSDOM/whatever environment which is
-    // not how it behaves in the live DOM :/
-    let spy = jest.fn();
-    router.subscribe(spy);
-
-    fireEvent.click(screen.getByText("Go to /about"));
-    await waitFor(() => screen.getByText("About"));
-    expect(spy).toBeCalledTimes(1);
-    expect(spy).toHaveBeenLastCalledWith(
-      expect.anything(),
-      expect.objectContaining({ unstable_flushSync: false })
-    );
-
-    fireEvent.click(screen.getByText("Go to /"));
-    await waitFor(() => screen.getByText("Home"));
-    expect(spy).toHaveBeenLastCalledWith(
-      expect.anything(),
-      expect.objectContaining({ unstable_flushSync: true })
-    );
-
-    expect(spy).toBeCalledTimes(2);
-  });
-
   it("wraps useNavigate updates in flushSync when specified", async () => {
     let router = createBrowserRouter(
       [
@@ -134,65 +74,8 @@ describe("flushSync", () => {
     );
 
     expect(spy).toBeCalledTimes(2);
-  });
 
-  it("wraps Form updates in flushSync when specified", async () => {
-    let router = createBrowserRouter(
-      [
-        {
-          path: "/",
-          action: () => null,
-          Component() {
-            return (
-              <>
-                <h1>Home</h1>
-                <Form method="post" action="/about">
-                  <button type="submit">Go to /about</button>
-                </Form>
-              </>
-            );
-          },
-        },
-        {
-          path: "/about",
-          action: () => null,
-          Component() {
-            return (
-              <>
-                <h1>About</h1>
-                <Form method="post" action="/" unstable_flushSync>
-                  <button type="submit">Go to /</button>
-                </Form>
-              </>
-            );
-          },
-        },
-      ],
-      {
-        window: getWindowImpl("/"),
-      }
-    );
-    render(
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    );
-
-    // This isn't the best way to test this but it seems that startTransition is
-    // performing sync updates in the test/JSDOM/whatever environment which is
-    // not how it behaves in the live DOM :/
-    let spy = jest.fn();
-    router.subscribe(spy);
-
-    fireEvent.click(screen.getByText("Go to /about"));
-    await waitFor(() => screen.getByText("About"));
-    expect(spy).toBeCalledTimes(2);
-    expect(spy.mock.calls[0][1].unstable_flushSync).toBe(false);
-    expect(spy.mock.calls[1][1].unstable_flushSync).toBe(false);
-
-    fireEvent.click(screen.getByText("Go to /"));
-    await waitFor(() => screen.getByText("Home"));
-    expect(spy).toBeCalledTimes(4);
-    expect(spy.mock.calls[2][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
+    router.dispose();
   });
 
   it("wraps useSubmit updates in flushSync when specified", async () => {
@@ -265,6 +148,8 @@ describe("flushSync", () => {
     expect(spy).toBeCalledTimes(4);
     expect(spy.mock.calls[2][1].unstable_flushSync).toBe(true);
     expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
+
+    router.dispose();
   });
 
   it("wraps fetcher.load updates in flushSync when specified", async () => {
@@ -327,6 +212,8 @@ describe("flushSync", () => {
     expect(spy).toBeCalledTimes(4);
     expect(spy.mock.calls[2][1].unstable_flushSync).toBe(true);
     expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
+
+    router.dispose();
   });
 
   it("wraps fetcher.submit updates in flushSync when specified", async () => {
@@ -392,6 +279,8 @@ describe("flushSync", () => {
     expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
     expect(spy.mock.calls[4][1].unstable_flushSync).toBe(true);
     expect(spy.mock.calls[5][1].unstable_flushSync).toBe(true);
+
+    router.dispose();
   });
 });
 
