@@ -1611,7 +1611,9 @@ export function useFetcher<TData = any>({
 
   // Fetcher key handling
   let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
-  if (!fetcherKey) {
+  if (key && key !== fetcherKey) {
+    setFetcherKey(key);
+  } else if (!fetcherKey) {
     setFetcherKey(getUniqueFetcherId());
   }
 
