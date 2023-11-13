@@ -1188,17 +1188,36 @@ export function resolveTo(
   // `to` values that do not provide a pathname. `to` can simply be a search or
   // hash string, in which case we should assume that the navigation is relative
   // to the current location's pathname and *not* the route pathname.
-  if (isPathRelative || toPathname == null) {
+  if (toPathname == null) {
     from = locationPathname;
+  } else if (isPathRelative) {
+    let fromSegments = routePathnames[routePathnames.length - 1]
+      .replace(/^\//, "")
+      .split("/");
+
+    if (toPathname.startsWith("..")) {
+      let toSegments = toPathname.split("/");
+
+      // With relative="path", each leading .. segment means "go up one URL segment"
+      while (toSegments[0] === "..") {
+        toSegments.shift();
+        fromSegments.pop();
+      }
+
+      to.pathname = toSegments.join("/");
+    }
+
+    from = "/" + fromSegments.join("/");
   } else {
     let routePathnameIndex = routePathnames.length - 1;
 
     if (toPathname.startsWith("..")) {
       let toSegments = toPathname.split("/");
 
-      // Each leading .. segment means "go up one route" instead of "go up one
-      // URL segment".  This is a key difference from how <a href> works and a
-      // major reason we call this a "to" value instead of a "href".
+      // With relative="route" (the default), each leading .. segment means
+      // "go up one route" instead of "go up one URL segment".  This is a key
+      // difference from how <a href> works and a major reason we call this a
+      // "to" value instead of a "href".
       while (toSegments[0] === "..") {
         toSegments.shift();
         routePathnameIndex -= 1;
