@@ -815,7 +815,9 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           return [
             'import { createElement } from "react";',
             'export * from "@remix-run/react";',
-            `export const LiveReload = ${viteCommand !== "serve"} ? () => null : `,
+            `export const LiveReload = ${
+              viteCommand !== "serve"
+            } ? () => null : `,
             '() => createElement("script", {',
             "  dangerouslySetInnerHTML: { ",
             "    __html: `window.__remixLiveReloadEnabled = true`",
