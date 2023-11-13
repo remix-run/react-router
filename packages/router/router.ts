@@ -411,7 +411,7 @@ export interface RouterSubscriber {
     opts: {
       deletedFetchers: string[];
       unstable_viewTransitionOpts?: ViewTransitionOpts;
-      unstable_flushSync?: boolean;
+      unstable_flushSync: boolean;
     }
   ): void;
 }
@@ -843,9 +843,6 @@ export function createRouter(init: RouterInit): Router {
   // Should the current navigation enable document.startViewTransition?
   let pendingViewTransitionEnabled = false;
 
-  // Should the current navigation use flushSync for state updates?
-  let pendingFlushSync = false;
-
   // Store applied view transitions so we can apply them on POP
   let appliedViewTransitions: Map<string, Set<string>> = new Map<
     string,
@@ -967,7 +964,7 @@ export function createRouter(init: RouterInit): Router {
             reset() {
               let blockers = new Map(state.blockers);
               blockers.set(blockerKey!, IDLE_BLOCKER);
-              updateState({ blockers }, { flushSync: false });
+              updateState({ blockers });
             },
           });
           return;
@@ -1024,9 +1021,9 @@ export function createRouter(init: RouterInit): Router {
   function updateState(
     newState: Partial<RouterState>,
     opts: {
-      flushSync: boolean;
+      flushSync?: boolean;
       viewTransitionOpts?: ViewTransitionOpts;
-    }
+    } = {}
   ): void {
     state = {
       ...state,
@@ -1060,7 +1057,7 @@ export function createRouter(init: RouterInit): Router {
       subscriber(state, {
         deletedFetchers: deletedFetchersKeys,
         unstable_viewTransitionOpts: opts.viewTransitionOpts,
-        unstable_flushSync: opts.flushSync,
+        unstable_flushSync: opts.flushSync === true,
       })
     );
 
@@ -1078,7 +1075,8 @@ export function createRouter(init: RouterInit): Router {
   // - Can pass any other state in newState
   function completeNavigation(
     location: Location,
-    newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>
+    newState: Partial<Omit<RouterState, "action" | "location" | "navigation">>,
+    { flushSync }: { flushSync?: boolean } = {}
   ): void {
     // Deduce if we're in a loading/actionReload state:
     // - We have committed actionData in the store
@@ -1202,7 +1200,7 @@ export function createRouter(init: RouterInit): Router {
       },
       {
         viewTransitionOpts,
-        flushSync: pendingFlushSync,
+        flushSync: flushSync === true,
       }
     );
 
@@ -1210,7 +1208,6 @@ export function createRouter(init: RouterInit): Router {
     pendingAction = HistoryAction.Pop;
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
-    pendingFlushSync = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     cancelledDeferredRoutes = [];
@@ -1308,7 +1305,7 @@ export function createRouter(init: RouterInit): Router {
         reset() {
           let blockers = new Map(state.blockers);
           blockers.set(blockerKey!, IDLE_BLOCKER);
-          updateState({ blockers }, { flushSync });
+          updateState({ blockers });
         },
       });
       return;
@@ -1331,7 +1328,7 @@ export function createRouter(init: RouterInit): Router {
   // loaders during the next loader round
   function revalidate() {
     interruptActiveLoads();
-    updateState({ revalidation: "loading" }, { flushSync: false });
+    updateState({ revalidation: "loading" });
 
     // If we're currently submitting an action, we don't need to start a new
     // navigation, we'll just let the follow up loader execution call all loaders
@@ -1392,11 +1389,11 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     pendingViewTransitionEnabled = (opts && opts.enableViewTransition) === true;
-    pendingFlushSync = (opts && opts.flushSync) === true;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
     let matches = matchRoutes(routesToUse, location, basename);
+    let flushSync = (opts && opts.flushSync) === true;
 
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
@@ -1405,13 +1402,17 @@ export function createRouter(init: RouterInit): Router {
         getShortCircuitMatches(routesToUse);
       // Cancel all pending deferred on 404s since we don't keep any routes
       cancelActiveDeferreds();
-      completeNavigation(location, {
-        matches: notFoundMatches,
-        loaderData: {},
-        errors: {
-          [route.id]: error,
+      completeNavigation(
+        location,
+        {
+          matches: notFoundMatches,
+          loaderData: {},
+          errors: {
+            [route.id]: error,
+          },
         },
-      });
+        { flushSync }
+      );
       return;
     }
 
@@ -1427,7 +1428,7 @@ export function createRouter(init: RouterInit): Router {
       isHashChangeOnly(state.location, location) &&
       !(opts && opts.submission && isMutationMethod(opts.submission.formMethod))
     ) {
-      completeNavigation(location, { matches });
+      completeNavigation(location, { matches }, { flushSync });
       return;
     }
 
@@ -1461,7 +1462,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
-        { replace: opts.replace }
+        { replace: opts.replace, flushSync }
       );
 
       if (actionOutput.shortCircuited) {
@@ -1471,6 +1472,7 @@ export function createRouter(init: RouterInit): Router {
       pendingActionData = actionOutput.pendingActionData;
       pendingError = actionOutput.pendingActionError;
       loadingNavigation = getLoadingNavigation(location, opts.submission);
+      flushSync = false;
 
       // Create a GET request for the loaders
       request = new Request(request.url, { signal: request.signal });
@@ -1485,6 +1487,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.submission,
       opts && opts.fetcherSubmission,
       opts && opts.replace,
+      flushSync,
       pendingActionData,
       pendingError
     );
@@ -1513,13 +1516,13 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
-    opts: { replace?: boolean } = {}
+    opts: { replace?: boolean; flushSync?: boolean } = {}
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
 
     // Put us in a submitting state
     let navigation = getSubmittingNavigation(location, submission);
-    updateState({ navigation }, { flushSync: pendingFlushSync });
+    updateState({ navigation }, { flushSync: opts.flushSync === true });
 
     // Call our action and get the result
     let result: DataResult;
@@ -1604,6 +1607,7 @@ export function createRouter(init: RouterInit): Router {
     submission?: Submission,
     fetcherSubmission?: Submission,
     replace?: boolean,
+    flushSync?: boolean,
     pendingActionData?: RouteData,
     pendingError?: RouteData
   ): Promise<HandleLoadersResult> {
@@ -1650,14 +1654,18 @@ export function createRouter(init: RouterInit): Router {
     // Short circuit if we have no loaders to run
     if (matchesToLoad.length === 0 && revalidatingFetchers.length === 0) {
       let updatedFetchers = markFetchRedirectsDone();
-      completeNavigation(location, {
-        matches,
-        loaderData: {},
-        // Commit pending error if we're short circuiting
-        errors: pendingError || null,
-        ...(pendingActionData ? { actionData: pendingActionData } : {}),
-        ...(updatedFetchers ? { fetchers: new Map(state.fetchers) } : {}),
-      });
+      completeNavigation(
+        location,
+        {
+          matches,
+          loaderData: {},
+          // Commit pending error if we're short circuiting
+          errors: pendingError || null,
+          ...(pendingActionData ? { actionData: pendingActionData } : {}),
+          ...(updatedFetchers ? { fetchers: new Map(state.fetchers) } : {}),
+        },
+        { flushSync }
+      );
       return { shortCircuited: true };
     }
 
@@ -1688,7 +1696,7 @@ export function createRouter(init: RouterInit): Router {
             : {}),
         },
         {
-          flushSync: pendingFlushSync,
+          flushSync,
         }
       );
     }
@@ -1934,7 +1942,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (deletedFetchers.has(key)) {
-      updateFetcherState(key, getDoneFetcher(undefined), { flushSync });
+      updateFetcherState(key, getDoneFetcher(undefined));
       return;
     }
 
@@ -1945,11 +1953,11 @@ export function createRouter(init: RouterInit): Router {
         // should take precedence over this redirect navigation.  We already
         // set isRevalidationRequired so all loaders for the new route should
         // fire unless opted out via shouldRevalidate
-        updateFetcherState(key, getDoneFetcher(undefined), { flushSync });
+        updateFetcherState(key, getDoneFetcher(undefined));
         return;
       } else {
         fetchRedirectIds.add(key);
-        updateFetcherState(key, getLoadingFetcher(submission), { flushSync });
+        updateFetcherState(key, getLoadingFetcher(submission));
         return startRedirectNavigation(state, actionResult, {
           fetcherSubmission: submission,
         });
@@ -1958,7 +1966,7 @@ export function createRouter(init: RouterInit): Router {
 
     // Process any non-redirect errors thrown
     if (isErrorResult(actionResult)) {
-      setFetcherError(key, routeId, actionResult.error, { flushSync });
+      setFetcherError(key, routeId, actionResult.error);
       return;
     }
 
@@ -2026,7 +2034,7 @@ export function createRouter(init: RouterInit): Router {
         }
       });
 
-    updateState({ fetchers: new Map(state.fetchers) }, { flushSync });
+    updateState({ fetchers: new Map(state.fetchers) });
 
     let abortPendingFetchRevalidations = () =>
       revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
@@ -2112,19 +2120,16 @@ export function createRouter(init: RouterInit): Router {
       // otherwise just update with the fetcher data, preserving any existing
       // loaderData for loaders that did not need to reload.  We have to
       // manually merge here since we aren't going through completeNavigation
-      updateState(
-        {
-          errors,
-          loaderData: mergeLoaderData(
-            state.loaderData,
-            loaderData,
-            matches,
-            errors
-          ),
-          fetchers: new Map(state.fetchers),
-        },
-        { flushSync }
-      );
+      updateState({
+        errors,
+        loaderData: mergeLoaderData(
+          state.loaderData,
+          loaderData,
+          matches,
+          errors
+        ),
+        fetchers: new Map(state.fetchers),
+      });
       isRevalidationRequired = false;
     }
   }
@@ -2190,7 +2195,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (deletedFetchers.has(key)) {
-      updateFetcherState(key, getDoneFetcher(undefined), { flushSync });
+      updateFetcherState(key, getDoneFetcher(undefined));
       return;
     }
 
@@ -2199,7 +2204,7 @@ export function createRouter(init: RouterInit): Router {
       if (pendingNavigationLoadId > originatingLoadId) {
         // A new navigation was kicked off after our loader started, so that
         // should take precedence over this redirect navigation
-        updateFetcherState(key, getDoneFetcher(undefined), { flushSync });
+        updateFetcherState(key, getDoneFetcher(undefined));
         return;
       } else {
         fetchRedirectIds.add(key);
@@ -2210,14 +2215,14 @@ export function createRouter(init: RouterInit): Router {
 
     // Process any non-redirect errors thrown
     if (isErrorResult(result)) {
-      setFetcherError(key, routeId, result.error, { flushSync });
+      setFetcherError(key, routeId, result.error);
       return;
     }
 
     invariant(!isDeferredResult(result), "Unhandled fetcher deferred data");
 
     // Put the fetcher back into an idle state
-    updateFetcherState(key, getDoneFetcher(result.data), { flushSync });
+    updateFetcherState(key, getDoneFetcher(result.data));
   }
 
   /**
@@ -2429,12 +2434,12 @@ export function createRouter(init: RouterInit): Router {
   function updateFetcherState(
     key: string,
     fetcher: Fetcher,
-    opts: { flushSync: boolean }
+    opts: { flushSync?: boolean } = {}
   ) {
     state.fetchers.set(key, fetcher);
     updateState(
       { fetchers: new Map(state.fetchers) },
-      { flushSync: opts.flushSync }
+      { flushSync: (opts && opts.flushSync) === true }
     );
   }
 
@@ -2442,7 +2447,7 @@ export function createRouter(init: RouterInit): Router {
     key: string,
     routeId: string,
     error: any,
-    opts: { flushSync: boolean }
+    opts: { flushSync?: boolean } = {}
   ) {
     let boundaryMatch = findNearestBoundary(state.matches, routeId);
     deleteFetcher(key);
@@ -2453,7 +2458,7 @@ export function createRouter(init: RouterInit): Router {
         },
         fetchers: new Map(state.fetchers),
       },
-      { flushSync: opts.flushSync }
+      { flushSync: (opts && opts.flushSync) === true }
     );
   }
 
@@ -2499,7 +2504,7 @@ export function createRouter(init: RouterInit): Router {
     } else {
       deleteFetcher(key);
     }
-    updateState({ fetchers: new Map(state.fetchers) }, { flushSync: false });
+    updateState({ fetchers: new Map(state.fetchers) });
   }
 
   function abortFetcher(key: string) {
@@ -2582,7 +2587,7 @@ export function createRouter(init: RouterInit): Router {
 
     let blockers = new Map(state.blockers);
     blockers.set(key, newBlocker);
-    updateState({ blockers }, { flushSync: false });
+    updateState({ blockers });
   }
 
   function shouldBlockNavigation({
@@ -2656,7 +2661,7 @@ export function createRouter(init: RouterInit): Router {
       initialScrollRestored = true;
       let y = getSavedScrollPosition(state.location, state.matches);
       if (y != null) {
-        updateState({ restoreScrollPosition: y }, { flushSync: false });
+        updateState({ restoreScrollPosition: y });
       }
     }
 

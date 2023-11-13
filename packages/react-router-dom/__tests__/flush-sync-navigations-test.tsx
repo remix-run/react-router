@@ -2,8 +2,6 @@ import * as React from "react";
 import {
   RouterProvider,
   createBrowserRouter,
-  Form,
-  Link,
   useNavigate,
   useSubmit,
   useFetcher,
@@ -147,7 +145,7 @@ describe("flushSync", () => {
     await waitFor(() => screen.getByText("Home"));
     expect(spy).toBeCalledTimes(4);
     expect(spy.mock.calls[2][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
+    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(false);
 
     router.dispose();
   });
@@ -211,7 +209,7 @@ describe("flushSync", () => {
     await waitFor(() => screen.getByText("sync:LOADER:idle"));
     expect(spy).toBeCalledTimes(4);
     expect(spy.mock.calls[2][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
+    expect(spy.mock.calls[3][1].unstable_flushSync).toBe(false);
 
     router.dispose();
   });
@@ -277,8 +275,8 @@ describe("flushSync", () => {
     await waitFor(() => screen.getByText("sync:ACTION:idle"));
     expect(spy).toBeCalledTimes(6);
     expect(spy.mock.calls[3][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[4][1].unstable_flushSync).toBe(true);
-    expect(spy.mock.calls[5][1].unstable_flushSync).toBe(true);
+    expect(spy.mock.calls[4][1].unstable_flushSync).toBe(false);
+    expect(spy.mock.calls[5][1].unstable_flushSync).toBe(false);
 
     router.dispose();
   });

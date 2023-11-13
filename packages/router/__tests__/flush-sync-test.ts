@@ -36,7 +36,7 @@ describe("flushSync", () => {
     await B.loaders.b.resolve("B");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ unstable_flushSync: true })
+      expect.objectContaining({ unstable_flushSync: false })
     );
 
     unsubscribe();
@@ -80,7 +80,7 @@ describe("flushSync", () => {
     await B.actions.b.resolve("B");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ unstable_flushSync: true })
+      expect.objectContaining({ unstable_flushSync: false })
     );
 
     unsubscribe();
@@ -114,6 +114,10 @@ describe("flushSync", () => {
 
     await B.loaders.root.resolve("ROOT2");
     expect(t.router.state.fetchers.get(key)?.data).toBe("ROOT2");
+    expect(spy).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ unstable_flushSync: false })
+    );
 
     unsubscribe();
     t.router.dispose();
@@ -159,7 +163,7 @@ describe("flushSync", () => {
     expect(t.router.state.fetchers.get(key)?.data).toBe("ROOT2");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ unstable_flushSync: true })
+      expect.objectContaining({ unstable_flushSync: false })
     );
 
     unsubscribe();
