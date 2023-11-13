@@ -91,7 +91,11 @@ function EditContact() {
 
 The `unstable_flushSync` option tells React Router DOM to wrap the initial state update for this navigation in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.
 
+<docs-warning>`unstable_flushSync` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
+
 <docs-warning>`ReactDOM.flushSync` de-optimizes React and can hurt the performance of your app.</docs-warning>
+
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
 
 ## `options.unstable_viewTransition`
 

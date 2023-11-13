@@ -107,7 +107,7 @@ function SomeComponent() {
 
 ## Methods
 
-## `fetcher.load(href, options)`
+### `fetcher.load(href, options)`
 
 Loads data from a route loader.
 
@@ -133,13 +133,15 @@ If you find yourself calling this function inside of click handlers, you can pro
 
 <docs-info>Any `fetcher.load` calls that are active on the page will be re-executed as part of revalidation (either after a navigation submission, another fetcher submission, or a `useRevalidator()` call)</docs-info>
 
-### `options.unstable_flushSync`
+#### `options.unstable_flushSync`
 
 The `unstable_flushSync` option tells React Router DOM to wrap the initial state update for this `fetcher.load` in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.
 
 <docs-warning>`ReactDOM.flushSync` de-optimizes React and can hurt the performance of your app.</docs-warning>
 
-## `fetcher.submit()`
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
+
+### `fetcher.submit()`
 
 The imperative version of `<fetcher.Form>`. If a user interaction should initiate the fetch, you should use `<fetcher.Form>`. But if you, the programmer are initiating the fetch (not in response to a user clicking a button, etc.), then use this function.
 

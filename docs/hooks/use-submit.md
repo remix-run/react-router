@@ -166,6 +166,8 @@ The `unstable_flushSync` option tells React Router DOM to wrap the initial state
 
 <docs-warning>`ReactDOM.flushSync` de-optimizes React and can hurt the performance of your app.</docs-warning>
 
+<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
+
 [pickingarouter]: ../routers/picking-a-router
 [form]: ../components/form
 [flush-sync]: https://react.dev/reference/react-dom/flushSync
