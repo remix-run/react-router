@@ -143,7 +143,7 @@ To add a new release, copy from this template:
 
 ### Patch Changes
 
-**Full Changelog**: [`6.X.Y...6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
+**Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 
 -->
 
@@ -321,7 +321,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 - Fix a race-condition with loader/action-thrown errors on `route.lazy` routes ([#10778](https://github.com/remix-run/react-router/pull/10778))
 - Fix type for `actionResult` on the arguments object passed to `shouldRevalidate` ([#10779](https://github.com/remix-run/react-router/pull/10779))
 
-**Full Changelog**: [6.15.0...6.16.0](https://github.com/remix-run/react-router/compare/react-router@6.15.0...react-router@6.16.0)
+**Full Changelog**: [`v6.15.0...v6.16.0`](https://github.com/remix-run/react-router/compare/react-router@6.15.0...react-router@6.16.0)
 
 ## v6.15.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.15.0)
 
@@ -339,7 +339,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 - SSR: Fix an issue in `queryRoute` that was not always identifying thrown `Response` instances ([#10717](https://github.com/remix-run/react-router/pull/10717))
 - `react-router-native`: Update `@ungap/url-search-params` dependency from `^0.1.4` to `^0.2.2` ([#10590](https://github.com/remix-run/react-router/pull/10590))
 
-**Full Changelog**: [6.14.2...6.15.0](https://github.com/remix-run/react-router/compare/react-router@6.14.2...react-router@6.15.0)
+**Full Changelog**: [`v6.14.2...v6.15.0`](https://github.com/remix-run/react-router/compare/react-router@6.14.2...react-router@6.15.0)
 
 ## v6.14.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.2)
 
@@ -353,7 +353,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 - Typescript: Enhance the return type of `Route.lazy` to prohibit returning an empty object ([#10634](https://github.com/remix-run/react-router/pull/10634))
 - SSR: Support proper hydration of `Error` subclasses such as `ReferenceError`/`TypeError` ([#10633](https://github.com/remix-run/react-router/pull/10633))
 
-**Full Changelog**: [6.14.1...6.14.2](https://github.com/remix-run/react-router/compare/react-router@6.14.1...react-router@6.14.2)
+**Full Changelog**: [`v6.14.1...v6.14.2`](https://github.com/remix-run/react-router/compare/react-router@6.14.1...react-router@6.14.2)
 
 ## v6.14.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.1)
 
@@ -364,7 +364,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 - Updated dependencies:
   - `@remix-run/router@1.7.1`
 
-**Full Changelog**: [6.14.0...6.14.1](https://github.com/remix-run/react-router/compare/react-router@6.14.0...react-router@6.14.1)
+**Full Changelog**: [`v6.14.0...v6.14.1`](https://github.com/remix-run/react-router/compare/react-router@6.14.0...react-router@6.14.1)
 
 ## v6.14.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.0)
 
@@ -448,7 +448,7 @@ This behavior will likely change in v7 so it's best to make any JSON object subm
 - Fix `tsc --skipLibCheck:false` issues on React 17 ([#10622](https://github.com/remix-run/react-router/pull/10622))
 - Upgrade `typescript` to 5.1 ([#10581](https://github.com/remix-run/react-router/pull/10581))
 
-**Full Changelog**: [6.13.0...6.14.0](https://github.com/remix-run/react-router/compare/react-router@6.13.0...react-router@6.14.0)
+**Full Changelog**: [`v6.13.0...v6.14.0`](https://github.com/remix-run/react-router/compare/react-router@6.13.0...react-router@6.14.0)
 
 ## v6.13.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.13.0)
 
@@ -488,7 +488,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 - Work around webpack/terser `React.startTransition` minification bug in production mode ([#10588](https://github.com/remix-run/react-router/pull/10588))
 
-**Full Changelog**: [6.12.1...6.13.0](https://github.com/remix-run/react-router/compare/react-router@6.12.1...react-router@6.13.0)
+**Full Changelog**: [`v6.12.1...v6.13.0`](https://github.com/remix-run/react-router/compare/react-router@6.12.1...react-router@6.13.0)
 
 ## v6.12.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.1)
 
@@ -499,7 +499,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 - Adjust feature detection of `React.startTransition` to fix webpack + react 17 compilation error ([#10569](https://github.com/remix-run/react-router/pull/10569))
 
-**Full Changelog**: [6.12.0...6.12.1](https://github.com/remix-run/react-router/compare/react-router@6.12.0...react-router@6.12.1)
+**Full Changelog**: [`v6.12.0...v6.12.1`](https://github.com/remix-run/react-router/compare/react-router@6.12.0...react-router@6.12.1)
 
 ## v6.12.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0)
 
@@ -525,7 +525,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 - Updated dependencies:
   - `@remix-run/router@1.6.3` ([Changelog](https://github.com/remix-run/react-router/blob/main/packages/router/CHANGELOG.md#163))
 
-**Full Changelog**: [6.11.2...6.12.0](https://github.com/remix-run/react-router/compare/react-router@6.11.2...react-router@6.12.0)
+**Full Changelog**: [`v6.11.2...v6.12.0`](https://github.com/remix-run/react-router/compare/react-router@6.11.2...react-router@6.12.0)
 
 ## v6.11.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.2)
 
@@ -536,7 +536,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 - Export `SetURLSearchParams` type ([#10444](https://github.com/remix-run/react-router/pull/10444))
 - Fix Remix HMR-driven error boundaries by properly reconstructing new routes and `manifest` in `_internalSetRoutes` ([#10437](https://github.com/remix-run/react-router/pull/10437))
 
-**Full Changelog**: [6.11.1...6.11.2](https://github.com/remix-run/react-router/compare/react-router@6.11.1...react-router@6.11.2)
+**Full Changelog**: [`v6.11.1...v6.11.2`](https://github.com/remix-run/react-router/compare/react-router@6.11.1...react-router@6.11.2)
 
 ## v6.11.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.1)
 
@@ -548,7 +548,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 - Fix `basename` handling when navigating without a path ([#10433](https://github.com/remix-run/react-router/pull/10433))
 - "Same hash" navigations no longer re-run loaders to match browser behavior (i.e. `/path#hash -> /path#hash`) ([#10408](https://github.com/remix-run/react-router/pull/10408))
 
-**Full Changelog**: [6.11.0...6.11.1](https://github.com/remix-run/react-router/compare/react-router@6.11.0...react-router@6.11.1)
+**Full Changelog**: [`v6.11.0...v6.11.1`](https://github.com/remix-run/react-router/compare/react-router@6.11.0...react-router@6.11.1)
 
 ## v6.11.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.0)
 
@@ -575,7 +575,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 - Ensure proper 404 error on `fetcher.load` call to a route without a `loader` ([#10345](https://github.com/remix-run/react-router/pull/10345))
 - Decouple `AbortController` usage between revalidating fetchers and the thing that triggered them such that the unmount/deletion of a revalidating fetcher doesn't impact the ongoing triggering navigation/revalidation ([#10271](https://github.com/remix-run/react-router/pull/10271))
 
-**Full Changelog**: [6.10.0...6.11.0](https://github.com/remix-run/react-router/compare/react-router@6.10.0...react-router@6.11.0)
+**Full Changelog**: [`v6.10.0...v6.11.0`](https://github.com/remix-run/react-router/compare/react-router@6.10.0...react-router@6.11.0)
 
 ## v6.10.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.10.0)
 
@@ -613,7 +613,7 @@ You can also check out the docs [here](https://reactrouter.com/en/dev/guides/api
 - Remove `instanceof` check for `DeferredData` to be resilient to ESM/CJS boundaries in SSR bundling scenarios ([#10247](https://github.com/remix-run/react-router/pull/10247))
 - Update to latest `@remix-run/web-fetch@4.3.3` ([#10216](https://github.com/remix-run/react-router/pull/10216))
 
-**Full Changelog**: [6.9.0...6.10.0](https://github.com/remix-run/react-router/compare/react-router@6.9.0...react-router@6.10.0)
+**Full Changelog**: [`v6.9.0...v6.10.0`](https://github.com/remix-run/react-router/compare/react-router@6.9.0...react-router@6.10.0)
 
 ## v6.9.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.9.0)
 
@@ -728,7 +728,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 - Fix `generatePath` incorrectly applying parameters in some cases ([#10078](https://github.com/remix-run/react-router/pull/10078))
 - `[react-router-dom-v5-compat]` Add missed data router API re-exports ([#10171](https://github.com/remix-run/react-router/pull/10171))
 
-**Full Changelog**: [6.8.2...6.9.0](https://github.com/remix-run/react-router/compare/react-router@6.8.2...react-router@6.9.0)
+**Full Changelog**: [`v6.8.2...v6.9.0`](https://github.com/remix-run/react-router/compare/react-router@6.8.2...react-router@6.9.0)
 
 ## v6.8.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.2)
 
@@ -742,7 +742,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 - Ensure status code and headers are maintained for `defer` loader responses in `createStaticHandler`'s `query()` method ([#10077](https://github.com/remix-run/react-router/pull/10077))
 - Change `invariant` to an `UNSAFE_invariant` export since it's only intended for internal use ([#10066](https://github.com/remix-run/react-router/pull/10066))
 
-**Full Changelog**: [6.8.1...6.8.2](https://github.com/remix-run/react-router/compare/react-router@6.8.1...react-router@6.8.2)
+**Full Changelog**: [`v6.8.1...v6.8.2`](https://github.com/remix-run/react-router/compare/react-router@6.8.1...react-router@6.8.2)
 
 ## v6.8.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.1)
 
@@ -753,7 +753,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 - Improved absolute url detection in `Link` component (now also supports `mailto:` urls) ([#9994](https://github.com/remix-run/react-router/pull/9994))
 - Fix partial object (search or hash only) pathnames losing current path value ([#10029](https://github.com/remix-run/react-router/pull/10029))
 
-**Full Changelog**: [6.8.0...6.8.1](https://github.com/remix-run/react-router/compare/react-router@6.8.0...react-router@6.8.1)
+**Full Changelog**: [`v6.8.0...v6.8.1`](https://github.com/remix-run/react-router/compare/react-router@6.8.0...react-router@6.8.1)
 
 ## v6.8.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.0)
 
@@ -810,7 +810,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 - Ensure `useId` consistency during SSR ([#9805](https://github.com/remix-run/react-router/pull/9805))
 
-**Full Changelog**: [6.6.1...6.6.2](https://github.com/remix-run/react-router/compare/react-router@6.6.1...react-router@6.6.2)
+**Full Changelog**: [`v6.6.1...v6.6.2`](https://github.com/remix-run/react-router/compare/react-router@6.6.1...react-router@6.6.2)
 
 ## v6.6.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.6.1)
 
@@ -819,7 +819,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 - Include submission info in `shouldRevalidate` on action redirects ([#9777](https://github.com/remix-run/react-router/pull/9777), [#9782](https://github.com/remix-run/react-router/pull/9782))
 - Reset `actionData` on action redirect to current location ([#9772](https://github.com/remix-run/react-router/pull/9772))
 
-**Full Changelog**: [6.6.0...6.6.1](https://github.com/remix-run/react-router/compare/react-router@6.6.0...react-router@6.6.1)
+**Full Changelog**: [`v6.6.0...v6.6.1`](https://github.com/remix-run/react-router/compare/react-router@6.6.0...react-router@6.6.1)
 
 ## v6.6.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.6.0)
 
@@ -842,7 +842,7 @@ This minor release is primarily to stabilize our SSR APIs for Data Routers now t
 - Skip initial scroll restoration for SSR apps with `hydrationData` ([#9664](https://github.com/remix-run/react-router/pull/9664))
 - Fix a few bugs where loader/action data wasn't properly cleared on errors ([#9735](https://github.com/remix-run/react-router/pull/9735))
 
-**Full Changelog**: [6.5.0...6.6.0](https://github.com/remix-run/react-router/compare/react-router@6.5.0...react-router@6.6.0)
+**Full Changelog**: [`v6.5.0...v6.6.0`](https://github.com/remix-run/react-router/compare/react-router@6.5.0...react-router@6.6.0)
 
 ## v6.5.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.5.0)
 
@@ -904,7 +904,7 @@ function Comp() {
 - GET forms now expose a submission on the loading navigation ([#9695](https://github.com/remix-run/react-router/pull/9695))
 - Fix error boundary tracking for multiple errors bubbling to the same boundary ([#9702](https://github.com/remix-run/react-router/pull/9702))
 
-**Full Changelog**: [6.4.5...6.5.0](https://github.com/remix-run/react-router/compare/react-router@6.4.5...react-router@6.5.0)
+**Full Changelog**: [`v6.4.5...v6.5.0`](https://github.com/remix-run/react-router/compare/react-router@6.4.5...react-router@6.5.0)
 
 ## v6.4.5 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.5)
 
@@ -916,7 +916,7 @@ function Comp() {
 - Add `requestContext` support to static handler `query`/`queryRoute` ([#9696](https://github.com/remix-run/react-router/pull/9696))
   - Note that the unstable API of `queryRoute(path, routeId)` has been changed to `queryRoute(path, { routeId, requestContext })`
 
-**Full Changelog**: [6.4.4...6.4.5](https://github.com/remix-run/react-router/compare/react-router@6.4.4...react-router@6.4.5)
+**Full Changelog**: [`v6.4.4...v6.4.5`](https://github.com/remix-run/react-router/compare/react-router@6.4.4...react-router@6.4.5)
 
 ## v6.4.4 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router-dom%406.4.4)
 
@@ -934,7 +934,7 @@ function Comp() {
   - `@remix-run/router@1.0.4`
   - `react-router@6.4.4`
 
-**Full Changelog**: [6.4.3...6.4.4](https://github.com/remix-run/react-router/compare/react-router-dom@6.4.3...react-router-dom@6.4.4)
+**Full Changelog**: [`v6.4.3...v6.4.4`](https://github.com/remix-run/react-router/compare/react-router-dom@6.4.3...react-router-dom@6.4.4)
 
 ## v6.4.3 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.3)
 
@@ -952,7 +952,7 @@ function Comp() {
 - Add UMD build for `@remix-run/router` (#9446)
 - Fix `createURL` in local file execution in Firefox (#9464)
 
-**Full Changelog**: [6.4.2...6.4.3](https://github.com/remix-run/react-router/compare/react-router@6.4.2...react-router@6.4.3)
+**Full Changelog**: [`v6.4.2...v6.4.3`](https://github.com/remix-run/react-router/compare/react-router@6.4.2...react-router@6.4.3)
 
 ## v6.4.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.2)
 
@@ -963,7 +963,7 @@ function Comp() {
 - Enhance console error messages for invalid usage of data router hooks ([#9311](https://github.com/remix-run/react-router/pull/9311))
 - If an index route has children, it will result in a runtime error. We have strengthened our `RouteObject`/`RouteProps` types to surface the error in TypeScript. ([#9366](https://github.com/remix-run/react-router/pull/9366))
 
-**Full Changelog**: [6.4.1...6.4.2](https://github.com/remix-run/react-router/compare/react-router@6.4.1...react-router@6.4.2)
+**Full Changelog**: [`v6.4.1...v6.4.2`](https://github.com/remix-run/react-router/compare/react-router@6.4.1...react-router@6.4.2)
 
 ## v6.4.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.1)
 
@@ -972,7 +972,7 @@ function Comp() {
 - Preserve state from `initialEntries` ([#9288](https://github.com/remix-run/react-router/pull/9288))
 - Preserve `?index` for fetcher get submissions to index routes ([#9312](https://github.com/remix-run/react-router/pull/9312))
 
-**Full Changelog**: [6.4.0...6.4.1](https://github.com/remix-run/react-router/compare/react-router@6.4.0...react-router@6.4.1)
+**Full Changelog**: [`v6.4.0...v6.4.1`](https://github.com/remix-run/react-router/compare/react-router@6.4.0...react-router@6.4.1)
 
 ## v6.4.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.0)
 
@@ -1005,13 +1005,15 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - `useLocation` returns the scoped location inside a `<Routes location>` component (#9094)
 - Respect the `<Link replace>` prop if it is defined (#8779)
 
+**Full Changelog**: [`v6.3.0...v6.4.0`](https://github.com/remix-run/react-router/compare/v6.3.0...v6.4.0)
+
 ## v6.3.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.3.0)
 
 ### Minor Changes
 
 - Added the v5 to v6 backwards compatibility package 💜 ([#8752](https://github.com/remix-run/react-router/pull/8752)). The official guide can be found [in this discussion](https://github.com/remix-run/react-router/discussions/8753)
 
-**Full Changelog**: [6.2.2...6.3.0](https://github.com/remix-run/react-router/compare/v6.2.2...v6.3.0)
+**Full Changelog**: [`v6.2.2...v6.3.0`](https://github.com/remix-run/react-router/compare/v6.2.2...v6.3.0)
 
 ## v6.2.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.2.2)
 
@@ -1020,7 +1022,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - Fixed nested splat routes that begin with special URL-safe characters (#8563)
 - Fixed a bug where index routes were missing route context in some cases (#8497)
 
-**Full Changelog**: [6.2.1...6.2.2](https://github.com/remix-run/react-router/compare/v6.2.1...v6.2.2)
+**Full Changelog**: [`v6.2.1...v6.2.2`](https://github.com/remix-run/react-router/compare/v6.2.1...v6.2.2)
 
 ## v6.2.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.2.1)
 
@@ -1028,7 +1030,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 - This release updates the internal `history` dependency to `5.2.0`.
 
-**Full Changelog**: [6.2.0...6.2.1](https://github.com/remix-run/react-router/compare/v6.2.0...v6.2.1)
+**Full Changelog**: [`v6.2.0...v6.2.1`](https://github.com/remix-run/react-router/compare/v6.2.0...v6.2.1)
 
 ## v6.2.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.2.0)
 
@@ -1041,7 +1043,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - Fixed the `RouteProps` `element` type, which should be a `ReactNode` (#8473)
 - Fixed a bug with `useOutlet` for top-level routes (#8483)
 
-**Full Changelog**: [6.1.1...6.2.0](https://github.com/remix-run/react-router/compare/v6.1.1...v6.2.0)
+**Full Changelog**: [`v6.1.1...v6.2.0`](https://github.com/remix-run/react-router/compare/v6.1.1...v6.2.0)
 
 ## v6.1.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.1.1)
 
@@ -1049,7 +1051,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 - In v6.1.0 we inadvertently shipped a new, undocumented API that will likely introduce bugs (#7586). We have flagged `HistoryRouter` as `unstable_HistoryRouter`, as this API will likely need to change before a new major release.
 
-**Full Changelog**: [6.1.0...6.1.1](https://github.com/remix-run/react-router/compare/v6.1.0...v6.1.1)
+**Full Changelog**: [`v6.1.0...v6.1.1`](https://github.com/remix-run/react-router/compare/v6.1.0...v6.1.1)
 
 ## v6.1.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.1.0)
 
@@ -1064,7 +1066,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - Fixed a bug that broke support for base64 encoded IDs on nested routes (#8291)
 - A few error message improvements (#8202)
 
-**Full Changelog**: [6.0.1...6.1.0](https://github.com/remix-run/react-router/compare/v6.0.1...v6.1.0)
+**Full Changelog**: [`v6.0.1...v6.1.0`](https://github.com/remix-run/react-router/compare/v6.0.1...v6.1.0)
 
 ## v6.0.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.0.1)
 
@@ -1072,6 +1074,8 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 - Add a default `<StaticRouter location>` value (#8243)
 - Add invariant for using `<Route>` inside `<Routes>` to help people make the change (#8238)
+
+**Full Changelog**: [`v6.0.0...v6.0.1`](https://github.com/remix-run/react-router/compare/v6.0.1...v6.1.0)
 
 ## v6.0.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.0.0)
 
