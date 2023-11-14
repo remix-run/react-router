@@ -2,7 +2,7 @@
 
 # React Router Releases
 
-This page lists all all releases/release notes for React Router back to `v6.0.0`. For releases prior to v6, please refer to the [Github Releases Page](https://github.com/remix-run/react-router/releases).
+This page lists all releases/release notes for React Router back to `v6.0.0`. For releases prior to v6, please refer to the [Github Releases Page](https://github.com/remix-run/react-router/releases).
 
 We manage release notes in this file instead of the paginated Github Releases Page for 2 reasons:
 
