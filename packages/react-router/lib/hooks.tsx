@@ -850,10 +850,14 @@ export function useMatches(): UIMatch[] {
   );
 }
 
+type DataReturnType<T> = T extends (...args: any[]) => infer Output
+  ? Awaited<Output>
+  : unknown;
+
 /**
  * Returns the loader data for the nearest ancestor Route loader
  */
-export function useLoaderData(): unknown {
+export function useLoaderData<T>(): DataReturnType<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
 
@@ -861,6 +865,7 @@ export function useLoaderData(): unknown {
     console.error(
       `You cannot \`useLoaderData\` in an errorElement (routeId: ${routeId})`
     );
+    // @ts-ignore
     return undefined;
   }
   return state.loaderData[routeId];
@@ -869,7 +874,9 @@ export function useLoaderData(): unknown {
 /**
  * Returns the loaderData for the given routeId
  */
-export function useRouteLoaderData(routeId: string): unknown {
+export function useRouteLoaderData<T>(
+  routeId: string
+): DataReturnType<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
   return state.loaderData[routeId];
 }
@@ -877,7 +884,7 @@ export function useRouteLoaderData(routeId: string): unknown {
 /**
  * Returns the action data for the nearest ancestor Route action
  */
-export function useActionData(): unknown {
+export function useActionData<T>(): DataReturnType<T> | undefined {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
 
   let route = React.useContext(RouteContext);
