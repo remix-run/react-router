@@ -233,7 +233,7 @@ const showUnstableWarning = () => {
   );
 };
 
-const getViteMajorVersion = () => {
+const getViteMajorVersion = (): number => {
   let vitePkg = require("vite/package.json");
   return parseInt(vitePkg.version.split(".")[0]!);
 };
@@ -244,6 +244,7 @@ export type RemixVitePlugin = (
 export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
   let viteCommand: Vite.ResolvedConfig["command"];
   let viteUserConfig: Vite.UserConfig;
+  let isViteV4 = getViteMajorVersion() === 4;
 
   let cssModulesManifest: Record<string, string> = {};
   let ssrBuildContext:
@@ -340,10 +341,9 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
   let createBuildManifest = async (): Promise<Manifest> => {
     let pluginConfig = await resolvePluginConfig();
 
-    let viteManifestPath =
-      getViteMajorVersion() === 4
-        ? "manifest.json"
-        : path.join(".vite", "manifest.json");
+    let viteManifestPath = isViteV4
+      ? "manifest.json"
+      : path.join(".vite", "manifest.json");
 
     let viteManifest = JSON.parse(
       await fs.readFile(
@@ -549,6 +549,40 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       async configResolved(viteConfig) {
         await initEsModuleLexer;
 
+        ssrBuildContext =
+          viteConfig.build.ssr && viteCommand === "build"
+            ? { isSsrBuild: true, getManifest: createBuildManifest }
+            : { isSsrBuild: false };
+
+        // We load the same Vite config file again for the child compiler so
+        // that both parent and child compiler's plugins have independent state.
+        // If we re-used the `viteUserConfig.plugins` array for the child
+        // compiler, it could lead to mutating shared state between plugin
+        // instances in unexpected ways, e.g. during `vite build` the
+        // `configResolved` plugin hook would be called with `command = "build"`
+        // by parent and then `command = "serve"` by child, which some plugins
+        // may respond to by updating state referenced by the parent.
+        if (!viteConfig.configFile) {
+          throw new Error(
+            "The Remix Vite plugin requires the use of a Vite config file"
+          );
+        }
+        let childCompilerConfigFile = await vite.loadConfigFromFile(
+          {
+            command: viteConfig.command,
+            mode: viteConfig.mode,
+            ...(isViteV4
+              ? { ssrBuild: ssrBuildContext.isSsrBuild }
+              : { isSsrBuild: ssrBuildContext.isSsrBuild }),
+          },
+          viteConfig.configFile
+        );
+
+        invariant(
+          childCompilerConfigFile,
+          "Vite config file was unable to be resolved for Remix child compiler"
+        );
+
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
           mode: viteConfig.mode,
@@ -562,7 +596,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           configFile: false,
           envFile: false,
           plugins: [
-            ...(viteUserConfig.plugins ?? [])
+            ...(childCompilerConfigFile.config.plugins ?? [])
               .flat()
               // Exclude this plugin from the child compiler to prevent an
               // infinite loop (plugin creates a child compiler with the same
@@ -591,11 +625,6 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           ],
         });
         await viteChildCompiler.pluginContainer.buildStart({});
-
-        ssrBuildContext =
-          viteConfig.build.ssr && viteCommand === "build"
-            ? { isSsrBuild: true, getManifest: createBuildManifest }
-            : { isSsrBuild: false };
       },
       transform(code, id) {
         if (isCssModulesFile(id)) {
