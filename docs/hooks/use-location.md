@@ -10,9 +10,15 @@ title: useLocation
 ```tsx
 declare function useLocation(): Location;
 
-interface Location extends Path {
-  state: any;
-  key: Key;
+interface Location<State = any> extends Path {
+  state: State;
+  key: string;
+}
+
+interface Path {
+  pathname: string;
+  search: string;
+  hash: string;
 }
 ```
 
@@ -38,4 +44,28 @@ function App() {
 }
 ```
 
+## Properties
+
+### `location.hash`
+
+The hash of the current URL.
+
+### `location.key`
+
+The unique key of this location.
+
+### `location.pathname`
+
+The path of the current URL.
+
+### `location.search`
+
+The query string of the current URL.
+
+### `location.state`
+
+The state value of the location created by [`<Link state>`][link-state] or [`navigate`][navigate].
+
+[link-state]: ../components/link#state
 [location]: ../utils/location
+[navigate]: ./use-navigate
