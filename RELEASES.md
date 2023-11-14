@@ -201,7 +201,7 @@ function handleClick() {
 
 **Full Changelog**: [`6.18.0...6.19.0`](https://github.com/remix-run/react-router/compare/react-router@6.18.0...react-router@6.19.0)
 
-## v6.18.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.18.0)
+## v6.18.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.18.0)
 
 ### What's Changed
 
@@ -242,7 +242,7 @@ Per the same [RFC](https://github.com/remix-run/remix/discussions/7698) as above
 
 **Full Changelog**: [`6.17.0...6.18.0`](https://github.com/remix-run/react-router/compare/react-router@6.17.0...react-router@6.18.0)
 
-## v6.17.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.17.0)
+## v6.17.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.17.0)
 
 ### What's Changed
 
@@ -302,7 +302,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [`6.16.0...6.17.0`](https://github.com/remix-run/react-router/compare/react-router@6.16.0...react-router@6.17.0)
 
-## v6.16.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.16.0)
+## v6.16.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.16.0)
 
 ### Minor Changes
 
@@ -323,7 +323,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [6.15.0...6.16.0](https://github.com/remix-run/react-router/compare/react-router@6.15.0...react-router@6.16.0)
 
-## v6.15.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.15.0)
+## v6.15.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.15.0)
 
 ### Minor Changes
 
@@ -341,7 +341,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [6.14.2...6.15.0](https://github.com/remix-run/react-router/compare/react-router@6.14.2...react-router@6.15.0)
 
-## v6.14.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.14.2)
+## v6.14.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.2)
 
 ### Patch Changes
 
@@ -355,7 +355,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [6.14.1...6.14.2](https://github.com/remix-run/react-router/compare/react-router@6.14.1...react-router@6.14.2)
 
-## v6.14.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.14.1)
+## v6.14.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.1)
 
 ### Patch Changes
 
@@ -366,7 +366,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [6.14.0...6.14.1](https://github.com/remix-run/react-router/compare/react-router@6.14.0...react-router@6.14.1)
 
-## v6.14.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.14.0)
+## v6.14.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.0)
 
 ### What's Changed
 
@@ -450,7 +450,7 @@ This behavior will likely change in v7 so it's best to make any JSON object subm
 
 **Full Changelog**: [6.13.0...6.14.0](https://github.com/remix-run/react-router/compare/react-router@6.13.0...react-router@6.14.0)
 
-## v6.13.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.13.0)
+## v6.13.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.13.0)
 
 ### What's Changed
 
@@ -490,7 +490,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 **Full Changelog**: [6.12.1...6.13.0](https://github.com/remix-run/react-router/compare/react-router@6.12.1...react-router@6.13.0)
 
-## v6.12.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.12.1)
+## v6.12.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.1)
 
 > **Warning**
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
@@ -501,7 +501,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 **Full Changelog**: [6.12.0...6.12.1](https://github.com/remix-run/react-router/compare/react-router@6.12.0...react-router@6.12.1)
 
-## v6.12.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.12.0)
+## v6.12.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0)
 
 > **Warning**
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
@@ -527,7 +527,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [6.11.2...6.12.0](https://github.com/remix-run/react-router/compare/react-router@6.11.2...react-router@6.12.0)
 
-## v6.11.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.11.2)
+## v6.11.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.2)
 
 ### Patch Changes
 
@@ -538,7 +538,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [6.11.1...6.11.2](https://github.com/remix-run/react-router/compare/react-router@6.11.1...react-router@6.11.2)
 
-## v6.11.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.11.1)
+## v6.11.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.1)
 
 ### Patch Changes
 
@@ -550,7 +550,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [6.11.0...6.11.1](https://github.com/remix-run/react-router/compare/react-router@6.11.0...react-router@6.11.1)
 
-## v6.11.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.11.0)
+## v6.11.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.0)
 
 ### Minor Changes
 
@@ -577,7 +577,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [6.10.0...6.11.0](https://github.com/remix-run/react-router/compare/react-router@6.10.0...react-router@6.11.0)
 
-## v6.10.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/vreact-router%40.10.0)
+## v6.10.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.10.0)
 
 ### What's Changed
 
