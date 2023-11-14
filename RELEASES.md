@@ -1005,7 +1005,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - `useLocation` returns the scoped location inside a `<Routes location>` component (#9094)
 - Respect the `<Link replace>` prop if it is defined (#8779)
 
-**Full Changelog**: [`v6.3.0...v6.4.0`](https://github.com/remix-run/react-router/compare/v6.3.0...v6.4.0)
+**Full Changelog**: [`v6.3.0...v6.4.0`](https://github.com/remix-run/react-router/compare/v6.3.0...react-router%406.4.0)
 
 ## v6.3.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.3.0)
 
