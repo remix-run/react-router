@@ -879,11 +879,8 @@ export function useRouteLoaderData(routeId: string): unknown {
  */
 export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
-
-  let route = React.useContext(RouteContext);
-  invariant(route, `useActionData must be used inside a RouteContext`);
-
-  return Object.values(state?.actionData || {})[0];
+  let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
+  return state.actionData ? state.actionData[routeId] : undefined;
 }
 
 /**
