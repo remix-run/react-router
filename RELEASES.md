@@ -153,6 +153,16 @@ To add a new release, copy from this template:
 
 #### `unstable_flushSync` API
 
+This release brings a new `unstable_flushSync` option to the imperative APIs (`useSubmit`, `useNavigate`, `fetcher.submit`, `fetcher.load`) to let users opt-into synchronous DOM updates for pending/optimistic UI.
+
+```js
+function handleClick() {
+  submit(data, { flushSync: true });
+  // Everything is flushed to the DOM so you can focus/scroll to your pending/optimistic UI
+  setFocusAndOrScrollToNewlyAddedThing();
+}
+```
+
 ### Minor Changes
 
 - Add `unstable_flushSync` option to `useNavigate`/`useSubmit`/`fetcher.load`/`fetcher.submit` to opt-out of `React.startTransition` and into `ReactDOM.flushSync` for state updates ([#11005](https://github.com/remix-run/react-router/pull/11005))
