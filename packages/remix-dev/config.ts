@@ -80,7 +80,7 @@ export interface AppConfig {
   publicPath?: string;
 
   /**
-   * Options for `remix dev`. See https://remix.run/docs/en/main/other-api/dev-v2#options-1
+   * Options for `remix dev`. See https://remix.run/other-api/dev#options-1
    */
   dev?: Dev;
 
@@ -249,7 +249,7 @@ export interface RemixConfig {
   publicPath: string;
 
   /**
-   * Options for `remix dev`. See https://remix.run/docs/en/main/other-api/dev-v2#options-1
+   * Options for `remix dev`. See https://remix.run/other-api/dev#options-1
    */
   dev: Dev;
 
