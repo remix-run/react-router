@@ -10,7 +10,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - The paginated Github interface also cuts off longer releases notes without indication in list view, and you need to click into the detail view to see the full set of release notes
 
 <details>
-  <summary>Table of Contents</summary>
+  <summary>**Table of Contents**</summary>
 
 - [React Router Releases](#react-router-releases)
   - [v6.19.0 🏷️](#v6190-️)
