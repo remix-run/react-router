@@ -921,7 +921,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/projects");
+          expect(el.attr("action")).toMatch("/projects/blarg");
         });
 
         test("no action resolves to URL including search params", async ({
@@ -931,7 +931,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/projects?foo=bar");
+          expect(el.attr("action")).toMatch("/projects/blarg?foo=bar");
         });
 
         test("absolute action resolves relative to the root route", async ({
