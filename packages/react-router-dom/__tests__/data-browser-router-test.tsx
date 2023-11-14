@@ -29,7 +29,6 @@ import {
   useFetchers,
   useLoaderData,
   useLocation,
-  useMatches,
   useNavigate,
   useNavigation,
   useRouteError,
@@ -5821,7 +5820,12 @@ function testDomRouter(
                       Component() {
                         let fetcher = useFetcher({ key: "me" });
                         let data = useLoaderData() as { count: number };
-                        return <h1>{`Page (${data.count})`}</h1>;
+                        return (
+                          <>
+                            <h1>{`Page (${data.count})`}</h1>
+                            <p>{fetcher.data}</p>
+                          </>
+                        );
                       },
                       async loader() {
                         await new Promise((r) => setTimeout(r, 10));
@@ -5853,6 +5857,7 @@ function testDomRouter(
             dfd.resolve("FETCH");
             await waitFor(() => screen.getByText("Num fetchers: 0"));
             expect(getHtml(container)).toMatch("Page (2)");
+            expect(getHtml(container)).toMatch("FETCH");
           });
 
           it("submitting fetchers w/redirects are cleaned up on completion", async () => {

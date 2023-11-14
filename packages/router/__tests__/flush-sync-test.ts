@@ -1,6 +1,5 @@
-import { IDLE_NAVIGATION } from "../router";
 import { cleanup, setup } from "./utils/data-router-setup";
-import { createFormData, tick } from "./utils/utils";
+import { createFormData } from "./utils/utils";
 
 describe("flushSync", () => {
   // Detect any failures inside the router navigate code
