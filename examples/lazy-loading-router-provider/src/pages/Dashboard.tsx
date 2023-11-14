@@ -45,7 +45,7 @@ export async function dashboardMessagesLoader() {
 }
 
 export function DashboardMessages() {
-  let { messages } = useLoaderData() as MessagesData;
+  let { messages } = useLoaderData<MessagesData>();
 
   return (
     <div>

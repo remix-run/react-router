@@ -63,7 +63,7 @@ const router = createBrowserRouter([
           return json({ message: "LOADER DATA" });
         },
         Component() {
-          let data = useLoaderData() as { message: string };
+          let data = useLoaderData<{ message: string }>();
           React.useEffect(() => {
             document.title = "Loader";
           }, []);

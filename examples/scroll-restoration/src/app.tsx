@@ -171,7 +171,7 @@ async function getArrayLoader(): Promise<ArrayLoaderData> {
 }
 
 function LongPage() {
-  let data = useLoaderData() as ArrayLoaderData;
+  let data = useLoaderData<ArrayLoaderData>();
   let location = useLocation();
   return (
     <>

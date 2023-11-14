@@ -850,9 +850,9 @@ export function useMatches(): UIMatch[] {
   );
 }
 
-type DataReturnType<T> = T extends (...args: any[]) => infer Output
+type DataReturnType<T = unknown> = T extends (...args: any[]) => infer Output
   ? Awaited<Output>
-  : unknown;
+  : T;
 
 /**
  * Returns the loader data for the nearest ancestor Route loader

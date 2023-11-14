@@ -400,7 +400,7 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data.message}</h1>;
       }
 
@@ -458,7 +458,7 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data.message}</h1>;
       }
 
@@ -512,7 +512,7 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data.message}</h1>;
       }
 
@@ -553,7 +553,7 @@ function testDomRouter(
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data.message}</h1>;
       }
 
@@ -683,7 +683,7 @@ function testDomRouter(
         return <h1>Foo</h1>;
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>{data.message}</h1>;
       }
 
@@ -772,7 +772,7 @@ function testDomRouter(
         return <h1>Foo</h1>;
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>{data.message}</h1>;
       }
 
@@ -941,7 +941,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useLoaderData<string>();
         let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         let submit = useSubmit();
@@ -1180,7 +1180,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useLoaderData<string>();
         let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
@@ -1376,7 +1376,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useLoaderData<string>();
         let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
@@ -2308,7 +2308,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useLoaderData<string>();
         let navigation = useNavigation();
         return (
           <div>
@@ -2458,7 +2458,7 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useLoaderData() as string;
+        let data = useLoaderData<string>();
         let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
@@ -5718,7 +5718,7 @@ function testDomRouter(
                     {
                       path: "page",
                       Component() {
-                        let data = useLoaderData() as { count: number };
+                        let data = useLoaderData<{ count: number }>();
                         return <h1>{`Page (${data.count})`}</h1>;
                       },
                       async loader() {
@@ -5793,7 +5793,7 @@ function testDomRouter(
                       path: "page",
                       Component() {
                         let fetcher = useFetcher({ key: "me" });
-                        let data = useLoaderData() as { count: number };
+                        let data = useLoaderData<{ count: number }>();
                         return <h1>{`Page (${data.count})`}</h1>;
                       },
                       async loader() {
@@ -6280,7 +6280,7 @@ function testDomRouter(
                 },
                 loader: () => loaderDefer.promise,
                 Component() {
-                  let data = useLoaderData() as string;
+                  let data = useLoaderData<string>();
                   let actionData = useActionData() as string | undefined;
                   let location = useLocation();
                   let navigation = useNavigation();
@@ -6982,7 +6982,7 @@ function testDomRouter(
         }
 
         function Foo() {
-          let data = useLoaderData() as { message: string };
+          let data = useLoaderData<{ message: string }>();
           return <h1>Foo:{data.message}</h1>;
         }
         function FooError() {
@@ -6990,7 +6990,7 @@ function testDomRouter(
           return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
-          let data = useLoaderData() as { message: string };
+          let data = useLoaderData<{ message: string }>();
           return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
@@ -7101,7 +7101,7 @@ function testDomRouter(
           return <p>Layout Error:{error.message}</p>;
         }
         function Foo() {
-          let data = useLoaderData() as { message: string };
+          let data = useLoaderData<{ message: string }>();
           return <h1>Foo:{data.message}</h1>;
         }
         function FooError() {
@@ -7109,7 +7109,7 @@ function testDomRouter(
           return <p>Foo Error:{error.message}</p>;
         }
         function Bar() {
-          let data = useLoaderData() as { message: string };
+          let data = useLoaderData<{ message: string }>();
           return <h1>Bar:{data.message}</h1>;
         }
 
@@ -7181,7 +7181,7 @@ function testDomRouter(
         }
 
         function Bar() {
-          let data = useLoaderData() as { message: string };
+          let data = useLoaderData<{ message: string }>();
           return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {
@@ -7266,7 +7266,7 @@ function testDomRouter(
         }
 
         function Bar() {
-          let data = useLoaderData() as { message: string };
+          let data = useLoaderData<{ message: string }>();
           return <h1>Bar:{data.message}</h1>;
         }
         function BarError() {

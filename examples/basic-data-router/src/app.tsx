@@ -11,7 +11,7 @@ let router = createBrowserRouter([
     path: "/",
     loader: () => ({ message: "Hello Data Router!" }),
     Component() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       return <h1>{data.message}</h1>;
     },
   },

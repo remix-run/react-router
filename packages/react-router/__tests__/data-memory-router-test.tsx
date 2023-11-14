@@ -278,7 +278,7 @@ describe("createMemoryRouter", () => {
     let { container } = render(<RouterProvider router={router} />);
 
     function Comp() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       let actionData = useActionData();
       let navigation = useNavigation();
       return (
@@ -329,7 +329,7 @@ describe("createMemoryRouter", () => {
     }
 
     function Foo() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -373,7 +373,7 @@ describe("createMemoryRouter", () => {
     let { container } = render(<RouterProvider router={router} />);
 
     function Foo() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -418,7 +418,7 @@ describe("createMemoryRouter", () => {
     }
 
     function Foo() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -459,7 +459,7 @@ describe("createMemoryRouter", () => {
     }
 
     function Foo() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       return <h1>Foo:{data?.message}</h1>;
     }
 
@@ -550,7 +550,7 @@ describe("createMemoryRouter", () => {
       return <h1>Foo</h1>;
     }
     function Bar() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       return <h1>{data?.message}</h1>;
     }
 
@@ -651,7 +651,7 @@ describe("createMemoryRouter", () => {
       return <h1>Foo</h1>;
     }
     function Bar() {
-      let data = useLoaderData() as { message: string };
+      let data = useLoaderData<{ message: string }>();
       let actionData = useActionData();
       return (
         <h1>
@@ -1032,7 +1032,7 @@ describe("createMemoryRouter", () => {
       let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         let actionData = useActionData();
         let navigation = useNavigation();
         return (
@@ -1093,7 +1093,7 @@ describe("createMemoryRouter", () => {
       let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         let actionData = useActionData();
         let navigation = useNavigation();
         return (
@@ -1141,7 +1141,7 @@ describe("createMemoryRouter", () => {
       let { container } = render(<RouterProvider router={router} />);
 
       function Comp() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         let actionData = useActionData();
         let navigation = useNavigation();
         return (
@@ -1215,7 +1215,7 @@ describe("createMemoryRouter", () => {
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data?.message}</h1>;
       }
       function FooError() {
@@ -1223,7 +1223,7 @@ describe("createMemoryRouter", () => {
         return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Bar:{data?.message}</h1>;
       }
       function BarError() {
@@ -1357,7 +1357,7 @@ describe("createMemoryRouter", () => {
       }
 
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data?.message}</h1>;
       }
       function FooError() {
@@ -1365,7 +1365,7 @@ describe("createMemoryRouter", () => {
         return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Bar:{data?.message}</h1>;
       }
       function BarError() {
@@ -1501,7 +1501,7 @@ describe("createMemoryRouter", () => {
         return <p>Layout Error:{error.message}</p>;
       }
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data?.message}</h1>;
       }
       function FooError() {
@@ -1509,7 +1509,7 @@ describe("createMemoryRouter", () => {
         return <p>Foo Error:{error.message}</p>;
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Bar:{data?.message}</h1>;
       }
 
@@ -1742,11 +1742,11 @@ describe("createMemoryRouter", () => {
         );
       }
       function Foo() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Foo:{data?.message}</h1>;
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Bar:{data?.message}</h1>;
       }
 
@@ -1823,7 +1823,7 @@ describe("createMemoryRouter", () => {
         );
       }
       function Bar() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return <h1>Bar:{data?.message}</h1>;
       }
       function BarError() {
@@ -2187,7 +2187,7 @@ describe("createMemoryRouter", () => {
 
       function FooError() {
         let error = useRouteError() as Error;
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         return (
           <>
             <p>
@@ -2283,7 +2283,7 @@ describe("createMemoryRouter", () => {
         );
       }
       function LayoutError() {
-        let data = useLoaderData() as { message: string };
+        let data = useLoaderData<{ message: string }>();
         let error = useRouteError() as Error;
         return (
           <>
@@ -2381,7 +2381,7 @@ describe("createMemoryRouter", () => {
       }
 
       function Bar() {
-        let data = useLoaderData() as { critical: string };
+        let data = useLoaderData<{ critical: string }>();
         return (
           <>
             <p>{data.critical}</p>
@@ -3004,7 +3004,7 @@ describe("createMemoryRouter", () => {
 
       let count = 0;
       function Bar() {
-        let { bar } = useLoaderData() as { bar: Promise<string> };
+        let { bar } = useLoaderData<{ bar: Promise<string> }>();
 
         React.useEffect(() => {
           bar.then((data) => {

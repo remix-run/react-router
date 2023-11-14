@@ -59,7 +59,7 @@ describe("useRevalidator", () => {
     }
 
     function Foo() {
-      let data = useLoaderData() as string;
+      let data = useLoaderData<string>();
       return <p>{data}</p>;
     }
 

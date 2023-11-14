@@ -12,7 +12,7 @@ export const loader = async (): Promise<LazyLoaderData> => {
 };
 
 function LazyPage() {
-  let data = useLoaderData() as LazyLoaderData;
+  let data = useLoaderData<LazyLoaderData>();
 
   return (
     <>
