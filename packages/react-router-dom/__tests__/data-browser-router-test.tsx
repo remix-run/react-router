@@ -2693,6 +2693,28 @@ function testDomRouter(
             "/foo"
           );
         });
+
+        it("does not include the index parameter if we've submitted to a child index route", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<NoActionComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar?index&a=1"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1"
+          );
+        });
       });
 
       describe("index routes", () => {
