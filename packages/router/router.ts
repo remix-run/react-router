@@ -348,6 +348,8 @@ export interface FutureConfig {
   v7_prependBasename: boolean;
 }
 
+export type UnwrapResponseFunction = (response: Response) => Promise<unknown>;
+
 /**
  * Initialization options for createRouter
  */
@@ -362,6 +364,7 @@ export interface RouterInit {
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
+  unwrapResponse?: UnwrapResponseFunction;
   window?: Window;
 }
 
@@ -735,6 +738,7 @@ export function createRouter(init: RouterInit): Router {
     typeof routerWindow.document !== "undefined" &&
     typeof routerWindow.document.createElement !== "undefined";
   const isServer = !isBrowser;
+  const unwrapResponse = init.unwrapResponse;
 
   invariant(
     init.routes.length > 0,
@@ -1545,7 +1549,8 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        basename
+        basename,
+        unwrapResponse
       );
 
       if (request.signal.aborted) {
@@ -1929,7 +1934,8 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      unwrapResponse
     );
 
     if (fetchRequest.signal.aborted) {
@@ -2171,7 +2177,8 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      unwrapResponse
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2367,7 +2374,8 @@ export function createRouter(init: RouterInit): Router {
           matches,
           manifest,
           mapRouteProperties,
-          basename
+          basename,
+          unwrapResponse
         )
       ),
       ...fetchersToLoad.map((f) => {
@@ -2379,7 +2387,8 @@ export function createRouter(init: RouterInit): Router {
             f.matches,
             manifest,
             mapRouteProperties,
-            basename
+            basename,
+            unwrapResponse
           );
         } else {
           let error: ErrorResult = {
@@ -2769,6 +2778,7 @@ export interface CreateStaticHandlerOptions {
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
+  unwrapResponse?: UnwrapResponseFunction;
 }
 
 export function createStaticHandler(
@@ -2779,6 +2789,7 @@ export function createStaticHandler(
     routes.length > 0,
     "You must provide a non-empty routes array to createStaticHandler"
   );
+  let unwrapResponse = opts?.unwrapResponse;
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
@@ -3056,6 +3067,7 @@ export function createStaticHandler(
         manifest,
         mapRouteProperties,
         basename,
+        unwrapResponse,
         { isStaticRequest: true, isRouteRequest, requestContext }
       );
 
@@ -3224,6 +3236,7 @@ export function createStaticHandler(
           manifest,
           mapRouteProperties,
           basename,
+          unwrapResponse,
           { isStaticRequest: true, isRouteRequest, requestContext }
         )
       ),
@@ -3824,6 +3837,7 @@ async function callLoaderOrAction(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
+  unwrapResponse: UnwrapResponseFunction | undefined,
   opts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
@@ -3984,6 +3998,9 @@ async function callLoaderOrAction(
     }
 
     let data: any;
+    if (unwrapResponse) {
+      data = unwrapResponse(result);
+    } else {
     let contentType = result.headers.get("Content-Type");
     // Check between word boundaries instead of startsWith() due to the last
     // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
@@ -3991,6 +4008,7 @@ async function callLoaderOrAction(
       data = await result.json();
     } else {
       data = await result.text();
+      }
     }
 
     if (resultType === ResultType.error) {
