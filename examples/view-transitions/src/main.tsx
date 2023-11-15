@@ -82,7 +82,7 @@ const router = createBrowserRouter([
           return json({ message: "ACTION DATA" });
         },
         Component() {
-          let data = useActionData() as { message: string } | undefined;
+          let data = useActionData<{ message: string }>();
           React.useEffect(() => {
             document.title = "Action";
           }, []);

@@ -162,7 +162,7 @@ function LoginPage() {
   let navigation = useNavigation();
   let isLoggingIn = navigation.formData?.get("username") != null;
 
-  let actionData = useActionData() as { error: string } | undefined;
+  let actionData = useActionData<{ error: string }>();
 
   return (
     <div>

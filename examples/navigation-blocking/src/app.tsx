@@ -83,7 +83,7 @@ function Layout() {
 }
 
 function ImportantForm() {
-  let actionData = useActionData() as { ok: boolean } | undefined;
+  let actionData = useActionData<{ ok: boolean }>();
   let [value, setValue] = React.useState("");
   // Allow the submission navigation to the same route to go through
   let shouldBlock = React.useCallback<BlockerFunction>(

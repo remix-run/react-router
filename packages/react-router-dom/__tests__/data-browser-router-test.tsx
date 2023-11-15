@@ -939,7 +939,7 @@ function testDomRouter(
 
       function Home() {
         let data = useLoaderData<string>();
-        let actionData = useActionData() as string | undefined;
+        let actionData = useActionData<string>();
         let navigation = useNavigation();
         let submit = useSubmit();
         let formRef = React.useRef<HTMLFormElement>(null);
@@ -1040,8 +1040,8 @@ function testDomRouter(
                 action: () => actionDefer.promise,
                 loader: () => loaderDefer.promise,
                 Component() {
-                  let data = useLoaderData() as string;
-                  let actionData = useActionData() as string | undefined;
+                  let data = useLoaderData<string>();
+                  let actionData = useActionData<string | undefined>();
                   return (
                     <>
                       <h1>Action</h1>
@@ -1176,7 +1176,7 @@ function testDomRouter(
 
       function Home() {
         let data = useLoaderData<string>();
-        let actionData = useActionData() as string | undefined;
+        let actionData = useActionData<string>()
         let navigation = useNavigation();
         return (
           <div>
@@ -1260,8 +1260,8 @@ function testDomRouter(
                   return `${resolvedValue}:${urlParam}`;
                 },
                 Component() {
-                  let data = useLoaderData() as string;
-                  let actionData = useActionData() as string | undefined;
+                  let data = useLoaderData<string>();
+                  let actionData = useActionData<string>();
                   return (
                     <>
                       <h1>Path</h1>
@@ -1374,7 +1374,7 @@ function testDomRouter(
 
       function Home() {
         let data = useLoaderData<string>();
-        let actionData = useActionData() as string | undefined;
+        let actionData = useActionData<string>()
         let navigation = useNavigation();
         return (
           <div>
@@ -1475,8 +1475,8 @@ function testDomRouter(
                 },
                 loader: () => loaderDefer.promise,
                 Component() {
-                  let data = useLoaderData() as string;
-                  let actionData = useActionData() as string | undefined;
+                  let data = useLoaderData<string>();
+                  let actionData = useActionData<string>();
                   return (
                     <>
                       <h1>Action</h1>
@@ -1758,7 +1758,7 @@ function testDomRouter(
       }
 
       function FormPage() {
-        let data = useActionData() as string | undefined;
+        let data = useActionData<string>();
         return (
           <Form method="post">
             <p>Form Page</p>
@@ -1826,7 +1826,7 @@ function testDomRouter(
       }
 
       function FormPage() {
-        let data = useActionData() as string | undefined;
+        let data = useActionData<string>()
         return (
           <Form method="post">
             <p>Form Page</p>
@@ -2068,7 +2068,7 @@ function testDomRouter(
       }
 
       function Page() {
-        let actionData = useActionData() as string | undefined;
+        let actionData = useActionData<string>()
         return (
           <>
             <h1>Page 1</h1>
@@ -2221,7 +2221,7 @@ function testDomRouter(
 
       function Comp() {
         let location = useLocation();
-        let data = useActionData() as string | undefined;
+        let data = useActionData<string>()
         return (
           <Form method="post">
             <p>{location.pathname + location.search}</p>
@@ -2388,7 +2388,7 @@ function testDomRouter(
                 path="bar"
                 action={() => "Yes"}
                 Component={() => {
-                  let actionData = useActionData() as string | undefined;
+                  let actionData = useActionData<string>()
                   return (
                     <Form method="post" action="/foo">
                       <p>{actionData || "No"}</p>
@@ -2463,7 +2463,7 @@ function testDomRouter(
 
       function Home() {
         let data = useLoaderData<string>();
-        let actionData = useActionData() as string | undefined;
+        let actionData = useActionData<string>()
         let navigation = useNavigation();
         return (
           <div>
@@ -6313,7 +6313,7 @@ function testDomRouter(
                 loader: () => loaderDefer.promise,
                 Component() {
                   let data = useLoaderData<string>();
-                  let actionData = useActionData() as string | undefined;
+                  let actionData = useActionData<string>()
                   let location = useLocation();
                   let navigation = useNavigation();
                   let fetchers = useFetchers();
