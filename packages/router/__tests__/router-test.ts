@@ -1331,6 +1331,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -1752,6 +1753,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -1792,6 +1794,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });
@@ -1825,6 +1828,7 @@ describe("a router", () => {
         hydrationData: {
           loaderData: {
             root: "ROOT_DATA",
+            index: "INDEX_DATA",
           },
         },
       });

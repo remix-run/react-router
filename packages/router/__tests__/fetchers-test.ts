@@ -122,7 +122,10 @@ describe("fetchers", () => {
     });
 
     it("loader fetch", async () => {
-      let t = initializeTest({ url: "/foo" });
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
 
       let A = await t.fetch("/foo");
       expect(A.fetcher.state).toBe("loading");
@@ -133,7 +136,10 @@ describe("fetchers", () => {
     });
 
     it("loader re-fetch", async () => {
-      let t = initializeTest({ url: "/foo" });
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
       let key = "key";
 
       let A = await t.fetch("/foo", key);
@@ -153,7 +159,10 @@ describe("fetchers", () => {
     });
 
     it("loader submission fetch", async () => {
-      let t = initializeTest({ url: "/foo" });
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
 
       let A = await t.fetch("/foo", {
         formMethod: "get",
@@ -176,7 +185,10 @@ describe("fetchers", () => {
     });
 
     it("loader submission re-fetch", async () => {
-      let t = initializeTest({ url: "/foo" });
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
       let key = "key";
 
       let A = await t.fetch("/foo", key, {
@@ -201,7 +213,12 @@ describe("fetchers", () => {
     });
 
     it("action fetch", async () => {
-      let t = initializeTest({ url: "/foo" });
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: {
+          loaderData: { root: "ROOT", foo: "FOO" },
+        },
+      });
 
       let A = await t.fetch("/foo", {
         formMethod: "post",
@@ -227,7 +244,10 @@ describe("fetchers", () => {
     });
 
     it("action re-fetch", async () => {
-      let t = initializeTest({ url: "/foo" });
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
       let key = "key";
 
       let A = await t.fetch("/foo", key, {
@@ -717,7 +737,10 @@ describe("fetchers", () => {
     });
 
     it("aborts resubmissions loader call", async () => {
-      let t = initializeTest({ url: "/foo" });
+      let t = initializeTest({
+        url: "/foo",
+        hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+      });
       let key = "KEY";
       let A = await t.fetch("/foo", key, {
         formMethod: "post",
@@ -740,7 +763,10 @@ describe("fetchers", () => {
       C) POST            |----|---O
     `, () => {
       it("aborts A load, ignores A resolve, aborts B action", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let key = "KEY";
 
         let A = await t.fetch("/foo", key, {
@@ -759,7 +785,7 @@ describe("fetchers", () => {
 
         await A.loaders.root.resolve("A ROOT LOADER");
         await A.loaders.foo.resolve("A LOADER");
-        expect(t.router.state.loaderData.foo).toBeUndefined();
+        expect(t.router.state.loaderData.foo).toBe("FOO");
 
         let C = await t.fetch("/foo", key, {
           formMethod: "post",
@@ -775,7 +801,7 @@ describe("fetchers", () => {
 
         await B.loaders.root.resolve("B ROOT LOADER");
         await B.loaders.foo.resolve("B LOADER");
-        expect(t.router.state.loaderData.foo).toBeUndefined();
+        expect(t.router.state.loaderData.foo).toBe("FOO");
 
         await C.loaders.root.resolve("C ROOT LOADER");
         await C.loaders.foo.resolve("C LOADER");
@@ -790,7 +816,10 @@ describe("fetchers", () => {
       C) k1           |-----|---O
     `, () => {
       it("aborts A load, commits B and C loads", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let k1 = "1";
         let k2 = "2";
 
@@ -815,7 +844,7 @@ describe("fetchers", () => {
 
         await Ak1.loaders.root.resolve("A ROOT LOADER");
         await Ak1.loaders.foo.resolve("A LOADER");
-        expect(t.router.state.loaderData.foo).toBeUndefined();
+        expect(t.router.state.loaderData.foo).toBe("FOO");
 
         await Bk2.loaders.root.resolve("B ROOT LOADER");
         await Bk2.loaders.foo.resolve("B LOADER");
@@ -838,7 +867,10 @@ describe("fetchers", () => {
       B) POST /foo   |-----[A,B]---O
     `, () => {
       it("commits A, commits B", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -871,7 +903,10 @@ describe("fetchers", () => {
       B) POST /foo   |--X
     `, () => {
       it("catches A, persists boundary for B", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -901,7 +936,10 @@ describe("fetchers", () => {
       B) POST /foo   |------🧤
     `, () => {
       it("commits A, catches B", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -931,7 +969,10 @@ describe("fetchers", () => {
       B) POST /foo   |----[A,B]--O
     `, () => {
       it("aborts A, commits B, sets A done", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -960,7 +1001,10 @@ describe("fetchers", () => {
       B) POST /foo   |--[B]-------O
     `, () => {
       it("commits B, commits A", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -994,7 +1038,10 @@ describe("fetchers", () => {
       B) POST /foo   |--|-----X
     `, () => {
       it("aborts B, commits A, sets B done", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
 
         let A = await t.fetch("/foo", {
           formMethod: "post",
@@ -1027,7 +1074,10 @@ describe("fetchers", () => {
       B) nav GET      |---O
     `, () => {
       it("does not abort A action or data reload", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
 
         let A = await t.fetch("/foo", {
           formMethod: "post",
@@ -1129,7 +1179,10 @@ describe("fetchers", () => {
       B) nav GET         |---O
     `, () => {
       it("commits both", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
 
         let A = await t.fetch("/foo", {
           formMethod: "post",
@@ -1158,7 +1211,10 @@ describe("fetchers", () => {
       B) nav POST           |---[A,B]--O
     `, () => {
       it("keeps both", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -1190,7 +1246,10 @@ describe("fetchers", () => {
       B) nav POST     |-----[A,B]--O
     `, () => {
       it("aborts A, commits B, marks fetcher done", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -1218,7 +1277,10 @@ describe("fetchers", () => {
       B) nav POST     |--[B]--O
     `, () => {
       it("commits both, uses the nav's href", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
@@ -1246,7 +1308,10 @@ describe("fetchers", () => {
       B) nav POST     |--[B]-------X
     `, () => {
       it("aborts B, commits A, uses the nav's href", async () => {
-        let t = initializeTest({ url: "/foo" });
+        let t = initializeTest({
+          url: "/foo",
+          hydrationData: { loaderData: { root: "ROOT", foo: "FOO" } },
+        });
         let A = await t.fetch("/foo", {
           formMethod: "post",
           formData: createFormData({ key: "value" }),
