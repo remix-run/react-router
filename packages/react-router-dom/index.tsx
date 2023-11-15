@@ -680,7 +680,11 @@ export function RouterProvider({
                 navigator={navigator}
               >
                 {state.initialized ? (
-                  <DataRoutes routes={router.routes} state={state} />
+                  <DataRoutes
+                    routes={router.routes}
+                    future={router.future}
+                    state={state}
+                  />
                 ) : (
                   fallbackElement
                 )}
@@ -696,12 +700,14 @@ export function RouterProvider({
 
 function DataRoutes({
   routes,
+  future,
   state,
 }: {
   routes: DataRouteObject[];
+  future: RemixRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state);
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 export interface BrowserRouterProps {

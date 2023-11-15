@@ -76,8 +76,10 @@ interface RouteObject {
   loader?: LoaderFunction;
   action?: ActionFunction;
   element?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
+  fallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  Fallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   handle?: RouteObject["handle"];
   shouldRevalidate?: ShouldRevalidateFunction;

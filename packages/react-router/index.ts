@@ -245,6 +245,22 @@ function mapRouteProperties(route: RouteObject) {
     });
   }
 
+  if (route.Fallback) {
+    if (__DEV__) {
+      if (route.fallbackElement) {
+        warning(
+          false,
+          "You should not include both `Fallback` and `fallbackElement` on your route - " +
+            "`Fallback` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      fallbackElement: React.createElement(route.Fallback),
+      Fallback: undefined,
+    });
+  }
+
   if (route.ErrorBoundary) {
     if (__DEV__) {
       if (route.errorElement) {
