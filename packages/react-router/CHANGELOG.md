@@ -1,6 +1,6 @@
 # `react-router`
 
-## 6.19.0-pre.0
+## 6.19.0
 
 ### Minor Changes
 
@@ -15,7 +15,7 @@
   - ⚠️ This fixes a quite long-standing bug specifically for `"."` paths inside a splat route which incorrectly dropped the splat portion of the URL. If you are relative routing via `"."` inside a splat route in your application you should double check that your logic is not relying on this buggy behavior and update accordingly.
 
 - Updated dependencies:
-  - `@remix-run/router@1.12.0-pre.0`
+  - `@remix-run/router@1.12.0`
 
 ## 6.18.0
 

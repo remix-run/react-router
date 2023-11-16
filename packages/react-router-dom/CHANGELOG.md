@@ -1,6 +1,6 @@
 # `react-router-dom`
 
-## 6.19.0-pre.0
+## 6.19.0
 
 ### Minor Changes
 
@@ -13,8 +13,8 @@
 - Fix `useFormAction` which was incorrectly inheriting the `?index` query param from child route `action` submissions ([#11025](https://github.com/remix-run/react-router/pull/11025))
 - Fix `NavLink` `active` logic when `to` location has a trailing slash ([#10734](https://github.com/remix-run/react-router/pull/10734))
 - Updated dependencies:
-  - `react-router@6.19.0-pre.0`
-  - `@remix-run/router@1.12.0-pre.0`
+  - `react-router@6.19.0`
+  - `@remix-run/router@1.12.0`
 
 ## 6.18.0
 
