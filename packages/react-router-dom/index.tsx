@@ -630,6 +630,15 @@ export function RouterProvider({
     }
   }, [vtContext.isTransitioning, interruption]);
 
+  React.useEffect(() => {
+    warning(
+      fallbackElement == null || !router.future.v7_partialHydration,
+      "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+    );
+    // Only log this once on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,

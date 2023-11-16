@@ -110,6 +110,15 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
+  React.useEffect(() => {
+    warning(
+      fallbackElement == null || !router.future.v7_partialHydration,
+      "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+    );
+    // Only log this once on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,

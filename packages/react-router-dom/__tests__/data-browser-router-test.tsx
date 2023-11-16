@@ -7521,6 +7521,361 @@ function testDomRouter(
         expect(spy).toHaveBeenCalledTimes(2);
       });
     });
+
+    // TODO: Probably want these running against RouterProvider in react-router too?
+    // Look into extracting the setState stuff and sharing the subscriber,
+    // layout effect, navigator, render stuff
+    describe("partial hydration", () => {
+      it("does not handle partial hydration by default", async () => {
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => "INDEX",
+                  Fallback: () => <p>Should not see me</p>,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - undefined
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("with v7_partialHydration, supports partial hydration w/leaf fallback", async () => {
+        let dfd = createDeferred();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd.promise,
+                  Fallback: () => <p>Index Loading...</p>,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <p>
+                Index Loading...
+              </p>
+            </div>
+          </div>"
+        `);
+
+        dfd.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("with v7_partialHydration, supports partial hydration w/root fallback", async () => {
+        let dfd = createDeferred();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Fallback: () => <p>Root Loading...</p>,
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Root Loading...
+            </p>
+          </div>"
+        `);
+
+        dfd.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("with v7_partialHydration, supports partial hydration w/no fallback", async () => {
+        let dfd = createDeferred();
+        let consoleSpy = jest.spyOn(console, "warn");
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`"<div />"`);
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          "No `Fallback` element provided to render during initial hydration"
+        );
+
+        dfd.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+
+        consoleSpy.mockRestore();
+      });
+
+      it("with v7_partialHydration, deprecates fallbackElement", async () => {
+        let dfd1 = createDeferred();
+        let dfd2 = createDeferred();
+        let consoleSpy = jest.spyOn(console, "warn");
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => dfd1.promise,
+              Fallback: () => <p>Root Loading...</p>,
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd2.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(
+          <RouterProvider
+            router={router}
+            fallbackElement={<p>fallbackElement...</p>}
+          />
+        );
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Root Loading...
+            </p>
+          </div>"
+        `);
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+          "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+        );
+
+        dfd1.resolve("ROOT DATA");
+        dfd2.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+
+        consoleSpy.mockRestore();
+      });
+    });
   });
 }
 
