@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.3.0-pre.1
+
+### Patch Changes
+
+- Emit assets that were only referenced in the server build into the client assets directory in Vite build ([`8cd31d654`](https://github.com/remix-run/remix/commit/8cd31d6543ef4c765220fc64dca9bcc9c61ee9eb))
+- Updated dependencies:
+  - `@remix-run/node@2.3.0-pre.1`
+  - `@remix-run/server-runtime@2.3.0-pre.1`
+
 ## 2.3.0-pre.0
 
 ### Patch Changes
