@@ -20,6 +20,7 @@ export type {
   ParamParseKey,
   Params,
   PathMatch,
+  PathParam,
   PathPattern,
   RedirectFunction,
   ShouldRevalidateFunction,
