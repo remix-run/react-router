@@ -1,23 +1,6 @@
 # `@remix-run/dev`
 
-## 2.3.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.3.0-pre.2`
-  - `@remix-run/server-runtime@2.3.0-pre.2`
-
-## 2.3.0-pre.1
-
-### Patch Changes
-
-- Emit assets that were only referenced in the server build into the client assets directory in Vite build ([`8cd31d654`](https://github.com/remix-run/remix/commit/8cd31d6543ef4c765220fc64dca9bcc9c61ee9eb))
-- Updated dependencies:
-  - `@remix-run/node@2.3.0-pre.1`
-  - `@remix-run/server-runtime@2.3.0-pre.1`
-
-## 2.3.0-pre.0
+## 2.3.0
 
 ### Patch Changes
 
@@ -31,32 +14,23 @@
 - Allow `process.env.NODE_ENV` values other than `"development"` in Vite dev ([#7980](https://github.com/remix-run/remix/pull/7980))
 - Attach CSS from shared chunks to routes in Vite build ([#7952](https://github.com/remix-run/remix/pull/7952))
 - fix(vite): Let Vite handle serving files outside of project root via `/@fs` ([#7913](https://github.com/remix-run/remix/pull/7913))
-
-  This fixes errors when using default client entry or server entry in a pnpm project
-  where those files may be outside of the project root, but within the workspace root.
-
-  By default, Vite prevents access to files outside the workspace root
-  (when using workspaces) or outside of the project root (when not using
-  workspaces) unless user explicitly opts into it via Vite's `server.fs.allow`.
-
+  - This fixes errors when using default client entry or server entry in a pnpm project where those files may be outside of the project root, but within the workspace root.
+  - By default, Vite prevents access to files outside the workspace root (when using workspaces) or outside of the project root (when not using workspaces) unless user explicitly opts into it via Vite's `server.fs.allow`.
 - Improve performance of LiveReload proxy in Vite dev ([#7883](https://github.com/remix-run/remix/pull/7883))
 - fix(vite): deduplicate `@remix-run/react` ([#7926](https://github.com/remix-run/remix/pull/7926))
-
-  Pre-bundle Remix dependencies to avoid Remix router duplicates.
-  Our remix-remix-react-proxy plugin does not process default client and
-  server entry files since those come from within `node_modules`.
-  That means that before Vite pre-bundles dependencies (e.g. first time dev server is run)
-  mismatching Remix routers cause `Error: You must render this element inside a <Remix> element`.
-
+  - Pre-bundle Remix dependencies to avoid Remix router duplicates.
+  - Our remix-react-proxy plugin does not process default client and
+  - server entry files since those come from within `node_modules`.
+  - That means that before Vite pre-bundles dependencies (e.g. first time dev server is run) mismatching Remix routers cause `Error: You must render this element inside a <Remix> element`.
 - Fix React Fast Refresh error on load when using `defer` in Vite dev server ([#7842](https://github.com/remix-run/remix/pull/7842))
 - Handle multiple "Set-Cookie" headers in Vite dev server ([#7843](https://github.com/remix-run/remix/pull/7843))
 - Fix flash of unstyled content on initial page load in Vite dev when using a custom Express server ([#7937](https://github.com/remix-run/remix/pull/7937))
+- Emit assets that were only referenced in the server build into the client assets directory in Vite build ([#7892](https://github.com/remix-run/remix/pull/7892), cherry-picked in [`8cd31d65`](https://github.com/remix-run/remix/commit/8cd31d6543ef4c765220fc64dca9bcc9c61ee9eb))
 - Populate `process.env` from `.env` files on the server in Vite dev ([#7958](https://github.com/remix-run/remix/pull/7958))
 - Fix `FutureConfig` type ([#7895](https://github.com/remix-run/remix/pull/7895))
 - Updated dependencies:
-  - `@remix-run/server-runtime@2.3.0-pre.0`
-  - `@remix-run/node@2.3.0-pre.0`
-  - `@remix-run/serve@2.3.0-pre.0`
+  - `@remix-run/server-runtime@2.3.0`
+  - `@remix-run/node@2.3.0`
 
 ## 2.2.0
 

@@ -1,26 +1,12 @@
 # `@remix-run/express`
 
-## 2.3.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.3.0-pre.2`
-
-## 2.3.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.3.0-pre.1`
-
-## 2.3.0-pre.0
+## 2.3.0
 
 ### Patch Changes
 
 - Fix flash of unstyled content on initial page load in Vite dev when using a custom Express server ([#7937](https://github.com/remix-run/remix/pull/7937))
 - Updated dependencies:
-  - `@remix-run/node@2.3.0-pre.0`
+  - `@remix-run/node@2.3.0`
 
 ## 2.2.0
 
