@@ -530,7 +530,7 @@ describe("<Link> href", () => {
       });
 
       expect(renderer.root.findByType("a").props.href).toEqual(
-        "/inbox/messages"
+        "/inbox/messages/abc"
       );
     });
 

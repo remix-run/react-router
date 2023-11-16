@@ -1,5 +1,33 @@
 # `@remix-run/router`
 
+## 1.12.0
+
+### Minor Changes
+
+- Add `unstable_flushSync` option to `router.navigate` and `router.fetch` to tell the React Router layer to opt-out of `React.startTransition` and into `ReactDOM.flushSync` for state updates ([#11005](https://github.com/remix-run/react-router/pull/11005))
+
+### Patch Changes
+
+- Fix `relative="path"` bug where relative path calculations started from the full location pathname, instead of from the current contextual route pathname. ([#11006](https://github.com/remix-run/react-router/pull/11006))
+
+  ```jsx
+  <Route path="/a">
+    <Route path="/b" element={<Component />}>
+      <Route path="/c" />
+    </Route>
+  </Route>;
+
+  function Component() {
+    return (
+      <>
+        {/* This is now correctly relative to /a/b, not /a/b/c */}
+        <Link to=".." relative="path" />
+        <Outlet />
+      </>
+    );
+  }
+  ```
+
 ## 1.11.0
 
 ### Minor Changes

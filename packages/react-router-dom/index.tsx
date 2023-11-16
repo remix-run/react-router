@@ -3,6 +3,7 @@
  * you'll need to update the rollup config for react-router-dom-v5-compat.
  */
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import type {
   DataRouteObject,
   FutureConfig,
@@ -24,7 +25,7 @@ import {
   useNavigate,
   useNavigation,
   useResolvedPath,
-  unstable_useBlocker as useBlocker,
+  useBlocker,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
@@ -48,6 +49,7 @@ import type {
   V7_FormMethod,
   RouterState,
   RouterSubscriber,
+  BlockerFunction,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -168,7 +170,7 @@ export {
   useActionData,
   useAsyncError,
   useAsyncValue,
-  unstable_useBlocker,
+  useBlocker,
   useHref,
   useInRouterContext,
   useLoaderData,
@@ -337,6 +339,7 @@ type ViewTransitionContextObject =
     }
   | {
       isTransitioning: true;
+      flushSync: boolean;
       currentLocation: Location;
       nextLocation: Location;
     };
@@ -389,10 +392,20 @@ export { FetchersContext as UNSAFE_FetchersContext };
 */
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
+const FLUSH_SYNC = "flushSync";
+const flushSyncImpl = ReactDOM[FLUSH_SYNC];
 
 function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
     startTransitionImpl(cb);
+  } else {
+    cb();
+  }
+}
+
+function flushSyncSafe(cb: () => void) {
+  if (flushSyncImpl) {
+    flushSyncImpl(cb);
   } else {
     cb();
   }
@@ -467,7 +480,11 @@ export function RouterProvider({
   let setState = React.useCallback<RouterSubscriber>(
     (
       newState: RouterState,
-      { deletedFetchers, unstable_viewTransitionOpts: viewTransitionOpts }
+      {
+        deletedFetchers,
+        unstable_flushSync: flushSync,
+        unstable_viewTransitionOpts: viewTransitionOpts,
+      }
     ) => {
       deletedFetchers.forEach((key) => fetcherData.current.delete(key));
       newState.fetchers.forEach((fetcher, key) => {
@@ -476,17 +493,62 @@ export function RouterProvider({
         }
       });
 
-      if (
-        !viewTransitionOpts ||
+      let isViewTransitionUnavailable =
         router.window == null ||
-        typeof router.window.document.startViewTransition !== "function"
-      ) {
-        // Mid-navigation state update, or startViewTransition isn't available
-        optInStartTransition(() => setStateImpl(newState));
-      } else if (transition && renderDfd) {
+        typeof router.window.document.startViewTransition !== "function";
+
+      // If this isn't a view transition or it's not available in this browser,
+      // just update and be done with it
+      if (!viewTransitionOpts || isViewTransitionUnavailable) {
+        if (flushSync) {
+          flushSyncSafe(() => setStateImpl(newState));
+        } else {
+          optInStartTransition(() => setStateImpl(newState));
+        }
+        return;
+      }
+
+      // flushSync + startViewTransition
+      if (flushSync) {
+        // Flush through the context to mark DOM elements as transition=ing
+        flushSyncSafe(() => {
+          // Cancel any pending transitions
+          if (transition) {
+            renderDfd && renderDfd.resolve();
+            transition.skipTransition();
+          }
+          setVtContext({
+            isTransitioning: true,
+            flushSync: true,
+            currentLocation: viewTransitionOpts.currentLocation,
+            nextLocation: viewTransitionOpts.nextLocation,
+          });
+        });
+
+        // Update the DOM
+        let t = router.window!.document.startViewTransition(() => {
+          flushSyncSafe(() => setStateImpl(newState));
+        });
+
+        // Clean up after the animation completes
+        t.finished.finally(() => {
+          flushSyncSafe(() => {
+            setRenderDfd(undefined);
+            setTransition(undefined);
+            setPendingState(undefined);
+            setVtContext({ isTransitioning: false });
+          });
+        });
+
+        flushSyncSafe(() => setTransition(t));
+        return;
+      }
+
+      // startTransition + startViewTransition
+      if (transition) {
         // Interrupting an in-progress transition, cancel and let everything flush
         // out, and then kick off a new transition from the interruption state
-        renderDfd.resolve();
+        renderDfd && renderDfd.resolve();
         transition.skipTransition();
         setInterruption({
           state: newState,
@@ -498,6 +560,7 @@ export function RouterProvider({
         setPendingState(newState);
         setVtContext({
           isTransitioning: true,
+          flushSync: false,
           currentLocation: viewTransitionOpts.currentLocation,
           nextLocation: viewTransitionOpts.nextLocation,
         });
@@ -513,10 +576,10 @@ export function RouterProvider({
   // When we start a view transition, create a Deferred we can use for the
   // eventual "completed" render
   React.useEffect(() => {
-    if (vtContext.isTransitioning) {
+    if (vtContext.isTransitioning && !vtContext.flushSync) {
       setRenderDfd(new Deferred<void>());
     }
-  }, [vtContext.isTransitioning]);
+  }, [vtContext]);
 
   // Once the deferred is created, kick off startViewTransition() to update the
   // DOM and then wait on the Deferred to resolve (indicating the DOM update has
@@ -558,6 +621,7 @@ export function RouterProvider({
       setPendingState(interruption.state);
       setVtContext({
         isTransitioning: true,
+        flushSync: false,
         currentLocation: interruption.currentLocation,
         nextLocation: interruption.nextLocation,
       });
@@ -915,7 +979,6 @@ export interface NavLinkProps
   style?:
     | React.CSSProperties
     | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
-  unstable_viewTransition?: boolean;
 }
 
 /**
@@ -964,11 +1027,20 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       toPathname = toPathname.toLowerCase();
     }
 
+    // If the `to` has a trailing slash, look at that exact spot.  Otherwise,
+    // we're looking for a slash _after_ what's in `to`.  For example:
+    //
+    // <NavLink to="/users"> and <NavLink to="/users/">
+    // both want to look for a / at index 6 to match URL `/users/matt`
+    const endSlashPosition =
+      toPathname !== "/" && toPathname.endsWith("/")
+        ? toPathname.length - 1
+        : toPathname.length;
     let isActive =
       locationPathname === toPathname ||
       (!end &&
         locationPathname.startsWith(toPathname) &&
-        locationPathname.charAt(toPathname.length) === "/");
+        locationPathname.charAt(endSlashPosition) === "/");
 
     let isPending =
       nextLocationPathname != null &&
@@ -1434,6 +1506,7 @@ export function useSubmit(): SubmitFunction {
           body,
           formMethod: options.method || (method as HTMLFormMethod),
           formEncType: options.encType || (encType as FormEncType),
+          unstable_flushSync: options.unstable_flushSync,
         });
       } else {
         router.navigate(options.action || action, {
@@ -1445,6 +1518,7 @@ export function useSubmit(): SubmitFunction {
           replace: options.replace,
           state: options.state,
           fromRouteId: currentRouteId,
+          unstable_flushSync: options.unstable_flushSync,
           unstable_viewTransition: options.unstable_viewTransition,
         });
       }
@@ -1468,10 +1542,8 @@ export function useFormAction(
   // object referenced by useMemo inside useResolvedPath
   let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
-  // Previously we set the default action to ".". The problem with this is that
-  // `useResolvedPath(".")` excludes search params of the resolved URL. This is
-  // the intended behavior of when "." is specifically provided as
-  // the form action, but inconsistent w/ browsers when the action is omitted.
+  // If no action was specified, browsers will persist current search params
+  // when determining the path, so match that behavior
   // https://github.com/remix-run/remix/issues/927
   let location = useLocation();
   if (action == null) {
@@ -1479,11 +1551,11 @@ export function useFormAction(
     // would have called useResolvedPath(".") which will never include a search
     path.search = location.search;
 
-    // When grabbing search params from the URL, remove the automatically
-    // inserted ?index param so we match the useResolvedPath search behavior
-    // which would not include ?index
-    if (match.route.index) {
-      let params = new URLSearchParams(path.search);
+    // When grabbing search params from the URL, remove any included ?index param
+    // since it might not apply to our contextual route.  We add it back based
+    // on match.route.index below
+    let params = new URLSearchParams(path.search);
+    if (params.has("index") && params.get("index") === "") {
       params.delete("index");
       path.search = params.toString() ? `?${params.toString()}` : "";
     }
@@ -1512,7 +1584,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
     FetcherFormProps & React.RefAttributes<HTMLFormElement>
   >;
   submit: FetcherSubmitFunction;
-  load: (href: string) => void;
+  load: (href: string, opts?: { unstable_flushSync?: boolean }) => void;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
@@ -1539,7 +1611,9 @@ export function useFetcher<TData = any>({
 
   // Fetcher key handling
   let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
-  if (!fetcherKey) {
+  if (key && key !== fetcherKey) {
+    setFetcherKey(key);
+  } else if (!fetcherKey) {
     setFetcherKey(getUniqueFetcherId());
   }
 
@@ -1556,9 +1630,9 @@ export function useFetcher<TData = any>({
 
   // Fetcher additions
   let load = React.useCallback(
-    (href: string) => {
+    (href: string, opts?: { unstable_flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
-      router.fetch(fetcherKey, routeId, href);
+      router.fetch(fetcherKey, routeId, href, opts);
     },
     [fetcherKey, routeId, router]
   );
@@ -1801,7 +1875,13 @@ function usePageHide(
  * very incorrectly in some cases) across browsers if user click addition
  * back/forward navigations while the confirm is open.  Use at your own risk.
  */
-function usePrompt({ when, message }: { when: boolean; message: string }) {
+function usePrompt({
+  when,
+  message,
+}: {
+  when: boolean | BlockerFunction;
+  message: string;
+}) {
   let blocker = useBlocker(when);
 
   React.useEffect(() => {

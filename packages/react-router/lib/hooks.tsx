@@ -312,8 +312,12 @@ export function useResolvedPath(
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
+  // Use the full pathname for the leaf match so we include splat values
+  // for "." links
   let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+    getPathContributingMatches(matches).map((match, idx) =>
+      idx === matches.length - 1 ? match.pathname : match.pathnameBase
+    )
   );
 
   return React.useMemo(
@@ -875,11 +879,8 @@ export function useRouteLoaderData(routeId: string): unknown {
  */
 export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
-
-  let route = React.useContext(RouteContext);
-  invariant(route, `useActionData must be used inside a RouteContext`);
-
-  return Object.values(state?.actionData || {})[0];
+  let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
+  return state.actionData ? state.actionData[routeId] : undefined;
 }
 
 /**

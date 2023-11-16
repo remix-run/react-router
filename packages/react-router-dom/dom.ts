@@ -205,6 +205,11 @@ export interface SubmitOptions {
   preventScrollReset?: boolean;
 
   /**
+   * Enable flushSync for this navigation's state updates
+   */
+  unstable_flushSync?: boolean;
+
+  /**
    * Enable view transitions on this submission navigation
    */
   unstable_viewTransition?: boolean;

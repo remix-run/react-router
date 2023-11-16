@@ -13,7 +13,7 @@ import {
   Outlet,
   Route,
   RouterProvider,
-  unstable_useBlocker as useBlocker,
+  useBlocker,
   useLocation,
 } from "react-router-dom";
 

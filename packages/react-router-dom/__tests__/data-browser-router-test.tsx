@@ -29,7 +29,6 @@ import {
   useFetchers,
   useLoaderData,
   useLocation,
-  useMatches,
   useNavigate,
   useNavigation,
   useRouteError,
@@ -186,7 +185,6 @@ function testDomRouter(
         "<div>
           <div>
             parent data
-            child action
             idle
             <div>
               child data
@@ -238,7 +236,6 @@ function testDomRouter(
         "<div>
           <div>
             parent data
-            child action
             idle
             <div>
               child data
@@ -1042,7 +1039,17 @@ function testDomRouter(
               lazy={async () => ({
                 action: () => actionDefer.promise,
                 loader: () => loaderDefer.promise,
-                element: <h1>Action</h1>,
+                Component() {
+                  let data = useLoaderData() as string;
+                  let actionData = useActionData() as string | undefined;
+                  return (
+                    <>
+                      <h1>Action</h1>
+                      <p>{data}</p>
+                      <p>{actionData}</p>
+                    </>
+                  );
+                },
               })}
             />
           </Route>
@@ -1054,8 +1061,6 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useMatches().pop()?.data as string | undefined;
-        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         let submit = useSubmit();
         let formRef = React.useRef<HTMLFormElement>(null);
@@ -1067,8 +1072,6 @@ function testDomRouter(
             <button onClick={() => submit(formRef.current)}>Submit Form</button>
             <div id="output">
               <p>{navigation.state}</p>
-              <p>{data}</p>
-              <p>{actionData}</p>
               <Outlet />
             </div>
           </div>
@@ -1084,8 +1087,6 @@ function testDomRouter(
           <p>
             idle
           </p>
-          <p />
-          <p />
           <h1>
             Home
           </h1>
@@ -1102,8 +1103,6 @@ function testDomRouter(
           <p>
             submitting
           </p>
-          <p />
-          <p />
           <h1>
             Home
           </h1>
@@ -1119,10 +1118,6 @@ function testDomRouter(
         >
           <p>
             loading
-          </p>
-          <p />
-          <p>
-            Action Data
           </p>
           <h1>
             Home
@@ -1140,15 +1135,15 @@ function testDomRouter(
           <p>
             idle
           </p>
+          <h1>
+            Action
+          </h1>
           <p>
             Loader Data
           </p>
           <p>
             Action Data
           </p>
-          <h1>
-            Action
-          </h1>
         </div>"
       `);
     });
@@ -1264,7 +1259,17 @@ function testDomRouter(
                   ).searchParams.get("test");
                   return `${resolvedValue}:${urlParam}`;
                 },
-                element: <h1>Path</h1>,
+                Component() {
+                  let data = useLoaderData() as string;
+                  let actionData = useActionData() as string | undefined;
+                  return (
+                    <>
+                      <h1>Path</h1>
+                      <p>{data}</p>
+                      <p>{actionData}</p>
+                    </>
+                  );
+                },
               })}
             />
           </Route>
@@ -1276,8 +1281,6 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useMatches().pop()?.data as string | undefined;
-        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1287,8 +1290,6 @@ function testDomRouter(
             </Form>
             <div id="output">
               <p>{navigation.state}</p>
-              <p>{data}</p>
-              <p>{actionData}</p>
               <Outlet />
             </div>
           </div>
@@ -1304,8 +1305,6 @@ function testDomRouter(
           <p>
             idle
           </p>
-          <p />
-          <p />
           <h1>
             Home
           </h1>
@@ -1322,8 +1321,6 @@ function testDomRouter(
           <p>
             loading
           </p>
-          <p />
-          <p />
           <h1>
             Home
           </h1>
@@ -1340,13 +1337,13 @@ function testDomRouter(
           <p>
             idle
           </p>
+          <h1>
+            Path
+          </h1>
           <p>
             Loader Data:value
           </p>
           <p />
-          <h1>
-            Path
-          </h1>
         </div>"
       `);
     });
@@ -1477,7 +1474,17 @@ function testDomRouter(
                   return `${resolvedValue}:${formData.get("test")}`;
                 },
                 loader: () => loaderDefer.promise,
-                element: <h1>Action</h1>,
+                Component() {
+                  let data = useLoaderData() as string;
+                  let actionData = useActionData() as string | undefined;
+                  return (
+                    <>
+                      <h1>Action</h1>
+                      <p>{data}</p>
+                      <p>{actionData}</p>
+                    </>
+                  );
+                },
               })}
             />
           </Route>
@@ -1490,8 +1497,6 @@ function testDomRouter(
       let { container } = render(<RouterProvider router={router} />);
 
       function Home() {
-        let data = useMatches().pop()?.data as string | undefined;
-        let actionData = useActionData() as string | undefined;
         let navigation = useNavigation();
         return (
           <div>
@@ -1501,8 +1506,6 @@ function testDomRouter(
             </Form>
             <div id="output">
               <p>{navigation.state}</p>
-              <p>{data}</p>
-              <p>{actionData}</p>
               <Outlet />
             </div>
           </div>
@@ -1518,8 +1521,6 @@ function testDomRouter(
           <p>
             idle
           </p>
-          <p />
-          <p />
           <h1>
             Home
           </h1>
@@ -1536,8 +1537,6 @@ function testDomRouter(
           <p>
             submitting
           </p>
-          <p />
-          <p />
           <h1>
             Home
           </h1>
@@ -1553,10 +1552,6 @@ function testDomRouter(
         >
           <p>
             loading
-          </p>
-          <p />
-          <p>
-            Action Data:value
           </p>
           <h1>
             Home
@@ -1574,15 +1569,15 @@ function testDomRouter(
           <p>
             idle
           </p>
+          <h1>
+            Action
+          </h1>
           <p>
             Loader Data
           </p>
           <p>
             Action Data:value
           </p>
-          <h1>
-            Action
-          </h1>
         </div>"
       `);
     });
@@ -2038,7 +2033,7 @@ function testDomRouter(
               path="1"
               action={() => "action"}
               loader={() => "1"}
-              element={<h1>Page 1</h1>}
+              element={<Page />}
             />
           </Route>
         ),
@@ -2052,7 +2047,6 @@ function testDomRouter(
       function Layout() {
         let navigate = useNavigate();
         let submit = useSubmit();
-        let actionData = useActionData() as string | undefined;
         let formData = new FormData();
         formData.append("test", "value");
         return (
@@ -2067,9 +2061,18 @@ function testDomRouter(
             </button>
             <button onClick={() => navigate(-1)}>Go back</button>
             <div className="output">
-              {actionData ? <p>{actionData}</p> : null}
               <Outlet />
             </div>
+          </>
+        );
+      }
+
+      function Page() {
+        let actionData = useActionData() as string | undefined;
+        return (
+          <>
+            <h1>Page 1</h1>
+            <p>{actionData}</p>
           </>
         );
       }
@@ -2095,6 +2098,7 @@ function testDomRouter(
           <h1>
             Page 1
           </h1>
+          <p />
         </div>"
       `);
 
@@ -2105,12 +2109,12 @@ function testDomRouter(
         "<div
           class="output"
         >
-          <p>
-            action
-          </p>
           <h1>
             Page 1
           </h1>
+          <p>
+            action
+          </p>
         </div>"
       `);
 
@@ -2653,6 +2657,68 @@ function testDomRouter(
             "/foo/bar"
           );
         });
+
+        it("does not include dynamic parameters from a parent layout route", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo" element={<ActionEmptyComponent />}>
+                  <Route path=":param" element={<h1>Param</h1>} />
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
+
+        it("does not include splat parameters from a parent layout route", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo" element={<ActionEmptyComponent />}>
+                  <Route path="*" element={<h1>Splat</h1>} />
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar/baz/qux"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo"
+          );
+        });
+
+        it("does not include the index parameter if we've submitted to a child index route", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo">
+                  <Route path="bar" element={<NoActionComponent />}>
+                    <Route index={true} element={<h1>Index</h1>} />
+                  </Route>
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar?index&a=1"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar?a=1"
+          );
+        });
       });
 
       describe("index routes", () => {
@@ -2876,6 +2942,44 @@ function testDomRouter(
             "/foo/bar"
           );
         });
+
+        it("includes param portion of path when no action is specified (inline splat)", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo">
+                  <Route path=":param" element={<NoActionComponent />} />
+                </Route>
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
+
+        it("includes splat portion of path when no action is specified (nested splat)", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo/:param" element={<NoActionComponent />} />
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar"
+          );
+        });
       });
 
       describe("splat routes", () => {
@@ -2895,7 +2999,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo?a=1"
+            "/foo/bar?a=1"
           );
         });
 
@@ -2915,7 +3019,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo/bar"
           );
         });
 
@@ -2935,7 +3039,25 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo/bar"
+          );
+        });
+
+        it("includes splat portion of path when no action is specified (inline splat)", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route path="/">
+                <Route path="foo/*" element={<NoActionComponent />} />
+              </Route>
+            ),
+            {
+              window: getWindow("/foo/bar/baz"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          expect(container.querySelector("form")?.getAttribute("action")).toBe(
+            "/foo/bar/baz"
           );
         });
       });
@@ -5213,6 +5335,77 @@ function testDomRouter(
           );
         });
 
+        it("updates the key if it changes while the fetcher remains mounted", async () => {
+          let router = createTestRouter(
+            [
+              {
+                path: "/",
+                Component() {
+                  let fetchers = useFetchers();
+                  let [fetcherKey, setFetcherKey] = React.useState("a");
+                  return (
+                    <>
+                      <ReusedFetcher fetcherKey={fetcherKey} />
+                      <button onClick={() => setFetcherKey("b")}>
+                        Change Key
+                      </button>
+                      <p>Fetchers:</p>
+                      <pre>{JSON.stringify(fetchers)}</pre>
+                    </>
+                  );
+                },
+              },
+              {
+                path: "/echo",
+                loader: ({ request }) => request.url,
+              },
+            ],
+            { window: getWindow("/") }
+          );
+
+          function ReusedFetcher({ fetcherKey }: { fetcherKey: string }) {
+            let fetcher = useFetcher({ key: fetcherKey });
+
+            return (
+              <>
+                <button
+                  onClick={() => fetcher.load(`/echo?fetcherKey=${fetcherKey}`)}
+                >
+                  Load Fetcher
+                </button>
+                <p>{`fetcherKey:${fetcherKey}`}</p>
+                <p>Fetcher:{JSON.stringify(fetcher)}</p>
+              </>
+            );
+          }
+
+          let { container } = render(<RouterProvider router={router} />);
+
+          // Start with idle fetcher 'a'
+          expect(getHtml(container)).toContain('{"Form":{},"state":"idle"}');
+          expect(getHtml(container)).toContain("fetcherKey:a");
+
+          fireEvent.click(screen.getByText("Load Fetcher"));
+          await waitFor(
+            () => screen.getAllByText(/\/echo\?fetcherKey=a/).length > 0
+          );
+
+          // Fetcher 'a' now has data
+          expect(getHtml(container)).toContain(
+            '{"Form":{},"state":"idle","data":"http://localhost/echo?fetcherKey=a"}'
+          );
+          expect(getHtml(container)).toContain(
+            '[{"state":"idle","data":"http://localhost/echo?fetcherKey=a","key":"a"}]'
+          );
+
+          fireEvent.click(screen.getByText("Change Key"));
+          await waitFor(() => screen.getByText("fetcherKey:b"));
+
+          // We should have a new uninitialized/idle fetcher 'b'
+          expect(getHtml(container)).toContain('{"Form":{},"state":"idle"');
+          expect(getHtml(container)).toContain("[]");
+        });
+
         it("exposes fetcher keys via useFetchers", async () => {
           let router = createTestRouter(
             [
@@ -5627,7 +5820,12 @@ function testDomRouter(
                       Component() {
                         let fetcher = useFetcher({ key: "me" });
                         let data = useLoaderData() as { count: number };
-                        return <h1>{`Page (${data.count})`}</h1>;
+                        return (
+                          <>
+                            <h1>{`Page (${data.count})`}</h1>
+                            <p>{fetcher.data}</p>
+                          </>
+                        );
                       },
                       async loader() {
                         await new Promise((r) => setTimeout(r, 10));
@@ -5659,6 +5857,7 @@ function testDomRouter(
             dfd.resolve("FETCH");
             await waitFor(() => screen.getByText("Num fetchers: 0"));
             expect(getHtml(container)).toMatch("Page (2)");
+            expect(getHtml(container)).toMatch("FETCH");
           });
 
           it("submitting fetchers w/redirects are cleaned up on completion", async () => {

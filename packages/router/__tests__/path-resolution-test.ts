@@ -451,6 +451,27 @@ describe("path resolution", () => {
     expect(router.state.location.pathname).toBe("/a/b/c/d");
     router.navigate("/a/b/c/d/e/f");
 
+    // Navigating with relative:path from mid-route-hierarchy
+    router.navigate("..", { relative: "path", fromRouteId: "f" });
+    expect(router.state.location.pathname).toBe("/a/b/c/d/e");
+    router.navigate("/a/b/c/d/e/f");
+
+    router.navigate("../..", { relative: "path", fromRouteId: "de" });
+    expect(router.state.location.pathname).toBe("/a/b/c");
+    router.navigate("/a/b/c/d/e/f");
+
+    router.navigate("../..", { relative: "path", fromRouteId: "bc" });
+    expect(router.state.location.pathname).toBe("/a");
+    router.navigate("/a/b/c/d/e/f");
+
+    // Go up farther than # of URL segments
+    router.navigate("../../../../../../../../..", {
+      relative: "path",
+      fromRouteId: "f",
+    });
+    expect(router.state.location.pathname).toBe("/");
+    router.navigate("/a/b/c/d/e/f");
+
     router.dispose();
   });
 

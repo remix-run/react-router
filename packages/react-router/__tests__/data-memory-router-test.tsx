@@ -295,7 +295,6 @@ describe("createMemoryRouter", () => {
       "<div>
         <div>
           parent data
-          child action
           idle
           <div>
             child data
