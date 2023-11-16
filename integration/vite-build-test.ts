@@ -32,6 +32,10 @@ test.describe("Vite build", () => {
           import mdx from "@mdx-js/rollup";
 
           export default defineConfig({
+            build: {
+              // force emitting asset files instead of inlined as data-url
+              assetsInlineLimit: 0,
+            },
             plugins: [
               remix(),
               mdx(),
@@ -183,6 +187,29 @@ test.describe("Vite build", () => {
             return <div data-dotenv-route-loader-content>{loaderContent}</div>;
           }
         `,
+
+        "app/routes/ssr-assets.tsx": js`
+          import url1 from "../assets/test1.txt?url";
+          import url2 from "../assets/test2.txt?url";
+          import { useLoaderData } from "@remix-run/react"
+
+          export const loader: LoaderFunction = () => {
+            return { url2 };
+          };
+
+          export default function SsrAssetRoute() {
+            const loaderData = useLoaderData();
+            return (
+              <div>
+                <a href={url1}>url1</a>
+                <a href={loaderData.url2}>url2</a>
+              </div>
+            );
+          }
+        `,
+
+        "app/assets/test1.txt": "test1",
+        "app/assets/test2.txt": "test2",
       },
     });
 
@@ -250,6 +277,21 @@ test.describe("Vite build", () => {
     );
 
     expect(pageErrors).toEqual([]);
+  });
+
+  test("emits SSR assets to the client assets directory", async ({ page }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/ssr-assets");
+
+    // verify asset files are emitted and served correctly
+    await page.getByRole("link", { name: "url1" }).click();
+    await page.waitForURL("**/build/assets/test1-*.txt");
+    await page.getByText("test1").click();
+    await page.goBack();
+
+    await page.getByRole("link", { name: "url2" }).click();
+    await page.waitForURL("**/build/assets/test2-*.txt");
+    await page.getByText("test2").click();
   });
 
   test("supports code-split css", async ({ page }) => {
