@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 2.3.0
+
+### Minor Changes
+
+- Updated `cookie` dependency from `0.4.1` to [`0.5.0`](https://github.com/jshttp/cookie/blob/v0.5.0/HISTORY.md#050--2022-04-11) to inherit support for `Priority` attribute in Chrome ([#6770](https://github.com/remix-run/remix/pull/6770))
+
 ## 2.2.0
 
 ### Minor Changes
