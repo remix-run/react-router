@@ -4612,21 +4612,20 @@ function testDomRouter(
       });
 
       it("show all fetchers via useFetchers and cleans up fetchers on unmount", async () => {
-        let dfd1 = createDeferred();
-        let dfd2 = createDeferred();
+        let navDfd = createDeferred();
+        let fetchDfd1 = createDeferred();
+        let fetchDfd2 = createDeferred();
         let router = createTestRouter(
           createRoutesFromElements(
             <Route path="/" element={<Parent />}>
-              <Route
-                path="/1"
-                loader={async () => await dfd1.promise}
-                element={<Comp1 />}
-              />
+              <Route path="/1" element={<Comp1 />} />
               <Route
                 path="/2"
-                loader={async () => await dfd2.promise}
+                loader={() => navDfd.promise}
                 element={<Comp2 />}
               />
+              <Route path="/fetch-1" loader={() => fetchDfd1.promise} />
+              <Route path="/fetch-2" loader={() => fetchDfd2.promise} />
             </Route>
           ),
           {
@@ -4658,7 +4657,7 @@ function testDomRouter(
                 1{fetcher.state}
                 {fetcher.data || "null"}
               </p>
-              <button onClick={() => fetcher.load("/1")}>load</button>
+              <button onClick={() => fetcher.load("/fetch-1")}>load</button>
             </>
           );
         }
@@ -4671,7 +4670,7 @@ function testDomRouter(
                 2{fetcher.state}
                 {fetcher.data || "null"}
               </p>
-              <button onClick={() => fetcher.load("/2")}>load</button>
+              <button onClick={() => fetcher.load("/fetch-2")}>load</button>
             </>
           );
         }
@@ -4718,7 +4717,7 @@ function testDomRouter(
         `);
 
         // Resolve Comp1 fetcher - UI updates
-        dfd1.resolve("data 1");
+        fetchDfd1.resolve("data 1");
         await waitFor(() => screen.getByText(/data 1/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
@@ -4761,7 +4760,7 @@ function testDomRouter(
         `);
 
         // Resolve Comp2 loader and complete navigation
-        dfd2.resolve("data 2");
+        navDfd.resolve("nav data");
         await waitFor(() => screen.getByText(/2.*idle/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
@@ -4782,8 +4781,7 @@ function testDomRouter(
           </div>"
         `);
 
-        // Activate Comp2 fetcher, which now officially kicks out Comp1's
-        // fetcher from useFetchers and reflects Comp2's fetcher
+        // Activate Comp2 fetcher
         fireEvent.click(screen.getByText("load"));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
@@ -4805,7 +4803,8 @@ function testDomRouter(
         `);
 
         // Comp2 loader resolves with the same data, useFetchers reflects idle-done
-        await waitFor(() => screen.getByText(/2.*idle/));
+        fetchDfd2.resolve("data 2");
+        await waitFor(() => screen.getByText(/data 2/));
         expect(getHtml(container.querySelector("#output")!))
           .toMatchInlineSnapshot(`
           "<div
