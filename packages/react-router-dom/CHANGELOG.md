@@ -1,5 +1,21 @@
 # `react-router-dom`
 
+## 6.19.0
+
+### Minor Changes
+
+- Add `unstable_flushSync` option to `useNavigate`/`useSumbit`/`fetcher.load`/`fetcher.submit` to opt-out of `React.startTransition` and into `ReactDOM.flushSync` for state updates ([#11005](https://github.com/remix-run/react-router/pull/11005))
+- Allow `unstable_usePrompt` to accept a `BlockerFunction` in addition to a `boolean` ([#10991](https://github.com/remix-run/react-router/pull/10991))
+
+### Patch Changes
+
+- Fix issue where a changing fetcher `key` in a `useFetcher` that remains mounted wasn't getting picked up ([#11009](https://github.com/remix-run/react-router/pull/11009))
+- Fix `useFormAction` which was incorrectly inheriting the `?index` query param from child route `action` submissions ([#11025](https://github.com/remix-run/react-router/pull/11025))
+- Fix `NavLink` `active` logic when `to` location has a trailing slash ([#10734](https://github.com/remix-run/react-router/pull/10734))
+- Updated dependencies:
+  - `react-router@6.19.0`
+  - `@remix-run/router@1.12.0`
+
 ## 6.18.0
 
 ### Minor Changes

@@ -60,7 +60,11 @@ Specifying `replace: true` will cause the navigation to replace the current entr
 
 ## `options.state`
 
-You may include an optional state value in to store in [history state][history-state]
+You may include an optional `state` value to store in [history state][history-state], which you can then access on the destination route via [`useLocation`][use-location]. For example:
+
+```tsx
+navigate("/new-route", { state: { key: "value" } });
+```
 
 ## `options.preventScrollReset`
 
@@ -109,6 +113,7 @@ The `unstable_viewTransition` option enables a [View Transition][view-transition
 [actions]: ../route/action
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
 [scrollrestoration]: ../components/scroll-restoration
+[use-location]: ../hooks/use-location
 [use-view-transition-state]: ../hooks//use-view-transition-state
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
 [picking-a-router]: ../routers/picking-a-router
