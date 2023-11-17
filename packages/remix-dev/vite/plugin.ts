@@ -519,6 +519,13 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             base: pluginConfig.publicPath,
             build: {
               ...viteUserConfig.build,
+              // By convention Remix builds into a subdirectory within the
+              // public directory ("public/build" by default) so we don't want
+              // to copy the contents of the public directory around. This also
+              // ensures that we don't get caught in an infinite loop when
+              // `assetsBuildDirectory` is nested multiple levels deep within
+              // the public directory, e.g. "public/custom-base-dir/build"
+              copyPublicDir: false,
               ...(!isSsrBuild
                 ? {
                     manifest: true,
