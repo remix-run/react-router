@@ -542,7 +542,12 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
                     },
                   }
                 : {
-                    ssrEmitAssets: true, // We move SSR-only assets to client assets and clean the rest
+                    // We move SSR-only assets to client assets. Note that the
+                    // SSR build can also emit code-split JS files (e.g. by
+                    // dynamic import) under the same assets directory
+                    // regardless of "ssrEmitAssets" option, so we also need to
+                    // keep these JS files have to be kept as-is.
+                    ssrEmitAssets: true,
                     manifest: true, // We need the manifest to detect SSR-only assets
                     outDir: path.dirname(pluginConfig.serverBuildPath),
                     rollupOptions: {
@@ -756,7 +761,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       },
       writeBundle: {
         // After the SSR build is finished, we inspect the Vite manifest for
-        // the SSR build and move all server assets to client assets directory
+        // the SSR build and move server-only assets to client assets directory
         async handler() {
           if (!ssrBuildContext.isSsrBuild) {
             return;
@@ -785,20 +790,39 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             )
           );
 
-          let ssrOnlyAssetPaths = new Set(
-            Object.values(ssrViteManifest)
-              .flatMap((chunk) => chunk.assets ?? [])
-              // Only move assets that aren't in the client build
-              .filter((asset) => !clientAssetPaths.has(asset))
+          let ssrAssetPaths = new Set(
+            Object.values(ssrViteManifest).flatMap(
+              (chunk) => chunk.assets ?? []
+            )
           );
 
-          let movedAssetPaths = await Promise.all(
-            Array.from(ssrOnlyAssetPaths).map(async (ssrAssetPath) => {
-              let src = path.join(serverBuildDir, ssrAssetPath);
+          // We only move assets that aren't in the client build, otherwise we
+          // remove them. These assets only exist because we explicitly set
+          // `ssrEmitAssets: true` in the SSR Vite config. These assets
+          // typically wouldn't exist by default, which is why we assume it's
+          // safe to remove them. We're aiming for a clean build output so that
+          // unnecessary assets don't get deployed alongside the server code.
+          let movedAssetPaths: string[] = [];
+          for (let ssrAssetPath of ssrAssetPaths) {
+            let src = path.join(serverBuildDir, ssrAssetPath);
+            if (!clientAssetPaths.has(ssrAssetPath)) {
               let dest = path.join(assetsBuildDirectory, ssrAssetPath);
               await fse.move(src, dest);
-              return dest;
-            })
+              movedAssetPaths.push(dest);
+            } else {
+              await fse.remove(src);
+            }
+          }
+
+          // We assume CSS files from the SSR build are unnecessary and remove
+          // them for the same reasons as above.
+          let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
+            (chunk) => chunk.css ?? []
+          );
+          await Promise.all(
+            ssrCssPaths.map((cssPath) =>
+              fse.remove(path.join(serverBuildDir, cssPath))
+            )
           );
 
           let logger = resolvedViteConfig.logger;
@@ -816,15 +840,6 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
                 "",
               ].join("\n")
             );
-          }
-
-          let ssrAssetsDir = path.join(
-            resolvedViteConfig.build.outDir,
-            resolvedViteConfig.build.assetsDir
-          );
-
-          if (fse.existsSync(ssrAssetsDir)) {
-            await fse.remove(ssrAssetsDir);
           }
         },
       },
