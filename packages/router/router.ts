@@ -40,6 +40,7 @@ import {
   convertRouteMatchToUiMatch,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
+  getResolveToMatches,
   immutableRouteKeys,
   isRouteErrorResponse,
   joinPaths,
@@ -3338,7 +3339,7 @@ function normalizeTo(
   // Resolve the relative path
   let path = resolveTo(
     to ? to : ".",
-    getPathContributingMatches(contextualMatches).map((m) => m.pathnameBase),
+    getResolveToMatches(contextualMatches),
     stripBasename(location.pathname, basename) || location.pathname,
     relative === "path"
   );
