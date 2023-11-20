@@ -5497,7 +5497,9 @@ function testDomRouter(
             expect(getHtml(container)).toMatch("Page");
 
             // Resolve after the navigation - no-op
-            expect(loaderRequest?.signal?.aborted).toBe(true);
+            expect((loaderRequest as unknown as Request)?.signal?.aborted).toBe(
+              true
+            );
             dfd.resolve("FETCH");
             await waitFor(() => screen.getByText("Num fetchers: 0"));
             expect(getHtml(container)).toMatch("Page");
@@ -7726,7 +7728,6 @@ function testDomRouter(
 
       it("with v7_partialHydration, supports partial hydration w/no fallback", async () => {
         let dfd = createDeferred();
-        let consoleSpy = jest.spyOn(console, "warn");
         let router = createTestRouter(
           [
             {
@@ -7771,10 +7772,6 @@ function testDomRouter(
 
         expect(getHtml(container)).toMatchInlineSnapshot(`"<div />"`);
 
-        expect(consoleSpy).toHaveBeenCalledWith(
-          "No `Fallback` element provided to render during initial hydration"
-        );
-
         dfd.resolve("INDEX DATA");
         await waitFor(() => screen.getByText(/INDEX DATA/));
         expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -7789,14 +7786,11 @@ function testDomRouter(
             </div>
           </div>"
         `);
-
-        consoleSpy.mockRestore();
       });
 
       it("with v7_partialHydration, deprecates fallbackElement", async () => {
         let dfd1 = createDeferred();
         let dfd2 = createDeferred();
-        let consoleSpy = jest.spyOn(console, "warn");
         let router = createTestRouter(
           [
             {
@@ -7853,7 +7847,7 @@ function testDomRouter(
           </div>"
         `);
 
-        expect(consoleSpy).toHaveBeenCalledWith(
+        expect(consoleWarn).toHaveBeenCalledWith(
           "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
         );
 
@@ -7872,8 +7866,6 @@ function testDomRouter(
             </div>
           </div>"
         `);
-
-        consoleSpy.mockRestore();
       });
     });
   });

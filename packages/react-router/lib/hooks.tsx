@@ -704,12 +704,14 @@ export function _renderMatches(
         match.route.id &&
         dataRouterState?.loaderData[match.route.id] === undefined
       ) {
+        // We found the first route without data, flag that we need to render
+        // a fallback and render up until the appropriate fallback
         renderFallback = true;
-        // We found the first route without data, slice to here and break the loop
-        renderedMatches = renderedMatches.slice(
-          0,
-          Math.min(renderedMatches.length, i + 1)
-        );
+        if (fallbackIndex >= 0) {
+          renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
+        } else {
+          renderedMatches = [renderedMatches[0]];
+        }
         break;
       }
     }
