@@ -85,7 +85,6 @@ export { StaticHandlerContext };
 export interface StaticRouterProviderProps {
   context: StaticHandlerContext;
   router: RemixRouter;
-  fallbackElement?: React.ReactNode;
   hydrate?: boolean;
   nonce?: string;
 }
@@ -97,7 +96,6 @@ export interface StaticRouterProviderProps {
 export function StaticRouterProvider({
   context,
   router,
-  fallbackElement,
   hydrate = true,
   nonce,
 }: StaticRouterProviderProps) {
@@ -147,15 +145,11 @@ export function StaticRouterProvider({
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
               >
-                {fallbackElement ? (
-                  fallbackElement
-                ) : (
-                  <DataRoutes
-                    routes={router.routes}
-                    future={router.future}
-                    state={state}
-                  />
-                )}
+                <DataRoutes
+                  routes={router.routes}
+                  future={router.future}
+                  state={state}
+                />
               </Router>
             </ViewTransitionContext.Provider>
           </FetchersContext.Provider>
