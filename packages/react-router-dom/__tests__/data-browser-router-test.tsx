@@ -6302,11 +6302,15 @@ function testDomRouter(
                     let [showFetcher, setShowFetcher] = React.useState(true);
                     let [fetcherData, setFetcherData] = React.useState(null);
                     let fetchers = useFetchers();
+                    let actionData = useActionData();
+                    let navigation = useNavigation();
 
                     return (
                       <>
-                        <Form method="post" navigate={false}>
+                        <Form method="post">
                           <button type="submit">Submit Form</button>
+                          <p>{`Navigation State: ${navigation.state}`}</p>
+                          <p>{`Action Data: ${actionData}`}</p>
                           <p>{`Active Fetchers: ${fetchers.length}`}</p>
                         </Form>
                         {showFetcher ? (
@@ -6349,7 +6353,7 @@ function testDomRouter(
                   <button onClick={() => fetcher.load("/fetch")}>
                     Load Fetcher
                   </button>
-                  <pre>{fetcher.state}</pre>
+                  <pre>{`Fetcher State: ${fetcher.state}`}</pre>
                 </>
               );
             }
@@ -6357,16 +6361,31 @@ function testDomRouter(
             render(<RouterProvider router={router} />);
 
             fireEvent.click(screen.getByText("Load Fetcher"));
-            await waitFor(() => screen.getByText("loading"));
+            await waitFor(
+              () =>
+                screen.getByText("Active Fetchers: 1") &&
+                screen.getByText("Fetcher State: loading")
+            );
 
             loaderDfd.resolve("FETCHER DATA");
-            await waitFor(() => screen.getByText("FETCHER DATA"));
+            await waitFor(
+              () =>
+                screen.getByText("FETCHER DATA") &&
+                screen.getByText("Active Fetchers: 0")
+            );
 
             fireEvent.click(screen.getByText("Submit Form"));
-            await waitFor(() => screen.getByText("Active Fetchers: 1"));
+            await waitFor(() =>
+              screen.getByText("Navigation State: submitting")
+            );
 
             actionDfd.resolve("ACTION");
-            await waitFor(() => screen.getByText("Active Fetchers: 0"));
+            await waitFor(
+              () =>
+                screen.getByText("Navigation State: idle") &&
+                screen.getByText("Active Fetchers: 0") &&
+                screen.getByText("Action Data: ACTION")
+            );
 
             expect(count).toBe(1);
           });
