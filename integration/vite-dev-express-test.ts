@@ -159,7 +159,10 @@ test.afterAll(async () => {
 });
 
 test.describe("Vite custom Express server", () => {
-  test("handles HMR & HDR", async ({ page }) => {
+  test("handles HMR & HDR", async ({ page, browserName }) => {
+    let pageErrors: Error[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
     // setup: initial render
     await page.goto(`http://localhost:${dev.port}/`, {
       waitUntil: "networkidle",
@@ -178,6 +181,7 @@ test.describe("Vite custom Express server", () => {
     let input = page.locator("#index input");
     await expect(input).toBeVisible();
     await input.type("stateful");
+    expect(pageErrors).toEqual([]);
 
     // route: HMR
     await edit("app/routes/_index.tsx", (contents) =>
@@ -189,6 +193,7 @@ test.describe("Vite custom Express server", () => {
     await expect(page).toHaveTitle("HMR updated title: 1");
     await expect(hmrStatus).toHaveText("HMR updated: 1");
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
 
     // route: add loader
     await edit("app/routes/_index.tsx", (contents) =>
@@ -217,6 +222,25 @@ test.describe("Vite custom Express server", () => {
     // React Fast Refresh cannot preserve state for a component when hooks are added or removed
     await expect(input).toHaveValue("");
     await input.type("stateful");
+    expect(
+      // When adding a loader, a harmless error is logged to the browser console.
+      // HMR works as intended, so this seems like a React Fast Refresh bug caused by off-screen rendering with old server data or something like that 🤷
+      pageErrors.filter((error) => {
+        let chromium =
+          browserName === "chromium" &&
+          error.message ===
+            "Cannot destructure property 'message' of 'useLoaderData(...)' as it is null.";
+        let firefox =
+          browserName === "firefox" &&
+          error.message === "TypeError: (intermediate value)() is null";
+        let webkit =
+          browserName === "webkit" &&
+          error.message === "Right side of assignment cannot be destructured";
+        let expected = chromium || firefox || webkit;
+        return !expected;
+      })
+    ).toEqual([]);
+    pageErrors = [];
 
     // route: HDR
     await edit("app/routes/_index.tsx", (contents) =>
@@ -236,6 +260,7 @@ test.describe("Vite custom Express server", () => {
     await expect(hmrStatus).toHaveText("HMR updated: 2");
     await expect(hdrStatus).toHaveText("HDR updated: 2");
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
 
     // create new non-route component module
     await fs.writeFile(
@@ -260,6 +285,7 @@ test.describe("Vite custom Express server", () => {
     await expect(component).toBeVisible();
     await expect(component).toHaveText("Component HMR: 0");
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
 
     // non-route: HMR
     await edit("app/component.tsx", (contents) =>
@@ -268,6 +294,7 @@ test.describe("Vite custom Express server", () => {
     await page.waitForLoadState("networkidle");
     await expect(component).toHaveText("Component HMR: 1");
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
 
     // create new non-route server module
     await fs.writeFile(
@@ -297,6 +324,7 @@ test.describe("Vite custom Express server", () => {
     await page.waitForLoadState("networkidle");
     await expect(hdrStatus).toHaveText("HDR updated: direct 0 & indirect 0");
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
 
     // non-route: HDR for direct dependency
     await edit("app/direct-hdr-dep.ts", (contents) =>
@@ -305,6 +333,7 @@ test.describe("Vite custom Express server", () => {
     await page.waitForLoadState("networkidle");
     await expect(hdrStatus).toHaveText("HDR updated: direct 1 & indirect 0");
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
 
     // non-route: HDR for indirect dependency
     await edit("app/indirect-hdr-dep.ts", (contents) =>
@@ -313,6 +342,7 @@ test.describe("Vite custom Express server", () => {
     await page.waitForLoadState("networkidle");
     await expect(hdrStatus).toHaveText("HDR updated: direct 1 & indirect 1");
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
 
     // everything everywhere all at once
     await Promise.all([
@@ -338,6 +368,7 @@ test.describe("Vite custom Express server", () => {
       "HDR updated: route & direct 2 & indirect 2"
     );
     await expect(input).toHaveValue("stateful");
+    expect(pageErrors).toEqual([]);
   });
 
   test("loads .env file", async ({ page }) => {
