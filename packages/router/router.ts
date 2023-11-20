@@ -1632,6 +1632,7 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
+      deletedFetchers,
       fetchLoadMatches,
       fetchRedirectIds,
       routesToUse,
@@ -2005,6 +2006,7 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
+      deletedFetchers,
       fetchLoadMatches,
       fetchRedirectIds,
       routesToUse,
@@ -3549,6 +3551,7 @@ function getMatchesToLoad(
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
+  deletedFetchers: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
@@ -3616,7 +3619,10 @@ function getMatchesToLoad(
   let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches.forEach((f, key) => {
     // Don't revalidate if fetcher won't be present in the subsequent render
-    if (!matches.some((m) => m.route.id === f.routeId)) {
+    if (
+      !matches.some((m) => m.route.id === f.routeId) ||
+      deletedFetchers.has(key)
+    ) {
       return;
     }
 

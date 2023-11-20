@@ -6288,6 +6288,107 @@ function testDomRouter(
             await waitFor(() => screen.getByText("FETCH ERROR"));
             expect(getHtml(container)).toMatch("Unexpected Application Error!");
           });
+
+          it("unmounted fetchers should not revalidate", async () => {
+            let count = 0;
+            let loaderDfd = createDeferred();
+            let actionDfd = createDeferred();
+            let router = createTestRouter(
+              [
+                {
+                  path: "/",
+                  action: () => actionDfd.promise,
+                  Component() {
+                    let [showFetcher, setShowFetcher] = React.useState(true);
+                    let [fetcherData, setFetcherData] = React.useState(null);
+                    let fetchers = useFetchers();
+                    let actionData = useActionData();
+                    let navigation = useNavigation();
+
+                    return (
+                      <>
+                        <Form method="post">
+                          <button type="submit">Submit Form</button>
+                          <p>{`Navigation State: ${navigation.state}`}</p>
+                          <p>{`Action Data: ${actionData}`}</p>
+                          <p>{`Active Fetchers: ${fetchers.length}`}</p>
+                        </Form>
+                        {showFetcher ? (
+                          <FetcherComponent
+                            onClose={(data) => {
+                              setFetcherData(data);
+                              setShowFetcher(false);
+                            }}
+                          />
+                        ) : (
+                          <p>{fetcherData}</p>
+                        )}
+                      </>
+                    );
+                  },
+                },
+                {
+                  path: "/fetch",
+                  async loader() {
+                    count++;
+                    if (count === 1) return await loaderDfd.promise;
+                    throw new Error("Fetcher load called too many times");
+                  },
+                },
+              ],
+              { window: getWindow("/"), future: { v7_fetcherPersist: true } }
+            );
+
+            function FetcherComponent({ onClose }) {
+              let fetcher = useFetcher();
+
+              React.useEffect(() => {
+                if (fetcher.state === "idle" && fetcher.data) {
+                  onClose(fetcher.data);
+                }
+              }, [fetcher, onClose]);
+
+              return (
+                <>
+                  <button onClick={() => fetcher.load("/fetch")}>
+                    Load Fetcher
+                  </button>
+                  <pre>{`Fetcher State: ${fetcher.state}`}</pre>
+                </>
+              );
+            }
+
+            render(<RouterProvider router={router} />);
+
+            fireEvent.click(screen.getByText("Load Fetcher"));
+            await waitFor(
+              () =>
+                screen.getByText("Active Fetchers: 1") &&
+                screen.getByText("Fetcher State: loading")
+            );
+
+            loaderDfd.resolve("FETCHER DATA");
+            await waitFor(
+              () =>
+                screen.getByText("FETCHER DATA") &&
+                screen.getByText("Active Fetchers: 0")
+            );
+
+            fireEvent.click(screen.getByText("Submit Form"));
+            await waitFor(() =>
+              screen.getByText("Navigation State: submitting")
+            );
+
+            actionDfd.resolve("ACTION");
+            await waitFor(
+              () =>
+                screen.getByText("Navigation State: idle") &&
+                screen.getByText("Active Fetchers: 0") &&
+                screen.getByText("Action Data: ACTION")
+            );
+
+            expect(count).toBe(1);
+          });
         });
       });
 
