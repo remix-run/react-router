@@ -14,7 +14,7 @@ import {
   AbortedDeferredError,
   Action as NavigationType,
   createMemoryHistory,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
+  UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
@@ -281,7 +281,7 @@ export function Navigate({
   // StrictMode they navigate to the same place
   let path = resolveTo(
     to,
-    getPathContributingMatches(matches).map((match) => match.pathnameBase),
+    getResolveToMatches(matches),
     locationPathname,
     relative === "path"
   );
