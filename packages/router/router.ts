@@ -716,6 +716,17 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
   hasErrorBoundary: Boolean(route.hasErrorBoundary),
 });
 
+const defaultUnwrapResponse: UnwrapResponseFunction = (response) => {
+  let contentType = response.headers.get("Content-Type");
+  // Check between word boundaries instead of startsWith() due to the last
+  // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
+  if (contentType && /\bapplication\/json\b/.test(contentType)) {
+    return response.json();
+  } else {
+    return response.text();
+  }
+};
+
 const TRANSITIONS_STORAGE_KEY = "remix-router-transitions";
 
 //#endregion
@@ -738,7 +749,7 @@ export function createRouter(init: RouterInit): Router {
     typeof routerWindow.document !== "undefined" &&
     typeof routerWindow.document.createElement !== "undefined";
   const isServer = !isBrowser;
-  const unwrapResponse = init.unwrapResponse;
+  const unwrapResponse = init.unwrapResponse || defaultUnwrapResponse;
 
   invariant(
     init.routes.length > 0,
@@ -2789,7 +2800,7 @@ export function createStaticHandler(
     routes.length > 0,
     "You must provide a non-empty routes array to createStaticHandler"
   );
-  let unwrapResponse = opts?.unwrapResponse;
+  let unwrapResponse = opts?.unwrapResponse || defaultUnwrapResponse;
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
@@ -3837,7 +3848,7 @@ async function callLoaderOrAction(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
-  unwrapResponse: UnwrapResponseFunction | undefined,
+  unwrapResponse: UnwrapResponseFunction,
   opts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
@@ -3997,18 +4008,15 @@ async function callLoaderOrAction(
       throw queryRouteResponse;
     }
 
-    let data: any;
-    if (unwrapResponse) {
-      data = unwrapResponse(result);
-    } else {
-    let contentType = result.headers.get("Content-Type");
-    // Check between word boundaries instead of startsWith() due to the last
-    // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
-    if (contentType && /\bapplication\/json\b/.test(contentType)) {
-      data = await result.json();
-    } else {
-      data = await result.text();
-      }
+    let data: unknown;
+    try {
+      data = await unwrapResponse(result);
+    } catch (e) {
+      resultType = ResultType.error;
+      return {
+        type: ResultType.error,
+        error: e,
+      };
     }
 
     if (resultType === ResultType.error) {
