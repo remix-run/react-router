@@ -30,13 +30,19 @@ test.describe("Vite CSS dev", () => {
         "vite.config.ts": js`
           import { defineConfig } from "vite";
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
+          import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
           export default defineConfig({
             server: {
               port: ${devPort},
               strictPort: true,
             },
-            plugins: [remix()],
+            plugins: [
+              vanillaExtractPlugin({
+                emitCssInSsr: true,
+              }),
+              remix(),
+            ],
           });
         `,
         "app/root.tsx": js`
@@ -78,10 +84,28 @@ test.describe("Vite CSS dev", () => {
             padding: ${TEST_PADDING_VALUE};
           }
         `,
+        "app/styles-vanilla-global.css.ts": js`
+          import { createVar, globalStyle } from "@vanilla-extract/css";
+
+          globalStyle(".index_vanilla_global", {
+            background: "lightgreen",
+            padding: "${TEST_PADDING_VALUE}",
+          });
+        `,
+        "app/styles-vanilla-local.css.ts": js`
+          import { style } from "@vanilla-extract/css";
+
+          export const index = style({
+            background: "lightblue",
+            padding: "${TEST_PADDING_VALUE}",
+          });
+        `,
         "app/routes/_index.tsx": js`
           import "../styles-bundled.css";
           import linkedStyles from "../styles-linked.css?url";
           import cssModulesStyles from "../styles.module.css";
+          import "../styles-vanilla-global.css";
+          import * as stylesVanillaLocal from "../styles-vanilla-local.css";
 
           export function links() {
             return [{ rel: "stylesheet", href: linkedStyles }];
@@ -90,10 +114,15 @@ test.describe("Vite CSS dev", () => {
           export default function IndexRoute() {
             return (
               <div id="index">
+                <input />
                 <div data-css-modules className={cssModulesStyles.index}>
                   <div data-css-linked className="index_linked">
                     <div data-css-bundled className="index_bundled">
-                      <h2>CSS test</h2>
+                      <div data-css-vanilla-global className="index_vanilla_global">
+                        <div data-css-vanilla-local className={stylesVanillaLocal.index}>
+                          <h2>CSS test</h2>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -154,6 +183,14 @@ test.describe("Vite CSS dev", () => {
         "padding",
         TEST_PADDING_VALUE
       );
+      await expect(page.locator("#index [data-css-vanilla-global]")).toHaveCSS(
+        "padding",
+        TEST_PADDING_VALUE
+      );
+      await expect(page.locator("#index [data-css-vanilla-local]")).toHaveCSS(
+        "padding",
+        TEST_PADDING_VALUE
+      );
     });
   });
 
@@ -182,6 +219,19 @@ test.describe("Vite CSS dev", () => {
         "padding",
         TEST_PADDING_VALUE
       );
+      await expect(page.locator("#index [data-css-vanilla-global]")).toHaveCSS(
+        "padding",
+        TEST_PADDING_VALUE
+      );
+      await expect(page.locator("#index [data-css-vanilla-local]")).toHaveCSS(
+        "padding",
+        TEST_PADDING_VALUE
+      );
+
+      let input = page.locator("#index input");
+      await expect(input).toBeVisible();
+      await input.type("stateful");
+      await expect(input).toHaveValue("stateful");
 
       let bundledCssContents = await fs.readFile(
         path.join(projectDir, "app/styles-bundled.css"),
@@ -222,6 +272,15 @@ test.describe("Vite CSS dev", () => {
         "utf8"
       );
 
+      await editFile(
+        path.join(projectDir, "app/styles-vanilla-global.css.ts"),
+        (data) => data.replace(TEST_PADDING_VALUE, UPDATED_TEST_PADDING_VALUE)
+      );
+      await editFile(
+        path.join(projectDir, "app/styles-vanilla-local.css.ts"),
+        (data) => data.replace(TEST_PADDING_VALUE, UPDATED_TEST_PADDING_VALUE)
+      );
+
       await expect(page.locator("#index [data-css-modules]")).toHaveCSS(
         "padding",
         UPDATED_TEST_PADDING_VALUE
@@ -234,6 +293,18 @@ test.describe("Vite CSS dev", () => {
         "padding",
         UPDATED_TEST_PADDING_VALUE
       );
+      await expect(page.locator("#index [data-css-vanilla-global]")).toHaveCSS(
+        "padding",
+        UPDATED_TEST_PADDING_VALUE
+      );
+      await expect(page.locator("#index [data-css-vanilla-local]")).toHaveCSS(
+        "padding",
+        UPDATED_TEST_PADDING_VALUE
+      );
+
+      await expect(input).toHaveValue("stateful");
+
+      expect(pageErrors).toEqual([]);
     });
   });
 });
@@ -243,3 +314,8 @@ let bufferize = (stream: Readable): (() => string) => {
   stream.on("data", (data) => (buffer += data.toString()));
   return () => buffer;
 };
+
+async function editFile(filepath: string, edit: (content: string) => string) {
+  let content = await fs.readFile(filepath, "utf-8");
+  await fs.writeFile(filepath, edit(content));
+}
