@@ -956,7 +956,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             `export const LiveReload = ${
               viteCommand !== "serve"
             } ? () => null : `,
-            '() => createElement("script", {',
+            '({ nonce = undefined }) => createElement("script", {',
+            "  nonce,",
             "  dangerouslySetInnerHTML: { ",
             "    __html: `window.__remixLiveReloadEnabled = true`",
             "  }",

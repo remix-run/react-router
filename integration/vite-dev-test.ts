@@ -56,7 +56,7 @@ test.describe("Vite dev", () => {
                     <Outlet />
                   </div>
                   <Scripts />
-                  <LiveReload />
+                  <LiveReload nonce="1234" />
                 </body>
               </html>
             );
@@ -267,6 +267,9 @@ test.describe("Vite dev", () => {
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("HMR updated: yes");
     await expect(input).toHaveValue("stateful");
+
+    // check LiveReload script has nonce
+    await expect(page.locator(`script[nonce="1234"]`)).toBeAttached();
 
     // Ensure no errors after HMR
     expect(pageErrors).toEqual([]);
