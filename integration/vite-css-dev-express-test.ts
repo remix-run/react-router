@@ -35,9 +35,7 @@ test.describe("Vite CSS dev (Express server)", () => {
               }
             },
             plugins: [
-              vanillaExtractPlugin({
-                emitCssInSsr: true,
-              }),
+              vanillaExtractPlugin(),
               remix(),
             ],
           });

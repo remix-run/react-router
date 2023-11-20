@@ -45,9 +45,7 @@ test.describe("Vite CSS build", () => {
 
           export default defineConfig({
             plugins: [
-              vanillaExtractPlugin({
-                emitCssInSsr: true,
-              }),
+              vanillaExtractPlugin(),
               remix(),
             ],
           });

@@ -38,9 +38,7 @@ test.describe("Vite CSS dev", () => {
               strictPort: true,
             },
             plugins: [
-              vanillaExtractPlugin({
-                emitCssInSsr: true,
-              }),
+              vanillaExtractPlugin(),
               remix(),
             ],
           });

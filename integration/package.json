@@ -10,7 +10,7 @@
     "@cloudflare/workers-types": "^4.20230518.0",
     "@playwright/test": "^1.33.0",
     "@vanilla-extract/css": "^1.10.0",
-    "@vanilla-extract/vite-plugin": "^3.9.1",
+    "@vanilla-extract/vite-plugin": "^3.9.2",
     "cheerio": "^1.0.0-rc.12",
     "cross-env": "^7.0.3",
     "cross-spawn": "^7.0.3",
