@@ -147,6 +147,21 @@ To add a new release, copy from this template:
 
 -->
 
+## v6.20.0
+
+### Minor Changes
+
+- Export the `PathParam` type from the public API ([#10719](https://github.com/remix-run/react-router/pull/10719))
+
+### Patch Changes
+
+- Do not revalidate unmounted fetchers when `v7_fetcherPersist` is enabled ([#11044](https://github.com/remix-run/react-router/pull/11044))
+- Fix bug with `resolveTo` path resolution in splat routes ([#11045](https://github.com/remix-run/react-router/pull/11045))
+  - This is a follow up to [#10983](https://github.com/remix-run/react-router/pull/10983) to handle the few other code paths using `getPathContributingMatches`
+  - This removes the `UNSAFE_getPathContributingMatches` export from `@remix-run/router` since we no longer need this in the `react-router`/`react-router-dom` layers
+
+**Full Changelog**: [`v6.19.0...v6.20.0`](https://github.com/remix-run/react-router/compare/react-router@6.19.0...react-router@6.20.0)
+
 ## v6.19.0
 
 ### What's Changed
