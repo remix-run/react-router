@@ -8,5 +8,9 @@
     "react-router-native": "6.19.0",
     "@remix-run/router": "1.12.0"
   },
-  "changesets": []
+  "changesets": [
+    "cyan-knives-shake",
+    "resolve-to-splat",
+    "unmounted-fetcher-revalidate"
+  ]
 }
