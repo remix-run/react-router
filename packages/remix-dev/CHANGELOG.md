@@ -1,5 +1,18 @@
 # `@remix-run/dev`
 
+## 2.3.1-pre.0
+
+### Patch Changes
+
+- Support `nonce` prop on `LiveReload` component in Vite dev ([#8014](https://github.com/remix-run/remix/pull/8014))
+- Lock into proper `@remix-run/router` version ([#8077](https://github.com/remix-run/remix/pull/8077))
+- Ensure code-split JS files in the server build's assets directory aren't cleaned up after Vite build ([#8042](https://github.com/remix-run/remix/pull/8042))
+- Fix redundant copying of assets from `public` directory in Vite build. This ensures that static assets aren't duplicated in the server build directory. This also fixes an issue where the build would break if `assetsBuildDirectory` was deeply nested within the `public` directory. ([#8039](https://github.com/remix-run/remix/pull/8039))
+- Updated dependencies:
+  - `@remix-run/node@2.3.1-pre.0`
+  - `@remix-run/serve@2.3.1-pre.0`
+  - `@remix-run/server-runtime@2.3.1-pre.0`
+
 ## 2.3.0
 
 ### Patch Changes
