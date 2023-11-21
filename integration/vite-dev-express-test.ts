@@ -222,6 +222,7 @@ test.describe("Vite custom Express server", () => {
     // React Fast Refresh cannot preserve state for a component when hooks are added or removed
     await expect(input).toHaveValue("");
     await input.type("stateful");
+    expect(pageErrors.length).toBeGreaterThan(0);
     expect(
       // When adding a loader, a harmless error is logged to the browser console.
       // HMR works as intended, so this seems like a React Fast Refresh bug caused by off-screen rendering with old server data or something like that 🤷
