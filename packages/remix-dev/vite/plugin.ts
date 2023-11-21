@@ -75,11 +75,6 @@ let remixReactProxyId = VirtualModule.id("remix-react-proxy");
 let hmrRuntimeId = VirtualModule.id("hmr-runtime");
 let injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
 
-const normalizePath = (p: string) => {
-  let unixPath = p.replace(/[\\/]+/g, "/").replace(/^([a-zA-Z]+:|\.\/)/, "");
-  return vite.normalizePath(unixPath);
-};
-
 const resolveFileUrl = (
   { rootDirectory }: Pick<ResolvedRemixVitePluginConfig, "rootDirectory">,
   filePath: string
@@ -88,12 +83,14 @@ const resolveFileUrl = (
   let isWithinRoot =
     !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
 
-  // Vite will prevent serving files outside of the workspace
-  // unless user explictly opts in with `server.fs.allow`
-  // https://vitejs.dev/config/server-options.html#server-fs-allow
-  if (!isWithinRoot) return `/@fs` + filePath;
+  if (!isWithinRoot) {
+    // Vite will prevent serving files outside of the workspace
+    // unless user explictly opts in with `server.fs.allow`
+    // https://vitejs.dev/config/server-options.html#server-fs-allow
+    return path.posix.join("/@fs", vite.normalizePath(filePath));
+  }
 
-  return `/${normalizePath(relativePath)}`;
+  return "/" + vite.normalizePath(relativePath);
 };
 
 const isJsFile = (filePath: string) => /\.[cm]?[jt]sx?$/i.test(filePath);
@@ -106,7 +103,7 @@ const resolveRelativeRouteFilePath = (
   let file = route.file;
   let fullPath = path.resolve(pluginConfig.appDirectory, file);
 
-  return normalizePath(fullPath);
+  return vite.normalizePath(fullPath);
 };
 
 let vmods = [serverEntryId, serverManifestId, browserManifestId];
@@ -125,7 +122,7 @@ const resolveBuildAssetPaths = (
     pluginConfig.rootDirectory,
     absoluteFilePath
   );
-  let manifestKey = normalizePath(rootRelativeFilePath);
+  let manifestKey = vite.normalizePath(rootRelativeFilePath);
   let entryChunk = viteManifest[manifestKey];
 
   if (!entryChunk) {
