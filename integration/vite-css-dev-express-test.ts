@@ -168,7 +168,7 @@ test.describe("Vite CSS dev (Express server)", () => {
       },
     });
 
-    dev = await node(projectDir, ["./server.mjs"], { port });
+    dev = await node(["./server.mjs"], { cwd: projectDir, port });
   });
 
   test.afterAll(async () => {

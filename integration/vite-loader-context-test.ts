@@ -38,7 +38,7 @@ test.beforeAll(async () => {
       `,
     },
   });
-  dev = await node(projectDir, ["./server.mjs"], { port });
+  dev = await node(["./server.mjs"], { cwd: projectDir, port });
 });
 
 test.afterAll(async () => {

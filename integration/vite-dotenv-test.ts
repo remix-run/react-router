@@ -49,7 +49,7 @@ test.describe("Vite custom Express server", () => {
         `,
       },
     });
-    dev = await node(projectDir, ["./server.mjs"], { port });
+    dev = await node(["./server.mjs"], { cwd: projectDir, port });
   });
 
   test.afterAll(async () => {

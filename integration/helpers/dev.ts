@@ -1,7 +1,6 @@
 import { spawn } from "node:child_process";
 import type { Readable } from "node:stream";
 import execa from "execa";
-import getPort from "get-port";
 import resolveBin from "resolve-bin";
 import waitOn from "wait-on";
 
@@ -19,6 +18,8 @@ export const basicTemplate = (args: {
 
     export default defineConfig({
       server: {
+        port: ${args.port},
+        strictPort: true,
         hmr: {
           port: ${args.hmrPort}
         }
@@ -131,31 +132,29 @@ export const basicTemplate = (args: {
   `,
 });
 
-export async function viteDev(
-  projectDir: string,
-  options: { port?: number } = {}
-) {
+export async function viteDev(options: { cwd: string; port: number }) {
   let viteBin = resolveBin.sync("vite");
-  return node(projectDir, [viteBin, "dev"], options);
+  return node([viteBin, "dev"], options);
 }
 
 export async function node(
-  projectDir: string,
   command: string[],
-  options: { port?: number } = {}
+  options: {
+    cwd: string;
+    port: number;
+  }
 ) {
   let nodeBin = process.argv[0];
   let proc = spawn(nodeBin, command, {
-    cwd: projectDir,
+    cwd: options.cwd,
     env: process.env,
     stdio: "pipe",
   });
   let devStdout = bufferize(proc.stdout);
   let devStderr = bufferize(proc.stderr);
 
-  let port = options.port ?? (await getPort());
   await waitOn({
-    resources: [`http://localhost:${port}/`],
+    resources: [`http://localhost:${options.port}/`],
     timeout: 10000,
   }).catch((err) => {
     let stdout = devStdout();
@@ -172,7 +171,7 @@ export async function node(
     );
   });
 
-  return { pid: proc.pid!, port: port };
+  return { pid: proc.pid!, port: options.port };
 }
 
 export async function kill(pid: number) {

@@ -5,7 +5,62 @@ import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
 import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { basicTemplate, kill, node } from "./helpers/dev.js";
+import { basicTemplate, kill, node, viteDev } from "./helpers/dev.js";
+
+const files = {
+  "app/routes/_index.tsx": js`
+    // imports
+    import { useState, useEffect } from "react";
+
+    export const meta = () => [{ title: "HMR updated title: 0" }]
+
+    // loader
+
+    export default function IndexRoute() {
+      // hooks
+      const [mounted, setMounted] = useState(false);
+      useEffect(() => {
+        setMounted(true);
+      }, []);
+
+      return (
+        <div id="index">
+          <h2 data-title>Index</h2>
+          <input />
+          <p data-mounted>Mounted: {mounted ? "yes" : "no"}</p>
+          <p data-hmr>HMR updated: 0</p>
+          {/* elements */}
+        </div>
+      );
+    }
+  `,
+};
+
+test.describe("Vite dev server", () => {
+  let projectDir: string;
+  let dev: { pid: number; port: number };
+
+  test.beforeAll(async () => {
+    let port = await getPort();
+    let hmrPort = await getPort();
+    projectDir = await createFixtureProject({
+      compiler: "vite",
+      files: {
+        ...basicTemplate({ port, hmrPort }),
+        ...files,
+      },
+    });
+    dev = await viteDev({ cwd: projectDir, port });
+  });
+
+  test.afterAll(async () => {
+    await kill(dev.pid);
+  });
+
+  test("handles HMR & HDR", async ({ page, browserName }) => {
+    await workflow({ page, browserName, projectDir, port: dev.port });
+  });
+});
 
 test.describe("Vite custom Express server", () => {
   let projectDir: string;
@@ -18,35 +73,10 @@ test.describe("Vite custom Express server", () => {
       compiler: "vite",
       files: {
         ...basicTemplate({ port, hmrPort }),
-        "app/routes/_index.tsx": js`
-          // imports
-          import { useState, useEffect } from "react";
-
-          export const meta = () => [{ title: "HMR updated title: 0" }]
-
-          // loader
-
-          export default function IndexRoute() {
-            // hooks
-            const [mounted, setMounted] = useState(false);
-            useEffect(() => {
-              setMounted(true);
-            }, []);
-
-            return (
-              <div id="index">
-                <h2 data-title>Index</h2>
-                <input />
-                <p data-mounted>Mounted: {mounted ? "yes" : "no"}</p>
-                <p data-hmr>HMR updated: 0</p>
-                {/* elements */}
-              </div>
-            );
-          }
-        `,
+        ...files,
       },
     });
-    dev = await node(projectDir, ["./server.mjs"], { port });
+    dev = await node(["./server.mjs"], { cwd: projectDir, port });
   });
 
   test.afterAll(async () => {
