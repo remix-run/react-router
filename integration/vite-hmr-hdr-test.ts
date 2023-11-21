@@ -172,7 +172,7 @@ async function workflow({
           "Cannot destructure property 'message' of 'useLoaderData(...)' as it is null.";
       let firefox =
         browserName === "firefox" &&
-        error.message === "TypeError: (intermediate value)() is null";
+        error.message === "(intermediate value)() is null";
       let webkit =
         browserName === "webkit" &&
         error.message === "Right side of assignment cannot be destructured";
