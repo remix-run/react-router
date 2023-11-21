@@ -702,10 +702,17 @@ export function _renderMatches(
       if (
         match.route.loader &&
         match.route.id &&
-        dataRouterState.loaderData[match.route.id] === undefined
+        dataRouterState.loaderData[match.route.id] === undefined &&
+        (!dataRouterState.errors ||
+          dataRouterState.errors[match.route.id] === undefined)
       ) {
-        // We found the first route without data, flag that we need to render
-        // a fallback and render up until the appropriate fallback
+        // TODO:
+        // TODO: Add unit tests for this error flow!
+        // TODO:
+
+        // We found the first route without data/errors which means it's loader
+        // still needs to run.  Flag that we need to render a fallback and
+        // render up until the appropriate fallback
         renderFallback = true;
         if (fallbackIndex >= 0) {
           renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
