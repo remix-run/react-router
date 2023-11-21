@@ -692,7 +692,7 @@ export function _renderMatches(
   // a given Fallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
-  if (future && future.v7_partialHydration) {
+  if (dataRouterState && future && future.v7_partialHydration) {
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data
@@ -702,7 +702,7 @@ export function _renderMatches(
       if (
         match.route.loader &&
         match.route.id &&
-        dataRouterState?.loaderData[match.route.id] === undefined
+        dataRouterState.loaderData[match.route.id] === undefined
       ) {
         // We found the first route without data, flag that we need to render
         // a fallback and render up until the appropriate fallback
