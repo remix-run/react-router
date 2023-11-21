@@ -1092,7 +1092,9 @@ function addRefreshWrapper(
   id: string
 ): string {
   let isRoute = getRoute(pluginConfig, id);
-  let acceptExports = isRoute ? ["meta", "links", "shouldRevalidate"] : [];
+  let acceptExports = isRoute
+    ? ["handle", "meta", "links", "shouldRevalidate"]
+    : [];
   return (
     REACT_REFRESH_HEADER.replace("__SOURCE__", JSON.stringify(id)) +
     code +

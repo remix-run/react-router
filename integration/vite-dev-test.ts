@@ -197,6 +197,36 @@ test.describe("Vite dev", () => {
             </>
           }
         `,
+        "app/routes/known-route-exports.tsx": js`
+          import { useMatches } from "@remix-run/react";
+
+          export const meta = () => [{
+            title: "HMR meta: 0"
+          }]
+
+          export const links = () => [{
+            rel: "icon",
+            href: "/favicon.ico",
+            type: "image/png",
+            "data-link": "HMR links: 0",
+          }]
+
+          export const handle = {
+            data: "HMR handle: 0"
+          };
+
+          export default function TestRoute() {
+            const matches = useMatches();
+
+            return (
+              <div id="known-route-export-hmr">
+                <input />
+                <p data-hmr>HMR component: 0</p>
+                <p data-handle>{matches[1].handle.data}</p>
+              </div>
+            );
+          }
+        `,
       },
     });
 
@@ -350,6 +380,55 @@ test.describe("Vite dev", () => {
     let clientContent = page.locator("[data-dotenv-route-client-content]");
     await expect(clientContent).toHaveText(
       "process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing"
+    );
+
+    expect(pageErrors).toEqual([]);
+  });
+
+  test("handle known route exports with HMR", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    await page.goto(`http://localhost:${devPort}/known-route-exports`, {
+      waitUntil: "networkidle",
+    });
+    expect(pageErrors).toEqual([]);
+
+    // file editing utils
+    let filepath = path.join(projectDir, "app/routes/known-route-exports.tsx");
+    let filedata = await fs.readFile(filepath, "utf8");
+    async function editFile(edit: (data: string) => string) {
+      filedata = edit(filedata);
+      await fs.writeFile(filepath, filedata, "utf8");
+    }
+
+    // verify input state is preserved after each update
+    let input = page.locator("input");
+    await input.type("stateful");
+    await expect(input).toHaveValue("stateful");
+
+    // component
+    await editFile((data) =>
+      data.replace("HMR component: 0", "HMR component: 1")
+    );
+    await expect(page.locator("[data-hmr]")).toHaveText("HMR component: 1");
+    await expect(input).toHaveValue("stateful");
+
+    // handle
+    await editFile((data) => data.replace("HMR handle: 0", "HMR handle: 1"));
+    await expect(page.locator("[data-handle]")).toHaveText("HMR handle: 1");
+    await expect(input).toHaveValue("stateful");
+
+    // meta
+    await editFile((data) => data.replace("HMR meta: 0", "HMR meta: 1"));
+    await expect(page).toHaveTitle("HMR meta: 1");
+    await expect(input).toHaveValue("stateful");
+
+    // links
+    await editFile((data) => data.replace("HMR links: 0", "HMR links: 1"));
+    await expect(page.locator("[data-link]")).toHaveAttribute(
+      "data-link",
+      "HMR links: 1"
     );
 
     expect(pageErrors).toEqual([]);
