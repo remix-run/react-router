@@ -7583,7 +7583,7 @@ function testDomRouter(
         `);
       });
 
-      it("with v7_partialHydration, supports partial hydration w/leaf fallback", async () => {
+      it("supports partial hydration w/leaf fallback", async () => {
         let dfd = createDeferred();
         let router = createTestRouter(
           [
@@ -7657,7 +7657,7 @@ function testDomRouter(
         `);
       });
 
-      it("with v7_partialHydration, supports partial hydration w/root fallback", async () => {
+      it("supports partial hydration w/root fallback", async () => {
         let dfd = createDeferred();
         let router = createTestRouter(
           [
@@ -7726,7 +7726,7 @@ function testDomRouter(
         `);
       });
 
-      it("with v7_partialHydration, supports partial hydration w/no fallback", async () => {
+      it("supports partial hydration w/no fallback", async () => {
         let dfd = createDeferred();
         let router = createTestRouter(
           [
@@ -7788,7 +7788,7 @@ function testDomRouter(
         `);
       });
 
-      it("with v7_partialHydration, deprecates fallbackElement", async () => {
+      it("deprecates fallbackElement", async () => {
         let dfd1 = createDeferred();
         let dfd2 = createDeferred();
         let router = createTestRouter(
@@ -7866,6 +7866,74 @@ function testDomRouter(
             </div>
           </div>"
         `);
+      });
+
+      it("does not re-run loaders that don't have loader data due to errors", async () => {
+        let spy = jest.fn();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: spy,
+                  Fallback: () => <p>Index Loading...</p>,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                  ErrorBoundary() {
+                    let error = useRouteError() as string;
+                    return <p>{error}</p>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+              errors: {
+                index: "INDEX ERROR",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <p>
+                INDEX ERROR
+              </p>
+            </div>
+          </div>"
+        `);
+
+        expect(spy).not.toHaveBeenCalled();
       });
     });
   });

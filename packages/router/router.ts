@@ -1011,9 +1011,7 @@ export function createRouter(init: RouterInit): Router {
     if (
       !state.initialized ||
       (future.v7_partialHydration &&
-        state.matches.some(
-          (m) => m.route.loader && state.loaderData[m.route.id] === undefined
-        ))
+        state.matches.some((m) => isUnhydratedRoute(state, m.route)))
     ) {
       startNavigation(HistoryAction.Pop, state.location, {
         initialHydration: true,
@@ -3619,15 +3617,15 @@ function getMatchesToLoad(
   let navigationMatches = boundaryMatches.filter((match, index) => {
     if (isInitialLoad) {
       // On initial hydration we don't do any shouldRevalidate stuff - we just
-      // call the loaders that don't have hydration data
-      return (
-        match.route.loader && state.loaderData[match.route.id] === undefined
-      );
+      // call the unhydrated loaders
+      return isUnhydratedRoute(state, match.route);
     }
+
     if (match.route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       return true;
     }
+
     if (match.route.loader == null) {
       return false;
     }
@@ -3749,6 +3747,18 @@ function getMatchesToLoad(
   });
 
   return [navigationMatches, revalidatingFetchers];
+}
+
+// Is this route unhydrated (when v7_partialHydration=true) such that we need
+// to call it's loader on the initial router creation
+function isUnhydratedRoute(state: RouterState, route: AgnosticDataRouteObject) {
+  return (
+    route.loader != null &&
+    state.loaderData[route.id] === undefined &&
+    (!state.errors ||
+      // Loader ran but errored - don't re-run
+      state.errors[route.id] === undefined)
+  );
 }
 
 function isNewLoader(
