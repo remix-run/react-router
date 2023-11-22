@@ -1,6 +1,6 @@
 # `react-router`
 
-## 6.20.0-pre.0
+## 6.20.0
 
 ### Minor Changes
 
@@ -9,12 +9,10 @@
 ### Patch Changes
 
 - Fix bug with `resolveTo` in splat routes ([#11045](https://github.com/remix-run/react-router/pull/11045))
-
   - This is a follow up to [#10983](https://github.com/remix-run/react-router/pull/10983) to handle the few other code paths using `getPathContributingMatches`
   - This removes the `UNSAFE_getPathContributingMatches` export from `@remix-run/router` since we no longer need this in the `react-router`/`react-router-dom` layers
-
 - Updated dependencies:
-  - `@remix-run/router@1.13.0-pre.0`
+  - `@remix-run/router@1.13.0`
 
 ## 6.19.0
 
