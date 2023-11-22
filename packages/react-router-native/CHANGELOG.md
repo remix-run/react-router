@@ -1,5 +1,16 @@
 # `react-router-native`
 
+## 6.20.0
+
+### Minor Changes
+
+- Export the `PathParam` type from the public API ([#10719](https://github.com/remix-run/react-router/pull/10719))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.20.0`
+
 ## 6.19.0
 
 ### Patch Changes

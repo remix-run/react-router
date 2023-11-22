@@ -349,7 +349,7 @@ type _PathParam<Path extends string> =
  * "/:a/:b" -> "a" | "b"
  * "/:a/b/:c/*" -> "a" | "c" | "*"
  */
-type PathParam<Path extends string> =
+export type PathParam<Path extends string> =
   // check if path is just a wildcard
   Path extends "*" | "/*"
     ? "*"
@@ -1142,6 +1142,17 @@ export function getPathContributingMatches<
   return matches.filter(
     (match, index) =>
       index === 0 || (match.route.path && match.route.path.length > 0)
+  );
+}
+
+// Return the array of pathnames for the current route matches - used to
+// generate the routePathnames input for resolveTo()
+export function getResolveToMatches<
+  T extends AgnosticRouteMatch = AgnosticRouteMatch
+>(matches: T[]) {
+  // Use the full pathname for the leaf match so we include splat values for "." links
+  return getPathContributingMatches(matches).map((match, idx) =>
+    idx === matches.length - 1 ? match.pathname : match.pathnameBase
   );
 }
 

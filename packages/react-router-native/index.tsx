@@ -51,6 +51,7 @@ export type {
   Path,
   PathMatch,
   Pathname,
+  PathParam,
   PathPattern,
   PathRouteProps,
   RedirectFunction,

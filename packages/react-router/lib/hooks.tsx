@@ -18,7 +18,7 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
+  UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -197,9 +197,7 @@ function useNavigateUnstable(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match) => match.pathnameBase)
-  );
+  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   let activeRef = React.useRef(false);
   useIsomorphicLayoutEffect(() => {
@@ -311,14 +309,7 @@ export function useResolvedPath(
 ): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
-
-  // Use the full pathname for the leaf match so we include splat values
-  // for "." links
-  let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match, idx) =>
-      idx === matches.length - 1 ? match.pathname : match.pathnameBase
-    )
-  );
+  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   return React.useMemo(
     () =>

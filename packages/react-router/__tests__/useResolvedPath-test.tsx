@@ -1,7 +1,16 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import type { Path } from "react-router";
-import { MemoryRouter, Routes, Route, useResolvedPath } from "react-router";
+import {
+  MemoryRouter,
+  Routes,
+  Route,
+  RouterProvider,
+  createMemoryRouter,
+  useResolvedPath,
+  Outlet,
+  useParams,
+} from "react-router";
 
 function ShowResolvedPath({ path }: { path: string | Path }) {
   return <pre>{JSON.stringify(useResolvedPath(path))}</pre>;
@@ -312,5 +321,99 @@ describe("useResolvedPath", () => {
         </pre>
       `);
     });
+  });
+
+  // Follow up test to https://github.com/remix-run/react-router/pull/10983 to
+  // ensure we do this consistently across route types
+  it("resolves relative paths consistently across route types", async () => {
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: Outlet,
+        children: [
+          {
+            path: "static/foo",
+            Component: () => <p>Static:{useResolvedPath("foo").pathname}</p>,
+          },
+          {
+            path: "static/foo/foo",
+            Component: () => (
+              <p>Static:{useResolvedPath("foo/foo").pathname}</p>
+            ),
+          },
+          {
+            path: "dynamic/:param",
+            Component: () => <p>Dynamic:{useResolvedPath("foo").pathname}</p>,
+          },
+          {
+            path: "dynamic/:param1/:param2",
+            Component: () => (
+              <p>Dynamic:{useResolvedPath("foo/foo").pathname}</p>
+            ),
+          },
+          {
+            path: "splat/*",
+            Component: () => (
+              <p>Splat:{useResolvedPath(useParams()["*"]).pathname}</p>
+            ),
+          },
+        ],
+      },
+    ]);
+
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(<RouterProvider router={router} />);
+    });
+    // @ts-expect-error
+    if (!renderer) throw new Error("renderer not defined");
+
+    await TestRenderer.act(() => router.navigate("/static/foo"));
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <p>
+        Static:
+        /static/foo/foo
+      </p>
+    `);
+
+    await TestRenderer.act(() => router.navigate("/dynamic/foo"));
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <p>
+        Dynamic:
+        /dynamic/foo/foo
+      </p>
+    `);
+
+    await TestRenderer.act(() => router.navigate("/splat/foo"));
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <p>
+        Splat:
+        /splat/foo/foo
+      </p>
+    `);
+
+    await TestRenderer.act(() => router.navigate("/static/foo/foo"));
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <p>
+        Static:
+        /static/foo/foo/foo/foo
+      </p>
+    `);
+
+    await TestRenderer.act(() => router.navigate("/dynamic/foo/foo"));
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <p>
+        Dynamic:
+        /dynamic/foo/foo/foo/foo
+      </p>
+    `);
+
+    await TestRenderer.act(() => router.navigate("/splat/foo/foo"));
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <p>
+        Splat:
+        /splat/foo/foo/foo/foo
+      </p>
+    `);
   });
 });

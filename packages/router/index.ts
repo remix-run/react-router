@@ -20,6 +20,7 @@ export type {
   ParamParseKey,
   Params,
   PathMatch,
+  PathParam,
   PathPattern,
   RedirectFunction,
   ShouldRevalidateFunction,
@@ -86,7 +87,7 @@ export {
   ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   convertRouteMatchToUiMatch as UNSAFE_convertRouteMatchToUiMatch,
-  getPathContributingMatches as UNSAFE_getPathContributingMatches,
+  getResolveToMatches as UNSAFE_getResolveToMatches,
 } from "./utils";
 
 export {

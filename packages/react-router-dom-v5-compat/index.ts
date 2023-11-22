@@ -85,6 +85,7 @@ export type {
   Params,
   Path,
   PathMatch,
+  PathParam,
   PathPattern,
   PathRouteProps,
   Pathname,
