@@ -242,12 +242,12 @@ test.describe("Vite build", () => {
     appFixture.close();
   });
 
-  test("server code is removed from client assets", async () => {
-    let publicBuildDir = path.join(fixture.projectDir, "public/build");
+  test("server code is removed from client build", async () => {
+    let clientBuildDir = path.join(fixture.projectDir, "build/client");
 
     // detect client asset files
     let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
-      cwd: publicBuildDir,
+      cwd: clientBuildDir,
       absolute: true,
     });
 
@@ -307,12 +307,12 @@ test.describe("Vite build", () => {
 
     // verify asset files are emitted and served correctly
     await page.getByRole("link", { name: "url1" }).click();
-    await page.waitForURL("**/build/assets/test1-*.txt");
+    await page.waitForURL("**/assets/test1-*.txt");
     await page.getByText("test1").click();
     await page.goBack();
 
     await page.getByRole("link", { name: "url2" }).click();
-    await page.waitForURL("**/build/assets/test2-*.txt");
+    await page.waitForURL("**/assets/test2-*.txt");
     await page.getByText("test2").click();
   });
 
@@ -333,7 +333,7 @@ test.describe("Vite build", () => {
 
   test("removes assets (other than code-split JS) and CSS files from SSR build", async () => {
     let assetFiles = glob.sync("*", {
-      cwd: path.join(fixture.projectDir, "build/assets"),
+      cwd: path.join(fixture.projectDir, "build/server/assets"),
     });
     let [asset, ...rest] = assetFiles;
     expect(rest).toEqual([]); // Provide more useful test output if this fails
