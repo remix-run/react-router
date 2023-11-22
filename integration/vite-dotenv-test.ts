@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
 import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { basicTemplate, kill, node } from "./helpers/dev.js";
+import { basicTemplate, kill, node } from "./helpers/vite.js";
 
 test.describe("Vite custom Express server", () => {
   let projectDir: string;

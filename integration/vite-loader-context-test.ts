@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
 import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { basicTemplate, kill, node } from "./helpers/dev.js";
+import { basicTemplate, kill, node } from "./helpers/vite.js";
 
 let projectDir: string;
 let dev: { pid: number; port: number };
@@ -10,15 +10,14 @@ let dev: { pid: number; port: number };
 test.beforeAll(async () => {
   let port = await getPort();
   let hmrPort = await getPort();
-  let files = basicTemplate({ port, hmrPort });
   projectDir = await createFixtureProject({
     compiler: "vite",
     files: {
-      ...files,
-      "server.mjs": files["server.mjs"].replace(
-        "// load context",
-        `getLoadContext: () => ({ value: "value" }),`
-      ),
+      ...basicTemplate({
+        port,
+        hmrPort,
+        requestHandlerArgs: `getLoadContext: () => ({ value: "value" })`,
+      }),
       "app/routes/_index.tsx": js`
         import { json } from "@remix-run/node";
         import { useLoaderData } from "@remix-run/react";
@@ -55,4 +54,5 @@ test("Vite custom Express server handles loader context", async ({ page }) => {
   await expect(page.locator("#index [data-context]")).toHaveText(
     "Context: value"
   );
+  expect(pageErrors).toEqual([]);
 });

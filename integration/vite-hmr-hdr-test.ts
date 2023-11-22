@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
 import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { basicTemplate, kill, node, viteDev } from "./helpers/dev.js";
+import { basicTemplate, kill, node, viteDev } from "./helpers/vite.js";
 
 const files = {
   "app/routes/_index.tsx": js`

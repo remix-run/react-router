@@ -11,6 +11,7 @@ const isWindows = process.platform === "win32";
 export const basicTemplate = (args: {
   port: number;
   hmrPort: number;
+  requestHandlerArgs?: string;
 }): Record<string, string> => ({
   "vite.config.ts": js`
     import { defineConfig } from "vite";
@@ -61,7 +62,7 @@ export const basicTemplate = (args: {
         build: vite
           ? () => unstable_loadViteServerBuild(vite)
           : await import("./build/index.js"),
-        // load context
+        ${args.requestHandlerArgs ?? ""}
       })
     );
 
