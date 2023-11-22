@@ -1,5 +1,17 @@
 # `react-router-dom-v5-compat`
 
+## 6.20.0
+
+### Minor Changes
+
+- Export the `PathParam` type from the public API ([#10719](https://github.com/remix-run/react-router/pull/10719))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.20.0`
+  - `react-router@6.20.0`
+
 ## 6.20.0-pre.0
 
 ### Minor Changes
