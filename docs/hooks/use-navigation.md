@@ -115,7 +115,7 @@ Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form></Form>` o
 
 In the case of a GET form submission, `navigation.formAction` will be empty
 
-If you submitted the form at www.example.com/id, then formAction would be "/id"
+If you submitted the form at `example.com/id`, then `navigation.formAction` would be "/id"
 
 ## `navigation.formMethod`
 
