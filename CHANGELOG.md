@@ -13,125 +13,128 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
-  - [v6.19.0 🏷️](#v6190-️)
-    - [What's Changed](#whats-changed)
-      - [`unstable_flushSync` API](#unstable_flushsync-api)
+  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
-  - [v6.18.0 🏷️](#v6180-️)
+  - [v6.19.0](#v6190)
+    - [What's Changed](#whats-changed)
+      - [`unstable_flushSync` API](#unstable_flushsync-api)
+    - [Minor Changes](#minor-changes-1)
+    - [Patch Changes](#patch-changes-1)
+  - [v6.18.0](#v6180)
     - [What's Changed](#whats-changed-1)
       - [New Fetcher APIs](#new-fetcher-apis)
       - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
-    - [Minor Changes](#minor-changes-1)
-    - [Patch Changes](#patch-changes-1)
-  - [v6.17.0 🏷️](#v6170-️)
-    - [What's Changed](#whats-changed-2)
-      - [View Transitions 🚀](#view-transitions-)
     - [Minor Changes](#minor-changes-2)
     - [Patch Changes](#patch-changes-2)
-  - [v6.16.0 🏷️](#v6160-️)
+  - [v6.17.0](#v6170)
+    - [What's Changed](#whats-changed-2)
+      - [View Transitions 🚀](#view-transitions-)
     - [Minor Changes](#minor-changes-3)
     - [Patch Changes](#patch-changes-3)
-  - [v6.15.0 🏷️](#v6150-️)
+  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-4)
     - [Patch Changes](#patch-changes-4)
-  - [v6.14.2 🏷️](#v6142-️)
+  - [v6.15.0](#v6150)
+    - [Minor Changes](#minor-changes-5)
     - [Patch Changes](#patch-changes-5)
-  - [v6.14.1 🏷️](#v6141-️)
+  - [v6.14.2](#v6142)
     - [Patch Changes](#patch-changes-6)
-  - [v6.14.0 🏷️](#v6140-️)
+  - [v6.14.1](#v6141)
+    - [Patch Changes](#patch-changes-7)
+  - [v6.14.0](#v6140)
     - [What's Changed](#whats-changed-3)
       - [JSON/Text Submissions](#jsontext-submissions)
-    - [Minor Changes](#minor-changes-5)
-    - [Patch Changes](#patch-changes-7)
-  - [v6.13.0 🏷️](#v6130-️)
-    - [What's Changed](#whats-changed-4)
     - [Minor Changes](#minor-changes-6)
     - [Patch Changes](#patch-changes-8)
-  - [v6.12.1 🏷️](#v6121-️)
+  - [v6.13.0](#v6130)
+    - [What's Changed](#whats-changed-4)
+    - [Minor Changes](#minor-changes-7)
     - [Patch Changes](#patch-changes-9)
-  - [v6.12.0 🏷️](#v6120-️)
+  - [v6.12.1](#v6121)
+    - [Patch Changes](#patch-changes-10)
+  - [v6.12.0](#v6120)
     - [What's Changed](#whats-changed-5)
       - [`React.startTransition` support](#reactstarttransition-support)
-    - [Minor Changes](#minor-changes-7)
-    - [Patch Changes](#patch-changes-10)
-  - [v6.11.2 🏷️](#v6112-️)
-    - [Patch Changes](#patch-changes-11)
-  - [v6.11.1 🏷️](#v6111-️)
-    - [Patch Changes](#patch-changes-12)
-  - [v6.11.0 🏷️](#v6110-️)
     - [Minor Changes](#minor-changes-8)
+    - [Patch Changes](#patch-changes-11)
+  - [v6.11.2](#v6112)
+    - [Patch Changes](#patch-changes-12)
+  - [v6.11.1](#v6111)
     - [Patch Changes](#patch-changes-13)
-  - [v6.10.0 🏷️](#v6100-️)
-    - [What's Changed](#whats-changed-6)
+  - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-9)
     - [Patch Changes](#patch-changes-14)
-  - [v6.9.0 🏷️](#v690-️)
+  - [v6.10.0](#v6100)
+    - [What's Changed](#whats-changed-6)
+    - [Minor Changes](#minor-changes-10)
+    - [Patch Changes](#patch-changes-15)
+  - [v6.9.0](#v690)
     - [What's Changed](#whats-changed-7)
       - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
       - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
-    - [Minor Changes](#minor-changes-10)
-    - [Patch Changes](#patch-changes-15)
-  - [v6.8.2 🏷️](#v682-️)
-    - [Patch Changes](#patch-changes-16)
-  - [v6.8.1 🏷️](#v681-️)
-    - [Patch Changes](#patch-changes-17)
-  - [v6.8.0 🏷️](#v680-️)
     - [Minor Changes](#minor-changes-11)
+    - [Patch Changes](#patch-changes-16)
+  - [v6.8.2](#v682)
+    - [Patch Changes](#patch-changes-17)
+  - [v6.8.1](#v681)
     - [Patch Changes](#patch-changes-18)
-  - [v6.7.0 🏷️](#v670-️)
+  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-12)
     - [Patch Changes](#patch-changes-19)
-  - [v6.6.2 🏷️](#v662-️)
-    - [Patch Changes](#patch-changes-20)
-  - [v6.6.1 🏷️](#v661-️)
-    - [Patch Changes](#patch-changes-21)
-  - [v6.6.0 🏷️](#v660-️)
-    - [What's Changed](#whats-changed-8)
+  - [v6.7.0](#v670)
     - [Minor Changes](#minor-changes-13)
+    - [Patch Changes](#patch-changes-20)
+  - [v6.6.2](#v662)
+    - [Patch Changes](#patch-changes-21)
+  - [v6.6.1](#v661)
     - [Patch Changes](#patch-changes-22)
-  - [v6.5.0 🏷️](#v650-️)
-    - [What's Changed](#whats-changed-9)
+  - [v6.6.0](#v660)
+    - [What's Changed](#whats-changed-8)
     - [Minor Changes](#minor-changes-14)
     - [Patch Changes](#patch-changes-23)
-  - [v6.4.5 🏷️](#v645-️)
+  - [v6.5.0](#v650)
+    - [What's Changed](#whats-changed-9)
+    - [Minor Changes](#minor-changes-15)
     - [Patch Changes](#patch-changes-24)
-  - [v6.4.4 🏷️](#v644-️)
+  - [v6.4.5](#v645)
     - [Patch Changes](#patch-changes-25)
-  - [v6.4.3 🏷️](#v643-️)
+  - [v6.4.4](#v644)
     - [Patch Changes](#patch-changes-26)
-  - [v6.4.2 🏷️](#v642-️)
+  - [v6.4.3](#v643)
     - [Patch Changes](#patch-changes-27)
-  - [v6.4.1 🏷️](#v641-️)
+  - [v6.4.2](#v642)
     - [Patch Changes](#patch-changes-28)
-  - [v6.4.0 🏷️](#v640-️)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-29)
+  - [v6.4.0](#v640)
     - [What's Changed](#whats-changed-10)
       - [Remix Data APIs](#remix-data-apis)
-    - [Patch Changes](#patch-changes-29)
-  - [v6.3.0 🏷️](#v630-️)
-    - [Minor Changes](#minor-changes-15)
-  - [v6.2.2 🏷️](#v622-️)
     - [Patch Changes](#patch-changes-30)
-  - [v6.2.1 🏷️](#v621-️)
-    - [Patch Changes](#patch-changes-31)
-  - [v6.2.0 🏷️](#v620-️)
+  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-16)
+  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-31)
+  - [v6.2.1](#v621)
     - [Patch Changes](#patch-changes-32)
-  - [v6.1.1 🏷️](#v611-️)
-    - [Patch Changes](#patch-changes-33)
-  - [v6.1.0 🏷️](#v610-️)
+  - [v6.2.0](#v620)
     - [Minor Changes](#minor-changes-17)
+    - [Patch Changes](#patch-changes-33)
+  - [v6.1.1](#v611)
     - [Patch Changes](#patch-changes-34)
-  - [v6.0.1 🏷️](#v601-️)
+  - [v6.1.0](#v610)
+    - [Minor Changes](#minor-changes-18)
     - [Patch Changes](#patch-changes-35)
-  - [v6.0.0 🏷️](#v600-️)
+  - [v6.0.1](#v601)
+    - [Patch Changes](#patch-changes-36)
+  - [v6.0.0](#v600)
 
 </details>
 
 <!--
 To add a new release, copy from this template:
 
-## v6.X.Y [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.X.Y)
+## v6.X.Y
 
 ### What's Changed
 
@@ -147,7 +150,22 @@ To add a new release, copy from this template:
 
 -->
 
-## v6.19.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.19.0)
+## v6.20.0
+
+### Minor Changes
+
+- Export the `PathParam` type from the public API ([#10719](https://github.com/remix-run/react-router/pull/10719))
+
+### Patch Changes
+
+- Do not revalidate unmounted fetchers when `v7_fetcherPersist` is enabled ([#11044](https://github.com/remix-run/react-router/pull/11044))
+- Fix bug with `resolveTo` path resolution in splat routes ([#11045](https://github.com/remix-run/react-router/pull/11045))
+  - This is a follow up to [#10983](https://github.com/remix-run/react-router/pull/10983) to handle the few other code paths using `getPathContributingMatches`
+  - This removes the `UNSAFE_getPathContributingMatches` export from `@remix-run/router` since we no longer need this in the `react-router`/`react-router-dom` layers
+
+**Full Changelog**: [`v6.19.0...v6.20.0`](https://github.com/remix-run/react-router/compare/react-router@6.19.0...react-router@6.20.0)
+
+## v6.19.0
 
 ### What's Changed
 
@@ -200,7 +218,7 @@ function handleClick() {
 
 **Full Changelog**: [`6.18.0...6.19.0`](https://github.com/remix-run/react-router/compare/react-router@6.18.0...react-router@6.19.0)
 
-## v6.18.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.18.0)
+## v6.18.0
 
 ### What's Changed
 
@@ -241,7 +259,7 @@ Per the same [RFC](https://github.com/remix-run/remix/discussions/7698) as above
 
 **Full Changelog**: [`6.17.0...6.18.0`](https://github.com/remix-run/react-router/compare/react-router@6.17.0...react-router@6.18.0)
 
-## v6.17.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.17.0)
+## v6.17.0
 
 ### What's Changed
 
@@ -301,7 +319,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [`6.16.0...6.17.0`](https://github.com/remix-run/react-router/compare/react-router@6.16.0...react-router@6.17.0)
 
-## v6.16.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.16.0)
+## v6.16.0
 
 ### Minor Changes
 
@@ -322,7 +340,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [`v6.15.0...v6.16.0`](https://github.com/remix-run/react-router/compare/react-router@6.15.0...react-router@6.16.0)
 
-## v6.15.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.15.0)
+## v6.15.0
 
 ### Minor Changes
 
@@ -340,7 +358,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [`v6.14.2...v6.15.0`](https://github.com/remix-run/react-router/compare/react-router@6.14.2...react-router@6.15.0)
 
-## v6.14.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.2)
+## v6.14.2
 
 ### Patch Changes
 
@@ -354,7 +372,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [`v6.14.1...v6.14.2`](https://github.com/remix-run/react-router/compare/react-router@6.14.1...react-router@6.14.2)
 
-## v6.14.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.1)
+## v6.14.1
 
 ### Patch Changes
 
@@ -365,7 +383,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 **Full Changelog**: [`v6.14.0...v6.14.1`](https://github.com/remix-run/react-router/compare/react-router@6.14.0...react-router@6.14.1)
 
-## v6.14.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.14.0)
+## v6.14.0
 
 ### What's Changed
 
@@ -449,7 +467,7 @@ This behavior will likely change in v7 so it's best to make any JSON object subm
 
 **Full Changelog**: [`v6.13.0...v6.14.0`](https://github.com/remix-run/react-router/compare/react-router@6.13.0...react-router@6.14.0)
 
-## v6.13.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.13.0)
+## v6.13.0
 
 ### What's Changed
 
@@ -489,7 +507,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 **Full Changelog**: [`v6.12.1...v6.13.0`](https://github.com/remix-run/react-router/compare/react-router@6.12.1...react-router@6.13.0)
 
-## v6.12.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.1)
+## v6.12.1
 
 > **Warning**
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
@@ -500,7 +518,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 **Full Changelog**: [`v6.12.0...v6.12.1`](https://github.com/remix-run/react-router/compare/react-router@6.12.0...react-router@6.12.1)
 
-## v6.12.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0)
+## v6.12.0
 
 > **Warning**
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
@@ -526,7 +544,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [`v6.11.2...v6.12.0`](https://github.com/remix-run/react-router/compare/react-router@6.11.2...react-router@6.12.0)
 
-## v6.11.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.2)
+## v6.11.2
 
 ### Patch Changes
 
@@ -537,7 +555,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [`v6.11.1...v6.11.2`](https://github.com/remix-run/react-router/compare/react-router@6.11.1...react-router@6.11.2)
 
-## v6.11.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.1)
+## v6.11.1
 
 ### Patch Changes
 
@@ -549,7 +567,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [`v6.11.0...v6.11.1`](https://github.com/remix-run/react-router/compare/react-router@6.11.0...react-router@6.11.1)
 
-## v6.11.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.11.0)
+## v6.11.0
 
 ### Minor Changes
 
@@ -576,7 +594,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 **Full Changelog**: [`v6.10.0...v6.11.0`](https://github.com/remix-run/react-router/compare/react-router@6.10.0...react-router@6.11.0)
 
-## v6.10.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.10.0)
+## v6.10.0
 
 ### What's Changed
 
@@ -614,7 +632,7 @@ You can also check out the docs [here](https://reactrouter.com/en/dev/guides/api
 
 **Full Changelog**: [`v6.9.0...v6.10.0`](https://github.com/remix-run/react-router/compare/react-router@6.9.0...react-router@6.10.0)
 
-## v6.9.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.9.0)
+## v6.9.0
 
 ### What's Changed
 
@@ -729,7 +747,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 
 **Full Changelog**: [`v6.8.2...v6.9.0`](https://github.com/remix-run/react-router/compare/react-router@6.8.2...react-router@6.9.0)
 
-## v6.8.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.2)
+## v6.8.2
 
 ### Patch Changes
 
@@ -743,7 +761,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 
 **Full Changelog**: [`v6.8.1...v6.8.2`](https://github.com/remix-run/react-router/compare/react-router@6.8.1...react-router@6.8.2)
 
-## v6.8.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.1)
+## v6.8.1
 
 ### Patch Changes
 
@@ -754,7 +772,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 
 **Full Changelog**: [`v6.8.0...v6.8.1`](https://github.com/remix-run/react-router/compare/react-router@6.8.0...react-router@6.8.1)
 
-## v6.8.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.8.0)
+## v6.8.0
 
 ### Minor Changes
 
@@ -783,7 +801,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 **Full Changelog**: [`v6.7.0...v6.8.0`](https://github.com/remix-run/react-router/compare/react-router@6.7.0...react-router@6.8.0)
 
-## v6.7.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.7.0)
+## v6.7.0
 
 ### Minor Changes
 
@@ -803,7 +821,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 **Full Changelog**: [`v6.6.2...v6.7.0`](https://github.com/remix-run/react-router/compare/react-router@6.6.2...react-router@6.7.0)
 
-## v6.6.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.6.2)
+## v6.6.2
 
 ### Patch Changes
 
@@ -811,7 +829,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 **Full Changelog**: [`v6.6.1...v6.6.2`](https://github.com/remix-run/react-router/compare/react-router@6.6.1...react-router@6.6.2)
 
-## v6.6.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.6.1)
+## v6.6.1
 
 ### Patch Changes
 
@@ -820,7 +838,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 **Full Changelog**: [`v6.6.0...v6.6.1`](https://github.com/remix-run/react-router/compare/react-router@6.6.0...react-router@6.6.1)
 
-## v6.6.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.6.0)
+## v6.6.0
 
 ### What's Changed
 
@@ -843,7 +861,7 @@ This minor release is primarily to stabilize our SSR APIs for Data Routers now t
 
 **Full Changelog**: [`v6.5.0...v6.6.0`](https://github.com/remix-run/react-router/compare/react-router@6.5.0...react-router@6.6.0)
 
-## v6.5.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.5.0)
+## v6.5.0
 
 ### What's Changed
 
@@ -905,7 +923,7 @@ function Comp() {
 
 **Full Changelog**: [`v6.4.5...v6.5.0`](https://github.com/remix-run/react-router/compare/react-router@6.4.5...react-router@6.5.0)
 
-## v6.4.5 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.5)
+## v6.4.5
 
 ### Patch Changes
 
@@ -917,7 +935,7 @@ function Comp() {
 
 **Full Changelog**: [`v6.4.4...v6.4.5`](https://github.com/remix-run/react-router/compare/react-router@6.4.4...react-router@6.4.5)
 
-## v6.4.4 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router-dom%406.4.4)
+## v6.4.4
 
 ### Patch Changes
 
@@ -935,7 +953,7 @@ function Comp() {
 
 **Full Changelog**: [`v6.4.3...v6.4.4`](https://github.com/remix-run/react-router/compare/react-router-dom@6.4.3...react-router-dom@6.4.4)
 
-## v6.4.3 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.3)
+## v6.4.3
 
 ### Patch Changes
 
@@ -953,7 +971,7 @@ function Comp() {
 
 **Full Changelog**: [`v6.4.2...v6.4.3`](https://github.com/remix-run/react-router/compare/react-router@6.4.2...react-router@6.4.3)
 
-## v6.4.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.2)
+## v6.4.2
 
 ### Patch Changes
 
@@ -964,7 +982,7 @@ function Comp() {
 
 **Full Changelog**: [`v6.4.1...v6.4.2`](https://github.com/remix-run/react-router/compare/react-router@6.4.1...react-router@6.4.2)
 
-## v6.4.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.1)
+## v6.4.1
 
 ### Patch Changes
 
@@ -973,7 +991,7 @@ function Comp() {
 
 **Full Changelog**: [`v6.4.0...v6.4.1`](https://github.com/remix-run/react-router/compare/react-router@6.4.0...react-router@6.4.1)
 
-## v6.4.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/react-router%406.4.0)
+## v6.4.0
 
 ### What's Changed
 
@@ -1006,7 +1024,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.3.0...v6.4.0`](https://github.com/remix-run/react-router/compare/v6.3.0...react-router%406.4.0)
 
-## v6.3.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.3.0)
+## v6.3.0
 
 ### Minor Changes
 
@@ -1014,7 +1032,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.2.2...v6.3.0`](https://github.com/remix-run/react-router/compare/v6.2.2...v6.3.0)
 
-## v6.2.2 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.2.2)
+## v6.2.2
 
 ### Patch Changes
 
@@ -1023,7 +1041,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.2.1...v6.2.2`](https://github.com/remix-run/react-router/compare/v6.2.1...v6.2.2)
 
-## v6.2.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.2.1)
+## v6.2.1
 
 ### Patch Changes
 
@@ -1031,7 +1049,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.2.0...v6.2.1`](https://github.com/remix-run/react-router/compare/v6.2.0...v6.2.1)
 
-## v6.2.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.2.0)
+## v6.2.0
 
 ### Minor Changes
 
@@ -1044,7 +1062,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.1.1...v6.2.0`](https://github.com/remix-run/react-router/compare/v6.1.1...v6.2.0)
 
-## v6.1.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.1.1)
+## v6.1.1
 
 ### Patch Changes
 
@@ -1052,7 +1070,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.1.0...v6.1.1`](https://github.com/remix-run/react-router/compare/v6.1.0...v6.1.1)
 
-## v6.1.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.1.0)
+## v6.1.0
 
 ### Minor Changes
 
@@ -1067,7 +1085,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.0.1...v6.1.0`](https://github.com/remix-run/react-router/compare/v6.0.1...v6.1.0)
 
-## v6.0.1 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.0.1)
+## v6.0.1
 
 ### Patch Changes
 
@@ -1076,7 +1094,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 **Full Changelog**: [`v6.0.0...v6.0.1`](https://github.com/remix-run/react-router/compare/v6.0.1...v6.1.0)
 
-## v6.0.0 [🏷️](https://github.com/remix-run/react-router/releases/tag/v6.0.0)
+## v6.0.0
 
 React Router v6 is here!
 
