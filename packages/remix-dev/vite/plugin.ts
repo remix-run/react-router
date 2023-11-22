@@ -26,7 +26,6 @@ import { createRequestHandler } from "./node/adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
 import { removeExports } from "./remove-exports";
-import { transformLegacyCssImports } from "./legacy-css-imports";
 import { replaceImportSpecifier } from "./replace-import-specifier";
 
 // We reassign the "vite" variable from a dynamic import of Vite's ESM build
@@ -69,9 +68,7 @@ type RemixConfigJsdocOverrides = {
 };
 
 export type RemixVitePluginOptions = RemixConfigJsdocOverrides &
-  Omit<SupportedRemixConfig, keyof RemixConfigJsdocOverrides> & {
-    legacyCssImports?: boolean;
-  };
+  Omit<SupportedRemixConfig, keyof RemixConfigJsdocOverrides>;
 
 type ResolvedRemixVitePluginConfig = Pick<
   ResolvedRemixConfig,
@@ -1092,19 +1089,6 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         return modules;
       },
     },
-    ...((options.legacyCssImports
-      ? [
-          {
-            name: "remix-legacy-css-imports",
-            enforce: "pre",
-            transform(code) {
-              if (code.includes('.css"') || code.includes(".css'")) {
-                return transformLegacyCssImports(code);
-              }
-            },
-          },
-        ]
-      : []) satisfies Vite.Plugin[]),
   ];
 };
 
