@@ -52,14 +52,7 @@ export function createRequestHandler({
       let request = createRemixRequest(req, res);
       let loadContext = await getLoadContext?.(req, res);
 
-      let criticalCss =
-        mode === "production" ? null : res.locals.__remixDevCriticalCss;
-
-      let response = await handleRequest(
-        request,
-        loadContext,
-        criticalCss ? { __criticalCss: criticalCss } : undefined
-      );
+      let response = await handleRequest(request, loadContext);
 
       await sendRemixResponse(res, response);
     } catch (error: unknown) {

@@ -25,3 +25,22 @@ export async function broadcastDevReady(build: ServerBuild, origin?: string) {
 export function logDevReady(build: ServerBuild) {
   console.log(`[REMIX DEV] ${build.assets.version} ready`);
 }
+
+type DevServerHooks = {
+  getCriticalCss: (
+    build: ServerBuild,
+    pathname: string
+  ) => Promise<string | undefined>;
+};
+
+const globalDevServerHooksKey = "__remix_devServerHooks";
+
+export function setDevServerHooks(devServerHooks: DevServerHooks) {
+  // @ts-expect-error
+  globalThis[globalDevServerHooksKey] = devServerHooks;
+}
+
+export function getDevServerHooks(): DevServerHooks | undefined {
+  // @ts-expect-error
+  return globalThis[globalDevServerHooksKey];
+}

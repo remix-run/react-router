@@ -28,16 +28,11 @@ import {
   isResponse,
 } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
+import { getDevServerHooks } from "./dev";
 
 export type RequestHandler = (
   request: Request,
-  loadContext?: AppLoadContext,
-  args?: {
-    /**
-     * @private This is an internal API intended for use by the Remix Vite plugin in dev mode
-     */
-    __criticalCss?: string;
-  }
+  loadContext?: AppLoadContext
 ) => Promise<Response>;
 
 export type CreateRequestHandlerFunction = (
@@ -80,11 +75,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
 
-  return async function requestHandler(
-    request,
-    loadContext = {},
-    { __criticalCss: criticalCss } = {}
-  ) {
+  return async function requestHandler(request, loadContext = {}) {
     _build = typeof build === "function" ? await build() : build;
     if (typeof build === "function") {
       let derived = derive(_build, mode);
@@ -144,6 +135,11 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         handleError
       );
     } else {
+      let criticalCss =
+        mode === ServerMode.Development
+          ? await getDevServerHooks()?.getCriticalCss(_build, url.pathname)
+          : undefined;
+
       response = await handleDocumentRequestRR(
         serverMode,
         _build,

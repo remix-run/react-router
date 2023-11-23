@@ -198,16 +198,14 @@ export let createRequestHandler = (
   build: ServerBuild,
   {
     mode = "production",
-    criticalCss,
   }: {
     mode?: string;
-    criticalCss?: string;
   }
 ) => {
   let handler = createBaseRequestHandler(build, mode);
   return async (req: IncomingMessage, res: ServerResponse) => {
     let request = createRequest(req);
-    let response = await handler(request, {}, { __criticalCss: criticalCss });
+    let response = await handler(request, {});
     handleNodeResponse(response, res);
   };
 };
