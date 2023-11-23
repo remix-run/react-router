@@ -55,7 +55,6 @@
     "minimatch": "^9.0.0",
     "node-fetch": "^2.6.9",
     "ora": "^5.4.1",
-    "parse-multipart-data": "^1.5.0",
     "picocolors": "^1.0.0",
     "picomatch": "^2.3.1",
     "pidtree": "^0.6.0",
@@ -72,7 +71,6 @@
     "set-cookie-parser": "^2.6.0",
     "tar-fs": "^2.1.1",
     "tsconfig-paths": "^4.0.0",
-    "undici": "^5.22.1",
     "ws": "^7.4.5"
   },
   "devDependencies": {
