@@ -123,6 +123,21 @@ Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form></Form>` o
 
 In the case of a GET form submission, `navigation.formMethod` will be empty
 
+Here is an example. Please note that `navigation.formMethod` is in lowercase
+
+```tsx
+function SubmitButton() {
+  const navigation = useNavigation();
+  console.log(navigation.formMethod)  // post
+
+  return (
+    <Form method="POST">
+      <button>Submit</button>
+    </Form>
+  );
+}
+```
+
 ## `navigation.formEncType`
 
 Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form></Form>` or `useSubmit` will have form's submission method value available in `navigation.formEncType`.
