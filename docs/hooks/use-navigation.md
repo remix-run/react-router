@@ -111,7 +111,7 @@ Note that this link will not appear "pending" if a form is being submitted to th
 
 ## `navigation.formAction`
 
-Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form></Form>` or `useSubmit` will have form's submission action route's path value available in `navigation.formAction`.
+Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have form's submission action route's path value available in `navigation.formAction`.
 
 In the case of a GET form submission, `navigation.formAction` will be empty
 
@@ -119,7 +119,7 @@ If you submitted the form at `example.com/id`, then `navigation.formAction` woul
 
 ## `navigation.formMethod`
 
-Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form></Form>` or `useSubmit` will have form's submission method value available in `navigation.formMethod`.
+Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have form's submission method value available in `navigation.formMethod`.
 
 In the case of a GET form submission, `navigation.formMethod` will be empty
 
@@ -142,7 +142,7 @@ function SubmitButton() {
 
 ## `navigation.formEncType`
 
-Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form></Form>` or `useSubmit` will have form's submission method value available in `navigation.formEncType`.
+Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have form's submission method value available in `navigation.formEncType`.
 
 This property can be one of the four values: "text/plain," "application/json," "multipart/form-data," or "application/x-www-form-urlencoded."
 
