@@ -123,13 +123,13 @@ Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useS
 
 In the case of a GET form submission, `navigation.formMethod` will be empty
 
-Here is an example.  Please note that `navigation.formMethod` is in lowercase
+Here is an example. Please note that `navigation.formMethod` is in lowercase
 
 ```tsx
 function SubmitButton() {
   const navigation = useNavigation();
-  if (navigation.formMethod){
-    console.log(navigation.formMethod)  // post
+  if (navigation.formMethod) {
+    console.log(navigation.formMethod); // post
   }
 
   return (
