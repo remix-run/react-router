@@ -27,10 +27,11 @@ export function logDevReady(build: ServerBuild) {
 }
 
 type DevServerHooks = {
-  getCriticalCss: (
+  getCriticalCss?: (
     build: ServerBuild,
     pathname: string
   ) => Promise<string | undefined>;
+  processRequestError?: (error: unknown) => void;
 };
 
 const globalDevServerHooksKey = "__remix_devServerHooks";

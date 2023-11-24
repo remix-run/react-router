@@ -197,6 +197,39 @@ test.describe("Vite dev", () => {
             </>
           }
         `,
+        "app/routes/error-stacktrace.tsx": js`
+          import type { LoaderFunction, MetaFunction } from "@remix-run/node";
+          import { Link, useLocation } from "@remix-run/react";
+
+          export const loader: LoaderFunction = ({ request }) => {
+            if (request.url.includes("crash-loader")) {
+              throw new Error("crash-loader");
+            }
+            return null;
+          };
+
+          export default function TestRoute() {
+            const location = useLocation();
+
+            if (import.meta.env.SSR && location.search.includes("crash-server-render")) {
+              throw new Error("crash-server-render");
+            }
+
+            return (
+              <div>
+                <ul>
+                  {["crash-loader", "crash-server-render"].map(
+                    (v) => (
+                      <li key={v}>
+                        <Link to={"/?" + v}>{v}</Link>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            );
+          }
+        `,
         "app/routes/known-route-exports.tsx": js`
           import { useMatches } from "@remix-run/react";
 
@@ -383,6 +416,29 @@ test.describe("Vite dev", () => {
     );
 
     expect(pageErrors).toEqual([]);
+  });
+
+  test("request errors map to original source code", async ({ page }) => {
+    let pageErrors: unknown[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error));
+
+    await page.goto(
+      `http://localhost:${devPort}/error-stacktrace?crash-server-render`
+    );
+    await expect(page.locator("main")).toContainText(
+      "Error: crash-server-render"
+    );
+    await expect(page.locator("main")).toContainText(
+      "error-stacktrace.tsx:16:11"
+    );
+
+    await page.goto(
+      `http://localhost:${devPort}/error-stacktrace?crash-loader`
+    );
+    await expect(page.locator("main")).toContainText("Error: crash-loader");
+    await expect(page.locator("main")).toContainText(
+      "error-stacktrace.tsx:7:11"
+    );
   });
 
   test("handle known route exports with HMR", async ({ page }) => {

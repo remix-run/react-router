@@ -669,9 +669,9 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           setTimeout(showUnstableWarning, 50);
         });
 
-        // Give the request handler access to the critical CSS in dev to avoid a
-        // flash of unstyled content since Vite injects CSS file contents via JS
         setDevServerHooks({
+          // Give the request handler access to the critical CSS in dev to avoid a
+          // flash of unstyled content since Vite injects CSS file contents via JS
           getCriticalCss: async (build, url) => {
             invariant(cachedPluginConfig);
             return getStylesForUrl(
@@ -681,6 +681,13 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
               build,
               url
             );
+          },
+          // If an error is caught within the request handler, let Vite fix the
+          // stack trace so it maps back to the actual source code
+          processRequestError: (error) => {
+            if (error instanceof Error) {
+              vite.ssrFixStacktrace(error);
+            }
           },
         });
 

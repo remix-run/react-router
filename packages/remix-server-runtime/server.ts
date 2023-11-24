@@ -94,12 +94,17 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let url = new URL(request.url);
 
     let matches = matchServerRoutes(routes, url.pathname);
-    let handleError = (error: unknown) =>
+    let handleError = (error: unknown) => {
+      if (mode === ServerMode.Development) {
+        getDevServerHooks()?.processRequestError?.(error);
+      }
+
       errorHandler(error, {
         context: loadContext,
         params: matches && matches.length > 0 ? matches[0].params : {},
         request,
       });
+    };
 
     let response: Response;
     if (url.searchParams.has("_data")) {
@@ -137,7 +142,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     } else {
       let criticalCss =
         mode === ServerMode.Development
-          ? await getDevServerHooks()?.getCriticalCss(_build, url.pathname)
+          ? await getDevServerHooks()?.getCriticalCss?.(_build, url.pathname)
           : undefined;
 
       response = await handleDocumentRequestRR(
