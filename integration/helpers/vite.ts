@@ -1,19 +1,19 @@
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
+import path from "node:path";
 import type { Readable } from "node:stream";
+import url from "node:url";
 import execa from "execa";
+import fse from "fs-extra";
 import resolveBin from "resolve-bin";
+import stripIndent from "strip-indent";
 import waitOn from "wait-on";
+import getPort from "get-port";
 
-import { js } from "./create-fixture.js";
+const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-const isWindows = process.platform === "win32";
-
-export const basicTemplate = (args: {
-  port: number;
-  hmrPort: number;
-  requestHandlerArgs?: string;
-}): Record<string, string> => ({
-  "vite.config.ts": js`
+export const VITE_CONFIG = async (args: { port: number }) => {
+  let hmrPort = await getPort();
+  return String.raw`
     import { defineConfig } from "vite";
     import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
@@ -22,13 +22,19 @@ export const basicTemplate = (args: {
         port: ${args.port},
         strictPort: true,
         hmr: {
-          port: ${args.hmrPort}
+          port: ${hmrPort}
         }
       },
       plugins: [remix()],
     });
-  `,
-  "server.mjs": js`
+  `;
+};
+
+export const EXPRESS_SERVER = (args: {
+  port: number;
+  loadContext?: Record<string, unknown>;
+}) =>
+  String.raw`
     import {
       unstable_createViteServer,
       unstable_loadViteServerBuild,
@@ -62,121 +68,74 @@ export const basicTemplate = (args: {
         build: vite
           ? () => unstable_loadViteServerBuild(vite)
           : await import("./build/index.js"),
-        ${args.requestHandlerArgs ?? ""}
+        getLoadContext: () => (${JSON.stringify(args.loadContext ?? {})}),
       })
     );
 
     const port = ${args.port};
     app.listen(port, () => console.log('http://localhost:' + port));
-  `,
-  "app/root.tsx": js`
-    import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+  `;
 
-    export default function Root() {
-      return (
-        <html lang="en">
-          <head>
-            <Meta />
-            <Links />
-          </head>
-          <body>
-            <Outlet />
-            <Scripts />
-            <LiveReload />
-          </body>
-        </html>
-      );
-    }
-  `,
-  "app/routes/_index.tsx": js`
-    import type { MetaFunction } from "@remix-run/node";
+const TMP_DIR = path.join(process.cwd(), ".tmp/integration");
+export async function createProject(files: Record<string, string> = {}) {
+  let projectName = `remix-${Math.random().toString(32).slice(2)}`;
+  let projectDir = path.join(TMP_DIR, projectName);
+  await fse.ensureDir(projectDir);
 
-    export const meta: MetaFunction = () => {
-      return [
-        { title: "New Remix App" },
-        { name: "description", content: "Welcome to Remix!" },
-      ];
-    };
+  // base template
+  let template = path.resolve(__dirname, "vite-template");
+  await fse.copy(template, projectDir, { errorOnExist: true });
 
-    export default function Index() {
-      return (
-        <div style={{ fontFamily: "system-ui, sans-serif", lineHeight: "1.8" }}>
-          <h1>Welcome to Remix</h1>
-          <ul>
-            <li>
-              <a
-                target="_blank"
-                href="https://remix.run/tutorials/blog"
-                rel="noreferrer"
-              >
-                15m Quickstart Blog Tutorial
-              </a>
-            </li>
-            <li>
-              <a
-                target="_blank"
-                href="https://remix.run/tutorials/jokes"
-                rel="noreferrer"
-              >
-                Deep Dive Jokes App Tutorial
-              </a>
-            </li>
-            <li>
-              <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-                Remix Docs
-              </a>
-            </li>
-          </ul>
-        </div>
-      );
-    }
-  `,
-});
+  // user-defined files
+  await Promise.all(
+    Object.entries(files).map(async ([filename, contents]) => {
+      let filepath = path.join(projectDir, filename);
+      await fse.ensureDir(path.dirname(filepath));
+      await fse.writeFile(filepath, stripIndent(contents));
+    })
+  );
 
-export async function viteDev(options: { cwd: string; port: number }) {
-  let viteBin = resolveBin.sync("vite");
-  return node([viteBin, "dev"], options);
+  // node_modules: overwrite with locally built Remix packages
+  await fse.copy(
+    path.join(__dirname, "../../build/node_modules"),
+    path.join(projectDir, "node_modules"),
+    { overwrite: true }
+  );
+
+  return projectDir;
 }
 
-export async function node(
-  command: string[],
-  options: {
-    cwd: string;
-    port: number;
-  }
-) {
+type ServerArgs = {
+  cwd: string;
+  port: number;
+};
+
+const createDev =
+  (nodeArgs: string[]) =>
+  async ({ cwd, port }: ServerArgs): Promise<() => Promise<void>> => {
+    let proc = node(nodeArgs, { cwd });
+    await waitForServer(proc, { port: port });
+    return async () => await kill(proc.pid!);
+  };
+
+export const viteDev = createDev([resolveBin.sync("vite"), "dev"]);
+export const customDev = createDev(["./server.mjs"]);
+
+function node(args: string[], options: { cwd: string }) {
   let nodeBin = process.argv[0];
-  let proc = spawn(nodeBin, command, {
+
+  let proc = spawn(nodeBin, args, {
     cwd: options.cwd,
     env: process.env,
     stdio: "pipe",
   });
-  let devStdout = bufferize(proc.stdout);
-  let devStderr = bufferize(proc.stderr);
-
-  await waitOn({
-    resources: [`http://localhost:${options.port}/`],
-    timeout: 10000,
-  }).catch((err) => {
-    let stdout = devStdout();
-    let stderr = devStderr();
-    kill(proc.pid!);
-    throw new Error(
-      [
-        err.message,
-        "",
-        "exit code: " + proc.exitCode,
-        "stdout: " + stdout ? `\n${stdout}\n` : "<empty>",
-        "stderr: " + stderr ? `\n${stderr}\n` : "<empty>",
-      ].join("\n")
-    );
-  });
-
-  return { pid: proc.pid!, port: options.port };
+  return proc;
 }
 
-export async function kill(pid: number) {
+async function kill(pid: number) {
   if (!isAlive(pid)) return;
+
+  let isWindows = process.platform === "win32";
   if (isWindows) {
     await execa("taskkill", ["/F", "/PID", pid.toString()]).catch((error) => {
       // taskkill 128 -> the process is already dead
@@ -194,14 +153,6 @@ export async function kill(pid: number) {
   });
 }
 
-// utils ------------------------------------------------------------
-
-function bufferize(stream: Readable): () => string {
-  let buffer = "";
-  stream.on("data", (data) => (buffer += data.toString()));
-  return () => buffer;
-}
-
 function isAlive(pid: number) {
   try {
     process.kill(pid, 0);
@@ -209,4 +160,36 @@ function isAlive(pid: number) {
   } catch (error) {
     return false;
   }
+}
+
+async function waitForServer(
+  proc: ChildProcess & { stdout: Readable; stderr: Readable },
+  args: { port: number }
+) {
+  let devStdout = bufferize(proc.stdout);
+  let devStderr = bufferize(proc.stderr);
+
+  await waitOn({
+    resources: [`http://localhost:${args.port}/`],
+    timeout: 10000,
+  }).catch((err) => {
+    let stdout = devStdout();
+    let stderr = devStderr();
+    kill(proc.pid!);
+    throw new Error(
+      [
+        err.message,
+        "",
+        "exit code: " + proc.exitCode,
+        "stdout: " + stdout ? `\n${stdout}\n` : "<empty>",
+        "stderr: " + stderr ? `\n${stderr}\n` : "<empty>",
+      ].join("\n")
+    );
+  });
+}
+
+function bufferize(stream: Readable): () => string {
+  let buffer = "";
+  stream.on("data", (data) => (buffer += data.toString()));
+  return () => buffer;
 }

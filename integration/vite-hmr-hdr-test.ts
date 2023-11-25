@@ -4,11 +4,16 @@ import type { Page, PlaywrightWorkerOptions } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
-import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { basicTemplate, kill, node, viteDev } from "./helpers/vite.js";
+import {
+  createProject,
+  viteDev,
+  customDev,
+  VITE_CONFIG,
+  EXPRESS_SERVER,
+} from "./helpers/vite.js";
 
 const files = {
-  "app/routes/_index.tsx": js`
+  "app/routes/_index.tsx": String.raw`
     // imports
     import { useState, useEffect } from "react";
 
@@ -36,72 +41,61 @@ const files = {
   `,
 };
 
-test.describe("Vite dev server", () => {
-  let projectDir: string;
-  let dev: { pid: number; port: number };
+test.describe(async () => {
+  let port: number;
+  let cwd: string;
+  let stop: () => Promise<void>;
 
   test.beforeAll(async () => {
-    let port = await getPort();
-    let hmrPort = await getPort();
-    projectDir = await createFixtureProject({
-      compiler: "vite",
-      files: {
-        ...basicTemplate({ port, hmrPort }),
-        ...files,
-      },
+    port = await getPort();
+    cwd = await createProject({
+      "vite.config.js": await VITE_CONFIG({ port }),
+      ...files,
     });
-    dev = await viteDev({ cwd: projectDir, port });
+    stop = await viteDev({ cwd, port });
   });
+  test.afterAll(async () => await stop());
 
-  test.afterAll(async () => {
-    await kill(dev.pid);
-  });
-
-  test("handles HMR & HDR", async ({ page, browserName }) => {
-    await workflow({ page, browserName, projectDir, port: dev.port });
+  test("Vite / HMR & HDR / vite dev", async ({ page, browserName }) => {
+    await workflow({ page, browserName, cwd, port });
   });
 });
 
-test.describe("Vite custom Express server", () => {
-  let projectDir: string;
-  let dev: { pid: number; port: number };
+test.describe(async () => {
+  let port: number;
+  let cwd: string;
+  let stop: () => Promise<void>;
 
   test.beforeAll(async () => {
-    let port = await getPort();
-    let hmrPort = await getPort();
-    projectDir = await createFixtureProject({
-      compiler: "vite",
-      files: {
-        ...basicTemplate({ port, hmrPort }),
-        ...files,
-      },
+    port = await getPort();
+    cwd = await createProject({
+      "vite.config.js": await VITE_CONFIG({ port }),
+      "server.mjs": EXPRESS_SERVER({ port }),
+      ...files,
     });
-    dev = await node(["./server.mjs"], { cwd: projectDir, port });
+    stop = await customDev({ cwd, port });
   });
+  test.afterAll(async () => await stop());
 
-  test.afterAll(async () => {
-    await kill(dev.pid);
-  });
-
-  test("handles HMR & HDR", async ({ page, browserName }) => {
-    await workflow({ page, browserName, projectDir, port: dev.port });
+  test("Vite / HMR & HDR / express", async ({ page, browserName }) => {
+    await workflow({ page, browserName, cwd, port });
   });
 });
 
 async function workflow({
   page,
   browserName,
-  projectDir,
+  cwd,
   port,
 }: {
   page: Page;
   browserName: PlaywrightWorkerOptions["browserName"];
-  projectDir: string;
+  cwd: string;
   port: number;
 }) {
   let pageErrors: Error[] = [];
   page.on("pageerror", (error) => pageErrors.push(error));
-  let edit = editor(projectDir);
+  let edit = editor(cwd);
 
   // setup: initial render
   await page.goto(`http://localhost:${port}/`, {
@@ -204,8 +198,8 @@ async function workflow({
 
   // create new non-route component module
   await fs.writeFile(
-    path.join(projectDir, "app/component.tsx"),
-    js`
+    path.join(cwd, "app/component.tsx"),
+    String.raw`
     export function MyComponent() {
       return <p data-component>Component HMR: 0</p>;
     }
@@ -238,13 +232,13 @@ async function workflow({
 
   // create new non-route server module
   await fs.writeFile(
-    path.join(projectDir, "app/indirect-hdr-dep.ts"),
-    js`export const indirect = "indirect 0"`,
+    path.join(cwd, "app/indirect-hdr-dep.ts"),
+    String.raw`export const indirect = "indirect 0"`,
     "utf8"
   );
   await fs.writeFile(
-    path.join(projectDir, "app/direct-hdr-dep.ts"),
-    js`
+    path.join(cwd, "app/direct-hdr-dep.ts"),
+    String.raw`
       import { indirect } from "./indirect-hdr-dep"
       export const direct = "direct 0 & " + indirect
     `,

@@ -1,54 +1,49 @@
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
-import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { basicTemplate, kill, node } from "./helpers/vite.js";
+import {
+  createProject,
+  customDev,
+  EXPRESS_SERVER,
+  VITE_CONFIG,
+} from "./helpers/vite.js";
 
-let projectDir: string;
-let dev: { pid: number; port: number };
+let port: number;
+let cwd: string;
+let stop: () => Promise<void>;
 
 test.beforeAll(async () => {
-  let port = await getPort();
-  let hmrPort = await getPort();
-  projectDir = await createFixtureProject({
-    compiler: "vite",
-    files: {
-      ...basicTemplate({
-        port,
-        hmrPort,
-        requestHandlerArgs: `getLoadContext: () => ({ value: "value" })`,
-      }),
-      "app/routes/_index.tsx": js`
-        import { json } from "@remix-run/node";
-        import { useLoaderData } from "@remix-run/react";
+  port = await getPort();
+  cwd = await createProject({
+    "vite.config.js": await VITE_CONFIG({ port }),
+    "server.mjs": EXPRESS_SERVER({ port, loadContext: { value: "value" } }),
+    "app/routes/_index.tsx": String.raw`
+      import { json } from "@remix-run/node";
+      import { useLoaderData } from "@remix-run/react";
 
-        export const loader = ({ context }) => {
-          return json({ context })
-        }
+      export const loader = ({ context }) => {
+        return json({ context })
+      }
 
-        export default function IndexRoute() {
-          let { context } = useLoaderData<typeof loader>();
-          return (
-            <div id="index">
-              <p data-context>Context: {context.value}</p>
-            </div>
-          );
-        }
-      `,
-    },
+      export default function IndexRoute() {
+        let { context } = useLoaderData<typeof loader>();
+        return (
+          <div id="index">
+            <p data-context>Context: {context.value}</p>
+          </div>
+        );
+      }
+    `,
   });
-  dev = await node(["./server.mjs"], { cwd: projectDir, port });
+  stop = await customDev({ cwd, port });
 });
+test.afterAll(async () => await stop());
 
-test.afterAll(async () => {
-  await kill(dev.pid);
-});
-
-test("Vite custom Express server handles loader context", async ({ page }) => {
+test("Vite / Load context / express", async ({ page }) => {
   let pageErrors: Error[] = [];
   page.on("pageerror", (error) => pageErrors.push(error));
 
-  await page.goto(`http://localhost:${dev.port}/`, {
+  await page.goto(`http://localhost:${port}/`, {
     waitUntil: "networkidle",
   });
   await expect(page.locator("#index [data-context]")).toHaveText(

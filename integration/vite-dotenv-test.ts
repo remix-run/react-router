@@ -1,66 +1,69 @@
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
-import { createFixtureProject, js } from "./helpers/create-fixture.js";
-import { basicTemplate, kill, node } from "./helpers/vite.js";
+import {
+  createProject,
+  customDev,
+  EXPRESS_SERVER,
+  VITE_CONFIG,
+} from "./helpers/vite.js";
 
-test.describe("Vite custom Express server", () => {
-  let projectDir: string;
-  let dev: { pid: number; port: number };
+let files = {
+  ".env": `
+    ENV_VAR_FROM_DOTENV_FILE=Content from .env file
+  `,
+  "app/routes/dotenv.tsx": String.raw`
+    import { useState, useEffect } from "react";
+    import { json } from "@remix-run/node";
+    import { useLoaderData } from "@remix-run/react";
+
+    export const loader = () => {
+      return json({
+        loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
+      })
+    }
+
+    export default function DotenvRoute() {
+      const { loaderContent } = useLoaderData();
+
+      const [clientContent, setClientContent] = useState('');
+      useEffect(() => {
+        try {
+          setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE shouldn't be available on the client, found: " + process.env.ENV_VAR_FROM_DOTENV_FILE);
+        } catch (err) {
+          setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing");
+        }
+      }, []);
+
+      return <>
+        <div data-dotenv-route-loader-content>{loaderContent}</div>
+        <div data-dotenv-route-client-content>{clientContent}</div>
+      </>
+    }
+  `,
+};
+
+test.describe(async () => {
+  let port: number;
+  let cwd: string;
+  let stop: () => Promise<void>;
 
   test.beforeAll(async () => {
-    let port = await getPort();
-    let hmrPort = await getPort();
-    projectDir = await createFixtureProject({
-      compiler: "vite",
-      files: {
-        ...basicTemplate({ port, hmrPort }),
-        ".env": `
-          ENV_VAR_FROM_DOTENV_FILE=Content from .env file
-        `,
-        "app/routes/dotenv.tsx": js`
-          import { useState, useEffect } from "react";
-          import { json } from "@remix-run/node";
-          import { useLoaderData } from "@remix-run/react";
-
-          export const loader = () => {
-            return json({
-              loaderContent: process.env.ENV_VAR_FROM_DOTENV_FILE,
-            })
-          }
-
-          export default function DotenvRoute() {
-            const { loaderContent } = useLoaderData();
-
-            const [clientContent, setClientContent] = useState('');
-            useEffect(() => {
-              try {
-                setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE shouldn't be available on the client, found: " + process.env.ENV_VAR_FROM_DOTENV_FILE);
-              } catch (err) {
-                setClientContent("process.env.ENV_VAR_FROM_DOTENV_FILE not available on the client, which is a good thing");
-              }
-            }, []);
-
-            return <>
-              <div data-dotenv-route-loader-content>{loaderContent}</div>
-              <div data-dotenv-route-client-content>{clientContent}</div>
-            </>
-          }
-        `,
-      },
+    port = await getPort();
+    cwd = await createProject({
+      "vite.config.js": await VITE_CONFIG({ port }),
+      "server.mjs": EXPRESS_SERVER({ port }),
+      ...files,
     });
-    dev = await node(["./server.mjs"], { cwd: projectDir, port });
+    stop = await customDev({ cwd, port });
   });
+  test.afterAll(async () => await stop());
 
-  test.afterAll(async () => {
-    await kill(dev.pid);
-  });
-
-  test("loads .env file", async ({ page }) => {
+  test("Vite / Load context / express", async ({ page }) => {
     let pageErrors: unknown[] = [];
     page.on("pageerror", (error) => pageErrors.push(error));
 
-    await page.goto(`http://localhost:${dev.port}/dotenv`, {
+    await page.goto(`http://localhost:${port}/dotenv`, {
       waitUntil: "networkidle",
     });
     expect(pageErrors).toEqual([]);
