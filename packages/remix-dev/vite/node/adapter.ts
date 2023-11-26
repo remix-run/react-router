@@ -44,13 +44,9 @@ function createRequest(req: IncomingMessage, res: ServerResponse): Request {
   invariant(req.url, 'Expected "req.url" to be defined');
   let url = new URL(req.url, origin);
 
-  let controller = new AbortController();
-  res.on("close", () => controller.abort());
-
   let init: RequestInit = {
     method: req.method,
     headers: createHeaders(req.headers),
-    signal: controller.signal,
   };
 
   if (req.method !== "GET" && req.method !== "HEAD") {
