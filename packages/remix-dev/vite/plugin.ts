@@ -628,6 +628,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           ...viteUserConfig,
           mode: viteConfig.mode,
           server: {
+            preTransformRequests: false,
             hmr: false,
           },
           configFile: false,
