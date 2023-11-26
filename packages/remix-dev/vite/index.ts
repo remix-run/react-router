@@ -1,10 +1,8 @@
 // This file allows us to dynamically require the plugin so non-Vite consumers
 // don't need to have Vite installed as a peer dependency. Only types should
 // be imported at the top level.
-import type { ViteDevServer } from "vite";
-
 import type { RemixVitePlugin } from "./plugin";
-import { id } from "./vmod";
+import { serverEntryId } from "./server-entry-id";
 
 export const unstable_vitePlugin: RemixVitePlugin = (...args) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
@@ -12,15 +10,6 @@ export const unstable_vitePlugin: RemixVitePlugin = (...args) => {
   return remixVitePlugin(...args);
 };
 
-export const unstable_createViteServer = async () => {
-  let vite = await import("vite");
-  return vite.createServer({
-    server: {
-      middlewareMode: true,
-    },
-  });
-};
-
-export const unstable_loadViteServerBuild = async (vite: ViteDevServer) => {
-  return vite.ssrLoadModule(id("server-entry"));
-};
+// We rename this export because from a consumer's perspective this is the
+// "server build" since they also provide their own server entry
+export const unstable_viteServerBuildModuleId = serverEntryId;

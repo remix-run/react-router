@@ -28,6 +28,7 @@ import invariant from "../invariant";
 import { createRequestHandler } from "./node/adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
+import { serverEntryId } from "./server-entry-id";
 import { removeExports } from "./remove-exports";
 import { replaceImportSpecifier } from "./replace-import-specifier";
 
@@ -88,7 +89,6 @@ type ResolvedRemixVitePluginConfig = Pick<
   | "serverModuleFormat"
 >;
 
-let serverEntryId = VirtualModule.id("server-entry");
 let serverManifestId = VirtualModule.id("server-manifest");
 let browserManifestId = VirtualModule.id("browser-manifest");
 let remixReactProxyId = VirtualModule.id("remix-react-proxy");
