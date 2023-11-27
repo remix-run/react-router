@@ -889,22 +889,30 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       name: "remix-empty-server-modules",
       enforce: "pre",
       async transform(_code, id, options) {
-        if (!options?.ssr && /\.server(\.[cm]?[jt]sx?)?$/.test(id))
+        if (options?.ssr) return;
+        let serverFileRE = /\.server(\.[cm]?[jt]sx?)?$/;
+        let serverDirRE = /\/\.server\//;
+        if (serverFileRE.test(id) || serverDirRE.test(id)) {
           return {
             code: "export default {}",
             map: null,
           };
+        }
       },
     },
     {
       name: "remix-empty-client-modules",
       enforce: "pre",
       async transform(_code, id, options) {
-        if (options?.ssr && /\.client(\.[cm]?[jt]sx?)?$/.test(id))
+        if (!options?.ssr) return;
+        let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
+        let clientDirRE = /\/\.client\//;
+        if (clientFileRE.test(id) || clientDirRE.test(id)) {
           return {
             code: "export default {}",
             map: null,
           };
+        }
       },
     },
     {

@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import type { Readable } from "node:stream";
 import url from "node:url";
@@ -119,6 +119,24 @@ const createDev =
     return async () => await kill(proc.pid!);
   };
 
+export const viteBuild = (args: { cwd: string }) => {
+  let vite = resolveBin.sync("vite");
+  let commands = [
+    [vite, "build"],
+    [vite, "build", "--ssr"],
+  ];
+  let results = [];
+  for (let command of commands) {
+    let result = spawnSync("node", command, {
+      cwd: args.cwd,
+      env: {
+        ...process.env,
+      },
+    });
+    results.push(result);
+  }
+  return results;
+};
 export const viteDev = createDev([resolveBin.sync("vite"), "dev"]);
 export const customDev = createDev(["./server.mjs"]);
 
