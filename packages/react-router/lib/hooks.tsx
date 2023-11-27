@@ -706,10 +706,6 @@ export function _renderMatches(
         (!dataRouterState.errors ||
           dataRouterState.errors[match.route.id] === undefined)
       ) {
-        // TODO:
-        // TODO: Add unit tests for this error flow!
-        // TODO:
-
         // We found the first route without data/errors which means it's loader
         // still needs to run.  Flag that we need to render a fallback and
         // render up until the appropriate fallback
