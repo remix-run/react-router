@@ -286,6 +286,9 @@ describe("route.Fallback components", () => {
           },
         });
 
+        let subscriberSpy = jest.fn();
+        router.subscribe(subscriberSpy);
+
         // Start with initialized:false
         expect(router.state).toMatchObject({
           historyAction: "POP",
@@ -309,6 +312,17 @@ describe("route.Fallback components", () => {
         // Root was not re-called
         expect(shouldRevalidateSpy).not.toHaveBeenCalled();
         expect(spy).not.toHaveBeenCalled();
+
+        // Ensure we don't go into a navigating state during initial calls of
+        // the loaders
+        expect(subscriberSpy).toHaveBeenCalledTimes(1);
+        expect(subscriberSpy.mock.calls[0][0]).toMatchObject({
+          loaderData: {
+            index: "INDEX DATA",
+            root: "LOADER DATA",
+          },
+          navigation: IDLE_NAVIGATION,
+        });
       });
     });
   });
