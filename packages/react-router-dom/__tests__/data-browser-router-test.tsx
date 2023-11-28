@@ -7549,7 +7549,7 @@ function testDomRouter(
                   id: "index",
                   index: true,
                   loader: () => "INDEX",
-                  Fallback: () => <p>Should not see me</p>,
+                  InitialFallback: () => <p>Should not see me</p>,
                   Component() {
                     let data = useLoaderData() as string;
                     return <h2>{`Index - ${data}`}</h2>;
@@ -7605,7 +7605,7 @@ function testDomRouter(
                   id: "index",
                   index: true,
                   loader: () => dfd.promise,
-                  Fallback: () => <p>Index Loading...</p>,
+                  InitialFallback: () => <p>Index Loading...</p>,
                   Component() {
                     let data = useLoaderData() as string;
                     return <h2>{`Index - ${data}`}</h2>;
@@ -7665,7 +7665,7 @@ function testDomRouter(
               id: "root",
               path: "/",
               loader: () => "ROOT",
-              Fallback: () => <p>Root Loading...</p>,
+              InitialFallback: () => <p>Root Loading...</p>,
               Component() {
                 let data = useLoaderData() as string;
                 return (
@@ -7797,7 +7797,7 @@ function testDomRouter(
               id: "root",
               path: "/",
               loader: () => dfd1.promise,
-              Fallback: () => <p>Root Loading...</p>,
+              InitialFallback: () => <p>Root Loading...</p>,
               Component() {
                 let data = useLoaderData() as string;
                 return (
@@ -7890,7 +7890,7 @@ function testDomRouter(
                   id: "index",
                   index: true,
                   loader: spy,
-                  Fallback: () => <p>Index Loading...</p>,
+                  InitialFallback: () => <p>Index Loading...</p>,
                   Component() {
                     let data = useLoaderData() as string;
                     return <h2>{`Index - ${data}`}</h2>;

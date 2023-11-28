@@ -245,19 +245,19 @@ function mapRouteProperties(route: RouteObject) {
     });
   }
 
-  if (route.Fallback) {
+  if (route.InitialFallback) {
     if (__DEV__) {
-      if (route.fallbackElement) {
+      if (route.initialFallbackElement) {
         warning(
           false,
-          "You should not include both `Fallback` and `fallbackElement` on your route - " +
-            "`Fallback` will be used."
+          "You should not include both `InitialFallback` and `initialFallbackElement` on your route - " +
+            "`InitialFallback` will be used."
         );
       }
     }
     Object.assign(updates, {
-      fallbackElement: React.createElement(route.Fallback),
-      Fallback: undefined,
+      initialFallbackElement: React.createElement(route.InitialFallback),
+      InitialFallback: undefined,
     });
   }
 

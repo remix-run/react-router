@@ -28,10 +28,10 @@ export interface IndexRouteObject {
   index: true;
   children?: undefined;
   element?: React.ReactNode | null;
-  fallbackElement?: React.ReactNode | null;
+  initialFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
-  Fallback?: React.ComponentType | null;
+  InitialFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<RouteObject>;
 }
@@ -48,10 +48,10 @@ export interface NonIndexRouteObject {
   index?: false;
   children?: RouteObject[];
   element?: React.ReactNode | null;
-  fallbackElement?: React.ReactNode | null;
+  initialFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
-  Fallback?: React.ComponentType | null;
+  InitialFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<RouteObject>;
 }
