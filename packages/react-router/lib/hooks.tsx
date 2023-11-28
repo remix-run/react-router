@@ -689,14 +689,14 @@ export function _renderMatches(
   }
 
   // If we're in a partial hydration mode, detect if we need to render down to
-  // a given InitialFallback while we load the rest of the hydration data
+  // a given HydrateFallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
   if (dataRouterState && future && future.v7_partialHydration) {
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data
-      if (match.route.InitialFallback || match.route.initialFallbackElement) {
+      if (match.route.HydrateFallback || match.route.hydrateFallbackElement) {
         fallbackIndex = i;
       }
       if (
@@ -723,9 +723,9 @@ export function _renderMatches(
   return renderedMatches.reduceRight((outlet, match, index) => {
     // Only data routers handle errors/fallbacks
     let error: any;
-    let shouldRenderInitialFallback = false;
+    let shouldRenderHydrateFallback = false;
     let errorElement: React.ReactNode | null = null;
-    let initialFallbackElement: React.ReactNode | null = null;
+    let hydrateFallbackElement: React.ReactNode | null = null;
     if (dataRouterState) {
       error = errors && match.route.id ? errors[match.route.id] : null;
       errorElement = match.route.errorElement || defaultErrorElement;
@@ -735,13 +735,13 @@ export function _renderMatches(
           warningOnce(
             "route-fallback",
             false,
-            "No `InitialFallback` element provided to render during initial hydration"
+            "No `HydrateFallback` element provided to render during initial hydration"
           );
-          shouldRenderInitialFallback = true;
-          initialFallbackElement = null;
+          shouldRenderHydrateFallback = true;
+          hydrateFallbackElement = null;
         } else if (fallbackIndex === index) {
-          shouldRenderInitialFallback = true;
-          initialFallbackElement = match.route.initialFallbackElement || null;
+          shouldRenderHydrateFallback = true;
+          hydrateFallbackElement = match.route.hydrateFallbackElement || null;
         }
       }
     }
@@ -751,8 +751,8 @@ export function _renderMatches(
       let children: React.ReactNode;
       if (error) {
         children = errorElement;
-      } else if (shouldRenderInitialFallback) {
-        children = initialFallbackElement;
+      } else if (shouldRenderHydrateFallback) {
+        children = hydrateFallbackElement;
       } else if (match.route.Component) {
         // Note: This is a de-optimized path since React won't re-use the
         // ReactElement since it's identity changes with each new

@@ -816,10 +816,10 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // "Initialized" here really means "Can `RouterProvider` render my route tree?"
-  // Prior to `route.InitialFallback`, we only had a root `fallbackElement` so we used
+  // Prior to `route.HydrateFallback`, we only had a root `fallbackElement` so we used
   // `state.initialized` to render that instead of `<DataRoutes>`.  Now that we
   // support route level fallbacks we can always render and we'll just render
-  // as deep as we have data for and detect the nearest ancestor InitialFallback
+  // as deep as we have data for and detect the nearest ancestor HydrateFallback
   let initialized =
     future.v7_partialHydration ||
     // All initialMatches need to be loaded before we're ready.  If we have lazy

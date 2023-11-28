@@ -7549,7 +7549,7 @@ function testDomRouter(
                   id: "index",
                   index: true,
                   loader: () => "INDEX",
-                  InitialFallback: () => <p>Should not see me</p>,
+                  HydrateFallback: () => <p>Should not see me</p>,
                   Component() {
                     let data = useLoaderData() as string;
                     return <h2>{`Index - ${data}`}</h2>;
@@ -7605,7 +7605,7 @@ function testDomRouter(
                   id: "index",
                   index: true,
                   loader: () => dfd.promise,
-                  InitialFallback: () => <p>Index Loading...</p>,
+                  HydrateFallback: () => <p>Index Loading...</p>,
                   Component() {
                     let data = useLoaderData() as string;
                     return <h2>{`Index - ${data}`}</h2>;
@@ -7665,7 +7665,7 @@ function testDomRouter(
               id: "root",
               path: "/",
               loader: () => "ROOT",
-              InitialFallback: () => <p>Root Loading...</p>,
+              HydrateFallback: () => <p>Root Loading...</p>,
               Component() {
                 let data = useLoaderData() as string;
                 return (
@@ -7797,7 +7797,7 @@ function testDomRouter(
               id: "root",
               path: "/",
               loader: () => dfd1.promise,
-              InitialFallback: () => <p>Root Loading...</p>,
+              HydrateFallback: () => <p>Root Loading...</p>,
               Component() {
                 let data = useLoaderData() as string;
                 return (
@@ -7890,7 +7890,7 @@ function testDomRouter(
                   id: "index",
                   index: true,
                   loader: spy,
-                  InitialFallback: () => <p>Index Loading...</p>,
+                  HydrateFallback: () => <p>Index Loading...</p>,
                   Component() {
                     let data = useLoaderData() as string;
                     return <h2>{`Index - ${data}`}</h2>;

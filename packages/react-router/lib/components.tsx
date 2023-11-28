@@ -336,10 +336,10 @@ export interface PathRouteProps {
   index?: false;
   children?: React.ReactNode;
   element?: React.ReactNode | null;
-  initialFallbackElement?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
-  InitialFallback?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
 }
 
@@ -358,10 +358,10 @@ export interface IndexRouteProps {
   index: true;
   children?: undefined;
   element?: React.ReactNode | null;
-  initialFallbackElement?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
-  InitialFallback?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
 }
 

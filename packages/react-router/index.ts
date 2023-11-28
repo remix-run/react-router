@@ -245,19 +245,19 @@ function mapRouteProperties(route: RouteObject) {
     });
   }
 
-  if (route.InitialFallback) {
+  if (route.HydrateFallback) {
     if (__DEV__) {
-      if (route.initialFallbackElement) {
+      if (route.hydrateFallbackElement) {
         warning(
           false,
-          "You should not include both `InitialFallback` and `initialFallbackElement` on your route - " +
-            "`InitialFallback` will be used."
+          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
+            "`HydrateFallback` will be used."
         );
       }
     }
     Object.assign(updates, {
-      initialFallbackElement: React.createElement(route.InitialFallback),
-      InitialFallback: undefined,
+      hydrateFallbackElement: React.createElement(route.HydrateFallback),
+      HydrateFallback: undefined,
     });
   }
 
