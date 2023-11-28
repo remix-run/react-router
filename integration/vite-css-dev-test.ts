@@ -43,6 +43,22 @@ test.describe("Vite CSS dev", () => {
             ],
           });
         `,
+        "app/entry.client.tsx": js`
+          import "./entry.client.css";
+        
+          import { RemixBrowser } from "@remix-run/react";
+          import { startTransition, StrictMode } from "react";
+          import { hydrateRoot } from "react-dom/client";
+
+          startTransition(() => {
+            hydrateRoot(
+              document,
+              <StrictMode>
+                <RemixBrowser />
+              </StrictMode>
+            );
+          });
+        `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
 
@@ -62,6 +78,12 @@ test.describe("Vite CSS dev", () => {
                 </body>
               </html>
             );
+          }
+        `,
+        "app/entry.client.css": css`
+          .client-entry {
+            background: pink;
+            padding: ${TEST_PADDING_VALUE};
           }
         `,
         "app/styles-bundled.css": css`
@@ -113,12 +135,14 @@ test.describe("Vite CSS dev", () => {
             return (
               <div id="index">
                 <input />
-                <div data-css-modules className={cssModulesStyles.index}>
-                  <div data-css-linked className="index_linked">
-                    <div data-css-bundled className="index_bundled">
-                      <div data-css-vanilla-global className="index_vanilla_global">
-                        <div data-css-vanilla-local className={stylesVanillaLocal.index}>
-                          <h2>CSS test</h2>
+                <div data-client-entry className="client-entry">
+                  <div data-css-modules className={cssModulesStyles.index}>
+                    <div data-css-linked className="index_linked">
+                      <div data-css-bundled className="index_bundled">
+                        <div data-css-vanilla-global className="index_vanilla_global">
+                          <div data-css-vanilla-local className={stylesVanillaLocal.index}>
+                            <h2>CSS test</h2>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -169,6 +193,10 @@ test.describe("Vite CSS dev", () => {
       await page.goto(`http://localhost:${devPort}/`, {
         waitUntil: "networkidle",
       });
+      await expect(page.locator("#index [data-client-entry]")).toHaveCSS(
+        "padding",
+        TEST_PADDING_VALUE
+      );
       await expect(page.locator("#index [data-css-modules]")).toHaveCSS(
         "padding",
         TEST_PADDING_VALUE
@@ -205,6 +233,10 @@ test.describe("Vite CSS dev", () => {
       // Ensure no errors on page load
       expect(pageErrors).toEqual([]);
 
+      await expect(page.locator("#index [data-client-entry]")).toHaveCSS(
+        "padding",
+        TEST_PADDING_VALUE
+      );
       await expect(page.locator("#index [data-css-modules]")).toHaveCSS(
         "padding",
         TEST_PADDING_VALUE
@@ -300,7 +332,27 @@ test.describe("Vite CSS dev", () => {
         UPDATED_TEST_PADDING_VALUE
       );
 
+      // Ensure CSS updates were handled by HMR
       await expect(input).toHaveValue("stateful");
+
+      // The following change triggers a full page reload, so we check it after all the checks for HMR state preservation
+      let clientEntryCssContents = await fs.readFile(
+        path.join(projectDir, "app/entry.client.css"),
+        "utf8"
+      );
+      await fs.writeFile(
+        path.join(projectDir, "app/entry.client.css"),
+        clientEntryCssContents.replace(
+          TEST_PADDING_VALUE,
+          UPDATED_TEST_PADDING_VALUE
+        ),
+        "utf8"
+      );
+
+      await expect(page.locator("#index [data-client-entry]")).toHaveCSS(
+        "padding",
+        UPDATED_TEST_PADDING_VALUE
+      );
 
       expect(pageErrors).toEqual([]);
     });

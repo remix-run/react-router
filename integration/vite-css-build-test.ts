@@ -50,6 +50,22 @@ test.describe("Vite CSS build", () => {
             ],
           });
         `,
+        "app/entry.client.tsx": js`
+          import "./entry.client.css";
+        
+          import { RemixBrowser } from "@remix-run/react";
+          import { startTransition, StrictMode } from "react";
+          import { hydrateRoot } from "react-dom/client";
+
+          startTransition(() => {
+            hydrateRoot(
+              document,
+              <StrictMode>
+                <RemixBrowser />
+              </StrictMode>
+            );
+          });
+        `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
@@ -68,6 +84,12 @@ test.describe("Vite CSS build", () => {
                 </body>
               </html>
             );
+          }
+        `,
+        "app/entry.client.css": css`
+          .client-entry {
+            background: pink;
+            padding: ${TEST_PADDING_VALUE};
           }
         `,
         "app/routes/_index/styles-bundled.css": css`
@@ -118,12 +140,14 @@ test.describe("Vite CSS build", () => {
           export default function IndexRoute() {
             return (
               <div id="index">
-                <div data-css-modules className={cssModulesStyles.index}>
-                  <div data-css-linked className="index_linked">
-                    <div data-css-bundled className="index_bundled">
-                      <div data-css-vanilla-global className="index_vanilla_global">
-                        <div data-css-vanilla-local className={stylesVanillaLocal.index}>
-                          <h2>CSS test</h2>
+                <div data-client-entry className="client-entry">
+                  <div data-css-modules className={cssModulesStyles.index}>
+                    <div data-css-linked className="index_linked">
+                      <div data-css-bundled className="index_bundled">
+                        <div data-css-vanilla-global className="index_vanilla_global">
+                          <div data-css-vanilla-local className={stylesVanillaLocal.index}>
+                            <h2>CSS test</h2>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -146,6 +170,10 @@ test.describe("Vite CSS build", () => {
   test("renders styles", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
+    await expect(page.locator("#index [data-client-entry]")).toHaveCSS(
+      "padding",
+      TEST_PADDING_VALUE
+    );
     await expect(page.locator("#index [data-css-modules]")).toHaveCSS(
       "padding",
       TEST_PADDING_VALUE
