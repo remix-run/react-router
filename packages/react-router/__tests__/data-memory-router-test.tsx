@@ -2014,6 +2014,50 @@ describe("createMemoryRouter", () => {
       }
     });
 
+    it("handles a `null` render-error", async () => {
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          Component() {
+            throw null;
+          },
+          ErrorBoundary() {
+            return <pre>{useRouteError() === null ? "Yes" : "No"}</pre>;
+          },
+        },
+      ]);
+      let { container } = render(<RouterProvider router={router} />);
+
+      await waitFor(() => screen.getByText("Yes"));
+      expect(getHtml(container)).toMatch("Yes");
+    });
+
+    it("handles a `null` render-error from a defer() call", async () => {
+      let router = createMemoryRouter([
+        {
+          path: "/",
+          loader() {
+            return defer({ lazy: Promise.reject(null) });
+          },
+          Component() {
+            let data = useLoaderData() as { lazy: Promise<unknown> };
+            return (
+              <React.Suspense>
+                <Await resolve={data.lazy}>No</Await>
+              </React.Suspense>
+            );
+          },
+          ErrorBoundary() {
+            return <pre>{useRouteError() === null ? "Yes" : "No"}</pre>;
+          },
+        },
+      ]);
+      let { container } = render(<RouterProvider router={router} />);
+
+      await waitFor(() => screen.getByText("Yes"));
+      expect(getHtml(container)).toMatch("Yes");
+    });
+
     it("handles back button routing away from a child error boundary", async () => {
       let router = createMemoryRouter(
         createRoutesFromElements(
