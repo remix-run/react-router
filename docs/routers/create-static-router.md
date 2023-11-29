@@ -55,9 +55,33 @@ export async function renderHtml(req) {
 ```ts
 declare function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext
+  context: StaticHandlerContext,
+  opts: {
+    future?: {
+      v7_partialHydration?: boolean;
+    };
+  }
 ): Router;
 ```
+
+## `opts.future`
+
+An optional set of [Future Flags][api-development-strategy] to enable for this Static Router. We recommend opting into newly released future flags sooner rather than later to ease your eventual migration to v7.
+
+```js
+const router = createBrowserRouter(routes, {
+  future: {
+    // Opt-into partial hydration
+    v7_partialHydration: true,
+  },
+});
+```
+
+The following future flags are currently available:
+
+| Flag                                      | Description                                        |
+| ----------------------------------------- | -------------------------------------------------- |
+| [`v7_partialHydration`][partialhydration] | Support partial hydration for Server-rendered apps |
 
 **See also:**
 
@@ -69,3 +93,5 @@ declare function createStaticRouter(
 [ssr]: ../guides/ssr
 [createstatichandler]: ../routers/create-static-handler
 [staticrouterprovider]: ../routers/static-router-provider
+[partialhydration]: ../routers/create-browser-router#partial-hydration-data
+[api-development-strategy]: ../guides/api-development-strategy
