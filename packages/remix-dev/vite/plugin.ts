@@ -1049,7 +1049,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
     },
     {
       name: "remix-react-refresh-babel",
-      enforce: "post",
+      enforce: "post", // jsx and typescript (in ts, jsx, tsx files) are already transpiled by vite
       async transform(code, id, options) {
         if (viteCommand !== "serve") return;
         if (id.includes("/node_modules/")) return;
@@ -1069,7 +1069,6 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           parserOpts: {
             sourceType: "module",
             allowAwaitOutsideFunction: true,
-            plugins: ["jsx", "typescript"],
           },
           plugins: [[require("react-refresh/babel"), { skipEnvCheck: true }]],
           sourceMaps: true,
