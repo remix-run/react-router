@@ -1,4 +1,4 @@
-import type { Router } from "../index";
+import type { LoaderFunction, Router } from "../index";
 import { IDLE_NAVIGATION, createMemoryHistory, createRouter } from "../index";
 
 import {
@@ -251,7 +251,7 @@ describe("future.v7_partialHydration", () => {
   });
 
   describe("when set to true", () => {
-    it("starts with initialized=true when loaders exist with partial hydrationData", async () => {
+    it("starts with initialized=true, runs unhydrated loaders with partial hydrationData", async () => {
       let spy = jest.fn();
       let shouldRevalidateSpy = jest.fn((args) => args.defaultShouldRevalidate);
       let dfd = createDeferred();
@@ -316,6 +316,85 @@ describe("future.v7_partialHydration", () => {
       expect(subscriberSpy.mock.calls[0][0]).toMatchObject({
         loaderData: {
           index: "INDEX DATA",
+          root: "LOADER DATA",
+        },
+        navigation: IDLE_NAVIGATION,
+      });
+    });
+
+    it("starts with initialized=true, runs hydrated loaders when loader.hydrate=true", async () => {
+      let spy = jest.fn();
+      let shouldRevalidateSpy = jest.fn((args) => args.defaultShouldRevalidate);
+      let dfd = createDeferred();
+      let indexLoader: LoaderFunction = () => dfd.promise;
+      indexLoader.hydrate = true;
+      router = createRouter({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: spy,
+            shouldRevalidate: shouldRevalidateSpy,
+            children: [
+              {
+                id: "index",
+                index: true,
+                loader: indexLoader,
+              },
+            ],
+          },
+        ],
+        history: createMemoryHistory(),
+        hydrationData: {
+          loaderData: {
+            root: "LOADER DATA",
+            index: "INDEX INITIAL",
+          },
+        },
+        future: {
+          v7_partialHydration: true,
+        },
+      });
+
+      let subscriberSpy = jest.fn();
+      router.subscribe(subscriberSpy);
+
+      // Start with initialized:false
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        loaderData: {
+          root: "LOADER DATA",
+          index: "INDEX INITIAL",
+        },
+        initialized: true,
+        navigation: { state: "idle" },
+      });
+
+      // Initialize/kick off data loads due to partial hydrationData
+      router.initialize();
+      await dfd.resolve("INDEX UPDATED");
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: { pathname: "/" },
+        loaderData: {
+          root: "LOADER DATA",
+          index: "INDEX UPDATED",
+        },
+        initialized: true,
+        navigation: { state: "idle" },
+      });
+
+      // Root was not re-called
+      expect(shouldRevalidateSpy).not.toHaveBeenCalled();
+      expect(spy).not.toHaveBeenCalled();
+
+      // Ensure we don't go into a navigating state during initial calls of
+      // the loaders
+      expect(subscriberSpy).toHaveBeenCalledTimes(1);
+      expect(subscriberSpy.mock.calls[0][0]).toMatchObject({
+        loaderData: {
+          index: "INDEX UPDATED",
           root: "LOADER DATA",
         },
         navigation: IDLE_NAVIGATION,

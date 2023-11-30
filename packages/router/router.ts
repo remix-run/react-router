@@ -3748,8 +3748,13 @@ function getMatchesToLoad(
 // Is this route unhydrated (when v7_partialHydration=true) such that we need
 // to call it's loader on the initial router creation
 function isUnhydratedRoute(state: RouterState, route: AgnosticDataRouteObject) {
+  if (!route.loader) {
+    return false;
+  }
+  if (route.loader.hydrate) {
+    return true;
+  }
   return (
-    route.loader != null &&
     state.loaderData[route.id] === undefined &&
     (!state.errors ||
       // Loader ran but errored - don't re-run

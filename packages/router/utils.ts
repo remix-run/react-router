@@ -169,11 +169,11 @@ type DataFunctionValue = Response | NonNullable<unknown> | null;
 /**
  * Route loader function signature
  */
-export interface LoaderFunction<Context = any> {
+export type LoaderFunction<Context = any> = {
   (args: LoaderFunctionArgs<Context>):
     | Promise<DataFunctionValue>
     | DataFunctionValue;
-}
+} & { hydrate?: boolean };
 
 /**
  * Route action function signature
