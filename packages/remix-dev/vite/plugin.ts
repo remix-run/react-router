@@ -912,7 +912,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         let serverDirRE = /\/\.server\//;
         if (serverFileRE.test(id) || serverDirRE.test(id)) {
           return {
-            code: "export default {}",
+            code: "export {}",
             map: null,
           };
         }
@@ -927,7 +927,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         let clientDirRE = /\/\.client\//;
         if (clientFileRE.test(id) || clientDirRE.test(id)) {
           return {
-            code: "export default {}",
+            code: "export {}",
             map: null,
           };
         }

@@ -8,13 +8,15 @@ import { createProject, viteBuild } from "./helpers/vite.js";
 let files = {
   "app/utils.server.ts": String.raw`
     export const dotServerFile = "SERVER_ONLY_FILE";
+    export default dotServerFile;
   `,
   "app/.server/utils.ts": String.raw`
     export const dotServerDir = "SERVER_ONLY_DIR";
+    export default dotServerDir;
   `,
 };
 
-test("Vite / build / .server file in client fails with expected error", async () => {
+test("Vite /  .server file / named import in client fails with expected error", async () => {
   let cwd = await createProject({
     ...files,
     "app/routes/fail-server-file-in-client.tsx": String.raw`
@@ -33,7 +35,43 @@ test("Vite / build / .server file in client fails with expected error", async ()
   );
 });
 
-test("Vite / build / .server dir in client fails with expected error", async () => {
+test("Vite /  .server file / namespace import in client fails with expected error", async () => {
+  let cwd = await createProject({
+    ...files,
+    "app/routes/fail-server-file-in-client.tsx": String.raw`
+      import * as utils from "~/utils.server";
+
+      export default function() {
+        console.log(utils.dotServerFile);
+        return <h1>Fail: Server file included in client</h1>
+      }
+    `,
+  });
+  let client = viteBuild({ cwd })[0];
+  let stderr = client.stderr.toString("utf8");
+  expect(stderr).toMatch(
+    `"dotServerFile" is not exported by "app/utils.server.ts"`
+  );
+});
+
+test("Vite / .server file / default import in client fails with expected error", async () => {
+  let cwd = await createProject({
+    ...files,
+    "app/routes/fail-server-file-in-client.tsx": String.raw`
+      import dotServerFile from "~/utils.server";
+
+      export default function() {
+        console.log(dotServerFile);
+        return <h1>Fail: Server file included in client</h1>
+      }
+    `,
+  });
+  let client = viteBuild({ cwd })[0];
+  let stderr = client.stderr.toString("utf8");
+  expect(stderr).toMatch(`"default" is not exported by "app/utils.server.ts"`);
+});
+
+test("Vite / .server dir / named import in client fails with expected error", async () => {
   let cwd = await createProject({
     ...files,
     "app/routes/fail-server-dir-in-client.tsx": String.raw`
@@ -52,7 +90,43 @@ test("Vite / build / .server dir in client fails with expected error", async () 
   );
 });
 
-test("Vite / build / dead-code elimination for server exports", async () => {
+test("Vite / .server dir / namespace import in client fails with expected error", async () => {
+  let cwd = await createProject({
+    ...files,
+    "app/routes/fail-server-dir-in-client.tsx": String.raw`
+      import * as utils from "~/.server/utils";
+
+      export default function() {
+        console.log(utils.dotServerDir);
+        return <h1>Fail: Server directory included in client</h1>
+      }
+    `,
+  });
+  let client = viteBuild({ cwd })[0];
+  let stderr = client.stderr.toString("utf8");
+  expect(stderr).toMatch(
+    `"dotServerDir" is not exported by "app/.server/utils.ts"`
+  );
+});
+
+test("Vite / .server dir / default import in client fails with expected error", async () => {
+  let cwd = await createProject({
+    ...files,
+    "app/routes/fail-server-dir-in-client.tsx": String.raw`
+      import dotServerDir from "~/.server/utils";
+
+      export default function() {
+        console.log(dotServerDir);
+        return <h1>Fail: Server directory included in client</h1>
+      }
+    `,
+  });
+  let client = viteBuild({ cwd })[0];
+  let stderr = client.stderr.toString("utf8");
+  expect(stderr).toMatch(`"default" is not exported by "app/.server/utils.ts"`);
+});
+
+test("Vite / dead-code elimination for server exports", async () => {
   let cwd = await createProject({
     ...files,
     "app/routes/remove-server-exports-and-dce.tsx": String.raw`
