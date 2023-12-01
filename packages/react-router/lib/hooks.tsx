@@ -18,7 +18,7 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
-  UNSAFE_getResolveToMatches as getResolveToMatches,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -197,7 +197,9 @@ function useNavigateUnstable(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
+  let routePathnamesJson = JSON.stringify(
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+  );
 
   let activeRef = React.useRef(false);
   useIsomorphicLayoutEffect(() => {
@@ -309,7 +311,10 @@ export function useResolvedPath(
 ): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
-  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
+
+  let routePathnamesJson = JSON.stringify(
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+  );
 
   return React.useMemo(
     () =>

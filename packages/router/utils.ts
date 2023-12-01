@@ -1145,17 +1145,6 @@ export function getPathContributingMatches<
   );
 }
 
-// Return the array of pathnames for the current route matches - used to
-// generate the routePathnames input for resolveTo()
-export function getResolveToMatches<
-  T extends AgnosticRouteMatch = AgnosticRouteMatch
->(matches: T[]) {
-  // Use the full pathname for the leaf match so we include splat values for "." links
-  return getPathContributingMatches(matches).map((match, idx) =>
-    idx === matches.length - 1 ? match.pathname : match.pathnameBase
-  );
-}
-
 /**
  * @private
  */
