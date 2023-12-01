@@ -1,5 +1,6 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import path from "node:path";
+import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
 import execa from "execa";
@@ -11,7 +12,10 @@ import getPort from "get-port";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const VITE_CONFIG = async (args: { port: number }) => {
+export const VITE_CONFIG = async (args: {
+  port: number;
+  vitePlugins?: string;
+}) => {
   let hmrPort = await getPort();
   return String.raw`
     import { defineConfig } from "vite";
@@ -25,7 +29,7 @@ export const VITE_CONFIG = async (args: { port: number }) => {
           port: ${hmrPort}
         }
       },
-      plugins: [remix()],
+      plugins: [remix(),${args.vitePlugins ?? ""}],
     });
   `;
 };
@@ -115,28 +119,53 @@ const createDev =
   (nodeArgs: string[]) =>
   async ({ cwd, port }: ServerArgs): Promise<() => Promise<void>> => {
     let proc = node(nodeArgs, { cwd });
-    await waitForServer(proc, { port: port });
+    await waitForServer(proc, { port });
     return async () => await kill(proc.pid!);
   };
 
-export const viteBuild = (args: { cwd: string }) => {
-  let vite = resolveBin.sync("vite");
+export const viteBuild = ({ cwd }: { cwd: string }) => {
+  let nodeBin = process.argv[0];
+  let viteBin = resolveBin.sync("vite");
   let commands = [
-    [vite, "build"],
-    [vite, "build", "--ssr"],
+    [viteBin, "build"],
+    [viteBin, "build", "--ssr"],
   ];
   let results = [];
   for (let command of commands) {
-    let result = spawnSync("node", command, {
-      cwd: args.cwd,
-      env: {
-        ...process.env,
-      },
+    let result = spawnSync(nodeBin, command, {
+      cwd,
+      env: { ...process.env },
     });
     results.push(result);
   }
   return results;
 };
+
+export const viteRemixServe = async ({
+  cwd,
+  port,
+}: {
+  cwd: string;
+  port: number;
+}) => {
+  let nodeBin = process.argv[0];
+  let serveProc = spawn(
+    nodeBin,
+    ["node_modules/@remix-run/serve/dist/cli.js", "build/server/index.js"],
+    {
+      cwd,
+      stdio: "pipe",
+      env: { NODE_ENV: "production", PORT: port.toFixed(0) },
+    }
+  );
+
+  await waitForServer(serveProc, { port });
+
+  return () => {
+    serveProc.kill();
+  };
+};
+
 export const viteDev = createDev([resolveBin.sync("vite"), "dev"]);
 export const customDev = createDev(["./server.mjs"]);
 
@@ -211,4 +240,12 @@ function bufferize(stream: Readable): () => string {
   let buffer = "";
   stream.on("data", (data) => (buffer += data.toString()));
   return () => buffer;
+}
+
+export function createEditor(projectDir: string) {
+  return async (file: string, transform: (contents: string) => string) => {
+    let filepath = path.join(projectDir, file);
+    let contents = await fs.readFile(filepath, "utf8");
+    await fs.writeFile(filepath, transform(contents), "utf8");
+  };
 }

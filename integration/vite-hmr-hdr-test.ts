@@ -6,6 +6,7 @@ import getPort from "get-port";
 
 import {
   createProject,
+  createEditor,
   viteDev,
   customDev,
   VITE_CONFIG,
@@ -95,7 +96,7 @@ async function workflow({
 }) {
   let pageErrors: Error[] = [];
   page.on("pageerror", (error) => pageErrors.push(error));
-  let edit = editor(cwd);
+  let edit = createEditor(cwd);
 
   // setup: initial render
   await page.goto(`http://localhost:${port}/`, {
@@ -304,11 +305,3 @@ async function workflow({
   await expect(input).toHaveValue("stateful");
   expect(pageErrors).toEqual([]);
 }
-
-const editor =
-  (projectDir: string) =>
-  async (file: string, transform: (contents: string) => string) => {
-    let filepath = path.join(projectDir, file);
-    let contents = await fs.readFile(filepath, "utf8");
-    await fs.writeFile(filepath, transform(contents), "utf8");
-  };
