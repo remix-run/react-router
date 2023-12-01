@@ -2942,44 +2942,6 @@ function testDomRouter(
             "/foo/bar"
           );
         });
-
-        it("includes param portion of path when no action is specified (inline splat)", async () => {
-          let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo">
-                  <Route path=":param" element={<NoActionComponent />} />
-                </Route>
-              </Route>
-            ),
-            {
-              window: getWindow("/foo/bar"),
-            }
-          );
-          let { container } = render(<RouterProvider router={router} />);
-
-          expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
-          );
-        });
-
-        it("includes splat portion of path when no action is specified (nested splat)", async () => {
-          let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo/:param" element={<NoActionComponent />} />
-              </Route>
-            ),
-            {
-              window: getWindow("/foo/bar"),
-            }
-          );
-          let { container } = render(<RouterProvider router={router} />);
-
-          expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
-          );
-        });
       });
 
       describe("splat routes", () => {
@@ -2999,7 +2961,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar?a=1"
+            "/foo?a=1"
           );
         });
 
@@ -3019,7 +2981,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
+            "/foo"
           );
         });
 
@@ -3039,25 +3001,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar"
-          );
-        });
-
-        it("includes splat portion of path when no action is specified (inline splat)", async () => {
-          let router = createTestRouter(
-            createRoutesFromElements(
-              <Route path="/">
-                <Route path="foo/*" element={<NoActionComponent />} />
-              </Route>
-            ),
-            {
-              window: getWindow("/foo/bar/baz"),
-            }
-          );
-          let { container } = render(<RouterProvider router={router} />);
-
-          expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo/bar/baz"
+            "/foo"
           );
         });
       });
@@ -3179,13 +3123,10 @@ function testDomRouter(
       it("navigates relative to the URL for splat routes", async () => {
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="inbox">
-              <Route path="messages" />
-              <Route
-                path="messages/*"
-                element={<Form action=".." relative="path" />}
-              />
-            </Route>
+            <Route
+              path="inbox/messages/*"
+              element={<Form action=".." relative="path" />}
+            />
           ),
           {
             window: getWindow("/inbox/messages/1/2/3"),
@@ -3194,7 +3135,7 @@ function testDomRouter(
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox/messages/1/2"
+          "/inbox"
         );
       });
     });

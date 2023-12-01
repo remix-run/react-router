@@ -138,7 +138,7 @@ describe("path resolution", () => {
             path: "*",
           },
         ],
-        "/foo/bar",
+        "/foo",
         false
       );
     });
@@ -391,36 +391,12 @@ describe("path resolution", () => {
       ]);
     });
 
-    it("from an index route", () => {
-      assertRoutingToChild([
-        {
-          path: "bar",
-          children: [
-            {
-              id: "activeRoute",
-              index: true,
-            },
-            { path: "baz" },
-          ],
-        },
-      ]);
-    });
-
     it("from a dynamic param route", () => {
       assertRoutingToChild([
         {
           id: "activeRoute",
           path: ":param",
           children: [{ path: "baz" }],
-        },
-      ]);
-    });
-
-    it("from a splat route", () => {
-      assertRoutingToChild([
-        {
-          id: "activeRoute",
-          path: "*",
         },
       ]);
     });
