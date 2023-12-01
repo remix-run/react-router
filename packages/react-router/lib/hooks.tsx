@@ -312,12 +312,8 @@ export function useResolvedPath(
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  // Use the full pathname for the leaf match so we include splat values
-  // for "." links
   let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match, idx) =>
-      idx === matches.length - 1 ? match.pathname : match.pathnameBase
-    )
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
   );
 
   return React.useMemo(
