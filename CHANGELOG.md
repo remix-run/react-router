@@ -158,13 +158,14 @@ To add a new release, copy from this template:
 
 - Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see [#11052](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329)) ([#11078](https://github.com/remix-run/react-router/pull/11078))
   - We plan to re-introduce this fix behind a future flag in the next minor version (see [this comment](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329))
+  - This fix was included in versions `6.19.0` and `6.20.0`. If you are upgrading from `6.18.0` or earlier, you would not have been impacted by this fix.
 
 **Full Changelog**: [`v6.20.0...v6.20.1`](https://github.com/remix-run/react-router/compare/react-router@6.20.0...react-router@6.20.1)
 
 ## v6.20.0
 
-> **Warning**
-> Please use version `6.20.1` or later instead of `6.20.0`. We discovered that a large number of apps were relying on buggy behavior that was fixed in this release ([#11045](https://github.com/remix-run/react-router/pull/11045). We reverted the fix in `6.20.1` and will be re-introducing it behind a future flag in a subsequent release. See [#11052](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329) for more details.
+> [!WARNING]
+> Please use version `6.20.1` or later instead of `6.20.0`. We discovered that a large number of apps were relying on buggy behavior that was fixed in this release ([#11045](https://github.com/remix-run/react-router/pull/11045)). We reverted the fix in `6.20.1` and will be re-introducing it behind a future flag in a subsequent release. See [#11052](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329) for more details.
 
 ### Minor Changes
 
@@ -181,8 +182,8 @@ To add a new release, copy from this template:
 
 ## v6.19.0
 
-> **Warning**
-> Please use version `6.20.1` or later instead of `6.19.0`. We discovered that a large number of apps were relying on buggy behavior that was fixed in this release ([#10983](https://github.com/remix-run/react-router/pull/10983). We reverted the fix in `6.20.1` and will be re-introducing it behind a future flag in a subsequent release. See [#11052](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329) for more details.
+> [!WARNING]
+> Please use version `6.20.1` or later instead of `6.19.0`. We discovered that a large number of apps were relying on buggy behavior that was fixed in this release ([#10983](https://github.com/remix-run/react-router/pull/10983)). We reverted the fix in `6.20.1` and will be re-introducing it behind a future flag in a subsequent release. See [#11052](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329) for more details.
 
 ### What's Changed
 
@@ -526,7 +527,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 ## v6.12.1
 
-> **Warning**
+> [!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
 
 ### Patch Changes
@@ -537,7 +538,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 ## v6.12.0
 
-> **Warning**
+> [!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
 
 ### What's Changed
