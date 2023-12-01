@@ -259,7 +259,7 @@
 
 ## 6.12.1
 
-> **Warning**
+> [!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.1`. This version suffers from a `webpack`/`terser` minification issue resulting in invalid minified code in your resulting production bundles which can cause issues in your application. See [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
 
 ### Patch Changes
