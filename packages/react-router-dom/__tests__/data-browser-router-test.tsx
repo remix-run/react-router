@@ -3123,13 +3123,10 @@ function testDomRouter(
       it("navigates relative to the URL for splat routes", async () => {
         let router = createTestRouter(
           createRoutesFromElements(
-            <Route path="inbox">
-              <Route path="messages" />
-              <Route
-                path="messages/*"
-                element={<Form action=".." relative="path" />}
-              />
-            </Route>
+            <Route
+              path="inbox/messages/*"
+              element={<Form action=".." relative="path" />}
+            />
           ),
           {
             window: getWindow("/inbox/messages/1/2/3"),
@@ -3138,7 +3135,7 @@ function testDomRouter(
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox/messages/1/2"
+          "/inbox"
         );
       });
     });
