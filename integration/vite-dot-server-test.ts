@@ -126,6 +126,29 @@ test("Vite / .server dir / default import in client fails with expected error", 
   expect(stderr).toMatch(`"default" is not exported by "app/.server/utils.ts"`);
 });
 
+test("Vite / `handle` with dynamic imports as an escape hatch for server-only code", async () => {
+  let cwd = await createProject({
+    ...files,
+    "app/routes/handle-server-only.tsx": String.raw`
+      export const handle = {
+        // Sharp knife alert: you probably should avoid doing this, but you can!
+        serverOnlyEscapeHatch: async () => {
+          let { dotServerFile } = await import("~/utils.server");
+          let dotServerDir = await import("~/.server/utils");
+          return { dotServerFile, dotServerDir };
+        }
+      }
+
+      export default function() {
+        return <h1>This should work</h1>
+      }
+    `,
+  });
+  let [client, server] = viteBuild({ cwd });
+  expect(client.status).toBe(0);
+  expect(server.status).toBe(0);
+});
+
 test("Vite / dead-code elimination for server exports", async () => {
   let cwd = await createProject({
     ...files,
@@ -159,8 +182,9 @@ test("Vite / dead-code elimination for server exports", async () => {
         }
       `,
   });
-  let client = viteBuild({ cwd })[0];
+  let [client, server] = viteBuild({ cwd });
   expect(client.status).toBe(0);
+  expect(server.status).toBe(0);
 
   // detect client asset files
   let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
