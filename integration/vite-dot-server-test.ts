@@ -1,9 +1,7 @@
 import * as path from "node:path";
 import { test, expect } from "@playwright/test";
-import shell from "shelljs";
-import glob from "glob";
 
-import { createProject, viteBuild } from "./helpers/vite.js";
+import { createProject, grep, viteBuild } from "./helpers/vite.js";
 
 let files = {
   "app/utils.server.ts": String.raw`
@@ -198,17 +196,3 @@ test("Vite / dead-code elimination for server exports", async () => {
   );
   expect(lines).toHaveLength(0);
 });
-
-function grep(cwd: string, pattern: RegExp): string[] {
-  let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
-    cwd,
-    absolute: true,
-  });
-
-  let lines = shell
-    .grep("-l", pattern, assetFiles)
-    .stdout.trim()
-    .split("\n")
-    .filter((line) => line.length > 0);
-  return lines;
-}

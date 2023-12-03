@@ -9,6 +9,8 @@ import resolveBin from "resolve-bin";
 import stripIndent from "strip-indent";
 import waitOn from "wait-on";
 import getPort from "get-port";
+import shell from "shelljs";
+import glob from "glob";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
@@ -248,4 +250,18 @@ export function createEditor(projectDir: string) {
     let contents = await fs.readFile(filepath, "utf8");
     await fs.writeFile(filepath, transform(contents), "utf8");
   };
+}
+
+export function grep(cwd: string, pattern: RegExp): string[] {
+  let assetFiles = glob.sync("**/*.@(js|jsx|ts|tsx)", {
+    cwd,
+    absolute: true,
+  });
+
+  let lines = shell
+    .grep("-l", pattern, assetFiles)
+    .stdout.trim()
+    .split("\n")
+    .filter((line) => line.length > 0);
+  return lines;
 }

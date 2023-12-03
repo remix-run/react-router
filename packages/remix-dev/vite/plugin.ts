@@ -938,14 +938,21 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
     },
     {
       name: "remix-empty-client-modules",
-      enforce: "pre",
-      async transform(_code, id, options) {
+      enforce: "post",
+      async transform(code, id, options) {
         if (!options?.ssr) return;
         let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
         let clientDirRE = /\/\.client\//;
         if (clientFileRE.test(id) || clientDirRE.test(id)) {
+          let exports = esModuleLexer(code)[1];
           return {
-            code: "export {}",
+            code: exports
+              .map(({ n: name }) =>
+                name === "default"
+                  ? "export default {};"
+                  : `export const ${name} = {};`
+              )
+              .join("\n"),
             map: null,
           };
         }
