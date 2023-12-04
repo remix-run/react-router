@@ -2790,7 +2790,7 @@ describe("a router", () => {
       expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
     });
 
-    it("handles errors thrown from unwrapResponse at the proper boundary", async () => {
+    it("handles errors thrown from decodeResponse at the proper boundary", async () => {
       let t = setup({
         routes: [
           {
