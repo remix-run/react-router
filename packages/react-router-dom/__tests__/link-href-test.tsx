@@ -928,7 +928,7 @@ describe("<Link> href", () => {
     warnSpy.mockRestore();
   });
 
-  test("renders fine when used outside a router context", () => {
+  test("renders fine when used outside a route context", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
