@@ -25,6 +25,7 @@ import {
 } from "react-router";
 import type {
   DataRouteObject,
+  FutureConfig,
   Location,
   RouteObject,
   To,
@@ -43,6 +44,7 @@ export interface StaticRouterProps {
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
+  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -53,6 +55,7 @@ export function StaticRouter({
   basename,
   children,
   location: locationProp = "/",
+  future,
 }: StaticRouterProps) {
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);
@@ -75,6 +78,7 @@ export function StaticRouter({
       location={location}
       navigationType={action}
       navigator={staticNavigator}
+      future={future}
       static={true}
     />
   );

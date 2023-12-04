@@ -104,6 +104,7 @@ export type {
   DataRouteObject,
   ErrorResponse,
   Fetcher,
+  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
