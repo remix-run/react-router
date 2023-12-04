@@ -27,6 +27,7 @@ function SomeComponent() {
   navigation.text;
   navigation.formAction;
   navigation.formMethod;
+  navigation.formEncType;
 }
 ```
 
@@ -107,6 +108,45 @@ Any POST, PUT, PATCH, or DELETE navigation that started from a `useSubmit(payloa
 This tells you what the next [location][location] is going to be.
 
 Note that this link will not appear "pending" if a form is being submitted to the URL the link points to, because we only do this for "loading" states. The form will contain the pending UI for when the state is "submitting", once the action is complete, then the link will go pending.
+
+## `navigation.formAction`
+
+Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have form's submission action route's path value available in `navigation.formAction`.
+
+In the case of a GET form submission, `navigation.formAction` will be empty
+
+If you submitted the form at `example.com/id`, then `navigation.formAction` would be "/id"
+
+## `navigation.formMethod`
+
+Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have form's submission method value available in `navigation.formMethod`.
+
+In the case of a GET form submission, `navigation.formMethod` will be empty
+
+Here is an example. Please note that `navigation.formMethod` is in lowercase
+
+```tsx
+function SubmitButton() {
+  const navigation = useNavigation();
+  if (navigation.formMethod) {
+    console.log(navigation.formMethod); // post
+  }
+
+  return (
+    <Form method="POST">
+      <button>Submit</button>
+    </Form>
+  );
+}
+```
+
+## `navigation.formEncType`
+
+Any POST, PUT, PATCH, or DELETE navigation that started from a `<Form>` or `useSubmit` will have form's submission method value available in `navigation.formEncType`.
+
+This property can be one of the four values: "text/plain," "application/json," "multipart/form-data," or "application/x-www-form-urlencoded."
+
+In the case of a GET form submission, `navigation.formEncType` will be empty
 
 [location]: ../utils/location
 [pickingarouter]: ../routers/picking-a-router

@@ -18,7 +18,7 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
-  UNSAFE_getResolveToMatches as getResolveToMatches,
+  UNSAFE_getPathContributingMatches as getPathContributingMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -197,7 +197,9 @@ function useNavigateUnstable(): NavigateFunction {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
+  let routePathnamesJson = JSON.stringify(
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+  );
 
   let activeRef = React.useRef(false);
   useIsomorphicLayoutEffect(() => {
@@ -309,7 +311,10 @@ export function useResolvedPath(
 ): Path {
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
-  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
+
+  let routePathnamesJson = JSON.stringify(
+    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+  );
 
   return React.useMemo(
     () =>
@@ -595,7 +600,7 @@ export class RenderErrorBoundary extends React.Component<
     // this because the error provided from the app state may be cleared without
     // the location changing.
     return {
-      error: props.error || state.error,
+      error: props.error !== undefined ? props.error : state.error,
       location: state.location,
       revalidation: props.revalidation || state.revalidation,
     };
@@ -610,7 +615,7 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   render() {
-    return this.state.error ? (
+    return this.state.error !== undefined ? (
       <RouteContext.Provider value={this.props.routeContext}>
         <RouteErrorContext.Provider
           value={this.state.error}
@@ -886,7 +891,7 @@ export function useRouteError(): unknown {
 
   // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
-  if (error) {
+  if (error !== undefined) {
     return error;
   }
 
