@@ -18,7 +18,7 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
+  UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -193,12 +193,12 @@ function useNavigateUnstable(): NavigateFunction {
   );
 
   let dataRouterContext = React.useContext(DataRouterContext);
-  let { basename, navigator } = React.useContext(NavigationContext);
+  let { basename, future, navigator } = React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
   let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+    getResolveToMatches(matches, future.v7_relativeSplatPath)
   );
 
   let activeRef = React.useRef(false);
@@ -309,11 +309,11 @@ export function useResolvedPath(
   to: To,
   { relative }: { relative?: RelativeRoutingType } = {}
 ): Path {
+  let { future } = React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
-
   let routePathnamesJson = JSON.stringify(
-    getPathContributingMatches(matches).map((match) => match.pathnameBase)
+    getResolveToMatches(matches, future.v7_relativeSplatPath)
   );
 
   return React.useMemo(

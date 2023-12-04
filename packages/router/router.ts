@@ -40,6 +40,7 @@ import {
   convertRouteMatchToUiMatch,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
+  getResolveToMatches,
   immutableRouteKeys,
   isRouteErrorResponse,
   joinPaths,
@@ -63,6 +64,14 @@ export interface Router {
    * Return the basename for the router
    */
   get basename(): RouterInit["basename"];
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Return the router future flags
+   */
+  get future(): FutureConfig;
 
   /**
    * @internal
@@ -346,6 +355,7 @@ export interface FutureConfig {
   v7_fetcherPersist: boolean;
   v7_normalizeFormMethod: boolean;
   v7_prependBasename: boolean;
+  v7_relativeSplatPath: boolean;
 }
 
 /**
@@ -770,6 +780,7 @@ export function createRouter(init: RouterInit): Router {
     v7_fetcherPersist: false,
     v7_normalizeFormMethod: false,
     v7_prependBasename: false,
+    v7_relativeSplatPath: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -1231,6 +1242,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       to,
+      future.v7_relativeSplatPath,
       opts?.fromRouteId,
       opts?.relative
     );
@@ -1545,7 +1557,8 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        basename
+        basename,
+        future.v7_relativeSplatPath
       );
 
       if (request.signal.aborted) {
@@ -1824,6 +1837,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       href,
+      future.v7_relativeSplatPath,
       routeId,
       opts?.relative
     );
@@ -1930,7 +1944,8 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      future.v7_relativeSplatPath
     );
 
     if (fetchRequest.signal.aborted) {
@@ -2173,7 +2188,8 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      future.v7_relativeSplatPath
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2369,7 +2385,8 @@ export function createRouter(init: RouterInit): Router {
           matches,
           manifest,
           mapRouteProperties,
-          basename
+          basename,
+          future.v7_relativeSplatPath
         )
       ),
       ...fetchersToLoad.map((f) => {
@@ -2381,7 +2398,8 @@ export function createRouter(init: RouterInit): Router {
             f.matches,
             manifest,
             mapRouteProperties,
-            basename
+            basename,
+            future.v7_relativeSplatPath
           );
         } else {
           let error: ErrorResult = {
@@ -2723,6 +2741,9 @@ export function createRouter(init: RouterInit): Router {
     get basename() {
       return basename;
     },
+    get future() {
+      return future;
+    },
     get state() {
       return state;
     },
@@ -2764,6 +2785,13 @@ export function createRouter(init: RouterInit): Router {
 
 export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
+/**
+ * Future flags to toggle new feature behavior
+ */
+export interface StaticHandlerFutureConfig {
+  v7_relativeSplatPath: boolean;
+}
+
 export interface CreateStaticHandlerOptions {
   basename?: string;
   /**
@@ -2771,6 +2799,7 @@ export interface CreateStaticHandlerOptions {
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
+  future?: Partial<StaticHandlerFutureConfig>;
 }
 
 export function createStaticHandler(
@@ -2796,6 +2825,11 @@ export function createStaticHandler(
   } else {
     mapRouteProperties = defaultMapRouteProperties;
   }
+  // Config driven behavior flags
+  let future: StaticHandlerFutureConfig = {
+    v7_relativeSplatPath: false,
+    ...(opts ? opts.future : null),
+  };
 
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
@@ -3058,6 +3092,7 @@ export function createStaticHandler(
         manifest,
         mapRouteProperties,
         basename,
+        future.v7_relativeSplatPath,
         { isStaticRequest: true, isRouteRequest, requestContext }
       );
 
@@ -3226,6 +3261,7 @@ export function createStaticHandler(
           manifest,
           mapRouteProperties,
           basename,
+          future.v7_relativeSplatPath,
           { isStaticRequest: true, isRouteRequest, requestContext }
         )
       ),
@@ -3316,6 +3352,7 @@ function normalizeTo(
   basename: string,
   prependBasename: boolean,
   to: To | null,
+  v7_relativeSplatPath: boolean,
   fromRouteId?: string,
   relative?: RelativeRoutingType
 ) {
@@ -3340,7 +3377,7 @@ function normalizeTo(
   // Resolve the relative path
   let path = resolveTo(
     to ? to : ".",
-    getPathContributingMatches(contextualMatches).map((m) => m.pathnameBase),
+    getResolveToMatches(contextualMatches, v7_relativeSplatPath),
     stripBasename(location.pathname, basename) || location.pathname,
     relative === "path"
   );
@@ -3830,6 +3867,7 @@ async function callLoaderOrAction(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
+  v7_relativeSplatPath: boolean,
   opts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
@@ -3943,7 +3981,8 @@ async function callLoaderOrAction(
           matches.slice(0, matches.indexOf(match) + 1),
           basename,
           true,
-          location
+          location,
+          v7_relativeSplatPath
         );
       } else if (!opts.isStaticRequest) {
         // Strip off the protocol+origin for same-origin + same-basename absolute

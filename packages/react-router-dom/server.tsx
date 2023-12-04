@@ -7,6 +7,7 @@ import type {
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
   RouterState,
+  FutureConfig as RouterFutureConfig,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -109,6 +110,9 @@ export function StaticRouterProvider({
     static: true,
     staticContext: context,
     basename: context.basename || "/",
+    future: {
+      v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+    },
   };
 
   let fetchersContext = new Map();
@@ -260,7 +264,11 @@ export function createStaticHandler(
 
 export function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext
+  context: StaticHandlerContext,
+  opts: {
+    // Only accept future flags that impact the server render
+    future?: Partial<Pick<RouterFutureConfig, "v7_relativeSplatPath">>;
+  } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
@@ -287,6 +295,14 @@ export function createStaticRouter(
   return {
     get basename() {
       return context.basename;
+    },
+    get future() {
+      return {
+        v7_fetcherPersist: false,
+        v7_normalizeFormMethod: false,
+        v7_prependBasename: false,
+        v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
+      };
     },
     get state() {
       return {
