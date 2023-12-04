@@ -121,6 +121,64 @@ describe("fetchers", () => {
       expect(router._internalFetchControllers.size).toBe(0);
     });
 
+    it("unabstracted loader fetch with decodeResponse", async () => {
+      let dfd = createDeferred();
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/"] }),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            loader: () => dfd.promise,
+          },
+        ],
+        hydrationData: {
+          loaderData: { root: "ROOT DATA" },
+        },
+        async decodeResponse(response, defaultDecode) {
+          let contentType = response.headers.get("Content-Type");
+          if (contentType === "text/custom") {
+            const text = await response.text();
+            switch (text) {
+              case "1":
+                return "DATA";
+              default:
+                return text;
+            }
+          }
+
+          return defaultDecode();
+        },
+      });
+
+      let key = "key";
+      router.fetch(key, "root", "/");
+      expect(router.state.fetchers.get(key)).toEqual({
+        state: "loading",
+        formMethod: undefined,
+        formEncType: undefined,
+        formData: undefined,
+        data: undefined,
+      });
+
+      await dfd.resolve(
+        new Response("1", {
+          headers: {
+            "Content-Type": "text/custom",
+          },
+        })
+      );
+      expect(router.state.fetchers.get(key)).toEqual({
+        state: "idle",
+        formMethod: undefined,
+        formEncType: undefined,
+        formData: undefined,
+        data: "DATA",
+      });
+
+      expect(router._internalFetchControllers.size).toBe(0);
+    });
+
     it("loader fetch", async () => {
       let t = initializeTest({ url: "/foo" });
 
