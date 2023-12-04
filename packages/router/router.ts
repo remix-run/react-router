@@ -4015,9 +4015,14 @@ async function callLoaderOrAction(
       }
     };
 
-    let data = await (decodeResponse
-      ? decodeResponse(result, defaultDecode)
-      : defaultDecode());
+    let data: unknown;
+    try {
+      data = await (decodeResponse
+        ? decodeResponse(result, defaultDecode)
+        : defaultDecode());
+    } catch (e) {
+      return { type: ResultType.error, error: e };
+    }
 
     if (resultType === ResultType.error) {
       return {
