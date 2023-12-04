@@ -85,6 +85,10 @@ function loader({ request }) {
 
 Note that the APIs here are not React Router specific, but rather standard web objects: [Request][request], [URL][url], [URLSearchParams][urlsearchparams].
 
+## `loader.hydrate`
+
+If you are [Server-Side Rendering][ssr] and leveraging the `fututre.v7_partialHydration` flag for [Partial Hydration][partialhydration], then you may wish to opt-into running a route `loader` on initial hydration _even though it has hydration data_ (for example, to let a user prime a cache with the hydration data). To force a `loader` to run on hydration in a partial hydration scenario, you can set a `hydrate` property on the `loader` function:
+
 ## Returning Responses
 
 While you can return anything you want from a loader and get access to it from [`useLoaderData`][useloaderdata], you can also return a web [Response][response].
@@ -174,3 +178,5 @@ For more details, read the [`errorElement`][errorelement] documentation.
 [json]: ../fetch/json
 [errorelement]: ./error-element
 [pickingarouter]: ../routers/picking-a-router
+[ssr]: ../guides/ssr.md
+[partialhydration]: ../routers/create-browser-router#partial-hydration-data

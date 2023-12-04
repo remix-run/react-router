@@ -68,6 +68,14 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
+   * Return the future config for the router
+   */
+  get future(): FutureConfig;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
    * Return the current state of the router
    */
   get state(): RouterState;
@@ -345,6 +353,7 @@ export type HydrationState = Partial<
 export interface FutureConfig {
   v7_fetcherPersist: boolean;
   v7_normalizeFormMethod: boolean;
+  v7_partialHydration: boolean;
   v7_prependBasename: boolean;
 }
 
@@ -769,6 +778,7 @@ export function createRouter(init: RouterInit): Router {
   let future: FutureConfig = {
     v7_fetcherPersist: false,
     v7_normalizeFormMethod: false,
+    v7_partialHydration: false,
     v7_prependBasename: false,
     ...init.future,
   };
@@ -804,12 +814,19 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
+  // "Initialized" here really means "Can `RouterProvider` render my route tree?"
+  // Prior to `route.HydrateFallback`, we only had a root `fallbackElement` so we used
+  // `state.initialized` to render that instead of `<DataRoutes>`.  Now that we
+  // support route level fallbacks we can always render and we'll just render
+  // as deep as we have data for and detect the nearest ancestor HydrateFallback
   let initialized =
+    future.v7_partialHydration ||
     // All initialMatches need to be loaded before we're ready.  If we have lazy
     // functions around still then we'll need to run them in initialize()
-    !initialMatches.some((m) => m.route.lazy) &&
-    // And we have to either have no loaders or have been provided hydrationData
-    (!initialMatches.some((m) => m.route.loader) || init.hydrationData != null);
+    (!initialMatches.some((m) => m.route.lazy) &&
+      // And we have to either have no loaders or have been provided hydrationData
+      (!initialMatches.some((m) => m.route.loader) ||
+        init.hydrationData != null));
 
   let router: Router;
   let state: RouterState = {
@@ -990,8 +1007,14 @@ export function createRouter(init: RouterInit): Router {
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
     // resolved prior to router creation since we can't go into a fallbackElement
     // UI for SSR'd apps
-    if (!state.initialized) {
-      startNavigation(HistoryAction.Pop, state.location);
+    if (
+      !state.initialized ||
+      (future.v7_partialHydration &&
+        state.matches.some((m) => isUnhydratedRoute(state, m.route)))
+    ) {
+      startNavigation(HistoryAction.Pop, state.location, {
+        initialHydration: true,
+      });
     }
 
     return router;
@@ -1363,6 +1386,7 @@ export function createRouter(init: RouterInit): Router {
     historyAction: HistoryAction,
     location: Location,
     opts?: {
+      initialHydration?: boolean;
       submission?: Submission;
       fetcherSubmission?: Submission;
       overrideNavigation?: Navigation;
@@ -1487,6 +1511,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.submission,
       opts && opts.fetcherSubmission,
       opts && opts.replace,
+      opts && opts.initialHydration === true,
       flushSync,
       pendingActionData,
       pendingError
@@ -1607,6 +1632,7 @@ export function createRouter(init: RouterInit): Router {
     submission?: Submission,
     fetcherSubmission?: Submission,
     replace?: boolean,
+    initialHydration?: boolean,
     flushSync?: boolean,
     pendingActionData?: RouteData,
     pendingError?: RouteData
@@ -1629,6 +1655,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       activeSubmission,
       location,
+      future.v7_partialHydration && initialHydration === true,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -1674,7 +1701,12 @@ export function createRouter(init: RouterInit): Router {
     // state.  If not, we need to switch to our loading state and load data,
     // preserving any new action data or existing action data (in the case of
     // a revalidation interrupting an actionReload)
-    if (!isUninterruptedRevalidation) {
+    // If we have partialHydration enabled, then don't update the state for the
+    // initial data load since iot's not a "navigation"
+    if (
+      !isUninterruptedRevalidation &&
+      (!future.v7_partialHydration || !initialHydration)
+    ) {
       revalidatingFetchers.forEach((rf) => {
         let fetcher = state.fetchers.get(rf.key);
         let revalidatingFetcher = getLoadingFetcher(
@@ -2003,6 +2035,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       submission,
       nextLocation,
+      false,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -2722,6 +2755,9 @@ export function createRouter(init: RouterInit): Router {
   router = {
     get basename() {
       return basename;
+    },
+    get future() {
+      return future;
     },
     get state() {
       return state;
@@ -3548,6 +3584,7 @@ function getMatchesToLoad(
   matches: AgnosticDataRouteMatch[],
   submission: Submission | undefined,
   location: Location,
+  isInitialLoad: boolean,
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
@@ -3573,10 +3610,17 @@ function getMatchesToLoad(
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
+    if (isInitialLoad) {
+      // On initial hydration we don't do any shouldRevalidate stuff - we just
+      // call the unhydrated loaders
+      return isUnhydratedRoute(state, match.route);
+    }
+
     if (match.route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       return true;
     }
+
     if (match.route.loader == null) {
       return false;
     }
@@ -3618,8 +3662,13 @@ function getMatchesToLoad(
   // Pick fetcher.loads that need to be revalidated
   let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches.forEach((f, key) => {
-    // Don't revalidate if fetcher won't be present in the subsequent render
+    // Don't revalidate:
+    //  - on initial load (shouldn't be any fetchers then anyway)
+    //  - if fetcher won't be present in the subsequent render
+    //    - no longer matches the URL (v7_fetcherPersist=false)
+    //    - was unmounted but persisted due to v7_fetcherPersist=true
     if (
+      isInitialLoad ||
       !matches.some((m) => m.route.id === f.routeId) ||
       deletedFetchers.has(key)
     ) {
@@ -3693,6 +3742,23 @@ function getMatchesToLoad(
   });
 
   return [navigationMatches, revalidatingFetchers];
+}
+
+// Is this route unhydrated (when v7_partialHydration=true) such that we need
+// to call it's loader on the initial router creation
+function isUnhydratedRoute(state: RouterState, route: AgnosticDataRouteObject) {
+  if (!route.loader) {
+    return false;
+  }
+  if (route.loader.hydrate) {
+    return true;
+  }
+  return (
+    state.loaderData[route.id] === undefined &&
+    (!state.errors ||
+      // Loader ran but errored - don't re-run
+      state.errors[route.id] === undefined)
+  );
 }
 
 function isNewLoader(

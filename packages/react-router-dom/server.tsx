@@ -7,6 +7,7 @@ import type {
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
   RouterState,
+  FutureConfig as RouterFutureConfig,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -144,7 +145,11 @@ export function StaticRouterProvider({
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
               >
-                <DataRoutes routes={router.routes} state={state} />
+                <DataRoutes
+                  routes={router.routes}
+                  future={router.future}
+                  state={state}
+                />
               </Router>
             </ViewTransitionContext.Provider>
           </FetchersContext.Provider>
@@ -163,12 +168,14 @@ export function StaticRouterProvider({
 
 function DataRoutes({
   routes,
+  future,
   state,
 }: {
   routes: DataRouteObject[];
+  future: RemixRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state);
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 function serializeErrors(
@@ -260,7 +267,11 @@ export function createStaticHandler(
 
 export function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext
+  context: StaticHandlerContext,
+  opts: {
+    // Only accept future flags that impact the server render
+    future?: Partial<Pick<RouterFutureConfig, "v7_partialHydration">>;
+  } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
@@ -287,6 +298,14 @@ export function createStaticRouter(
   return {
     get basename() {
       return context.basename;
+    },
+    get future() {
+      return {
+        v7_fetcherPersist: false,
+        v7_normalizeFormMethod: false,
+        v7_partialHydration: opts.future?.v7_partialHydration === true,
+        v7_prependBasename: false,
+      };
     },
     get state() {
       return {

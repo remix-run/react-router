@@ -110,6 +110,15 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
+  React.useEffect(() => {
+    warning(
+      fallbackElement == null || !router.future.v7_partialHydration,
+      "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+    );
+    // Only log this once on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
@@ -158,7 +167,11 @@ export function RouterProvider({
             navigator={navigator}
           >
             {state.initialized ? (
-              <DataRoutes routes={router.routes} state={state} />
+              <DataRoutes
+                routes={router.routes}
+                future={router.future}
+                state={state}
+              />
             ) : (
               fallbackElement
             )}
@@ -172,12 +185,14 @@ export function RouterProvider({
 
 function DataRoutes({
   routes,
+  future,
   state,
 }: {
   routes: DataRouteObject[];
+  future: RemixRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state);
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 export interface MemoryRouterProps {
@@ -321,8 +336,10 @@ export interface PathRouteProps {
   index?: false;
   children?: React.ReactNode;
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
 }
 
@@ -341,8 +358,10 @@ export interface IndexRouteProps {
   index: true;
   children?: undefined;
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
 }
 

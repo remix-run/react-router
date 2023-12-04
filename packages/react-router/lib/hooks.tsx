@@ -347,7 +347,8 @@ export function useRoutes(
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
-  dataRouterState?: RemixRouter["state"]
+  dataRouterState?: RemixRouter["state"],
+  future?: RemixRouter["future"]
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -469,7 +470,8 @@ export function useRoutesImpl(
         })
       ),
     parentMatches,
-    dataRouterState
+    dataRouterState,
+    future
   );
 
   // When a user passes in a `locationArg`, the associated routes need to
@@ -658,7 +660,8 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState: RemixRouter["state"] | null = null
+  dataRouterState: RemixRouter["state"] | null = null,
+  future: RemixRouter["future"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
     if (dataRouterState?.errors) {
@@ -690,18 +693,71 @@ export function _renderMatches(
     );
   }
 
-  return renderedMatches.reduceRight((outlet, match, index) => {
-    let error = match.route.id ? errors?.[match.route.id] : null;
-    // Only data routers handle errors
-    let errorElement: React.ReactNode | null = null;
-    if (dataRouterState) {
-      errorElement = match.route.errorElement || defaultErrorElement;
+  // If we're in a partial hydration mode, detect if we need to render down to
+  // a given HydrateFallback while we load the rest of the hydration data
+  let renderFallback = false;
+  let fallbackIndex = -1;
+  if (dataRouterState && future && future.v7_partialHydration) {
+    for (let i = 0; i < renderedMatches.length; i++) {
+      let match = renderedMatches[i];
+      // Track the deepest fallback up until the first route without data
+      if (match.route.HydrateFallback || match.route.hydrateFallbackElement) {
+        fallbackIndex = i;
+      }
+      if (
+        match.route.loader &&
+        match.route.id &&
+        dataRouterState.loaderData[match.route.id] === undefined &&
+        (!dataRouterState.errors ||
+          dataRouterState.errors[match.route.id] === undefined)
+      ) {
+        // We found the first route without data/errors which means it's loader
+        // still needs to run.  Flag that we need to render a fallback and
+        // render up until the appropriate fallback
+        renderFallback = true;
+        if (fallbackIndex >= 0) {
+          renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
+        } else {
+          renderedMatches = [renderedMatches[0]];
+        }
+        break;
+      }
     }
+  }
+
+  return renderedMatches.reduceRight((outlet, match, index) => {
+    // Only data routers handle errors/fallbacks
+    let error: any;
+    let shouldRenderHydrateFallback = false;
+    let errorElement: React.ReactNode | null = null;
+    let hydrateFallbackElement: React.ReactNode | null = null;
+    if (dataRouterState) {
+      error = errors && match.route.id ? errors[match.route.id] : null;
+      errorElement = match.route.errorElement || defaultErrorElement;
+
+      if (renderFallback) {
+        if (fallbackIndex < 0 && index === 0) {
+          warningOnce(
+            "route-fallback",
+            false,
+            "No `HydrateFallback` element provided to render during initial hydration"
+          );
+          shouldRenderHydrateFallback = true;
+          hydrateFallbackElement = null;
+        } else if (fallbackIndex === index) {
+          shouldRenderHydrateFallback = true;
+          hydrateFallbackElement = match.route.hydrateFallbackElement || null;
+        }
+      }
+    }
+
     let matches = parentMatches.concat(renderedMatches.slice(0, index + 1));
     let getChildren = () => {
       let children: React.ReactNode;
       if (error) {
         children = errorElement;
+      } else if (shouldRenderHydrateFallback) {
+        children = hydrateFallbackElement;
       } else if (match.route.Component) {
         // Note: This is a de-optimized path since React won't re-use the
         // ReactElement since it's identity changes with each new

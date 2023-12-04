@@ -245,6 +245,22 @@ function mapRouteProperties(route: RouteObject) {
     });
   }
 
+  if (route.HydrateFallback) {
+    if (__DEV__) {
+      if (route.hydrateFallbackElement) {
+        warning(
+          false,
+          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
+            "`HydrateFallback` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      hydrateFallbackElement: React.createElement(route.HydrateFallback),
+      HydrateFallback: undefined,
+    });
+  }
+
   if (route.ErrorBoundary) {
     if (__DEV__) {
       if (route.errorElement) {

@@ -1660,14 +1660,12 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route element={<Layout />}>
-            <Route index loader={() => "index"} element={<h1>index</h1>} />
-            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
-            <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
+            <Route index element={<h1>index</h1>} />
+            <Route path="1" element={<h1>Page 1</h1>} />
+            <Route path="2" element={<h1>Page 2</h1>} />
           </Route>
         ),
-        {
-          hydrationData: {},
-        }
+        {}
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1729,7 +1727,7 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route element={<Layout />}>
-            <Route index loader={() => "index"} element={<h1>Index Page</h1>} />
+            <Route index element={<h1>Index Page</h1>} />
             <Route
               path="form"
               action={() => "action data"}
@@ -1738,9 +1736,7 @@ function testDomRouter(
             <Route path="result" element={<h1>Result Page</h1>} />
           </Route>
         ),
-        {
-          hydrationData: {},
-        }
+        {}
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -1794,7 +1790,7 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route element={<Layout />}>
-            <Route index loader={() => "index"} element={<h1>Index Page</h1>} />
+            <Route index element={<h1>Index Page</h1>} />
             <Route
               path="form"
               action={() =>
@@ -1859,13 +1855,12 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route element={<Layout />}>
-            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route index element={<h1>index</h1>} />
             <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
             <Route path="2" loader={() => "2"} element={<h1>Page 2</h1>} />
           </Route>
         ),
         {
-          hydrationData: {},
           window: getWindow("/"),
         }
       );
@@ -1933,18 +1928,12 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route element={<Layout />}>
-            <Route index loader={() => "index"} element={<h1>index</h1>} />
-            <Route path="1" loader={() => "1"} element={<h1>Page 1</h1>} />
-            <Route
-              path="2"
-              action={() => "action"}
-              loader={() => "2"}
-              element={<h1>Page 2</h1>}
-            />
+            <Route index element={<h1>index</h1>} />
+            <Route path="1" element={<h1>Page 1</h1>} />
+            <Route path="2" action={() => "action"} element={<h1>Page 2</h1>} />
           </Route>
         ),
         {
-          hydrationData: {},
           window: getWindow("/"),
         }
       );
@@ -2028,7 +2017,7 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route element={<Layout />}>
-            <Route index loader={() => "index"} element={<h1>index</h1>} />
+            <Route index element={<h1>index</h1>} />
             <Route
               path="1"
               action={() => "action"}
@@ -2038,7 +2027,6 @@ function testDomRouter(
           </Route>
         ),
         {
-          hydrationData: {},
           window: getWindow("/"),
         }
       );
@@ -2136,7 +2124,7 @@ function testDomRouter(
       let testWindow = getWindow("/base/path");
       let router = createTestRouter(
         createRoutesFromElements(<Route path="path" element={<Comp />} />),
-        { basename: "/base", hydrationData: {}, window: testWindow }
+        { basename: "/base", window: testWindow }
       );
       let { container } = render(<RouterProvider router={router} />);
 
@@ -2213,7 +2201,7 @@ function testDomRouter(
         ),
         {
           basename: "/base",
-          hydrationData: {},
+
           window: testWindow,
         }
       );
@@ -2296,8 +2284,9 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route
+            id="index"
             path="/"
-            action={async ({ request }) => {
+            action={async () => {
               throw new Error("Should not hit this");
             }}
             loader={() => loaderDefer.promise}
@@ -2305,7 +2294,7 @@ function testDomRouter(
           />
         ),
         {
-          hydrationData: {},
+          hydrationData: { loaderData: { index: "Initial Data" } },
           window: getWindow("/"),
         }
       );
@@ -2339,7 +2328,9 @@ function testDomRouter(
           <p>
             idle
           </p>
-          <p />
+          <p>
+            Initial Data
+          </p>
         </div>"
       `);
 
@@ -2353,7 +2344,9 @@ function testDomRouter(
           <p>
             loading
           </p>
-          <p />
+          <p>
+            Initial Data
+          </p>
         </div>"
       `);
 
@@ -2444,6 +2437,7 @@ function testDomRouter(
       let router = createTestRouter(
         createRoutesFromElements(
           <Route
+            id="index"
             path="/"
             action={async ({ request }) => {
               let resolvedValue = await actionDefer.promise;
@@ -2455,7 +2449,7 @@ function testDomRouter(
           />
         ),
         {
-          hydrationData: {},
+          hydrationData: { loaderData: { index: "Initial Data" } },
           window: getWindow("/"),
         }
       );
@@ -3840,12 +3834,14 @@ function testDomRouter(
         let router = createTestRouter(
           createRoutesFromElements(
             <Route
+              id="parent"
               path="/parent"
               element={<Outlet />}
               action={() => "PARENT ACTION"}
               loader={() => "PARENT LOADER"}
             >
               <Route
+                id="index"
                 index
                 element={<Index />}
                 action={() => "INDEX ACTION"}
@@ -4773,6 +4769,7 @@ function testDomRouter(
           createRoutesFromElements(
             <>
               <Route
+                id="index"
                 path="/"
                 element={<Comp />}
                 action={async ({ request }) => {
@@ -4791,7 +4788,7 @@ function testDomRouter(
           ),
           {
             window: getWindow("/"),
-            hydrationData: { loaderData: { "0": null } },
+            hydrationData: { loaderData: { index: null } },
           }
         );
         let { container } = render(<RouterProvider router={router} />);
@@ -5441,7 +5438,9 @@ function testDomRouter(
             expect(getHtml(container)).toMatch("Page");
 
             // Resolve after the navigation - no-op
-            expect(loaderRequest?.signal?.aborted).toBe(true);
+            expect((loaderRequest as unknown as Request)?.signal?.aborted).toBe(
+              true
+            );
             dfd.resolve("FETCH");
             await waitFor(() => screen.getByText("Num fetchers: 0"));
             expect(getHtml(container)).toMatch("Page");
@@ -7463,6 +7462,419 @@ function testDomRouter(
         fireEvent.click(screen.getByText("/d"));
         await waitFor(() => screen.getByText("D"));
         expect(spy).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    // TODO: Probably want these running against RouterProvider in react-router too?
+    // Look into extracting the setState stuff and sharing the subscriber,
+    // layout effect, navigator, render stuff
+    describe("partial hydration", () => {
+      it("does not handle partial hydration by default", async () => {
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => "INDEX",
+                  HydrateFallback: () => <p>Should not see me</p>,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - undefined
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("supports partial hydration w/leaf fallback", async () => {
+        let dfd = createDeferred();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd.promise,
+                  HydrateFallback: () => <p>Index Loading...</p>,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <p>
+                Index Loading...
+              </p>
+            </div>
+          </div>"
+        `);
+
+        dfd.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("supports partial hydration w/root fallback", async () => {
+        let dfd = createDeferred();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              HydrateFallback: () => <p>Root Loading...</p>,
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Root Loading...
+            </p>
+          </div>"
+        `);
+
+        dfd.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("supports partial hydration w/no fallback", async () => {
+        let dfd = createDeferred();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`"<div />"`);
+
+        dfd.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("deprecates fallbackElement", async () => {
+        let dfd1 = createDeferred();
+        let dfd2 = createDeferred();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => dfd1.promise,
+              HydrateFallback: () => <p>Root Loading...</p>,
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: () => dfd2.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(
+          <RouterProvider
+            router={router}
+            fallbackElement={<p>fallbackElement...</p>}
+          />
+        );
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              Root Loading...
+            </p>
+          </div>"
+        `);
+
+        expect(consoleWarn).toHaveBeenCalledWith(
+          "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+        );
+
+        dfd1.resolve("ROOT DATA");
+        dfd2.resolve("INDEX DATA");
+        await waitFor(() => screen.getByText(/INDEX DATA/));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <h2>
+                Index - INDEX DATA
+              </h2>
+            </div>
+          </div>"
+        `);
+      });
+
+      it("does not re-run loaders that don't have loader data due to errors", async () => {
+        let spy = jest.fn();
+        let router = createTestRouter(
+          [
+            {
+              id: "root",
+              path: "/",
+              loader: () => "ROOT",
+              Component() {
+                let data = useLoaderData() as string;
+                return (
+                  <div>
+                    <h1>{`Home - ${data}`}</h1>
+                    <Outlet />
+                  </div>
+                );
+              },
+              children: [
+                {
+                  id: "index",
+                  index: true,
+                  loader: spy,
+                  HydrateFallback: () => <p>Index Loading...</p>,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                  ErrorBoundary() {
+                    let error = useRouteError() as string;
+                    return <p>{error}</p>;
+                  },
+                },
+              ],
+            },
+          ],
+          {
+            window: getWindow("/"),
+            hydrationData: {
+              loaderData: {
+                root: "HYDRATED ROOT",
+              },
+              errors: {
+                index: "INDEX ERROR",
+              },
+            },
+            future: {
+              v7_partialHydration: true,
+            },
+          }
+        );
+        let { container } = render(<RouterProvider router={router} />);
+
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <div>
+              <h1>
+                Home - HYDRATED ROOT
+              </h1>
+              <p>
+                INDEX ERROR
+              </p>
+            </div>
+          </div>"
+        `);
+
+        expect(spy).not.toHaveBeenCalled();
       });
     });
   });

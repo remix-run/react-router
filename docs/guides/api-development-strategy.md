@@ -63,11 +63,12 @@ const router = createBrowserRouter(routes, {
 });
 ```
 
-| Flag                     | Description                                                           |
-| ------------------------ | --------------------------------------------------------------------- |
-| `v7_fetcherPersist`      | Delay active fetcher cleanup until they return to an `idle` state     |
-| `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
-| `v7_prependBasename`     | Prepend the router basename to navigate/fetch paths                   |
+| Flag                                      | Description                                                           |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| `v7_fetcherPersist`                       | Delay active fetcher cleanup until they return to an `idle` state     |
+| `v7_normalizeFormMethod`                  | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
+| [`v7_partialHydration`][partialhydration] | Support partial hydration for Server-rendered apps                    |
+| `v7_prependBasename`                      | Prepend the router basename to navigate/fetch paths                   |
 
 ### React Router Future Flags
 
@@ -94,3 +95,4 @@ These flags apply to both Data and non-Data Routers and are passed to the render
 [feature-flowchart]: https://remix.run/docs-images/feature-flowchart.png
 [picking-a-router]: ../routers/picking-a-router
 [starttransition]: https://react.dev/reference/react/startTransition
+[partialhydration]: ../routers/create-browser-router#partial-hydration-data
