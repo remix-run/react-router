@@ -600,7 +600,7 @@ export class RenderErrorBoundary extends React.Component<
     // this because the error provided from the app state may be cleared without
     // the location changing.
     return {
-      error: props.error || state.error,
+      error: props.error !== undefined ? props.error : state.error,
       location: state.location,
       revalidation: props.revalidation || state.revalidation,
     };
@@ -615,7 +615,7 @@ export class RenderErrorBoundary extends React.Component<
   }
 
   render() {
-    return this.state.error ? (
+    return this.state.error !== undefined ? (
       <RouteContext.Provider value={this.props.routeContext}>
         <RouteErrorContext.Provider
           value={this.state.error}
@@ -891,7 +891,7 @@ export function useRouteError(): unknown {
 
   // If this was a render error, we put it in a RouteError context inside
   // of RenderErrorBoundary
-  if (error) {
+  if (error !== undefined) {
     return error;
   }
 
