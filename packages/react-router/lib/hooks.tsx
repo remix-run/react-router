@@ -732,7 +732,7 @@ export function _renderMatches(
     let errorElement: React.ReactNode | null = null;
     let hydrateFallbackElement: React.ReactNode | null = null;
     if (dataRouterState) {
-      error = errors && match.route.id ? errors[match.route.id] : null;
+      error = errors && match.route.id ? errors[match.route.id] : undefined;
       errorElement = match.route.errorElement || defaultErrorElement;
 
       if (renderFallback) {
