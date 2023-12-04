@@ -124,6 +124,75 @@ describe("navigations", () => {
       });
     });
 
+    it("handles errors when unwrapping Responses", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+            children: [
+              {
+                id: "foo",
+                path: "foo",
+                hasErrorBoundary: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+      });
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(
+        // Invalid JSON
+        new Response('{"key":"value"}}}}}', {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({});
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "foo": [SyntaxError: Unexpected token } in JSON at position 15],
+        }
+      `);
+    });
+
+    it("bubbles errors when unwrapping Responses", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "foo",
+                path: "foo",
+                loader: true,
+              },
+            ],
+          },
+        ],
+      });
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(
+        // Invalid JSON
+        new Response('{"key":"value"}}}}}', {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      expect(t.router.state.loaderData).toEqual({});
+      expect(t.router.state.errors).toMatchInlineSnapshot(`
+        {
+          "root": [SyntaxError: Unexpected token } in JSON at position 15],
+        }
+      `);
+    });
+
     it("does not fetch unchanging layout data", async () => {
       let t = initializeTest();
       let A = await t.navigate("/foo");
