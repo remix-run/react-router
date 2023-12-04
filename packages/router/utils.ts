@@ -1191,9 +1191,12 @@ export function resolveTo(
   if (toPathname == null) {
     from = locationPathname;
   } else if (isPathRelative) {
-    let fromSegments = routePathnames[routePathnames.length - 1]
-      .replace(/^\//, "")
-      .split("/");
+    let fromSegments =
+      routePathnames.length === 0
+        ? []
+        : routePathnames[routePathnames.length - 1]
+            .replace(/^\//, "")
+            .split("/");
 
     if (toPathname.startsWith("..")) {
       let toSegments = toPathname.split("/");

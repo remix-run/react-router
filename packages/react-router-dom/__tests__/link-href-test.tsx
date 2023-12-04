@@ -927,4 +927,37 @@ describe("<Link> href", () => {
     );
     warnSpy.mockRestore();
   });
+
+  test("renders fine when used outside a route context", () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter>
+          <Link to="route">Route</Link>
+          <Link to="path" relative="path">
+            Path
+          </Link>
+        </MemoryRouter>
+      );
+    });
+
+    let anchors = renderer.root.findAllByType("a");
+    expect(anchors.map((a) => ({ href: a.props.href, text: a.children })))
+      .toMatchInlineSnapshot(`
+      [
+        {
+          "href": "/route",
+          "text": [
+            "Route",
+          ],
+        },
+        {
+          "href": "/path",
+          "text": [
+            "Path",
+          ],
+        },
+      ]
+    `);
+  });
 });
