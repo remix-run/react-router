@@ -516,6 +516,7 @@ describe("redirects", () => {
       hydrationData: {
         loaderData: {
           action: "ACTION 0",
+          index: "INDEX",
         },
       },
     });

@@ -152,7 +152,11 @@ export function StaticRouterProvider({
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
               >
-                <DataRoutes routes={router.routes} state={state} />
+                <DataRoutes
+                  routes={router.routes}
+                  future={router.future}
+                  state={state}
+                />
               </Router>
             </ViewTransitionContext.Provider>
           </FetchersContext.Provider>
@@ -171,12 +175,14 @@ export function StaticRouterProvider({
 
 function DataRoutes({
   routes,
+  future,
   state,
 }: {
   routes: DataRouteObject[];
+  future: RemixRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state);
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 function serializeErrors(
@@ -271,7 +277,9 @@ export function createStaticRouter(
   context: StaticHandlerContext,
   opts: {
     // Only accept future flags that impact the server render
-    future?: Partial<Pick<RouterFutureConfig, "v7_relativeSplatPath">>;
+    future?: Partial<
+      Pick<RouterFutureConfig, "v7_partialHydration" | "v7_relativeSplatPath">
+    >;
   } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
@@ -304,6 +312,7 @@ export function createStaticRouter(
       return {
         v7_fetcherPersist: false,
         v7_normalizeFormMethod: false,
+        v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
         v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
       };
