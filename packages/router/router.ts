@@ -13,6 +13,7 @@ import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
   DataResult,
+  DecodeResponseFunction,
   DeferredData,
   DeferredResult,
   DetectErrorBoundaryFunction,
@@ -359,6 +360,7 @@ export interface RouterInit {
    * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
+  decodeResponse?: DecodeResponseFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -740,6 +742,8 @@ export function createRouter(init: RouterInit): Router {
     init.routes.length > 0,
     "You must provide a non-empty routes array to createRouter"
   );
+
+  let decodeResponse = init.decodeResponse;
 
   let mapRouteProperties: MapRoutePropertiesFunction;
   if (init.mapRouteProperties) {
@@ -1545,7 +1549,8 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        basename
+        basename,
+        decodeResponse
       );
 
       if (request.signal.aborted) {
@@ -1930,7 +1935,8 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      decodeResponse
     );
 
     if (fetchRequest.signal.aborted) {
@@ -2173,7 +2179,8 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      decodeResponse
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2369,7 +2376,8 @@ export function createRouter(init: RouterInit): Router {
           matches,
           manifest,
           mapRouteProperties,
-          basename
+          basename,
+          decodeResponse
         )
       ),
       ...fetchersToLoad.map((f) => {
@@ -2381,7 +2389,8 @@ export function createRouter(init: RouterInit): Router {
             f.matches,
             manifest,
             mapRouteProperties,
-            basename
+            basename,
+            decodeResponse
           );
         } else {
           let error: ErrorResult = {
@@ -2771,6 +2780,7 @@ export interface CreateStaticHandlerOptions {
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
+  decodeResponse?: DecodeResponseFunction;
 }
 
 export function createStaticHandler(
@@ -2784,6 +2794,7 @@ export function createStaticHandler(
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
+  let decodeResponse = opts?.decodeResponse;
   let mapRouteProperties: MapRoutePropertiesFunction;
   if (opts?.mapRouteProperties) {
     mapRouteProperties = opts.mapRouteProperties;
@@ -3058,6 +3069,7 @@ export function createStaticHandler(
         manifest,
         mapRouteProperties,
         basename,
+        decodeResponse,
         { isStaticRequest: true, isRouteRequest, requestContext }
       );
 
@@ -3226,6 +3238,7 @@ export function createStaticHandler(
           manifest,
           mapRouteProperties,
           basename,
+          decodeResponse,
           { isStaticRequest: true, isRouteRequest, requestContext }
         )
       ),
@@ -3830,6 +3843,7 @@ async function callLoaderOrAction(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
+  decodeResponse: DecodeResponseFunction | undefined,
   opts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
@@ -3989,15 +4003,21 @@ async function callLoaderOrAction(
       throw queryRouteResponse;
     }
 
-    let data: any;
-    let contentType = result.headers.get("Content-Type");
-    // Check between word boundaries instead of startsWith() due to the last
-    // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
-    if (contentType && /\bapplication\/json\b/.test(contentType)) {
-      data = await result.json();
-    } else {
-      data = await result.text();
-    }
+    let resultResponse = result;
+    let defaultDecode = (): Promise<unknown> => {
+      let contentType = resultResponse.headers.get("Content-Type");
+      // Check between word boundaries instead of startsWith() due to the last
+      // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
+      if (contentType && /\bapplication\/json\b/.test(contentType)) {
+        return resultResponse.json();
+      } else {
+        return resultResponse.text();
+      }
+    };
+
+    let data = await (decodeResponse
+      ? decodeResponse(result, defaultDecode)
+      : defaultDecode());
 
     if (resultType === ResultType.error) {
       return {

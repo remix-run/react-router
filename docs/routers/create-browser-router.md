@@ -101,6 +101,10 @@ createBrowserRouter(routes, {
 <Link to="/" />; // results in <a href="/app/" />
 ```
 
+## `decodeResponse`
+
+An optional hook to implement custom response decoding logic. This is where you could hook up libraries such as `super-json` or `turbo-stream`.
+
 ## `future`
 
 An optional set of [Future Flags][api-development-strategy] to enable for this Router. We recommend opting into newly released future flags sooner rather than later to ease your eventual migration to v7.

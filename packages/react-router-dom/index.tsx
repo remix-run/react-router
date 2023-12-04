@@ -36,6 +36,7 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
+  DecodeResponseFunction,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -231,6 +232,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
+  decodeResponse?: DecodeResponseFunction;
 }
 
 export function createBrowserRouter(
@@ -248,6 +250,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     window: opts?.window,
+    decodeResponse: opts?.decodeResponse,
   }).initialize();
 }
 
@@ -266,6 +269,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     window: opts?.window,
+    decodeResponse: opts?.decodeResponse,
   }).initialize();
 }
 

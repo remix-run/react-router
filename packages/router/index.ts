@@ -9,6 +9,7 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
+  DecodeResponseFunction,
   ErrorResponse,
   FormEncType,
   FormMethod,

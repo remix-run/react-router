@@ -122,6 +122,12 @@ describe("ssr", () => {
       path: "/redirect",
       loader: () => redirect("/"),
     },
+    {
+      id: "custom",
+      path: "/custom",
+      loader: () =>
+        new Response("1", { headers: { "Content-Type": "text/custom" } }),
+    },
   ];
 
   // Regardless of if the URL is internal or external - all absolute URL
@@ -151,6 +157,35 @@ describe("ssr", () => {
         errors: null,
         location: { pathname: "/parent/child" },
         matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
+      });
+    });
+
+    it("should support document load navigations with custom decodeResponse", async () => {
+      let { query } = createStaticHandler(SSR_ROUTES, {
+        async decodeResponse(response, defaultDecode) {
+          let contentType = response.headers.get("Content-Type");
+          if (contentType === "text/custom") {
+            const text = await response.text();
+            switch (text) {
+              case "1":
+                return "ONE";
+              default:
+                return text;
+            }
+          }
+
+          return defaultDecode();
+        },
+      });
+      let context = await query(createRequest("/custom"));
+      expect(context).toMatchObject({
+        actionData: null,
+        loaderData: {
+          custom: "ONE",
+        },
+        errors: null,
+        location: { pathname: "/custom" },
+        matches: [{ route: { id: "custom" } }],
       });
     });
 

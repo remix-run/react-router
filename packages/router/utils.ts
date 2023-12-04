@@ -233,6 +233,10 @@ export interface MapRoutePropertiesFunction {
   } & Record<string, any>;
 }
 
+export interface DecodeResponseFunction {
+  (response: Response, defaultDecode: () => Promise<unknown>): Promise<unknown>;
+}
+
 /**
  * Keys we cannot change from within a lazy() function. We spread all other keys
  * onto the route. Either they're meaningful to the router, or they'll get

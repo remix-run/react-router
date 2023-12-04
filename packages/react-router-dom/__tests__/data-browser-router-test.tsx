@@ -730,6 +730,109 @@ function testDomRouter(
         `);
     });
 
+    it("executes route loaders on navigation with decodeRoute", async () => {
+      let barDefer = createDeferred();
+
+      let router = createTestRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<Foo />} />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+            />
+          </Route>
+        ),
+        {
+          window: getWindow("/foo"),
+          async decodeResponse(response, defaultDecode) {
+            let contentType = response.headers.get("Content-Type");
+            if (contentType === "text/custom") {
+              const text = await response.text();
+              switch (text) {
+                case "bar":
+                  return { message: "Bar Loader" };
+                default:
+                  return text;
+              }
+            }
+
+            return defaultDecode();
+          },
+        }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <Link to="/bar">Link to Bar</Link>
+            <div id="output">
+              <p>{navigation.state}</p>
+              <Outlet />
+            </div>
+          </div>
+        );
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+      function Bar() {
+        let data = useLoaderData() as { message: string };
+        return <h1>{data.message}</h1>;
+      }
+
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>"
+        `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              loading
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>"
+        `);
+
+      barDefer.resolve(
+        new Response("bar", { headers: { "Content-Type": "text/custom" } })
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container.querySelector("#output")!))
+        .toMatchInlineSnapshot(`
+          "<div
+            id="output"
+          >
+            <p>
+              idle
+            </p>
+            <h1>
+              Bar Loader
+            </h1>
+          </div>"
+        `);
+    });
+
     it("executes lazy route loaders on navigation", async () => {
       let barDefer = createDeferred();
 
