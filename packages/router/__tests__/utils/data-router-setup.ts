@@ -4,11 +4,10 @@ import type {
   AgnosticRouteMatch,
   Fetcher,
   RouterFetchOptions,
-  HydrationState,
   InitialEntry,
   Router,
   RouterNavigateOptions,
-  FutureConfig,
+  RouterInit,
 } from "../../index";
 import {
   createMemoryHistory,
@@ -138,11 +137,8 @@ export const TASK_ROUTES: TestRouteObject[] = [
 
 type SetupOpts = {
   routes: TestRouteObject[];
-  basename?: string;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  hydrationData?: HydrationState;
-  future?: FutureConfig;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
@@ -172,12 +168,10 @@ export function createDeferred() {
 
 export function setup({
   routes,
-  basename,
   initialEntries,
   initialIndex,
-  hydrationData,
-  future,
-}: SetupOpts) {
+  ...routerInit
+}: Omit<RouterInit, "history" | "routes"> & SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
   // For example, the first navigation for /parent/foo would generate:
@@ -299,9 +293,9 @@ export function setup({
   // jsdom is making more and more properties non-configurable, so we inject
   // our own jest-friendly window.
   let testWindow = {
-    ...window,
+    ...(routerInit.window || window),
     location: {
-      ...window.location,
+      ...(routerInit.window || window).location,
       assign: jest.fn(),
       replace: jest.fn(),
     },
@@ -312,11 +306,9 @@ export function setup({
   jest.spyOn(history, "push");
   jest.spyOn(history, "replace");
   currentRouter = createRouter({
-    basename,
+    ...routerInit,
     history,
     routes: enhanceRoutes(routes),
-    hydrationData,
-    future,
     window: testWindow,
   }).initialize();
 

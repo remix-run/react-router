@@ -2714,4 +2714,118 @@ describe("a router", () => {
       expect(B.loaders.tasks.signal.aborted).toBe(true);
     });
   });
+
+  describe("decodeResponse", () => {
+    it("should unwrap json and text by default", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "json",
+            path: "/test",
+            loader: true,
+            children: [
+              {
+                id: "text",
+                index: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+      });
+
+      let A = await t.navigate("/test");
+      await A.loaders.json.resolve(
+        new Response(JSON.stringify({ message: "hello json" }), {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      await A.loaders.text.resolve(new Response("hello text"));
+
+      expect(t.router.state.loaderData).toEqual({
+        json: { message: "hello json" },
+        text: "hello text",
+      });
+    });
+
+    it("should allow custom implementations to be provided", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "test",
+            path: "/test",
+            loader: true,
+          },
+        ],
+        async decodeResponse(response) {
+          if (
+            response.headers.get("Content-Type") ===
+            "application/x-www-form-urlencoded"
+          ) {
+            let text = await response.text();
+            return new URLSearchParams(text);
+          }
+          throw new Error("Unknown Content-Type");
+        },
+      });
+
+      let A = await t.navigate("/test");
+      await A.loaders.test.resolve(
+        new Response(new URLSearchParams({ a: "1", b: "2" }).toString(), {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        })
+      );
+
+      expect(t.router.state.loaderData.test).toBeInstanceOf(URLSearchParams);
+      expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
+    });
+
+    it("handles errors thrown from unwrapResponse at the proper boundary", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            path: "/parent",
+            children: [
+              {
+                id: "child",
+                path: "child",
+                hasErrorBoundary: true,
+                children: [
+                  {
+                    id: "test",
+                    index: true,
+                    loader: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        async decodeResponse(response) {
+          throw new Error("Unable to unwrap response");
+        },
+      });
+
+      let A = await t.navigate("/parent/child");
+      await A.loaders.test.resolve(new Response("hello world"));
+
+      expect(t.router.state.loaderData.test).toBeUndefined();
+      expect(t.router.state.errors.child.message).toBe(
+        "Unable to unwrap response"
+      );
+    });
+  });
 });
