@@ -310,6 +310,9 @@ describe("useResolvedPath", () => {
           {`useLocation(): ${useLocation().pathname}`}
           {`useResolvedPath('.'): ${useResolvedPath(".").pathname}`}
           {`useResolvedPath('..'): ${useResolvedPath("..").pathname}`}
+          {`useResolvedPath('..', { relative: 'path' }): ${
+            useResolvedPath("..", { relative: "path" }).pathname
+          }`}
           {`useResolvedPath('baz/qux'): ${useResolvedPath("baz/qux").pathname}`}
           {`useResolvedPath('./baz/qux'): ${
             useResolvedPath("./baz/qux").pathname
@@ -328,6 +331,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
@@ -335,6 +339,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
@@ -342,6 +347,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /foo
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
@@ -349,6 +355,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo
           useResolvedPath('..'): /
+          useResolvedPath('..', { relative: 'path' }): /
           useResolvedPath('baz/qux'): /foo/baz/qux
           useResolvedPath('./baz/qux'): /foo/baz/qux
 
@@ -356,6 +363,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo
           useResolvedPath('..'): /foo
+          useResolvedPath('..', { relative: 'path' }): /
           useResolvedPath('baz/qux'): /foo/baz/qux
           useResolvedPath('./baz/qux'): /foo/baz/qux
 
@@ -373,6 +381,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
@@ -380,6 +389,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
@@ -387,6 +397,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /foo
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
@@ -394,6 +405,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
@@ -401,6 +413,7 @@ describe("useResolvedPath", () => {
           useLocation(): /foo/bar
           useResolvedPath('.'): /foo/bar
           useResolvedPath('..'): /foo
+          useResolvedPath('..', { relative: 'path' }): /foo
           useResolvedPath('baz/qux'): /foo/bar/baz/qux
           useResolvedPath('./baz/qux'): /foo/bar/baz/qux
 
