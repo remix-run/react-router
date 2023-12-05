@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.21.0-pre.2
+
+### Patch Changes
+
+- [Remove] Fix server future plumbing ([`f9d7ed62`](https://github.com/remix-run/react-router/commit/f9d7ed62904766013d05a1642232d73e47f3bc27))
+- Updated dependencies:
+  - `react-router@6.21.0-pre.2`
+
 ## 6.21.0-pre.1
 
 ### Patch Changes
