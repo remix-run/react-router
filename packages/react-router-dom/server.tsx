@@ -25,6 +25,7 @@ import {
 } from "react-router";
 import type {
   DataRouteObject,
+  FutureConfig,
   Location,
   RouteObject,
   To,
@@ -43,6 +44,7 @@ export interface StaticRouterProps {
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
+  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -53,6 +55,7 @@ export function StaticRouter({
   basename,
   children,
   location: locationProp = "/",
+  future,
 }: StaticRouterProps) {
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);
@@ -75,6 +78,7 @@ export function StaticRouter({
       location={location}
       navigationType={action}
       navigator={staticNavigator}
+      future={future}
       static={true}
     />
   );
@@ -110,6 +114,9 @@ export function StaticRouterProvider({
     static: true,
     staticContext: context,
     basename: context.basename || "/",
+    future: {
+      v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+    },
   };
 
   let fetchersContext = new Map();
@@ -270,7 +277,9 @@ export function createStaticRouter(
   context: StaticHandlerContext,
   opts: {
     // Only accept future flags that impact the server render
-    future?: Partial<Pick<RouterFutureConfig, "v7_partialHydration">>;
+    future?: Partial<
+      Pick<RouterFutureConfig, "v7_partialHydration" | "v7_relativeSplatPath">
+    >;
   } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
@@ -305,6 +314,7 @@ export function createStaticRouter(
         v7_normalizeFormMethod: false,
         v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
+        v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
       };
     },
     get state() {

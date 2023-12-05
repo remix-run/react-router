@@ -104,6 +104,7 @@ export type {
   DataRouteObject,
   ErrorResponse,
   Fetcher,
+  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
@@ -666,6 +667,9 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
+      future: {
+        v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+      },
     }),
     [router, navigator, basename]
   );
@@ -764,6 +768,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      future={future}
     />
   );
 }
@@ -814,6 +819,7 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      future={future}
     />
   );
 }
@@ -860,6 +866,7 @@ function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      future={future}
     />
   );
 }
@@ -1558,10 +1565,8 @@ export function useFormAction(
   // object referenced by useMemo inside useResolvedPath
   let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
-  // Previously we set the default action to ".". The problem with this is that
-  // `useResolvedPath(".")` excludes search params of the resolved URL. This is
-  // the intended behavior of when "." is specifically provided as
-  // the form action, but inconsistent w/ browsers when the action is omitted.
+  // If no action was specified, browsers will persist current search params
+  // when determining the path, so match that behavior
   // https://github.com/remix-run/remix/issues/927
   let location = useLocation();
   if (action == null) {

@@ -63,6 +63,8 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 
 <docs-info>`<Link to>` with a `..` behaves differently from a normal `<a href>` when the current URL ends with `/`. `<Link to>` ignores the trailing slash, and removes one URL segment for each `..`. But an `<a href>` value handles `..` differently when the current URL ends with `/` vs when it does not.</docs-info>
 
+<docs-info>Please see the [Splat Paths][relativesplatpath] section on the `useResolvedPath` docs for a note on the behavior of the `future.v7_relativeSplatPath` future flag for relative `<Link to>` behavior within splat routes</docs-info>
+
 ## `relative`
 
 By default, links are relative to the route hierarchy (`relative="route"`), so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing. You can opt into this behavior with `relative="path"`:
@@ -201,3 +203,4 @@ function ImageLink(to) {
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
 [picking-a-router]: ../routers/picking-a-router
 [navlink]: ./nav-link
+[relativesplatpath]: ../hooks/use-resolved-path#splat-paths

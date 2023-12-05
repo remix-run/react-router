@@ -150,6 +150,8 @@ submit(null, {
 <Form action="/logout" method="post" />;
 ```
 
+<docs-info>Please see the [Splat Paths][relativesplatpath] section on the `useResolvedPath` docs for a note on the behavior of the `future.v7_relativeSplatPath` future flag for relative `useSubmit()` `action` behavior within splat routes</docs-info>
+
 Because submissions are navigations, the options may also contain the other navigation related props from [`<Form>`][form] such as:
 
 - `fetcherKey`
@@ -170,3 +172,4 @@ The `unstable_flushSync` option tells React Router DOM to wrap the initial state
 [form]: ../components/form
 [flush-sync]: https://react.dev/reference/react-dom/flushSync
 [start-transition]: https://react.dev/reference/react/startTransition
+[relativesplatpath]: ../hooks/use-resolved-path#splat-paths
