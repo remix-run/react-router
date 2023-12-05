@@ -168,6 +168,7 @@ We fixed a splat route path-resolution bug in `6.19.0`, but later determined a l
 The buggy behavior is that the default behavior when resolving relative paths inside a splat route would _ignore_ any splat (`*`) portion of the current route path.
 
 **Background**
+
 This decision was originally made thinking that it would make the concept of nested different sections of your apps in `<Routes>` easier if relative routing would _replace_ the current splat:
 
 ```jsx
@@ -258,6 +259,7 @@ let router = createBrowserRouter({
 This is just a compounded issue from the above because the default location for a `Form` to submit to is itself (`"."`) - and if we ignore the splat portion, that now resolves to the parent route.
 
 **The Solution**
+
 If you are leveraging this behavior, it's recommended to enable the `future.v7_relativeSplatPath` flag, move your splat to it's own `Route`, and leverage `../` for any links to "sibling" pages:
 
 ```jsx
