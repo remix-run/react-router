@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.21.0-pre.1
+
+### Patch Changes
+
+- [REMOVE] Fix plumbing of future flags ([`558d7936`](https://github.com/remix-run/react-router/commit/558d7936cc8fe643374a2c9a9fdcf022e8c4c939))
+
 ## 6.21.0-pre.0
 
 ### Minor Changes
