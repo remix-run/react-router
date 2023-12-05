@@ -6,9 +6,9 @@
 "@remix-run/router": minor
 ---
 
-Add a new `future.v7_relativeSplatPath` flag to implenent a breaking bug fix to relative routing when inside a splat route.
+Add a new `future.v7_relativeSplatPath` flag to implement a breaking bug fix to relative routing when inside a splat route.
 
-This fix was originally added in [#10983](https://github.com/remix-run/react-router/issues/10983) and was later reverted in [#11078](https://github.com/remix-run/react-router/issues/110788) because it was determined that a large number of existing applications were relying on the buggy behavior (see [#11052](https://github.com/remix-run/react-router/issues/11052))
+This fix was originally added in [#10983](https://github.com/remix-run/react-router/issues/10983) and was later reverted in [#11078](https://github.com/remix-run/react-router/pull/11078) because it was determined that a large number of existing applications were relying on the buggy behavior (see [#11052](https://github.com/remix-run/react-router/issues/11052))
 
 **The Bug**
 The buggy behavior is that without this flag, the default behavior when resolving relative paths is to _ignore_ any splat (`*`) portion of the current route path.
@@ -52,7 +52,7 @@ Now, all links and route paths are relative to the router above them. This makes
 
 **The Problem**
 
-The problem is that this concept of ignoring part of a pth breaks a lot of other assumptions in React Router - namely that `"."` always means the current location pathname for that route. When we ignore the splat portion, we start getting invalid paths when using `"."`:
+The problem is that this concept of ignoring part of a path breaks a lot of other assumptions in React Router - namely that `"."` always means the current location pathname for that route. When we ignore the splat portion, we start getting invalid paths when using `"."`:
 
 ```jsx
 // If we are on URL /dashboard/team, and we want to link to /dashboard/team:

@@ -13,122 +13,127 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
-  - [v6.20.1](#v6201)
-    - [Patch Changes](#patch-changes)
-  - [v6.20.0](#v6200)
-    - [Minor Changes](#minor-changes)
-    - [Patch Changes](#patch-changes-1)
-  - [v6.19.0](#v6190)
+  - [v6.21.0](#v6210)
     - [What's Changed](#whats-changed)
-      - [`unstable_flushSync` API](#unstable_flushsync-api)
+      - [`future.v7_relativeSplatPath`](#futurev7_relativesplatpath)
+    - [Minor Changes](#minor-changes)
+    - [Patch Changes](#patch-changes)
+  - [v6.20.1](#v6201)
+    - [Patch Changes](#patch-changes-1)
+  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-1)
     - [Patch Changes](#patch-changes-2)
-  - [v6.18.0](#v6180)
+  - [v6.19.0](#v6190)
     - [What's Changed](#whats-changed-1)
-      - [New Fetcher APIs](#new-fetcher-apis)
-      - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
+      - [`unstable_flushSync` API](#unstable_flushsync-api)
     - [Minor Changes](#minor-changes-2)
     - [Patch Changes](#patch-changes-3)
-  - [v6.17.0](#v6170)
+  - [v6.18.0](#v6180)
     - [What's Changed](#whats-changed-2)
-      - [View Transitions 🚀](#view-transitions-)
+      - [New Fetcher APIs](#new-fetcher-apis)
+      - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
     - [Minor Changes](#minor-changes-3)
     - [Patch Changes](#patch-changes-4)
-  - [v6.16.0](#v6160)
+  - [v6.17.0](#v6170)
+    - [What's Changed](#whats-changed-3)
+      - [View Transitions 🚀](#view-transitions-)
     - [Minor Changes](#minor-changes-4)
     - [Patch Changes](#patch-changes-5)
-  - [v6.15.0](#v6150)
+  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-5)
     - [Patch Changes](#patch-changes-6)
-  - [v6.14.2](#v6142)
-    - [Patch Changes](#patch-changes-7)
-  - [v6.14.1](#v6141)
-    - [Patch Changes](#patch-changes-8)
-  - [v6.14.0](#v6140)
-    - [What's Changed](#whats-changed-3)
-      - [JSON/Text Submissions](#jsontext-submissions)
+  - [v6.15.0](#v6150)
     - [Minor Changes](#minor-changes-6)
+    - [Patch Changes](#patch-changes-7)
+  - [v6.14.2](#v6142)
+    - [Patch Changes](#patch-changes-8)
+  - [v6.14.1](#v6141)
     - [Patch Changes](#patch-changes-9)
-  - [v6.13.0](#v6130)
+  - [v6.14.0](#v6140)
     - [What's Changed](#whats-changed-4)
+      - [JSON/Text Submissions](#jsontext-submissions)
     - [Minor Changes](#minor-changes-7)
     - [Patch Changes](#patch-changes-10)
-  - [v6.12.1](#v6121)
-    - [Patch Changes](#patch-changes-11)
-  - [v6.12.0](#v6120)
+  - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-5)
-      - [`React.startTransition` support](#reactstarttransition-support)
     - [Minor Changes](#minor-changes-8)
+    - [Patch Changes](#patch-changes-11)
+  - [v6.12.1](#v6121)
     - [Patch Changes](#patch-changes-12)
-  - [v6.11.2](#v6112)
-    - [Patch Changes](#patch-changes-13)
-  - [v6.11.1](#v6111)
-    - [Patch Changes](#patch-changes-14)
-  - [v6.11.0](#v6110)
-    - [Minor Changes](#minor-changes-9)
-    - [Patch Changes](#patch-changes-15)
-  - [v6.10.0](#v6100)
+  - [v6.12.0](#v6120)
     - [What's Changed](#whats-changed-6)
+      - [`React.startTransition` support](#reactstarttransition-support)
+    - [Minor Changes](#minor-changes-9)
+    - [Patch Changes](#patch-changes-13)
+  - [v6.11.2](#v6112)
+    - [Patch Changes](#patch-changes-14)
+  - [v6.11.1](#v6111)
+    - [Patch Changes](#patch-changes-15)
+  - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-10)
     - [Patch Changes](#patch-changes-16)
-  - [v6.9.0](#v690)
+  - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-7)
-      - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
-      - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
     - [Minor Changes](#minor-changes-11)
     - [Patch Changes](#patch-changes-17)
-  - [v6.8.2](#v682)
-    - [Patch Changes](#patch-changes-18)
-  - [v6.8.1](#v681)
-    - [Patch Changes](#patch-changes-19)
-  - [v6.8.0](#v680)
+  - [v6.9.0](#v690)
+    - [What's Changed](#whats-changed-8)
+      - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
+      - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
     - [Minor Changes](#minor-changes-12)
+    - [Patch Changes](#patch-changes-18)
+  - [v6.8.2](#v682)
+    - [Patch Changes](#patch-changes-19)
+  - [v6.8.1](#v681)
     - [Patch Changes](#patch-changes-20)
-  - [v6.7.0](#v670)
+  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-13)
     - [Patch Changes](#patch-changes-21)
-  - [v6.6.2](#v662)
-    - [Patch Changes](#patch-changes-22)
-  - [v6.6.1](#v661)
-    - [Patch Changes](#patch-changes-23)
-  - [v6.6.0](#v660)
-    - [What's Changed](#whats-changed-8)
+  - [v6.7.0](#v670)
     - [Minor Changes](#minor-changes-14)
+    - [Patch Changes](#patch-changes-22)
+  - [v6.6.2](#v662)
+    - [Patch Changes](#patch-changes-23)
+  - [v6.6.1](#v661)
     - [Patch Changes](#patch-changes-24)
-  - [v6.5.0](#v650)
+  - [v6.6.0](#v660)
     - [What's Changed](#whats-changed-9)
     - [Minor Changes](#minor-changes-15)
     - [Patch Changes](#patch-changes-25)
-  - [v6.4.5](#v645)
-    - [Patch Changes](#patch-changes-26)
-  - [v6.4.4](#v644)
-    - [Patch Changes](#patch-changes-27)
-  - [v6.4.3](#v643)
-    - [Patch Changes](#patch-changes-28)
-  - [v6.4.2](#v642)
-    - [Patch Changes](#patch-changes-29)
-  - [v6.4.1](#v641)
-    - [Patch Changes](#patch-changes-30)
-  - [v6.4.0](#v640)
+  - [v6.5.0](#v650)
     - [What's Changed](#whats-changed-10)
-      - [Remix Data APIs](#remix-data-apis)
-    - [Patch Changes](#patch-changes-31)
-  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-16)
-  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-26)
+  - [v6.4.5](#v645)
+    - [Patch Changes](#patch-changes-27)
+  - [v6.4.4](#v644)
+    - [Patch Changes](#patch-changes-28)
+  - [v6.4.3](#v643)
+    - [Patch Changes](#patch-changes-29)
+  - [v6.4.2](#v642)
+    - [Patch Changes](#patch-changes-30)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-31)
+  - [v6.4.0](#v640)
+    - [What's Changed](#whats-changed-11)
+      - [Remix Data APIs](#remix-data-apis)
     - [Patch Changes](#patch-changes-32)
-  - [v6.2.1](#v621)
-    - [Patch Changes](#patch-changes-33)
-  - [v6.2.0](#v620)
+  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-17)
+  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-33)
+  - [v6.2.1](#v621)
     - [Patch Changes](#patch-changes-34)
-  - [v6.1.1](#v611)
-    - [Patch Changes](#patch-changes-35)
-  - [v6.1.0](#v610)
+  - [v6.2.0](#v620)
     - [Minor Changes](#minor-changes-18)
+    - [Patch Changes](#patch-changes-35)
+  - [v6.1.1](#v611)
     - [Patch Changes](#patch-changes-36)
-  - [v6.0.1](#v601)
+  - [v6.1.0](#v610)
+    - [Minor Changes](#minor-changes-19)
     - [Patch Changes](#patch-changes-37)
+  - [v6.0.1](#v601)
+    - [Patch Changes](#patch-changes-38)
   - [v6.0.0](#v600)
 
 </details>
@@ -151,6 +156,154 @@ To add a new release, copy from this template:
 **Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 
 -->
+
+## v6.21.0
+
+### What's Changed
+
+#### `future.v7_relativeSplatPath`
+
+We fixed a splat route path-resolution bug in `6.19.0`, but later determined a large number of applications were relying on the buggy behavior, so we reverted the fix in `6.20.1` (see [#10983](https://github.com/remix-run/react-router/issues/10983), [#11052](https://github.com/remix-run/react-router/issues/11052), [#11078](https://github.com/remix-run/react-router/issues/11078).
+
+The buggy behavior is that the default behavior when resolving relative paths inside a splat route would _ignore_ any splat (`*`) portion of the current route path.
+
+**Background**
+This decision was originally made thinking that it would make the concept of nested different sections of your apps in `<Routes>` easier if relative routing would _replace_ the current splat:
+
+```jsx
+<BrowserRouter>
+  <Routes>
+    <Route path="/" element={<Home />} />
+    <Route path="dashboard/*" element={<Dashboard />} />
+  </Routes>
+</BrowserRouter>
+```
+
+Any paths like `/dashboard`, `/dashboard/team`, `/dashboard/projects` will match the `Dashboard` route. The dashboard component itself can then render nested `<Routes>`:
+
+```jsx
+function Dashboard() {
+  return (
+    <div>
+      <h2>Dashboard</h2>
+      <nav>
+        <Link to="/">Dashboard Home</Link>
+        <Link to="team">Team</Link>
+        <Link to="projects">Projects</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<DashboardHome />} />
+        <Route path="team" element={<DashboardTeam />} />
+        <Route path="projects" element={<DashboardProjects />} />
+      </Routes>
+    </div>
+  );
+}
+```
+
+Now, all links and route paths are relative to the router above them. This makes code splitting and compartmentalizing your app really easy. You could render the `Dashboard` as its own independent app, or embed it into your large app without making any changes to it.
+
+**The Problem**
+
+The problem is that this concept of ignoring part of a path breaks a lot of other assumptions in React Router - namely that `"."` always means the current location pathname for that route. When we ignore the splat portion, we start getting invalid paths when using `"."`:
+
+```jsx
+// If we are on URL /dashboard/team, and we want to link to /dashboard/team:
+function DashboardTeam() {
+  // ❌ This is broken and results in <a href="/dashboard">
+  return <Link to=".">A broken link to the Current URL</Link>;
+
+  // ✅ This is fixed but super unintuitive since we're already at /dashboard/team!
+  return <Link to="./team">A broken link to the Current URL</Link>;
+}
+```
+
+We've also introduced an issue that we can no longer move our `DashboardTeam` component around our route hierarchy easily - since it behaves differently if we're underneath a non-splat route, such as `/dashboard/:widget`. Now, our `"."` links will, properly point to ourself _inclusive of the dynamic param value_ so behavior will break from it's corresponding usage in a `/dashboard/*` route.
+
+Furthermore, consider a nested splat route configuration:
+
+```jsx
+<BrowserRouter>
+  <Routes>
+    <Route path="dashboard">
+      <Route path="*" element={<Dashboard />} />
+    </Route>
+  </Routes>
+</BrowserRouter>
+```
+
+Now, a `<Link to=".">` and a `<Link to="..">` inside the `Dashboard` component go to the same place! That is definitely not correct!
+
+Another common issue arose in Data Routers (and Remix) where any `<Form>` should post to it's own route `action` if you the user doesn't specify a form action:
+
+```jsx
+let router = createBrowserRouter({
+  path: "/dashboard",
+  children: [
+    {
+      path: "*",
+      action: dashboardAction,
+      Component() {
+        // ❌ This form is broken!  It throws a 405 error when it submits because
+        // it tries to submit to /dashboard (without the splat value) and the parent
+        // `/dashboard` route doesn't have an action
+        return <Form method="post">...</Form>;
+      },
+    },
+  ],
+});
+```
+
+This is just a compounded issue from the above because the default location for a `Form` to submit to is itself (`"."`) - and if we ignore the splat portion, that now resolves to the parent route.
+
+**The Solution**
+If you are leveraging this behavior, it's recommended to enable the `future.v7_relativeSplatPath` flag, move your splat to it's own `Route`, and leverage `../` for any links to "sibling" pages:
+
+```jsx
+<BrowserRouter>
+  <Routes>
+    <Route path="dashboard">
+      <Route path="*" element={<Dashboard />} />
+    </Route>
+  </Routes>
+</BrowserRouter>
+
+function Dashboard() {
+  return (
+    <div>
+      <h2>Dashboard</h2>
+      <nav>
+        <Link to="..">Dashboard Home</Link>
+        <Link to="../team">Team</Link>
+        <Link to="../projects">Projects</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<DashboardHome />} />
+        <Route path="team" element={<DashboardTeam />} />
+        <Route path="projects" element={<DashboardProjects />} />
+      </Router>
+    </div>
+  );
+}
+```
+
+This way, `.` means "the full current pathname for my route" in all cases (including static, dynamic, and splat routes) and `..` always means "my parents pathname".
+
+For more information, please see the [`useResolvedPath` docs](https://reactrouter.com/hooks/use-resolved-path#splat-paths).
+
+### Minor Changes
+
+- Add a new `future.v7_relativeSplatPath` flag to implement a breaking bug fix to relative routing when inside a splat route. ([#11087](https://github.com/remix-run/react-router/pull/11087))
+
+### Patch Changes
+
+- Properly handle falsy error values in `ErrorBoundary`'s ([#11071](https://github.com/remix-run/react-router/pull/11071))
+- Catch and bubble errors thrown when trying to unwrap responses from `loader`/`action` functions ([#11061](https://github.com/remix-run/react-router/pull/11061))
+- Fix `relative="path"` issue when rendering `Link`/`NavLink` outside of matched routes ([#11062](https://github.com/remix-run/react-router/pull/11062))
+
+**Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 
 ## v6.20.1
 
