@@ -1,5 +1,16 @@
 # `@remix-run/node`
 
+## 2.4.0-pre.0
+
+### Minor Changes
+
+- Deprecate `DataFunctionArgs` in favor of `LoaderFunctionArgs`/`ActionFunctionArgs`. This is aimed at keeping the types aligned across server/client loaders/actions now that `clientLoader`/`clientActon` functions have `serverLoader`/`serverAction` parameters which differentiate `ClientLoaderFunctionArgs`/`ClientActionFunctionArgs`. ([#8173](https://github.com/remix-run/remix/pull/8173))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.4.0-pre.0`
+
 ## 2.3.1
 
 ### Patch Changes
