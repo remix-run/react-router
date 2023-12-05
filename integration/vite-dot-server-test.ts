@@ -26,8 +26,8 @@ test("Vite / .server file / named import in client fails with expected error", a
       }
     `,
   });
-  let client = viteBuild({ cwd })[0];
-  let stderr = client.stderr.toString("utf8");
+  let result = viteBuild({ cwd });
+  let stderr = result.stderr.toString("utf8");
   expect(stderr).toMatch(
     `"dotServerFile" is not exported by "app/utils.server.ts"`
   );
@@ -45,8 +45,8 @@ test("Vite / .server file / namespace import in client fails with expected error
       }
     `,
   });
-  let client = viteBuild({ cwd })[0];
-  let stderr = client.stderr.toString("utf8");
+  let result = viteBuild({ cwd });
+  let stderr = result.stderr.toString("utf8");
   expect(stderr).toMatch(
     `"dotServerFile" is not exported by "app/utils.server.ts"`
   );
@@ -64,8 +64,8 @@ test("Vite / .server file / default import in client fails with expected error",
       }
     `,
   });
-  let client = viteBuild({ cwd })[0];
-  let stderr = client.stderr.toString("utf8");
+  let result = viteBuild({ cwd });
+  let stderr = result.stderr.toString("utf8");
   expect(stderr).toMatch(`"default" is not exported by "app/utils.server.ts"`);
 });
 
@@ -81,8 +81,8 @@ test("Vite / .server dir / named import in client fails with expected error", as
       }
     `,
   });
-  let client = viteBuild({ cwd })[0];
-  let stderr = client.stderr.toString("utf8");
+  let result = viteBuild({ cwd });
+  let stderr = result.stderr.toString("utf8");
   expect(stderr).toMatch(
     `"dotServerDir" is not exported by "app/.server/utils.ts"`
   );
@@ -100,8 +100,8 @@ test("Vite / .server dir / namespace import in client fails with expected error"
       }
     `,
   });
-  let client = viteBuild({ cwd })[0];
-  let stderr = client.stderr.toString("utf8");
+  let result = viteBuild({ cwd });
+  let stderr = result.stderr.toString("utf8");
   expect(stderr).toMatch(
     `"dotServerDir" is not exported by "app/.server/utils.ts"`
   );
@@ -119,8 +119,8 @@ test("Vite / .server dir / default import in client fails with expected error", 
       }
     `,
   });
-  let client = viteBuild({ cwd })[0];
-  let stderr = client.stderr.toString("utf8");
+  let result = viteBuild({ cwd });
+  let stderr = result.stderr.toString("utf8");
   expect(stderr).toMatch(`"default" is not exported by "app/.server/utils.ts"`);
 });
 
@@ -142,9 +142,8 @@ test("Vite / `handle` with dynamic imports as an escape hatch for server-only co
       }
     `,
   });
-  let [client, server] = viteBuild({ cwd });
-  expect(client.status).toBe(0);
-  expect(server.status).toBe(0);
+  let { status } = viteBuild({ cwd });
+  expect(status).toBe(0);
 
   let lines = grep(
     path.join(cwd, "build/client"),
@@ -186,9 +185,8 @@ test("Vite / dead-code elimination for server exports", async () => {
       }
     `,
   });
-  let [client, server] = viteBuild({ cwd });
-  expect(client.status).toBe(0);
-  expect(server.status).toBe(0);
+  let { status } = viteBuild({ cwd });
+  expect(status).toBe(0);
 
   let lines = grep(
     path.join(cwd, "build/client"),

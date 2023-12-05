@@ -21,8 +21,8 @@ test("Vite / invalid route exports / expected build error", async () => {
       export const invalid2 = 2;
     `,
   });
-  let client = viteBuild({ cwd })[0];
-  let stderr = client.stderr.toString("utf8");
+  let result = viteBuild({ cwd });
+  let stderr = result.stderr.toString("utf8");
   expect(stderr).toMatch(
     "2 invalid route exports in `routes/fail-non-remix-exports.tsx`:\n  - `invalid1`\n  - `invalid2`"
   );
@@ -64,7 +64,6 @@ test("Vite / invalid route exports / ignore in mdx", async () => {
       # Hello World
     `,
   });
-  let [client, server] = viteBuild({ cwd });
-  expect(client.status).toBe(0);
-  expect(server.status).toBe(0);
+  let { status } = viteBuild({ cwd });
+  expect(status).toBe(0);
 });

@@ -3,8 +3,8 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build && vite build --ssr",
+    "dev": "remix vite:dev",
+    "build": "remix vite:build",
     "start": "remix-serve ./build/server/index.js",
     "typecheck": "tsc"
   },

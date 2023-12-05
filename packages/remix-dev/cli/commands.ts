@@ -11,6 +11,8 @@ import * as compiler from "../compiler";
 import * as devServer from "../devServer";
 import * as devServer_unstable from "../devServer_unstable";
 import type { RemixConfig } from "../config";
+import type { ViteDevOptions } from "../vite/dev";
+import type { ViteBuildOptions } from "../vite/build";
 import { readConfig } from "../config";
 import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
 import { detectPackageManager } from "./detectPackageManager";
@@ -132,6 +134,14 @@ export async function build(
   logger.info("built" + pc.gray(` (${prettyMs(Date.now() - start)})`));
 }
 
+export async function viteBuild(
+  root: string,
+  options: ViteBuildOptions = {}
+): Promise<void> {
+  let { build } = await import("../vite/build");
+  await build(root, options);
+}
+
 export async function watch(
   remixRootOrConfig: string | RemixConfig,
   mode?: string
@@ -172,6 +182,14 @@ export async function dev(
   devServer_unstable.serve(config, resolved);
 
   // keep `remix dev` alive by waiting indefinitely
+  await new Promise(() => {});
+}
+
+export async function viteDev(root: string, options: ViteDevOptions = {}) {
+  let { dev } = await import("../vite/dev");
+  await dev(root, options);
+
+  // keep `remix vite-dev` alive by waiting indefinitely
   await new Promise(() => {});
 }
 

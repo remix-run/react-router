@@ -3,7 +3,6 @@ import type { Readable } from "node:stream";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import resolveBin from "resolve-bin";
 import getPort from "get-port";
 import waitOn from "wait-on";
 
@@ -264,8 +263,8 @@ test.describe("Vite dev", () => {
     });
 
     let nodeBin = process.argv[0];
-    let viteBin = resolveBin.sync("vite");
-    devProc = spawn(nodeBin, [viteBin, "dev"], {
+    let remixBin = "node_modules/@remix-run/dev/dist/cli.js";
+    devProc = spawn(nodeBin, [remixBin, "vite:dev"], {
       cwd: projectDir,
       env: process.env,
       stdio: "pipe",

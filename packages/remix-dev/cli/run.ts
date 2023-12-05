@@ -92,6 +92,12 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     );
   }
 
+  let isBooleanFlag = (arg: string) => {
+    let index = argv.indexOf(arg);
+    let nextArg = argv[index + 1];
+    return !nextArg || nextArg.startsWith("-");
+  };
+
   let args = arg(
     {
       "--no-delete": Boolean,
@@ -100,7 +106,6 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--help": Boolean,
       "-h": "--help",
       "--json": Boolean,
-      "--sourcemap": Boolean,
       "--token": String,
       "--typescript": Boolean,
       "--no-typescript": Boolean,
@@ -109,12 +114,36 @@ export async function run(argv: string[] = process.argv.slice(2)) {
 
       // dev server
       "--command": String,
-      "-c": "--command",
       "--manual": Boolean,
       "--port": Number,
       "-p": "--port",
       "--tls-key": String,
       "--tls-cert": String,
+
+      ...(argv[0].startsWith("vite:")
+        ? {
+            // Vite commands
+            // --force and --port are already defined above
+            "--assetsInlineLimit": Number,
+            "--clearScreen": Boolean,
+            "--config": String,
+            "-c": "--config",
+            "--cors": Boolean,
+            "--emptyOutDir": Boolean,
+            "--host": isBooleanFlag("--host") ? Boolean : String,
+            "--logLevel": String,
+            "-l": "--logLevel",
+            "--minify": String,
+            "--mode": String,
+            "-m": "--mode",
+            "--open": isBooleanFlag("--open") ? Boolean : String,
+            "--strictPort": Boolean,
+          }
+        : {
+            // Non Vite commands
+            "-c": "--command",
+            "--sourcemap": Boolean,
+          }),
     },
     {
       argv,
@@ -172,6 +201,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       if (!process.env.NODE_ENV) process.env.NODE_ENV = "production";
       await commands.build(input[1], process.env.NODE_ENV, flags.sourcemap);
       break;
+    case "vite:build":
+      await commands.viteBuild(input[1], flags);
+      break;
     case "watch":
       if (!process.env.NODE_ENV) process.env.NODE_ENV = "development";
       await commands.watch(input[1], process.env.NODE_ENV);
@@ -186,6 +218,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     }
     case "dev":
       await commands.dev(input[1], flags);
+      break;
+    case "vite:dev":
+      await commands.viteDev(input[1], flags);
       break;
     default:
       // `remix ./my-project` is shorthand for `remix dev ./my-project`
