@@ -7,8 +7,9 @@ import {
 } from "./responses";
 import type {
   ActionFunction,
-  DataFunctionArgs,
+  ActionFunctionArgs,
   LoaderFunction,
+  LoaderFunctionArgs,
 } from "./routeModules";
 
 /**
@@ -35,7 +36,7 @@ export async function callRouteActionRR({
 }: {
   request: Request;
   action: ActionFunction;
-  params: DataFunctionArgs["params"];
+  params: ActionFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
 }) {
@@ -64,7 +65,7 @@ export async function callRouteLoaderRR({
 }: {
   request: Request;
   loader: LoaderFunction;
-  params: DataFunctionArgs["params"];
+  params: LoaderFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
 }) {

@@ -10,7 +10,7 @@ import {
   useLoaderData,
   useMatches,
 } from "@remix-run/react";
-import type { DataFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 
 test("renders a route", () => {
@@ -128,7 +128,7 @@ test("fetchers work", async () => {
 });
 
 test("can pass a predefined loader", () => {
-  async function loader(_args: DataFunctionArgs) {
+  async function loader(_args: LoaderFunctionArgs) {
     return json({ hi: "there" });
   }
 

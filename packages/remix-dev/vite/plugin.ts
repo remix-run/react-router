@@ -49,7 +49,10 @@ type SupportedRemixConfig = Pick<RemixUserConfig, SupportedRemixConfigKey>;
 
 const ROUTE_EXPORTS = new Set([
   "ErrorBoundary",
+  "HydrateFallback",
   "action",
+  "clientAction",
+  "clientLoader",
   "default", // component
   "handle",
   "headers",
@@ -440,6 +443,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         caseSensitive: route.caseSensitive,
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
+        hasClientAction: sourceExports.includes("clientAction"),
+        hasClientLoader: sourceExports.includes("clientLoader"),
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         ...resolveBuildAssetPaths(
           pluginConfig,
@@ -497,6 +502,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         }`,
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
+        hasClientAction: sourceExports.includes("clientAction"),
+        hasClientLoader: sourceExports.includes("clientLoader"),
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         imports: [],
       };
@@ -1158,7 +1165,14 @@ function addRefreshWrapper(
 ): string {
   let isRoute = getRoute(pluginConfig, id);
   let acceptExports = isRoute
-    ? ["handle", "meta", "links", "shouldRevalidate"]
+    ? [
+        "clientAction",
+        "clientLoader",
+        "handle",
+        "meta",
+        "links",
+        "shouldRevalidate",
+      ]
     : [];
   return (
     REACT_REFRESH_HEADER.replace("__SOURCE__", JSON.stringify(id)) +
@@ -1249,7 +1263,9 @@ async function getRouteMetadata(
       resolveRelativeRouteFilePath(route, pluginConfig)
     )}?import`, // Ensure the Vite dev server responds with a JS module
     hasAction: sourceExports.includes("action"),
+    hasClientAction: sourceExports.includes("clientAction"),
     hasLoader: sourceExports.includes("loader"),
+    hasClientLoader: sourceExports.includes("clientLoader"),
     hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
     imports: [],
   };

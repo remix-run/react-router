@@ -71,11 +71,23 @@ export let detectLoaderChanges = async (
             );
 
             let contents = "module.exports = {};";
-            if (theExports.includes("loader")) {
+            if (
+              theExports.includes("loader") &&
+              theExports.includes("clientLoader")
+            ) {
+              contents = `export { loader, clientLoader } from ${JSON.stringify(
+                `./${file}`
+              )};`;
+            } else if (theExports.includes("loader")) {
               contents = `export { loader } from ${JSON.stringify(
                 `./${file}`
               )};`;
+            } else if (theExports.includes("clientLoader")) {
+              contents = `export { clientLoader } from ${JSON.stringify(
+                `./${file}`
+              )};`;
             }
+
             return {
               contents,
               resolveDir: ctx.config.appDirectory,

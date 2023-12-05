@@ -98,6 +98,8 @@ export async function create({
           imports: resolveImports(output.imports),
           hasAction: sourceExports.includes("action"),
           hasLoader: sourceExports.includes("loader"),
+          hasClientAction: sourceExports.includes("clientAction"),
+          hasClientLoader: sourceExports.includes("clientLoader"),
           hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
         };
       }

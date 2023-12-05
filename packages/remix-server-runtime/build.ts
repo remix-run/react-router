@@ -1,4 +1,4 @@
-import type { DataFunctionArgs } from "./routeModules";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "./routeModules";
 import type { AssetsManifest, EntryContext, FutureConfig } from "./entry";
 import type { ServerRouteManifest } from "./routes";
 import type { AppLoadContext } from "./data";
@@ -29,11 +29,13 @@ export interface HandleDocumentRequestFunction {
 }
 
 export interface HandleDataRequestFunction {
-  (response: Response, args: DataFunctionArgs): Promise<Response> | Response;
+  (response: Response, args: LoaderFunctionArgs | ActionFunctionArgs):
+    | Promise<Response>
+    | Response;
 }
 
 export interface HandleErrorFunction {
-  (error: unknown, args: DataFunctionArgs): void;
+  (error: unknown, args: LoaderFunctionArgs | ActionFunctionArgs): void;
 }
 
 /**

@@ -16,31 +16,80 @@ export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule;
 }
 
-// Context is always provided in Remix, and typed for module augmentation support.
-// RR also doesn't export DataFunctionArgs, so we extend the two interfaces here
-// even tough they're identical under the hood
+/**
+ * @deprecated Use `LoaderFunctionArgs`/`ActionFunctionArgs` instead
+ */
 export type DataFunctionArgs = RRActionFunctionArgs<AppLoadContext> &
   RRLoaderFunctionArgs<AppLoadContext> & {
+    // Context is always provided in Remix, and typed for module augmentation support.
+    // RR also doesn't export DataFunctionArgs, so we extend the two interfaces here
+    // even tough they're identical under the hood
     context: AppLoadContext;
   };
 
 /**
- * A function that handles data mutations for a route.
+ * A function that handles data mutations for a route on the server
  */
 export type ActionFunction = (
-  args: DataFunctionArgs
+  args: ActionFunctionArgs
 ) => ReturnType<RRActionFunction>;
 
-export type ActionFunctionArgs = DataFunctionArgs;
+/**
+ * Arguments passed to a route `action` function
+ */
+export type ActionFunctionArgs = RRActionFunctionArgs<AppLoadContext> & {
+  // Context is always provided in Remix, and typed for module augmentation support.
+  context: AppLoadContext;
+};
 
 /**
- * A function that loads data for a route.
+ * A function that handles data mutations for a route on the client
+ * @private Public API is exported from @remix-run/react
+ */
+type ClientActionFunction = (
+  args: ClientActionFunctionArgs
+) => ReturnType<RRActionFunction>;
+
+/**
+ * Arguments passed to a route `clientAction` function
+ * @private Public API is exported from @remix-run/react
+ */
+type ClientActionFunctionArgs = RRActionFunctionArgs<undefined> & {
+  serverAction: <T = AppData>() => Promise<SerializeFrom<T>>;
+};
+
+/**
+ * A function that loads data for a route on the server
  */
 export type LoaderFunction = (
-  args: DataFunctionArgs
+  args: LoaderFunctionArgs
 ) => ReturnType<RRLoaderFunction>;
 
-export type LoaderFunctionArgs = DataFunctionArgs;
+/**
+ * Arguments passed to a route `loader` function
+ */
+export type LoaderFunctionArgs = RRLoaderFunctionArgs<AppLoadContext> & {
+  // Context is always provided in Remix, and typed for module augmentation support.
+  context: AppLoadContext;
+};
+
+/**
+ * A function that loads data for a route on the client
+ * @private Public API is exported from @remix-run/react
+ */
+type ClientLoaderFunction = ((
+  args: ClientLoaderFunctionArgs
+) => ReturnType<RRLoaderFunction>) & {
+  hydrate?: boolean;
+};
+
+/**
+ * Arguments passed to a route `clientLoader` function
+ * @private Public API is exported from @remix-run/react
+ */
+type ClientLoaderFunctionArgs = RRLoaderFunctionArgs<undefined> & {
+  serverLoader: <T = AppData>() => Promise<SerializeFrom<T>>;
+};
 
 export type HeadersArgs = {
   loaderHeaders: Headers;
@@ -200,7 +249,10 @@ type LdJsonValue = LdJsonPrimitive | LdJsonObject | LdJsonArray;
 export type RouteHandle = unknown;
 
 export interface EntryRouteModule {
+  clientAction?: ClientActionFunction;
+  clientLoader?: ClientLoaderFunction;
   ErrorBoundary?: any; // Weakly typed because server-runtime is not React-aware
+  HydrateFallback?: any; // Weakly typed because server-runtime is not React-aware
   default: any; // Weakly typed because server-runtime is not React-aware
   handle?: RouteHandle;
   links?: LinksFunction;
