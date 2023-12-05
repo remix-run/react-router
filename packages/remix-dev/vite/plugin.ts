@@ -349,6 +349,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         relativeAssetsBuildDirectory,
         future: {
           v3_fetcherPersist: options.future?.v3_fetcherPersist === true,
+          v3_relativeSplatPath: options.future?.v3_relativeSplatPath === true,
         },
       };
     };

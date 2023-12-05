@@ -16,6 +16,7 @@ export interface EntryContext {
 
 export interface FutureConfig {
   v3_fetcherPersist: boolean;
+  v3_relativeSplatPath: boolean;
 }
 
 export interface AssetsManifest {

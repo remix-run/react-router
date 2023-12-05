@@ -44,7 +44,11 @@ function derive(build: ServerBuild, mode?: string) {
   let routes = createRoutes(build.routes);
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
-  let staticHandler = createStaticHandler(dataRoutes);
+  let staticHandler = createStaticHandler(dataRoutes, {
+    future: {
+      v7_relativeSplatPath: build.future?.v3_relativeSplatPath,
+    },
+  });
 
   let errorHandler =
     build.entry.module.handleError ||

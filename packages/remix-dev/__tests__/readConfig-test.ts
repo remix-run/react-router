@@ -37,6 +37,7 @@ describe("readConfig", () => {
         "entryServerFilePath": Any<String>,
         "future": {
           "v3_fetcherPersist": false,
+          "v3_relativeSplatPath": false,
         },
         "mdx": undefined,
         "postcss": true,
