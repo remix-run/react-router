@@ -8,5 +8,11 @@
     "react-router-native": "6.20.1",
     "@remix-run/router": "1.13.1"
   },
-  "changesets": []
+  "changesets": [
+    "catch-unwrap-error",
+    "handle-falsy-errors",
+    "partial-hydration-data",
+    "pretty-dolphins-relax",
+    "relative-splat-path"
+  ]
 }
