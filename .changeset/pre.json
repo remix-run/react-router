@@ -10,6 +10,7 @@
   },
   "changesets": [
     "catch-unwrap-error",
+    "empty-ligers-walk",
     "handle-falsy-errors",
     "partial-hydration-data",
     "pretty-dolphins-relax",
