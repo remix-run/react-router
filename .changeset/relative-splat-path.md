@@ -42,7 +42,7 @@ function Dashboard() {
         <Route path="/" element={<DashboardHome />} />
         <Route path="team" element={<DashboardTeam />} />
         <Route path="projects" element={<DashboardProjects />} />
-      </Router>
+      </Routes>
     </div>
   );
 }

@@ -54,6 +54,8 @@ The `navigate` function has two signatures:
 - Either pass a `To` value (same type as `<Link to>`) with an optional second `options` argument (similar to the props you can pass to [`<Link>`][link]), or
 - Pass the delta you want to go in the history stack. For example, `navigate(-1)` is equivalent to hitting the back button
 
+<docs-info>Please see the [Splat Paths][relativesplatpath] section on the `useResolvedPath` docs for a note on the behavior of the `future.v7_relativeSplatPath` future flag for relative `useNavigate()` behavior within splat routes</docs-info>
+
 ## `options.replace`
 
 Specifying `replace: true` will cause the navigation to replace the current entry in the history stack instead of adding a new one.
@@ -119,3 +121,4 @@ The `unstable_viewTransition` option enables a [View Transition][view-transition
 [picking-a-router]: ../routers/picking-a-router
 [flush-sync]: https://react.dev/reference/react-dom/flushSync
 [start-transition]: https://react.dev/reference/react/startTransition
+[relativesplatpath]: ../hooks/use-resolved-path#splat-paths
