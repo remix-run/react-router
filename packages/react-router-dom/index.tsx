@@ -667,9 +667,6 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
-      future: {
-        v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-      },
     }),
     [router, navigator, basename]
   );
@@ -691,6 +688,9 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
+                future={{
+                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+                }}
               >
                 {state.initialized ? (
                   <DataRoutes
