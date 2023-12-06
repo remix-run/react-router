@@ -13,6 +13,8 @@ import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
   DataResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
   DeferredData,
   DeferredResult,
   DetectErrorBoundaryFunction,
@@ -370,6 +372,7 @@ export interface RouterInit {
    * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
+  dataStrategy?: DataStrategyFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -751,6 +754,8 @@ export function createRouter(init: RouterInit): Router {
     init.routes.length > 0,
     "You must provide a non-empty routes array to createRouter"
   );
+
+  const dataStrategy = init.dataStrategy || defaultDataStrategy;
 
   let mapRouteProperties: MapRoutePropertiesFunction;
   if (init.mapRouteProperties) {
@@ -1567,7 +1572,7 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      result = await callLoaderOrAction(
+      result = await loadOrMutateData(
         "action",
         request,
         actionMatch,
@@ -1761,8 +1766,8 @@ export function createRouter(init: RouterInit): Router {
       );
     }
 
-    let { results, loaderResults, fetcherResults } =
-      await callLoadersAndMaybeResolveData(
+    let { loaderResults, fetcherResults } =
+      await loadDataAndMaybeResolveDeferred(
         state.matches,
         matches,
         matchesToLoad,
@@ -1786,7 +1791,7 @@ export function createRouter(init: RouterInit): Router {
     revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
-    let redirect = findRedirect(results);
+    let redirect = findRedirect([...loaderResults, ...fetcherResults]);
     if (redirect) {
       if (redirect.idx >= matchesToLoad.length) {
         // If this redirect came from a fetcher make sure we mark it in
@@ -1961,7 +1966,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let actionResult = await callLoaderOrAction(
+    let actionResult = await loadOrMutateData(
       "action",
       fetchRequest,
       match,
@@ -2086,8 +2091,8 @@ export function createRouter(init: RouterInit): Router {
       abortPendingFetchRevalidations
     );
 
-    let { results, loaderResults, fetcherResults } =
-      await callLoadersAndMaybeResolveData(
+    let { loaderResults, fetcherResults } =
+      await loadDataAndMaybeResolveDeferred(
         state.matches,
         matches,
         matchesToLoad,
@@ -2108,7 +2113,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
-    let redirect = findRedirect(results);
+    let redirect = findRedirect([...loaderResults, ...fetcherResults]);
     if (redirect) {
       if (redirect.idx >= matchesToLoad.length) {
         // If this redirect came from a fetcher make sure we mark it in
@@ -2206,7 +2211,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let result: DataResult = await callLoaderOrAction(
+    let result: DataResult = await loadOrMutateData(
       "loader",
       fetchRequest,
       match,
@@ -2391,52 +2396,126 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  async function callLoadersAndMaybeResolveData(
-    currentMatches: AgnosticDataRouteMatch[],
+  async function loadOrMutateData(
+    type: "loader" | "action",
+    request: Request,
+    match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
-    matchesToLoad: AgnosticDataRouteMatch[],
-    fetchersToLoad: RevalidatingFetcher[],
-    request: Request
-  ) {
-    // Call all navigation loaders and revalidating fetcher loaders in parallel,
-    // then slice off the results into separate arrays so we can handle them
-    // accordingly
-    let results = await Promise.all([
-      ...matchesToLoad.map((match) =>
-        callLoaderOrAction(
-          "loader",
+    manifest: RouteManifest,
+    mapRouteProperties: MapRoutePropertiesFunction,
+    basename: string,
+    v7_relativeSplatPath: boolean,
+    opts: {
+      isStaticRequest?: boolean;
+      isRouteRequest?: boolean;
+      requestContext?: unknown;
+    } = {}
+  ): Promise<DataResult> {
+    let [result] = await dataStrategy({
+      matches: [match],
+      request,
+      type,
+      defaultStrategy(match) {
+        return callLoaderOrAction(
+          type,
           request,
           match,
           matches,
           manifest,
           mapRouteProperties,
           basename,
-          future.v7_relativeSplatPath
-        )
-      ),
-      ...fetchersToLoad.map((f) => {
-        if (f.matches && f.match && f.controller) {
-          return callLoaderOrAction(
-            "loader",
-            createClientSideRequest(init.history, f.path, f.controller.signal),
-            f.match,
-            f.matches,
-            manifest,
-            mapRouteProperties,
-            basename,
-            future.v7_relativeSplatPath
-          );
-        } else {
-          let error: ErrorResult = {
-            type: ResultType.error,
-            error: getInternalRouterError(404, { pathname: f.path }),
-          };
-          return error;
-        }
-      }),
+          v7_relativeSplatPath,
+          opts
+        );
+      },
+    });
+
+    return result;
+  }
+
+  async function loadDataAndMaybeResolveDeferred(
+    currentMatches: AgnosticDataRouteMatch[],
+    matches: AgnosticDataRouteMatch[],
+    matchesToLoad: AgnosticDataRouteMatch[],
+    fetchersToLoad: RevalidatingFetcher[],
+    request: Request
+  ) {
+    let fetchersToError: number[] = [];
+    let [loaderResults, fetcherResults] = await Promise.all([
+      matchesToLoad.length
+        ? dataStrategy({
+            matches: matchesToLoad,
+            request,
+            type: "loader",
+            defaultStrategy(match) {
+              return callLoaderOrAction(
+                "loader",
+                request,
+                match,
+                matches,
+                manifest,
+                mapRouteProperties,
+                basename,
+                future.v7_relativeSplatPath
+              );
+            },
+          })
+        : [],
+      fetchersToLoad.length
+        ? dataStrategy({
+            matches: fetchersToLoad
+              .filter((f, index) => {
+                if (f.matches && f.match && f.controller) {
+                  return true;
+                }
+
+                fetchersToError.push(index);
+                return false;
+              })
+              .map((f) => f.match!),
+            request,
+            type: "loader",
+            defaultStrategy(match) {
+              let f = fetchersToLoad.find((f) => f.match === match);
+              invariant(f, "Expected fetcher for match in defaultStrategy");
+              invariant(
+                f.controller,
+                "Expected controller for fetcher in defaultStrategy"
+              );
+              invariant(
+                f.matches,
+                "Expected matches for fetcher in defaultStrategy"
+              );
+
+              return callLoaderOrAction(
+                "loader",
+                createClientSideRequest(
+                  init.history,
+                  f.path,
+                  f.controller.signal
+                ),
+                match,
+                f.matches,
+                manifest,
+                mapRouteProperties,
+                basename,
+                future.v7_relativeSplatPath
+              );
+            },
+          })
+        : [],
     ]);
-    let loaderResults = results.slice(0, matchesToLoad.length);
-    let fetcherResults = results.slice(matchesToLoad.length);
+
+    // insert an error result for fetchers that didn't have either a
+    // match, matches, or controller
+    fetchersToError.forEach((idx) => {
+      fetcherResults.splice(idx, 0, {
+        type: ResultType.error,
+        error: getInternalRouterError(404, {
+          pathname: fetchersToLoad[idx].path,
+        }),
+      });
+    });
 
     await Promise.all([
       resolveDeferredResults(
@@ -2456,7 +2535,10 @@ export function createRouter(init: RouterInit): Router {
       ),
     ]);
 
-    return { results, loaderResults, fetcherResults };
+    return {
+      loaderResults,
+      fetcherResults,
+    };
   }
 
   function interruptActiveLoads() {
@@ -3341,6 +3423,13 @@ export function createStaticHandler(
 ////////////////////////////////////////////////////////////////////////////////
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
+
+function defaultDataStrategy({
+  defaultStrategy,
+  matches,
+}: DataStrategyFunctionArgs) {
+  return Promise.all(matches.map((match) => defaultStrategy(match)));
+}
 
 /**
  * Given an existing StaticHandlerContext and an error thrown at render time,

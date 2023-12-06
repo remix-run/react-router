@@ -223,6 +223,17 @@ export interface DetectErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
 }
 
+export interface DataStrategyFunctionArgs {
+  request: Request;
+  matches: AgnosticDataRouteMatch[];
+  type: "loader" | "action";
+  defaultStrategy(match: AgnosticDataRouteMatch): Promise<DataResult>;
+}
+
+export interface DataStrategyFunction {
+  (args: DataStrategyFunctionArgs): Promise<DataResult[]>;
+}
+
 /**
  * Function provided by the framework-aware layers to set any framework-specific
  * properties from framework-agnostic properties
