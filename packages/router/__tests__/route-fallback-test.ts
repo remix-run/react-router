@@ -251,7 +251,7 @@ describe("future.v7_partialHydration", () => {
   });
 
   describe("when set to true", () => {
-    it("starts with initialized=true, runs unhydrated loaders with partial hydrationData", async () => {
+    it("starts with initialized=false, runs unhydrated loaders with partial hydrationData", async () => {
       let spy = jest.fn();
       let shouldRevalidateSpy = jest.fn((args) => args.defaultShouldRevalidate);
       let dfd = createDeferred();
@@ -291,7 +291,7 @@ describe("future.v7_partialHydration", () => {
         historyAction: "POP",
         location: { pathname: "/" },
         loaderData: { root: "LOADER DATA" },
-        initialized: true,
+        initialized: false,
         navigation: { state: "idle" },
       });
 
@@ -322,7 +322,7 @@ describe("future.v7_partialHydration", () => {
       });
     });
 
-    it("starts with initialized=true, runs hydrated loaders when loader.hydrate=true", async () => {
+    it("starts with initialized=false, runs hydrated loaders when loader.hydrate=true", async () => {
       let spy = jest.fn();
       let shouldRevalidateSpy = jest.fn((args) => args.defaultShouldRevalidate);
       let dfd = createDeferred();
@@ -367,7 +367,7 @@ describe("future.v7_partialHydration", () => {
           root: "LOADER DATA",
           index: "INDEX INITIAL",
         },
-        initialized: true,
+        initialized: false,
         navigation: { state: "idle" },
       });
 

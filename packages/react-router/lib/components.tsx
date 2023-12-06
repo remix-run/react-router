@@ -116,7 +116,8 @@ export function RouterProvider({
   React.useEffect(() => {
     warning(
       fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+      "`<RouterProvider fallbackElement>` is deprecated when using " +
+        "`v7_partialHydration`, use a `HydrateFallback` component instead"
     );
     // Only log this once on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,7 +173,7 @@ export function RouterProvider({
               v7_relativeSplatPath: router.future.v7_relativeSplatPath,
             }}
           >
-            {state.initialized ? (
+            {state.initialized || router.future.v7_partialHydration ? (
               <DataRoutes
                 routes={router.routes}
                 future={router.future}
