@@ -1,5 +1,13 @@
 # `@remix-run/node`
 
+## 2.4.0-pre.5
+
+### Patch Changes
+
+- Update to `@remix-run/web-fetch@4.4.2` ([#8231](https://github.com/remix-run/remix/pull/8231))
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.4.0-pre.5`
+
 ## 2.4.0-pre.4
 
 ### Patch Changes
