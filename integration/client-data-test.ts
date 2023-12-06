@@ -404,7 +404,61 @@ test.describe("Client Data", () => {
       expect(html).toMatch("Child Client Loader");
     });
 
-    test("clientLoader.hydrate is automatically implied when no server loader exists", async ({
+    test("HydrateFallback is not rendered if clientLoader.hydrate is not set (w/server loader)", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...getFiles({
+            parentClientLoader: false,
+            parentClientLoaderHydrate: false,
+            childClientLoader: false,
+            childClientLoaderHydrate: false,
+          }),
+          // Blow away parent.child.tsx with our own version
+          "app/routes/parent.child.tsx": js`
+            import * as React from 'react';
+            import { json } from '@remix-run/node';
+            import { useLoaderData } from '@remix-run/react';
+            export function loader() {
+              return json({
+                message: "Child Server Loader Data",
+              });
+            }
+            export async function clientLoader({ serverLoader }) {
+              await new Promise(r => setTimeout(r, 100));
+              return {
+                message: "Child Client Loader Data",
+              };
+            }
+            export function HydrateFallback() {
+              return <p>SHOULD NOT SEE ME</p>
+            }
+            export default function Component() {
+              let data = useLoaderData();
+              return <p id="child-data">{data.message}</p>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      // Ensure initial document request contains the child fallback _and_ the
+      // subsequent streamed/resolved deferred data
+      let doc = await fixture.requestDocument("/parent/child");
+      let html = await doc.text();
+      expect(html).toMatch("Child Server Loader Data");
+      expect(html).not.toMatch("SHOULD NOT SEE ME");
+
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      await page.waitForSelector("#child-data");
+      html = await app.getHtml("main");
+      expect(html).toMatch("Child Server Loader Data");
+    });
+
+    test("clientLoader.hydrate is automatically implied when no server loader exists (w HydrateFallback)", async ({
       page,
     }) => {
       appFixture = await createAppFixture(
@@ -443,6 +497,50 @@ test.describe("Client Data", () => {
       await app.goto("/parent/child");
       let html = await app.getHtml("main");
       expect(html).toMatch("Child Fallback");
+      await page.waitForSelector("#child-data");
+      html = await app.getHtml("main");
+      expect(html).toMatch("Loader Data (clientLoader only)");
+    });
+
+    test("clientLoader.hydrate is automatically implied when no server loader exists (w/o HydrateFallback)", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            // Blow away parent.child.tsx with our own version without a server loader
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { useLoaderData } from '@remix-run/react';
+              // Even without setting hydrate=true, this should run on hydration
+              export async function clientLoader({ serverLoader }) {
+                await new Promise(r => setTimeout(r, 100));
+                return {
+                  message: "Loader Data (clientLoader only)",
+                };
+              }
+              export default function Component() {
+                let data = useLoaderData();
+                return <p id="child-data">{data.message}</p>;
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      let html = await app.getHtml();
+      expect(html).toMatch(
+        "💿 Hey developer 👋. You can provide a way better UX than this"
+      );
+      expect(html).not.toMatch("child-data");
       await page.waitForSelector("#child-data");
       html = await app.getHtml("main");
       expect(html).toMatch("Loader Data (clientLoader only)");
