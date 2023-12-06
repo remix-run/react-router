@@ -334,6 +334,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         serverBuildPath,
         serverModuleFormat,
         relativeAssetsBuildDirectory,
+        future,
       } = await resolveConfig(config, { rootDirectory });
 
       return {
@@ -347,10 +348,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         serverBuildPath,
         serverModuleFormat,
         relativeAssetsBuildDirectory,
-        future: {
-          v3_fetcherPersist: options.future?.v3_fetcherPersist === true,
-          v3_relativeSplatPath: options.future?.v3_relativeSplatPath === true,
-        },
+        future,
       };
     };
 
@@ -376,11 +374,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       export const assetsBuildDirectory = ${JSON.stringify(
         pluginConfig.relativeAssetsBuildDirectory
       )};
-      ${
-        pluginConfig.future
-          ? `export const future = ${JSON.stringify(pluginConfig.future)}`
-          : ""
-      };
+      export const future = ${JSON.stringify(pluginConfig.future)};
       export const publicPath = ${JSON.stringify(pluginConfig.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
