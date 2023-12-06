@@ -958,8 +958,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             code: exports
               .map(({ n: name }) =>
                 name === "default"
-                  ? "export default {};"
-                  : `export const ${name} = {};`
+                  ? "export default undefined;"
+                  : `export const ${name} = undefined;`
               )
               .join("\n"),
             map: null,
