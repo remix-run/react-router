@@ -1209,21 +1209,16 @@ export function resolveTo(
   // to the current location's pathname and *not* the route pathname.
   if (toPathname == null) {
     from = locationPathname;
-  } else if (isPathRelative) {
-    from =
-      routePathnames.length === 0
-        ? "/"
-        : routePathnames[routePathnames.length - 1];
   } else {
     let routePathnameIndex = routePathnames.length - 1;
 
-    if (toPathname.startsWith("..")) {
+    // With relative="route" (the default), each leading .. segment means
+    // "go up one route" instead of "go up one URL segment".  This is a key
+    // difference from how <a href> works and a major reason we call this a
+    // "to" value instead of a "href".
+    if (!isPathRelative && toPathname.startsWith("..")) {
       let toSegments = toPathname.split("/");
 
-      // With relative="route" (the default), each leading .. segment means
-      // "go up one route" instead of "go up one URL segment".  This is a key
-      // difference from how <a href> works and a major reason we call this a
-      // "to" value instead of a "href".
       while (toSegments[0] === "..") {
         toSegments.shift();
         routePathnameIndex -= 1;
@@ -1232,8 +1227,6 @@ export function resolveTo(
       to.pathname = toSegments.join("/");
     }
 
-    // If there are more ".." segments than parent routes, resolve relative to
-    // the root / URL.
     from = routePathnameIndex >= 0 ? routePathnames[routePathnameIndex] : "/";
   }
 
