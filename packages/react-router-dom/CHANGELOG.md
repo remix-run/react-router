@@ -1,5 +1,14 @@
 # `react-router-dom`
 
+## 6.21.0-pre.3
+
+### Patch Changes
+
+- [REMOVE] Refactor internals for partial hydration ([#11094](https://github.com/remix-run/react-router/pull/11094))
+- Updated dependencies:
+  - `react-router@6.21.0-pre.3`
+  - `@remix-run/router@1.14.0-pre.1`
+
 ## 6.21.0-pre.2
 
 ### Patch Changes
