@@ -65,7 +65,7 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 
 ## `relative`
 
-By default, links are relative to the route hierarchy (`relative="route"`), so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing. You can opt into this behavior with `relative="path"`:
+By default, links are relative to the route hierarchy (`relative="route"`), so `..` will go up one `Route` level from the current contextual route. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing from the current contextual route path. You can opt into this behavior with `relative="path"`:
 
 ```jsx
 // Contact and EditContact do not share additional UI layout
@@ -79,7 +79,8 @@ By default, links are relative to the route hierarchy (`relative="route"`), so `
 
 function EditContact() {
   // Since Contact is not a parent of EditContact we need to go up one level
-  // in the path, instead of one level in the Route hierarchy
+  // in the current contextual route path, instead of one level in the Route
+  // hierarchy
   return (
     <Link to=".." relative="path">
       Cancel
