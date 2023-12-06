@@ -1210,26 +1210,10 @@ export function resolveTo(
   if (toPathname == null) {
     from = locationPathname;
   } else if (isPathRelative) {
-    let fromSegments =
+    from =
       routePathnames.length === 0
-        ? []
-        : routePathnames[routePathnames.length - 1]
-            .replace(/^\//, "")
-            .split("/");
-
-    if (toPathname.startsWith("..")) {
-      let toSegments = toPathname.split("/");
-
-      // With relative="path", each leading .. segment means "go up one URL segment"
-      while (toSegments[0] === "..") {
-        toSegments.shift();
-        fromSegments.pop();
-      }
-
-      to.pathname = toSegments.join("/");
-    }
-
-    from = "/" + fromSegments.join("/");
+        ? "/"
+        : routePathnames[routePathnames.length - 1];
   } else {
     let routePathnameIndex = routePathnames.length - 1;
 
