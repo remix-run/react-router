@@ -756,6 +756,7 @@ export function createRouter(init: RouterInit): Router {
   );
 
   const dataStrategy = init.dataStrategy || defaultDataStrategy;
+  const callLoaderOrAction = createCallLoaderOrAction(dataStrategy);
 
   let mapRouteProperties: MapRoutePropertiesFunction;
   if (init.mapRouteProperties) {
@@ -1572,7 +1573,7 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      result = await loadOrMutateData(
+      result = await callLoaderOrAction(
         "action",
         request,
         actionMatch,
@@ -1966,7 +1967,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let actionResult = await loadOrMutateData(
+    let actionResult = await callLoaderOrAction(
       "action",
       fetchRequest,
       match,
@@ -2211,7 +2212,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let result: DataResult = await loadOrMutateData(
+    let result: DataResult = await callLoaderOrAction(
       "loader",
       fetchRequest,
       match,
@@ -2394,43 +2395,6 @@ export function createRouter(init: RouterInit): Router {
         preventScrollReset: pendingPreventScrollReset,
       });
     }
-  }
-
-  async function loadOrMutateData(
-    type: "loader" | "action",
-    request: Request,
-    match: AgnosticDataRouteMatch,
-    matches: AgnosticDataRouteMatch[],
-    manifest: RouteManifest,
-    mapRouteProperties: MapRoutePropertiesFunction,
-    basename: string,
-    v7_relativeSplatPath: boolean,
-    opts: {
-      isStaticRequest?: boolean;
-      isRouteRequest?: boolean;
-      requestContext?: unknown;
-    } = {}
-  ): Promise<DataResult> {
-    let [result] = await dataStrategy({
-      matches: [match],
-      request,
-      type,
-      defaultStrategy(match) {
-        return callLoaderOrAction(
-          type,
-          request,
-          match,
-          matches,
-          manifest,
-          mapRouteProperties,
-          basename,
-          v7_relativeSplatPath,
-          opts
-        );
-      },
-    });
-
-    return result;
   }
 
   async function loadDataAndMaybeResolveDeferred(
@@ -2905,6 +2869,7 @@ export interface CreateStaticHandlerOptions {
    * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
+  dataStrategy?: DataStrategyFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<StaticHandlerFutureConfig>;
 }
@@ -2917,6 +2882,9 @@ export function createStaticHandler(
     routes.length > 0,
     "You must provide a non-empty routes array to createStaticHandler"
   );
+
+  const dataStrategy = opts?.dataStrategy || defaultDataStrategy;
+  const callLoaderOrAction = createCallLoaderOrAction(dataStrategy);
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
@@ -3358,9 +3326,12 @@ export function createStaticHandler(
       };
     }
 
-    let results = await Promise.all([
-      ...matchesToLoad.map((match) =>
-        callLoaderOrAction(
+    let results = await dataStrategy({
+      matches: matchesToLoad,
+      request,
+      type: "loader",
+      defaultStrategy(match) {
+        return callLoaderOrActionImplementation(
           "loader",
           request,
           match,
@@ -3370,9 +3341,9 @@ export function createStaticHandler(
           basename,
           future.v7_relativeSplatPath,
           { isStaticRequest: true, isRouteRequest, requestContext }
-        )
-      ),
-    ]);
+        );
+      },
+    });
 
     if (request.signal.aborted) {
       let method = isRouteRequest ? "queryRoute" : "query";
@@ -4003,7 +3974,46 @@ async function loadLazyRouteModule(
   });
 }
 
-async function callLoaderOrAction(
+function createCallLoaderOrAction(dataStrategy: DataStrategyFunction) {
+  return async (
+    type: "loader" | "action",
+    request: Request,
+    match: AgnosticDataRouteMatch,
+    matches: AgnosticDataRouteMatch[],
+    manifest: RouteManifest,
+    mapRouteProperties: MapRoutePropertiesFunction,
+    basename: string,
+    v7_relativeSplatPath: boolean,
+    opts: {
+      isStaticRequest?: boolean;
+      isRouteRequest?: boolean;
+      requestContext?: unknown;
+    } = {}
+  ): Promise<DataResult> => {
+    let [result] = await dataStrategy({
+      matches: [match],
+      request,
+      type,
+      defaultStrategy(match) {
+        return callLoaderOrActionImplementation(
+          type,
+          request,
+          match,
+          matches,
+          manifest,
+          mapRouteProperties,
+          basename,
+          v7_relativeSplatPath,
+          opts
+        );
+      },
+    });
+
+    return result;
+  };
+}
+
+async function callLoaderOrActionImplementation(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataRouteMatch,
