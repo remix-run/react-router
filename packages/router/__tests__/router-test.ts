@@ -1,7 +1,11 @@
 import type { HydrationState } from "../index";
 import { createMemoryHistory, createRouter, IDLE_NAVIGATION } from "../index";
-import type { AgnosticDataRouteObject, AgnosticRouteObject } from "../utils";
-import { ErrorResponseImpl } from "../utils";
+import type {
+  AgnosticDataRouteObject,
+  AgnosticRouteObject,
+  DataResult,
+} from "../utils";
+import { ErrorResponseImpl, ResultType } from "../utils";
 
 import {
   deferredData,
@@ -2470,6 +2474,206 @@ describe("a router", () => {
       });
 
       cleanup(router);
+    });
+  });
+
+  describe("router dataStrategy", () => {
+    it("should unwrap json and text by default", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "json",
+            path: "/test",
+            loader: true,
+            children: [
+              {
+                id: "text",
+                index: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+      });
+
+      let A = await t.navigate("/test");
+      await A.loaders.json.resolve(
+        new Response(JSON.stringify({ message: "hello json" }), {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      await A.loaders.text.resolve(new Response("hello text"));
+
+      expect(t.router.state.loaderData).toEqual({
+        json: { message: "hello json" },
+        text: "hello text",
+      });
+    });
+
+    it("should allow a custom implementation to passthrough to default behavior", async () => {
+      let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
+        return Promise.all(matches.map((match) => defaultStrategy(match)));
+      });
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "json",
+            path: "/test",
+            loader: true,
+            children: [
+              {
+                id: "text",
+                index: true,
+                loader: true,
+              },
+            ],
+          },
+        ],
+        dataStrategy,
+      });
+
+      let A = await t.navigate("/test");
+      await A.loaders.json.resolve(
+        new Response(JSON.stringify({ message: "hello json" }), {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      await A.loaders.text.resolve(new Response("hello text"));
+
+      expect(t.router.state.loaderData).toEqual({
+        json: { message: "hello json" },
+        text: "hello text",
+      });
+      expect(dataStrategy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "loader",
+          request: expect.any(Request),
+          matches: expect.arrayContaining([
+            expect.objectContaining({
+              route: expect.objectContaining({
+                id: "json",
+              }),
+            }),
+            expect.objectContaining({
+              route: expect.objectContaining({
+                id: "text",
+              }),
+            }),
+          ]),
+        })
+      );
+    });
+
+    it("should allow custom implementations to override default behavior", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "test",
+            path: "/test",
+            loader: true,
+          },
+        ],
+        dataStrategy({ matches, request }) {
+          return Promise.all(
+            matches.map((match) =>
+              Promise.resolve(
+                match.route.loader!({ params: match.params, request })
+              ).then(async (response): Promise<DataResult> => {
+                if (response instanceof Response) {
+                  if (
+                    response.headers.get("Content-Type") ===
+                    "application/x-www-form-urlencoded"
+                  ) {
+                    let text = await response.text();
+                    const data = new URLSearchParams(text);
+                    return {
+                      type: ResultType.data,
+                      data,
+                      statusCode: response.status,
+                      headers: response.headers,
+                    };
+                  }
+                }
+                throw new Error("Unknown Content-Type");
+              })
+            )
+          );
+        },
+      });
+
+      let A = await t.navigate("/test");
+      await A.loaders.test.resolve(
+        new Response(new URLSearchParams({ a: "1", b: "2" }).toString(), {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        })
+      );
+
+      expect(t.router.state.loaderData.test).toBeInstanceOf(URLSearchParams);
+      expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
+    });
+
+    it("handles errors at the proper boundary", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            path: "/parent",
+            children: [
+              {
+                id: "child",
+                path: "child",
+                hasErrorBoundary: true,
+                children: [
+                  {
+                    id: "test",
+                    index: true,
+                    loader: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        dataStrategy({ matches, request }) {
+          return Promise.all(
+            matches.map((match) =>
+              Promise.resolve(
+                match.route.loader!({ params: match.params, request })
+              ).then(async (response): Promise<DataResult> => {
+                return {
+                  type: ResultType.error,
+                  error: new Error("Unable to unwrap response"),
+                };
+              })
+            )
+          );
+        },
+      });
+
+      let A = await t.navigate("/parent/child");
+      await A.loaders.test.resolve(new Response("hello world"));
+
+      expect(t.router.state.loaderData.test).toBeUndefined();
+      expect(t.router.state.errors?.child.message).toBe(
+        "Unable to unwrap response"
+      );
     });
   });
 

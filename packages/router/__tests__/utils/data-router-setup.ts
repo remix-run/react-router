@@ -23,6 +23,7 @@ import { invariant } from "../../history";
 import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
+  DataStrategyFunction,
 } from "../../utils";
 import { stripBasename } from "../../utils";
 
@@ -143,6 +144,7 @@ type SetupOpts = {
   initialIndex?: number;
   hydrationData?: HydrationState;
   future?: FutureConfig;
+  dataStrategy?: DataStrategyFunction;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
@@ -177,6 +179,7 @@ export function setup({
   initialIndex,
   hydrationData,
   future,
+  dataStrategy,
 }: SetupOpts) {
   let guid = 0;
   // Global "active" helpers, keyed by navType:guid:loaderOrAction:routeId.
@@ -318,6 +321,7 @@ export function setup({
     hydrationData,
     future,
     window: testWindow,
+    dataStrategy,
   }).initialize();
 
   function getRouteHelpers(
