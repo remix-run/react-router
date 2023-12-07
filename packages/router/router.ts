@@ -2404,7 +2404,6 @@ export function createRouter(init: RouterInit): Router {
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
-    let fetchersToError: number[] = [];
     let [loaderResults, ...fetcherResults] = await Promise.all([
       matchesToLoad.length
         ? dataStrategy({
@@ -2469,17 +2468,6 @@ export function createRouter(init: RouterInit): Router {
         }).then((r) => r[0]);
       }),
     ]);
-
-    // insert an error result for fetchers that didn't have either a
-    // match, matches, or controller
-    fetchersToError.forEach((idx) => {
-      fetcherResults.splice(idx, 0, {
-        type: ResultType.error,
-        error: getInternalRouterError(404, {
-          pathname: fetchersToLoad[idx].path,
-        }),
-      });
-    });
 
     await Promise.all([
       resolveDeferredResults(
