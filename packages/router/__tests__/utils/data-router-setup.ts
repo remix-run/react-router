@@ -142,7 +142,7 @@ type SetupOpts = {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
-  future?: FutureConfig;
+  future?: Partial<FutureConfig>;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
