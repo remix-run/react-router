@@ -224,6 +224,7 @@ export interface ServerRuntimeMetaArgs<
   params: Params;
   location: Location;
   matches: ServerRuntimeMetaMatches<MatchLoaders>;
+  error?: unknown;
 }
 
 export type ServerRuntimeMetaDescriptor =
