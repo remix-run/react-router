@@ -2405,7 +2405,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request
   ) {
     let fetchersToError: number[] = [];
-    let [loaderResults, fetcherResults] = await Promise.all([
+    let [loaderResults, ...fetcherResults] = await Promise.all([
       matchesToLoad.length
         ? dataStrategy({
             matches: matchesToLoad,
@@ -2425,49 +2425,49 @@ export function createRouter(init: RouterInit): Router {
             },
           })
         : [],
-      fetchersToLoad.length
-        ? dataStrategy({
-            matches: fetchersToLoad
-              .filter((f, index) => {
-                if (f.matches && f.match && f.controller) {
-                  return true;
-                }
+      ...fetchersToLoad.map((f) => {
+        if (!f.matches || !f.match || !f.controller) {
+          return Promise.resolve<DataResult>({
+            type: ResultType.error,
+            error: getInternalRouterError(404, {
+              pathname: f.path,
+            }),
+          });
+        }
 
-                fetchersToError.push(index);
-                return false;
-              })
-              .map((f) => f.match!),
-            request,
-            type: "loader",
-            defaultStrategy(match) {
-              let f = fetchersToLoad.find((f) => f.match === match);
-              invariant(f, "Expected fetcher for match in defaultStrategy");
-              invariant(
-                f.controller,
-                "Expected controller for fetcher in defaultStrategy"
-              );
-              invariant(
-                f.matches,
-                "Expected matches for fetcher in defaultStrategy"
-              );
+        return dataStrategy({
+          matches: [f.match!],
+          request,
+          type: "loader",
+          defaultStrategy(match) {
+            let f = fetchersToLoad.find((f) => f.match === match);
+            invariant(f, "Expected fetcher for match in defaultStrategy");
+            invariant(
+              f.controller,
+              "Expected controller for fetcher in defaultStrategy"
+            );
+            invariant(
+              f.matches,
+              "Expected matches for fetcher in defaultStrategy"
+            );
 
-              return callLoaderOrAction(
-                "loader",
-                createClientSideRequest(
-                  init.history,
-                  f.path,
-                  f.controller.signal
-                ),
-                match,
-                f.matches,
-                manifest,
-                mapRouteProperties,
-                basename,
-                future.v7_relativeSplatPath
-              );
-            },
-          })
-        : [],
+            return callLoaderOrAction(
+              "loader",
+              createClientSideRequest(
+                init.history,
+                f.path,
+                f.controller.signal
+              ),
+              match,
+              f.matches,
+              manifest,
+              mapRouteProperties,
+              basename,
+              future.v7_relativeSplatPath
+            );
+          },
+        }).then((r) => r[0]);
+      }),
     ]);
 
     // insert an error result for fetchers that didn't have either a
