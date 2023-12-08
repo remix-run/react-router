@@ -9,6 +9,9 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
+  DataResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
   ErrorResponse,
   FormEncType,
   FormMethod,
@@ -45,6 +48,7 @@ export {
   redirectDocument,
   resolvePath,
   resolveTo,
+  ResultType,
   stripBasename,
 } from "./utils";
 

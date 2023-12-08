@@ -1,4 +1,9 @@
-import type { ErrorResponse } from "@remix-run/router";
+import type {
+  DataResult,
+  DataStrategyFunctionArgs,
+  ErrorResponse,
+} from "@remix-run/router";
+import { ResultType } from "@remix-run/router";
 import "@testing-library/jest-dom";
 import {
   fireEvent,
@@ -33,6 +38,7 @@ import {
 import { createDeferred } from "../../router/__tests__/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
+import {} from "@remix-run/router";
 
 describe("createMemoryRouter", () => {
   let consoleWarn: jest.SpyInstance;
@@ -3165,4 +3171,150 @@ describe("createMemoryRouter", () => {
       `);
     });
   });
+
+  describe("router dataStrategy", () => {
+    it("executes route loaders on navigation", async () => {
+      let barDefer = createDeferred();
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<Foo />} />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+            />
+          </Route>
+        ),
+        { initialEntries: ["/foo"], dataStrategy: urlDataStrategy }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <p>{navigation.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+      function Bar() {
+        let data = useLoaderData() as URLSearchParams;
+        return <h1>{data?.get("message")}</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              loading
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      // barDefer.resolve({ message: "Bar Loader" });
+      barDefer.resolve(
+        new Response(
+          new URLSearchParams([["message", "Bar Loader"]]).toString(),
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        )
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Bar Loader
+            </h1>
+          </div>
+        </div>"
+      `);
+    });
+  });
 });
+
+async function urlDataStrategy({
+  matches,
+  request,
+  type,
+}: DataStrategyFunctionArgs): Promise<DataResult[]> {
+  return Promise.all(
+    matches.map<Promise<DataResult>>((match) => {
+      try {
+        let handler =
+          type === "loader" ? match.route.loader : match.route.action;
+        return Promise.resolve(handler!({ params: match.params, request }))
+          .then(async (response) => {
+            if (
+              !(response instanceof Response) ||
+              !response.headers
+                .get("Content-Type")
+                ?.match(/\bapplication\/x-www-form-urlencoded\b/)
+            ) {
+              throw new Error("Invalid response");
+            }
+            return new URLSearchParams(await response.text());
+          })
+          .then<DataResult>((data) => ({
+            type: ResultType.data,
+            data,
+          }))
+          .catch((error) => ({
+            type: ResultType.error,
+            error,
+          }));
+      } catch (error) {
+        return Promise.resolve({
+          type: ResultType.error,
+          error,
+        });
+      }
+    })
+  );
+}

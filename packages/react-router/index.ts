@@ -4,6 +4,7 @@ import type {
   ActionFunctionArgs,
   Blocker,
   BlockerFunction,
+  DataStrategyFunction,
   ErrorResponse,
   Fetcher,
   HydrationState,
@@ -288,6 +289,7 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
+    dataStrategy?: DataStrategyFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -303,6 +305,7 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     mapRouteProperties,
+    dataStrategy: opts?.dataStrategy,
   }).initialize();
 }
 
