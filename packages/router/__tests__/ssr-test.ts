@@ -681,7 +681,11 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toBeInstanceOf(DOMException);
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
       expect(e.name).toBe("AbortError");
       expect(e.message).toBe("This operation was aborted");
     });
@@ -711,7 +715,11 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toBeInstanceOf(DOMException);
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
       expect(e.name).toBe("AbortError");
       expect(e.message).toBe("This operation was aborted");
     });
@@ -2072,7 +2080,11 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toBeInstanceOf(DOMException);
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
       expect(e.name).toBe("AbortError");
       expect(e.message).toBe("This operation was aborted");
     });
@@ -2102,7 +2114,11 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toBeInstanceOf(DOMException);
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
       expect(e.name).toBe("AbortError");
       expect(e.message).toBe("This operation was aborted");
     });
