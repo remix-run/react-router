@@ -71,6 +71,23 @@ const router = createBrowserRouter(routes, {
 | `v7_prependBasename`                        | Prepend the router basename to navigate/fetch paths                   |
 | [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                    |
 
+#### `createStaticHandler` Future Flags
+
+These flags are only applicable when [SSR][ssr]-ing a React Router app:
+
+```js
+const handler = createStaticHandler(routes, {
+  future: {
+    v7_throwAbortReason: true,
+  },
+});
+```
+
+| Flag                                        | Description                                                         |
+| ------------------------------------------- | ------------------------------------------------------------------- |
+| [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                  |
+| [`v7_throwAbortReason`][abortreason]        | Throw `request.signal.reason` if a query/queryRoute call is aborted |
+
 ### React Router Future Flags
 
 These flags apply to both Data and non-Data Routers and are passed to the rendered React component:
@@ -98,3 +115,5 @@ These flags apply to both Data and non-Data Routers and are passed to the render
 [starttransition]: https://react.dev/reference/react/startTransition
 [partialhydration]: ../routers/create-browser-router#partial-hydration-data
 [relativesplatpath]: ../hooks/use-resolved-path#splat-paths
+[ssr]: ../guides/ssr
+[abortreason]: ../routers/create-static-handler#handlerqueryrequest-opts

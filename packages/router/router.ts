@@ -2823,6 +2823,7 @@ export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
  */
 export interface StaticHandlerFutureConfig {
   v7_relativeSplatPath: boolean;
+  v7_throwAbortReason: boolean;
 }
 
 export interface CreateStaticHandlerOptions {
@@ -2861,6 +2862,7 @@ export function createStaticHandler(
   // Config driven behavior flags
   let future: StaticHandlerFutureConfig = {
     v7_relativeSplatPath: false,
+    v7_throwAbortReason: false,
     ...(opts ? opts.future : null),
   };
 
@@ -3130,10 +3132,7 @@ export function createStaticHandler(
       );
 
       if (request.signal.aborted) {
-        let method = isRouteRequest ? "queryRoute" : "query";
-        throw new Error(
-          `${method}() call aborted: ${request.method} ${request.url}`
-        );
+        throwStaticHandlerAbortedError(request, isRouteRequest, future);
       }
     }
 
@@ -3301,10 +3300,7 @@ export function createStaticHandler(
     ]);
 
     if (request.signal.aborted) {
-      let method = isRouteRequest ? "queryRoute" : "query";
-      throw new Error(
-        `${method}() call aborted: ${request.method} ${request.url}`
-      );
+      throwStaticHandlerAbortedError(request, isRouteRequest, future);
     }
 
     // Process and commit output from loaders
@@ -3367,6 +3363,21 @@ export function getStaticContextFromError(
     },
   };
   return newContext;
+}
+
+function throwStaticHandlerAbortedError(
+  request: Request,
+  isRouteRequest: boolean,
+  future: StaticHandlerFutureConfig
+) {
+  let method = isRouteRequest ? "queryRoute" : "query";
+  if (future.v7_throwAbortReason && request.signal.reason !== undefined) {
+    throw request.signal.reason;
+  } else {
+    throw new Error(
+      `${method}() call aborted: ${request.method} ${request.url}`
+    );
+  }
 }
 
 function isSubmissionNavigation(

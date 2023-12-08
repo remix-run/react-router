@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import type { StaticHandler, StaticHandlerContext } from "../router";
 import { UNSAFE_DEFERRED_SYMBOL, createStaticHandler } from "../router";
 import {
@@ -650,6 +654,95 @@ describe("ssr", () => {
       expect(e).toMatchInlineSnapshot(
         `[Error: query() call aborted: POST http://localhost/path?key=value]`
       );
+    });
+
+    it("should handle aborted load requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { query } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let contextPromise = query(request);
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await contextPromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(DOMException);
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted submit requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { query } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            action: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createSubmitRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let contextPromise = query(request);
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await contextPromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(DOMException);
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted requests (v7_throwAbortReason=true + custom reason)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { query } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let contextPromise = query(request);
+        controller.abort(new Error("Oh no!"));
+        // This should resolve even though we never resolved the loader
+        await contextPromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(Error);
+      expect(e.message).toBe("Oh no!");
     });
 
     it("should assign signals to requests by default (per the", async () => {
@@ -1949,6 +2042,98 @@ describe("ssr", () => {
       expect(e).toMatchInlineSnapshot(
         `[Error: queryRoute() call aborted: POST http://localhost/path?key=value]`
       );
+    });
+
+    it("should handle aborted load requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { queryRoute } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let statePromise = queryRoute(request, { routeId: "root" });
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await statePromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(DOMException);
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted submit requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { queryRoute } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            action: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createSubmitRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let statePromise = queryRoute(request, { routeId: "root" });
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await statePromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(DOMException);
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted load requests (v7_throwAbortReason=true + custom reason)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { queryRoute } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let statePromise = queryRoute(request, { routeId: "root" });
+        // Note this works in Node 18+ - but it does not work if using the
+        // `abort-controller` polyfill which doesn't yet support a custom `reason`
+        // See: https://github.com/mysticatea/abort-controller/issues/33
+        controller.abort(new Error("Oh no!"));
+        // This should resolve even though we never resolved the loader
+        await statePromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(Error);
+      expect(e.message).toBe("Oh no!");
     });
 
     it("should assign signals to requests by default (per the spec)", async () => {
