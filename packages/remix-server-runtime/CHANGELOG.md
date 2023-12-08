@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 2.4.0-pre.7
+
+### Patch Changes
+
+- [REMOVE] Add missing `hasClientAction`/`hasClientLoader` to `EntryRoute` type ([#8248](https://github.com/remix-run/remix/pull/8248))
+
 ## 2.4.0-pre.6
 
 ## 2.4.0-pre.5
