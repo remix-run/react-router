@@ -27,6 +27,8 @@ export interface Route {
 export interface EntryRoute extends Route {
   hasAction: boolean;
   hasLoader: boolean;
+  hasClientAction: boolean;
+  hasClientLoader: boolean;
   hasErrorBoundary: boolean;
   imports?: string[];
   css?: string[];
