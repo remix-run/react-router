@@ -11,6 +11,7 @@ import type {
   ActionFunction,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
+  AgnosticDataStrategyMatch,
   AgnosticRouteObject,
   DataResult,
   DataStrategyFunction,
@@ -23,6 +24,7 @@ import type {
   FormMethod,
   HTMLFormMethod,
   ImmutableRouteKey,
+  LazyRoutePromise,
   LoaderFunction,
   MapRoutePropertiesFunction,
   MutationFormMethod,
@@ -2407,7 +2409,13 @@ export function createRouter(init: RouterInit): Router {
     let [loaderResults, ...fetcherResults] = await Promise.all([
       matchesToLoad.length
         ? dataStrategy({
-            matches: matchesToLoad,
+            matches: matchesToLoad.map((m) =>
+              finesseToAgnosticDataStrategyMatch(
+                m,
+                mapRouteProperties,
+                manifest
+              )
+            ),
             request,
             type: "loader",
             defaultStrategy(match) {
@@ -2435,12 +2443,16 @@ export function createRouter(init: RouterInit): Router {
         }
 
         return dataStrategy({
-          matches: [f.match!],
+          matches: [
+            finesseToAgnosticDataStrategyMatch(
+              f.match!,
+              mapRouteProperties,
+              manifest
+            ),
+          ],
           request,
           type: "loader",
           defaultStrategy(match) {
-            let f = fetchersToLoad.find((f) => f.match === match);
-            invariant(f, "Expected fetcher for match in defaultStrategy");
             invariant(
               f.controller,
               "Expected controller for fetcher in defaultStrategy"
@@ -3315,7 +3327,9 @@ export function createStaticHandler(
     }
 
     let results = await dataStrategy({
-      matches: matchesToLoad,
+      matches: matchesToLoad.map((m) =>
+        finesseToAgnosticDataStrategyMatch(m, mapRouteProperties, manifest)
+      ),
       request,
       type: "loader",
       defaultStrategy(match) {
@@ -3324,8 +3338,6 @@ export function createStaticHandler(
           request,
           match,
           matches,
-          manifest,
-          mapRouteProperties,
           basename,
           future.v7_relativeSplatPath,
           { isStaticRequest: true, isRouteRequest, requestContext }
@@ -3893,9 +3905,9 @@ async function loadLazyRouteModule(
   route: AgnosticDataRouteObject,
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest
-) {
+): Promise<AgnosticDataRouteObject> {
   if (!route.lazy) {
-    return;
+    return route;
   }
 
   let lazyRoute = await route.lazy();
@@ -3904,7 +3916,7 @@ async function loadLazyRouteModule(
   // call then we can return - first lazy() to finish wins because the return
   // value of lazy is expected to be static
   if (!route.lazy) {
-    return;
+    return route;
   }
 
   let routeToUpdate = manifest[route.id];
@@ -3960,6 +3972,8 @@ async function loadLazyRouteModule(
     ...mapRouteProperties(routeToUpdate),
     lazy: undefined,
   });
+
+  return route;
 }
 
 function createCallLoaderOrAction(dataStrategy: DataStrategyFunction) {
@@ -3979,7 +3993,9 @@ function createCallLoaderOrAction(dataStrategy: DataStrategyFunction) {
     } = {}
   ): Promise<DataResult> => {
     let [result] = await dataStrategy({
-      matches: [match],
+      matches: [
+        finesseToAgnosticDataStrategyMatch(match, mapRouteProperties, manifest),
+      ],
       request,
       type,
       defaultStrategy(match) {
@@ -3988,8 +4004,6 @@ function createCallLoaderOrAction(dataStrategy: DataStrategyFunction) {
           request,
           match,
           matches,
-          manifest,
-          mapRouteProperties,
           basename,
           v7_relativeSplatPath,
           opts
@@ -4001,13 +4015,45 @@ function createCallLoaderOrAction(dataStrategy: DataStrategyFunction) {
   };
 }
 
+function finesseToAgnosticDataStrategyMatch(
+  match: AgnosticDataRouteMatch,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  manifest: RouteManifest
+): AgnosticDataStrategyMatch {
+  let loadRoutePromise: Promise<AgnosticDataRouteObject> | undefined;
+
+  if (match.route.lazy) {
+    try {
+      loadRoutePromise = loadLazyRouteModule(
+        match.route,
+        mapRouteProperties,
+        manifest
+      );
+    } catch (error) {
+      loadRoutePromise = Promise.reject(error);
+    }
+  }
+
+  if (!loadRoutePromise) {
+    loadRoutePromise = Promise.resolve(match.route);
+  }
+
+  loadRoutePromise.catch(() => {});
+
+  return {
+    ...match,
+    route: Object.assign(
+      loadRoutePromise,
+      match.route
+    ) as unknown as LazyRoutePromise,
+  };
+}
+
 async function callLoaderOrActionImplementation(
   type: "loader" | "action",
   request: Request,
-  match: AgnosticDataRouteMatch,
+  match: AgnosticDataStrategyMatch,
   matches: AgnosticDataRouteMatch[],
-  manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
   v7_relativeSplatPath: boolean,
   opts: {
@@ -4050,7 +4096,7 @@ async function callLoaderOrActionImplementation(
           runHandler(handler).catch((e) => {
             handlerError = e;
           }),
-          loadLazyRouteModule(match.route, mapRouteProperties, manifest),
+          match.route,
         ]);
         if (handlerError) {
           throw handlerError;
@@ -4058,9 +4104,9 @@ async function callLoaderOrActionImplementation(
         result = values[0];
       } else {
         // Load lazy route module, then run any returned handler
-        await loadLazyRouteModule(match.route, mapRouteProperties, manifest);
+        let route = await match.route;
 
-        handler = match.route[type];
+        handler = route[type];
         if (handler) {
           // Handler still run even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or
@@ -4120,7 +4166,10 @@ async function callLoaderOrActionImplementation(
       if (!ABSOLUTE_URL_REGEX.test(location)) {
         location = normalizeTo(
           new URL(request.url),
-          matches.slice(0, matches.indexOf(match) + 1),
+          matches.slice(
+            0,
+            matches.findIndex((m) => m.route.id === match.route.id) + 1
+          ),
           basename,
           true,
           location,

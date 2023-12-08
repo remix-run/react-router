@@ -2478,203 +2478,387 @@ describe("a router", () => {
   });
 
   describe("router dataStrategy", () => {
-    it("should unwrap json and text by default", async () => {
-      let t = setup({
-        routes: [
-          {
-            path: "/",
-          },
-          {
-            id: "json",
-            path: "/test",
-            loader: true,
-            children: [
-              {
-                id: "text",
-                index: true,
-                loader: true,
-              },
-            ],
-          },
-        ],
+    describe("loader", () => {
+      it("should unwrap json and text by default", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "json",
+              path: "/test",
+              loader: true,
+              children: [
+                {
+                  id: "text",
+                  index: true,
+                  loader: true,
+                },
+              ],
+            },
+          ],
+        });
+
+        let A = await t.navigate("/test");
+        await A.loaders.json.resolve(
+          new Response(JSON.stringify({ message: "hello json" }), {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+        await A.loaders.text.resolve(new Response("hello text"));
+
+        expect(t.router.state.loaderData).toEqual({
+          json: { message: "hello json" },
+          text: "hello text",
+        });
       });
 
-      let A = await t.navigate("/test");
-      await A.loaders.json.resolve(
-        new Response(JSON.stringify({ message: "hello json" }), {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-      );
-      await A.loaders.text.resolve(new Response("hello text"));
+      it("should allow a custom implementation to passthrough to default behavior", async () => {
+        let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
+          return Promise.all(matches.map((match) => defaultStrategy(match)));
+        });
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "json",
+              path: "/test",
+              loader: true,
+              children: [
+                {
+                  id: "text",
+                  index: true,
+                  loader: true,
+                },
+              ],
+            },
+          ],
+          dataStrategy,
+        });
 
-      expect(t.router.state.loaderData).toEqual({
-        json: { message: "hello json" },
-        text: "hello text",
-      });
-    });
+        let A = await t.navigate("/test");
+        await A.loaders.json.resolve(
+          new Response(JSON.stringify({ message: "hello json" }), {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+        await A.loaders.text.resolve(new Response("hello text"));
 
-    it("should allow a custom implementation to passthrough to default behavior", async () => {
-      let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
-        return Promise.all(matches.map((match) => defaultStrategy(match)));
-      });
-      let t = setup({
-        routes: [
-          {
-            path: "/",
-          },
-          {
-            id: "json",
-            path: "/test",
-            loader: true,
-            children: [
-              {
-                id: "text",
-                index: true,
-                loader: true,
-              },
-            ],
-          },
-        ],
-        dataStrategy,
-      });
-
-      let A = await t.navigate("/test");
-      await A.loaders.json.resolve(
-        new Response(JSON.stringify({ message: "hello json" }), {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        })
-      );
-      await A.loaders.text.resolve(new Response("hello text"));
-
-      expect(t.router.state.loaderData).toEqual({
-        json: { message: "hello json" },
-        text: "hello text",
-      });
-      expect(dataStrategy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: "loader",
-          request: expect.any(Request),
-          matches: expect.arrayContaining([
-            expect.objectContaining({
-              route: expect.objectContaining({
-                id: "json",
+        expect(t.router.state.loaderData).toEqual({
+          json: { message: "hello json" },
+          text: "hello text",
+        });
+        expect(dataStrategy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: "loader",
+            request: expect.any(Request),
+            matches: expect.arrayContaining([
+              expect.objectContaining({
+                route: expect.objectContaining({
+                  id: "json",
+                }),
               }),
-            }),
-            expect.objectContaining({
-              route: expect.objectContaining({
-                id: "text",
+              expect.objectContaining({
+                route: expect.objectContaining({
+                  id: "text",
+                }),
               }),
-            }),
-          ]),
-        })
-      );
-    });
+            ]),
+          })
+        );
+      });
 
-    it("should allow custom implementations to override default behavior", async () => {
-      let t = setup({
-        routes: [
-          {
-            path: "/",
-          },
-          {
-            id: "test",
-            path: "/test",
-            loader: true,
-          },
-        ],
-        dataStrategy({ matches, request }) {
-          return Promise.all(
-            matches.map((match) =>
-              Promise.resolve(
-                match.route.loader!({ params: match.params, request })
-              ).then(async (response): Promise<DataResult> => {
-                if (response instanceof Response) {
-                  if (
-                    response.headers.get("Content-Type") ===
-                    "application/x-www-form-urlencoded"
-                  ) {
-                    let text = await response.text();
-                    const data = new URLSearchParams(text);
-                    return {
-                      type: ResultType.data,
-                      data,
-                      statusCode: response.status,
-                      headers: response.headers,
-                    };
+      it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
+        let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
+          return Promise.all(matches.map((match) => defaultStrategy(match)));
+        });
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "json",
+              path: "/test",
+              lazy: true,
+            },
+          ],
+          dataStrategy,
+        });
+
+        let A = await t.navigate("/test");
+        await A.lazy.json.resolve({
+          loader: () => ({ message: "hello json" }),
+        });
+        expect(t.router.state.loaderData).toEqual({
+          json: { message: "hello json" },
+        });
+        expect(dataStrategy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: "loader",
+            request: expect.any(Request),
+            matches: expect.arrayContaining([
+              expect.objectContaining({
+                route: expect.objectContaining({
+                  id: "json",
+                }),
+              }),
+            ]),
+          })
+        );
+      });
+
+      it("should allow custom implementations to override default behavior", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "test",
+              path: "/test",
+              loader: true,
+            },
+          ],
+          dataStrategy({ matches, request }) {
+            return Promise.all(
+              matches.map(async (match) =>
+                Promise.resolve(
+                  (await match.route).loader!({ params: match.params, request })
+                ).then(async (response): Promise<DataResult> => {
+                  if (response instanceof Response) {
+                    if (
+                      response.headers.get("Content-Type") ===
+                      "application/x-www-form-urlencoded"
+                    ) {
+                      let text = await response.text();
+                      const data = new URLSearchParams(text);
+                      return {
+                        type: ResultType.data,
+                        data,
+                        statusCode: response.status,
+                        headers: response.headers,
+                      };
+                    }
                   }
-                }
-                throw new Error("Unknown Content-Type");
-              })
-            )
-          );
-        },
+                  throw new Error("Unknown Content-Type");
+                })
+              )
+            );
+          },
+        });
+
+        let A = await t.navigate("/test");
+        await A.loaders.test.resolve(
+          new Response(new URLSearchParams({ a: "1", b: "2" }).toString(), {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          })
+        );
+
+        expect(t.router.state.loaderData.test).toBeInstanceOf(URLSearchParams);
+        expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
       });
 
-      let A = await t.navigate("/test");
-      await A.loaders.test.resolve(
-        new Response(new URLSearchParams({ a: "1", b: "2" }).toString(), {
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        })
-      );
+      it("should allow custom implementations to override default behavior with lazy", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "test",
+              path: "/test",
+              lazy: true,
+            },
+          ],
+          async dataStrategy({ type, matches, request }) {
+            // const handles = await getMatchRouteModulesAndGetHandles(matches);
 
-      expect(t.router.state.loaderData.test).toBeInstanceOf(URLSearchParams);
-      expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
-    });
+            // return fetchStuffFromSomewhere(handles).then((response) =>
+            //   decodeIntoIndivualMatches(response).map((data) => ({
+            //     type: ResultType.data,
+            //     data,
+            //   }))
+            // );
 
-    it("handles errors at the proper boundary", async () => {
-      let t = setup({
-        routes: [
-          {
-            path: "/",
+            // return Promise.all(
+            //   matches.map(async (match) => {
+            //     const routeModule = await match.route;
+            //     const handler = routeModule[type];
+            //     return Promise.resolve(
+            //       handler({ params: match.params, request })
+            //     )
+            //       .then((response) => ({
+            //         type: ResultType.data,
+            //         data: decodeResponse(response),
+            //       }))
+            //       .catch((error) => ({
+            //         type: ResultType.error,
+            //         error,
+            //       }));
+            //   })
+            // );
+
+            return Promise.all(
+              matches.map(async (match) =>
+                Promise.resolve(
+                  (await match.route).loader!({ params: match.params, request })
+                ).then(async (response): Promise<DataResult> => {
+                  if (response instanceof Response) {
+                    if (
+                      response.headers.get("Content-Type") ===
+                      "application/x-www-form-urlencoded"
+                    ) {
+                      let text = await response.text();
+                      const data = new URLSearchParams(text);
+                      return {
+                        type: ResultType.data,
+                        data,
+                        statusCode: response.status,
+                        headers: response.headers,
+                      };
+                    }
+                  }
+                  throw new Error("Unknown Content-Type");
+                })
+              )
+            );
           },
-          {
-            path: "/parent",
-            children: [
-              {
-                id: "child",
-                path: "child",
-                hasErrorBoundary: true,
-                children: [
-                  {
-                    id: "test",
-                    index: true,
-                    loader: true,
-                  },
-                ],
+        });
+
+        let A = await t.navigate("/test");
+        await A.lazy.test.resolve({
+          loader: () =>
+            new Response(new URLSearchParams({ a: "1", b: "2" }).toString(), {
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
               },
-            ],
-          },
-        ],
-        dataStrategy({ matches, request }) {
-          return Promise.all(
-            matches.map((match) =>
-              Promise.resolve(
-                match.route.loader!({ params: match.params, request })
-              ).then(async (response): Promise<DataResult> => {
-                return {
-                  type: ResultType.error,
-                  error: new Error("Unable to unwrap response"),
-                };
-              })
-            )
-          );
-        },
+            }),
+        });
+
+        expect(t.router.state.errors).toMatchInlineSnapshot(`null`);
+        expect(t.router.state.loaderData.test).toBeInstanceOf(URLSearchParams);
+        expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
       });
 
-      let A = await t.navigate("/parent/child");
-      await A.loaders.test.resolve(new Response("hello world"));
+      it("handles errors at the proper boundary", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              path: "/parent",
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  hasErrorBoundary: true,
+                  children: [
+                    {
+                      id: "test",
+                      index: true,
+                      loader: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          dataStrategy({ matches, request }) {
+            return Promise.all(
+              matches.map((match) =>
+                Promise.resolve(
+                  match.route.loader!({ params: match.params, request })
+                ).then(async (response): Promise<DataResult> => {
+                  return {
+                    type: ResultType.error,
+                    error: new Error("Unable to unwrap response"),
+                  };
+                })
+              )
+            );
+          },
+        });
 
-      expect(t.router.state.loaderData.test).toBeUndefined();
-      expect(t.router.state.errors?.child.message).toBe(
-        "Unable to unwrap response"
-      );
+        let A = await t.navigate("/parent/child");
+        await A.loaders.test.resolve(new Response("hello world"));
+
+        expect(t.router.state.loaderData.test).toBeUndefined();
+        expect(t.router.state.errors?.child.message).toBe(
+          "Unable to unwrap response"
+        );
+      });
     });
+    // describe("action", () => {
+    //   it("should allow a custom implementation to passthrough to default behavior", async () => {
+    //     let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
+    //       return Promise.all(matches.map((match) => defaultStrategy(match)));
+    //     });
+    //     let t = setup({
+    //       routes: [
+    //         {
+    //           path: "/",
+    //         },
+    //         {
+    //           id: "json",
+    //           path: "/test",
+    //           loader: true,
+    //           children: [
+    //             {
+    //               id: "text",
+    //               index: true,
+    //               loader: true,
+    //             },
+    //           ],
+    //         },
+    //       ],
+    //       dataStrategy,
+    //     });
+
+    //     let A = await t.navigate("/test");
+    //     await A.loaders.json.resolve(
+    //       new Response(JSON.stringify({ message: "hello json" }), {
+    //         headers: {
+    //           "Content-Type": "application/json",
+    //         },
+    //       })
+    //     );
+    //     await A.loaders.text.resolve(new Response("hello text"));
+
+    //     expect(t.router.state.loaderData).toEqual({
+    //       json: { message: "hello json" },
+    //       text: "hello text",
+    //     });
+    //     expect(dataStrategy).toHaveBeenCalledWith(
+    //       expect.objectContaining({
+    //         type: "loader",
+    //         request: expect.any(Request),
+    //         matches: expect.arrayContaining([
+    //           expect.objectContaining({
+    //             route: expect.objectContaining({
+    //               id: "json",
+    //             }),
+    //           }),
+    //           expect.objectContaining({
+    //             route: expect.objectContaining({
+    //               id: "text",
+    //             }),
+    //           }),
+    //         ]),
+    //       })
+    //     );
+    //   });
+    // });
   });
 
   describe("router.dispose", () => {

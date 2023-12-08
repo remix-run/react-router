@@ -225,9 +225,9 @@ export interface DetectErrorBoundaryFunction {
 
 export interface DataStrategyFunctionArgs {
   request: Request;
-  matches: AgnosticDataRouteMatch[];
+  matches: AgnosticDataStrategyMatch[];
   type: "loader" | "action";
-  defaultStrategy(match: AgnosticDataRouteMatch): Promise<DataResult>;
+  defaultStrategy(match: AgnosticDataStrategyMatch): Promise<DataResult>;
 }
 
 export interface DataStrategyFunction {
@@ -411,6 +411,14 @@ export interface AgnosticRouteMatch<
 
 export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
+
+export type LazyRoutePromise = PromiseLike<AgnosticDataRouteObject> &
+  AgnosticDataRouteObject;
+
+export interface AgnosticDataStrategyMatch
+  extends Omit<AgnosticRouteMatch<string, AgnosticDataRouteObject>, "route"> {
+  route: LazyRoutePromise;
+}
 
 function isIndexRoute(
   route: AgnosticRouteObject

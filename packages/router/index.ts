@@ -5,6 +5,7 @@ export type {
   AgnosticDataNonIndexRouteObject,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
+  AgnosticDataStrategyMatch,
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,

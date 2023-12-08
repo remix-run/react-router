@@ -212,6 +212,8 @@ describe("lazily loaded route modules", () => {
       expect(A.lazy.lazy.stub).toHaveBeenCalled();
 
       let lazyLoaderStub = jest.fn(() => "LAZY LOADER");
+      // Hmm, this feels like something's missing...
+      t.router.routes[0].lazy = undefined;
       await A.lazy.lazy.resolve({
         loader: lazyLoaderStub,
       });
