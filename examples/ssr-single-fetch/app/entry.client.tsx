@@ -7,6 +7,7 @@ import {
   matchRoutes,
   ResultType,
   RouterProvider,
+  type DataResult,
   type DataRouteObject,
 } from "react-router-dom";
 import { decode } from "turbo-stream";
@@ -73,10 +74,10 @@ initializeRoutes(routes)
               singleFetchResponse.headers.get("X-Remix-Location") || "/";
             const status = Number.parseInt(
               singleFetchResponse.headers.get("X-Remix-Redirect-Status") ||
-                "302",
+              "302",
               10
             );
-            const res = {
+            const res: DataResult = {
               type: ResultType.redirect,
               location,
               status,
@@ -95,7 +96,9 @@ initializeRoutes(routes)
             loaderData?: Record<string, unknown>;
           };
 
-          return matches.map((m) => ({
+          await Promise.all(matches.map(m => m.route))
+
+          return matches.map<DataResult>((m) => ({
             type: ResultType.data,
             data: data[`${type}Data`]?.[m.route.id],
           }));

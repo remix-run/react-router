@@ -7,10 +7,6 @@
     "checkJs": true,
     "noEmit": true,
     "types": ["node", "vite/client"],
-    "jsx": "react-jsx",
-    "rootDir": ".",
-    "paths": {
-      "react-router-dom": ["../../packages/react-router-dom/index.tsx"]
-    }
+    "jsx": "react-jsx"
   }
 }
