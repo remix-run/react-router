@@ -1,39 +1,42 @@
 import { Readable } from "node:stream";
 
-import express from "express";
+import { serve } from "@hono/node-server";
+import { Hono } from "hono";
+// import express from "express";
 import * as vite from "vite";
 
-const app = express();
+const app = new Hono();
 const viteServer = await vite.createServer({
   server: { middlewareMode: true },
   appType: "custom",
 });
 
-app.use(viteServer.middlewares);
+// app.use(viteServer.middlewares);
+app.use("*", async (c, next) => {
+  try {
+    const result = await viteServer.transformRequest(
+      new URL(c.req.url).pathname,
+      { ssr: false }
+    );
+    if (result) {
+      return new Response(result.code, {
+        headers: { "Content-Type": "application/javascript; charset=utf-8" },
+      });
+    }
+  } catch {}
 
-app.use("*", async (req, res) => {
+  await next();
+});
+
+app.all("*", async (c) => {
   const { render } = /** @type {import("./app/entry.server.js")} */ (
     await viteServer.ssrLoadModule("/app/entry.server.tsx")
   );
 
-  const url = new URL(req.originalUrl || "/", "http://localhost:3000");
-
-  // TODO: handle headers
-  let init = {
-    method: req.method,
-    body: /** @type {ReadableStream<Uint8Array> | undefined} */ (undefined),
-  };
-  if (req.method !== "GET" && req.method !== "HEAD") {
-    init.body = /** @type {ReadableStream<Uint8Array> | undefined} */ (
-      Readable.toWeb(req)
-    );
-  }
-  const request = new Request(url, init);
-
   /**
    * @type {Response}
    */
-  const response = await render(request, {
+  return await render(c.req.raw, {
     bootstrapModules: [
       "/@vite/client",
       "/@react-refresh",
@@ -41,21 +44,8 @@ app.use("*", async (req, res) => {
     ],
     // bootstrapScriptContent: reactPlugin.preambleCode,
   });
-
-  // TODO: handle headers
-  res.writeHead(response.status, response.statusText, {});
-
-  if (response.body) {
-    Readable.fromWeb(
-      /** @type {import("node:stream/web").ReadableStream} */ (response.body)
-    ).pipe(res, {
-      end: true,
-    });
-  } else {
-    res.end();
-  }
 });
 
-app.listen(3000, () => {
+serve({ ...app, port: 3000 }, () => {
   console.log("http://localhost:3000");
 });

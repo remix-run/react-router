@@ -64,11 +64,25 @@ export async function render(
 
   let context = await query(request);
 
-  if (context instanceof Response) {
-    return context;
-  }
-
   if (isDataRequest) {
+    if (context instanceof Response) {
+      if (context.status >= 300 && context.status < 400) {
+        const headers = new Headers(context.headers);
+        headers.set("X-Remix-Redirect", "1");
+        headers.set("X-Remix-Location", headers.get("Location") || "/");
+        headers.set("X-Remix-Redirect-Status", context.status.toString());
+        headers.append("Vary", "X-Routes");
+
+        return new Response(undefined, {
+          status: 204,
+          headers,
+        });
+      }
+      return context;
+    }
+
+    // TODO: handle headers
+
     return new Response(
       encode({
         actionData: context.actionData,
@@ -83,6 +97,10 @@ export async function render(
         },
       }
     );
+  }
+
+  if (context instanceof Response) {
+    return context;
   }
 
   let router = createStaticRouter(dataRoutes, context);

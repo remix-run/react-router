@@ -1,7 +1,7 @@
 export function Component() {
   return (
-    <main>
-      <h1>About</h1>
-    </main>
+    <div>
+      <h2>About</h2>
+    </div>
   );
 }

@@ -65,6 +65,30 @@ initializeRoutes(routes)
 
         try {
           const singleFetchResponse = await fetch(singleFetchRequest);
+          if (
+            singleFetchResponse.status === 204 &&
+            !!singleFetchResponse.headers.get("X-Remix-Redirect")
+          ) {
+            const location =
+              singleFetchResponse.headers.get("X-Remix-Location") || "/";
+            const status = Number.parseInt(
+              singleFetchResponse.headers.get("X-Remix-Redirect-Status") ||
+                "302",
+              10
+            );
+            const res = {
+              type: ResultType.redirect,
+              location,
+              status,
+              revalidate:
+                !!singleFetchResponse.headers.get("X-Remix-Revalidate"),
+              reloadDocument: !!singleFetchResponse.headers.get(
+                "X-Remix-Reload-Document"
+              ),
+            };
+            return matches.map(() => res);
+          }
+
           const decoded = await decode(singleFetchResponse.body!);
           const data = decoded.value as {
             actionData?: Record<string, unknown>;
