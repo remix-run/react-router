@@ -36,6 +36,9 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
+  DataResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -56,6 +59,7 @@ import {
   createBrowserHistory,
   createHashHistory,
   joinPaths,
+  ResultType,
   stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
@@ -83,6 +87,9 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
+  DataResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -91,7 +98,11 @@ export type {
   URLSearchParamsInit,
   V7_FormMethod,
 };
-export { createSearchParams };
+export {
+  createSearchParams,
+  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
+  ResultType,
+};
 
 // Note: Keep in sync with react-router exports!
 export type {
@@ -232,6 +243,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
+  dataStrategy?: DataStrategyFunction;
 }
 
 export function createBrowserRouter(
@@ -249,6 +261,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     window: opts?.window,
+    dataStrategy: opts?.dataStrategy,
   }).initialize();
 }
 

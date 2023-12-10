@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "types": ["node", "vite/client"],
+    "jsx": "react-jsx",
+    "rootDir": ".",
+    "paths": {
+      "react-router-dom": ["../../packages/react-router-dom/index.tsx"]
+    }
+  }
+}

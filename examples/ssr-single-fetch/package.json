@@ -1,0 +1,33 @@
+{
+  "name": "react-router-ssr-remix-like-setup",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "USE_SOURCE=1 node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/core": "^7.23.5",
+    "@types/babel__core": "^7.20.5",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.2",
+    "@types/react": "^18.2.40",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.0",
+    "babel-plugin-eliminator": "^1.0.1",
+    "browserslist": "^4.22.1",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.4",
+    "vite-tsconfig-paths": "^4.2.1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1",
+    "turbo-stream": "^1.2.0"
+  }
+}
