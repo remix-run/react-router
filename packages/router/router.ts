@@ -8,6 +8,7 @@ import {
   warning,
 } from "./history";
 import type {
+  AgnosticDataNonIndexRouteObject,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   DataStrategyMatch,
@@ -1455,8 +1456,7 @@ export function createRouter(init: RouterInit): Router {
     let matches = matchRoutes(routesToUse, location, basename);
     let flushSync = (opts && opts.flushSync) === true;
 
-    // Short circuit with a 404 on the root error boundary if we match nothing
-    if (!matches) {
+    function handle404() {
       let error = getInternalRouterError(404, { pathname: location.pathname });
       let { matches: notFoundMatches, route } =
         getShortCircuitMatches(routesToUse);
@@ -1473,6 +1473,11 @@ export function createRouter(init: RouterInit): Router {
         },
         { flushSync }
       );
+    }
+
+    // Short circuit with a 404 on the root error boundary if we match nothing
+    if (!matches) {
+      handle404();
       return;
     }
 
@@ -1490,6 +1495,25 @@ export function createRouter(init: RouterInit): Router {
     ) {
       completeNavigation(location, { matches }, { flushSync });
       return;
+    }
+
+    // Fog of war POC
+    // - TODO: This is a bit tricker to do as submitting/loading states - what
+    //   if we introduce an optional "discovering" state ahead of them?  It
+    //   feels sort of weird to start `submitting` and then 404...
+    //   idle -> discovering -> submitting -> loading -> idle
+    //   idle -> discovering -> loading -> idle
+    //   idle -> discovering -> idle (404s after discovering)
+    let fogMatch = isFogOFWarPath(matches);
+    if (fogMatch) {
+      let routesToUse = inFlightDataRoutes || dataRoutes;
+      let newMatches = await handleFogOFWar(fogMatch, routesToUse, location);
+      if (newMatches) {
+        matches = newMatches;
+      } else {
+        handle404();
+        return;
+      }
     }
 
     // Create a controller/Request for this navigation
@@ -1570,6 +1594,51 @@ export function createRouter(init: RouterInit): Router {
       loaderData,
       errors,
     });
+  }
+
+  function isFogOFWarPath(matches: AgnosticDataRouteMatch[]):
+    | (AgnosticDataNonIndexRouteObject & {
+        children: () => Promise<AgnosticDataRouteObject[]>;
+      })
+    | false {
+    if (matches && matches.length > 0) {
+      let route = matches[matches.length - 1].route;
+      if (
+        typeof route.children === "function" &&
+        route.path &&
+        route.path.endsWith("/*")
+      ) {
+        return route as AgnosticDataNonIndexRouteObject & {
+          children: () => Promise<AgnosticDataRouteObject[]>;
+        };
+      }
+    }
+    return false;
+  }
+
+  async function handleFogOFWar(
+    fogRoute: AgnosticDataNonIndexRouteObject & {
+      children: () => Promise<AgnosticDataRouteObject[]>;
+    },
+    routesToUse: AgnosticDataRouteObject[],
+    location: Location
+  ): Promise<AgnosticDataRouteMatch[] | null> {
+    let routeToUpdate = manifest[fogRoute.id];
+    invariant(routeToUpdate !== undefined, "No route found in manifest");
+    invariant(
+      typeof routeToUpdate.path === "string" &&
+        routeToUpdate.path.endsWith("/*"),
+      "Route must be a splat route"
+    );
+    // TODO: why is this cast needed?
+    let children = (await fogRoute.children()) as AgnosticDataRouteObject[];
+    // Remove splat and add loaded child routes
+    routeToUpdate.path = routeToUpdate.path.replace(/\/\*$/, "");
+    routeToUpdate.children = children.map((route) => ({
+      ...route,
+      ...mapRouteProperties(route),
+    }));
+    return matchRoutes(routesToUse, location, basename);
   }
 
   // Call the action matched by the leaf route for this navigation and handle

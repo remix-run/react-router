@@ -329,7 +329,7 @@ export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
  * Non-index routes may have children, but cannot have index
  */
 export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
-  children?: AgnosticRouteObject[];
+  children?: AgnosticRouteObject[] | (() => Promise<AgnosticRouteObject[]>);
   index?: false;
 };
 
@@ -346,7 +346,9 @@ export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
 };
 
 export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
-  children?: AgnosticDataRouteObject[];
+  children?:
+    | AgnosticDataRouteObject[]
+    | (() => Promise<AgnosticDataRouteObject[]>);
   id: string;
 };
 
@@ -478,12 +480,25 @@ export function convertRoutesToDataRoutes(
       manifest[id] = pathOrLayoutRoute;
 
       if (route.children) {
-        pathOrLayoutRoute.children = convertRoutesToDataRoutes(
-          route.children,
-          mapRouteProperties,
-          treePath,
-          manifest
-        );
+        if (typeof route.children === "function") {
+          let loadChildren = route.children;
+          pathOrLayoutRoute.children = async () => {
+            let children = await loadChildren();
+            return convertRoutesToDataRoutes(
+              children,
+              mapRouteProperties,
+              treePath,
+              manifest
+            );
+          };
+        } else {
+          pathOrLayoutRoute.children = convertRoutesToDataRoutes(
+            route.children,
+            mapRouteProperties,
+            treePath,
+            manifest
+          );
+        }
       }
 
       return pathOrLayoutRoute;
@@ -615,7 +630,10 @@ function flattenRoutes<
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
       );
-
+      invariant(
+        typeof route.children !== "function",
+        "Route children must be resolved prior to calling flattenRoutes"
+      );
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 

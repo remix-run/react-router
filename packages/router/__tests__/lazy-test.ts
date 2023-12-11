@@ -1260,4 +1260,46 @@ describe("lazily loaded route modules", () => {
       expect(err?.message).toBe("LAZY LOADER ERROR");
     });
   });
+
+  it("Fog of war (💨 of 🗡️)", async () => {
+    let router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "dashboard",
+          path: "dashboard/*",
+          // Two things required at the moment
+          // - need a splat to initially "match"
+          // - when children is a function we call it and append the routes
+          async children() {
+            await new Promise((r) => setTimeout(r, 100));
+            return [
+              {
+                id: "dashboardUsers",
+                path: "users",
+                async loader() {
+                  await new Promise((r) => setTimeout(r, 100));
+                  return "USERS";
+                },
+              },
+            ];
+          },
+        },
+      ],
+    });
+
+    router.navigate("/dashboard/users");
+    await new Promise((r) => setTimeout(r, 300));
+    expect(router.state.location.pathname).toBe("/dashboard/users");
+    expect(router.state.loaderData).toEqual({
+      dashboardUsers: "USERS",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "dashboard",
+      "dashboardUsers",
+    ]);
+  });
 });
