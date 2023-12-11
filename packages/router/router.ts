@@ -2419,13 +2419,11 @@ export function createRouter(init: RouterInit): Router {
             request,
             type: "loader",
             defaultStrategy(match) {
-              return callLoaderOrAction(
+              return callLoaderOrActionImplementation(
                 "loader",
                 request,
                 match,
                 matches,
-                manifest,
-                mapRouteProperties,
                 basename,
                 future.v7_relativeSplatPath
               );
@@ -2462,7 +2460,7 @@ export function createRouter(init: RouterInit): Router {
               "Expected matches for fetcher in defaultStrategy"
             );
 
-            return callLoaderOrAction(
+            return callLoaderOrActionImplementation(
               "loader",
               createClientSideRequest(
                 init.history,
@@ -2471,8 +2469,6 @@ export function createRouter(init: RouterInit): Router {
               ),
               match,
               f.matches,
-              manifest,
-              mapRouteProperties,
               basename,
               future.v7_relativeSplatPath
             );
