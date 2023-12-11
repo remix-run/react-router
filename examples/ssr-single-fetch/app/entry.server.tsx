@@ -40,7 +40,11 @@ export async function render(
       if (isDataRequest && xRouteIds?.length) {
         let routesToLoad = new Set(xRouteIds);
 
-        await Promise.all(matches.map(m => m.route))
+        await Promise.all(
+          matches
+            .filter((m) => routesToLoad.has(m.route.id))
+            .map((m) => m.route)
+        );
         return Promise.all(
           matches.map((match) => {
             if (!routesToLoad!.has(match.route.id)) {
@@ -55,7 +59,7 @@ export async function render(
         );
       }
 
-      await Promise.all(matches.map(m => m.route))
+      await Promise.all(matches.map((m) => m.route));
       return Promise.all(
         matches.map((match) => {
           return defaultStrategy(match);
