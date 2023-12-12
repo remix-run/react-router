@@ -28,7 +28,6 @@ import invariant from "../invariant";
 import { createRequestHandler } from "./node/adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
-import { serverEntryId } from "./server-entry-id";
 import { resolveFileUrl } from "./resolve-file-url";
 import { removeExports } from "./remove-exports";
 import { replaceImportSpecifier } from "./replace-import-specifier";
@@ -101,6 +100,7 @@ export type ResolvedRemixVitePluginConfig = Pick<
   | "serverModuleFormat"
 >;
 
+let serverBuildId = VirtualModule.id("server-build");
 let serverManifestId = VirtualModule.id("server-manifest");
 let browserManifestId = VirtualModule.id("browser-manifest");
 let remixReactProxyId = VirtualModule.id("remix-react-proxy");
@@ -121,7 +121,7 @@ const resolveRelativeRouteFilePath = (
   return vite.normalizePath(fullPath);
 };
 
-let vmods = [serverEntryId, serverManifestId, browserManifestId];
+let vmods = [serverBuildId, serverManifestId, browserManifestId];
 
 const getHash = (source: BinaryLike, maxLength?: number): string => {
   let hash = createHash("sha256").update(source).digest("hex");
@@ -629,7 +629,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
                     rollupOptions: {
                       ...viteUserConfig.build?.rollupOptions,
                       preserveEntrySignatures: "exports-only",
-                      input: serverEntryId,
+                      input: serverBuildId,
                       output: {
                         entryFileNames: path.basename(
                           pluginConfig.serverBuildPath
@@ -822,7 +822,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             viteDevServer.middlewares.use(async (req, res, next) => {
               try {
                 let build = (await viteDevServer.ssrLoadModule(
-                  serverEntryId
+                  serverBuildId
                 )) as ServerBuild;
 
                 let handle = createRequestHandler(build, {
@@ -924,7 +924,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       },
       async load(id) {
         switch (id) {
-          case VirtualModule.resolve(serverEntryId): {
+          case VirtualModule.resolve(serverBuildId): {
             return await getServerEntry();
           }
           case VirtualModule.resolve(serverManifestId): {

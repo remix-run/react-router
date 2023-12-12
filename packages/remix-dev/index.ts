@@ -6,4 +6,4 @@ export * as cli from "./cli/index";
 
 export type { Manifest as AssetsManifest } from "./manifest";
 export { getDependenciesToBundle } from "./dependencies";
-export { unstable_vitePlugin, unstable_viteServerBuildModuleId } from "./vite";
+export { unstable_vitePlugin } from "./vite";

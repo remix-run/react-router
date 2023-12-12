@@ -41,7 +41,6 @@ export const EXPRESS_SERVER = (args: {
   loadContext?: Record<string, unknown>;
 }) =>
   String.raw`
-    import { unstable_viteServerBuildModuleId } from "@remix-run/dev";
     import { createRequestHandler } from "@remix-run/express";
     import { installGlobals } from "@remix-run/node";
     import express from "express";
@@ -73,7 +72,7 @@ export const EXPRESS_SERVER = (args: {
       "*",
       createRequestHandler({
         build: vite
-          ? () => vite.ssrLoadModule(unstable_viteServerBuildModuleId)
+          ? () => vite.ssrLoadModule("virtual:remix/server-build")
           : await import("./build/index.js"),
         getLoadContext: () => (${JSON.stringify(args.loadContext ?? {})}),
       })
