@@ -276,16 +276,6 @@ const getRouteModuleExports = async (
   return exportNames;
 };
 
-const showUnstableWarning = () => {
-  console.warn(
-    colors.yellow(
-      colors.bold(
-        "\n  ⚠️  Remix support for Vite is unstable and\n     not yet recommended for production\n"
-      )
-    )
-  );
-};
-
 const getViteMajorVersion = (): number => {
   let vitePkg = require("vite/package.json");
   return parseInt(vitePkg.version.split(".")[0]!);
@@ -725,40 +715,30 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
 
         if (
           viteCommand === "build" &&
-          // Only show warning on initial client build
-          !viteConfig.build.ssr
-        ) {
-          showUnstableWarning();
-        }
-
-        if (
-          viteCommand === "build" &&
           viteConfig.mode === "production" &&
           !viteConfig.build.ssr &&
           viteConfig.build.sourcemap
         ) {
           viteConfig.logger.warn(
             colors.yellow(
-              colors.bold("  ⚠️  Source maps are enabled in production\n") +
+              "\n" +
+                colors.bold("  ⚠️  Source maps are enabled in production\n") +
                 [
                   "This makes your server code publicly",
                   "visible in the browser. This is highly",
                   "discouraged! If you insist, ensure that",
                   "you are using environment variables for",
                   "secrets and not hard-coding them in",
-                  "your source code.\n",
+                  "your source code.",
                 ]
                   .map((line) => "     " + line)
-                  .join("\n")
+                  .join("\n") +
+                "\n"
             )
           );
         }
       },
       configureServer(viteDevServer) {
-        viteDevServer.httpServer?.on("listening", () => {
-          setTimeout(showUnstableWarning, 50);
-        });
-
         setDevServerHooks({
           // Give the request handler access to the critical CSS in dev to avoid a
           // flash of unstyled content since Vite injects CSS file contents via JS
