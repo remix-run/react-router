@@ -518,6 +518,17 @@ export function matchRoutes<
   locationArg: Partial<Location> | string,
   basename = "/"
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
+  return matchRoutesImpl(routes, locationArg, false, basename);
+}
+
+export function matchRoutesImpl<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
+  routes: RouteObjectType[],
+  locationArg: Partial<Location> | string,
+  allowPartial = false,
+  basename = "/"
+): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -539,7 +550,11 @@ export function matchRoutes<
     // should be a safe operation.  This avoids needing matchRoutes to be
     // history-aware.
     let decoded = decodePath(pathname);
-    matches = matchRouteBranch<string, RouteObjectType>(branches[i], decoded);
+    matches = matchRouteBranch<string, RouteObjectType>(
+      branches[i],
+      decoded,
+      allowPartial
+    );
   }
 
   return matches;
@@ -786,7 +801,8 @@ function matchRouteBranch<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
-  pathname: string
+  pathname: string,
+  allowPartial = false
 ): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
@@ -805,7 +821,21 @@ function matchRouteBranch<
       remainingPathname
     );
 
-    if (!match) return null;
+    if (!match) {
+      if (end && allowPartial) {
+        match = matchPath(
+          {
+            path: meta.relativePath,
+            caseSensitive: meta.caseSensitive,
+            end: false,
+          },
+          remainingPathname
+        );
+      }
+      if (!match) {
+        return null;
+      }
+    }
 
     Object.assign(matchedParams, match.params);
 

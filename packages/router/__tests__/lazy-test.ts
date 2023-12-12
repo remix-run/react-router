@@ -1270,7 +1270,7 @@ describe("lazily loaded route modules", () => {
         },
         {
           id: "dashboard",
-          path: "dashboard/*",
+          path: "dashboard",
           // Two things required at the moment
           // - need a splat to initially "match"
           // - when children is a function we call it and append the routes
