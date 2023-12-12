@@ -61,6 +61,8 @@ const ROUTE_EXPORTS = new Set([
   "shouldRevalidate",
 ]);
 
+const SERVER_ONLY_EXPORTS = ["loader", "action", "headers"];
+
 // We need to provide different JSDoc comments in some cases due to differences
 // between the Remix config and the Vite plugin.
 type RemixConfigJsdocOverrides = {
@@ -927,22 +929,89 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       },
     },
     {
-      name: "remix-empty-server-modules",
+      name: "remix-dot-server",
       enforce: "pre",
-      async transform(_code, id, options) {
+      async resolveId(id, importer, options) {
         if (options?.ssr) return;
+
+        let isResolving = options?.custom?.["remix-dot-server"] ?? false;
+        if (isResolving) return;
+        options.custom = { ...options.custom, "remix-dot-server": true };
+        let resolved = await this.resolve(id, importer, options);
+        if (!resolved) return;
+
         let serverFileRE = /\.server(\.[cm]?[jt]sx?)?$/;
         let serverDirRE = /\/\.server\//;
-        if (serverFileRE.test(id) || serverDirRE.test(id)) {
-          return {
-            code: "export {}",
-            map: null,
-          };
+        let isDotServer =
+          serverFileRE.test(resolved!.id) || serverDirRE.test(resolved!.id);
+        if (!isDotServer) return;
+
+        if (!importer) throw Error(`Importer not found: ${id}`);
+
+        let vite = importViteEsmSync();
+        let pluginConfig = await resolvePluginConfig();
+        let importerShort = vite.normalizePath(
+          path.relative(pluginConfig.rootDirectory, importer)
+        );
+        let isRoute = getRoute(pluginConfig, importer);
+
+        if (isRoute) {
+          let serverOnlyExports = SERVER_ONLY_EXPORTS.map(
+            (xport) => `\`${xport}\``
+          ).join(", ");
+          throw Error(
+            [
+              colors.red(`Server-only module referenced by client`),
+              "",
+              `    '${id}' imported by route '${importerShort}'`,
+              "",
+              `  The only route exports that can reference server-only modules are:`,
+              `    ${serverOnlyExports}`,
+              "",
+              `  But other route exports in '${importerShort}' depend on '${id}'.`,
+              "",
+              "  For more see https://remix.run/docs/en/main/discussion/server-vs-client",
+              "",
+            ].join("\n")
+          );
         }
+
+        let importedBy = path.parse(importerShort);
+        let dotServerFile = vite.normalizePath(
+          path.join(
+            importedBy.dir,
+            importedBy.name + ".server" + importedBy.ext
+          )
+        );
+
+        throw Error(
+          [
+            colors.red(`Server-only module referenced by client`),
+            "",
+            `    '${id}' imported by '${importerShort}'`,
+            "",
+
+            `  * If all code in '${importerShort}' is server-only:`,
+            "",
+            `    Rename it to '${dotServerFile}'`,
+            "",
+            `  * Otherwise:`,
+            "",
+            `    - Keep client-safe code in '${importerShort}'`,
+            `    - And move server-only code to a \`.server\` file`,
+            `      e.g. '${dotServerFile}'`,
+            "",
+            "  If you have lots of `.server` files, try using",
+            "  a `.server` directory e.g. 'app/.server'",
+            "",
+            "  For more, see https://remix.run/docs/en/main/future/vite#server-code-not-tree-shaken-in-development",
+            "",
+          ].join("\n")
+        );
       },
     },
     {
-      name: "remix-empty-client-modules",
+      name: "remix-dot-client",
       enforce: "post",
       async transform(code, id, options) {
         if (!options?.ssr) return;
@@ -991,10 +1060,8 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           throw Error(message);
         }
 
-        let serverExports = ["loader", "action", "headers"];
-
         return {
-          code: removeExports(code, serverExports),
+          code: removeExports(code, SERVER_ONLY_EXPORTS),
           map: null,
         };
       },
