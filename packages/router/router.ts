@@ -1466,17 +1466,39 @@ export function createRouter(init: RouterInit): Router {
       //   idle -> discovering -> submitting -> loading -> idle
       //   idle -> discovering -> loading -> idle
       //   idle -> discovering -> idle (404s after discovering)
-      let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
-        routesToUse,
-        location,
-        true,
-        basename
-      );
-      if (fogMatches) {
+      while (true) {
+        let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+          routesToUse,
+          location,
+          true,
+          basename
+        );
+
+        if (!fogMatches) {
+          // No partial match - this is a legit 404
+          break;
+        }
+
+        // Found a partial match
         let fogMatch = fogMatches[fogMatches.length - 1];
         if (fogMatch && typeof fogMatch.route.children === "function") {
-          let routesToUse = inFlightDataRoutes || dataRoutes;
-          matches = await handleFogOFWar(fogMatch.route, routesToUse, location);
+          let routeToUpdate = manifest[fogMatch.route.id];
+          invariant(
+            typeof fogMatch.route.children === "function",
+            "Route must have a children function"
+          );
+          invariant(routeToUpdate !== undefined, "No route found in manifest");
+          let children =
+            (await fogMatch.route.children()) as AgnosticDataRouteObject[];
+          routeToUpdate.children = children.map((route) =>
+            Object.assign(route, mapRouteProperties(route))
+          );
+          let newMatches = matchRoutes(routesToUse, location, basename);
+          if (newMatches) {
+            matches = newMatches;
+          }
+        } else {
+          break;
         }
       }
 
@@ -1597,25 +1619,6 @@ export function createRouter(init: RouterInit): Router {
       loaderData,
       errors,
     });
-  }
-
-  async function handleFogOFWar(
-    fogRoute: AgnosticDataNonIndexRouteObject,
-    routesToUse: AgnosticDataRouteObject[],
-    location: Location
-  ): Promise<AgnosticDataRouteMatch[] | null> {
-    let routeToUpdate = manifest[fogRoute.id];
-    invariant(
-      typeof fogRoute.children === "function",
-      "Route must have a children function"
-    );
-    invariant(routeToUpdate !== undefined, "No route found in manifest");
-    let children = (await fogRoute.children()) as AgnosticDataRouteObject[];
-    routeToUpdate.children = children.map((route) => ({
-      ...route,
-      ...mapRouteProperties(route),
-    }));
-    return matchRoutes(routesToUse, location, basename);
   }
 
   // Call the action matched by the leaf route for this navigation and handle
@@ -5289,5 +5292,4 @@ function persistAppliedTransitions(
     }
   }
 }
-
 //#endregion
