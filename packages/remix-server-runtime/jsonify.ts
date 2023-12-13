@@ -21,6 +21,9 @@ export type Jsonify<T> =
   T extends Number ? number :
   T extends Boolean ? boolean :
 
+  // Promises JSON.stringify to an empty object
+  T extends Promise<unknown> ? EmptyObject :
+
   // Map & Set
   T extends Map<unknown, unknown> ? EmptyObject :
   T extends Set<unknown> ? EmptyObject :
@@ -119,6 +122,7 @@ type _tests = [
   Expect<Equal<Jsonify<String>, string>>,
   Expect<Equal<Jsonify<Number>, number>>,
   Expect<Equal<Jsonify<Boolean>, boolean>>,
+  Expect<Equal<Jsonify<Promise<string>>, EmptyObject>>,
 
   // Map & Set
   Expect<Equal<Jsonify<Map<unknown, unknown>>, EmptyObject>>,
@@ -251,7 +255,7 @@ type NeverToNull<T> = [T] extends [never] ? null : T;
 
 // adapted from https://github.com/sindresorhus/type-fest/blob/main/source/empty-object.d.ts
 declare const emptyObjectSymbol: unique symbol;
-type EmptyObject = { [emptyObjectSymbol]?: never };
+export type EmptyObject = { [emptyObjectSymbol]?: never };
 
 // adapted from https://github.com/type-challenges/type-challenges/blob/main/utils/index.d.ts
 type IsAny<T> = 0 extends 1 & T ? true : false;
