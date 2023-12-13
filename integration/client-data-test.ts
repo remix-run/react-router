@@ -315,7 +315,6 @@ test.describe("Client Data", () => {
             childClientLoader: false,
             childClientLoaderHydrate: false,
           }),
-          // Blow away parent.child.tsx with our own deferred version
           "app/routes/parent.child.tsx": js`
             import * as React from 'react';
             import { defer, json } from '@remix-run/node'
@@ -404,7 +403,60 @@ test.describe("Client Data", () => {
       expect(html).toMatch("Child Client Loader");
     });
 
-    test("clientLoader.hydrate is automatically implied when no server loader exists", async ({
+    test("HydrateFallback is not rendered if clientLoader.hydrate is not set (w/server loader)", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...getFiles({
+            parentClientLoader: false,
+            parentClientLoaderHydrate: false,
+            childClientLoader: false,
+            childClientLoaderHydrate: false,
+          }),
+          "app/routes/parent.child.tsx": js`
+            import * as React from 'react';
+            import { json } from '@remix-run/node';
+            import { useLoaderData } from '@remix-run/react';
+            export function loader() {
+              return json({
+                message: "Child Server Loader Data",
+              });
+            }
+            export async function clientLoader({ serverLoader }) {
+              await new Promise(r => setTimeout(r, 100));
+              return {
+                message: "Child Client Loader Data",
+              };
+            }
+            export function HydrateFallback() {
+              return <p>SHOULD NOT SEE ME</p>
+            }
+            export default function Component() {
+              let data = useLoaderData();
+              return <p id="child-data">{data.message}</p>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      // Ensure initial document request contains the child fallback _and_ the
+      // subsequent streamed/resolved deferred data
+      let doc = await fixture.requestDocument("/parent/child");
+      let html = await doc.text();
+      expect(html).toMatch("Child Server Loader Data");
+      expect(html).not.toMatch("SHOULD NOT SEE ME");
+
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      await page.waitForSelector("#child-data");
+      html = await app.getHtml("main");
+      expect(html).toMatch("Child Server Loader Data");
+    });
+
+    test("clientLoader.hydrate is automatically implied when no server loader exists (w HydrateFallback)", async ({
       page,
     }) => {
       appFixture = await createAppFixture(
@@ -416,7 +468,6 @@ test.describe("Client Data", () => {
               childClientLoader: false,
               childClientLoaderHydrate: false,
             }),
-            // Blow away parent.child.tsx with our own version without a server loader
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
               import { useLoaderData } from '@remix-run/react';
@@ -446,6 +497,232 @@ test.describe("Client Data", () => {
       await page.waitForSelector("#child-data");
       html = await app.getHtml("main");
       expect(html).toMatch("Loader Data (clientLoader only)");
+    });
+
+    test("clientLoader.hydrate is automatically implied when no server loader exists (w/o HydrateFallback)", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { useLoaderData } from '@remix-run/react';
+              // Even without setting hydrate=true, this should run on hydration
+              export async function clientLoader({ serverLoader }) {
+                await new Promise(r => setTimeout(r, 100));
+                return {
+                  message: "Loader Data (clientLoader only)",
+                };
+              }
+              export default function Component() {
+                let data = useLoaderData();
+                return <p id="child-data">{data.message}</p>;
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      let html = await app.getHtml();
+      expect(html).toMatch(
+        "💿 Hey developer 👋. You can provide a way better UX than this"
+      );
+      expect(html).not.toMatch("child-data");
+      await page.waitForSelector("#child-data");
+      html = await app.getHtml("main");
+      expect(html).toMatch("Loader Data (clientLoader only)");
+    });
+
+    test("throws a 400 if you call serverLoader without a server loader", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { useLoaderData, useRouteError } from '@remix-run/react';
+              export async function clientLoader({ serverLoader }) {
+                return await serverLoader();
+              }
+              export default function Component() {
+                return <p>Child</p>;
+              }
+              export function HydrateFallback() {
+                return <p>Loading...</p>;
+              }
+              export function ErrorBoundary() {
+                let error = useRouteError();
+                return <p id="child-error">{error.status} {error.data}</p>;
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      await page.waitForSelector("#child-error");
+      let html = await app.getHtml("#child-error");
+      expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
+        "400 Error: You are trying to call serverLoader() on a route that does " +
+          'not have a server loader (routeId: "routes/parent.child")'
+      );
+    });
+
+    test("initial hydration data check functions properly", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { json } from '@remix-run/node';
+              import { useLoaderData, useRevalidator } from '@remix-run/react';
+              let isFirstCall = true;
+              export async function loader({ serverLoader }) {
+                if (isFirstCall) {
+                  isFirstCall = false
+                  return json({
+                    message: "Child Server Loader Data (1)",
+                  });
+                }
+                return json({
+                  message: "Child Server Loader Data (2+)",
+                });
+              }
+              export async function clientLoader({ serverLoader }) {
+                await new Promise(r => setTimeout(r, 100));
+                let serverData = await serverLoader();
+                return {
+                  message: serverData.message + " (mutated by client)",
+                };
+              }
+              clientLoader.hydrate=true;
+              export default function Component() {
+                let data = useLoaderData();
+                let revalidator = useRevalidator();
+                return (
+                  <>
+                    <p id="child-data">{data.message}</p>
+                    <button onClick={() => revalidator.revalidate()}>Revalidate</button>
+                  </>
+                );
+              }
+              export function HydrateFallback() {
+                return <p>Loading...</p>
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      await page.waitForSelector("#child-data");
+      let html = await app.getHtml();
+      expect(html).toMatch("Child Server Loader Data (1) (mutated by client)");
+      app.clickElement("button");
+      await page.waitForSelector(':has-text("Child Server Loader Data (2+)")');
+      html = await app.getHtml("main");
+      expect(html).toMatch("Child Server Loader Data (2+) (mutated by client)");
+    });
+
+    test("initial hydration data check functions properly even if serverLoader isn't called on hydration", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { json } from '@remix-run/node';
+              import { useLoaderData, useRevalidator } from '@remix-run/react';
+              let isFirstCall = true;
+              export async function loader({ serverLoader }) {
+                if (isFirstCall) {
+                  isFirstCall = false
+                  return json({
+                    message: "Child Server Loader Data (1)",
+                  });
+                }
+                return json({
+                  message: "Child Server Loader Data (2+)",
+                });
+              }
+              let isFirstClientCall = true;
+              export async function clientLoader({ serverLoader }) {
+                await new Promise(r => setTimeout(r, 100));
+                if (isFirstClientCall) {
+                  isFirstClientCall = false;
+                  // First time through - don't even call serverLoader
+                  return {
+                    message: "Child Client Loader Data",
+                  };
+                }
+                // Only call the serverLoader on subsequent calls and this
+                // should *not* return us the initialData any longer
+                let serverData = await serverLoader();
+                return {
+                  message: serverData.message + " (mutated by client)",
+                };
+              }
+              clientLoader.hydrate=true;
+              export default function Component() {
+                let data = useLoaderData();
+                let revalidator = useRevalidator();
+                return (
+                  <>
+                    <p id="child-data">{data.message}</p>
+                    <button onClick={() => revalidator.revalidate()}>Revalidate</button>
+                  </>
+                );
+              }
+              export function HydrateFallback() {
+                return <p>Loading...</p>
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      await page.waitForSelector("#child-data");
+      let html = await app.getHtml();
+      expect(html).toMatch("Child Client Loader Data");
+      app.clickElement("button");
+      await page.waitForSelector(':has-text("Child Server Loader Data (2+)")');
+      html = await app.getHtml("main");
+      expect(html).toMatch("Child Server Loader Data (2+) (mutated by client)");
     });
   });
 
@@ -533,6 +810,50 @@ test.describe("Client Data", () => {
       let html = await app.getHtml("main");
       expect(html).toMatch("Parent Server Loader (mutated by client)");
       expect(html).toMatch("Child Server Loader (mutated by client");
+    });
+
+    test("throws a 400 if you call serverLoader without a server loader", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { useLoaderData, useRouteError } from '@remix-run/react';
+              export async function clientLoader({ serverLoader }) {
+                return await serverLoader();
+              }
+              export default function Component() {
+                return <p>Child</p>;
+              }
+              export function HydrateFallback() {
+                return <p>Loading...</p>;
+              }
+              export function ErrorBoundary() {
+                let error = useRouteError();
+                return <p id="child-error">{error.status} {error.data}</p>;
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/");
+      await app.clickLink("/parent/child");
+      await page.waitForSelector("#child-error");
+      let html = await app.getHtml("#child-error");
+      expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
+        "400 Error: You are trying to call serverLoader() on a route that does " +
+          'not have a server loader (routeId: "routes/parent.child")'
+      );
     });
   });
 
@@ -697,6 +1018,51 @@ test.describe("Client Data", () => {
       expect(html).toMatch("Parent Server Loader (mutated by client)");
       expect(html).toMatch("Child Server Loader (mutated by client)");
       expect(html).toMatch("Child Server Action (mutated by client)");
+    });
+
+    test("throws a 400 if you call serverAction without a server action", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { json } from '@remix-run/node';
+              import { Form, useRouteError } from '@remix-run/react';
+              export async function clientAction({ serverAction }) {
+                return await serverAction();
+              }
+              export default function Component() {
+                return (
+                  <Form method="post">
+                    <button type="submit">Submit</button>
+                  </Form>
+                );
+              }
+              export function ErrorBoundary() {
+                let error = useRouteError();
+                return <p id="child-error">{error.status} {error.data}</p>;
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/parent/child");
+      app.clickSubmitButton("/parent/child");
+      await page.waitForSelector("#child-error");
+      let html = await app.getHtml("#child-error");
+      expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
+        "400 Error: You are trying to call serverAction() on a route that does " +
+          'not have a server action (routeId: "routes/parent.child")'
+      );
     });
   });
 
@@ -869,6 +1235,53 @@ test.describe("Client Data", () => {
       expect(html).toMatch("Parent Server Loader (mutated by client)");
       expect(html).toMatch("Child Server Loader (mutated by client)");
       expect(html).toMatch("Child Server Action (mutated by client)");
+    });
+
+    test("throws a 400 if you call serverAction without a server action", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: false,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/parent.child.tsx": js`
+              import * as React from 'react';
+              import { json } from '@remix-run/node';
+              import { Form, useRouteError } from '@remix-run/react';
+              export async function clientAction({ serverAction }) {
+                return await serverAction();
+              }
+              export default function Component() {
+                return (
+                  <Form method="post">
+                    <button type="submit">Submit</button>
+                  </Form>
+                );
+              }
+              export function ErrorBoundary() {
+                let error = useRouteError();
+                return <p id="child-error">{error.status} {error.data}</p>;
+              }
+            `,
+          },
+        })
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await app.goto("/parent/child");
+      await page.waitForSelector("form");
+      app.clickSubmitButton("/parent/child");
+      await page.waitForSelector("#child-error");
+      let html = await app.getHtml("#child-error");
+      expect(html.replace(/\n/g, " ").replace(/ +/g, " ")).toMatch(
+        "400 Error: You are trying to call serverAction() on a route that does " +
+          'not have a server action (routeId: "routes/parent.child")'
+      );
     });
   });
 });
