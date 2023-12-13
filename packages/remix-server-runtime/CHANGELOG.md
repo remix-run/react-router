@@ -1,30 +1,6 @@
 # `@remix-run/server-runtime`
 
-## 2.4.0-pre.10
-
-## 2.4.0-pre.9
-
-## 2.4.0-pre.8
-
-## 2.4.0-pre.7
-
-### Patch Changes
-
-- [REMOVE] Add missing `hasClientAction`/`hasClientLoader` to `EntryRoute` type ([#8248](https://github.com/remix-run/remix/pull/8248))
-
-## 2.4.0-pre.6
-
-## 2.4.0-pre.5
-
-## 2.4.0-pre.4
-
-## 2.4.0-pre.3
-
-## 2.4.0-pre.2
-
-## 2.4.0-pre.1
-
-## 2.4.0-pre.0
+## 2.4.0
 
 ### Minor Changes
 
@@ -48,6 +24,7 @@
   For more information, please refer to the [`clientLoader`](https://remix.run/route/client-loader) and [`clientAction`](https://remix.run/route/client-action) documentation.
 
 - Deprecate `DataFunctionArgs` in favor of `LoaderFunctionArgs`/`ActionFunctionArgs`. This is aimed at keeping the types aligned across server/client loaders/actions now that `clientLoader`/`clientActon` functions have `serverLoader`/`serverAction` parameters which differentiate `ClientLoaderFunctionArgs`/`ClientActionFunctionArgs`. ([#8173](https://github.com/remix-run/remix/pull/8173))
+
 - Add a new `future.v3_relativeSplatPath` flag to implement a breaking bug fix to relative routing when inside a splat route. For more information, please see the React Router [`6.21.0` Release Notes](https://github.com/remix-run/react-router/blob/release-next/CHANGELOG.md#futurev7_relativesplatpath) and the [`useResolvedPath` docs](https://remix.run/hooks/use-resolved-path#splat-paths). ([#8216](https://github.com/remix-run/remix/pull/8216))
 
 ### Patch Changes

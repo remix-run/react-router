@@ -1,91 +1,12 @@
 # `@remix-run/dev`
 
-## 2.4.0-pre.10
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.10`
-  - `@remix-run/server-runtime@2.4.0-pre.10`
-
-## 2.4.0-pre.9
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.9`
-  - `@remix-run/server-runtime@2.4.0-pre.9`
-
-## 2.4.0-pre.8
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.8`
-  - `@remix-run/server-runtime@2.4.0-pre.8`
-
-## 2.4.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@2.4.0-pre.7`
-  - `@remix-run/node@2.4.0-pre.7`
-
-## 2.4.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.6`
-  - `@remix-run/server-runtime@2.4.0-pre.6`
-
-## 2.4.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.5`
-  - `@remix-run/server-runtime@2.4.0-pre.5`
-
-## 2.4.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.4`
-  - `@remix-run/server-runtime@2.4.0-pre.4`
-
-## 2.4.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.3`
-  - `@remix-run/server-runtime@2.4.0-pre.3`
-
-## 2.4.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.2`
-  - `@remix-run/server-runtime@2.4.0-pre.2`
-
-## 2.4.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.0-pre.1`
-  - `@remix-run/server-runtime@2.4.0-pre.1`
-
-## 2.4.0-pre.0
+## 2.4.0
 
 ### Minor Changes
 
 - Vite: exclude modules within `.server` directories from client build ([#8154](https://github.com/remix-run/remix/pull/8154))
-- Add support for `clientLoader`/`clientAction`/`HydrateFallback` route exports ([RFC](https://github.com/remix-run/remix/discussions/7634)). ([#8173](https://github.com/remix-run/remix/pull/8173))
+
+- Add support for `clientLoader`/`clientAction`/`HydrateFallback` route exports ([RFC](https://github.com/remix-run/remix/discussions/7634)) ([#8173](https://github.com/remix-run/remix/pull/8173))
 
   Remix now supports loaders/actions that run on the client (in addition to, or instead of the loader/action that runs on the server). While we still recommend server loaders/actions for the majority of your data needs in a Remix app - these provide some levers you can pull for more advanced use-cases such as:
 
@@ -110,16 +31,20 @@
   Previously, the Remix compiler would allow any export from routes.
   While this was convenient, it was also a common source of bugs that were hard to track down because they only surfaced at runtime.
 
-  For more, see https://remix.run/docs/en/main/future/vite#strict-route-exports
+  For more, see <https://remix.run/docs/en/main/future/vite#strict-route-exports>
 
 - Add a new `future.v3_relativeSplatPath` flag to implement a breaking bug fix to relative routing when inside a splat route. For more information, please see the React Router [`6.21.0` Release Notes](https://github.com/remix-run/react-router/blob/release-next/CHANGELOG.md#futurev7_relativesplatpath) and the [`useResolvedPath` docs](https://remix.run/hooks/use-resolved-path#splat-paths). ([#8216](https://github.com/remix-run/remix/pull/8216))
 
 ### Patch Changes
 
 - Upgrade Vite peer dependency range to v5 ([#8172](https://github.com/remix-run/remix/pull/8172))
+
 - Support HMR for routes with `handle` export in Vite dev ([#8022](https://github.com/remix-run/remix/pull/8022))
+
 - Fix flash of unstyled content for non-Express custom servers in Vite dev ([#8076](https://github.com/remix-run/remix/pull/8076))
+
 - Bundle CSS imported in client entry file in Vite plugin ([#8143](https://github.com/remix-run/remix/pull/8143))
+
 - Change Vite build output paths to fix a conflict between how Vite and the Remix compiler each manage the `public` directory. ([#8077](https://github.com/remix-run/remix/pull/8077))
 
   **This is a breaking change for projects using the unstable Vite plugin.**
@@ -129,7 +54,9 @@
   For more information on the changes and guidance on how to migrate your project, refer to the updated [Remix Vite documentation](https://remix.run/docs/en/main/future/vite).
 
 - Remove undocumented `legacyCssImports` option from Vite plugin due to issues with `?url` imports of CSS files not being processed correctly in Vite ([#8096](https://github.com/remix-run/remix/pull/8096))
+
 - Vite: fix access to default `entry.{client,server}.tsx` within pnpm workspace on Windows ([#8057](https://github.com/remix-run/remix/pull/8057))
+
 - Remove `unstable_createViteServer` and `unstable_loadViteServerBuild` which were only minimal wrappers around Vite's `createServer` and `ssrLoadModule` functions when using a custom server. ([#8120](https://github.com/remix-run/remix/pull/8120))
 
   **This is a breaking change for projects using the unstable Vite plugin with a custom server.**
@@ -175,6 +102,7 @@
   ```
 
 - Pass request handler errors to `vite.ssrFixStacktrace` in Vite dev to ensure stack traces correctly map to the original source code ([#8066](https://github.com/remix-run/remix/pull/8066))
+
 - Vite: Preserve names for exports from .client imports ([#8200](https://github.com/remix-run/remix/pull/8200))
 
   Unlike `.server` modules, the main idea is not to prevent code from leaking into the server build
@@ -188,6 +116,7 @@
   code is running on the server or client.
 
 - Add `@remix-run/node` to Vite's `optimizeDeps.include` array ([#8177](https://github.com/remix-run/remix/pull/8177))
+
 - Improve Vite plugin performance ([#8121](https://github.com/remix-run/remix/pull/8121))
 
   - Parallelize detection of route module exports
@@ -219,10 +148,10 @@
   A better experience is to have those errors happen at build-time so that you guarantee that your users won't hit them.
 
 - Fix `request instanceof Request` checks when using Vite dev server ([#8062](https://github.com/remix-run/remix/pull/8062))
+
 - Updated dependencies:
-  - `@remix-run/server-runtime@2.4.0-pre.0`
-  - `@remix-run/node@2.4.0-pre.0`
-  - `@remix-run/serve@2.4.0-pre.0`
+  - `@remix-run/server-runtime@2.4.0`
+  - `@remix-run/node@2.4.0`
 
 ## 2.3.1
 
