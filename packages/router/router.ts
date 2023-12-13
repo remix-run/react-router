@@ -40,6 +40,7 @@ import {
   convertRouteMatchToUiMatch,
   convertRoutesToDataRoutes,
   getPathContributingMatches,
+  getResolveToMatches,
   immutableRouteKeys,
   isRouteErrorResponse,
   joinPaths,
@@ -63,6 +64,14 @@ export interface Router {
    * Return the basename for the router
    */
   get basename(): RouterInit["basename"];
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Return the future config for the router
+   */
+  get future(): FutureConfig;
 
   /**
    * @internal
@@ -345,7 +354,9 @@ export type HydrationState = Partial<
 export interface FutureConfig {
   v7_fetcherPersist: boolean;
   v7_normalizeFormMethod: boolean;
+  v7_partialHydration: boolean;
   v7_prependBasename: boolean;
+  v7_relativeSplatPath: boolean;
 }
 
 /**
@@ -769,7 +780,9 @@ export function createRouter(init: RouterInit): Router {
   let future: FutureConfig = {
     v7_fetcherPersist: false,
     v7_normalizeFormMethod: false,
+    v7_partialHydration: false,
     v7_prependBasename: false,
+    v7_relativeSplatPath: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -804,12 +817,34 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  let initialized =
+  let initialized: boolean;
+  let hasLazyRoutes = initialMatches.some((m) => m.route.lazy);
+  let hasLoaders = initialMatches.some((m) => m.route.loader);
+  if (hasLazyRoutes) {
     // All initialMatches need to be loaded before we're ready.  If we have lazy
     // functions around still then we'll need to run them in initialize()
-    !initialMatches.some((m) => m.route.lazy) &&
-    // And we have to either have no loaders or have been provided hydrationData
-    (!initialMatches.some((m) => m.route.loader) || init.hydrationData != null);
+    initialized = false;
+  } else if (!hasLoaders) {
+    // If we've got no loaders to run, then we're good to go
+    initialized = true;
+  } else if (future.v7_partialHydration) {
+    // If partial hydration is enabled, we're initialized so long as we were
+    // provided with hydrationData for every route with a loader, and no loaders
+    // were marked for explicit hydration
+    let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
+    let errors = init.hydrationData ? init.hydrationData.errors : null;
+    initialized = initialMatches.every(
+      (m) =>
+        m.route.loader &&
+        m.route.loader.hydrate !== true &&
+        ((loaderData && loaderData[m.route.id] !== undefined) ||
+          (errors && errors[m.route.id] !== undefined))
+    );
+  } else {
+    // Without partial hydration - we're initialized if we were provided any
+    // hydrationData - which is expected to be complete
+    initialized = init.hydrationData != null;
+  }
 
   let router: Router;
   let state: RouterState = {
@@ -991,7 +1026,9 @@ export function createRouter(init: RouterInit): Router {
     // resolved prior to router creation since we can't go into a fallbackElement
     // UI for SSR'd apps
     if (!state.initialized) {
-      startNavigation(HistoryAction.Pop, state.location);
+      startNavigation(HistoryAction.Pop, state.location, {
+        initialHydration: true,
+      });
     }
 
     return router;
@@ -1231,6 +1268,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       to,
+      future.v7_relativeSplatPath,
       opts?.fromRouteId,
       opts?.relative
     );
@@ -1363,6 +1401,7 @@ export function createRouter(init: RouterInit): Router {
     historyAction: HistoryAction,
     location: Location,
     opts?: {
+      initialHydration?: boolean;
       submission?: Submission;
       fetcherSubmission?: Submission;
       overrideNavigation?: Navigation;
@@ -1487,6 +1526,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.submission,
       opts && opts.fetcherSubmission,
       opts && opts.replace,
+      opts && opts.initialHydration === true,
       flushSync,
       pendingActionData,
       pendingError
@@ -1545,7 +1585,8 @@ export function createRouter(init: RouterInit): Router {
         matches,
         manifest,
         mapRouteProperties,
-        basename
+        basename,
+        future.v7_relativeSplatPath
       );
 
       if (request.signal.aborted) {
@@ -1607,6 +1648,7 @@ export function createRouter(init: RouterInit): Router {
     submission?: Submission,
     fetcherSubmission?: Submission,
     replace?: boolean,
+    initialHydration?: boolean,
     flushSync?: boolean,
     pendingActionData?: RouteData,
     pendingError?: RouteData
@@ -1629,6 +1671,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       activeSubmission,
       location,
+      future.v7_partialHydration && initialHydration === true,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -1674,7 +1717,12 @@ export function createRouter(init: RouterInit): Router {
     // state.  If not, we need to switch to our loading state and load data,
     // preserving any new action data or existing action data (in the case of
     // a revalidation interrupting an actionReload)
-    if (!isUninterruptedRevalidation) {
+    // If we have partialHydration enabled, then don't update the state for the
+    // initial data load since iot's not a "navigation"
+    if (
+      !isUninterruptedRevalidation &&
+      (!future.v7_partialHydration || !initialHydration)
+    ) {
       revalidatingFetchers.forEach((rf) => {
         let fetcher = state.fetchers.get(rf.key);
         let revalidatingFetcher = getLoadingFetcher(
@@ -1824,6 +1872,7 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       href,
+      future.v7_relativeSplatPath,
       routeId,
       opts?.relative
     );
@@ -1930,7 +1979,8 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      future.v7_relativeSplatPath
     );
 
     if (fetchRequest.signal.aborted) {
@@ -2003,6 +2053,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       submission,
       nextLocation,
+      false,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -2173,7 +2224,8 @@ export function createRouter(init: RouterInit): Router {
       matches,
       manifest,
       mapRouteProperties,
-      basename
+      basename,
+      future.v7_relativeSplatPath
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2369,7 +2421,8 @@ export function createRouter(init: RouterInit): Router {
           matches,
           manifest,
           mapRouteProperties,
-          basename
+          basename,
+          future.v7_relativeSplatPath
         )
       ),
       ...fetchersToLoad.map((f) => {
@@ -2381,7 +2434,8 @@ export function createRouter(init: RouterInit): Router {
             f.matches,
             manifest,
             mapRouteProperties,
-            basename
+            basename,
+            future.v7_relativeSplatPath
           );
         } else {
           let error: ErrorResult = {
@@ -2723,6 +2777,9 @@ export function createRouter(init: RouterInit): Router {
     get basename() {
       return basename;
     },
+    get future() {
+      return future;
+    },
     get state() {
       return state;
     },
@@ -2764,6 +2821,13 @@ export function createRouter(init: RouterInit): Router {
 
 export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
+/**
+ * Future flags to toggle new feature behavior
+ */
+export interface StaticHandlerFutureConfig {
+  v7_relativeSplatPath: boolean;
+}
+
 export interface CreateStaticHandlerOptions {
   basename?: string;
   /**
@@ -2771,6 +2835,7 @@ export interface CreateStaticHandlerOptions {
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
+  future?: Partial<StaticHandlerFutureConfig>;
 }
 
 export function createStaticHandler(
@@ -2796,6 +2861,11 @@ export function createStaticHandler(
   } else {
     mapRouteProperties = defaultMapRouteProperties;
   }
+  // Config driven behavior flags
+  let future: StaticHandlerFutureConfig = {
+    v7_relativeSplatPath: false,
+    ...(opts ? opts.future : null),
+  };
 
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
@@ -3058,6 +3128,7 @@ export function createStaticHandler(
         manifest,
         mapRouteProperties,
         basename,
+        future.v7_relativeSplatPath,
         { isStaticRequest: true, isRouteRequest, requestContext }
       );
 
@@ -3226,6 +3297,7 @@ export function createStaticHandler(
           manifest,
           mapRouteProperties,
           basename,
+          future.v7_relativeSplatPath,
           { isStaticRequest: true, isRouteRequest, requestContext }
         )
       ),
@@ -3316,6 +3388,7 @@ function normalizeTo(
   basename: string,
   prependBasename: boolean,
   to: To | null,
+  v7_relativeSplatPath: boolean,
   fromRouteId?: string,
   relative?: RelativeRoutingType
 ) {
@@ -3340,7 +3413,7 @@ function normalizeTo(
   // Resolve the relative path
   let path = resolveTo(
     to ? to : ".",
-    getPathContributingMatches(contextualMatches).map((m) => m.pathnameBase),
+    getResolveToMatches(contextualMatches, v7_relativeSplatPath),
     stripBasename(location.pathname, basename) || location.pathname,
     relative === "path"
   );
@@ -3548,6 +3621,7 @@ function getMatchesToLoad(
   matches: AgnosticDataRouteMatch[],
   submission: Submission | undefined,
   location: Location,
+  isInitialLoad: boolean,
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
@@ -3573,10 +3647,17 @@ function getMatchesToLoad(
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
+    if (isInitialLoad) {
+      // On initial hydration we don't do any shouldRevalidate stuff - we just
+      // call the unhydrated loaders
+      return isUnhydratedRoute(state, match.route);
+    }
+
     if (match.route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       return true;
     }
+
     if (match.route.loader == null) {
       return false;
     }
@@ -3618,8 +3699,13 @@ function getMatchesToLoad(
   // Pick fetcher.loads that need to be revalidated
   let revalidatingFetchers: RevalidatingFetcher[] = [];
   fetchLoadMatches.forEach((f, key) => {
-    // Don't revalidate if fetcher won't be present in the subsequent render
+    // Don't revalidate:
+    //  - on initial load (shouldn't be any fetchers then anyway)
+    //  - if fetcher won't be present in the subsequent render
+    //    - no longer matches the URL (v7_fetcherPersist=false)
+    //    - was unmounted but persisted due to v7_fetcherPersist=true
     if (
+      isInitialLoad ||
       !matches.some((m) => m.route.id === f.routeId) ||
       deletedFetchers.has(key)
     ) {
@@ -3693,6 +3779,23 @@ function getMatchesToLoad(
   });
 
   return [navigationMatches, revalidatingFetchers];
+}
+
+// Is this route unhydrated (when v7_partialHydration=true) such that we need
+// to call it's loader on the initial router creation
+function isUnhydratedRoute(state: RouterState, route: AgnosticDataRouteObject) {
+  if (!route.loader) {
+    return false;
+  }
+  if (route.loader.hydrate) {
+    return true;
+  }
+  return (
+    state.loaderData[route.id] === undefined &&
+    (!state.errors ||
+      // Loader ran but errored - don't re-run
+      state.errors[route.id] === undefined)
+  );
 }
 
 function isNewLoader(
@@ -3830,6 +3933,7 @@ async function callLoaderOrAction(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
+  v7_relativeSplatPath: boolean,
   opts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
@@ -3943,7 +4047,8 @@ async function callLoaderOrAction(
           matches.slice(0, matches.indexOf(match) + 1),
           basename,
           true,
-          location
+          location,
+          v7_relativeSplatPath
         );
       } else if (!opts.isStaticRequest) {
         // Strip off the protocol+origin for same-origin + same-basename absolute
@@ -3990,13 +4095,18 @@ async function callLoaderOrAction(
     }
 
     let data: any;
-    let contentType = result.headers.get("Content-Type");
-    // Check between word boundaries instead of startsWith() due to the last
-    // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
-    if (contentType && /\bapplication\/json\b/.test(contentType)) {
-      data = await result.json();
-    } else {
-      data = await result.text();
+
+    try {
+      let contentType = result.headers.get("Content-Type");
+      // Check between word boundaries instead of startsWith() due to the last
+      // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
+      if (contentType && /\bapplication\/json\b/.test(contentType)) {
+        data = await result.json();
+      } else {
+        data = await result.text();
+      }
+    } catch (e) {
+      return { type: ResultType.error, error: e };
     }
 
     if (resultType === ResultType.error) {

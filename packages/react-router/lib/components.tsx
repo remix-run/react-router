@@ -14,7 +14,7 @@ import {
   AbortedDeferredError,
   Action as NavigationType,
   createMemoryHistory,
-  UNSAFE_getPathContributingMatches as getPathContributingMatches,
+  UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
@@ -51,13 +51,16 @@ import {
 } from "./hooks";
 
 export interface FutureConfig {
+  v7_relativeSplatPath: boolean;
   v7_startTransition: boolean;
 }
 
 export interface RouterProviderProps {
   fallbackElement?: React.ReactNode;
   router: RemixRouter;
-  future?: Partial<FutureConfig>;
+  // Only accept future flags relevant to rendering behavior
+  // routing flags should be accessed via router.future
+  future?: Partial<Pick<FutureConfig, "v7_startTransition">>;
 }
 
 /**
@@ -110,6 +113,16 @@ export function RouterProvider({
   // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
   React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
 
+  React.useEffect(() => {
+    warning(
+      fallbackElement == null || !router.future.v7_partialHydration,
+      "`<RouterProvider fallbackElement>` is deprecated when using " +
+        "`v7_partialHydration`, use a `HydrateFallback` component instead"
+    );
+    // Only log this once on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
@@ -156,9 +169,16 @@ export function RouterProvider({
             location={state.location}
             navigationType={state.historyAction}
             navigator={navigator}
+            future={{
+              v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+            }}
           >
-            {state.initialized ? (
-              <DataRoutes routes={router.routes} state={state} />
+            {state.initialized || router.future.v7_partialHydration ? (
+              <DataRoutes
+                routes={router.routes}
+                future={router.future}
+                state={state}
+              />
             ) : (
               fallbackElement
             )}
@@ -172,12 +192,14 @@ export function RouterProvider({
 
 function DataRoutes({
   routes,
+  future,
   state,
 }: {
   routes: DataRouteObject[];
+  future: RemixRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state);
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 export interface MemoryRouterProps {
@@ -233,6 +255,7 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      future={future}
     />
   );
 }
@@ -266,8 +289,10 @@ export function Navigate({
     `<Navigate> may be used only in the context of a <Router> component.`
   );
 
+  let { future, static: isStatic } = React.useContext(NavigationContext);
+
   warning(
-    !React.useContext(NavigationContext).static,
+    !isStatic,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
@@ -281,7 +306,7 @@ export function Navigate({
   // StrictMode they navigate to the same place
   let path = resolveTo(
     to,
-    getPathContributingMatches(matches).map((match) => match.pathnameBase),
+    getResolveToMatches(matches, future.v7_relativeSplatPath),
     locationPathname,
     relative === "path"
   );
@@ -321,8 +346,10 @@ export interface PathRouteProps {
   index?: false;
   children?: React.ReactNode;
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
 }
 
@@ -341,8 +368,10 @@ export interface IndexRouteProps {
   index: true;
   children?: undefined;
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
 }
 
@@ -368,6 +397,7 @@ export interface RouterProps {
   navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
+  future?: Partial<Pick<FutureConfig, "v7_relativeSplatPath">>;
 }
 
 /**
@@ -386,6 +416,7 @@ export function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
+  future,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
@@ -397,8 +428,16 @@ export function Router({
   // the enforcement of trailing slashes throughout the app
   let basename = basenameProp.replace(/^\/*/, "/");
   let navigationContext = React.useMemo(
-    () => ({ basename, navigator, static: staticProp }),
-    [basename, navigator, staticProp]
+    () => ({
+      basename,
+      navigator,
+      static: staticProp,
+      future: {
+        v7_relativeSplatPath: false,
+        ...future,
+      },
+    }),
+    [basename, future, navigator, staticProp]
   );
 
   if (typeof locationProp === "string") {

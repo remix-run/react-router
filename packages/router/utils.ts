@@ -169,11 +169,11 @@ type DataFunctionValue = Response | NonNullable<unknown> | null;
 /**
  * Route loader function signature
  */
-export interface LoaderFunction<Context = any> {
+export type LoaderFunction<Context = any> = {
   (args: LoaderFunctionArgs<Context>):
     | Promise<DataFunctionValue>
     | DataFunctionValue;
-}
+} & { hydrate?: boolean };
 
 /**
  * Route action function signature
@@ -1145,6 +1145,25 @@ export function getPathContributingMatches<
   );
 }
 
+// Return the array of pathnames for the current route matches - used to
+// generate the routePathnames input for resolveTo()
+export function getResolveToMatches<
+  T extends AgnosticRouteMatch = AgnosticRouteMatch
+>(matches: T[], v7_relativeSplatPath: boolean) {
+  let pathMatches = getPathContributingMatches(matches);
+
+  // When v7_relativeSplatPath is enabled, use the full pathname for the leaf
+  // match so we include splat values for "." links.  See:
+  // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
+  if (v7_relativeSplatPath) {
+    return pathMatches.map((match, idx) =>
+      idx === matches.length - 1 ? match.pathname : match.pathnameBase
+    );
+  }
+
+  return pathMatches.map((match) => match.pathnameBase);
+}
+
 /**
  * @private
  */
@@ -1191,9 +1210,12 @@ export function resolveTo(
   if (toPathname == null) {
     from = locationPathname;
   } else if (isPathRelative) {
-    let fromSegments = routePathnames[routePathnames.length - 1]
-      .replace(/^\//, "")
-      .split("/");
+    let fromSegments =
+      routePathnames.length === 0
+        ? []
+        : routePathnames[routePathnames.length - 1]
+            .replace(/^\//, "")
+            .split("/");
 
     if (toPathname.startsWith("..")) {
       let toSegments = toPathname.split("/");

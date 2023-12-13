@@ -7,6 +7,7 @@ import type {
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
   RouterState,
+  FutureConfig as RouterFutureConfig,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -24,6 +25,7 @@ import {
 } from "react-router";
 import type {
   DataRouteObject,
+  FutureConfig,
   Location,
   RouteObject,
   To,
@@ -42,6 +44,7 @@ export interface StaticRouterProps {
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
+  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -52,6 +55,7 @@ export function StaticRouter({
   basename,
   children,
   location: locationProp = "/",
+  future,
 }: StaticRouterProps) {
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);
@@ -74,6 +78,7 @@ export function StaticRouter({
       location={location}
       navigationType={action}
       navigator={staticNavigator}
+      future={future}
       static={true}
     />
   );
@@ -143,8 +148,15 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
+                future={{
+                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+                }}
               >
-                <DataRoutes routes={router.routes} state={state} />
+                <DataRoutes
+                  routes={router.routes}
+                  future={router.future}
+                  state={state}
+                />
               </Router>
             </ViewTransitionContext.Provider>
           </FetchersContext.Provider>
@@ -163,12 +175,14 @@ export function StaticRouterProvider({
 
 function DataRoutes({
   routes,
+  future,
   state,
 }: {
   routes: DataRouteObject[];
+  future: RemixRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state);
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 function serializeErrors(
@@ -260,7 +274,13 @@ export function createStaticHandler(
 
 export function createStaticRouter(
   routes: RouteObject[],
-  context: StaticHandlerContext
+  context: StaticHandlerContext,
+  opts: {
+    // Only accept future flags that impact the server render
+    future?: Partial<
+      Pick<RouterFutureConfig, "v7_partialHydration" | "v7_relativeSplatPath">
+    >;
+  } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
@@ -287,6 +307,15 @@ export function createStaticRouter(
   return {
     get basename() {
       return context.basename;
+    },
+    get future() {
+      return {
+        v7_fetcherPersist: false,
+        v7_normalizeFormMethod: false,
+        v7_partialHydration: opts.future?.v7_partialHydration === true,
+        v7_prependBasename: false,
+        v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
+      };
     },
     get state() {
       return {

@@ -104,6 +104,7 @@ export type {
   DataRouteObject,
   ErrorResponse,
   Fetcher,
+  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
@@ -630,6 +631,16 @@ export function RouterProvider({
     }
   }, [vtContext.isTransitioning, interruption]);
 
+  React.useEffect(() => {
+    warning(
+      fallbackElement == null || !router.future.v7_partialHydration,
+      "`<RouterProvider fallbackElement>` is deprecated when using " +
+        "`v7_partialHydration`, use a `HydrateFallback` component instead"
+    );
+    // Only log this once on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
@@ -678,9 +689,16 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
+                future={{
+                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+                }}
               >
-                {state.initialized ? (
-                  <DataRoutes routes={router.routes} state={state} />
+                {state.initialized || router.future.v7_partialHydration ? (
+                  <DataRoutes
+                    routes={router.routes}
+                    future={router.future}
+                    state={state}
+                  />
                 ) : (
                   fallbackElement
                 )}
@@ -696,12 +714,14 @@ export function RouterProvider({
 
 function DataRoutes({
   routes,
+  future,
   state,
 }: {
   routes: DataRouteObject[];
+  future: RemixRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state);
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 export interface BrowserRouterProps {
@@ -749,6 +769,7 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      future={future}
     />
   );
 }
@@ -799,6 +820,7 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      future={future}
     />
   );
 }
@@ -845,6 +867,7 @@ function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
+      future={future}
     />
   );
 }
@@ -1543,10 +1566,8 @@ export function useFormAction(
   // object referenced by useMemo inside useResolvedPath
   let path = { ...useResolvedPath(action ? action : ".", { relative }) };
 
-  // Previously we set the default action to ".". The problem with this is that
-  // `useResolvedPath(".")` excludes search params of the resolved URL. This is
-  // the intended behavior of when "." is specifically provided as
-  // the form action, but inconsistent w/ browsers when the action is omitted.
+  // If no action was specified, browsers will persist current search params
+  // when determining the path, so match that behavior
   // https://github.com/remix-run/remix/issues/927
   let location = useLocation();
   if (action == null) {

@@ -165,6 +165,14 @@ And with that you've got a server-side-rendered and hydrated application! For a 
 
 As mentioned above, server-side rendering is tricky at scale and for production-grade applications, and we strongly recommend checking out [Remix][remix] if that's your goal. But if you are going the manual route, here's a few additional concepts you may need to consider:
 
+#### Hydration
+
+A core concept of Server Side Rendering is [hydration][hydration] which involves "attaching" a client-side React application to server-rendered HTML. To do this correctly, we need to create our client-side React Router application in the same state that it was in during the server render. When your server render loaded data via `loader` functions, we need to send this data up so that we can create our client router with the same loader data for the initial render/hydration.
+
+The basic usages of `<StaticRouterProvider>` and `createBrowserRouter` shown in this guide handle this for you internally, but if you need to take control over the hydration process you can disable the automatic hydration process via [`<StaticRouterProvider hydrate={false} />`][hydrate-false].
+
+In some advanced use cases, you may want to partially hydrate a client-side React Router application. You can do this via the [`future.v7_partialHydration`][partialhydration] flag passed to `createBrowserRouter`.
+
 #### Redirects
 
 If any loaders redirect, `handler.query` will return the `Response` directly so you should check that and send a redirect response instead of attempting to render an HTML document:
@@ -309,3 +317,6 @@ Again, we recommend you give [Remix](https://remix.run) a look. It's the best wa
 [createstaticrouter]: ../routers/create-static-router
 [staticrouterprovider]: ../routers/static-router-provider
 [lazy]: ../route/lazy
+[hydration]: https://react.dev/reference/react-dom/client/hydrateRoot
+[hydrate-false]: ../routers/static-router-provider#hydrate
+[partialhydration]: ../routers/create-browser-router#partial-hydration-data

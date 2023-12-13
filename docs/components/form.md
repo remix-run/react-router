@@ -109,6 +109,8 @@ If you need to post to a different route, then add an action prop:
 
 - [Index Search Param][indexsearchparam] (index vs parent route disambiguation)
 
+<docs-info>Please see the [Splat Paths][relativesplatpath] section on the `useResolvedPath` docs for a note on the behavior of the `future.v7_relativeSplatPath` future flag for relative `useNavigate()` behavior within splat routes</docs-info>
+
 ## `method`
 
 This determines the [HTTP verb](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods) to be used. The same as plain HTML [form method][htmlform-method], except it also supports "put", "patch", and "delete" in addition to "get" and "post". The default is "get".
@@ -394,3 +396,4 @@ You can access those values from the `request.url`
 [history-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/state
 [use-view-transition-state]: ../hooks//use-view-transition-state
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API
+[relativesplatpath]: ../hooks/use-resolved-path#splat-paths

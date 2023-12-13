@@ -76,8 +76,10 @@ interface RouteObject {
   loader?: LoaderFunction;
   action?: ActionFunction;
   element?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   handle?: RouteObject["handle"];
   shouldRevalidate?: ShouldRevalidateFunction;
@@ -354,6 +356,16 @@ Otherwise use `ErrorBoundary` and React Router will create the React Element for
 
 Please see the [errorElement][errorelement] documentation for more details.
 
+## `hydrateFallbackElement`/`HydrateFallback`
+
+If you are using [Server-Side Rendering][ssr] and you are leveraging [partial hydration][partialhydration], then you can specify an Element/Component to render for non-hydrated routes during the initial hydration of the application.
+
+<docs-warning>If you are not using a data router like [`createBrowserRouter`][createbrowserrouter], this will do nothing</docs-warning>
+
+<docs-warning>This is only intended for more advanced uses cases such as Remix's [`clientLoader`][clientloader] functionality. Most SSR apps will not need to leverage these route properties.</docs-warning>
+
+Please see the [hydrateFallbackElement][hydratefallbackelement] documentation for more details.
+
 ## `handle`
 
 Any application-specific data. Please see the [useMatches][usematches] documentation for details and examples.
@@ -404,6 +416,7 @@ Please see the [lazy][lazy] documentation for more details.
 [loader]: ./loader
 [action]: ./action
 [errorelement]: ./error-element
+[hydratefallbackelement]: ./hydrate-fallback-element
 [form]: ../components/form
 [fetcher]: ../hooks/use-fetcher
 [usesubmit]: ../hooks/use-submit
@@ -411,3 +424,6 @@ Please see the [lazy][lazy] documentation for more details.
 [createbrowserrouter]: ../routers/create-browser-router
 [usematches]: ../hooks/use-matches
 [lazy]: ./lazy
+[ssr]: ../guides/ssr
+[partialhydration]: ../routers/create-browser-router#partial-hydration-data
+[clientloader]: https://remix.run/route/client-loader

@@ -28,8 +28,10 @@ export interface IndexRouteObject {
   index: true;
   children?: undefined;
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<RouteObject>;
 }
@@ -46,8 +48,10 @@ export interface NonIndexRouteObject {
   index?: false;
   children?: RouteObject[];
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<RouteObject>;
 }
@@ -66,7 +70,10 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
-export interface DataRouterContextObject extends NavigationContextObject {
+export interface DataRouterContextObject
+  // Omit `future` since those can be pulled from the `router`
+  // `NavigationContext` needs future since it doesn't have a `router` in all cases
+  extends Omit<NavigationContextObject, "future"> {
   router: Router;
   staticContext?: StaticHandlerContext;
 }
@@ -120,6 +127,9 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
+  future: {
+    v7_relativeSplatPath: boolean;
+  };
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(
