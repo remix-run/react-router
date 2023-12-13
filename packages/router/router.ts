@@ -817,19 +817,34 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // "Initialized" here really means "Can `RouterProvider` render my route tree?"
-  // Prior to `route.HydrateFallback`, we only had a root `fallbackElement` so we used
-  // `state.initialized` to render that instead of `<DataRoutes>`.  Now that we
-  // support route level fallbacks we can always render and we'll just render
-  // as deep as we have data for and detect the nearest ancestor HydrateFallback
-  let initialized =
-    future.v7_partialHydration ||
+  let initialized: boolean;
+  let hasLazyRoutes = initialMatches.some((m) => m.route.lazy);
+  let hasLoaders = initialMatches.some((m) => m.route.loader);
+  if (hasLazyRoutes) {
     // All initialMatches need to be loaded before we're ready.  If we have lazy
     // functions around still then we'll need to run them in initialize()
-    (!initialMatches.some((m) => m.route.lazy) &&
-      // And we have to either have no loaders or have been provided hydrationData
-      (!initialMatches.some((m) => m.route.loader) ||
-        init.hydrationData != null));
+    initialized = false;
+  } else if (!hasLoaders) {
+    // If we've got no loaders to run, then we're good to go
+    initialized = true;
+  } else if (future.v7_partialHydration) {
+    // If partial hydration is enabled, we're initialized so long as we were
+    // provided with hydrationData for every route with a loader, and no loaders
+    // were marked for explicit hydration
+    let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
+    let errors = init.hydrationData ? init.hydrationData.errors : null;
+    initialized = initialMatches.every(
+      (m) =>
+        m.route.loader &&
+        m.route.loader.hydrate !== true &&
+        ((loaderData && loaderData[m.route.id] !== undefined) ||
+          (errors && errors[m.route.id] !== undefined))
+    );
+  } else {
+    // Without partial hydration - we're initialized if we were provided any
+    // hydrationData - which is expected to be complete
+    initialized = init.hydrationData != null;
+  }
 
   let router: Router;
   let state: RouterState = {
@@ -1010,11 +1025,7 @@ export function createRouter(init: RouterInit): Router {
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
     // resolved prior to router creation since we can't go into a fallbackElement
     // UI for SSR'd apps
-    if (
-      !state.initialized ||
-      (future.v7_partialHydration &&
-        state.matches.some((m) => isUnhydratedRoute(state, m.route)))
-    ) {
+    if (!state.initialized) {
       startNavigation(HistoryAction.Pop, state.location, {
         initialHydration: true,
       });

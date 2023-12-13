@@ -70,7 +70,10 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
-export interface DataRouterContextObject extends NavigationContextObject {
+export interface DataRouterContextObject
+  // Omit `future` since those can be pulled from the `router`
+  // `NavigationContext` needs future since it doesn't have a `router` in all cases
+  extends Omit<NavigationContextObject, "future"> {
   router: Router;
   staticContext?: StaticHandlerContext;
 }
