@@ -1,5 +1,5 @@
 /* eslint-disable jest/valid-title */
-import type { HydrationState } from "../index";
+import type { FutureConfig, HydrationState } from "../index";
 import {
   createMemoryHistory,
   createRouter,
@@ -21,6 +21,7 @@ import { createFormData, tick } from "./utils/utils";
 function initializeTest(init?: {
   url?: string;
   hydrationData?: HydrationState;
+  future?: Partial<FutureConfig>;
 }) {
   return setup({
     routes: [
@@ -66,6 +67,7 @@ function initializeTest(init?: {
     hydrationData: init?.hydrationData || {
       loaderData: { root: "ROOT", index: "INDEX" },
     },
+    future: init?.future,
     ...(init?.url ? { initialEntries: [init.url] } : {}),
   });
 }
@@ -82,6 +84,7 @@ describe("fetchers", () => {
     // @ts-ignore
     console.warn.mockReset();
   });
+
   describe("fetcher states", () => {
     it("unabstracted loader fetch", async () => {
       let dfd = createDeferred();
@@ -335,6 +338,134 @@ describe("fetchers", () => {
           signal: A.loaders.root.stub.mock.calls[0][0].request.signal,
         }),
       });
+    });
+  });
+
+  describe("fetcher removal (w/v7_fetcherPersist)", () => {
+    it("loading fetchers persist until completion", async () => {
+      let t = initializeTest({ future: { v7_fetcherPersist: true } });
+
+      let key = "key";
+      t.router.getFetcher(key); // mount
+      expect(t.router.state.fetchers.size).toBe(0);
+
+      let A = await t.fetch("/foo", key);
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      t.router.deleteFetcher(key); // unmount
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      // Cleaned up on completion
+      await A.loaders.foo.resolve("FOO");
+      expect(t.router.state.fetchers.size).toBe(0);
+    });
+
+    it("submitting fetchers persist until completion when removed during submitting phase", async () => {
+      let t = initializeTest({ future: { v7_fetcherPersist: true } });
+
+      let key = "key";
+      expect(t.router.state.fetchers.size).toBe(0);
+
+      t.router.getFetcher(key); // mount
+      let A = await t.fetch("/foo", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      t.router.deleteFetcher(key); // unmount
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      await A.actions.foo.resolve("FOO");
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      // Cleaned up on completion
+      await A.loaders.root.resolve("ROOT*");
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      await A.loaders.index.resolve("INDEX*");
+      expect(t.router.state.fetchers.size).toBe(0);
+    });
+
+    it("submitting fetchers persist until completion when removed during loading phase", async () => {
+      let t = initializeTest({ future: { v7_fetcherPersist: true } });
+
+      let key = "key";
+      t.router.getFetcher(key); // mount
+      expect(t.router.state.fetchers.size).toBe(0);
+
+      let A = await t.fetch("/foo", key, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+
+      await A.actions.foo.resolve("FOO");
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      t.router.deleteFetcher(key); // unmount
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      // Cleaned up on completion
+      await A.loaders.root.resolve("ROOT*");
+      expect(t.router.state.fetchers.size).toBe(1);
+      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+
+      await A.loaders.index.resolve("INDEX*");
+      expect(t.router.state.fetchers.size).toBe(0);
+    });
+
+    it("unmounted fetcher.load errors/redirects should not be processed", async () => {
+      let t = initializeTest({ future: { v7_fetcherPersist: true } });
+
+      t.router.getFetcher("a"); // mount
+      let A = await t.fetch("/foo", "a");
+      t.router.deleteFetcher("a"); //unmount
+      await A.loaders.foo.reject("ERROR");
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(t.router.state.errors).toBe(null);
+
+      t.router.getFetcher("b"); // mount
+      let B = await t.fetch("/bar", "b");
+      t.router.deleteFetcher("b"); //unmount
+      await B.loaders.bar.redirect("/baz");
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.router.state.location.pathname).toBe("/");
+    });
+
+    it("unmounted fetcher.submit errors/redirects should not be processed", async () => {
+      let t = initializeTest({ future: { v7_fetcherPersist: true } });
+
+      t.router.getFetcher("a"); // mount
+      let A = await t.fetch("/foo", "a", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.router.deleteFetcher("a"); //unmount
+      await A.actions.foo.reject("ERROR");
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(t.router.state.errors).toBe(null);
+
+      t.router.getFetcher("b"); // mount
+      let B = await t.fetch("/bar", "b", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.router.deleteFetcher("b"); //unmount
+      await B.actions.bar.redirect("/baz");
+      expect(t.router.state.fetchers.size).toBe(0);
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.router.state.location.pathname).toBe("/");
     });
   });
 

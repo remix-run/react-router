@@ -145,6 +145,7 @@ type SetupOpts = {
   hydrationData?: HydrationState;
   future?: FutureConfig;
   dataStrategy?: DataStrategyFunction;
+  future?: Partial<FutureConfig>;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
