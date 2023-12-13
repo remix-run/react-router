@@ -1,22 +1,6 @@
 # `react-router`
 
-## 6.21.0-pre.3
-
-### Patch Changes
-
-- [REMOVE] Refactor internals for partial hydration ([#11094](https://github.com/remix-run/react-router/pull/11094))
-- Updated dependencies:
-  - `@remix-run/router@1.14.0-pre.1`
-
-## 6.21.0-pre.2
-
-## 6.21.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Fix plumbing of future flags ([`558d7936`](https://github.com/remix-run/react-router/commit/558d7936cc8fe643374a2c9a9fdcf022e8c4c939))
-
-## 6.21.0-pre.0
+## 6.21.0
 
 ### Minor Changes
 
@@ -155,7 +139,7 @@
 
 - Properly handle falsy error values in ErrorBoundary's ([#11071](https://github.com/remix-run/react-router/pull/11071))
 - Updated dependencies:
-  - `@remix-run/router@1.14.0-pre.0`
+  - `@remix-run/router@1.14.0`
 
 ## 6.20.1
 

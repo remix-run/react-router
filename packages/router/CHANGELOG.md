@@ -1,12 +1,6 @@
 # `@remix-run/router`
 
-## 1.14.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Refactor internals for partial hydration ([#11094](https://github.com/remix-run/react-router/pull/11094))
-
-## 1.14.0-pre.0
+## 1.14.0
 
 ### Minor Changes
 
