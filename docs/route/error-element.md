@@ -46,7 +46,7 @@ Put an `errorElement` at the top of your route tree and handle nearly every erro
 
 <docs-warning>We recommend _always_ providing at least a root-level `errorElement` before shipping your application to production, because the UI of the default `errorElement` is ugly and not intended for end-user consumption.</docs-warning>
 
-If you do not provide an `errorElement` in your route tree to handle a given error, errors will bubble up and be handled by a default `errorElement` which will print the error message and stack trace. Some folks have questioned why the stack trace shows up in production builds. Normally, you don't want to expose stack traces on your production sites for security reasons. However, this is more applicable to server-side errors (and Remix does indeed strip stack traces from server-side loader/action responses). In the case of client-side `react-router-dom` applications the code is already available in the browser anyway so any hiding is just security through obscurity. Furthermore, we would still want to expose the error in the console, so removing it from the UI display is still not hiding any information about the stack trace. Not showing it in the UI _and_ not logging it to to the console would mean that application developers have no information _at all_ about production bugs, which poses its own set of issues. So, again we recommend you always add a root level `errorElement` before deploying your site to production!
+If you do not provide an `errorElement` in your route tree to handle a given error, errors will bubble up and be handled by a default `errorElement` which will print the error message and stack trace. Some folks have questioned why the stack trace shows up in production builds. Normally, you don't want to expose stack traces on your production sites for security reasons. However, this is more applicable to server-side errors (and Remix does indeed strip stack traces from server-side loader/action responses). In the case of client-side `react-router-dom` applications the code is already available in the browser anyway so any hiding is just security through obscurity. Furthermore, we would still want to expose the error in the console, so removing it from the UI display is still not hiding any information about the stack trace. Not showing it in the UI _and_ not logging it to the console would mean that application developers have no information _at all_ about production bugs, which poses its own set of issues. So, again we recommend you always add a root level `errorElement` before deploying your site to production!
 
 ## Throwing Manually
 
@@ -77,13 +77,13 @@ Here's a "not found" case in a [loader][loader]:
 
 As soon as you know you can't render the route with the data you're loading, you can throw to break the call stack. You don't have to worry about the rest of the work in the loader (like parsing the user's markdown bio) when it doesn't exist. Just throw and get out of there.
 
-This also means you don't have to worry about a bunch of error branching code in your route component, it won't even try to render if you throw in the loader or action, instead your `errorElement` will render.
+This also means you don't have to worry about a bunch of error branching code in your route component. It won't even try to render if you throw in the loader or action, since your `errorElement` will render instead.
 
 You can throw anything from a loader or action just like you can return anything: responses (like the previous example), errors, or plain objects.
 
 ## Throwing Responses
 
-While you can throw anything and it will be provided back to you through [`useRouteError`][userouteerror], If you throw a [Response][response], React Router will automatically parse the response data before returning it to your components.
+While you can throw anything and it will be provided back to you through [`useRouteError`][userouteerror], if you throw a [Response][response], React Router will automatically parse the response data before returning it to your components.
 
 Additionally, [`isRouteErrorResponse`][isrouteerrorresponse] lets you check for this specific type in your boundaries. Coupled with [`json`][json], you can easily throw responses with some data and render different cases in your boundary:
 
