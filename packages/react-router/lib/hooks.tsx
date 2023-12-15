@@ -422,6 +422,7 @@ export function useRoutesImpl(
   }
 
   let pathname = location.pathname || "/";
+  debugger;
   let remainingPathname =
     parentPathnameBase === "/"
       ? pathname

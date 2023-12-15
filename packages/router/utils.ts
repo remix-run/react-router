@@ -480,6 +480,7 @@ export function matchRoutes<
     return null;
   }
 
+  debugger;
   let branches = flattenRoutes(routes);
   rankRouteBranches(branches);
 
@@ -763,6 +764,7 @@ function matchRouteBranch<
 
     let route = meta.route;
 
+    debugger;
     matches.push({
       // TODO: Can this as be avoided?
       params: matchedParams as Params<ParamKey>,
@@ -930,7 +932,8 @@ export function matchPath<
       if (isOptional && !value) {
         memo[paramName] = undefined;
       } else {
-        memo[paramName] = safelyDecodeURIComponent(value || "", paramName);
+        memo[paramName] = value || "";
+        // memo[paramName] = safelyDecodeURIComponent(value || "", paramName);
       }
       return memo;
     },
@@ -1004,7 +1007,11 @@ function compilePath(
 
 function safelyDecodeURI(value: string) {
   try {
-    return decodeURI(value);
+    // return decodeURI(value);
+    return value
+      .split("/")
+      .map((v) => decodeURIComponent(v).replace(/\//g, "%2F"))
+      .join("/");
   } catch (error) {
     warning(
       false,

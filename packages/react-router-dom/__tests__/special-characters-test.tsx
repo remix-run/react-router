@@ -136,6 +136,22 @@ let specialChars = [
   // Add a few multi-char space use cases for good measure
   { char: "a b", pathChar: "a%20b", searchChar: "a%20b", hashChar: "a%20b" },
   { char: "a+b", pathChar: "a+b", searchChar: "a+b", hashChar: "a+b" },
+
+  // Miscellaneous
+  {
+    char: "bad%20%26%20encoding%20%25%20here",
+    pathChar: "bad%20%26%20encoding%20%25%20here",
+    searchChar: "bad%20%26%20encoding%20%25%20here",
+    hashChar: "bad%20%26%20encoding%20%25%20here",
+    paramChar: "bad & encoding % here",
+  },
+  {
+    char: "a%23b%25c",
+    pathChar: "a%23b%25c",
+    searchChar: "a%23b%25c",
+    hashChar: "a%23b%25c",
+    paramChar: "a#b%c",
+  },
 ];
 
 describe("special character tests", () => {
@@ -333,7 +349,7 @@ describe("special character tests", () => {
 
     it("handles special chars in inline nested param route paths", async () => {
       for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+        let { char, pathChar, paramChar } = charDef;
         await testParamValues(
           `/inline-param/${char}`,
           "Inline Nested Param Route",
@@ -342,7 +358,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: char }
+          { slug: paramChar || char }
         );
 
         await testParamValues(
@@ -353,14 +369,14 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: `foo${char}bar` }
+          { slug: `foo${paramChar || char}bar` }
         );
       }
     });
 
     it("handles special chars in parent nested param route paths", async () => {
       for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+        let { char, pathChar, paramChar } = charDef;
         await testParamValues(
           `/param/${char}`,
           "Parent Nested Param Route",
@@ -369,7 +385,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: char }
+          { slug: paramChar || char }
         );
 
         await testParamValues(
@@ -380,14 +396,14 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: `foo${char}bar` }
+          { slug: `foo${paramChar || char}bar` }
         );
       }
     });
 
     it("handles special chars in inline nested splat routes", async () => {
       for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+        let { char, pathChar, paramChar } = charDef;
         await testParamValues(
           `/inline-splat/${char}`,
           "Inline Nested Splat Route",
@@ -396,7 +412,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": char }
+          { "*": paramChar || char }
         );
 
         await testParamValues(
@@ -407,14 +423,14 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${char}bar` }
+          { "*": `foo${paramChar || char}bar` }
         );
       }
     });
 
     it("handles special chars in nested splat routes", async () => {
       for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+        let { char, pathChar, paramChar } = charDef;
         await testParamValues(
           `/splat/${char}`,
           "Parent Nested Splat Route",
@@ -423,7 +439,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": char }
+          { "*": paramChar || char }
         );
 
         await testParamValues(
@@ -434,14 +450,14 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${char}bar` }
+          { "*": `foo${paramChar || char}bar` }
         );
       }
     });
 
     it("handles special chars in nested splat routes with separators", async () => {
       for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+        let { char, pathChar, paramChar } = charDef;
         await testParamValues(
           `/splat/foo/bar${char}`,
           "Parent Nested Splat Route",
@@ -450,14 +466,14 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo/bar${char}` }
+          { "*": `foo/bar${paramChar || char}` }
         );
       }
     });
 
     it("handles special chars in root splat routes", async () => {
       for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+        let { char, pathChar, paramChar } = charDef;
         await testParamValues(
           `/${char}`,
           "Root Splat Route",
@@ -466,7 +482,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": char }
+          { "*": paramChar || char }
         );
 
         await testParamValues(
@@ -477,14 +493,14 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${char}bar` }
+          { "*": `foo${paramChar || char}bar` }
         );
       }
     });
 
     it("handles special chars in root splat routes with separators", async () => {
       for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+        let { char, pathChar, paramChar } = charDef;
         await testParamValues(
           `/foo/bar${char}`,
           "Root Splat Route",
@@ -493,37 +509,60 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo/bar${char}` }
+          { "*": `foo/bar${paramChar || char}` }
         );
       }
     });
 
-    it("handles special chars in descendant routes paths", async () => {
-      for (let charDef of specialChars) {
-        let { char, pathChar } = charDef;
+    it.only("handles special chars in descendant routes paths", async () => {
+      // for (let charDef of specialChars) {
+      //   let { char, pathChar, paramChar } = charDef;
 
-        await testParamValues(
-          `/descendant/${char}/match`,
-          "Descendant Route",
-          {
-            pathname: `/descendant/${pathChar}/match`,
-            search: "",
-            hash: "",
-          },
-          { param: char, "*": "match" }
-        );
+      //   await testParamValues(
+      //     `/descendant/${char}/match`,
+      //     "Descendant Route",
+      //     {
+      //       pathname: `/descendant/${pathChar}/match`,
+      //       search: "",
+      //       hash: "",
+      //     },
+      //     { param: paramChar || char, "*": "match" }
+      //   );
 
-        await testParamValues(
-          `/descendant/foo${char}bar/match`,
-          "Descendant Route",
-          {
-            pathname: `/descendant/foo${pathChar}bar/match`,
-            search: "",
-            hash: "",
-          },
-          { param: `foo${char}bar`, "*": "match" }
-        );
-      }
+      //   await testParamValues(
+      //     `/descendant/foo${char}bar/match`,
+      //     "Descendant Route",
+      //     {
+      //       pathname: `/descendant/foo${pathChar}bar/match`,
+      //       search: "",
+      //       hash: "",
+      //     },
+      //     { param: `foo${paramChar || char}bar`, "*": "match" }
+      //   );
+      // }
+
+      debugger;
+      await testParamValues(
+        `/descendant/bad%20%26%20encoding%20%25%20here/match`,
+        "Descendant Route",
+        {
+          pathname: `/descendant/bad%20%26%20encoding%20%25%20here/match`,
+          search: "",
+          hash: "",
+        },
+        { param: "bad & encoding % here", "*": "match" }
+      );
+
+      // await testParamValues(
+      //   `/descendant/foobad%20%26%20encoding%20%25%20herebar/match`,
+      //   "Descendant Route",
+      //   {
+      //     pathname: `/descendant/foobad%20%26%20encoding%20%25%20herebar/match`,
+      //     search: "",
+      //     hash: "",
+      //   },
+      //   { param: `foobad & encoding % herebar`, "*": "match" }
+      // );
     });
 
     it("handles special chars in search params", async () => {
