@@ -438,7 +438,8 @@ export function useRoutesImpl(
     warning(
       matches == null ||
         matches[matches.length - 1].route.element !== undefined ||
-        matches[matches.length - 1].route.Component !== undefined,
+        matches[matches.length - 1].route.Component !== undefined ||
+        matches[matches.length - 1].route.lazy !== undefined,
       `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" ` +
         `does not have an element or Component. This means it will render an <Outlet /> with a ` +
         `null value by default resulting in an "empty" page.`
@@ -704,23 +705,25 @@ export function _renderMatches(
       if (match.route.HydrateFallback || match.route.hydrateFallbackElement) {
         fallbackIndex = i;
       }
-      if (
-        match.route.loader &&
-        match.route.id &&
-        dataRouterState.loaderData[match.route.id] === undefined &&
-        (!dataRouterState.errors ||
-          dataRouterState.errors[match.route.id] === undefined)
-      ) {
-        // We found the first route without data/errors which means it's loader
-        // still needs to run.  Flag that we need to render a fallback and
-        // render up until the appropriate fallback
-        renderFallback = true;
-        if (fallbackIndex >= 0) {
-          renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
-        } else {
-          renderedMatches = [renderedMatches[0]];
+
+      if (match.route.id) {
+        let { loaderData, errors } = dataRouterState;
+        let needsToRunLoader =
+          match.route.loader &&
+          loaderData[match.route.id] === undefined &&
+          (!errors || errors[match.route.id] === undefined);
+        if (match.route.lazy || needsToRunLoader) {
+          // We found the first route that's not ready to render (waiting on
+          // lazy, or has a loader that hasn't run yet).  Flag that we need to
+          // render a fallback and render up until the appropriate fallback
+          renderFallback = true;
+          if (fallbackIndex >= 0) {
+            renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
+          } else {
+            renderedMatches = [renderedMatches[0]];
+          }
+          break;
         }
-        break;
       }
     }
   }
