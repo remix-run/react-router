@@ -193,22 +193,17 @@ describe("useSearchParams", () => {
 
     function TestComponent(params: Readonly<TestParams>) {
       const { incrementParamsUpdateCount, incrementSetterUpdateCount } = params;
-      const lastParamsRef = React.useRef<URLSearchParams>();
-      const lastSetterRef = React.useRef<SetURLSearchParams>();
-
       const queryRef = React.useRef<HTMLInputElement>(null);
       const [searchParams, setSearchParams] = useSearchParams({ q: "" });
       const query = searchParams.get("q")!;
 
-      if(lastParamsRef.current !== searchParams) {
+      React.useEffect(() => {
         incrementParamsUpdateCount();
-      }
-      lastParamsRef.current = searchParams;
+      }, [searchParams]);
 
-      if(lastSetterRef.current !== setSearchParams) {
+      React.useEffect(() => {
         incrementSetterUpdateCount();
-      }
-      lastSetterRef.current = setSearchParams;
+      }, [setSearchParams]);
 
       function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
