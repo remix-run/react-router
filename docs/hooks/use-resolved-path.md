@@ -60,7 +60,7 @@ And then it gets worse if you define the splat route as a child:
 <BrowserRouter>
   <Routes>
     <Route path="/dashboard">
-      <Route path="*" element={<Dashboard />} />
+      <Route index path="*" element={<Dashboard />} />
     </Route>
   </Routes>
 </BrowserRouter>
@@ -73,7 +73,7 @@ And then it gets worse if you define the splat route as a child:
 
 When you enable the flag, this "bug" is fixed so that path resolution is consistent across all route types, and `useResolvedPath(".")` always resolves to the current pathname for the contextual route. This includes any dynamic param or splat param values.
 
-If you want to navigate between "sibling" routes within a splat route, it is suggested you move your splat route to it's own child (`<Route path="*" element={<Dashboard />} />`) and use `useResolvedPath("../teams")` and `useResolvedPath("../projects")` parent-relative paths to navigate to sibling routes.
+If you want to navigate between "sibling" routes within a splat route, it is suggested you move your splat route to it's own child (`<Route index path="*" element={<Dashboard />} />`) and use `useResolvedPath("../teams")` and `useResolvedPath("../projects")` parent-relative paths to navigate to sibling `/dashboard` routes.
 
 [navlink]: ../components/nav-link
 [resolvepath]: ../utils/resolve-path
