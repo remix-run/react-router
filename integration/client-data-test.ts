@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 
+import { ServerMode } from "../packages/remix-server-runtime/mode.js";
 import {
   createAppFixture,
   createFixture,
@@ -723,6 +724,61 @@ test.describe("Client Data", () => {
       await page.waitForSelector(':has-text("Child Server Loader Data (2+)")');
       html = await app.getHtml("main");
       expect(html).toMatch("Child Server Loader Data (2+) (mutated by client)");
+    });
+
+    test("server loader errors are re-thrown from serverLoader()", async ({
+      page,
+    }) => {
+      let _consoleError = console.error;
+      console.error = () => {};
+      appFixture = await createAppFixture(
+        await createFixture(
+          {
+            files: {
+              ...getFiles({
+                parentClientLoader: false,
+                parentClientLoaderHydrate: false,
+                childClientLoader: false,
+                childClientLoaderHydrate: false,
+              }),
+              "app/routes/parent.child.tsx": js`
+                import { ClientLoaderFunctionArgs, useRouteError } from "@remix-run/react";
+
+                export function loader() {
+                  throw new Error("Broken!")
+                }
+
+                export async function clientLoader({ serverLoader }) {
+                  return await serverLoader();
+                }
+                clientLoader.hydrate = true;
+
+                export default function Index() {
+                  return <h1>Should not see me</h1>;
+                }
+
+                export function ErrorBoundary() {
+                  let error = useRouteError();
+                  return <p id="child-error">{error.message}</p>;
+                }
+              `,
+            },
+          },
+          ServerMode.Development // Avoid error sanitization
+        ),
+        ServerMode.Development // Avoid error sanitization
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      let html = await app.getHtml("main");
+      expect(html).toMatch("Broken!");
+      // Ensure we hydrate and remain on the boundary
+      await new Promise((r) => setTimeout(r, 100));
+      html = await app.getHtml("main");
+      expect(html).toMatch("Broken!");
+      expect(html).not.toMatch("Should not see me");
+      console.error = _consoleError;
     });
   });
 
