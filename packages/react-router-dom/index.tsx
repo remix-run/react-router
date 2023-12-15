@@ -991,36 +991,42 @@ export function useSearchParams(
       `user.`
   );
 
+  let location = useLocation();
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
   let hasSetSearchParamsRef = React.useRef(false);
-  let searchParamsRef = React.useRef<URLSearchParams>(defaultSearchParamsRef.current);
 
-  let location = useLocation();
-  let searchParams = React.useMemo(
-    () => {
-      // Only merge in the defaults if we haven't yet called setSearchParams.
-      // Once we call that we want those to take precedence, otherwise you can't
-      // remove a param with setSearchParams({}) if it has an initial value
-      searchParamsRef.current = getSearchParamsForLocation(
-        location.search,
-        hasSetSearchParamsRef.current ? null : defaultSearchParamsRef.current
-      );
-      return searchParamsRef.current;
-    },
-    [location.search]
+  let [searchParams, __setSearchParams] = React.useState<URLSearchParams>(
+    getSearchParamsForLocation( location.search, defaultSearchParamsRef.current )
   );
+  let searchParamsRef  = React.useRef<URLSearchParams>(searchParams);
+
+  let initializedRef = React.useRef<boolean>(false);
+  React.useEffect(() => {
+    // Prevent re-assigning the search params on initialization
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      return;
+    }
+
+    // Only merge in the defaults if we haven't yet called setSearchParams.
+    // Once we call that we want those to take precedence, otherwise you can't
+    // remove a param with setSearchParams({}) if it has an initial value
+    searchParamsRef.current = getSearchParamsForLocation(
+      location.search,
+      hasSetSearchParamsRef.current ? null : defaultSearchParamsRef.current
+    );
+
+    __setSearchParams(searchParamsRef.current);
+  }, [location.search, __setSearchParams]);
 
   let navigate = useNavigate();
-  let setSearchParams = React.useCallback<SetURLSearchParams>(
-    (nextInit, navigateOptions) => {
-      const newSearchParams = createSearchParams(
-        typeof nextInit === "function" ? nextInit(searchParamsRef.current) : nextInit
-      );
-      hasSetSearchParamsRef.current = true;
-      navigate("?" + newSearchParams, navigateOptions);
-    },
-    [navigate]
-  );
+  let setSearchParams = React.useCallback<SetURLSearchParams>((nextInit, navigateOptions) => {
+    const newSearchParams = createSearchParams(
+      typeof nextInit === "function" ? nextInit(searchParamsRef.current) : nextInit
+    );
+    hasSetSearchParamsRef.current = true;
+    navigate("?" + newSearchParams, navigateOptions);
+  },[navigate]);
 
   return [searchParams, setSearchParams];
 }

@@ -24,7 +24,7 @@ describe("useSearchParams", () => {
     return <View>{children}</View>;
   }
 
-  it("reads and writes the search string", () => {
+  it("reads and writes the search string", async () => {
     function SearchPage() {
       let [searchParams, setSearchParams] = useSearchParams({ q: "" });
       let [query, setQuery] = React.useState(searchParams.get("q")!);
@@ -45,7 +45,7 @@ describe("useSearchParams", () => {
     }
 
     let renderer: TestRenderer.ReactTestRenderer;
-    TestRenderer.act(() => {
+    await TestRenderer.act(async () => {
       renderer = TestRenderer.create(
         <NativeRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
@@ -55,24 +55,22 @@ describe("useSearchParams", () => {
       );
     });
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    expect(renderer!.toJSON()).toMatchSnapshot();
 
-    let textInput = renderer.root.findByType(TextInput);
-
-    TestRenderer.act(() => {
+    await TestRenderer.act(() => {
+      let textInput = renderer.root.findByType(TextInput);
       textInput.props.onChangeText("Ryan Florence");
     });
 
-    let searchForm = renderer.root.findByType(SearchForm);
-
-    TestRenderer.act(() => {
+    await TestRenderer.act(() => {
+      let searchForm = renderer.root.findByType(SearchForm);
       searchForm.props.onSubmit();
     });
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    expect(renderer!.toJSON()).toMatchSnapshot();
   });
 
-  it("reads and writes the search string (functional update)", () => {
+  it("reads and writes the search string (functional update)", async () => {
     function SearchPage() {
       let [searchParams, setSearchParams] = useSearchParams({ q: "" });
       let [query, setQuery] = React.useState(searchParams.get("q")!);
@@ -98,7 +96,7 @@ describe("useSearchParams", () => {
     }
 
     let renderer: TestRenderer.ReactTestRenderer;
-    TestRenderer.act(() => {
+    await TestRenderer.act(() => {
       renderer = TestRenderer.create(
         <NativeRouter initialEntries={["/search?q=Michael+Jackson"]}>
           <Routes>
@@ -108,18 +106,17 @@ describe("useSearchParams", () => {
       );
     });
 
-    expect(renderer.toJSON()).toMatchSnapshot();
-
-    let searchForm = renderer.root.findByType(SearchForm);
+    expect(renderer!.toJSON()).toMatchSnapshot();
 
     TestRenderer.act(() => {
+      let searchForm = renderer.root.findByType(SearchForm);
       searchForm.props.onSubmit();
     });
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    expect(renderer!.toJSON()).toMatchSnapshot();
   });
 
-  it("allows removal of search params when a default is provided", () => {
+  it("allows removal of search params when a default is provided", async () => {
     function SearchPage() {
       let [searchParams, setSearchParams] = useSearchParams({
         value: "initial",
@@ -134,7 +131,7 @@ describe("useSearchParams", () => {
     }
 
     let renderer: TestRenderer.ReactTestRenderer;
-    TestRenderer.act(() => {
+    await TestRenderer.act(() => {
       renderer = TestRenderer.create(
         <NativeRouter initialEntries={["/search?value=initial"]}>
           <Routes>
@@ -144,15 +141,14 @@ describe("useSearchParams", () => {
       );
     });
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    expect(renderer!.toJSON()).toMatchSnapshot();
 
-    let button = renderer.root.findByType(Button);
-
-    TestRenderer.act(() => {
+    await TestRenderer.act(() => {
+      let button = renderer.root.findByType(Button);
       button.props.onClick();
     });
 
-    expect(renderer.toJSON()).toMatchSnapshot();
+    expect(renderer!.toJSON()).toMatchSnapshot();
   });
 
   it("does not modify the setSearchParams reference when the searchParams change", async () => {
@@ -168,15 +164,15 @@ describe("useSearchParams", () => {
       const [searchParams, setSearchParams] = useSearchParams({ q: "" });
       const [query] = React.useState(searchParams.get("q")!);
 
-      if(lastParamsRef.current !== searchParams) {
+      React.useEffect(() => {
+        lastParamsRef.current = searchParams;
         incrementParamsUpdateCount();
-      }
-      lastParamsRef.current = searchParams;
+      }, [searchParams, incrementParamsUpdateCount]);
 
-      if(lastSetterRef.current !== setSearchParams) {
+      React.useEffect(() => {
+        lastSetterRef.current = setSearchParams;
         incrementSetterUpdateCount();
-      }
-      lastSetterRef.current = setSearchParams;
+      }, [setSearchParams, incrementSetterUpdateCount]);
 
       function handleSubmit() {
         setSearchParams(cur => {
@@ -217,7 +213,7 @@ describe("useSearchParams", () => {
     // Initial Rendering of the TestApp
     // The TestComponent should increment both the paramsUpdateCount and setterUpdateCount to 1
     let renderer: TestRenderer.ReactTestRenderer;
-    await TestRenderer.act(() => {
+    TestRenderer.act(() => {
       renderer = TestRenderer.create(<TestApp {...params}/>);
     });
 
@@ -227,7 +223,7 @@ describe("useSearchParams", () => {
     // Modify the search params via the form in the TestComponent.
     // This should trigger a re-render of the component and update the paramsUpdateCount (only)
     const searchForm = renderer!.root.findByType(SearchForm);
-    await TestRenderer.act(() => {
+    TestRenderer.act(() => {
       searchForm.props.onSubmit();
     });
 
@@ -237,7 +233,7 @@ describe("useSearchParams", () => {
     // Third Times The Charm 
     // Verifies that the setter is still valid now that we aren't regenerating each time the
     // searchParams reference changes
-    await TestRenderer.act(() => {
+    TestRenderer.act(() => {
       searchForm.props.onSubmit();
     });
 
