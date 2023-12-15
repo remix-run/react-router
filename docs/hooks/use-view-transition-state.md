@@ -31,14 +31,17 @@ Consider clicking on an image in a list that you need to expand into the hero im
 ```jsx
 function NavImage({ src, alt, id }) {
   const to = `/images/${id}`;
-  const isTransitioning = unstable_useViewTransitionState(to);
+  const isTransitioning =
+    unstable_useViewTransitionState(to);
   return (
     <Link to={to} unstable_viewTransition>
       <img
         src={src}
         alt={alt}
         style={{
-          viewTransitionName: isTransitioning ? "image-expand" : "",
+          viewTransitionName: isTransitioning
+            ? "image-expand"
+            : "",
         }}
       />
     </Link>
