@@ -14,7 +14,7 @@ import {
 } from "react-router-dom";
 
 import getHtml from "../../react-router/__tests__/utils/getHtml";
-import { createDeferred } from "../../router/__tests__/utils/utils";
+import { createDeferred, tick } from "../../router/__tests__/utils/utils";
 
 let didAssertMissingHydrateFallback = false;
 
@@ -517,6 +517,135 @@ function testPartialHydration(
         </h1>
         <h2>
           Index - INDEX UPDATED
+        </h2>
+      </div>"
+    `);
+  });
+
+  it("supports partial hydration w/lazy initial routes (leaf fallback)", async () => {
+    let dfd = createDeferred();
+    let router = createTestRouter(
+      [
+        {
+          path: "/",
+          Component() {
+            return (
+              <>
+                <h1>Root</h1>
+                <Outlet />
+              </>
+            );
+          },
+          children: [
+            {
+              id: "index",
+              index: true,
+              HydrateFallback: () => <p>Index Loading...</p>,
+              async lazy() {
+                await tick();
+                return {
+                  loader: () => dfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                };
+              },
+            },
+          ],
+        },
+      ],
+      {
+        future: {
+          v7_partialHydration: true,
+        },
+      }
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Root
+        </h1>
+        <p>
+          Index Loading...
+        </p>
+      </div>"
+    `);
+
+    dfd.resolve("INDEX DATA");
+    await waitFor(() => screen.getByText(/INDEX DATA/));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Root
+        </h1>
+        <h2>
+          Index - INDEX DATA
+        </h2>
+      </div>"
+    `);
+  });
+
+  it("supports partial hydration w/lazy initial routes (root fallback)", async () => {
+    let dfd = createDeferred();
+    let router = createTestRouter(
+      [
+        {
+          path: "/",
+          Component() {
+            return (
+              <>
+                <h1>Root</h1>
+                <Outlet />
+              </>
+            );
+          },
+          HydrateFallback: () => <p>Loading...</p>,
+          children: [
+            {
+              id: "index",
+              index: true,
+              async lazy() {
+                await tick();
+                return {
+                  loader: () => dfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h2>{`Index - ${data}`}</h2>;
+                  },
+                };
+              },
+            },
+          ],
+        },
+      ],
+      {
+        future: {
+          v7_partialHydration: true,
+        },
+      }
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <p>
+          Loading...
+        </p>
+      </div>"
+    `);
+
+    dfd.resolve("INDEX DATA");
+    await waitFor(() => screen.getByText(/INDEX DATA/));
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Root
+        </h1>
+        <h2>
+          Index - INDEX DATA
         </h2>
       </div>"
     `);

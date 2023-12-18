@@ -3655,19 +3655,25 @@ function getMatchesToLoad(
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
-    if (isInitialLoad) {
-      // On initial hydration we don't do any shouldRevalidate stuff - we just
-      // call the unhydrated loaders
-      return isUnhydratedRoute(state, match.route);
-    }
-
-    if (match.route.lazy) {
+    let { route } = match;
+    if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       return true;
     }
 
-    if (match.route.loader == null) {
+    if (route.loader == null) {
       return false;
+    }
+
+    if (isInitialLoad) {
+      if (route.loader.hydrate) {
+        return true;
+      }
+      return (
+        state.loaderData[route.id] === undefined &&
+        // Don't re-run if the loader ran and threw an error
+        (!state.errors || state.errors[route.id] === undefined)
+      );
     }
 
     // Always call the loader on new route instances and pending defer cancellations
@@ -3787,23 +3793,6 @@ function getMatchesToLoad(
   });
 
   return [navigationMatches, revalidatingFetchers];
-}
-
-// Is this route unhydrated (when v7_partialHydration=true) such that we need
-// to call it's loader on the initial router creation
-function isUnhydratedRoute(state: RouterState, route: AgnosticDataRouteObject) {
-  if (!route.loader) {
-    return false;
-  }
-  if (route.loader.hydrate) {
-    return true;
-  }
-  return (
-    state.loaderData[route.id] === undefined &&
-    (!state.errors ||
-      // Loader ran but errored - don't re-run
-      state.errors[route.id] === undefined)
-  );
 }
 
 function isNewLoader(
