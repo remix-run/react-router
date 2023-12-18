@@ -20,12 +20,13 @@ process.env.NODE_ENV = process.env.NODE_ENV ?? "production";
 
 sourceMapSupport.install({
   retrieveSourceMap: function (source) {
-    // get source file without the `file://` prefix or `?t=...` suffix
-    let match = source.match(/^file:\/\/(.*)\?t=[.\d]+$/);
+    // get source file with the `file://` prefix
+    let match = source.match(/^file:\/\/(.*)$/);
     if (match) {
+      let filePath = url.fileURLToPath(source);
       return {
         url: source,
-        map: fs.readFileSync(`${match[1]}.map`, "utf8"),
+        map: fs.readFileSync(`${filePath}.map`, "utf8"),
       };
     }
     return null;
