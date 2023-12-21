@@ -149,7 +149,7 @@
   <BrowserRouter>
     <Routes>
       <Route path="dashboard">
-        <Route path="*" element={<Dashboard />} />
+        <Route index path="*" element={<Dashboard />} />
       </Route>
     </Routes>
   </BrowserRouter>

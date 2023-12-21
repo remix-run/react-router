@@ -116,12 +116,13 @@ const router = createBrowserRouter(routes, {
 
 The following future flags are currently available:
 
-| Flag                     | Description                                                           |
-| ------------------------ | --------------------------------------------------------------------- |
-| `v7_fetcherPersist`      | Delay active fetcher cleanup until they return to an `idle` state     |
-| `v7_normalizeFormMethod` | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
-| `v7_partialHydration`    | Support partial hydration for Server-rendered apps                    |
-| `v7_prependBasename`     | Prepend the router basename to navigate/fetch paths                   |
+| Flag                                        | Description                                                           |
+| ------------------------------------------- | --------------------------------------------------------------------- |
+| `v7_fetcherPersist`                         | Delay active fetcher cleanup until they return to an `idle` state     |
+| `v7_normalizeFormMethod`                    | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
+| `v7_partialHydration`                       | Support partial hydration for Server-rendered apps                    |
+| `v7_prependBasename`                        | Prepend the router basename to navigate/fetch paths                   |
+| [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                    |
 
 ## `hydrationData`
 
@@ -197,3 +198,4 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [query]: ./create-static-handler#handlerqueryrequest-opts
 [clientloader]: https://remix.run/route/client-loader
 [hydratefallback]: ../route/hydrate-fallback-element
+[relativesplatpath]: ../hooks/use-resolved-path#splat-paths
