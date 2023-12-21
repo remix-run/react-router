@@ -1,6 +1,7 @@
 import type * as Vite from "vite";
 import colors from "picocolors";
 
+import { preloadViteEsm } from "./import-vite-esm-sync";
 import type { ResolvedRemixVitePluginConfig } from "./plugin";
 
 async function extractRemixPluginConfig({
@@ -56,6 +57,10 @@ export async function build(
     mode,
   }: ViteBuildOptions
 ) {
+  // Ensure Vite's ESM build is preloaded at the start of the process
+  // so it can be accessed synchronously via `importViteEsmSync`
+  await preloadViteEsm();
+
   // For now we just use this function to validate that the Vite config is
   // targeting Remix, but in the future the return value can be used to
   // configure the entire multi-step build process.

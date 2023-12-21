@@ -1,6 +1,8 @@
 import type * as Vite from "vite";
 import colors from "picocolors";
 
+import { preloadViteEsm } from "./import-vite-esm-sync";
+
 export interface ViteDevOptions {
   clearScreen?: boolean;
   config?: string;
@@ -29,6 +31,10 @@ export async function dev(
     strictPort,
   }: ViteDevOptions
 ) {
+  // Ensure Vite's ESM build is preloaded at the start of the process
+  // so it can be accessed synchronously via `importViteEsmSync`
+  await preloadViteEsm();
+
   let vite = await import("vite");
   let server = await vite.createServer({
     root,
