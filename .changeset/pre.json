@@ -8,5 +8,9 @@
     "react-router-native": "6.21.0",
     "@remix-run/router": "1.14.0"
   },
-  "changesets": []
+  "changesets": [
+    "lazy-partial-hydration",
+    "silver-teachers-doubt",
+    "smooth-ligers-give"
+  ]
 }
