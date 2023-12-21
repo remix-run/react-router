@@ -258,7 +258,7 @@ describe("useResolvedPath", () => {
           routes: (
             <Route path="/foo">
               <Route
-                path=":param/*"
+                path=":param"
                 element={
                   <Component desc='<Route path="/foo"><Route path=":param" />' />
                 }

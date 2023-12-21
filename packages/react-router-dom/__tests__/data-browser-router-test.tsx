@@ -5712,10 +5712,10 @@ function testDomRouter(
             await waitFor(() => screen.getByText("Page (1)"));
             expect(getHtml(container)).toMatch("Num fetchers: 1");
 
-            // Resolve after the navigation and revalidation
+            // Resolve action after the navigation and trigger revalidation
             dfd.resolve("FETCH");
             await waitFor(() => screen.getByText("Num fetchers: 0"));
-            expect(getHtml(container)).toMatch("Page (1)");
+            expect(getHtml(container)).toMatch("Page (2)");
           });
 
           it("submitting fetchers w/revalidations are cleaned up on completion (remounted)", async () => {
