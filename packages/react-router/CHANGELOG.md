@@ -1,12 +1,12 @@
 # `react-router`
 
-## 6.21.1-pre.0
+## 6.21.1
 
 ### Patch Changes
 
 - Fix bug with `route.lazy` not working correctly on initial SPA load when `v7_partialHydration` is specified ([#11121](https://github.com/remix-run/react-router/pull/11121))
 - Updated dependencies:
-  - `@remix-run/router@1.14.1-pre.0`
+  - `@remix-run/router@1.14.1`
 
 ## 6.21.0
 
