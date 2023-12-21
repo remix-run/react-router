@@ -1,5 +1,14 @@
 # `@remix-run/serve`
 
+## 2.4.1-pre.0
+
+### Patch Changes
+
+- Use node `fileURLToPath` to convert source map URL to path ([#8321](https://github.com/remix-run/remix/pull/8321))
+- Updated dependencies:
+  - `@remix-run/node@2.4.1-pre.0`
+  - `@remix-run/express@2.4.1-pre.0`
+
 ## 2.4.0
 
 ### Patch Changes
