@@ -1,5 +1,13 @@
 # `react-router-dom-v5-compat`
 
+## 6.21.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.21.1`
+  - `react-router-dom@6.21.1`
+
 ## 6.21.0
 
 ### Minor Changes
@@ -108,7 +116,7 @@
   <BrowserRouter>
     <Routes>
       <Route path="dashboard">
-        <Route path="*" element={<Dashboard />} />
+        <Route index path="*" element={<Dashboard />} />
       </Route>
     </Routes>
   </BrowserRouter>
