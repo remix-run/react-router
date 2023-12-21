@@ -16,6 +16,7 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const VITE_CONFIG = async (args: {
   port: number;
+  pluginOptions?: string;
   vitePlugins?: string;
 }) => {
   let hmrPort = await getPort();
@@ -31,7 +32,7 @@ export const VITE_CONFIG = async (args: {
           port: ${hmrPort}
         }
       },
-      plugins: [remix(),${args.vitePlugins ?? ""}],
+      plugins: [remix(${args.pluginOptions}),${args.vitePlugins ?? ""}],
     });
   `;
 };
@@ -136,14 +137,19 @@ export const viteBuild = ({ cwd }: { cwd: string }) => {
 export const viteRemixServe = async ({
   cwd,
   port,
+  serverBundle,
 }: {
   cwd: string;
   port: number;
+  serverBundle?: string;
 }) => {
   let nodeBin = process.argv[0];
   let serveProc = spawn(
     nodeBin,
-    ["node_modules/@remix-run/serve/dist/cli.js", "build/server/index.js"],
+    [
+      "node_modules/@remix-run/serve/dist/cli.js",
+      `build/server/${serverBundle ? serverBundle + "/" : ""}index.js`,
+    ],
     {
       cwd,
       stdio: "pipe",
