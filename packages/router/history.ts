@@ -56,7 +56,7 @@ export interface Path {
  * An entry in a history stack. A location contains information about the
  * URL path, as well as possibly some arbitrary state and a key.
  */
-export interface Location<State = any> extends Path {
+export interface Location<State = unknown> extends Path {
   /**
    * A value of arbitrary data associated with this location.
    */
