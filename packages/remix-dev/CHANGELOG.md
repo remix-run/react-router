@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.4.1-pre.3
+
+### Patch Changes
+
+- Vite: Fix errors for non-existent `index.html` importer ([#8353](https://github.com/remix-run/remix/pull/8353))
+- Updated dependencies:
+  - `@remix-run/node@2.4.1-pre.3`
+  - `@remix-run/server-runtime@2.4.1-pre.3`
+
 ## 2.4.1-pre.2
 
 ### Patch Changes
