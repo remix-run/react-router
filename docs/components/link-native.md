@@ -16,7 +16,7 @@ interface LinkProps extends TouchableHighlightProps {
   children?: React.ReactNode;
   onPress?(event: GestureResponderEvent): void;
   replace?: boolean;
-  state?: any;
+  state?: unknown;
   to: To;
 }
 ```

@@ -17,7 +17,7 @@ interface NavigateFunction {
 
 interface NavigateOptions {
   replace?: boolean;
-  state?: any;
+  state?: unknown;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
   unstable_flushSync?: boolean;

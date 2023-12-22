@@ -22,7 +22,7 @@ interface LinkProps
   relative?: "route" | "path";
   reloadDocument?: boolean;
   replace?: boolean;
-  state?: any;
+  state?: unknown;
   unstable_viewTransition?: boolean;
 }
 
@@ -143,7 +143,7 @@ The `state` property can be used to set a stateful value for the new location wh
 You can access this state value while on the "new-path" route:
 
 ```ts
-let { state } = useLocation();
+let { state } = useLocation<{some?: string}>();
 ```
 
 ## `reloadDocument`

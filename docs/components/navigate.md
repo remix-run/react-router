@@ -13,7 +13,7 @@ declare function Navigate(props: NavigateProps): null;
 interface NavigateProps {
   to: To;
   replace?: boolean;
-  state?: any;
+  state?: unknown;
   relative?: RelativeRoutingType;
 }
 ```
