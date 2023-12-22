@@ -1,5 +1,78 @@
 # `@remix-run/dev`
 
+## 2.4.1
+
+### Patch Changes
+
+- Vite: Error messages when `.server` files are referenced by client ([#8267](https://github.com/remix-run/remix/pull/8267))
+
+  - Previously, referencing a `.server` module from client code resulted in an error message like:
+    - `The requested module '/app/models/answer.server.ts' does not provide an export named 'isDateType'`
+  - This was confusing because `answer.server.ts` _does_ provide the `isDateType` export, but Remix was replacing `.server` modules with empty modules (`export {}`) for the client build
+  - Now, Remix explicitly fails at compile time when a `.server` module is referenced from client code and includes dedicated error messages depending on whether the import occurs in a route or a non-route module
+  - The error messages also include links to relevant documentation
+
+- Remove `unstable_viteServerBuildModuleId` in favor of manually referencing virtual module name `"virtual:remix/server-build"`. ([#8264](https://github.com/remix-run/remix/pull/8264))
+
+  **This is a breaking change for projects using the unstable Vite plugin with a custom server.**
+
+  This change was made to avoid issues where `@remix-run/dev` could be inadvertently required in your server's production dependencies.
+
+  Instead, you should manually write the virtual module name `"virtual:remix/server-build"` when calling `ssrLoadModule` in development.
+
+  ```diff
+  -import { unstable_viteServerBuildModuleId } from "@remix-run/dev";
+
+  // ...
+
+  app.all(
+    "*",
+    createRequestHandler({
+      build: vite
+  -      ? () => vite.ssrLoadModule(unstable_viteServerBuildModuleId)
+  +      ? () => vite.ssrLoadModule("virtual:remix/server-build")
+        : await import("./build/server/index.js"),
+    })
+  );
+  ```
+
+- Vite: Fix errors for non-existent `index.html` importer ([#8353](https://github.com/remix-run/remix/pull/8353))
+
+- Add `vite:dev` and `vite:build` commands to the Remix CLI. ([#8211](https://github.com/remix-run/remix/pull/8211))
+
+  In order to handle upcoming Remix features where your plugin options can impact the number of Vite builds required, you should now run your Vite `dev` and `build` processes via the Remix CLI.
+
+  ```diff
+  {
+    "scripts": {
+  -    "dev": "vite dev",
+  -    "build": "vite build && vite build --ssr"
+  +    "dev": "remix vite:dev",
+  +    "build": "remix vite:build"
+    }
+  }
+  ```
+
+- Vite: Preserve names for exports from `.client` modules ([#8200](https://github.com/remix-run/remix/pull/8200))
+
+  Unlike `.server` modules, the main idea is not to prevent code from leaking into the server build
+  since the client build is already public. Rather, the goal is to isolate the SSR render from client-only code.
+  Routes need to import code from `.client` modules without compilation failing and then rely on runtime checks
+  or otherwise ensure that execution only happens within a client-only context (e.g. event handlers, `useEffect`).
+
+  Replacing `.client` modules with empty modules would cause the build to fail as ESM named imports are statically analyzed.
+  So instead, we preserve the named export but replace each exported value with `undefined`.
+  That way, the import is valid at build time and standard runtime checks can be used to determine if the
+  code is running on the server or client.
+
+- Disable watch mode in Vite child compiler during build ([#8342](https://github.com/remix-run/remix/pull/8342))
+
+- Vite: Show warning when source maps are enabled in production build ([#8222](https://github.com/remix-run/remix/pull/8222))
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.4.1`
+  - `@remix-run/node@2.4.1`
+
 ## 2.4.0
 
 ### Minor Changes

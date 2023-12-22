@@ -1009,7 +1009,13 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           serverFileRE.test(resolved!.id) || serverDirRE.test(resolved!.id);
         if (!isDotServer) return;
 
-        if (!importer) throw Error(`Importer not found: ${id}`);
+        if (!importer) return;
+        if (viteCommand !== "build" && importer.endsWith(".html")) {
+          // Vite has a special `index.html` importer for `resolveId` within `transformRequest`
+          // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/transformRequest.ts#L158
+          // https://github.com/vitejs/vite/blob/5684fcd8d27110d098b3e1c19d851f44251588f1/packages/vite/src/node/server/pluginContainer.ts#L668
+          return;
+        }
 
         let vite = importViteEsmSync();
         let pluginConfig = await resolvePluginConfig();
