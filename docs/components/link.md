@@ -143,7 +143,9 @@ The `state` property can be used to set a stateful value for the new location wh
 You can access this state value while on the "new-path" route:
 
 ```ts
-let { state } = useLocation<{some?: string}>();
+const location = useLocation<{some?: string}>();
+
+location.state?.some //=> "value"
 ```
 
 ## `reloadDocument`
