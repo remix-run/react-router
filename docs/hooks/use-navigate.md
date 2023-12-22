@@ -68,6 +68,14 @@ You may include an optional `state` value to store in [history state][history-st
 navigate("/new-route", { state: { key: "value" } });
 ```
 
+you can retrieve this state in your target component like this:
+
+```ts
+const location = useLocation<{key?: string}>();
+
+location.state?.key //=> "value"
+```
+
 ## `options.preventScrollReset`
 
 When using the [`<ScrollRestoration>`][scrollrestoration] component, you can disable resetting the scroll to the top of the page via `options.preventScrollReset`
