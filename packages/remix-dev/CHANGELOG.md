@@ -1,31 +1,6 @@
 # `@remix-run/dev`
 
-## 2.4.1-pre.3
-
-### Patch Changes
-
-- Vite: Fix errors for non-existent `index.html` importer ([#8353](https://github.com/remix-run/remix/pull/8353))
-- Updated dependencies:
-  - `@remix-run/node@2.4.1-pre.3`
-  - `@remix-run/server-runtime@2.4.1-pre.3`
-
-## 2.4.1-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.1-pre.2`
-  - `@remix-run/server-runtime@2.4.1-pre.2`
-
-## 2.4.1-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.4.1-pre.1`
-  - `@remix-run/server-runtime@2.4.1-pre.1`
-
-## 2.4.1-pre.0
+## 2.4.1
 
 ### Patch Changes
 
@@ -61,6 +36,8 @@
   );
   ```
 
+- Vite: Fix errors for non-existent `index.html` importer ([#8353](https://github.com/remix-run/remix/pull/8353))
+
 - Add `vite:dev` and `vite:build` commands to the Remix CLI. ([#8211](https://github.com/remix-run/remix/pull/8211))
 
   In order to handle upcoming Remix features where your plugin options can impact the number of Vite builds required, you should now run your Vite `dev` and `build` processes via the Remix CLI.
@@ -89,11 +66,12 @@
   code is running on the server or client.
 
 - Disable watch mode in Vite child compiler during build ([#8342](https://github.com/remix-run/remix/pull/8342))
+
 - Vite: Show warning when source maps are enabled in production build ([#8222](https://github.com/remix-run/remix/pull/8222))
+
 - Updated dependencies:
-  - `@remix-run/serve@2.4.1-pre.0`
-  - `@remix-run/server-runtime@2.4.1-pre.0`
-  - `@remix-run/node@2.4.1-pre.0`
+  - `@remix-run/server-runtime@2.4.1`
+  - `@remix-run/node@2.4.1`
 
 ## 2.4.0
 
