@@ -88,7 +88,7 @@ export type ServerBundlesManifest = {
       file: string;
     };
   };
-  routeIdToBundleId: Record<string, string>;
+  routeIdToServerBundleId: Record<string, string>;
   routes: RouteManifest;
 };
 
@@ -122,7 +122,7 @@ async function getServerBuilds({
 
   let serverBundlesManifest: ServerBundlesManifest = {
     serverBundles: {},
-    routeIdToBundleId: {},
+    routeIdToServerBundleId: {},
     routes: rootRelativeRoutes,
   };
 
@@ -145,7 +145,7 @@ async function getServerBuilds({
           `The "unstable_serverBundles" function must return a string`
         );
       }
-      serverBundlesManifest.routeIdToBundleId[route.id] = bundleId;
+      serverBundlesManifest.routeIdToServerBundleId[route.id] = bundleId;
 
       let serverBundleDirectory = path.join(serverBuildDirectory, bundleId);
       let serverBuildConfig = serverBuildConfigByBundleId.get(bundleId);

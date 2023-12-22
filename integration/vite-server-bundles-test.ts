@@ -272,7 +272,7 @@ test.describe(() => {
           file: "build/server/root/index.js",
         },
       },
-      routeIdToBundleId: {
+      routeIdToServerBundleId: {
         "routes/_pathless.bundle-c.route-a": "bundle-c",
         "routes/_pathless.bundle-c.route-b": "bundle-c",
         "routes/_pathless.bundle-c": "bundle-c",
