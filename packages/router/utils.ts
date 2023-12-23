@@ -640,7 +640,7 @@ function explodeOptionalSegments(path: string): string[] {
   let required = first.replace(/\?$/, "");
 
   if (rest.length === 0) {
-    // Intepret empty string as omitting an optional segment
+    // Interpret empty string as omitting an optional segment
     // `["one", "", "three"]` corresponds to omitting `:two` from `/one/:two?/three` -> `/one/three`
     return isOptional ? [required, ""] : [required];
   }
