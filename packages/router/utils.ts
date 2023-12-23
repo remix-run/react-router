@@ -1014,13 +1014,13 @@ function safelyDecodeURI(value: string) {
   }
 }
 
-function safelyDecodeURIComponent(value: string, paramName: string) {
+function safelyDecodeURIComponent(value: string, paramName?: string) {
   try {
     return decodeURIComponent(value);
   } catch (error) {
     warning(
       false,
-      `The value for the URL param "${paramName}" will not be decoded because` +
+      `The value for the URL "${paramName ? `param ${paramName}` : ''}" will not be decoded because` +
         ` the string "${value}" is a malformed URL segment. This is probably` +
         ` due to a bad percent encoding (${error}).`
     );
