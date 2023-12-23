@@ -763,15 +763,15 @@ describe("special character tests", () => {
     describe("memory routers", () => {
       it("does not encode characters in MemoryRouter", () => {
         let ctx = render(
-          <MemoryRouter initialEntries={["/with space"]}>
+          <MemoryRouter initialEntries={["/with&encoded:characters"]}>
             <Routes>
-              <Route path="/with space" element={<ShowPath />} />
+              <Route path="/with&encoded:characters" element={<ShowPath />} />
             </Routes>
           </MemoryRouter>
         );
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with&amp;encoded:characters","search":"","hash":""}</pre>"`
         );
       });
 
@@ -779,32 +779,32 @@ describe("special character tests", () => {
         function Start() {
           let navigate = useNavigate();
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => navigate("/with&encoded:characters"), []);
           return null;
         }
         let ctx = render(
           <MemoryRouter>
             <Routes>
               <Route path="/" element={<Start />} />
-              <Route path="/with space" element={<ShowPath />} />
+              <Route path="/with&amp;encoded:characters" element={<ShowPath />} />
             </Routes>
           </MemoryRouter>
         );
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with&amp;encoded:characters","search":"","hash":""}</pre>"`
         );
       });
 
       it("does not encode characters in createMemoryRouter", () => {
         let router = createMemoryRouter(
-          [{ path: "/with space", element: <ShowPath /> }],
-          { initialEntries: ["/with space"] }
+          [{ path: "/with&encoded:characters", element: <ShowPath /> }],
+          { initialEntries: ["/with&encoded:characters"] }
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with&amp;encoded:characters","search":"","hash":""}</pre>"`
         );
       });
 
@@ -812,36 +812,36 @@ describe("special character tests", () => {
         function Start() {
           let navigate = useNavigate();
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => navigate("/with%26encoded%3Acharacters"), []);
           return null;
         }
         let router = createMemoryRouter([
           { path: "/", element: <Start /> },
-          { path: "/with space", element: <ShowPath /> },
+          { path: "/with&encoded:characters", element: <ShowPath /> },
         ]);
         let ctx = render(<RouterProvider router={router} />);
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
     });
 
     describe("browser routers", () => {
       it("encodes characters in BrowserRouter", () => {
-        let testWindow = getWindow("/with space");
+        let testWindow = getWindow("/with%26encoded%3Acharacters");
 
         let ctx = render(
           <BrowserRouter window={testWindow}>
             <Routes>
-              <Route path="/with space" element={<ShowPath />} />
+              <Route path="/with&encoded:characters" element={<ShowPath />} />
             </Routes>
           </BrowserRouter>
         );
 
-        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(testWindow.location.pathname).toBe("/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
 
@@ -851,7 +851,7 @@ describe("special character tests", () => {
         function Start() {
           let navigate = useNavigate();
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => navigate("/with%26encoded%3Acharacters"), []);
           return null;
         }
 
@@ -859,29 +859,29 @@ describe("special character tests", () => {
           <BrowserRouter window={testWindow}>
             <Routes>
               <Route path="/" element={<Start />} />
-              <Route path="/with space" element={<ShowPath />} />
+              <Route path="/with&encoded:characters" element={<ShowPath />} />
             </Routes>
           </BrowserRouter>
         );
 
-        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(testWindow.location.pathname).toBe("/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
 
       it("encodes characters in createBrowserRouter", () => {
-        let testWindow = getWindow("/with space");
+        let testWindow = getWindow("/with%26encoded%3Acharacters");
 
         let router = createBrowserRouter(
-          [{ path: "/with space", element: <ShowPath /> }],
+          [{ path: "/with&encoded:characters", element: <ShowPath /> }],
           { window: testWindow }
         );
         let ctx = render(<RouterProvider router={router} />);
 
-        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(testWindow.location.pathname).toBe("/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
 
@@ -891,42 +891,42 @@ describe("special character tests", () => {
         function Start() {
           let navigate = useNavigate();
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => navigate("/with%26encoded%3Acharacters"), []);
           return null;
         }
 
         let router = createBrowserRouter(
           [
             { path: "/", element: <Start /> },
-            { path: "/with space", element: <ShowPath /> },
+            { path: "/with&encoded:characters", element: <ShowPath /> },
           ],
           { window: testWindow }
         );
         let ctx = render(<RouterProvider router={router} />);
 
-        expect(testWindow.location.pathname).toBe("/with%20space");
+        expect(testWindow.location.pathname).toBe("/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
     });
 
     describe("hash routers", () => {
       it("encodes characters in HashRouter", () => {
-        let testWindow = getWindow("/#/with space");
+        let testWindow = getWindow("/#/with%26encoded%3Acharacters");
 
         let ctx = render(
           <HashRouter window={testWindow}>
             <Routes>
-              <Route path="/with space" element={<ShowPath />} />
+              <Route path="/with&encoded:characters" element={<ShowPath />} />
             </Routes>
           </HashRouter>
         );
 
         expect(testWindow.location.pathname).toBe("/");
-        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(testWindow.location.hash).toBe("#/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
 
@@ -936,7 +936,7 @@ describe("special character tests", () => {
         function Start() {
           let navigate = useNavigate();
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => navigate("/with%26encoded%3Acharacters"), []);
           return null;
         }
 
@@ -944,31 +944,31 @@ describe("special character tests", () => {
           <HashRouter window={testWindow}>
             <Routes>
               <Route path="/" element={<Start />} />
-              <Route path="/with space" element={<ShowPath />} />
+              <Route path="/with&encoded:characters" element={<ShowPath />} />
             </Routes>
           </HashRouter>
         );
 
         expect(testWindow.location.pathname).toBe("/");
-        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(testWindow.location.hash).toBe("#/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
 
       it("encodes characters in createHashRouter", () => {
-        let testWindow = getWindow("/#/with space");
+        let testWindow = getWindow("/#/with%26encoded%3Acharacters");
 
         let router = createHashRouter(
-          [{ path: "/with space", element: <ShowPath /> }],
+          [{ path: "/with&encoded:characters", element: <ShowPath /> }],
           { window: testWindow }
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(testWindow.location.pathname).toBe("/");
-        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(testWindow.location.hash).toBe("#/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
 
@@ -978,23 +978,23 @@ describe("special character tests", () => {
         function Start() {
           let navigate = useNavigate();
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => navigate("/with%26encoded%3Acharacters"), []);
           return null;
         }
 
         let router = createHashRouter(
           [
             { path: "/", element: <Start /> },
-            { path: "/with space", element: <ShowPath /> },
+            { path: "/with&encoded:characters", element: <ShowPath /> },
           ],
           { window: testWindow }
         );
         let ctx = render(<RouterProvider router={router} />);
 
         expect(testWindow.location.pathname).toBe("/");
-        expect(testWindow.location.hash).toBe("#/with%20space");
+        expect(testWindow.location.hash).toBe("#/with%26encoded%3Acharacters");
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with%26encoded%3Acharacters","search":"","hash":""}</pre>"`
         );
       });
     });
