@@ -998,21 +998,6 @@ function compilePath(
   return [matcher, params];
 }
 
-function safelyDecodeURI(value: string) {
-  try {
-    return decodeURI(value);
-  } catch (error) {
-    warning(
-      false,
-      `The URL path "${value}" could not be decoded because it is is a ` +
-        `malformed URL segment. This is probably due to a bad percent ` +
-        `encoding (${error}).`
-    );
-
-    return value;
-  }
-}
-
 function safelyDecodeURIComponent(value: string, paramName?: string) {
   try {
     return decodeURIComponent(value);
