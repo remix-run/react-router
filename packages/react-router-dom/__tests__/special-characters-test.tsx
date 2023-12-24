@@ -786,7 +786,7 @@ describe("special character tests", () => {
           <MemoryRouter>
             <Routes>
               <Route path="/" element={<Start />} />
-              <Route path="/with space&amp;encoded:characters" element={<ShowPath />} />
+              <Route path="/with space&encoded:characters" element={<ShowPath />} />
             </Routes>
           </MemoryRouter>
         );
@@ -812,7 +812,7 @@ describe("special character tests", () => {
         function Start() {
           let navigate = useNavigate();
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with%20space%26encoded%3Acharacters"), []);
+          React.useEffect(() => navigate("/with space&encoded:characters"), []);
           return null;
         }
         let router = createMemoryRouter([
@@ -822,7 +822,7 @@ describe("special character tests", () => {
         let ctx = render(<RouterProvider router={router} />);
 
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
-          `"<pre>{"pathname":"/with%20space%26encoded%3Acharacters","search":"","hash":""}</pre>"`
+          `"<pre>{"pathname":"/with space&amp;encoded:characters","search":"","hash":""}</pre>"`
         );
       });
     });
