@@ -108,6 +108,14 @@ describe("matchPath", () => {
         pathnameBase: "/users/mj",
       });
     });
+
+    it("matches second consecutive slash as a parameter", () => {
+      expect(matchPath("/:id", "//")).toMatchObject({
+        params: { id: "/" },
+        pathname: "//",
+        pathnameBase: "//",
+      });
+    });
   });
 
   describe("with { end: false }", () => {
@@ -163,6 +171,10 @@ describe("matchPath", () => {
       expect(
         matchPath({ path: "/users/mj", end: false }, "/users/mj2")
       ).toBeNull();
+    });
+
+    it("does not match second consecutive slash as a parameter", () => {
+      expect(matchPath({ path: "/:id", end: false }, "//")).toBeNull();
     });
   });
 

@@ -902,6 +902,15 @@ export function matchPath<
     pattern = { path: pattern, caseSensitive: false, end: true };
   }
 
+  // GH Issue #8072: Support matching against a standalone "/" as a parameter
+  // Here we encode the second slash to allow for pattern matching against the second slash.
+  // The encoded variant can be thought of as a placeholder during this matching process.
+  // When this process is complete we undo this encoding iff it was applied.
+  const encodeDoubleSlash = pattern.end && pathname.startsWith("//");
+  if (encodeDoubleSlash) {
+    pathname = pathname.replace("//", "/%2F");
+  }
+
   let [matcher, compiledParams] = compilePath(
     pattern.path,
     pattern.caseSensitive,
@@ -938,8 +947,8 @@ export function matchPath<
 
   return {
     params,
-    pathname: matchedPathname,
-    pathnameBase,
+    pathname: encodeDoubleSlash ? matchedPathname.replace("/%2F", "//") : matchedPathname,
+    pathnameBase: encodeDoubleSlash ? pathnameBase.replace("/%2F", "//") : pathnameBase,
     pattern,
   };
 }
