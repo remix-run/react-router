@@ -1300,7 +1300,7 @@ export type JsonFunction = <Data>(
 export const json: JsonFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
 
-  let headers = new Headers(responseInit.headers);
+  let headers = new Headers(responseInit.headers ?? {});
   if (!headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json; charset=utf-8");
   }
@@ -1535,7 +1535,7 @@ export const redirect: RedirectFunction = (url, init = 302) => {
     responseInit.status = 302;
   }
 
-  let headers = new Headers(responseInit.headers);
+  let headers = new Headers(responseInit.headers ?? {});
   headers.set("Location", url);
 
   return new Response(null, {
