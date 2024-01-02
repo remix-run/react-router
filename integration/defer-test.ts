@@ -985,7 +985,7 @@ test.describe("aborted", () => {
           import type { AppLoadContext, EntryContext } from "@remix-run/node";
           import { createReadableStreamFromReadable } from "@remix-run/node";
           import { RemixServer } from "@remix-run/react";
-          import { isbot } from "isbot";
+          import isbot from "isbot";
           import { renderToPipeableStream } from "react-dom/server";
 
           const ABORT_DELAY = 1;
@@ -997,7 +997,7 @@ test.describe("aborted", () => {
             remixContext: EntryContext,
             loadContext: AppLoadContext
           ) {
-            return isbot(request.headers.get("user-agent") || "")
+            return isbot(request.headers.get("user-agent"))
               ? handleBotRequest(
                   request,
                   responseStatusCode,
