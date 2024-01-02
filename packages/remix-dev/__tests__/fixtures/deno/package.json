@@ -16,7 +16,7 @@
     "@remix-run/css-bundle": "*",
     "@remix-run/deno": "*",
     "@remix-run/react": "*",
-    "isbot": "^3.6.8",
+    "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
