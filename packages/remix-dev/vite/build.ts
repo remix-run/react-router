@@ -27,7 +27,9 @@ async function extractConfig({
   // process so we don't need to have a separate Remix config
   let viteConfig = await vite.resolveConfig(
     { mode, configFile, root },
-    "build"
+    "build", // command
+    "production", // default mode
+    "production" // default NODE_ENV
   );
 
   let pluginConfig = viteConfig[
