@@ -493,7 +493,7 @@ export async function resolveConfig(
       pkgJson.update({
         dependencies: {
           ...pkgJson.content.dependencies,
-          isbot: "latest",
+          isbot: "^4",
         },
       });
 
