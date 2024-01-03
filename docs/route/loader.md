@@ -178,5 +178,5 @@ For more details, read the [`errorElement`][errorelement] documentation.
 [json]: ../fetch/json
 [errorelement]: ./error-element
 [pickingarouter]: ../routers/picking-a-router
-[ssr]: ../guides/ssr.md
+[ssr]: ../guides/ssr
 [partialhydration]: ../routers/create-browser-router#partial-hydration-data
