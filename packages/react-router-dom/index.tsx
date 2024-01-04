@@ -396,6 +396,8 @@ const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
 const FLUSH_SYNC = "flushSync";
 const flushSyncImpl = ReactDOM[FLUSH_SYNC];
+const USE_ID = "useId";
+const useIdImpl = React[USE_ID];
 
 function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
@@ -1634,10 +1636,14 @@ export function useFetcher<TData = any>({
   );
 
   // Fetcher key handling
-  let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
+  // OK to call conditionally to feature detect `useId`
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  let defaultKey = useIdImpl ? useIdImpl() : "";
+  let [fetcherKey, setFetcherKey] = React.useState<string>(key || defaultKey);
   if (key && key !== fetcherKey) {
     setFetcherKey(key);
   } else if (!fetcherKey) {
+    // We will only fall through here when `useId` is not available
     setFetcherKey(getUniqueFetcherId());
   }
 

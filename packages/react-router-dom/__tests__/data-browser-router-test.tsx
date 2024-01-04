@@ -5368,9 +5368,11 @@ function testDomRouter(
             { window: getWindow("/") }
           );
           let { container } = render(<RouterProvider router={router} />);
-          expect(container.innerHTML).not.toMatch(/__\d+__,my-key/);
+          expect(container.innerHTML).not.toMatch(/my-key/);
           await waitFor(() =>
-            expect(container.innerHTML).toMatch(/__\d+__,my-key/)
+            // React `useId()` results in either `:r2a:` or `:rp:` depending on
+            // `DataBrowserRouter`/`DataHashRouter`
+            expect(container.innerHTML).toMatch(/(:r2a:|:rp:),my-key/)
           );
         });
       });
