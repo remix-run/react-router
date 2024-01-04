@@ -4098,7 +4098,12 @@ async function callLoaderOrAction(
       // Check between word boundaries instead of startsWith() due to the last
       // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
       if (contentType && /\bapplication\/json\b/.test(contentType)) {
-        data = await result.json();
+        let contentLength = result.headers.get("Content-Length");
+        if (contentLength === "0") {
+          data = null;
+        } else {
+          data = await result.json();
+        }
       } else {
         data = await result.text();
       }

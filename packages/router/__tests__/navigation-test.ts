@@ -114,6 +114,25 @@ describe("navigations", () => {
       });
     });
 
+    // See: https://github.com/remix-run/react-router/issues/11145
+    it("does not attempt to deserialize empty json responses", async () => {
+      let t = initializeTest();
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(
+        new Response(null, {
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": "0",
+          },
+        })
+      );
+      expect(t.router.state.errors).toBeNull();
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: null,
+      });
+    });
+
     it("unwraps non-redirect text Responses", async () => {
       let t = initializeTest();
       let A = await t.navigate("/foo");
