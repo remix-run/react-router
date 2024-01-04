@@ -161,6 +161,17 @@ const resolveRelativeRouteFilePath = (
 
 let vmods = [serverBuildId, serverManifestId, browserManifestId];
 
+const invalidateVirtualModules = (viteDevServer: Vite.ViteDevServer) => {
+  vmods.forEach((vmod) => {
+    let mod = viteDevServer.moduleGraph.getModuleById(
+      VirtualModule.resolve(vmod)
+    );
+    if (mod) {
+      viteDevServer.moduleGraph.invalidateModule(mod);
+    }
+  });
+};
+
 const getHash = (source: BinaryLike, maxLength?: number): string => {
   let hash = createHash("sha256").update(source).digest("hex");
   return typeof maxLength === "number" ? hash.slice(0, maxLength) : hash;
@@ -844,16 +855,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
               ) {
                 previousPluginConfig = pluginConfig;
 
-                // Invalidate all virtual modules
-                vmods.forEach((vmod) => {
-                  let mod = viteDevServer.moduleGraph.getModuleById(
-                    VirtualModule.resolve(vmod)
-                  );
-
-                  if (mod) {
-                    viteDevServer.moduleGraph.invalidateModule(mod);
-                  }
-                });
+                invalidateVirtualModules(viteDevServer);
               }
 
               next();
@@ -1276,14 +1278,44 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         cachedPluginConfig = pluginConfig;
         let route = getRoute(pluginConfig, file);
 
+        type ManifestRoute = Manifest["routes"][string];
+        type HmrEventData = { route: ManifestRoute | null };
+        let hmrEventData: HmrEventData = { route: null };
+
+        if (route) {
+          // invalidate manifest on route exports change
+          let serverManifest = (await server.ssrLoadModule(serverManifestId))
+            .default as Manifest;
+
+          let oldRouteMetadata = serverManifest.routes[route.id];
+          let newRouteMetadata = await getRouteMetadata(
+            pluginConfig,
+            viteChildCompiler,
+            route
+          );
+
+          hmrEventData.route = newRouteMetadata;
+
+          if (
+            !oldRouteMetadata ||
+            (
+              [
+                "hasLoader",
+                "hasClientLoader",
+                "hasAction",
+                "hasClientAction",
+                "hasErrorBoundary",
+              ] as const
+            ).some((key) => oldRouteMetadata[key] !== newRouteMetadata[key])
+          ) {
+            invalidateVirtualModules(server);
+          }
+        }
+
         server.ws.send({
           type: "custom",
           event: "remix:hmr",
-          data: {
-            route: route
-              ? await getRouteMetadata(pluginConfig, viteChildCompiler, route)
-              : null,
-          },
+          data: hmrEventData,
         });
 
         return modules;
