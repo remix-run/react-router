@@ -365,6 +365,7 @@ export interface IndexRouteProps {
   action?: IndexRouteObject["action"];
   hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
+  validateParams?: IndexRouteObject["validateParams"];
   handle?: IndexRouteObject["handle"];
   index: true;
   children?: undefined;
@@ -708,6 +709,7 @@ export function createRoutesFromChildren(
       action: element.props.action,
       errorElement: element.props.errorElement,
       ErrorBoundary: element.props.ErrorBoundary,
+      validateParams: element.props.validateParams,
       hasErrorBoundary:
         element.props.ErrorBoundary != null ||
         element.props.errorElement != null,
