@@ -342,6 +342,7 @@ export interface PathRouteProps {
   action?: NonIndexRouteObject["action"];
   hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
+  validateParams?: NonIndexRouteObject["validateParams"];
   handle?: NonIndexRouteObject["handle"];
   index?: false;
   children?: React.ReactNode;

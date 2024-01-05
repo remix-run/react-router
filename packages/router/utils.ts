@@ -270,12 +270,15 @@ export interface LazyRouteFunction<R extends AgnosticRouteObject> {
   (): Promise<RequireOne<Omit<R, ImmutableRouteKey>>>;
 }
 
+export type ValidateParamsFunction = (params: Params) => boolean;
+
 /**
  * Base RouteObject with common props shared by all types of routes
  */
 type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
+  validateParams?: ValidateParamsFunction;
   id?: string;
   loader?: LoaderFunction;
   action?: ActionFunction;
@@ -760,6 +763,12 @@ function matchRouteBranch<
     if (!match) return null;
 
     Object.assign(matchedParams, match.params);
+
+    if (meta.route.validateParams) {
+      if (!meta.route.validateParams(matchedParams)) {
+        return null;
+      }
+    }
 
     let route = meta.route;
 

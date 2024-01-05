@@ -24,6 +24,7 @@ export interface IndexRouteObject {
   action?: AgnosticIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
+  validateParams?: AgnosticIndexRouteObject["validateParams"];
   handle?: AgnosticIndexRouteObject["handle"];
   index: true;
   children?: undefined;
@@ -44,6 +45,7 @@ export interface NonIndexRouteObject {
   action?: AgnosticNonIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
+  validateParams?: AgnosticNonIndexRouteObject["validateParams"];
   handle?: AgnosticNonIndexRouteObject["handle"];
   index?: false;
   children?: RouteObject[];

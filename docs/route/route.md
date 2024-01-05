@@ -27,6 +27,10 @@ const router = createBrowserRouter([
       );
     },
 
+    validateParams: ({ teamId }) => {
+      return !isNaN(Number(teamId));
+    }
+
     // performing this mutation when data is submitted to it
     action: async ({ request }) => {
       return updateFakeTeam(await request.formData());

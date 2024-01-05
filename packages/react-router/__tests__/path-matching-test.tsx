@@ -1,5 +1,5 @@
 import type { RouteObject } from "react-router";
-import { matchRoutes } from "react-router";
+import { matchPath, matchRoutes } from "react-router";
 
 function pickPaths(routes: RouteObject[], pathname: string): string[] | null {
   let matches = matchRoutes(routes, pathname);
@@ -330,6 +330,30 @@ describe("path matching with splats", () => {
     `);
 
     consoleWarn.mockRestore();
+  });
+});
+
+describe("path matching with param validation", () => {
+  test("optional static segment at the start of the path", () => {
+    let routes = [
+      {
+        path: "/test/:param?",
+        validateParams: (params) => {
+          return params.param === "hi";
+        },
+      },
+    ];
+
+    expect(matchRoutes(routes, "/test/hi")).toMatchObject([
+      {
+        pathname: "/test/hi",
+        params: {
+          param: "hi",
+        },
+      },
+    ]);
+
+    expect(matchRoutes(routes, '/test/not-hi')).toBeNull();
   });
 });
 
