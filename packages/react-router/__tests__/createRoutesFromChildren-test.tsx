@@ -39,6 +39,7 @@ describe("creating routes from JSX", () => {
               "loader": undefined,
               "path": "home",
               "shouldRevalidate": undefined,
+              "validateParams": undefined,
             },
             {
               "Component": undefined,
@@ -57,6 +58,7 @@ describe("creating routes from JSX", () => {
               "loader": undefined,
               "path": "about",
               "shouldRevalidate": undefined,
+              "validateParams": undefined,
             },
             {
               "Component": undefined,
@@ -81,6 +83,7 @@ describe("creating routes from JSX", () => {
                   "loader": undefined,
                   "path": undefined,
                   "shouldRevalidate": undefined,
+                  "validateParams": undefined,
                 },
                 {
                   "Component": undefined,
@@ -99,6 +102,7 @@ describe("creating routes from JSX", () => {
                   "loader": undefined,
                   "path": ":id",
                   "shouldRevalidate": undefined,
+                  "validateParams": undefined,
                 },
               ],
               "element": undefined,
@@ -111,6 +115,7 @@ describe("creating routes from JSX", () => {
               "loader": undefined,
               "path": "users",
               "shouldRevalidate": undefined,
+              "validateParams": undefined,
             },
           ],
           "element": undefined,
@@ -123,6 +128,7 @@ describe("creating routes from JSX", () => {
           "loader": undefined,
           "path": "/",
           "shouldRevalidate": undefined,
+          "validateParams": undefined,
         },
       ]
     `);
@@ -173,6 +179,7 @@ describe("creating routes from JSX", () => {
               "loader": [Function],
               "path": "home",
               "shouldRevalidate": [Function],
+              "validateParams": undefined,
             },
             {
               "Component": undefined,
@@ -197,6 +204,7 @@ describe("creating routes from JSX", () => {
                   "loader": undefined,
                   "path": undefined,
                   "shouldRevalidate": undefined,
+                  "validateParams": undefined,
                 },
               ],
               "element": undefined,
@@ -209,6 +217,7 @@ describe("creating routes from JSX", () => {
               "loader": undefined,
               "path": "users",
               "shouldRevalidate": undefined,
+              "validateParams": undefined,
             },
           ],
           "element": undefined,
@@ -223,6 +232,7 @@ describe("creating routes from JSX", () => {
           "loader": undefined,
           "path": "/",
           "shouldRevalidate": undefined,
+          "validateParams": undefined,
         },
       ]
     `);
