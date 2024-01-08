@@ -13,7 +13,7 @@ import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "./serialize";
 
 export interface RouteModules<RouteModule> {
-  [routeId: string]: RouteModule;
+  [routeId: string]: RouteModule | undefined;
 }
 
 /**

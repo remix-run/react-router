@@ -11,6 +11,7 @@ export interface EntryContext {
   serverHandoffString?: string;
   staticHandlerContext: StaticHandlerContext;
   future: FutureConfig;
+  isSpaMode: boolean;
   serializeError(error: Error): SerializedError;
 }
 

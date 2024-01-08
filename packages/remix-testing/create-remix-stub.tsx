@@ -114,6 +114,7 @@ export function createRemixStub(
           version: "",
         },
         routeModules: {},
+        isSpaMode: false,
       };
 
       // Update the routes to include context in the loader/action and populate

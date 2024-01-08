@@ -161,8 +161,8 @@ export interface AppConfig {
   serverPlatform?: ServerPlatform;
 
   /**
-   * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
-   * Defaults to `true`.
+   * Whether to support Tailwind functions and directives in CSS files if
+   * `tailwindcss` is installed. Defaults to `true`.
    */
   tailwind?: boolean;
 
@@ -174,7 +174,8 @@ export interface AppConfig {
   ignoredRouteFiles?: string[];
 
   /**
-   * A function for defining custom directories to watch while running `remix dev`, in addition to `appDirectory`.
+   * A function for defining custom directories to watch while running `remix dev`,
+   * in addition to `appDirectory`.
    */
   watchPaths?:
     | string
@@ -338,6 +339,14 @@ export interface RemixConfig {
   serverPlatform: ServerPlatform;
 
   /**
+   * Enable SPA Mode.  Default's to `false`.
+   *
+   * This is the inverse of the user-level `unstable_ssr` config and used throughout
+   * the codebase to avoid confusion with Vite's `ssr` config
+   */
+  isSpaMode: boolean;
+
+  /**
    * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
    * Defaults to `true`.
    */
@@ -407,9 +416,11 @@ export async function resolveConfig(
   {
     rootDirectory,
     serverMode = ServerMode.Production,
+    isSpaMode = false,
   }: {
     rootDirectory: string;
     serverMode?: ServerMode;
+    isSpaMode?: boolean;
   }
 ): Promise<RemixConfig> {
   if (!isValidServerMode(serverMode)) {
@@ -462,7 +473,17 @@ export async function resolveConfig(
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  if (userEntryServerFile) {
+  if (isSpaMode) {
+    // This is a super-simple default since we don't need streaming in SPA Mode.
+    // We can include this in a remix-spa template, but right now `npx remix reveal`
+    // will still expose the streaming template since that command doesn't have
+    // access to the `unstable_ssr:false` flag in the vite config (the streaming template
+    // works just fine so maybe instea dof having this we _only have this version
+    // in the template...).  We let users manage an entry.server file in SPA Mode
+    // so they can de ide if they want to hydrate the full document or just an
+    // embedded `<div id="app">` or whatever.
+    entryServerFile = "entry.server.spa.tsx";
+  } else if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
     let serverRuntime = deps["@remix-run/deno"]
@@ -646,6 +667,7 @@ export async function resolveConfig(
     serverMode,
     serverModuleFormat,
     serverNodeBuiltinsPolyfill,
+    isSpaMode,
     browserNodeBuiltinsPolyfill,
     serverPlatform,
     mdx,

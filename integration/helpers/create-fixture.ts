@@ -51,6 +51,38 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       compiler === "vite" ? "build/server/index.js" : "build/index.js"
     )
   ).href;
+
+  let getBrowserAsset = async (asset: string) => {
+    return fse.readFile(
+      path.join(projectDir, "public", asset.replace(/^\//, "")),
+      "utf8"
+    );
+  };
+
+  let isSpaMode =
+    compiler === "vite" &&
+    fse.existsSync(path.join(projectDir, "build/client/index.html"));
+
+  if (isSpaMode) {
+    return {
+      projectDir,
+      build: null,
+      isSpaMode,
+      compiler,
+      requestDocument: () => {
+        throw new Error("Cannot requestDocument in SPA Mode tests");
+      },
+      requestData: () => {
+        throw new Error("Cannot requestData in SPA Mode tests");
+      },
+      postDocument: () => {
+        throw new Error("Cannot postDocument in SPA Mode tests");
+      },
+      getBrowserAsset,
+      useRemixServe: init.useRemixServe,
+    };
+  }
+
   let app: ServerBuild = await import(buildPath);
   let handler = createRequestHandler(app, mode || ServerMode.Production);
 
@@ -89,16 +121,10 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     });
   };
 
-  let getBrowserAsset = async (asset: string) => {
-    return fse.readFile(
-      path.join(projectDir, "public", asset.replace(/^\//, "")),
-      "utf8"
-    );
-  };
-
   return {
     projectDir,
     build: app,
+    isSpaMode,
     compiler,
     requestDocument,
     requestData,
@@ -172,6 +198,22 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
             });
           }
         });
+      });
+    }
+
+    if (fixture.isSpaMode) {
+      return new Promise(async (accept) => {
+        let port = await getPort();
+        let app = express();
+        app.use(express.static(path.join(fixture.projectDir, "build/client")));
+        app.get("*", (_, res, next) =>
+          res.sendFile(
+            path.join(process.cwd(), "build/client/index.html"),
+            next
+          )
+        );
+        let server = app.listen(port);
+        accept({ stop: server.close.bind(server), port });
       });
     }
 
@@ -281,7 +323,7 @@ export async function createFixtureProject(
       at the same time, unless the \`remix.config.js\` file contains a reference
       to the \`global.INJECTED_FIXTURE_REMIX_CONFIG\` placeholder so it can
       accept the injected config values. Either move all config values into
-      \`remix.config.js\` file, or spread the  injected config, 
+      \`remix.config.js\` file, or spread the  injected config,
       e.g. \`export default { ...global.INJECTED_FIXTURE_REMIX_CONFIG }\`.
     `);
   }

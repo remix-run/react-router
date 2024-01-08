@@ -3,6 +3,7 @@
 import type * as Vite from "vite";
 import { type BinaryLike, createHash } from "node:crypto";
 import * as path from "node:path";
+import * as url from "node:url";
 import * as fse from "fs-extra";
 import babel from "@babel/core";
 import {
@@ -114,6 +115,13 @@ export type RemixVitePluginOptions = RemixConfigJsdocOverrides &
      * bundle's directory name within the server build directory.
      */
     unstable_serverBundles?: ServerBundlesFunction;
+    /**
+     * Enable server-side rendering for your application. Disable to use Remix in
+     * "SPA Mode", which will request the `/` path at build-time and save it as
+     * an `index.html` file with your assets so your application can be deployed
+     * as a SPA without server-rendering. Default's to `true`.
+     */
+    unstable_ssr?: boolean;
   };
 
 export type ResolvedRemixVitePluginConfig = Pick<
@@ -124,6 +132,7 @@ export type ResolvedRemixVitePluginConfig = Pick<
   | "entryClientFilePath"
   | "entryServerFilePath"
   | "future"
+  | "isSpaMode"
   | "publicPath"
   | "relativeAssetsBuildDirectory"
   | "routes"
@@ -370,6 +379,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         serverBuildDirectory: "build/server",
         serverBuildFile: "index.js",
         publicPath: "/",
+        unstable_ssr: true,
       } as const satisfies Partial<RemixVitePluginOptions>;
 
       let pluginConfig = {
@@ -380,9 +390,14 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
       let rootDirectory =
         viteUserConfig.root ?? process.env.REMIX_ROOT ?? process.cwd();
 
+      let isSpaMode = pluginConfig.unstable_ssr === false;
+
       let resolvedRemixConfig = await resolveConfig(
         pick(pluginConfig, supportedRemixConfigKeys),
-        { rootDirectory }
+        {
+          rootDirectory,
+          isSpaMode,
+        }
       );
 
       // Only select the Remix config options that the Vite plugin uses
@@ -405,6 +420,18 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         ...resolveServerBuildConfig(),
       };
 
+      // Log warning for incompatible vite config flags
+      if (isSpaMode && unstable_serverBundles) {
+        console.warn(
+          colors.yellow(
+            colors.bold("⚠️  SPA Mode: ") +
+              "the `unstable_serverBundles` config is invalid with " +
+              "`unstable_ssr:false` and will be ignored`"
+          )
+        );
+        unstable_serverBundles = undefined;
+      }
+
       return {
         appDirectory,
         rootDirectory,
@@ -417,6 +444,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         serverBuildFile,
         serverBundles: unstable_serverBundles,
         serverModuleFormat,
+        isSpaMode,
         relativeAssetsBuildDirectory,
         future,
       };
@@ -445,6 +473,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         pluginConfig.relativeAssetsBuildDirectory
       )};
       export const future = ${JSON.stringify(pluginConfig.future)};
+      export const isSpaMode = ${pluginConfig.isSpaMode === true};
       export const publicPath = ${JSON.stringify(pluginConfig.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
@@ -896,8 +925,12 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
           invariant(cachedPluginConfig);
           invariant(viteConfig);
 
-          let { assetsBuildDirectory, serverBuildDirectory, rootDirectory } =
-            cachedPluginConfig;
+          let {
+            assetsBuildDirectory,
+            serverBuildDirectory,
+            serverBuildFile,
+            rootDirectory,
+          } = cachedPluginConfig;
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let clientViteManifest = await loadViteManifest(assetsBuildDirectory);
@@ -955,6 +988,15 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
                 ),
                 "",
               ].join("\n")
+            );
+          }
+
+          if (cachedPluginConfig.isSpaMode) {
+            await handleSpaMode(
+              path.join(rootDirectory, serverBuildDirectory),
+              serverBuildFile,
+              assetsBuildDirectory,
+              viteConfig
             );
           }
         },
@@ -1129,6 +1171,34 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             "",
           ].join("\n");
           throw Error(message);
+        }
+
+        if (pluginConfig.isSpaMode) {
+          let serverOnlyExports = esModuleLexer(code)[1]
+            .map((exp) => exp.n)
+            .filter((exp) => SERVER_ONLY_EXPORTS.includes(exp));
+          if (serverOnlyExports.length > 0) {
+            let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
+            let message =
+              `SPA Mode: ${serverOnlyExports.length} invalid route export(s) in ` +
+              `\`${route.file}\`: ${str}. See https://remix.run/guides/spa-mode ` +
+              `for more information.`;
+            throw Error(message);
+          }
+
+          if (route.id !== "root") {
+            let hasHydrateFallback = esModuleLexer(code)[1]
+              .map((exp) => exp.n)
+              .some((exp) => exp === "HydrateFallback");
+            if (hasHydrateFallback) {
+              let message =
+                `SPA Mode: Invalid \`HydrateFallback\` export found in ` +
+                `\`${route.file}\`. \`HydrateFallback\` is only permitted on ` +
+                `the root route in SPA Mode. See https://remix.run/guides/spa-mode ` +
+                `for more information.`;
+              throw Error(message);
+            }
+          }
         }
 
         return {
@@ -1436,4 +1506,34 @@ async function getRouteMetadata(
     imports: [],
   };
   return info;
+}
+
+async function handleSpaMode(
+  serverBuildDirectoryPath: string,
+  serverBuildFile: string,
+  assetsBuildDirectory: string,
+  viteConfig: Vite.ResolvedConfig
+) {
+  // Create a handler and call it for the `/` path - rendering down to the
+  // proper HydrateFallback ... or not!  Maybe they have a static landing page
+  // generated from routes/_index.tsx.
+  let serverBuildPath = path.join(serverBuildDirectoryPath, serverBuildFile);
+  let build = await import(url.pathToFileURL(serverBuildPath).toString());
+  let { createRequestHandler: createHandler } = await import("@remix-run/node");
+  let handler = createHandler(build, viteConfig.mode);
+  let response = await handler(new Request("http://localhost/"));
+  invariant(response.status === 200, "Error generating the index.html file");
+
+  // Write out the index.html file for the SPA
+  let htmlPath = path.join(assetsBuildDirectory, "index.html");
+  await fse.writeFile(htmlPath, await response.text());
+
+  viteConfig.logger.info(
+    "SPA Mode: index.html has been written to your " +
+      colors.bold(path.relative(process.cwd(), assetsBuildDirectory)) +
+      " directory"
+  );
+
+  // Cleanup - we no longer need the server build assets
+  fse.removeSync(serverBuildDirectoryPath);
 }

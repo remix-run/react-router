@@ -39,6 +39,7 @@ describe("readConfig", () => {
           "v3_fetcherPersist": false,
           "v3_relativeSplatPath": false,
         },
+        "isSpaMode": false,
         "mdx": undefined,
         "postcss": true,
         "publicPath": "/build/",

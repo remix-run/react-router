@@ -48,7 +48,8 @@ const enqueueUpdate = debounce(async () => {
       needsRevalidation,
       manifest.routes,
       window.__remixRouteModules,
-      window.__remixContext.future
+      window.__remixContext.future,
+      window.__remixContext.isSpaMode
     );
     __remixRouter._internalSetRoutes(routes);
     routeUpdates.clear();

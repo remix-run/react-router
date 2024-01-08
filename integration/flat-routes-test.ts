@@ -160,7 +160,7 @@ test.describe("flat routes", () => {
   }
 
   test("allows ignoredRouteFiles to be configured", async () => {
-    let routeIds = Object.keys(fixture.build.routes);
+    let routeIds = Object.keys(fixture.build!.routes);
 
     expect(routeIds).not.toContain(IGNORED_ROUTE);
   });

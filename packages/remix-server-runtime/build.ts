@@ -16,6 +16,7 @@ export interface ServerBuild {
   publicPath: string;
   assetsBuildDirectory: string;
   future: FutureConfig;
+  isSpaMode: boolean;
 }
 
 export interface HandleDocumentRequestFunction {
