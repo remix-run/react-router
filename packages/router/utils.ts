@@ -685,7 +685,7 @@ function rankRouteBranches(branches: RouteBranch[]): void {
   );
 }
 
-const paramRe = /^:\w+$/;
+const paramRe = /^:[\w-]+$/;
 const dynamicSegmentValue = 3;
 const indexRouteValue = 2;
 const emptySegmentValue = 1;
@@ -822,7 +822,7 @@ export function generatePath<Path extends string>(
         return stringify(params[star]);
       }
 
-      const keyMatch = segment.match(/^:(\w+)(\??)$/);
+      const keyMatch = segment.match(/^:([\w-]+)(\??)$/);
       if (keyMatch) {
         const [, key, optional] = keyMatch;
         let param = params[key as PathParam<Path>];
@@ -967,10 +967,13 @@ function compilePath(
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^${}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/\/:(\w+)(\?)?/g, (_: string, paramName: string, isOptional) => {
-        params.push({ paramName, isOptional: isOptional != null });
-        return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
-      });
+      .replace(
+        /\/:([\w-]+)(\?)?/g,
+        (_: string, paramName: string, isOptional) => {
+          params.push({ paramName, isOptional: isOptional != null });
+          return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
+        }
+      );
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
