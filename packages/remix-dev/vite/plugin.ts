@@ -46,21 +46,6 @@ const supportedRemixConfigKeys = [
 type SupportedRemixConfigKey = typeof supportedRemixConfigKeys[number];
 type SupportedRemixConfig = Pick<RemixUserConfig, SupportedRemixConfigKey>;
 
-const ROUTE_EXPORTS = new Set([
-  "ErrorBoundary",
-  "HydrateFallback",
-  "action",
-  "clientAction",
-  "clientLoader",
-  "default", // component
-  "handle",
-  "headers",
-  "links",
-  "loader",
-  "meta",
-  "shouldRevalidate",
-]);
-
 const SERVER_ONLY_EXPORTS = ["loader", "action", "headers"];
 
 // We need to provide different JSDoc comments in some cases due to differences
@@ -1155,23 +1140,6 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
 
         let route = getRoute(pluginConfig, id);
         if (!route) return;
-
-        // check the exports, fail if unknown exists, unless id ends with .mdx
-        let nonRemixExports = esModuleLexer(code)[1]
-          .map((exp) => exp.n)
-          .filter((exp) => !ROUTE_EXPORTS.has(exp));
-        if (nonRemixExports.length > 0 && !id.endsWith(".mdx")) {
-          let message = [
-            `${nonRemixExports.length} invalid route export${
-              nonRemixExports.length > 1 ? "s" : ""
-            } in \`${route.file}\`:`,
-            ...nonRemixExports.map((exp) => `  - \`${exp}\``),
-            "",
-            "See https://remix.run/docs/en/main/future/vite#strict-route-exports",
-            "",
-          ].join("\n");
-          throw Error(message);
-        }
 
         if (pluginConfig.isSpaMode) {
           let serverOnlyExports = esModuleLexer(code)[1]
