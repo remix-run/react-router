@@ -1,5 +1,14 @@
 # `@remix-run/serve`
 
+## 2.5.0-pre.0
+
+### Patch Changes
+
+- Don't try to load sourcemaps if they don't exist on disk ([#8446](https://github.com/remix-run/remix/pull/8446))
+- Updated dependencies:
+  - `@remix-run/node@2.5.0-pre.0`
+  - `@remix-run/express@2.5.0-pre.0`
+
 ## 2.4.1
 
 ### Patch Changes
