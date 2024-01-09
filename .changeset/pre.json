@@ -8,5 +8,9 @@
     "react-router-native": "6.21.1",
     "@remix-run/router": "1.14.1"
   },
-  "changesets": []
+  "changesets": [
+    "dynamic-param-dash",
+    "fetcher-key-useid",
+    "unlucky-planets-repeat"
+  ]
 }
