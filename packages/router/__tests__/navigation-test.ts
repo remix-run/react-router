@@ -122,7 +122,6 @@ describe("navigations", () => {
         new Response(null, {
           headers: {
             "Content-Type": "application/json",
-            "Content-Length": "0",
           },
         })
       );
