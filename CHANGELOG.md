@@ -145,7 +145,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 ## v6.X.Y
 
-**Date:** YYYY-MM-DD
+Date: YYYY-MM-DD
 
 ### What's Changed
 
@@ -162,7 +162,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 ## v6.21.1
 
-**Date:** 2023-12-21
+Date: 2023-12-21
 
 ### Patch Changes
 
@@ -174,7 +174,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 
 ## v6.21.0
 
-**Date:** 2023-12-13
+Date: 2023-12-13
 
 ### What's Changed
 
@@ -205,7 +205,7 @@ We added a new `future.v7_partialHydration` future flag for the `@remix-run/rout
 
 ## v6.20.1
 
-**Date:** 2023-12-01
+Date: 2023-12-01
 
 ### Patch Changes
 
@@ -217,7 +217,7 @@ We added a new `future.v7_partialHydration` future flag for the `@remix-run/rout
 
 ## v6.20.0
 
-**Date:** 2023-11-22
+Date: 2023-11-22
 
 > [!WARNING]
 > Please use version `6.20.1` or later instead of `6.20.0`. We discovered that a large number of apps were relying on buggy behavior that was fixed in this release ([#11045](https://github.com/remix-run/react-router/pull/11045)). We reverted the fix in `6.20.1` and will be re-introducing it behind a future flag in a subsequent release. See [#11052](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329) for more details.
@@ -237,7 +237,7 @@ We added a new `future.v7_partialHydration` future flag for the `@remix-run/rout
 
 ## v6.19.0
 
-**Date:** 2023-11-16
+Date: 2023-11-16
 
 > [!WARNING]
 > Please use version `6.20.1` or later instead of `6.19.0`. We discovered that a large number of apps were relying on buggy behavior that was fixed in this release ([#10983](https://github.com/remix-run/react-router/pull/10983)). We reverted the fix in `6.20.1` and will be re-introducing it behind a future flag in a subsequent release. See [#11052](https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329) for more details.
@@ -295,7 +295,7 @@ function handleClick() {
 
 ## v6.18.0
 
-**Date:** 2023-10-31
+Date: 2023-10-31
 
 ### What's Changed
 
@@ -338,7 +338,7 @@ Per the same [RFC](https://github.com/remix-run/remix/discussions/7698) as above
 
 ## v6.17.0
 
-**Date:** 2023-10-16
+Date: 2023-10-16
 
 ### What's Changed
 
@@ -400,7 +400,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 ## v6.16.0
 
-**Date:** 2023-09-13
+Date: 2023-09-13
 
 ### Minor Changes
 
@@ -423,7 +423,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 ## v6.15.0
 
-**Date:** 2023-08-10
+Date: 2023-08-10
 
 ### Minor Changes
 
@@ -443,7 +443,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 ## v6.14.2
 
-**Date:** 2023-07-17
+Date: 2023-07-17
 
 ### Patch Changes
 
@@ -459,7 +459,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 ## v6.14.1
 
-**Date:** 2023-06-30
+Date: 2023-06-30
 
 ### Patch Changes
 
@@ -472,7 +472,7 @@ For more information on using the View Transitions API, please refer to the [Smo
 
 ## v6.14.0
 
-**Date:** 2023-06-23
+Date: 2023-06-23
 
 ### What's Changed
 
@@ -558,7 +558,7 @@ This behavior will likely change in v7 so it's best to make any JSON object subm
 
 ## v6.13.0
 
-**Date:** 2023-06-14
+Date: 2023-06-14
 
 ### What's Changed
 
@@ -600,7 +600,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 ## v6.12.1
 
-**Date:** 2023-06-08
+Date: 2023-06-08
 
 > [!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
@@ -613,7 +613,7 @@ We recommend folks adopt this flag sooner rather than later to be better compati
 
 ## v6.12.0
 
-**Date:** 2023-06-06
+Date: 2023-06-06
 
 > [!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.0`/`6.12.1`. These versions suffered from some Webpack build/minification issues resulting failed builds or invalid minified code in your production bundles. See [#10569](https://github.com/remix-run/react-router/pull/10569) and [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
@@ -641,7 +641,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 ## v6.11.2
 
-**Date:** 2023-05-17
+Date: 2023-05-17
 
 ### Patch Changes
 
@@ -654,7 +654,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 ## v6.11.1
 
-**Date:** 2023-05-03
+Date: 2023-05-03
 
 ### Patch Changes
 
@@ -668,7 +668,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 ## v6.11.0
 
-**Date:** 2023-04-28
+Date: 2023-04-28
 
 ### Minor Changes
 
@@ -697,7 +697,7 @@ With `6.12.0` we've added better support for suspending components by wrapping t
 
 ## v6.10.0
 
-**Date:** 2023-03-29
+Date: 2023-03-29
 
 ### What's Changed
 
@@ -737,7 +737,7 @@ You can also check out the docs [here](https://reactrouter.com/en/dev/guides/api
 
 ## v6.9.0
 
-**Date:** 2023-03-10
+Date: 2023-03-10
 
 ### What's Changed
 
@@ -854,7 +854,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 
 ## v6.8.2
 
-**Date:** 2023-02-27
+Date: 2023-02-27
 
 ### Patch Changes
 
@@ -870,7 +870,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 
 ## v6.8.1
 
-**Date:** 2023-02-06
+Date: 2023-02-06
 
 ### Patch Changes
 
@@ -883,7 +883,7 @@ An example of this in action can be found in the [`examples/lazy-loading-router-
 
 ## v6.8.0
 
-**Date:** 2023-01-26
+Date: 2023-01-26
 
 ### Minor Changes
 
@@ -914,7 +914,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 ## v6.7.0
 
-**Date:** 2023-01-18
+Date: 2023-01-18
 
 ### Minor Changes
 
@@ -936,7 +936,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 ## v6.6.2
 
-**Date:** 2023-01-09
+Date: 2023-01-09
 
 ### Patch Changes
 
@@ -946,7 +946,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 ## v6.6.1
 
-**Date:** 2022-12-23
+Date: 2022-12-23
 
 ### Patch Changes
 
@@ -957,7 +957,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 ## v6.6.0
 
-**Date:** 2022-12-21
+Date: 2022-12-21
 
 ### What's Changed
 
@@ -982,7 +982,7 @@ This minor release is primarily to stabilize our SSR APIs for Data Routers now t
 
 ## v6.5.0
 
-**Date:** 2022-12-16
+Date: 2022-12-16
 
 ### What's Changed
 
@@ -1046,7 +1046,7 @@ function Comp() {
 
 ## v6.4.5
 
-**Date:** 2022-12-07
+Date: 2022-12-07
 
 ### Patch Changes
 
@@ -1060,7 +1060,7 @@ function Comp() {
 
 ## v6.4.4
 
-**Date:** 2022-11-30
+Date: 2022-11-30
 
 ### Patch Changes
 
@@ -1080,7 +1080,7 @@ function Comp() {
 
 ## v6.4.3
 
-**Date:** 2022-11-01
+Date: 2022-11-01
 
 ### Patch Changes
 
@@ -1100,7 +1100,7 @@ function Comp() {
 
 ## v6.4.2
 
-**Date:** 2022-10-06
+Date: 2022-10-06
 
 ### Patch Changes
 
@@ -1113,7 +1113,7 @@ function Comp() {
 
 ## v6.4.1
 
-**Date:** 2022-09-22
+Date: 2022-09-22
 
 ### Patch Changes
 
@@ -1124,7 +1124,7 @@ function Comp() {
 
 ## v6.4.0
 
-**Date:** 2022-09-13
+Date: 2022-09-13
 
 ### What's Changed
 
@@ -1159,7 +1159,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.3.0
 
-**Date:** 2022-03-31
+Date: 2022-03-31
 
 ### Minor Changes
 
@@ -1169,7 +1169,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.2.2
 
-**Date:** 2022-02-28
+Date: 2022-02-28
 
 ### Patch Changes
 
@@ -1180,7 +1180,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.2.1
 
-**Date:** 2021-12-17
+Date: 2021-12-17
 
 ### Patch Changes
 
@@ -1190,7 +1190,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.2.0
 
-**Date:** 2021-12-17
+Date: 2021-12-17
 
 ### Minor Changes
 
@@ -1205,7 +1205,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.1.1
 
-**Date:** 2021-12-11
+Date: 2021-12-11
 
 ### Patch Changes
 
@@ -1215,7 +1215,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.1.0
 
-**Date:** 2021-12-10
+Date: 2021-12-10
 
 ### Minor Changes
 
@@ -1232,7 +1232,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.0.2
 
-**Date:** 2021-11-09
+Date: 2021-11-09
 
 ### Patch Changes
 
@@ -1242,7 +1242,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.0.1
 
-**Date:** 2021-11-05
+Date: 2021-11-05
 
 ### Patch Changes
 
@@ -1253,7 +1253,7 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 
 ## v6.0.0
 
-**Date:** 2021-11-03
+Date: 2021-11-03
 
 React Router v6 is here!
 
