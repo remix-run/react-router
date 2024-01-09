@@ -1490,11 +1490,27 @@ async function handleSpaMode(
   let { createRequestHandler: createHandler } = await import("@remix-run/node");
   let handler = createHandler(build, viteConfig.mode);
   let response = await handler(new Request("http://localhost/"));
-  invariant(response.status === 200, "Error generating the index.html file");
+  let html = await response.text();
+  if (response.status !== 200) {
+    throw new Error(
+      `SPA Mode: Received a ${response.status} status code from ` +
+        `\`entry.server.tsx\` while generating the \`index.html\` file.\n${html}`
+    );
+  }
+
+  if (
+    !html.includes("window.__remixContext =") ||
+    !html.includes("window.__remixRouteModules =")
+  ) {
+    throw new Error(
+      "SPA Mode: Did you forget to include <Scripts/> in your `root.tsx` " +
+        "`HydrateFallback` component?  Your `index.html` file cannot hydrate " +
+        "into a SPA without `<Scripts />`."
+    );
+  }
 
   // Write out the index.html file for the SPA
-  let htmlPath = path.join(assetsBuildDirectory, "index.html");
-  await fse.writeFile(htmlPath, await response.text());
+  await fse.writeFile(path.join(assetsBuildDirectory, "index.html"), html);
 
   viteConfig.logger.info(
     "SPA Mode: index.html has been written to your " +
