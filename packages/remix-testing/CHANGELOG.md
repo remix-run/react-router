@@ -36,7 +36,7 @@
   npx http-server build/client
   ```
 
-  For more information, please refer to the [SPA Mode docs][https://reactrouter.com/en/main/guides/spa-mode].
+  For more information, please refer to the [SPA Mode docs][https://remix.run/future/spa-mode].
 
 ### Patch Changes
 

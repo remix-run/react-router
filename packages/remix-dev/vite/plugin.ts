@@ -1149,7 +1149,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
             let message =
               `SPA Mode: ${serverOnlyExports.length} invalid route export(s) in ` +
-              `\`${route.file}\`: ${str}. See https://remix.run/guides/spa-mode ` +
+              `\`${route.file}\`: ${str}. See https://remix.run/future/spa-mode ` +
               `for more information.`;
             throw Error(message);
           }
@@ -1162,7 +1162,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
               let message =
                 `SPA Mode: Invalid \`HydrateFallback\` export found in ` +
                 `\`${route.file}\`. \`HydrateFallback\` is only permitted on ` +
-                `the root route in SPA Mode. See https://remix.run/guides/spa-mode ` +
+                `the root route in SPA Mode. See https://remix.run/future/spa-mode ` +
                 `for more information.`;
               throw Error(message);
             }

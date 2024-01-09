@@ -61,7 +61,7 @@
   npx http-server build/client
   ```
 
-  For more information, please refer to the [SPA Mode docs][https://reactrouter.com/en/main/guides/spa-mode].
+  For more information, please refer to the [SPA Mode docs][https://remix.run/future/spa-mode].
 
 ### Patch Changes
 
@@ -71,7 +71,7 @@
 - Vite: Loosen strict route exports restriction, reinstating support for non-Remix route exports ([#8420](https://github.com/remix-run/remix/pull/8420))
 - Fix issue with `isbot` v4 released on 1/1/2024 ([#8415](https://github.com/remix-run/remix/pull/8415))
 
-  - `remix dev` wil now add `"isbot": "^4"` to `package.json` instead of using `latest`
+  - `remix dev` will now add `"isbot": "^4"` to `package.json` instead of using `latest`
   - Update built-in `entry.server` files to work with both `isbot@3` and `isbot@4` for backwards-compatibility with Remix apps that have pinned `isbot` to v3
   - Templates are updated to use `isbot@4` moving forward via `create-remix`
 
