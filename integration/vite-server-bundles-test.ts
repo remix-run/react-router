@@ -158,14 +158,12 @@ test.describe(() => {
   });
 
   test.describe(() => {
-    let stop: () => Promise<void>;
+    let stop: () => void;
     test.beforeAll(async () => {
       stop = await viteDev({ cwd, port: devPort });
     });
 
-    test.afterAll(async () => {
-      await stop();
-    });
+    test.afterAll(() => stop());
 
     test("Vite / server bundles / dev", async ({ page }) => {
       // There are no server bundles in dev mode, this is just a smoke test to
@@ -193,9 +191,7 @@ test.describe(() => {
   });
 
   test.describe(() => {
-    test.beforeAll(async () => {
-      await viteBuild({ cwd });
-    });
+    test.beforeAll(() => viteBuild({ cwd }));
 
     test("Vite / server bundles / build / server", async ({ page }) => {
       let pageErrors: Error[] = [];

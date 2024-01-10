@@ -45,7 +45,7 @@ const files = {
 test.describe(async () => {
   let port: number;
   let cwd: string;
-  let stop: () => Promise<void>;
+  let stop: () => void;
 
   test.beforeAll(async () => {
     port = await getPort();
@@ -55,7 +55,7 @@ test.describe(async () => {
     });
     stop = await viteDev({ cwd, port });
   });
-  test.afterAll(async () => await stop());
+  test.afterAll(() => stop());
 
   test("Vite / HMR & HDR / vite dev", async ({ page, browserName }) => {
     await workflow({ page, browserName, cwd, port });
@@ -65,7 +65,7 @@ test.describe(async () => {
 test.describe(async () => {
   let port: number;
   let cwd: string;
-  let stop: () => Promise<void>;
+  let stop: () => void;
 
   test.beforeAll(async () => {
     port = await getPort();
@@ -76,7 +76,7 @@ test.describe(async () => {
     });
     stop = await customDev({ cwd, port });
   });
-  test.afterAll(async () => await stop());
+  test.afterAll(() => stop());
 
   test("Vite / HMR & HDR / express", async ({ page, browserName }) => {
     await workflow({ page, browserName, cwd, port });

@@ -3,7 +3,6 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
-import execa from "execa";
 import fse from "fs-extra";
 import stripIndent from "strip-indent";
 import waitOn from "wait-on";
@@ -112,19 +111,6 @@ export async function createProject(files: Record<string, string> = {}) {
   return projectDir;
 }
 
-type ServerArgs = {
-  cwd: string;
-  port: number;
-};
-
-const createDev =
-  (nodeArgs: string[]) =>
-  async ({ cwd, port }: ServerArgs): Promise<() => Promise<void>> => {
-    let proc = node(nodeArgs, { cwd });
-    await waitForServer(proc, { port });
-    return async () => await kill(proc.pid!);
-  };
-
 export const viteBuild = ({ cwd }: { cwd: string }) => {
   let nodeBin = process.argv[0];
 
@@ -156,16 +142,36 @@ export const viteRemixServe = async ({
       env: { NODE_ENV: "production", PORT: port.toFixed(0) },
     }
   );
-
   await waitForServer(serveProc, { port });
-
-  return () => {
-    serveProc.kill();
-  };
+  return () => serveProc.kill();
 };
+
+type ServerArgs = {
+  cwd: string;
+  port: number;
+};
+
+const createDev =
+  (nodeArgs: string[]) =>
+  async ({ cwd, port }: ServerArgs): Promise<() => unknown> => {
+    let proc = node(nodeArgs, { cwd });
+    await waitForServer(proc, { port });
+    return () => proc.kill();
+  };
 
 export const viteDev = createDev([remixBin, "vite:dev"]);
 export const customDev = createDev(["./server.mjs"]);
+
+export const using = async (
+  cleanup: () => unknown | Promise<unknown>,
+  task: () => unknown | Promise<unknown>
+) => {
+  try {
+    await task();
+  } finally {
+    await cleanup();
+  }
+};
 
 function node(args: string[], options: { cwd: string }) {
   let nodeBin = process.argv[0];
@@ -176,36 +182,6 @@ function node(args: string[], options: { cwd: string }) {
     stdio: "pipe",
   });
   return proc;
-}
-
-async function kill(pid: number) {
-  if (!isAlive(pid)) return;
-
-  let isWindows = process.platform === "win32";
-  if (isWindows) {
-    await execa("taskkill", ["/F", "/PID", pid.toString()]).catch((error) => {
-      // taskkill 128 -> the process is already dead
-      if (error.exitCode === 128) return;
-      if (/There is no running instance of the task./.test(error.message))
-        return;
-      console.warn(error.message);
-    });
-    return;
-  }
-  await execa("kill", ["-9", pid.toString()]).catch((error) => {
-    // process is already dead
-    if (/No such process/.test(error.message)) return;
-    console.warn(error.message);
-  });
-}
-
-function isAlive(pid: number) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return false;
-  }
 }
 
 async function waitForServer(
@@ -221,7 +197,7 @@ async function waitForServer(
   }).catch((err) => {
     let stdout = devStdout();
     let stderr = devStderr();
-    kill(proc.pid!);
+    proc.kill();
     throw new Error(
       [
         err.message,

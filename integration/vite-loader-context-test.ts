@@ -10,7 +10,7 @@ import {
 
 let port: number;
 let cwd: string;
-let stop: () => Promise<void>;
+let stop: () => void;
 
 test.beforeAll(async () => {
   port = await getPort();
@@ -37,7 +37,7 @@ test.beforeAll(async () => {
   });
   stop = await customDev({ cwd, port });
 });
-test.afterAll(async () => await stop());
+test.afterAll(() => stop());
 
 test("Vite / Load context / express", async ({ page }) => {
   let pageErrors: Error[] = [];

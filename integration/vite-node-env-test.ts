@@ -20,7 +20,7 @@ let files = {
 test.describe(async () => {
   let devPort: number;
   let cwd: string;
-  let stop: () => Promise<void> | void;
+  let stop: () => void;
 
   test.beforeAll(async () => {
     devPort = await getPort();
@@ -34,7 +34,7 @@ test.describe(async () => {
     test.beforeAll(async () => {
       stop = await viteDev({ cwd, port: devPort });
     });
-    test.afterAll(async () => await stop());
+    test.afterAll(() => stop());
 
     test("Vite / NODE_ENV / dev", async ({ page }) => {
       let pageErrors: unknown[] = [];
@@ -55,11 +55,11 @@ test.describe(async () => {
   test.describe(() => {
     let buildPort: number;
     test.beforeAll(async () => {
-      await viteBuild({ cwd });
+      viteBuild({ cwd });
       buildPort = await getPort();
       stop = await viteRemixServe({ cwd, port: buildPort });
     });
-    test.afterAll(async () => await stop());
+    test.afterAll(() => stop());
 
     test("Vite / NODE_ENV / build", async ({ page }) => {
       let pageErrors: unknown[] = [];

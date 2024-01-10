@@ -133,7 +133,7 @@ test.describe(() => {
   test.describe(async () => {
     let port: number;
     let cwd: string;
-    let stop: () => Promise<void>;
+    let stop: () => void;
 
     test.beforeAll(async () => {
       port = await getPort();
@@ -143,7 +143,7 @@ test.describe(() => {
       });
       stop = await viteDev({ cwd, port });
     });
-    test.afterAll(async () => await stop());
+    test.afterAll(() => stop());
 
     test.describe(() => {
       test.use({ javaScriptEnabled: false });
@@ -164,7 +164,7 @@ test.describe(() => {
   test.describe(async () => {
     let port: number;
     let cwd: string;
-    let stop: () => Promise<void>;
+    let stop: () => void;
 
     test.beforeAll(async () => {
       port = await getPort();
@@ -175,7 +175,7 @@ test.describe(() => {
       });
       stop = await customDev({ cwd, port });
     });
-    test.afterAll(async () => await stop());
+    test.afterAll(() => stop());
 
     test.describe(() => {
       test.use({ javaScriptEnabled: false });
@@ -210,7 +210,7 @@ test.describe(() => {
         contents.replace('"sideEffects": false', '"sideEffects": ["*.css.ts"]')
       );
 
-      await viteBuild({ cwd });
+      viteBuild({ cwd });
       stop = await viteRemixServe({ cwd, port });
     });
     test.afterAll(() => stop());

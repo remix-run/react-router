@@ -44,7 +44,7 @@ const files = {
 test.describe(async () => {
   let port: number;
   let cwd: string;
-  let stop: () => Promise<void>;
+  let stop: () => void;
 
   test.beforeAll(async () => {
     port = await getPort();
@@ -54,7 +54,7 @@ test.describe(async () => {
     });
     stop = await viteDev({ cwd, port });
   });
-  test.afterAll(async () => await stop());
+  test.afterAll(() => stop());
 
   test("Vite / dev / invalidate manifest on route exports change", async ({
     page,
