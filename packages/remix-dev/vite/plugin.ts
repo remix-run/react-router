@@ -46,7 +46,20 @@ const supportedRemixConfigKeys = [
 type SupportedRemixConfigKey = typeof supportedRemixConfigKeys[number];
 type SupportedRemixConfig = Pick<RemixUserConfig, SupportedRemixConfigKey>;
 
-const SERVER_ONLY_EXPORTS = ["loader", "action", "headers"];
+const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
+const CLIENT_ROUTE_EXPORTS = [
+  "clientAction",
+  "clientLoader",
+  "default",
+  "ErrorBoundary",
+  "handle",
+  "HydrateFallback",
+  "links",
+  "meta",
+  "shouldRevalidate",
+];
+
+const CLIENT_ROUTE_QUERY_STRING = "?client-route";
 
 // We need to provide different JSDoc comments in some cases due to differences
 // between the Remix config and the Vite plugin.
@@ -140,8 +153,6 @@ let remixReactProxyId = VirtualModule.id("remix-react-proxy");
 let hmrRuntimeId = VirtualModule.id("hmr-runtime");
 let injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
 
-const isJsFile = (filePath: string) => /\.[cm]?[jt]sx?$/i.test(filePath);
-
 const resolveRelativeRouteFilePath = (
   route: ConfigRoute,
   pluginConfig: ResolvedRemixVitePluginConfig
@@ -177,19 +188,19 @@ const resolveChunk = (
   absoluteFilePath: string
 ) => {
   let vite = importViteEsmSync();
-  let rootRelativeFilePath = path.relative(
-    pluginConfig.rootDirectory,
-    absoluteFilePath
+  let rootRelativeFilePath = vite.normalizePath(
+    path.relative(pluginConfig.rootDirectory, absoluteFilePath)
   );
-  let manifestKey = vite.normalizePath(rootRelativeFilePath);
-  let entryChunk = viteManifest[manifestKey];
+  let entryChunk =
+    viteManifest[rootRelativeFilePath + CLIENT_ROUTE_QUERY_STRING] ??
+    viteManifest[rootRelativeFilePath];
 
   if (!entryChunk) {
     let knownManifestKeys = Object.keys(viteManifest)
       .map((key) => '"' + key + '"')
       .join(", ");
     throw new Error(
-      `No manifest entry found for "${manifestKey}". Known manifest keys: ${knownManifestKeys}`
+      `No manifest entry found for "${rootRelativeFilePath}". Known manifest keys: ${knownManifestKeys}`
     );
   }
 
@@ -215,7 +226,7 @@ const resolveBuildAssetPaths = (
   ]);
 
   return {
-    module: `${pluginConfig.publicPath}${entryChunk.file}`,
+    module: `${pluginConfig.publicPath}${entryChunk.file}${CLIENT_ROUTE_QUERY_STRING}`,
     imports:
       dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
         return `${pluginConfig.publicPath}${viteManifest[imported].file}`;
@@ -296,7 +307,7 @@ const getRouteModuleExports = async (
 
   let ssr = true;
   let { pluginContainer, moduleGraph } = viteChildCompiler;
-  let routePath = path.join(pluginConfig.appDirectory, routeFile);
+  let routePath = path.resolve(pluginConfig.appDirectory, routeFile);
   let url = resolveFileUrl(pluginConfig, routePath);
 
   let resolveId = async () => {
@@ -576,9 +587,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         module: `${resolveFileUrl(
           pluginConfig,
           resolveRelativeRouteFilePath(route, pluginConfig)
-        )}${
-          isJsFile(route.file) ? "" : "?import" // Ensure the Vite dev server responds with a JS module
-        }`,
+        )}${CLIENT_ROUTE_QUERY_STRING}`,
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
         hasClientAction: sourceExports.includes("clientAction"),
@@ -692,8 +701,12 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
                       preserveEntrySignatures: "exports-only",
                       input: [
                         pluginConfig.entryClientFilePath,
-                        ...Object.values(pluginConfig.routes).map((route) =>
-                          path.resolve(pluginConfig.appDirectory, route.file)
+                        ...Object.values(pluginConfig.routes).map(
+                          (route) =>
+                            `${path.resolve(
+                              pluginConfig.appDirectory,
+                              route.file
+                            )}${CLIENT_ROUTE_QUERY_STRING}`
                         ),
                       ],
                     },
@@ -796,9 +809,26 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         });
         await viteChildCompiler.pluginContainer.buildStart({});
       },
-      transform(code, id) {
+      async transform(code, id) {
         if (isCssModulesFile(id)) {
           cssModulesManifest[id] = code;
+        }
+
+        if (id.endsWith(CLIENT_ROUTE_QUERY_STRING)) {
+          invariant(cachedPluginConfig);
+          let routeModuleId = id.replace(CLIENT_ROUTE_QUERY_STRING, "");
+          let sourceExports = await getRouteModuleExports(
+            viteChildCompiler,
+            cachedPluginConfig,
+            routeModuleId
+          );
+
+          let routeFileName = path.basename(routeModuleId);
+          let clientExports = sourceExports
+            .filter((exportName) => CLIENT_ROUTE_EXPORTS.includes(exportName))
+            .join(", ");
+
+          return `export { ${clientExports} } from "./${routeFileName}";`;
         }
       },
       buildStart() {
@@ -1054,7 +1084,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         let isRoute = getRoute(pluginConfig, importer);
 
         if (isRoute) {
-          let serverOnlyExports = SERVER_ONLY_EXPORTS.map(
+          let serverOnlyExports = SERVER_ONLY_ROUTE_EXPORTS.map(
             (xport) => `\`${xport}\``
           ).join(", ");
           throw Error(
@@ -1144,7 +1174,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         if (pluginConfig.isSpaMode) {
           let serverOnlyExports = esModuleLexer(code)[1]
             .map((exp) => exp.n)
-            .filter((exp) => SERVER_ONLY_EXPORTS.includes(exp));
+            .filter((exp) => SERVER_ONLY_ROUTE_EXPORTS.includes(exp));
           if (serverOnlyExports.length > 0) {
             let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
             let message =
@@ -1170,7 +1200,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         }
 
         return {
-          code: removeExports(code, SERVER_ONLY_EXPORTS),
+          code: removeExports(code, SERVER_ONLY_ROUTE_EXPORTS),
           map: null,
         };
       },
@@ -1285,6 +1315,13 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
         let isJSX = filepath.endsWith("x");
         let useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
         if (!useFastRefresh) return;
+
+        if (id.endsWith(CLIENT_ROUTE_QUERY_STRING)) {
+          let pluginConfig =
+            cachedPluginConfig || (await resolvePluginConfig());
+
+          return { code: addRefreshWrapper(pluginConfig, code, id) };
+        }
 
         let result = await babel.transformAsync(code, {
           filename: id,
