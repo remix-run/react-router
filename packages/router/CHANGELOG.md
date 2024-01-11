@@ -8,6 +8,14 @@
 - Fix bug preventing revalidation from occurring for persisted fetchers unmounted during the `submitting` phase ([#11102](https://github.com/remix-run/react-router/pull/11102))
 - De-dup relative path logic in `resolveTo` ([#11097](https://github.com/remix-run/react-router/pull/11097))
 
+## 1.14.1-pre.0
+
+### Patch Changes
+
+- Fix bug with `route.lazy` not working correctly on initial SPA load when `v7_partialHydration` is specified ([#11121](https://github.com/remix-run/react-router/pull/11121))
+- Fix bug preventing revalidation from occurring for persisted fetchers unmounted during the `submitting` phase ([#11102](https://github.com/remix-run/react-router/pull/11102))
+- De-dup relative path logic in `resolveTo` ([#11097](https://github.com/remix-run/react-router/pull/11097))
+
 ## 1.14.0
 
 ### Minor Changes
