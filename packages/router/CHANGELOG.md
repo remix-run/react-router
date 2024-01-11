@@ -8,14 +8,6 @@
 - Fix bug preventing revalidation from occurring for persisted fetchers unmounted during the `submitting` phase ([#11102](https://github.com/remix-run/react-router/pull/11102))
 - De-dup relative path logic in `resolveTo` ([#11097](https://github.com/remix-run/react-router/pull/11097))
 
-## 1.14.1-pre.0
-
-### Patch Changes
-
-- Fix bug with `route.lazy` not working correctly on initial SPA load when `v7_partialHydration` is specified ([#11121](https://github.com/remix-run/react-router/pull/11121))
-- Fix bug preventing revalidation from occurring for persisted fetchers unmounted during the `submitting` phase ([#11102](https://github.com/remix-run/react-router/pull/11102))
-- De-dup relative path logic in `resolveTo` ([#11097](https://github.com/remix-run/react-router/pull/11097))
-
 ## 1.14.0
 
 ### Minor Changes
@@ -201,7 +193,7 @@
 
 ### Patch Changes
 
-- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
+- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see <https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329>). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
 
 ## 1.13.0
 
@@ -681,11 +673,6 @@ function Comp() {
 
 This is the first stable release of `@remix-run/router`, which provides all the underlying routing and data loading/mutation logic for `react-router`. You should _not_ be using this package directly unless you are authoring a routing library similar to `react-router`.
 
-For an overview of the features provided by `react-router`, we recommend you go check out the [docs][rr-docs], especially the [feature overview][rr-feature-overview] and the [tutorial][rr-tutorial].
+For an overview of the features provided by `react-router`, we recommend you go check out the [docs](https://reactrouter.com), especially the [feature overview](https://reactrouter.com/start/overview) and the [tutorial](https://reactrouter.com/start/tutorial).
 
-For an overview of the features provided by `@remix-run/router`, please check out the [`README`][remix-router-readme].
-
-[rr-docs]: https://reactrouter.com
-[rr-feature-overview]: https://reactrouter.com/start/overview
-[rr-tutorial]: https://reactrouter.com/start/tutorial
-[remix-router-readme]: https://github.com/remix-run/react-router/blob/main/packages/router/README.md
+For an overview of the features provided by `@remix-run/router`, please check out the [`README`](./README.md).

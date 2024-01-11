@@ -8,14 +8,6 @@
 - Updated dependencies:
   - `@remix-run/router@1.14.1`
 
-## 6.21.1-pre.0
-
-### Patch Changes
-
-- Fix bug with `route.lazy` not working correctly on initial SPA load when `v7_partialHydration` is specified ([#11121](https://github.com/remix-run/react-router/pull/11121))
-- Updated dependencies:
-  - `@remix-run/router@1.14.1`
-
 ## 6.21.0
 
 ### Minor Changes
@@ -161,7 +153,7 @@
 
 ### Patch Changes
 
-- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
+- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see <https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329>). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
 - Updated dependencies:
   - `@remix-run/router@1.13.1`
 
@@ -189,6 +181,7 @@
 ### Patch Changes
 
 - Fix `useActionData` so it returns proper contextual action data and not _any_ action data in the tree ([#11023](https://github.com/remix-run/react-router/pull/11023))
+
 - Fix bug in `useResolvedPath` that would cause `useResolvedPath(".")` in a splat route to lose the splat portion of the URL path. ([#10983](https://github.com/remix-run/react-router/pull/10983))
 
   - ⚠️ This fixes a quite long-standing bug specifically for `"."` paths inside a splat route which incorrectly dropped the splat portion of the URL. If you are relative routing via `"."` inside a splat route in your application you should double check that your logic is not relying on this buggy behavior and update accordingly.
@@ -301,7 +294,7 @@
 
 ## 6.12.1
 
-> [!WARNING]
+> \[!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.1`. This version suffers from a `webpack`/`terser` minification issue resulting in invalid minified code in your resulting production bundles which can cause issues in your application. See [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
 
 ### Patch Changes
@@ -633,7 +626,7 @@ function Comp() {
 
 ## 6.4.0
 
-Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs][rr-docs], especially the [feature overview][rr-feature-overview] and the [tutorial][rr-tutorial].
+Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs](https://reactrouter.com), especially the [feature overview](https://reactrouter.com/start/overview) and the [tutorial](https://reactrouter.com/start/tutorial).
 
 **New APIs**
 
@@ -651,7 +644,3 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 **Updated Dependencies**
 
 - `@remix-run/router@1.0.0`
-
-[rr-docs]: https://reactrouter.com
-[rr-feature-overview]: https://reactrouter.com/start/overview
-[rr-tutorial]: https://reactrouter.com/start/tutorial
