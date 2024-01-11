@@ -9,15 +9,6 @@
   - `@remix-run/router@1.14.2`
   - `react-router@6.21.2`
 
-## 6.21.2-pre.0
-
-### Patch Changes
-
-- Leverage `useId` for internal fetcher keys when available ([#11166](https://github.com/remix-run/react-router/pull/11166))
-- Updated dependencies:
-  - `@remix-run/router@1.14.2-pre.0`
-  - `react-router@6.21.2-pre.0`
-
 ## 6.21.1
 
 ### Patch Changes

@@ -7,13 +7,6 @@
 - Updated dependencies:
   - `@remix-run/router@1.14.2`
 
-## 6.21.2-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.14.2-pre.0`
-
 ## 6.21.1
 
 ### Patch Changes
