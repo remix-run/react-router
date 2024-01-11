@@ -1,5 +1,12 @@
 # `@remix-run/router`
 
+## 1.14.2
+
+### Patch Changes
+
+- Fix bug where dashes were not picked up in dynamic parameter names ([#11160](https://github.com/remix-run/react-router/pull/11160))
+- Do not attempt to deserialize empty JSON responses ([#11164](https://github.com/remix-run/react-router/pull/11164))
+
 ## 1.14.1
 
 ### Patch Changes

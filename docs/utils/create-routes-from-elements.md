@@ -9,6 +9,7 @@ title: createRoutesFromElements
 ```jsx
 import {
   createBrowserRouter,
+  createRoutesFromElements,
   RouterProvider,
 } from "react-router-dom";
 
