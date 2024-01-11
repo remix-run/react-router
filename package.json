@@ -23,7 +23,7 @@
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "changeset": "changeset",
-    "version": "changeset version",
+    "version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
     "postversion": "node scripts/postversion.mjs",
     "version:experimental": "node ./scripts/version experimental",
