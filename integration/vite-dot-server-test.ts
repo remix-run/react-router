@@ -144,12 +144,12 @@ test.describe("Vite / route / server-only module referenced by client", () => {
 
         `    '${specifier}' imported by route 'app/routes/_index.tsx'`,
 
-        "  The only route exports that can reference server-only modules are:",
+        "  Remix automatically removes server-code from these exports:",
         "    `loader`, `action`, `headers`",
 
         `  But other route exports in 'app/routes/_index.tsx' depend on '${specifier}'.`,
 
-        "  For more see https://remix.run/docs/en/main/discussion/server-vs-client",
+        "  See https://remix.run/docs/en/main/future/vite#splitting-up-client-and-server-code",
       ].forEach(expect(stderr).toMatch);
     });
   }
@@ -209,20 +209,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 
         `    '${specifier}' imported by 'app/reexport-server-only.ts'`,
 
-        "  * If all code in 'app/reexport-server-only.ts' is server-only:",
-
-        "    Rename it to 'app/reexport-server-only.server.ts'",
-
-        "  * Otherwise:",
-
-        `    - Keep client-safe code in 'app/reexport-server-only.ts'`,
-        `    - And move server-only code to a \`.server\` file`,
-        `      e.g. 'app/reexport-server-only.server.ts'`,
-
-        "  If you have lots of `.server` files, try using",
-        "  a `.server` directory e.g. 'app/.server'",
-
-        "For more, see https://remix.run/docs/en/main/future/vite#server-code-not-tree-shaken-in-development",
+        "  See https://remix.run/docs/en/main/future/vite#splitting-up-client-and-server-code",
       ].forEach(expect(stderr).toMatch);
     });
   }

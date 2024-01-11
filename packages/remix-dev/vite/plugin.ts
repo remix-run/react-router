@@ -1093,24 +1093,16 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
               "",
               `    '${id}' imported by route '${importerShort}'`,
               "",
-              `  The only route exports that can reference server-only modules are:`,
+              `  Remix automatically removes server-code from these exports:`,
               `    ${serverOnlyExports}`,
               "",
               `  But other route exports in '${importerShort}' depend on '${id}'.`,
               "",
-              "  For more see https://remix.run/docs/en/main/discussion/server-vs-client",
+              "  See https://remix.run/docs/en/main/future/vite#splitting-up-client-and-server-code",
               "",
             ].join("\n")
           );
         }
-
-        let importedBy = path.parse(importerShort);
-        let dotServerFile = vite.normalizePath(
-          path.join(
-            importedBy.dir,
-            importedBy.name + ".server" + importedBy.ext
-          )
-        );
 
         throw Error(
           [
@@ -1118,21 +1110,7 @@ export const remixVitePlugin: RemixVitePlugin = (options = {}) => {
             "",
             `    '${id}' imported by '${importerShort}'`,
             "",
-
-            `  * If all code in '${importerShort}' is server-only:`,
-            "",
-            `    Rename it to '${dotServerFile}'`,
-            "",
-            `  * Otherwise:`,
-            "",
-            `    - Keep client-safe code in '${importerShort}'`,
-            `    - And move server-only code to a \`.server\` file`,
-            `      e.g. '${dotServerFile}'`,
-            "",
-            "  If you have lots of `.server` files, try using",
-            "  a `.server` directory e.g. 'app/.server'",
-            "",
-            "  For more, see https://remix.run/docs/en/main/future/vite#server-code-not-tree-shaken-in-development",
+            "  See https://remix.run/docs/en/main/future/vite#splitting-up-client-and-server-code",
             "",
           ].join("\n")
         );
