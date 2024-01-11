@@ -97,9 +97,9 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-test-renderer": "^18.2.0",
-    "remark-gfm": "^4.0.0",
-    "remark-parse": "^11.0.0",
-    "remark-stringify": "^11.0.0",
+    "remark-gfm": "3.0.1",
+    "remark-parse": "^10.0.1",
+    "remark-stringify": "^10.0.2",
     "rollup": "^2.79.1",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-extensions": "^0.1.0",
@@ -108,8 +108,8 @@
     "semver": "^7.5.4",
     "type-fest": "^2.19.0",
     "typescript": "^5.1.6",
-    "unified": "^11.0.4",
-    "unist-util-remove": "^4.0.0"
+    "unified": "^10.1.2",
+    "unist-util-remove": "^3.1.0"
   },
   "engines": {
     "node": ">=14.0.0"
