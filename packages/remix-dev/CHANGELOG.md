@@ -1,5 +1,83 @@
 # `@remix-run/dev`
 
+## 2.5.0
+
+### Minor Changes
+
+- Add unstable support for "SPA Mode" ([#8457](https://github.com/remix-run/remix/pull/8457))
+
+  You can opt into SPA Mode by setting `unstable_ssr: false` in your Remix Vite plugin config:
+
+  ```js
+  // vite.config.ts
+  import { unstable_vitePlugin as remix } from "@remix-run/dev";
+  import { defineConfig } from "vite";
+
+  export default defineConfig({
+    plugins: [remix({ unstable_ssr: false })],
+  });
+  ```
+
+  Development in SPA Mode is just like a normal Remix app, and still uses the Remix dev server for HMR/HDR:
+
+  ```sh
+  remix vite:dev
+  ```
+
+  Building in SPA Mode will generate an `index.html` file in your client assets directory:
+
+  ```sh
+  remix vite:build
+  ```
+
+  To run your SPA, you serve your client assets directory via an HTTP server:
+
+  ```sh
+  npx http-server build/client
+  ```
+
+  For more information, please refer to the [SPA Mode docs](https://remix.run/future/spa-mode).
+
+- Add `unstable_serverBundles` option to Vite plugin to support splitting server code into multiple request handlers. ([#8332](https://github.com/remix-run/remix/pull/8332))
+
+  This is an advanced feature designed for hosting provider integrations. When compiling your app into multiple server bundles, there will need to be a custom routing layer in front of your app directing requests to the correct bundle. This feature is currently unstable and only designed to gather early feedback.
+
+  **Example usage:**
+
+  ```ts
+  import { unstable_vitePlugin as remix } from "@remix-run/dev";
+  import { defineConfig } from "vite";
+
+  export default defineConfig({
+    plugins: [
+      remix({
+        unstable_serverBundles: ({ branch }) => {
+          const isAuthenticatedRoute = branch.some(
+            (route) => route.id === "routes/_authenticated"
+          );
+
+          return isAuthenticatedRoute ? "authenticated" : "unauthenticated";
+        },
+      }),
+    ],
+  });
+  ```
+
+### Patch Changes
+
+- Fix issue with `isbot` v4 released on 1/1/2024 ([#8415](https://github.com/remix-run/remix/pull/8415))
+  - `remix dev` will now add `"isbot": "^4"` to `package.json` instead of using `latest`
+  - Update built-in `entry.server` files to work with both `isbot@3` and `isbot@4` for backwards-compatibility with Remix apps that have pinned `isbot` to v3
+  - Templates are updated to use `isbot@4` moving forward via `create-remix`
+- Vite: Fix HMR issues when altering exports for non-rendered routes ([#8157](https://github.com/remix-run/remix/pull/8157))
+- Vite: Default `NODE_ENV` to `"production"` when running `remix vite:build` command ([#8405](https://github.com/remix-run/remix/pull/8405))
+- Vite: Remove Vite plugin config option `serverBuildPath` in favor of separate `serverBuildDirectory` and `serverBuildFile` options ([#8332](https://github.com/remix-run/remix/pull/8332))
+- Vite: Loosen strict route exports restriction, reinstating support for non-Remix route exports ([#8420](https://github.com/remix-run/remix/pull/8420))
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.5.0`
+  - `@remix-run/node@2.5.0`
+
 ## 2.4.1
 
 ### Patch Changes

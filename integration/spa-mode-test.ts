@@ -212,7 +212,7 @@ test.describe("SPA Mode", () => {
       let stderr = result.stderr.toString("utf8");
       expect(stderr).toMatch(
         "SPA Mode: 3 invalid route export(s) in `routes/invalid-exports.tsx`: " +
-          "`headers`, `loader`, `action`. See https://remix.run/guides/spa-mode " +
+          "`headers`, `loader`, `action`. See https://remix.run/future/spa-mode " +
           "for more information."
       );
     });
@@ -242,7 +242,104 @@ test.describe("SPA Mode", () => {
       expect(stderr).toMatch(
         "SPA Mode: Invalid `HydrateFallback` export found in `routes/invalid-exports.tsx`. " +
           "`HydrateFallback` is only permitted on the root route in SPA Mode. " +
-          "See https://remix.run/guides/spa-mode for more information."
+          "See https://remix.run/future/spa-mode for more information."
+      );
+    });
+
+    test("errors on a non-200 status from entry.server.tsx", async () => {
+      let cwd = await createProject({
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+          export default defineConfig({
+            plugins: [remix({ unstable_ssr: false })],
+          });
+        `,
+        "app/entry.server.tsx": js`
+          import { RemixServer } from "@remix-run/react";
+          import { renderToString } from "react-dom/server";
+
+          export default function handleRequest(
+            request,
+            responseStatusCode,
+            responseHeaders,
+            remixContext
+          ) {
+            const html = renderToString(
+              <RemixServer context={remixContext} url={request.url} />
+            );
+            return new Response(html, {
+              headers: { "Content-Type": "text/html" },
+              status: 500,
+            });
+          }
+        `,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+
+          export function HydrateFallback() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <h1>Loading...</h1>
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+      });
+      let result = viteBuild({ cwd });
+      let stderr = result.stderr.toString("utf8");
+      expect(stderr).toMatch(
+        "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
+          "generating the `index.html` file."
+      );
+      expect(stderr).toMatch("<h1>Loading...</h1>");
+    });
+
+    test("errors if you do not include <Scripts> in your root <HydrateFallback>", async () => {
+      let cwd = await createProject({
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+          export default defineConfig({
+            plugins: [remix({ unstable_ssr: false })],
+          });
+        `,
+        "app/root.tsx": String.raw`
+          export function HydrateFallback() {
+            return <h1>Loading</h1>
+          }
+        `,
+      });
+      let result = viteBuild({ cwd });
+      let stderr = result.stderr.toString("utf8");
+      expect(stderr).toMatch(
+        "SPA Mode: Did you forget to include <Scripts/> in your `root.tsx` " +
+          "`HydrateFallback` component?  Your `index.html` file cannot hydrate " +
+          "into a SPA without `<Scripts />`."
       );
     });
   });
