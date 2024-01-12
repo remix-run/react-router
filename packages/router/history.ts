@@ -723,7 +723,6 @@ function getUrlBasedHistory(
     encodeLocation(to) {
       // Encode a Location the same way window.location would
       let url = createURL(to);
-      // to.split('/').map(v => encodeURIComponent(v)).join('/')
       return {
         pathname: url.pathname,
         search: url.search,
