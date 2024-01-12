@@ -33,6 +33,15 @@ import {
  * maximum accuracy.  This is instead of programmatically generating during
  * these tests where JSDOM or a bad URL polyfill might not be trustworthy.
  *
+ *
+ * | Field       | Description                                                          |
+ * |-------------|----------------------------------------------------------------------|
+ * | char        | The (usually decoded) verbatim "character" you put in your <Link to> |
+ * | pathChar    | The value we expect to receive from location.pathname                |
+ * | searchChar  | The value we expect to receive from location.search                  |
+ * | hashChar    | The value we expect to receive from location.hash                    |
+ * | decodedChar | The decoded value we expect to receive from params                   |
+ *
  * function generateCharDef(char) {
  *   return {
  *       char,
@@ -137,7 +146,11 @@ let specialChars = [
   { char: "a b", pathChar: "a%20b", searchChar: "a%20b", hashChar: "a%20b" },
   { char: "a+b", pathChar: "a+b", searchChar: "a+b", hashChar: "a+b" },
 
-  // Miscellaneous
+  // Edge case scenarios where the incoming `char` (or string) is pre-encoded
+  // because it contains special characters such as `&`, `%`, or `#`.  For these
+  // we provide a `decodedChar` so we can assert the param value gets decoded
+  // properly and so we can ensure we can match these decoded values in static
+  // paths
   {
     char: "a%25b",
     pathChar: "a%25b",
