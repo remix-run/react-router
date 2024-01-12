@@ -14,3 +14,4 @@ export const future: ServerBuild["future"] = undefined!;
 export const publicPath: ServerBuild["publicPath"] = undefined!;
 // prettier-ignore
 export const assetsBuildDirectory: ServerBuild["assetsBuildDirectory"] = undefined!;
+export const isSpaMode: ServerBuild["isSpaMode"] = undefined!;
