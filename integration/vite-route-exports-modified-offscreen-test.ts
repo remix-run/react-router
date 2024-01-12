@@ -56,7 +56,7 @@ test.describe(async () => {
   });
   test.afterAll(() => stop());
 
-  test("Vite / dev / invalidate manifest on route exports change", async ({
+  test("Vite / dev / route exports modified offscreen", async ({
     page,
     context,
     browserName,
