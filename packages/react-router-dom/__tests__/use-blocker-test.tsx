@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import type { unstable_Blocker as Blocker, RouteObject } from "../index";
+import type { Blocker, RouteObject } from "../index";
 import {
   createMemoryRouter,
   json,
