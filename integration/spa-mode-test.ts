@@ -19,6 +19,7 @@ test.describe("SPA Mode", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       compiler: "vite",
+      spaMode: true,
       files: {
         "vite.config.ts": js`
           import { defineConfig } from "vite";
@@ -454,6 +455,94 @@ test.describe("SPA Mode", () => {
       expect(await page.locator("[data-error]").textContent()).toBe(
         'Error: You cannot call serverAction() in SPA Mode (routeId: "routes/error")'
       );
+    });
+
+    test("prepends DOCTYPE to <html> documents if not present", async () => {
+      let fixture = await createFixture({
+        compiler: "vite",
+        spaMode: true,
+        files: {
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+            export default defineConfig({
+              plugins: [remix({ unstable_ssr: false })],
+            });
+          `,
+          "app/root.tsx": js`
+            import { Outlet, Scripts } from "@remix-run/react";
+
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head></head>
+                  <body>
+                    <h1 data-root>Root</h1>
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export function HydrateFallback() {
+              return (
+                <html lang="en">
+                  <head></head>
+                  <body>
+                    <h1 data-loading>Loading SPA...</h1>
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+        },
+      });
+      let res = await fixture.requestDocument("/");
+      expect(await res.text()).toMatch(/^<!DOCTYPE html>\n<html lang="en">/);
+    });
+
+    test("does not prepend DOCTYPE if user is not hydrating the document", async () => {
+      let fixture = await createFixture({
+        compiler: "vite",
+        spaMode: true,
+        files: {
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+            export default defineConfig({
+              plugins: [remix({ unstable_ssr: false })],
+            });
+          `,
+          "app/root.tsx": js`
+            import { Outlet, Scripts } from "@remix-run/react";
+
+            export default function Root() {
+              return (
+                <div>
+                  <h1 data-root>Root</h1>
+                  <Scripts />
+                </div>
+              );
+            }
+
+            export function HydrateFallback() {
+              return (
+                <div>
+                  <h1>Loading SPA...</h1>
+                  <Scripts />
+                </div>
+              );
+            }
+          `,
+        },
+      });
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+      expect(html).toMatch(/^<div>/);
+      expect(html).not.toMatch(/<!DOCTYPE html>/);
     });
   });
 });
