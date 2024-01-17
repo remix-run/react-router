@@ -54,24 +54,24 @@ import {
 
 let specialChars = [
   // This set of characters never gets encoded by window.location
-  { char: "x", pathChar: "x", searchChar: "x", hashChar: "x" },
-  { char: "X", pathChar: "X", searchChar: "X", hashChar: "X" },
-  { char: "~", pathChar: "~", searchChar: "~", hashChar: "~" },
-  { char: "!", pathChar: "!", searchChar: "!", hashChar: "!" },
-  { char: "@", pathChar: "@", searchChar: "@", hashChar: "@" },
-  { char: "$", pathChar: "$", searchChar: "$", hashChar: "$" },
-  { char: "*", pathChar: "*", searchChar: "*", hashChar: "*" },
-  { char: "(", pathChar: "(", searchChar: "(", hashChar: "(" },
-  { char: ")", pathChar: ")", searchChar: ")", hashChar: ")" },
-  { char: "_", pathChar: "_", searchChar: "_", hashChar: "_" },
-  { char: "-", pathChar: "-", searchChar: "-", hashChar: "-" },
-  { char: "+", pathChar: "+", searchChar: "+", hashChar: "+" },
-  { char: "=", pathChar: "=", searchChar: "=", hashChar: "=" },
-  { char: "[", pathChar: "[", searchChar: "[", hashChar: "[" },
-  { char: "]", pathChar: "]", searchChar: "]", hashChar: "]" },
-  { char: ":", pathChar: ":", searchChar: ":", hashChar: ":" },
-  { char: ";", pathChar: ";", searchChar: ";", hashChar: ";" },
-  { char: ",", pathChar: ",", searchChar: ",", hashChar: "," },
+  { char: "x", pathChar: "x", searchChar: "x", hashChar: "x", decodedChar: "x" },
+  { char: "X", pathChar: "X", searchChar: "X", hashChar: "X", decodedChar: "X" },
+  { char: "~", pathChar: "~", searchChar: "~", hashChar: "~", decodedChar: "~" },
+  { char: "!", pathChar: "!", searchChar: "!", hashChar: "!", decodedChar: "!" },
+  { char: "@", pathChar: "@", searchChar: "@", hashChar: "@", decodedChar: "@" },
+  { char: "$", pathChar: "$", searchChar: "$", hashChar: "$", decodedChar: "$" },
+  { char: "*", pathChar: "*", searchChar: "*", hashChar: "*", decodedChar: "*" },
+  { char: "(", pathChar: "(", searchChar: "(", hashChar: "(", decodedChar: "(" },
+  { char: ")", pathChar: ")", searchChar: ")", hashChar: ")", decodedChar: ")" },
+  { char: "_", pathChar: "_", searchChar: "_", hashChar: "_", decodedChar: "_" },
+  { char: "-", pathChar: "-", searchChar: "-", hashChar: "-", decodedChar: "-" },
+  { char: "+", pathChar: "+", searchChar: "+", hashChar: "+", decodedChar: "+" },
+  { char: "=", pathChar: "=", searchChar: "=", hashChar: "=", decodedChar: "=" },
+  { char: "[", pathChar: "[", searchChar: "[", hashChar: "[", decodedChar: "[" },
+  { char: "]", pathChar: "]", searchChar: "]", hashChar: "]", decodedChar: "]" },
+  { char: ":", pathChar: ":", searchChar: ":", hashChar: ":", decodedChar: ":" },
+  { char: ";", pathChar: ";", searchChar: ";", hashChar: ";", decodedChar: ";" },
+  { char: ",", pathChar: ",", searchChar: ",", hashChar: ",", decodedChar: "," },
 
   // These chars should only get encoded when in the pathname, but JSDOM
   // seems to have a bug as it does not encode them, so don't test this
@@ -81,13 +81,13 @@ let specialChars = [
 
   // These chars get conditionally encoded based on what portion of the
   // URL they occur in
-  { char: "{", pathChar: "%7B", searchChar: "{", hashChar: "{" },
-  { char: "}", pathChar: "%7D", searchChar: "}", hashChar: "}" },
-  { char: "`", pathChar: "%60", searchChar: "`", hashChar: "%60" },
-  { char: "'", pathChar: "'", searchChar: "%27", hashChar: "'" },
-  { char: '"', pathChar: "%22", searchChar: "%22", hashChar: "%22" },
-  { char: "<", pathChar: "%3C", searchChar: "%3C", hashChar: "%3C" },
-  { char: ">", pathChar: "%3E", searchChar: "%3E", hashChar: "%3E" },
+  { char: "{", pathChar: "%7B", searchChar: "{", hashChar: "{", decodedChar: "{" },
+  { char: "}", pathChar: "%7D", searchChar: "}", hashChar: "}", decodedChar: "}" },
+  { char: "`", pathChar: "%60", searchChar: "`", hashChar: "%60", decodedChar: "`" },
+  { char: "'", pathChar: "'", searchChar: "%27", hashChar: "'", decodedChar: "'" },
+  { char: '"', pathChar: "%22", searchChar: "%22", hashChar: "%22", decodedChar: '"' },
+  { char: "<", pathChar: "%3C", searchChar: "%3C", hashChar: "%3C", decodedChar: "<" },
+  { char: ">", pathChar: "%3E", searchChar: "%3E", hashChar: "%3E", decodedChar: ">" },
 
   // These chars get encoded in all portions of the URL
   {
@@ -95,56 +95,82 @@ let specialChars = [
     pathChar: "%F0%9F%A4%AF",
     searchChar: "%F0%9F%A4%AF",
     hashChar: "%F0%9F%A4%AF",
+    decodedChar: "🤯",
   },
   {
     char: "✅",
     pathChar: "%E2%9C%85",
     searchChar: "%E2%9C%85",
     hashChar: "%E2%9C%85",
+    decodedChar: "✅",
   },
   {
     char: "🔥",
     pathChar: "%F0%9F%94%A5",
     searchChar: "%F0%9F%94%A5",
     hashChar: "%F0%9F%94%A5",
+    decodedChar: "🔥",
   },
-  { char: "ä", pathChar: "%C3%A4", searchChar: "%C3%A4", hashChar: "%C3%A4" },
-  { char: "Ä", pathChar: "%C3%84", searchChar: "%C3%84", hashChar: "%C3%84" },
-  { char: "ø", pathChar: "%C3%B8", searchChar: "%C3%B8", hashChar: "%C3%B8" },
+  {
+    char: "ä",
+    pathChar: "%C3%A4",
+    searchChar: "%C3%A4",
+    hashChar: "%C3%A4",
+    decodedChar: "ä",
+  },
+  {
+    char: "Ä",
+    pathChar: "%C3%84",
+    searchChar: "%C3%84",
+    hashChar: "%C3%84",
+    decodedChar: "Ä",
+  },
+  {
+    char: "ø",
+    pathChar: "%C3%B8",
+    searchChar: "%C3%B8",
+    hashChar: "%C3%B8",
+    decodedChar: "ø",
+  },
   {
     char: "山",
     pathChar: "%E5%B1%B1",
     searchChar: "%E5%B1%B1",
     hashChar: "%E5%B1%B1",
+    decodedChar: "山",
   },
   {
     char: "人",
     pathChar: "%E4%BA%BA",
     searchChar: "%E4%BA%BA",
     hashChar: "%E4%BA%BA",
+    decodedChar: "人",
   },
   {
     char: "口",
     pathChar: "%E5%8F%A3",
     searchChar: "%E5%8F%A3",
     hashChar: "%E5%8F%A3",
+    decodedChar: "口",
   },
   {
     char: "刀",
     pathChar: "%E5%88%80",
     searchChar: "%E5%88%80",
     hashChar: "%E5%88%80",
+    decodedChar: "刀",
   },
   {
     char: "木",
     pathChar: "%E6%9C%A8",
     searchChar: "%E6%9C%A8",
     hashChar: "%E6%9C%A8",
+    decodedChar: "木",
   },
 
   // Add a few multi-char space use cases for good measure
-  { char: "a b", pathChar: "a%20b", searchChar: "a%20b", hashChar: "a%20b" },
-  { char: "a+b", pathChar: "a+b", searchChar: "a+b", hashChar: "a+b" },
+  { char: "a b", pathChar: "a%20b", searchChar: "a%20b", hashChar: "a%20b", decodedChar: "a b" },
+  { char: "a+b", pathChar: "a+b", searchChar: "a+b", hashChar: "a+b", decodedChar: "a+b" },
 
   // Edge case scenarios where the incoming `char` (or string) is pre-encoded
   // because it contains special characters such as `&`, `%`, or `#`.  For these
@@ -378,7 +404,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: decodedChar || char }
+          { slug: decodedChar }
         );
 
         await testParamValues(
@@ -389,7 +415,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: `foo${decodedChar || char}bar` }
+          { slug: `foo${decodedChar}bar` }
         );
       }
     });
@@ -405,7 +431,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: decodedChar || char }
+          { slug: decodedChar }
         );
 
         await testParamValues(
@@ -416,7 +442,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { slug: `foo${decodedChar || char}bar` }
+          { slug: `foo${decodedChar}bar` }
         );
       }
     });
@@ -432,7 +458,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": decodedChar || char }
+          { "*": decodedChar }
         );
 
         await testParamValues(
@@ -443,7 +469,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${decodedChar || char}bar` }
+          { "*": `foo${decodedChar}bar` }
         );
       }
     });
@@ -459,7 +485,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": decodedChar || char }
+          { "*": decodedChar }
         );
 
         await testParamValues(
@@ -470,7 +496,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${decodedChar || char}bar` }
+          { "*": `foo${decodedChar}bar` }
         );
       }
     });
@@ -486,7 +512,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo/bar${decodedChar || char}` }
+          { "*": `foo/bar${decodedChar}` }
         );
       }
     });
@@ -502,7 +528,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": decodedChar || char }
+          { "*": decodedChar }
         );
 
         await testParamValues(
@@ -513,7 +539,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo${decodedChar || char}bar` }
+          { "*": `foo${decodedChar}bar` }
         );
       }
     });
@@ -529,7 +555,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { "*": `foo/bar${decodedChar || char}` }
+          { "*": `foo/bar${decodedChar}` }
         );
       }
     });
@@ -546,7 +572,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { param: decodedChar || char, "*": "match" }
+          { param: decodedChar, "*": "match" }
         );
 
         await testParamValues(
@@ -557,7 +583,7 @@ describe("special character tests", () => {
             search: "",
             hash: "",
           },
-          { param: `foo${decodedChar || char}bar`, "*": "match" }
+          { param: `foo${decodedChar}bar`, "*": "match" }
         );
       }
     });
@@ -738,16 +764,11 @@ describe("special character tests", () => {
         if (char === "*") {
           continue;
         }
-        await assertRouteMatch(
-          decodedChar || char,
-          `/${char}`,
-          "Matched Root",
-          {
-            pathname: `/${pathChar}`,
-            search: "",
-            hash: "",
-          }
-        );
+        await assertRouteMatch(decodedChar, `/${char}`, "Matched Root", {
+          pathname: `/${pathChar}`,
+          search: "",
+          hash: "",
+        });
       }
     });
 
@@ -759,7 +780,7 @@ describe("special character tests", () => {
           continue;
         }
         await assertRouteMatch(
-          decodedChar || char,
+          decodedChar,
           `/nested/${char}`,
           "Matched Static Nested",
           {
@@ -779,7 +800,7 @@ describe("special character tests", () => {
           continue;
         }
         await assertRouteMatch(
-          decodedChar || char,
+          decodedChar,
           `/foo/${char}`,
           "Matched Param Nested",
           {
