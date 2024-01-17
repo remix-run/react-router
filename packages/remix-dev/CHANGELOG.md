@@ -12,7 +12,7 @@
 
 ### Patch Changes
 
-- Add `isSpaMode` to `@remix-run/dev/server-build` virtual module" ([#8492](https://github.com/remix-run/remix/pull/8492))
+- Add `isSpaMode` to `@remix-run/dev/server-build` virtual module ([#8492](https://github.com/remix-run/remix/pull/8492))
 - vite: errors for server-only code point to new docs ([#8488](https://github.com/remix-run/remix/pull/8488))
 - Vite: Fix HMR race condition when reading changed file contents ([#8479](https://github.com/remix-run/remix/pull/8479))
 - Vite: Tree-shake unused route exports in the client build ([#8468](https://github.com/remix-run/remix/pull/8468))
