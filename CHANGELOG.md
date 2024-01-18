@@ -1113,17 +1113,17 @@ Date: 2022-11-01
 
 ### Patch Changes
 
-- Generate correct `<a href>` values when using `createHashRouter` (#9409)
-- Better handle encoding/matching with special characters in URLs and route paths (#9477, #9496)
-- Generate correct `formAction` pathnames when an `index` route also has a `path` (#9486)
+- Generate correct `<a href>` values when using `createHashRouter` ([#9409](https://github.com/remix-run/react-router/pull/9409))
+- Better handle encoding/matching with special characters in URLs and route paths ([#9477](https://github.com/remix-run/react-router/pull/9477), [#9496](https://github.com/remix-run/react-router/pull/9496))
+- Generate correct `formAction` pathnames when an `index` route also has a `path` ([#9486](https://github.com/remix-run/react-router/pull/9486))
 - Respect `relative=path` prop on `NavLink` ([#9453](https://github.com/remix-run/react-router/pull/9453))
-- Fix `NavLink` behavior for root urls (#9497)
-- `useRoutes` should be able to return `null` when passing `locationArg` (#9485)
-- Fix `initialEntries` type in `createMemoryRouter` (#9498)
-- Support `basename` and relative routing in `loader`/`action` redirects (#9447)
-- Ignore pathless layout routes when looking for proper submission `action` function (#9455)
-- Add UMD build for `@remix-run/router` (#9446)
-- Fix `createURL` in local file execution in Firefox (#9464)
+- Fix `NavLink` behavior for root urls ([#9497](https://github.com/remix-run/react-router/pull/9497))
+- `useRoutes` should be able to return `null` when passing `locationArg` ([#9485](https://github.com/remix-run/react-router/pull/9485))
+- Fix `initialEntries` type in `createMemoryRouter` ([#9498](https://github.com/remix-run/react-router/pull/9498))
+- Support `basename` and relative routing in `loader`/`action` redirects ([#9447](https://github.com/remix-run/react-router/pull/9447))
+- Ignore pathless layout routes when looking for proper submission `action` function ([#9455](https://github.com/remix-run/react-router/pull/9455))
+- Add UMD build for `@remix-run/router` ([#9446](https://github.com/remix-run/react-router/pull/9446))
+- Fix `createURL` in local file execution in Firefox ([#9464](https://github.com/remix-run/react-router/pull/9464))
 
 **Full Changelog**: [`v6.4.2...v6.4.3`](https://github.com/remix-run/react-router/compare/react-router@6.4.2...react-router@6.4.3)
 
@@ -1176,13 +1176,13 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - Perform in-page data loads and mutations with `useFetcher()`
 - Defer non-critical data with `defer` and `Await`
 - Manage scroll position with `<ScrollRestoration>`
-- Perform path-relative navigations with `<Link relative="path">` (#9160)
+- Perform path-relative navigations with `<Link relative="path">` ([#9160](https://github.com/remix-run/react-router/pull/9160))
 
 ### Patch Changes
 
-- Path resolution is now trailing slash agnostic (#8861)
-- `useLocation` returns the scoped location inside a `<Routes location>` component (#9094)
-- Respect the `<Link replace>` prop if it is defined (#8779)
+- Path resolution is now trailing slash agnostic ([#8861](https://github.com/remix-run/react-router/pull/8861))
+- `useLocation` returns the scoped location inside a `<Routes location>` component ([#9094](https://github.com/remix-run/react-router/pull/9094))
+- Respect the `<Link replace>` prop if it is defined ([#8779](https://github.com/remix-run/react-router/pull/8779))
 
 **Full Changelog**: [`v6.3.0...v6.4.0`](https://github.com/remix-run/react-router/compare/v6.3.0...react-router%406.4.0)
 
@@ -1202,8 +1202,8 @@ Date: 2022-02-28
 
 ### Patch Changes
 
-- Fixed nested splat routes that begin with special URL-safe characters (#8563)
-- Fixed a bug where index routes were missing route context in some cases (#8497)
+- Fixed nested splat routes that begin with special URL-safe characters ([#8563](https://github.com/remix-run/react-router/pull/8563))
+- Fixed a bug where index routes were missing route context in some cases ([#8497](https://github.com/remix-run/react-router/pull/8497))
 
 **Full Changelog**: [`v6.2.1...v6.2.2`](https://github.com/remix-run/react-router/compare/v6.2.1...v6.2.2)
 
@@ -1227,8 +1227,8 @@ Date: 2021-12-17
 
 ### Patch Changes
 
-- Fixed the `RouteProps` `element` type, which should be a `ReactNode` (#8473)
-- Fixed a bug with `useOutlet` for top-level routes (#8483)
+- Fixed the `RouteProps` `element` type, which should be a `ReactNode` ([#8473](https://github.com/remix-run/react-router/pull/8473))
+- Fixed a bug with `useOutlet` for top-level routes ([#8483](https://github.com/remix-run/react-router/pull/8483))
 
 **Full Changelog**: [`v6.1.1...v6.2.0`](https://github.com/remix-run/react-router/compare/v6.1.1...v6.2.0)
 
@@ -1238,7 +1238,7 @@ Date: 2021-12-11
 
 ### Patch Changes
 
-- In v6.1.0 we inadvertently shipped a new, undocumented API that will likely introduce bugs (#7586). We have flagged `HistoryRouter` as `unstable_HistoryRouter`, as this API will likely need to change before a new major release.
+- In v6.1.0 we inadvertently shipped a new, undocumented API that will likely introduce bugs ([#7586](https://github.com/remix-run/react-router/pull/7586)). We have flagged `HistoryRouter` as `unstable_HistoryRouter`, as this API will likely need to change before a new major release.
 
 **Full Changelog**: [`v6.1.0...v6.1.1`](https://github.com/remix-run/react-router/compare/v6.1.0...v6.1.1)
 
@@ -1248,14 +1248,14 @@ Date: 2021-12-10
 
 ### Minor Changes
 
-- `<Outlet>` can now receive a `context` prop. This value is passed to child routes and is accessible via the new `useOutletContext` hook. See [the API docs](https://reactrouter.com/docs/en/v6/api#useoutletcontext) for details. (#8461)
-- `<NavLink>` can now receive a child function for access to its props. (#8164)
-- Improved TypeScript signature for `useMatch` and `matchPath`. For example, when you call `useMatch("foo/:bar/:baz")`, the path is parsed and the return type will be `PathMatch<"bar" | "baz">`. (#8030)
+- `<Outlet>` can now receive a `context` prop. This value is passed to child routes and is accessible via the new `useOutletContext` hook. See [the API docs](https://reactrouter.com/docs/en/v6/api#useoutletcontext) for details. ([#8461](https://github.com/remix-run/react-router/pull/8461))
+- `<NavLink>` can now receive a child function for access to its props. ([#8164](https://github.com/remix-run/react-router/pull/8164))
+- Improved TypeScript signature for `useMatch` and `matchPath`. For example, when you call `useMatch("foo/:bar/:baz")`, the path is parsed and the return type will be `PathMatch<"bar" | "baz">`. ([#8030](https://github.com/remix-run/react-router/pull/8030))
 
 ### Patch Changes
 
-- Fixed a bug that broke support for base64 encoded IDs on nested routes (#8291)
-- A few error message improvements (#8202)
+- Fixed a bug that broke support for base64 encoded IDs on nested routes ([#8291](https://github.com/remix-run/react-router/pull/8291))
+- A few error message improvements ([#8202](https://github.com/remix-run/react-router/pull/8202))
 
 **Full Changelog**: [`v6.0.2...v6.1.0`](https://github.com/remix-run/react-router/compare/v6.0.2...v6.1.0)
 
@@ -1265,7 +1265,7 @@ Date: 2021-11-09
 
 ### Patch Changes
 
-- Added the `reloadDocument` prop to `<Link>`. This allows `<Link>` to function like a normal anchor tag by reloading the document after navigation while maintaining the relative `to` resolution (#8283)
+- Added the `reloadDocument` prop to `<Link>`. This allows `<Link>` to function like a normal anchor tag by reloading the document after navigation while maintaining the relative `to` resolution ([#8283](https://github.com/remix-run/react-router/pull/8283))
 
 **Full Changelog**: [`v6.0.1...v6.0.2`](https://github.com/remix-run/react-router/compare/v6.0.1...v6.0.2)
 
@@ -1275,8 +1275,8 @@ Date: 2021-11-05
 
 ### Patch Changes
 
-- Add a default `<StaticRouter location>` value (#8243)
-- Add invariant for using `<Route>` inside `<Routes>` to help people make the change (#8238)
+- Add a default `<StaticRouter location>` value ([#8243](https://github.com/remix-run/react-router/pull/8243))
+- Add invariant for using `<Route>` inside `<Routes>` to help people make the change ([#8238](https://github.com/remix-run/react-router/pull/8238))
 
 **Full Changelog**: [`v6.0.0...v6.0.1`](https://github.com/remix-run/react-router/compare/v6.0.0...v6.0.1)
 
