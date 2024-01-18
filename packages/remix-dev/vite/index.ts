@@ -2,7 +2,10 @@
 // don't need to have Vite installed as a peer dependency. Only types should
 // be imported at the top level.
 import type { RemixVitePlugin } from "./plugin";
-export type { ServerBundlesManifest as Unstable_ServerBundlesManifest } from "./build";
+export type {
+  ServerBundlesManifest as Unstable_ServerBundlesManifest,
+  VitePluginAdapter as Unstable_VitePluginAdapter,
+} from "./plugin";
 
 export const unstable_vitePlugin: RemixVitePlugin = (...args) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports

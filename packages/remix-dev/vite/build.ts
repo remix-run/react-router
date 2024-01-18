@@ -4,8 +4,9 @@ import fse from "fs-extra";
 import colors from "picocolors";
 
 import {
-  type ResolvedRemixVitePluginConfig,
+  type ResolvedVitePluginConfig,
   type ServerBuildConfig,
+  type ServerBundlesManifest,
   configRouteToBranchRoute,
 } from "./plugin";
 import type { ConfigRoute, RouteManifest } from "../config/routes";
@@ -32,15 +33,15 @@ async function extractConfig({
     "production" // default NODE_ENV
   );
 
-  let pluginConfig = viteConfig[
+  let remixConfig = viteConfig[
     "__remixPluginResolvedConfig" as keyof typeof viteConfig
-  ] as ResolvedRemixVitePluginConfig | undefined;
-  if (!pluginConfig) {
+  ] as ResolvedVitePluginConfig | undefined;
+  if (!remixConfig) {
     console.error(colors.red("Remix Vite plugin not found in Vite config"));
     process.exit(1);
   }
 
-  return { pluginConfig, viteConfig };
+  return { remixConfig, viteConfig };
 }
 
 function getAddressableRoutes(routes: RouteManifest): ConfigRoute[] {
@@ -83,17 +84,6 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
   return branch.reverse();
 }
 
-export type ServerBundlesManifest = {
-  serverBundles: {
-    [serverBundleId: string]: {
-      id: string;
-      file: string;
-    };
-  };
-  routeIdToServerBundleId: Record<string, string>;
-  routes: RouteManifest;
-};
-
 async function getServerBuilds({
   routes,
   serverBuildDirectory,
@@ -101,7 +91,7 @@ async function getServerBuilds({
   serverBundles,
   rootDirectory,
   appDirectory,
-}: ResolvedRemixVitePluginConfig): Promise<{
+}: ResolvedVitePluginConfig): Promise<{
   serverBuilds: ServerBuildConfig[];
   serverBundlesManifest?: ServerBundlesManifest;
 }> {
@@ -178,7 +168,7 @@ async function getServerBuilds({
 
 async function cleanServerBuildDirectory(
   viteConfig: Vite.ResolvedConfig,
-  { rootDirectory, serverBuildDirectory }: ResolvedRemixVitePluginConfig
+  { rootDirectory, serverBuildDirectory }: ResolvedVitePluginConfig
 ) {
   let isWithinRoot = () => {
     let relativePath = path.relative(rootDirectory, serverBuildDirectory);
@@ -219,7 +209,7 @@ export async function build(
   // so it can be accessed synchronously via `importViteEsmSync`
   await preloadViteEsm();
 
-  let { pluginConfig, viteConfig } = await extractConfig({
+  let { remixConfig, viteConfig } = await extractConfig({
     configFile,
     mode,
     root,
@@ -247,23 +237,46 @@ export async function build(
   // output directories, we need to clean the root server build directory
   // ourselves rather than relying on Vite to do it, otherwise you can end up
   // with stale server bundle directories in your build output
-  await cleanServerBuildDirectory(viteConfig, pluginConfig);
+  await cleanServerBuildDirectory(viteConfig, remixConfig);
 
   // Run the Vite client build first
   await viteBuild();
 
   // Then run Vite SSR builds in parallel
   let { serverBuilds, serverBundlesManifest } = await getServerBuilds(
-    pluginConfig
+    remixConfig
   );
 
   await Promise.all(serverBuilds.map(viteBuild));
 
   if (serverBundlesManifest) {
     await fse.writeFile(
-      path.join(pluginConfig.serverBuildDirectory, "bundles.json"),
+      path.join(remixConfig.serverBuildDirectory, "bundles.json"),
       JSON.stringify(serverBundlesManifest, null, 2),
       "utf-8"
     );
   }
+
+  let {
+    isSpaMode,
+    assetsBuildDirectory,
+    serverBuildDirectory,
+    serverBuildFile,
+  } = remixConfig;
+
+  // Should this already be absolute on the resolved config object?
+  // In the meantime, we make it absolute before passing to adapter hooks
+  serverBuildDirectory = path.resolve(root, serverBuildDirectory);
+
+  await remixConfig.adapter?.buildEnd?.({
+    // Since this is public API, these properties need to mirror the options
+    // passed to the Remix plugin. This means we need to translate our internal
+    // names back to their original public counterparts. It's probably worth
+    // aligning these internally so we don't need this translation layer.
+    assetsBuildDirectory,
+    serverBuildDirectory,
+    serverBuildFile,
+    unstable_serverBundlesManifest: serverBundlesManifest,
+    unstable_ssr: !isSpaMode,
+  });
 }
