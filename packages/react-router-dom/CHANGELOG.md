@@ -1,5 +1,14 @@
 # `react-router-dom`
 
+## 6.21.3
+
+### Patch Changes
+
+- Fix `NavLink` `isPending` when a `basename` is used ([#11195](https://github.com/remix-run/react-router/pull/11195))
+- Remove leftover `unstable_` prefix from `Blocker`/`BlockerFunction` types ([#11187](https://github.com/remix-run/react-router/pull/11187))
+- Updated dependencies:
+  - `react-router@6.21.3`
+
 ## 6.21.2
 
 ### Patch Changes
@@ -162,7 +171,7 @@
 
 ### Patch Changes
 
-- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
+- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see <https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329>). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
 - Updated dependencies:
   - `react-router@6.20.1`
   - `@remix-run/router@1.13.1`
@@ -417,7 +426,7 @@
 
 ## 6.12.1
 
-> [!WARNING]
+> \[!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.1`. This version suffers from a `webpack`/`terser` minification issue resulting in invalid minified code in your resulting production bundles which can cause issues in your application. See [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
 
 ### Patch Changes
@@ -752,7 +761,7 @@
 
 ## 6.4.0
 
-Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs][rr-docs], especially the [feature overview][rr-feature-overview] and the [tutorial][rr-tutorial].
+Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs](https://reactrouter.com), especially the [feature overview](https://reactrouter.com/start/overview) and the [tutorial](https://reactrouter.com/start/tutorial).
 
 **New APIs**
 
@@ -778,7 +787,3 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 **Updated Dependencies**
 
 - `react-router@6.4.0`
-
-[rr-docs]: https://reactrouter.com
-[rr-feature-overview]: https://reactrouter.com/start/overview
-[rr-tutorial]: https://reactrouter.com/start/tutorial

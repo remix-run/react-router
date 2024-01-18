@@ -47,8 +47,7 @@ You may need to make changes to a pre-release prior to publishing a final stable
 - Wait for the release workflow to finish. The Changesets action in the workflow will open a PR that will increment all versions and generate the changelogs for the stable release.
 - Review the updated `CHANGELOG` files and make any adjustments necessary.
   - `find packages -name 'CHANGELOG.md' -mindepth 2 -maxdepth 2 -exec code {} \;`
-  - Remove the changelogs for all pre-releases
-  - [TODO: We should automate this]
+  - Our automated release process should have removed prerelease entries
 - Finalize the release notes
   - This should already be in pretty good shape in the root `CHANGELOG.md` file in the repo
   - Do a quick double check that all iterated prerelease changesets got copied over

@@ -98,8 +98,8 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
-  unstable_Blocker,
-  unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
   ErrorResponse,
@@ -1028,7 +1028,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
-    let { navigator } = React.useContext(NavigationContext);
+    let { navigator, basename } = React.useContext(NavigationContext);
     let isTransitioning =
       routerState != null &&
       // Conditional usage is OK here because the usage of a data router is static
@@ -1051,6 +1051,11 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ? nextLocationPathname.toLowerCase()
         : null;
       toPathname = toPathname.toLowerCase();
+    }
+
+    if (nextLocationPathname && basename) {
+      nextLocationPathname =
+        stripBasename(nextLocationPathname, basename) || nextLocationPathname;
     }
 
     // If the `to` has a trailing slash, look at that exact spot.  Otherwise,

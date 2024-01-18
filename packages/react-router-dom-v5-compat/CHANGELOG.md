@@ -1,5 +1,14 @@
 # `react-router-dom-v5-compat`
 
+## 6.21.3
+
+### Patch Changes
+
+- Remove leftover `unstable_` prefix from `Blocker`/`BlockerFunction` types ([#11187](https://github.com/remix-run/react-router/pull/11187))
+- Updated dependencies:
+  - `react-router-dom@6.21.3`
+  - `react-router@6.21.3`
+
 ## 6.21.2
 
 ### Patch Changes
