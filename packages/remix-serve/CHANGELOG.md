@@ -1,5 +1,13 @@
 # `@remix-run/serve`
 
+## 2.5.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/express@2.5.1`
+  - `@remix-run/node@2.5.1`
+
 ## 2.5.0
 
 ### Patch Changes
