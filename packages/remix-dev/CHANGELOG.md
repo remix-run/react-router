@@ -1,44 +1,23 @@
 # `@remix-run/dev`
 
-## 2.5.1-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.5.1-pre.2`
-  - `@remix-run/server-runtime@2.5.1-pre.2`
-
-## 2.5.1-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.5.1-pre.1`
-  - `@remix-run/server-runtime@2.5.1-pre.1`
-
-## 2.5.1-pre.0
+## 2.5.1
 
 ### Patch Changes
 
 - Add `isSpaMode` to `@remix-run/dev/server-build` virtual module ([#8492](https://github.com/remix-run/remix/pull/8492))
-- vite: errors for server-only code point to new docs ([#8488](https://github.com/remix-run/remix/pull/8488))
+- Automatically prepend `<!DOCTYPE html>` if not present to fix quirks mode warnings for SPA template ([#8495](https://github.com/remix-run/remix/pull/8495))
+- Vite: Errors for server-only code point to new docs ([#8488](https://github.com/remix-run/remix/pull/8488))
 - Vite: Fix HMR race condition when reading changed file contents ([#8479](https://github.com/remix-run/remix/pull/8479))
 - Vite: Tree-shake unused route exports in the client build ([#8468](https://github.com/remix-run/remix/pull/8468))
 - Vite: Performance profiling ([#8493](https://github.com/remix-run/remix/pull/8493))
-
-  Run `remix vite:build --profile` to generate a `.cpuprofile` that can be shared or uploaded to speedscope.app
-
-  In dev, press `p + enter` to start a new profiling session or stop the current session.
-  If you need to profile dev server startup, run `remix vite:dev --profile` to initialize the dev server with a running profiling session.
-
-  For more, see the new docs: Vite > Performance
-
+  - Run `remix vite:build --profile` to generate a `.cpuprofile` that can be shared or uploaded to speedscope.app
+  - In dev, press `p + enter` to start a new profiling session or stop the current session
+  - If you need to profile dev server startup, run `remix vite:dev --profile` to initialize the dev server with a running profiling session
+  - For more, see the new docs: Vite > Performance
 - Vite: Improve performance of dev server requests by invalidating Remix's virtual modules on relevant file changes rather than on every request ([#8164](https://github.com/remix-run/remix/pull/8164))
-- Automatically prepend `<!DOCTYPE html>` if not present to fix quirks mode warnings for SPA template ([#8495](https://github.com/remix-run/remix/pull/8495))
 - Updated dependencies:
-  - `@remix-run/node@2.5.1-pre.0`
-  - `@remix-run/serve@2.5.1-pre.0`
-  - `@remix-run/server-runtime@2.5.1-pre.0`
+  - `@remix-run/node@2.5.1`
+  - `@remix-run/server-runtime@2.5.1`
 
 ## 2.5.0
 
@@ -106,12 +85,17 @@
 ### Patch Changes
 
 - Fix issue with `isbot` v4 released on 1/1/2024 ([#8415](https://github.com/remix-run/remix/pull/8415))
+
   - `remix dev` will now add `"isbot": "^4"` to `package.json` instead of using `latest`
   - Update built-in `entry.server` files to work with both `isbot@3` and `isbot@4` for backwards-compatibility with Remix apps that have pinned `isbot` to v3
   - Templates are updated to use `isbot@4` moving forward via `create-remix`
+
 - Vite: Fix HMR issues when altering exports for non-rendered routes ([#8157](https://github.com/remix-run/remix/pull/8157))
+
 - Vite: Default `NODE_ENV` to `"production"` when running `remix vite:build` command ([#8405](https://github.com/remix-run/remix/pull/8405))
+
 - Vite: Remove Vite plugin config option `serverBuildPath` in favor of separate `serverBuildDirectory` and `serverBuildFile` options ([#8332](https://github.com/remix-run/remix/pull/8332))
+
 - Vite: Loosen strict route exports restriction, reinstating support for non-Remix route exports ([#8420](https://github.com/remix-run/remix/pull/8420))
 
 - Updated dependencies:
