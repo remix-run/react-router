@@ -1,13 +1,13 @@
 # `react-router-dom`
 
-## 6.21.3-pre.0
+## 6.21.3
 
 ### Patch Changes
 
 - Fix `NavLink` `isPending` when a `basename` is used ([#11195](https://github.com/remix-run/react-router/pull/11195))
 - Remove leftover `unstable_` prefix from `Blocker`/`BlockerFunction` types ([#11187](https://github.com/remix-run/react-router/pull/11187))
 - Updated dependencies:
-  - `react-router@6.21.3-pre.0`
+  - `react-router@6.21.3`
 
 ## 6.21.2
 
