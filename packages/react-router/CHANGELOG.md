@@ -1,5 +1,11 @@
 # `react-router`
 
+## 6.21.3
+
+### Patch Changes
+
+- Remove leftover `unstable_` prefix from `Blocker`/`BlockerFunction` types ([#11187](https://github.com/remix-run/react-router/pull/11187))
+
 ## 6.21.2
 
 ### Patch Changes
