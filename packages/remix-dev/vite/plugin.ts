@@ -107,22 +107,27 @@ export type ServerBundlesManifest = {
   routes: RouteManifest;
 };
 
-const adapterOverrideKeys = [
+const adapterRemixConfigOverrideKeys = [
   "unstable_serverBundles",
 ] as const satisfies ReadonlyArray<keyof VitePluginConfig>;
-type AdapterOverrideKey = typeof adapterOverrideKeys[number];
 
-type AdapterOverrides = Pick<VitePluginConfig, AdapterOverrideKey>;
+type AdapterRemixConfigOverrideKey =
+  typeof adapterRemixConfigOverrideKeys[number];
 
-type Adapter = AdapterOverrides & {
+type AdapterRemixConfigOverrides = Pick<
+  VitePluginConfig,
+  AdapterRemixConfigOverrideKey
+>;
+
+type AdapterConfig = AdapterRemixConfigOverrides & {
   buildEnd?: BuildEndHook;
 };
 
-type AdapterWithoutOverrides = Omit<Adapter, AdapterOverrideKey>;
+type Adapter = Omit<AdapterConfig, AdapterRemixConfigOverrideKey>;
 
 export type VitePluginAdapter = (args: {
   remixConfig: VitePluginConfig;
-}) => Adapter | Promise<Adapter>;
+}) => AdapterConfig | Promise<AdapterConfig>;
 
 export type VitePluginConfig = RemixEsbuildUserConfigJsdocOverrides &
   Omit<
@@ -183,7 +188,7 @@ export type ResolvedVitePluginConfig = Pick<
   | "routes"
   | "serverModuleFormat"
 > & {
-  adapter?: AdapterWithoutOverrides;
+  adapter?: Adapter;
   isSpaMode: boolean;
   serverBuildDirectory: string;
   serverBuildFile: string;
@@ -380,6 +385,19 @@ const getRouteModuleExports = async (
   return exportNames;
 };
 
+const getServerBuildConfig = (
+  viteUserConfig: Vite.UserConfig
+): ServerBuildConfig | null => {
+  if (
+    !("__remixServerBuildConfig" in viteUserConfig) ||
+    !viteUserConfig.__remixServerBuildConfig
+  ) {
+    return null;
+  }
+
+  return viteUserConfig.__remixServerBuildConfig as ServerBuildConfig;
+};
+
 const getViteMajorVersion = (): number => {
   let vitePkg = require("vite/package.json");
   return parseInt(vitePkg.version.split(".")[0]!);
@@ -404,38 +422,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
   // During dev, this is updated on config file change or route file addition/removal.
   let remixConfig: ResolvedVitePluginConfig;
 
-  let resolveServerBuildConfig = (): ServerBuildConfig | null => {
-    if (
-      !("__remixServerBuildConfig" in viteUserConfig) ||
-      !viteUserConfig.__remixServerBuildConfig
-    ) {
-      return null;
-    }
-
-    let { routes, serverBuildDirectory } =
-      viteUserConfig.__remixServerBuildConfig as ServerBuildConfig;
-
-    // Ensure extra config values can't sneak through
-    return { routes, serverBuildDirectory };
-  };
-
-  let resolveAdapter = async () => {
-    let adapter = remixUserConfig.adapter
-      ? await remixUserConfig.adapter({
-          // We only pass in the plugin config that the user defined. We don't
-          // know the final resolved config until the adapter has been resolved.
-          remixConfig: remixUserConfig,
-        })
-      : undefined;
-
-    let adapterOverrides: AdapterOverrides | undefined =
-      adapter && pick(adapter, adapterOverrideKeys);
-    let adapterWithoutOverrides: AdapterWithoutOverrides | undefined =
-      adapter && omit(adapter, adapterOverrideKeys);
-
-    return { adapterOverrides, adapterWithoutOverrides };
-  };
-
   let resolvePluginConfig = async (): Promise<ResolvedVitePluginConfig> => {
     let defaults = {
       assetsBuildDirectory: "build/client",
@@ -445,54 +431,55 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       unstable_ssr: true,
     } as const satisfies Partial<VitePluginConfig>;
 
-    let { adapterOverrides, adapterWithoutOverrides } = await resolveAdapter();
+    let adapterConfig = remixUserConfig.adapter
+      ? await remixUserConfig.adapter({
+          // We only pass in the plugin config that the user defined. We don't
+          // know the final resolved config until the adapter has been resolved.
+          remixConfig: remixUserConfig,
+        })
+      : undefined;
+    let adapter: Adapter | undefined =
+      adapterConfig && omit(adapterConfig, adapterRemixConfigOverrideKeys);
+    let adapterRemixConfigOverrides: AdapterRemixConfigOverrides | undefined =
+      adapterConfig && pick(adapterConfig, adapterRemixConfigOverrideKeys);
 
-    let mergedRemixConfig = {
+    let resolvedRemixUserConfig = {
       ...defaults,
       ...remixUserConfig,
-      ...(adapterOverrides ?? {}),
+      ...(adapterRemixConfigOverrides ?? {}),
     };
 
     let rootDirectory =
       viteUserConfig.root ?? process.env.REMIX_ROOT ?? process.cwd();
 
-    let isSpaMode = mergedRemixConfig.unstable_ssr === false;
+    let isSpaMode = resolvedRemixUserConfig.unstable_ssr === false;
 
-    let resolvedRemixEsbuildConfig = await resolveRemixEsbuildConfig(
-      pick(mergedRemixConfig, supportedRemixEsbuildConfigKeys),
-      { rootDirectory, isSpaMode }
-    );
-
-    let resolvedRemixConfig = {
-      ...resolvedRemixEsbuildConfig,
-      serverBuildDirectory: path.resolve(
-        rootDirectory,
-        mergedRemixConfig.serverBuildDirectory
-      ),
-    };
-
-    // Only select the Remix config options that the Vite plugin uses
+    // Only select the Remix esbuild config options that the Vite plugin uses
     let {
       appDirectory,
       assetsBuildDirectory,
       entryClientFilePath,
-      publicPath,
-      routes,
       entryServerFilePath,
-      serverBuildDirectory,
-      serverBuildFile,
-      unstable_serverBundles,
-      serverModuleFormat,
-      relativeAssetsBuildDirectory,
       future,
-    } = {
-      ...mergedRemixConfig,
-      ...resolvedRemixConfig,
-      ...resolveServerBuildConfig(),
-    };
+      publicPath,
+      relativeAssetsBuildDirectory,
+      routes,
+      serverModuleFormat,
+    } = await resolveRemixEsbuildConfig(
+      pick(resolvedRemixUserConfig, supportedRemixEsbuildConfigKeys),
+      { rootDirectory, isSpaMode }
+    );
+
+    let serverBuildDirectory = path.resolve(
+      rootDirectory,
+      resolvedRemixUserConfig.serverBuildDirectory
+    );
+
+    let { serverBuildFile, unstable_serverBundles: serverBundles } =
+      resolvedRemixUserConfig;
 
     // Log warning for incompatible vite config flags
-    if (isSpaMode && unstable_serverBundles) {
+    if (isSpaMode && serverBundles) {
       console.warn(
         colors.yellow(
           colors.bold("⚠️  SPA Mode: ") +
@@ -500,26 +487,38 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             "`unstable_ssr:false` and will be ignored`"
         )
       );
-      unstable_serverBundles = undefined;
+      serverBundles = undefined;
     }
 
-    return {
-      adapter: adapterWithoutOverrides,
+    // Get the server build config passed in from the Remix CLI and override the
+    // relevant values if present. This is the mechanism by which we support
+    // server bundles since we can run multiple server builds with each one
+    // targeting a subset of routes and building into a separate directory.
+    let serverBuildConfig = getServerBuildConfig(viteUserConfig);
+    if (serverBuildConfig) {
+      routes = serverBuildConfig.routes;
+      serverBuildDirectory = serverBuildConfig.serverBuildDirectory;
+    }
+
+    let resolvedRemixConfig: ResolvedVitePluginConfig = {
+      adapter,
       appDirectory,
-      rootDirectory,
       assetsBuildDirectory,
       entryClientFilePath,
-      publicPath,
-      routes,
       entryServerFilePath,
+      future,
+      isSpaMode,
+      publicPath,
+      relativeAssetsBuildDirectory,
+      rootDirectory,
+      routes,
       serverBuildDirectory,
       serverBuildFile,
-      serverBundles: unstable_serverBundles,
+      serverBundles,
       serverModuleFormat,
-      isSpaMode,
-      relativeAssetsBuildDirectory,
-      future,
     };
+
+    return resolvedRemixConfig;
   };
 
   let getServerEntry = async () => {
