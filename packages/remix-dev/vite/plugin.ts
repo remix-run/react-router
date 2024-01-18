@@ -21,9 +21,9 @@ import colors from "picocolors";
 
 import { type ConfigRoute, type RouteManifest } from "../config/routes";
 import {
-  type AppConfig as RemixUserConfig,
-  type RemixConfig as ResolvedRemixConfig,
-  resolveConfig,
+  type AppConfig as RemixEsbuildUserConfig,
+  type RemixConfig as ResolvedRemixEsbuildConfig,
+  resolveConfig as resolveRemixEsbuildConfig,
 } from "../config";
 import { type Manifest } from "../manifest";
 import invariant from "../invariant";
@@ -35,7 +35,7 @@ import { removeExports } from "./remove-exports";
 import { replaceImportSpecifier } from "./replace-import-specifier";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 
-const supportedRemixConfigKeys = [
+const supportedRemixEsbuildConfigKeys = [
   "appDirectory",
   "assetsBuildDirectory",
   "future",
@@ -43,9 +43,11 @@ const supportedRemixConfigKeys = [
   "publicPath",
   "routes",
   "serverModuleFormat",
-] as const satisfies ReadonlyArray<keyof RemixUserConfig>;
-type SupportedRemixConfigKey = typeof supportedRemixConfigKeys[number];
-type SupportedRemixConfig = Pick<RemixUserConfig, SupportedRemixConfigKey>;
+] as const satisfies ReadonlyArray<keyof RemixEsbuildUserConfig>;
+type SupportedRemixEsbuildUserConfig = Pick<
+  RemixEsbuildUserConfig,
+  typeof supportedRemixEsbuildConfigKeys[number]
+>;
 
 const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
 const CLIENT_ROUTE_EXPORTS = [
@@ -64,17 +66,17 @@ const CLIENT_ROUTE_QUERY_STRING = "?client-route";
 
 // We need to provide different JSDoc comments in some cases due to differences
 // between the Remix config and the Vite plugin.
-type RemixConfigJsdocOverrides = {
+type RemixEsbuildUserConfigJsdocOverrides = {
   /**
    * The path to the browser build, relative to the project root. Defaults to
    * `"build/client"`.
    */
-  assetsBuildDirectory?: SupportedRemixConfig["assetsBuildDirectory"];
+  assetsBuildDirectory?: SupportedRemixEsbuildUserConfig["assetsBuildDirectory"];
   /**
    * The URL prefix of the browser build with a trailing slash. Defaults to
    * `"/"`. This is the path the browser will use to find assets.
    */
-  publicPath?: SupportedRemixConfig["publicPath"];
+  publicPath?: SupportedRemixEsbuildUserConfig["publicPath"];
 };
 
 // Only expose a subset of route properties to the "serverBundles" function
@@ -122,8 +124,11 @@ export type VitePluginAdapter = (args: {
   remixConfig: VitePluginConfig;
 }) => Adapter | Promise<Adapter>;
 
-export type VitePluginConfig = RemixConfigJsdocOverrides &
-  Omit<SupportedRemixConfig, keyof RemixConfigJsdocOverrides> & {
+export type VitePluginConfig = RemixEsbuildUserConfigJsdocOverrides &
+  Omit<
+    SupportedRemixEsbuildUserConfig,
+    keyof RemixEsbuildUserConfigJsdocOverrides
+  > & {
     /**
      * A function for adapting the build output and/or development environment
      * for different hosting providers.
@@ -166,7 +171,7 @@ type BuildEndArgs = Pick<
 type BuildEndHook = (args: BuildEndArgs) => void | Promise<void>;
 
 export type ResolvedVitePluginConfig = Pick<
-  ResolvedRemixConfig,
+  ResolvedRemixEsbuildConfig,
   | "appDirectory"
   | "rootDirectory"
   | "assetsBuildDirectory"
@@ -453,13 +458,18 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
 
     let isSpaMode = mergedRemixConfig.unstable_ssr === false;
 
-    let resolvedRemixConfig = await resolveConfig(
-      pick(mergedRemixConfig, supportedRemixConfigKeys),
-      {
-        rootDirectory,
-        isSpaMode,
-      }
+    let resolvedRemixEsbuildConfig = await resolveRemixEsbuildConfig(
+      pick(mergedRemixConfig, supportedRemixEsbuildConfigKeys),
+      { rootDirectory, isSpaMode }
     );
+
+    let resolvedRemixConfig = {
+      ...resolvedRemixEsbuildConfig,
+      serverBuildDirectory: path.resolve(
+        rootDirectory,
+        mergedRemixConfig.serverBuildDirectory
+      ),
+    };
 
     // Only select the Remix config options that the Vite plugin uses
     let {
@@ -1063,7 +1073,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
 
           if (remixConfig.isSpaMode) {
             await handleSpaMode(
-              path.join(rootDirectory, serverBuildDirectory),
+              serverBuildDirectory,
               serverBuildFile,
               assetsBuildDirectory,
               viteConfig

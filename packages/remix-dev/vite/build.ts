@@ -139,18 +139,21 @@ async function getServerBuilds({
       }
       serverBundlesManifest.routeIdToServerBundleId[route.id] = bundleId;
 
-      let serverBundleDirectory = path.join(serverBuildDirectory, bundleId);
+      let relativeServerBundleDirectory = path.relative(
+        rootDirectory,
+        path.join(serverBuildDirectory, bundleId)
+      );
       let serverBuildConfig = serverBuildConfigByBundleId.get(bundleId);
       if (!serverBuildConfig) {
         serverBundlesManifest.serverBundles[bundleId] = {
           id: bundleId,
           file: normalizePath(
-            path.join(serverBundleDirectory, serverBuildFile)
+            path.join(relativeServerBundleDirectory, serverBuildFile)
           ),
         };
         serverBuildConfig = {
           routes: {},
-          serverBuildDirectory: serverBundleDirectory,
+          serverBuildDirectory: relativeServerBundleDirectory,
         };
         serverBuildConfigByBundleId.set(bundleId, serverBuildConfig);
       }
@@ -263,10 +266,6 @@ export async function build(
     serverBuildDirectory,
     serverBuildFile,
   } = remixConfig;
-
-  // Should this already be absolute on the resolved config object?
-  // In the meantime, we make it absolute before passing to adapter hooks
-  serverBuildDirectory = path.resolve(root, serverBuildDirectory);
 
   await remixConfig.adapter?.buildEnd?.({
     // Since this is public API, these properties need to mirror the options
