@@ -260,22 +260,14 @@ export async function build(
     );
   }
 
-  let {
-    isSpaMode,
-    assetsBuildDirectory,
-    serverBuildDirectory,
-    serverBuildFile,
-  } = remixConfig;
+  let { assetsBuildDirectory, serverBuildDirectory, serverBuildFile, ssr } =
+    remixConfig;
 
   await remixConfig.adapter?.buildEnd?.({
-    // Since this is public API, these properties need to mirror the options
-    // passed to the Remix plugin. This means we need to translate our internal
-    // names back to their original public counterparts. It's probably worth
-    // aligning these internally so we don't need this translation layer.
     assetsBuildDirectory,
     serverBuildDirectory,
     serverBuildFile,
     unstable_serverBundlesManifest: serverBundlesManifest,
-    unstable_ssr: !isSpaMode,
+    unstable_ssr: ssr,
   });
 }

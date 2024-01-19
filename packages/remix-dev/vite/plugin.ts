@@ -184,15 +184,14 @@ export type ResolvedVitePluginConfig = Pick<
   | "entryServerFilePath"
   | "future"
   | "publicPath"
-  | "relativeAssetsBuildDirectory"
   | "routes"
   | "serverModuleFormat"
 > & {
   adapter?: Adapter;
-  isSpaMode: boolean;
   serverBuildDirectory: string;
   serverBuildFile: string;
   serverBundles?: ServerBundlesFunction;
+  ssr: boolean;
 };
 
 export type ServerBuildConfig = {
@@ -447,12 +446,13 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       ...defaults,
       ...remixUserConfig,
       ...(adapterRemixConfigOverrides ?? {}),
-    };
+    } satisfies VitePluginConfig;
 
     let rootDirectory =
       viteUserConfig.root ?? process.env.REMIX_ROOT ?? process.cwd();
 
-    let isSpaMode = resolvedRemixUserConfig.unstable_ssr === false;
+    let ssr = resolvedRemixUserConfig.unstable_ssr !== false;
+    let isSpaMode = !ssr;
 
     // Only select the Remix esbuild config options that the Vite plugin uses
     let {
@@ -462,7 +462,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       entryServerFilePath,
       future,
       publicPath,
-      relativeAssetsBuildDirectory,
       routes,
       serverModuleFormat,
     } = await resolveRemixEsbuildConfig(
@@ -507,15 +506,14 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       entryClientFilePath,
       entryServerFilePath,
       future,
-      isSpaMode,
       publicPath,
-      relativeAssetsBuildDirectory,
       rootDirectory,
       routes,
       serverBuildDirectory,
       serverBuildFile,
       serverBundles,
       serverModuleFormat,
+      ssr,
     };
 
     return resolvedRemixConfig;
@@ -539,10 +537,13 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       .join("\n")}
       export { default as assets } from ${JSON.stringify(serverManifestId)};
       export const assetsBuildDirectory = ${JSON.stringify(
-        remixConfig.relativeAssetsBuildDirectory
+        path.relative(
+          remixConfig.rootDirectory,
+          remixConfig.assetsBuildDirectory
+        )
       )};
       export const future = ${JSON.stringify(remixConfig.future)};
-      export const isSpaMode = ${remixConfig.isSpaMode === true};
+      export const isSpaMode = ${!remixConfig.ssr};
       export const publicPath = ${JSON.stringify(remixConfig.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
@@ -1070,7 +1071,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             );
           }
 
-          if (remixConfig.isSpaMode) {
+          if (!remixConfig.ssr) {
             await handleSpaMode(
               serverBuildDirectory,
               serverBuildFile,
@@ -1210,7 +1211,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         let route = getRoute(remixConfig, id);
         if (!route) return;
 
-        if (remixConfig.isSpaMode) {
+        if (!remixConfig.ssr) {
           let serverOnlyExports = esModuleLexer(code)[1]
             .map((exp) => exp.n)
             .filter((exp) => SERVER_ONLY_ROUTE_EXPORTS.includes(exp));

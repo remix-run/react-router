@@ -339,14 +339,6 @@ export interface RemixConfig {
   serverPlatform: ServerPlatform;
 
   /**
-   * Enable SPA Mode.  Default's to `false`.
-   *
-   * This is the inverse of the user-level `unstable_ssr` config and used throughout
-   * the codebase to avoid confusion with Vite's `ssr` config
-   */
-  isSpaMode: boolean;
-
-  /**
    * Whether to support Tailwind functions and directives in CSS files if `tailwindcss` is installed.
    * Defaults to `true`.
    */
@@ -667,7 +659,6 @@ export async function resolveConfig(
     serverMode,
     serverModuleFormat,
     serverNodeBuiltinsPolyfill,
-    isSpaMode,
     browserNodeBuiltinsPolyfill,
     serverPlatform,
     mdx,
