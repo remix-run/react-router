@@ -5,7 +5,7 @@ import colors from "picocolors";
 
 import {
   type ResolvedVitePluginConfig,
-  type ServerBuildConfig,
+  type ServerBundleBuildConfig,
   type ServerBundlesManifest,
   configRouteToBranchRoute,
 } from "./plugin";
@@ -84,6 +84,18 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
   return branch.reverse();
 }
 
+type RemixViteClientBuildArgs = {
+  ssr: false;
+  serverBundleBuildConfig?: never;
+};
+
+type RemixViteServerBuildArgs = {
+  ssr: true;
+  serverBundleBuildConfig?: ServerBundleBuildConfig;
+};
+
+type RemixViteBuildArgs = RemixViteClientBuildArgs | RemixViteServerBuildArgs;
+
 async function getServerBuilds({
   routes,
   serverBuildDirectory,
@@ -92,11 +104,11 @@ async function getServerBuilds({
   rootDirectory,
   appDirectory,
 }: ResolvedVitePluginConfig): Promise<{
-  serverBuilds: ServerBuildConfig[];
+  serverBuilds: RemixViteServerBuildArgs[];
   serverBundlesManifest?: ServerBundlesManifest;
 }> {
   if (!serverBundles) {
-    return { serverBuilds: [{ routes, serverBuildDirectory }] };
+    return { serverBuilds: [{ ssr: true }] };
   }
 
   let { normalizePath } = await import("vite");
@@ -118,12 +130,12 @@ async function getServerBuilds({
     routes: rootRelativeRoutes,
   };
 
-  let serverBuildConfigByBundleId = new Map<string, ServerBuildConfig>();
+  let serverBundleBuildConfigById = new Map<string, ServerBundleBuildConfig>();
 
   await Promise.all(
     getAddressableRoutes(routes).map(async (route) => {
       let branch = getRouteBranch(routes, route.id);
-      let bundleId = await serverBundles({
+      let serverBundleId = await serverBundles({
         branch: branch.map((route) =>
           configRouteToBranchRoute({
             ...route,
@@ -132,30 +144,30 @@ async function getServerBuilds({
           })
         ),
       });
-      if (typeof bundleId !== "string") {
+      if (typeof serverBundleId !== "string") {
         throw new Error(
           `The "unstable_serverBundles" function must return a string`
         );
       }
-      serverBundlesManifest.routeIdToServerBundleId[route.id] = bundleId;
+      serverBundlesManifest.routeIdToServerBundleId[route.id] = serverBundleId;
 
       let relativeServerBundleDirectory = path.relative(
         rootDirectory,
-        path.join(serverBuildDirectory, bundleId)
+        path.join(serverBuildDirectory, serverBundleId)
       );
-      let serverBuildConfig = serverBuildConfigByBundleId.get(bundleId);
+      let serverBuildConfig = serverBundleBuildConfigById.get(serverBundleId);
       if (!serverBuildConfig) {
-        serverBundlesManifest.serverBundles[bundleId] = {
-          id: bundleId,
+        serverBundlesManifest.serverBundles[serverBundleId] = {
+          id: serverBundleId,
           file: normalizePath(
             path.join(relativeServerBundleDirectory, serverBuildFile)
           ),
         };
         serverBuildConfig = {
           routes: {},
-          serverBuildDirectory: relativeServerBundleDirectory,
+          serverBundleId,
         };
-        serverBuildConfigByBundleId.set(bundleId, serverBuildConfig);
+        serverBundleBuildConfigById.set(serverBundleId, serverBuildConfig);
       }
       for (let route of branch) {
         serverBuildConfig.routes[route.id] = route;
@@ -163,8 +175,18 @@ async function getServerBuilds({
     })
   );
 
+  let serverBuilds = Array.from(serverBundleBuildConfigById.values()).map(
+    (serverBundleBuildConfig): RemixViteServerBuildArgs => {
+      let serverBuild: RemixViteServerBuildArgs = {
+        ssr: true,
+        serverBundleBuildConfig,
+      };
+      return serverBuild;
+    }
+  );
+
   return {
-    serverBuilds: Array.from(serverBuildConfigByBundleId.values()),
+    serverBuilds,
     serverBundlesManifest,
   };
 }
@@ -220,8 +242,10 @@ export async function build(
 
   let vite = await import("vite");
 
-  async function viteBuild(serverBuildConfig?: ServerBuildConfig) {
-    let ssr = Boolean(serverBuildConfig);
+  async function viteBuild({
+    ssr,
+    serverBundleBuildConfig,
+  }: RemixViteBuildArgs) {
     await vite.build({
       root,
       mode,
@@ -230,8 +254,8 @@ export async function build(
       optimizeDeps: { force },
       clearScreen,
       logLevel,
-      ...(serverBuildConfig
-        ? { __remixServerBuildConfig: serverBuildConfig }
+      ...(serverBundleBuildConfig
+        ? { __remixServerBundleBuildConfig: serverBundleBuildConfig }
         : {}),
     });
   }
@@ -243,7 +267,7 @@ export async function build(
   await cleanServerBuildDirectory(viteConfig, remixConfig);
 
   // Run the Vite client build first
-  await viteBuild();
+  await viteBuild({ ssr: false });
 
   // Then run Vite SSR builds in parallel
   let { serverBuilds, serverBundlesManifest } = await getServerBuilds(

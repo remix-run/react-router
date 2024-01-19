@@ -194,9 +194,9 @@ export type ResolvedVitePluginConfig = Pick<
   ssr: boolean;
 };
 
-export type ServerBuildConfig = {
+export type ServerBundleBuildConfig = {
   routes: RouteManifest;
-  serverBuildDirectory: string;
+  serverBundleId: string;
 };
 
 let serverBuildId = VirtualModule.id("server-build");
@@ -384,17 +384,17 @@ const getRouteModuleExports = async (
   return exportNames;
 };
 
-const getServerBuildConfig = (
+const getServerBundleBuildConfig = (
   viteUserConfig: Vite.UserConfig
-): ServerBuildConfig | null => {
+): ServerBundleBuildConfig | null => {
   if (
-    !("__remixServerBuildConfig" in viteUserConfig) ||
-    !viteUserConfig.__remixServerBuildConfig
+    !("__remixServerBundleBuildConfig" in viteUserConfig) ||
+    !viteUserConfig.__remixServerBundleBuildConfig
   ) {
     return null;
   }
 
-  return viteUserConfig.__remixServerBuildConfig as ServerBuildConfig;
+  return viteUserConfig.__remixServerBundleBuildConfig as ServerBundleBuildConfig;
 };
 
 const getViteMajorVersion = (): number => {
@@ -489,14 +489,17 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       serverBundles = undefined;
     }
 
-    // Get the server build config passed in from the Remix CLI and override the
-    // relevant values if present. This is the mechanism by which we support
-    // server bundles since we can run multiple server builds with each one
-    // targeting a subset of routes and building into a separate directory.
-    let serverBuildConfig = getServerBuildConfig(viteUserConfig);
-    if (serverBuildConfig) {
-      routes = serverBuildConfig.routes;
-      serverBuildDirectory = serverBuildConfig.serverBuildDirectory;
+    // Get the server bundle build config injected by the Remix CLI, if present.
+    let serverBundleBuildConfig = getServerBundleBuildConfig(viteUserConfig);
+
+    // For server bundle builds, override the relevant config. This lets us run
+    // multiple server builds with each one targeting a subset of routes.
+    if (serverBundleBuildConfig) {
+      routes = serverBundleBuildConfig.routes;
+      serverBuildDirectory = path.join(
+        serverBuildDirectory,
+        serverBundleBuildConfig.serverBundleId
+      );
     }
 
     let resolvedRemixConfig: ResolvedVitePluginConfig = {
