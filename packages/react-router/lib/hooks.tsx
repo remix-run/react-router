@@ -100,7 +100,7 @@ export function useInRouterContext(): boolean {
  *
  * @see https://reactrouter.com/hooks/use-location
  */
-export function useLocation<T = unknown>(): Location<T | null> {
+export function useLocation<State = any>(): Location<State | null> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the

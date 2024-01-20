@@ -8,7 +8,7 @@ title: useLocation
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLocation<State = unknown>(): Location<State | null>;
+declare function useLocation<State = any>(): Location<State | null>;
 
 interface Location<State = any> extends Path {
   state: State;
