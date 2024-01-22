@@ -3187,7 +3187,7 @@ describe("createMemoryRouter", () => {
             />
           </Route>
         ),
-        { initialEntries: ["/foo"], dataStrategy: urlDataStrategy }
+        { initialEntries: ["/foo"], unstable_dataStrategy: urlDataStrategy }
       );
       let { container } = render(<RouterProvider router={router} />);
 
