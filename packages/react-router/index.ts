@@ -289,7 +289,7 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
-    dataStrategy?: DataStrategyFunction;
+    unstable_dataStrategy?: DataStrategyFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -305,7 +305,7 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     mapRouteProperties,
-    dataStrategy: opts?.dataStrategy,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
   }).initialize();
 }
 

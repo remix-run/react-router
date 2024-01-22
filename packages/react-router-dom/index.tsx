@@ -243,7 +243,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   window?: Window;
-  dataStrategy?: DataStrategyFunction;
+  unstable_dataStrategy?: DataStrategyFunction;
 }
 
 export function createBrowserRouter(
@@ -261,7 +261,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     window: opts?.window,
-    dataStrategy: opts?.dataStrategy,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
   }).initialize();
 }
 

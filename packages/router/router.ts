@@ -374,11 +374,11 @@ export interface RouterInit {
    * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
-  dataStrategy?: DataStrategyFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
+  unstable_dataStrategy?: DataStrategyFunction;
 }
 
 /**
@@ -757,7 +757,7 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
-  const dataStrategy = init.dataStrategy || defaultDataStrategy;
+  const dataStrategy = init.unstable_dataStrategy || defaultDataStrategy;
   const callLoaderOrAction = createCallLoaderOrAction(dataStrategy);
 
   let mapRouteProperties: MapRoutePropertiesFunction;
@@ -3977,7 +3977,7 @@ async function loadLazyRouteModule(
     lazy: undefined,
   });
 
-  return route;
+  return routeToUpdate;
 }
 
 function createCallLoaderOrAction(dataStrategy: DataStrategyFunction) {
