@@ -3,7 +3,7 @@
 // be imported at the top level.
 import type { RemixVitePlugin } from "./plugin";
 export type {
-  ServerBundlesManifest as Unstable_ServerBundlesManifest,
+  BuildManifest as Unstable_BuildManifest,
   VitePluginAdapter as Unstable_VitePluginAdapter,
 } from "./plugin";
 

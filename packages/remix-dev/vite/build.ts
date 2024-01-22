@@ -6,8 +6,10 @@ import colors from "picocolors";
 import {
   type ResolvedVitePluginConfig,
   type ServerBundleBuildConfig,
-  type ServerBundlesManifest,
+  type BuildManifest,
+  type ServerBundlesBuildManifest,
   configRouteToBranchRoute,
+  getServerBuildDirectory,
 } from "./plugin";
 import type { ConfigRoute, RouteManifest } from "../config/routes";
 import invariant from "../invariant";
@@ -96,19 +98,24 @@ type RemixViteServerBuildArgs = {
 
 type RemixViteBuildArgs = RemixViteClientBuildArgs | RemixViteServerBuildArgs;
 
-async function getServerBuilds({
-  routes,
-  serverBuildDirectory,
-  serverBuildFile,
-  serverBundles,
-  rootDirectory,
-  appDirectory,
-}: ResolvedVitePluginConfig): Promise<{
+async function getServerBuilds(remixConfig: ResolvedVitePluginConfig): Promise<{
   serverBuilds: RemixViteServerBuildArgs[];
-  serverBundlesManifest?: ServerBundlesManifest;
+  buildManifest: BuildManifest;
 }> {
+  // eslint-disable-next-line prefer-let/prefer-let -- Improve type narrowing
+  const {
+    routes,
+    serverBuildFile,
+    serverBundles,
+    rootDirectory,
+    appDirectory,
+  } = remixConfig;
+  let serverBuildDirectory = getServerBuildDirectory(remixConfig);
   if (!serverBundles) {
-    return { serverBuilds: [{ ssr: true }] };
+    return {
+      serverBuilds: [{ ssr: true }],
+      buildManifest: { routes },
+    };
   }
 
   let { normalizePath } = await import("vite");
@@ -124,7 +131,7 @@ async function getServerBuilds({
     })
   );
 
-  let serverBundlesManifest: ServerBundlesManifest = {
+  let buildManifest: ServerBundlesBuildManifest = {
     serverBundles: {},
     routeIdToServerBundleId: {},
     routes: rootRelativeRoutes,
@@ -149,7 +156,7 @@ async function getServerBuilds({
           `The "unstable_serverBundles" function must return a string`
         );
       }
-      serverBundlesManifest.routeIdToServerBundleId[route.id] = serverBundleId;
+      buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
 
       let relativeServerBundleDirectory = path.relative(
         rootDirectory,
@@ -157,7 +164,7 @@ async function getServerBuilds({
       );
       let serverBuildConfig = serverBundleBuildConfigById.get(serverBundleId);
       if (!serverBuildConfig) {
-        serverBundlesManifest.serverBundles[serverBundleId] = {
+        buildManifest.serverBundles[serverBundleId] = {
           id: serverBundleId,
           file: normalizePath(
             path.join(relativeServerBundleDirectory, serverBuildFile)
@@ -187,16 +194,20 @@ async function getServerBuilds({
 
   return {
     serverBuilds,
-    serverBundlesManifest,
+    buildManifest,
   };
 }
 
 async function cleanServerBuildDirectory(
   viteConfig: Vite.ResolvedConfig,
-  { rootDirectory, serverBuildDirectory }: ResolvedVitePluginConfig
+  remixConfig: ResolvedVitePluginConfig
 ) {
+  let serverBuildDirectory = getServerBuildDirectory(remixConfig);
   let isWithinRoot = () => {
-    let relativePath = path.relative(rootDirectory, serverBuildDirectory);
+    let relativePath = path.relative(
+      remixConfig.rootDirectory,
+      serverBuildDirectory
+    );
     return !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
   };
 
@@ -270,28 +281,26 @@ export async function build(
   await viteBuild({ ssr: false });
 
   // Then run Vite SSR builds in parallel
-  let { serverBuilds, serverBundlesManifest } = await getServerBuilds(
-    remixConfig
-  );
+  let { serverBuilds, buildManifest } = await getServerBuilds(remixConfig);
 
   await Promise.all(serverBuilds.map(viteBuild));
 
-  if (serverBundlesManifest) {
+  if (remixConfig.manifest) {
     await fse.writeFile(
-      path.join(remixConfig.serverBuildDirectory, "bundles.json"),
-      JSON.stringify(serverBundlesManifest, null, 2),
+      path.join(remixConfig.buildDirectory, "manifest.json"),
+      JSON.stringify(buildManifest, null, 2),
       "utf-8"
     );
   }
 
-  let { assetsBuildDirectory, serverBuildDirectory, serverBuildFile, ssr } =
-    remixConfig;
+  let { buildDirectory, serverBuildFile, ssr } = remixConfig;
 
   await remixConfig.adapter?.buildEnd?.({
-    assetsBuildDirectory,
-    serverBuildDirectory,
-    serverBuildFile,
-    unstable_serverBundlesManifest: serverBundlesManifest,
-    unstable_ssr: ssr,
+    buildManifest,
+    remixConfig: {
+      buildDirectory,
+      serverBuildFile,
+      unstable_ssr: ssr,
+    },
   });
 }

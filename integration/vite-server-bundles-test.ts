@@ -28,7 +28,7 @@ function createRoute(path: string) {
   return {
     [`app/routes/${path}`]: `
       ${ROUTE_FILE_COMMENT}
-      import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+      import { Outlet } from "@remix-run/react";
       import { useState, useEffect } from "react";
 
       export default function Route() {
@@ -121,6 +121,7 @@ test.describe(() => {
       "vite.config.ts": await VITE_CONFIG({
         port: devPort,
         pluginOptions: `{
+          manifest: true,
           unstable_serverBundles: async ({ branch }) => {
             // Smoke test to ensure we can read the route files via 'route.file'
             await Promise.all(branch.map(async (route) => {
@@ -291,7 +292,7 @@ test.describe(() => {
     test("Vite / server bundles / build / manifest", async () => {
       expect(
         JSON.parse(
-          fs.readFileSync(path.join(cwd, "build/server/bundles.json"), "utf8")
+          fs.readFileSync(path.join(cwd, "build/manifest.json"), "utf8")
         )
       ).toEqual({
         serverBundles: {

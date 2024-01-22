@@ -20,7 +20,7 @@ test.describe(async () => {
     return normalizePath(pathname).startsWith(normalizePath(cwd));
   }
 
-  function pathRelativeToCwd(pathname: string) {
+  function relativeToCwd(pathname: string) {
     return normalizePath(path.relative(cwd, pathname));
   }
 
@@ -57,35 +57,24 @@ test.describe(async () => {
     let { status } = viteBuild({ cwd });
     expect(status).toBe(0);
 
-    expect(
-      Object.keys(
-        JSON.parse(
-          fs.readFileSync(path.join(cwd, "build/server/bundles.json"), "utf8")
-        ).serverBundles
-      )
-    ).toEqual(["user-options--adapter-options"]);
-
     let buildEndArgs: any = JSON.parse(
       fs.readFileSync(path.join(cwd, "BUILD_END_ARGS.json"), "utf8")
     );
+    let { remixConfig } = buildEndArgs;
 
     // Before rewriting to relative paths, assert that paths are absolute within cwd
-    expect(pathStartsWithCwd(buildEndArgs.serverBuildDirectory)).toBe(true);
-    expect(pathStartsWithCwd(buildEndArgs.assetsBuildDirectory)).toBe(true);
+    expect(pathStartsWithCwd(remixConfig.buildDirectory)).toBe(true);
 
     // Rewrite path args to be relative and normalized for snapshot test
-    buildEndArgs.serverBuildDirectory = pathRelativeToCwd(
-      buildEndArgs.serverBuildDirectory
-    );
-    buildEndArgs.assetsBuildDirectory = pathRelativeToCwd(
-      buildEndArgs.assetsBuildDirectory
-    );
+    remixConfig.buildDirectory = relativeToCwd(remixConfig.buildDirectory);
 
     expect(buildEndArgs).toEqual({
-      assetsBuildDirectory: "build/client",
-      serverBuildDirectory: "build/server",
-      serverBuildFile: "index.js",
-      unstable_serverBundlesManifest: {
+      remixConfig: {
+        buildDirectory: "build",
+        serverBuildFile: "index.js",
+        unstable_ssr: true,
+      },
+      buildManifest: {
         routeIdToServerBundleId: {
           "routes/_index": "user-options--adapter-options",
         },
@@ -109,7 +98,6 @@ test.describe(async () => {
           },
         },
       },
-      unstable_ssr: true,
     });
   });
 });
