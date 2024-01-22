@@ -2799,66 +2799,66 @@ describe("a router", () => {
         );
       });
     });
-    // describe("action", () => {
-    //   it("should allow a custom implementation to passthrough to default behavior", async () => {
-    //     let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
-    //       return Promise.all(matches.map((match) => defaultStrategy(match)));
-    //     });
-    //     let t = setup({
-    //       routes: [
-    //         {
-    //           path: "/",
-    //         },
-    //         {
-    //           id: "json",
-    //           path: "/test",
-    //           loader: true,
-    //           children: [
-    //             {
-    //               id: "text",
-    //               index: true,
-    //               loader: true,
-    //             },
-    //           ],
-    //         },
-    //       ],
-    //       dataStrategy,
-    //     });
+    describe("action", () => {
+      it("should allow a custom implementation to passthrough to default behavior", async () => {
+        let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
+          return Promise.all(matches.map((match) => defaultStrategy(match)));
+        });
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "json",
+              path: "/test",
+              loader: true,
+              children: [
+                {
+                  id: "text",
+                  index: true,
+                  loader: true,
+                },
+              ],
+            },
+          ],
+          dataStrategy,
+        });
 
-    //     let A = await t.navigate("/test");
-    //     await A.loaders.json.resolve(
-    //       new Response(JSON.stringify({ message: "hello json" }), {
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //         },
-    //       })
-    //     );
-    //     await A.loaders.text.resolve(new Response("hello text"));
+        let A = await t.navigate("/test");
+        await A.loaders.json.resolve(
+          new Response(JSON.stringify({ message: "hello json" }), {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+        );
+        await A.loaders.text.resolve(new Response("hello text"));
 
-    //     expect(t.router.state.loaderData).toEqual({
-    //       json: { message: "hello json" },
-    //       text: "hello text",
-    //     });
-    //     expect(dataStrategy).toHaveBeenCalledWith(
-    //       expect.objectContaining({
-    //         type: "loader",
-    //         request: expect.any(Request),
-    //         matches: expect.arrayContaining([
-    //           expect.objectContaining({
-    //             route: expect.objectContaining({
-    //               id: "json",
-    //             }),
-    //           }),
-    //           expect.objectContaining({
-    //             route: expect.objectContaining({
-    //               id: "text",
-    //             }),
-    //           }),
-    //         ]),
-    //       })
-    //     );
-    //   });
-    // });
+        expect(t.router.state.loaderData).toEqual({
+          json: { message: "hello json" },
+          text: "hello text",
+        });
+        expect(dataStrategy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: "loader",
+            request: expect.any(Request),
+            matches: expect.arrayContaining([
+              expect.objectContaining({
+                route: expect.objectContaining({
+                  id: "json",
+                }),
+              }),
+              expect.objectContaining({
+                route: expect.objectContaining({
+                  id: "text",
+                }),
+              }),
+            ]),
+          })
+        );
+      });
+    });
   });
 
   describe("router.dispose", () => {
