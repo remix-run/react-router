@@ -3372,7 +3372,7 @@ export function getStaticContextFromError(
 ) {
   let newContext: StaticHandlerContext = {
     ...context,
-    statusCode: 500,
+    statusCode: isRouteErrorResponse(error) ? error.status : 500,
     errors: {
       [context._deepestRenderedBoundaryId || routes[0].id]: error,
     },
