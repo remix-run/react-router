@@ -197,7 +197,6 @@ export type ResolvedVitePluginConfig = Pick<
   buildDirectory: string;
   manifest: boolean;
   serverBuildFile: string;
-  serverBundleId?: string;
   serverBundles?: ServerBundlesFunction;
   ssr: boolean;
 };
@@ -206,6 +205,18 @@ export type ServerBundleBuildConfig = {
   routes: RouteManifest;
   serverBundleId: string;
 };
+
+type BuildContext =
+  | {
+      isSsrBuild: false;
+      getBrowserManifest?: never;
+      serverBundleId?: never;
+    }
+  | {
+      isSsrBuild: true;
+      getBrowserManifest: () => Promise<BrowserManifest>;
+      serverBundleId: string | undefined;
+    };
 
 let serverBuildId = VirtualModule.id("server-build");
 let serverManifestId = VirtualModule.id("server-manifest");
@@ -405,14 +416,19 @@ const getServerBundleBuildConfig = (
   return viteUserConfig.__remixServerBundleBuildConfig as ServerBundleBuildConfig;
 };
 
-export let getServerBuildDirectory = (remixConfig: ResolvedVitePluginConfig) =>
+let getServerBuildDirectory = (
+  remixConfig: ResolvedVitePluginConfig,
+  { serverBundleId }: Pick<BuildContext, "serverBundleId">
+) =>
   path.join(
     remixConfig.buildDirectory,
     "server",
-    ...(typeof remixConfig.serverBundleId === "string"
-      ? [remixConfig.serverBundleId]
-      : [])
+    ...(typeof serverBundleId === "string" ? [serverBundleId] : [])
   );
+
+export let getServerBuildRootDirectory = (
+  remixConfig: ResolvedVitePluginConfig
+) => getServerBuildDirectory(remixConfig, { serverBundleId: undefined });
 
 let getClientBuildDirectory = (remixConfig: ResolvedVitePluginConfig) =>
   path.join(remixConfig.buildDirectory, "client");
@@ -424,9 +440,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
   let viteConfig: Vite.ResolvedConfig | undefined;
 
   let cssModulesManifest: Record<string, string> = {};
-  let ssrBuildContext:
-    | { isSsrBuild: false }
-    | { isSsrBuild: true; getBrowserManifest: () => Promise<BrowserManifest> };
+  let buildContext: BuildContext;
 
   let viteChildCompiler: Vite.ViteDevServer | null = null;
 
@@ -507,10 +521,8 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
 
     // For server bundle builds, override the relevant config. This lets us run
     // multiple server builds with each one targeting a subset of routes.
-    let serverBundleId: string | undefined = undefined;
     if (serverBundleBuildConfig) {
       routes = serverBundleBuildConfig.routes;
-      serverBundleId = serverBundleBuildConfig.serverBundleId;
     }
 
     let resolvedRemixConfig: ResolvedVitePluginConfig = {
@@ -525,13 +537,28 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       rootDirectory,
       routes,
       serverBuildFile,
-      serverBundleId,
       serverBundles,
       serverModuleFormat,
       ssr,
     };
 
     return resolvedRemixConfig;
+  };
+
+  let resolveBuildContext = (viteConfigEnv: Vite.ConfigEnv): BuildContext => {
+    let buildContext: BuildContext =
+      viteConfigEnv.isSsrBuild && viteCommand === "build"
+        ? {
+            isSsrBuild: true,
+            getBrowserManifest: createBrowserManifestForBuild,
+            serverBundleId:
+              getServerBundleBuildConfig(viteUserConfig)?.serverBundleId,
+          }
+        : {
+            isSsrBuild: false,
+          };
+
+    return buildContext;
   };
 
   let getServerEntry = async () => {
@@ -708,6 +735,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         viteCommand = viteConfigEnv.command;
 
         remixConfig = await resolvePluginConfig();
+        buildContext = resolveBuildContext(viteConfigEnv);
 
         Object.assign(
           process.env,
@@ -796,7 +824,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
                     ssrEmitAssets: true,
                     copyPublicDir: false, // Assets in the public directory are only used by the client
                     manifest: true, // We need the manifest to detect SSR-only assets
-                    outDir: getServerBuildDirectory(remixConfig),
+                    outDir: getServerBuildDirectory(remixConfig, buildContext),
                     rollupOptions: {
                       ...viteUserConfig.build?.rollupOptions,
                       preserveEntrySignatures: "exports-only",
@@ -815,16 +843,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         await initEsModuleLexer;
 
         viteConfig = resolvedViteConfig;
-
-        ssrBuildContext =
-          viteConfig.build.ssr && viteCommand === "build"
-            ? {
-                isSsrBuild: true,
-                getBrowserManifest: createBrowserManifestForBuild,
-              }
-            : {
-                isSsrBuild: false,
-              };
 
         // We load the same Vite config file again for the child compiler so
         // that both parent and child compiler's plugins have independent state.
@@ -846,7 +864,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           {
             command: viteConfig.command,
             mode: viteConfig.mode,
-            isSsrBuild: ssrBuildContext.isSsrBuild,
+            isSsrBuild: buildContext.isSsrBuild,
           },
           viteConfig.configFile
         );
@@ -1010,15 +1028,18 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         // After the SSR build is finished, we inspect the Vite manifest for
         // the SSR build and move server-only assets to client assets directory
         async handler() {
-          if (!ssrBuildContext.isSsrBuild) {
+          if (!buildContext.isSsrBuild) {
             return;
           }
 
           invariant(viteConfig);
 
           let { serverBuildFile, rootDirectory } = remixConfig;
-          let serverBuildDirectory = getServerBuildDirectory(remixConfig);
           let clientBuildDirectory = getClientBuildDirectory(remixConfig);
+          let serverBuildDirectory = getServerBuildDirectory(
+            remixConfig,
+            buildContext
+          );
 
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let clientViteManifest = await loadViteManifest(clientBuildDirectory);
@@ -1105,8 +1126,8 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             return await getServerEntry();
           }
           case VirtualModule.resolve(serverManifestId): {
-            let browserManifest = ssrBuildContext.isSsrBuild
-              ? await ssrBuildContext.getBrowserManifest()
+            let browserManifest = buildContext.isSsrBuild
+              ? await buildContext.getBrowserManifest()
               : await getBrowserManifestForDev();
 
             return `export default ${jsesc(browserManifest, { es6: true })};`;
