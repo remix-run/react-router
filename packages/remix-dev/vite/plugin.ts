@@ -405,11 +405,6 @@ const getServerBundleBuildConfig = (
   return viteUserConfig.__remixServerBundleBuildConfig as ServerBundleBuildConfig;
 };
 
-const getViteMajorVersion = (): number => {
-  let vitePkg = require("vite/package.json");
-  return parseInt(vitePkg.version.split(".")[0]!);
-};
-
 export let getServerBuildDirectory = (remixConfig: ResolvedVitePluginConfig) =>
   path.join(
     remixConfig.buildDirectory,
@@ -427,8 +422,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
   let viteCommand: Vite.ResolvedConfig["command"];
   let viteUserConfig: Vite.UserConfig;
   let viteConfig: Vite.ResolvedConfig | undefined;
-
-  let isViteV4 = getViteMajorVersion() === 4;
 
   let cssModulesManifest: Record<string, string> = {};
   let ssrBuildContext:
@@ -586,11 +579,8 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
   };
 
   let loadViteManifest = async (directory: string) => {
-    let manifestPath = isViteV4
-      ? "manifest.json"
-      : path.join(".vite", "manifest.json");
     let manifestContents = await fse.readFile(
-      path.resolve(directory, manifestPath),
+      path.resolve(directory, ".vite", "manifest.json"),
       "utf-8"
     );
     return JSON.parse(manifestContents) as Vite.Manifest;
@@ -731,12 +721,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           )
         );
 
-        let isSsrBuild =
-          "ssrBuild" in viteConfigEnv &&
-          typeof viteConfigEnv.ssrBuild === "boolean"
-            ? viteConfigEnv.ssrBuild // Vite v4 back compat
-            : viteConfigEnv.isSsrBuild;
-
         return {
           __remixPluginResolvedConfig: remixConfig,
           appType: "custom",
@@ -784,7 +768,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             base: remixConfig.publicPath,
             build: {
               ...viteUserConfig.build,
-              ...(!isSsrBuild
+              ...(!viteConfigEnv.isSsrBuild
                 ? {
                     manifest: true,
                     outDir: getClientBuildDirectory(remixConfig),
@@ -862,9 +846,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           {
             command: viteConfig.command,
             mode: viteConfig.mode,
-            ...(isViteV4
-              ? { ssrBuild: ssrBuildContext.isSsrBuild }
-              : { isSsrBuild: ssrBuildContext.isSsrBuild }),
+            isSsrBuild: ssrBuildContext.isSsrBuild,
           },
           viteConfig.configFile
         );
