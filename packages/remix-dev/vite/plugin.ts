@@ -1468,7 +1468,8 @@ function addRefreshWrapper(
   code: string,
   id: string
 ): string {
-  let isRoute = getRoute(pluginConfig, id);
+  let isRoute =
+    id.endsWith(CLIENT_ROUTE_QUERY_STRING) || getRoute(pluginConfig, id);
   let acceptExports = isRoute
     ? [
         "clientAction",
