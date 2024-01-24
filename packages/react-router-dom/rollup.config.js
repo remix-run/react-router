@@ -10,6 +10,7 @@ const {
   babelPluginReplaceVersionPlaceholder,
   createBanner,
   getBuildDirectories,
+  validateReplacedVersion,
   PRETTY,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
@@ -40,7 +41,7 @@ module.exports = function rollup() {
           ],
           plugins: [
             "babel-plugin-dev-expression",
-            babelPluginReplaceVersionPlaceholder(version),
+            babelPluginReplaceVersionPlaceholder(),
           ],
           extensions: [".ts", ".tsx"],
         }),
@@ -55,6 +56,7 @@ module.exports = function rollup() {
           ],
           verbose: true,
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];
@@ -84,7 +86,7 @@ module.exports = function rollup() {
           ],
           plugins: [
             "babel-plugin-dev-expression",
-            babelPluginReplaceVersionPlaceholder(version),
+            babelPluginReplaceVersionPlaceholder(),
           ],
           extensions: [".ts", ".tsx"],
         }),
@@ -92,6 +94,7 @@ module.exports = function rollup() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
@@ -127,7 +130,7 @@ module.exports = function rollup() {
           ],
           plugins: [
             "babel-plugin-dev-expression",
-            babelPluginReplaceVersionPlaceholder(version),
+            babelPluginReplaceVersionPlaceholder(),
           ],
           extensions: [".ts", ".tsx"],
         }),
@@ -135,7 +138,7 @@ module.exports = function rollup() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
+        validateReplacedVersion(),
         terser({ ecma: 8, safari10: true }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -170,7 +173,7 @@ module.exports = function rollup() {
           ],
           plugins: [
             "babel-plugin-dev-expression",
-            babelPluginReplaceVersionPlaceholder(version),
+            babelPluginReplaceVersionPlaceholder(),
           ],
           extensions: [".ts", ".tsx"],
         }),
@@ -178,6 +181,7 @@ module.exports = function rollup() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
@@ -207,7 +211,7 @@ module.exports = function rollup() {
           ],
           plugins: [
             "babel-plugin-dev-expression",
-            babelPluginReplaceVersionPlaceholder(version),
+            babelPluginReplaceVersionPlaceholder(),
           ],
           extensions: [".ts", ".tsx"],
         }),
@@ -215,8 +219,8 @@ module.exports = function rollup() {
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser(),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];
@@ -265,7 +269,7 @@ module.exports = function rollup() {
           ],
           plugins: [
             "babel-plugin-dev-expression",
-            babelPluginReplaceVersionPlaceholder(version),
+            babelPluginReplaceVersionPlaceholder(),
           ],
           extensions: [".ts", ".tsx"],
         }),
@@ -275,7 +279,7 @@ module.exports = function rollup() {
           exclude: ["__tests__"],
           noEmitOnError: true,
         }),
-        // compiler()
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
@@ -317,11 +321,11 @@ module.exports = function rollup() {
           ],
           plugins: [
             "babel-plugin-dev-expression",
-            babelPluginReplaceVersionPlaceholder(version),
+            babelPluginReplaceVersionPlaceholder(),
           ],
           extensions: [".ts", ".tsx"],
         }),
-        // compiler()
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];

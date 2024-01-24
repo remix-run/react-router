@@ -1,5 +1,6 @@
 const path = require("path");
 const fse = require("fs-extra");
+const { version } = require("./packages/react-router/package.json");
 
 const PRETTY = !!process.env.PRETTY;
 
@@ -65,7 +66,7 @@ function createBanner(packageName, version) {
 // Babel plugin to replace `const REACT_ROUTER_VERSION = "0.0.0";` with the
 // current version at build time, so we can set it on `window.__reactRouterVersion`
 // for consumption by the Core Web Vitals Technology Report
-function babelPluginReplaceVersionPlaceholder(version) {
+function babelPluginReplaceVersionPlaceholder() {
   return function (babel) {
     var t = babel.types;
 
@@ -105,9 +106,40 @@ function babelPluginReplaceVersionPlaceholder(version) {
   };
 }
 
+// Post-build plugin to validate that the version placeholder was replaced
+function validateReplacedVersion() {
+  return {
+    name: "validate-replaced-version",
+    writeBundle(_, bundle) {
+      Object.entries(bundle).forEach(([filename, contents]) => {
+        if (!filename.endsWith(".js") || filename === "server.js") {
+          return;
+        }
+
+        let requiredStrs = filename.endsWith(".min.js")
+          ? [`{window.__reactRouterVersion="${version}"}`]
+          : [
+              `const REACT_ROUTER_VERSION = "${version}";`,
+              `window.__reactRouterVersion = REACT_ROUTER_VERSION;`,
+            ];
+
+        requiredStrs.forEach((str) => {
+          if (!contents.code.includes(str)) {
+            throw new Error(
+              `Expected ${filename} to include \`${str}\` but it did not`
+            );
+          }
+        });
+      });
+    },
+  };
+}
+
+// rollup.config.js
 module.exports = {
   getBuildDirectories,
   createBanner,
   babelPluginReplaceVersionPlaceholder,
+  validateReplacedVersion,
   PRETTY,
 };
