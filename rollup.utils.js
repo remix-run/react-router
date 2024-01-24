@@ -1,6 +1,7 @@
 const path = require("path");
 const fse = require("fs-extra");
 const { version } = require("./packages/react-router/package.json");
+const majorVersion = version.split(".").shift();
 
 const PRETTY = !!process.env.PRETTY;
 
@@ -72,7 +73,7 @@ function babelPluginReplaceVersionPlaceholder() {
 
     const KIND = "const";
     const NAME = "REACT_ROUTER_VERSION";
-    const PLACEHOLDER = "0.0.0";
+    const PLACEHOLDER = "0";
 
     return {
       visitor: {
@@ -94,7 +95,7 @@ function babelPluginReplaceVersionPlaceholder() {
                 t.variableDeclaration(KIND, [
                   t.variableDeclarator(
                     t.identifier(NAME),
-                    t.stringLiteral(version)
+                    t.stringLiteral(majorVersion)
                   ),
                 ])
               );
@@ -117,9 +118,9 @@ function validateReplacedVersion() {
         }
 
         let requiredStrs = filename.endsWith(".min.js")
-          ? [`{window.__reactRouterVersion="${version}"}`]
+          ? [`{window.__reactRouterVersion="${majorVersion}"}`]
           : [
-              `const REACT_ROUTER_VERSION = "${version}";`,
+              `const REACT_ROUTER_VERSION = "${majorVersion}";`,
               `window.__reactRouterVersion = REACT_ROUTER_VERSION;`,
             ];
 

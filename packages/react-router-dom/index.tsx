@@ -233,7 +233,7 @@ declare global {
 // Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
 // to detect and properly classify live websites as being built with React Router:
 // https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
-const REACT_ROUTER_VERSION = "0.0.0";
+const REACT_ROUTER_VERSION = "0";
 try {
   window.__reactRouterVersion = REACT_ROUTER_VERSION;
 } catch (e) {
