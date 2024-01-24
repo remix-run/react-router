@@ -62,8 +62,52 @@ function createBanner(packageName, version) {
  */`;
 }
 
+// Babel plugin to replace `const REACT_ROUTER_VERSION = "0.0.0";` with the
+// current version at build time, so we can set it on `window.__reactRouterVersion`
+// for consumption by the Core Web Vitals Technology Report
+function babelPluginReplaceVersionPlaceholder(version) {
+  return function (babel) {
+    var t = babel.types;
+
+    const KIND = "const";
+    const NAME = "REACT_ROUTER_VERSION";
+    const PLACEHOLDER = "0.0.0";
+
+    return {
+      visitor: {
+        VariableDeclaration: {
+          enter: function (path) {
+            // Only operate on top-level variables
+            if (!path.parentPath.isProgram()) {
+              return;
+            }
+
+            let { kind, declarations } = path.node;
+            if (
+              kind === KIND &&
+              declarations.length === 1 &&
+              declarations[0].id.name === NAME &&
+              declarations[0].init?.value === PLACEHOLDER
+            ) {
+              path.replaceWith(
+                t.variableDeclaration(KIND, [
+                  t.variableDeclarator(
+                    t.identifier(NAME),
+                    t.stringLiteral(version)
+                  ),
+                ])
+              );
+            }
+          },
+        },
+      },
+    };
+  };
+}
+
 module.exports = {
   getBuildDirectories,
   createBanner,
+  babelPluginReplaceVersionPlaceholder,
   PRETTY,
 };

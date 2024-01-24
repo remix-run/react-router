@@ -7,6 +7,7 @@ const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
 const typescript = require("@rollup/plugin-typescript");
 const {
+  babelPluginReplaceVersionPlaceholder,
   createBanner,
   getBuildDirectories,
   PRETTY,
@@ -37,7 +38,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(version),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         typescript({
@@ -78,7 +82,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(version),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
@@ -118,7 +125,10 @@ module.exports = function rollup() {
             ],
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(version),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
@@ -158,7 +168,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(version),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
@@ -192,7 +205,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(version),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
@@ -247,7 +263,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(version),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         typescript({
@@ -296,7 +315,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(version),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         // compiler()
