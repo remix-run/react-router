@@ -155,6 +155,11 @@ async function getServerBuilds(ctx: RemixPluginContext): Promise<{
       if (typeof serverBundleId !== "string") {
         throw new Error(`The "serverBundles" function must return a string`);
       }
+      if (!/^[a-zA-Z0-9-_]+$/.test(serverBundleId)) {
+        throw new Error(
+          `The "serverBundles" function must only return strings containing alphanumeric characters, hyphens and underscores.`
+        );
+      }
       buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
 
       let relativeServerBundleDirectory = path.relative(
