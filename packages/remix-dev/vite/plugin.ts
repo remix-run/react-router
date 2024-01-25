@@ -175,10 +175,7 @@ export type VitePluginConfig = RemixEsbuildUserConfigJsdocOverrides &
   };
 
 type BuildEndHook = (args: {
-  remixConfig: Pick<
-    ResolvedVitePluginConfig,
-    "buildDirectory" | "serverBuildFile"
-  > & { unstable_ssr: boolean };
+  remixConfig: ResolvedVitePluginConfig;
   buildManifest: BuildManifest | undefined;
 }) => void | Promise<void>;
 
@@ -191,7 +188,7 @@ export type ResolvedVitePluginConfig = Pick<
   manifest: boolean;
   serverBuildFile: string;
   serverBundles?: ServerBundlesFunction;
-  ssr: boolean;
+  unstable_ssr: boolean;
 };
 
 export type ServerBundleBuildConfig = {
@@ -473,9 +470,8 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     let rootDirectory =
       viteUserConfig.root ?? process.env.REMIX_ROOT ?? process.cwd();
 
-    let { manifest, unstable_ssr: ssr } = resolvedRemixUserConfig;
-
-    let isSpaMode = !ssr;
+    let { manifest, unstable_ssr } = resolvedRemixUserConfig;
+    let isSpaMode = !unstable_ssr;
 
     // Only select the Remix esbuild config options that the Vite plugin uses
     let {
@@ -531,7 +527,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       serverBuildFile,
       serverBundles,
       serverModuleFormat,
-      ssr,
+      unstable_ssr,
     };
 
     let serverContext: RemixPluginServerContext =
@@ -579,7 +575,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         )
       )};
       export const future = ${JSON.stringify(ctx.remixConfig.future)};
-      export const isSpaMode = ${!ctx.remixConfig.ssr};
+      export const isSpaMode = ${!ctx.remixConfig.unstable_ssr};
       export const publicPath = ${JSON.stringify(ctx.remixConfig.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
@@ -1093,7 +1089,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             );
           }
 
-          if (!ctx.remixConfig.ssr) {
+          if (!ctx.remixConfig.unstable_ssr) {
             await handleSpaMode(
               serverBuildDirectory,
               ctx.remixConfig.serverBuildFile,
@@ -1234,7 +1230,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         let route = getRoute(ctx.remixConfig, id);
         if (!route) return;
 
-        if (!ctx.remixConfig.ssr) {
+        if (!ctx.remixConfig.unstable_ssr) {
           let serverOnlyExports = esModuleLexer(code)[1]
             .map((exp) => exp.n)
             .filter((exp) => SERVER_ONLY_ROUTE_EXPORTS.includes(exp));

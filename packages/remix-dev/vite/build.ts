@@ -289,14 +289,8 @@ export async function build(
     );
   }
 
-  let { buildDirectory, serverBuildFile, ssr } = remixConfig;
-
   await remixConfig.adapter?.buildEnd?.({
     buildManifest,
-    remixConfig: {
-      buildDirectory,
-      serverBuildFile,
-      unstable_ssr: ssr,
-    },
+    remixConfig,
   });
 }

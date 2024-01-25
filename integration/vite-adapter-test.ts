@@ -38,7 +38,18 @@ test.describe(async () => {
               },
               async buildEnd(args) {
                 let fs = await import("node:fs/promises");
-                await fs.writeFile("BUILD_END_ARGS.json", JSON.stringify(args, null, 2), "utf-8");
+                await fs.writeFile(
+                  "BUILD_END_ARGS.json",
+                  JSON.stringify(
+                    args,
+                    function replacer(key, value) {
+                      return typeof value === "function"
+                        ? value.toString()
+                        : value;
+                    },
+                    2,
+                  ),
+                  "utf-8");
               }
             }),
             
@@ -68,34 +79,45 @@ test.describe(async () => {
     // Rewrite path args to be relative and normalized for snapshot test
     remixConfig.buildDirectory = relativeToCwd(remixConfig.buildDirectory);
 
-    expect(buildEndArgs).toEqual({
-      remixConfig: {
-        buildDirectory: "build",
-        serverBuildFile: "index.js",
-        unstable_ssr: true,
+    expect(Object.keys(buildEndArgs)).toEqual(["buildManifest", "remixConfig"]);
+
+    // Smoke test the resolved config
+    expect(Object.keys(buildEndArgs.remixConfig)).toEqual([
+      "adapter",
+      "appDirectory",
+      "buildDirectory",
+      "future",
+      "manifest",
+      "publicPath",
+      "routes",
+      "serverBuildFile",
+      "serverBundles",
+      "serverModuleFormat",
+      "unstable_ssr",
+    ]);
+
+    // Ensure we get a valid build manifest
+    expect(buildEndArgs.buildManifest).toEqual({
+      routeIdToServerBundleId: {
+        "routes/_index": "user-options--adapter-options",
       },
-      buildManifest: {
-        routeIdToServerBundleId: {
-          "routes/_index": "user-options--adapter-options",
+      routes: {
+        root: {
+          file: "app/root.tsx",
+          id: "root",
+          path: "",
         },
-        routes: {
-          root: {
-            file: "app/root.tsx",
-            id: "root",
-            path: "",
-          },
-          "routes/_index": {
-            file: "app/routes/_index.tsx",
-            id: "routes/_index",
-            index: true,
-            parentId: "root",
-          },
+        "routes/_index": {
+          file: "app/routes/_index.tsx",
+          id: "routes/_index",
+          index: true,
+          parentId: "root",
         },
-        serverBundles: {
-          "user-options--adapter-options": {
-            file: "build/server/user-options--adapter-options/index.js",
-            id: "user-options--adapter-options",
-          },
+      },
+      serverBundles: {
+        "user-options--adapter-options": {
+          file: "build/server/user-options--adapter-options/index.js",
+          id: "user-options--adapter-options",
         },
       },
     });
