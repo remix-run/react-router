@@ -83,10 +83,10 @@ const handler = createStaticHandler(routes, {
 });
 ```
 
-| Flag                                        | Description                                                         |
-| ------------------------------------------- | ------------------------------------------------------------------- |
-| [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                  |
-| [`v7_throwAbortReason`][abortreason]        | Throw `request.signal.reason` if a query/queryRoute call is aborted |
+| Flag                                        | Description                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------------- |
+| [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                      |
+| [`v7_throwAbortReason`][abortreason]        | Throw `request.signal.reason` if a `query`/`queryRoute` call is aborted |
 
 ### React Router Future Flags
 
