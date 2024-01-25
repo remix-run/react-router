@@ -112,7 +112,7 @@ export type ServerBundlesBuildManifest = BaseBuildManifest & {
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
 const adapterRemixConfigOverrideKeys = [
-  "unstable_serverBundles",
+  "serverBundles",
 ] as const satisfies ReadonlyArray<keyof VitePluginConfig>;
 
 type AdapterRemixConfigOverrideKey =
@@ -164,7 +164,7 @@ export type VitePluginConfig = RemixEsbuildUserConfigJsdocOverrides &
      * function should return a server bundle ID which will be used as the
      * bundle's directory name within the server build directory.
      */
-    unstable_serverBundles?: ServerBundlesFunction;
+    serverBundles?: ServerBundlesFunction;
     /**
      * Enable server-side rendering for your application. Disable to use Remix in
      * "SPA Mode", which will request the `/` path at build-time and save it as
@@ -492,15 +492,14 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       resolvedRemixUserConfig.buildDirectory
     );
 
-    let { serverBuildFile, unstable_serverBundles: serverBundles } =
-      resolvedRemixUserConfig;
+    let { serverBuildFile, serverBundles } = resolvedRemixUserConfig;
 
     // Log warning for incompatible vite config flags
     if (isSpaMode && serverBundles) {
       console.warn(
         colors.yellow(
           colors.bold("⚠️  SPA Mode: ") +
-            "the `unstable_serverBundles` config is invalid with " +
+            "the `serverBundles` config is invalid with " +
             "`unstable_ssr:false` and will be ignored`"
         )
       );

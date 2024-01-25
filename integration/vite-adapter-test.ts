@@ -32,9 +32,9 @@ test.describe(async () => {
         pluginOptions: `
           {
             adapter: async ({ remixConfig }) => ({
-              unstable_serverBundles(...args) {
+              serverBundles(...args) {
                 // This lets us assert that user options are passed to adapter options hook
-                return remixConfig.unstable_serverBundles?.(...args) + "--adapter-options";
+                return remixConfig.serverBundles?.(...args) + "--adapter-options";
               },
               async buildEnd(args) {
                 let fs = await import("node:fs/promises");
@@ -53,7 +53,7 @@ test.describe(async () => {
               }
             }),
             
-            unstable_serverBundles() {
+            serverBundles() {
               return "user-options";
             }
           },
@@ -64,7 +64,7 @@ test.describe(async () => {
   });
   test.afterAll(() => stop());
 
-  test("Vite / adapter / unstable_serverBundles and buildEnd hooks", async () => {
+  test("Vite / adapter / serverBundles and buildEnd hooks", async () => {
     let { status } = viteBuild({ cwd });
     expect(status).toBe(0);
 

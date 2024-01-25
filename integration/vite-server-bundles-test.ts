@@ -122,7 +122,7 @@ test.describe(() => {
         port: devPort,
         pluginOptions: `{
           manifest: true,
-          unstable_serverBundles: async ({ branch }) => {
+          serverBundles: async ({ branch }) => {
             // Smoke test to ensure we can read the route files via 'route.file'
             await Promise.all(branch.map(async (route) => {
               const fs = await import("node:fs/promises");

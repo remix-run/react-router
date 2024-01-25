@@ -153,9 +153,7 @@ async function getServerBuilds(ctx: RemixPluginContext): Promise<{
         ),
       });
       if (typeof serverBundleId !== "string") {
-        throw new Error(
-          `The "unstable_serverBundles" function must return a string`
-        );
+        throw new Error(`The "serverBundles" function must return a string`);
       }
       buildManifest.routeIdToServerBundleId[route.id] = serverBundleId;
 
