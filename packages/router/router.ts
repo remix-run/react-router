@@ -3381,14 +3381,12 @@ function throwStaticHandlerAbortedError(
   isRouteRequest: boolean,
   future: StaticHandlerFutureConfig
 ) {
-  let method = isRouteRequest ? "queryRoute" : "query";
   if (future.v7_throwAbortReason && request.signal.reason !== undefined) {
     throw request.signal.reason;
-  } else {
-    throw new Error(
-      `${method}() call aborted: ${request.method} ${request.url}`
-    );
   }
+
+  let method = isRouteRequest ? "queryRoute" : "query";
+  throw new Error(`${method}() call aborted: ${request.method} ${request.url}`);
 }
 
 function isSubmissionNavigation(
