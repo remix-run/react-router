@@ -1455,29 +1455,28 @@ function isEqualJson(v1: unknown, v2: unknown) {
 }
 
 function addRefreshWrapper(
-  pluginConfig: ResolvedVitePluginConfig,
+  remixConfig: ResolvedVitePluginConfig,
   code: string,
   id: string
 ): string {
-  let isRoute =
-    id.endsWith(CLIENT_ROUTE_QUERY_STRING) || getRoute(pluginConfig, id);
-  let acceptExports = isRoute
-    ? [
-        "clientAction",
-        "clientLoader",
-        "handle",
-        "meta",
-        "links",
-        "shouldRevalidate",
-      ]
-    : [];
+  let route = getRoute(remixConfig, id);
+  let acceptExports =
+    route || id.endsWith(CLIENT_ROUTE_QUERY_STRING)
+      ? [
+          "clientAction",
+          "clientLoader",
+          "handle",
+          "meta",
+          "links",
+          "shouldRevalidate",
+        ]
+      : [];
   return (
-    REACT_REFRESH_HEADER.replace("__SOURCE__", JSON.stringify(id)) +
+    REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
     code +
-    REACT_REFRESH_FOOTER.replace("__SOURCE__", JSON.stringify(id)).replace(
-      "__ACCEPT_EXPORTS__",
-      JSON.stringify(acceptExports)
-    )
+    REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
+      .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
+      .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
   );
 }
 
@@ -1511,6 +1510,7 @@ if (import.meta.hot && !inWebWorker && window.__remixLiveReloadEnabled) {
     RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
     import.meta.hot.accept((nextExports) => {
       if (!nextExports) return;
+      __ROUTE_ID__ && window.__remixRouteModuleUpdates.set(__ROUTE_ID__, nextExports);
       const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate(currentExports, nextExports, __ACCEPT_EXPORTS__);
       if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
     });
