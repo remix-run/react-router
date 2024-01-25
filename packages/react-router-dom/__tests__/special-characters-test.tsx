@@ -26,6 +26,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
+import getHtml from "../../react-router/__tests__/utils/getHtml";
 
 /**
  * Here's all the special characters we want to test against.  This list was
@@ -52,6 +53,7 @@ import {
  * }
  */
 
+// prettier-ignore
 let specialChars = [
   // This set of characters never gets encoded by window.location
   { char: "x", pathChar: "x", searchChar: "x", hashChar: "x", decodedChar: "x" },
@@ -90,83 +92,17 @@ let specialChars = [
   { char: ">", pathChar: "%3E", searchChar: "%3E", hashChar: "%3E", decodedChar: ">" },
 
   // These chars get encoded in all portions of the URL
-  {
-    char: "🤯",
-    pathChar: "%F0%9F%A4%AF",
-    searchChar: "%F0%9F%A4%AF",
-    hashChar: "%F0%9F%A4%AF",
-    decodedChar: "🤯",
-  },
-  {
-    char: "✅",
-    pathChar: "%E2%9C%85",
-    searchChar: "%E2%9C%85",
-    hashChar: "%E2%9C%85",
-    decodedChar: "✅",
-  },
-  {
-    char: "🔥",
-    pathChar: "%F0%9F%94%A5",
-    searchChar: "%F0%9F%94%A5",
-    hashChar: "%F0%9F%94%A5",
-    decodedChar: "🔥",
-  },
-  {
-    char: "ä",
-    pathChar: "%C3%A4",
-    searchChar: "%C3%A4",
-    hashChar: "%C3%A4",
-    decodedChar: "ä",
-  },
-  {
-    char: "Ä",
-    pathChar: "%C3%84",
-    searchChar: "%C3%84",
-    hashChar: "%C3%84",
-    decodedChar: "Ä",
-  },
-  {
-    char: "ø",
-    pathChar: "%C3%B8",
-    searchChar: "%C3%B8",
-    hashChar: "%C3%B8",
-    decodedChar: "ø",
-  },
-  {
-    char: "山",
-    pathChar: "%E5%B1%B1",
-    searchChar: "%E5%B1%B1",
-    hashChar: "%E5%B1%B1",
-    decodedChar: "山",
-  },
-  {
-    char: "人",
-    pathChar: "%E4%BA%BA",
-    searchChar: "%E4%BA%BA",
-    hashChar: "%E4%BA%BA",
-    decodedChar: "人",
-  },
-  {
-    char: "口",
-    pathChar: "%E5%8F%A3",
-    searchChar: "%E5%8F%A3",
-    hashChar: "%E5%8F%A3",
-    decodedChar: "口",
-  },
-  {
-    char: "刀",
-    pathChar: "%E5%88%80",
-    searchChar: "%E5%88%80",
-    hashChar: "%E5%88%80",
-    decodedChar: "刀",
-  },
-  {
-    char: "木",
-    pathChar: "%E6%9C%A8",
-    searchChar: "%E6%9C%A8",
-    hashChar: "%E6%9C%A8",
-    decodedChar: "木",
-  },
+  { char: "🤯", pathChar: "%F0%9F%A4%AF", searchChar: "%F0%9F%A4%AF", hashChar: "%F0%9F%A4%AF", decodedChar: "🤯" },
+  { char: "✅", pathChar: "%E2%9C%85", searchChar: "%E2%9C%85", hashChar: "%E2%9C%85", decodedChar: "✅" },
+  { char: "🔥", pathChar: "%F0%9F%94%A5", searchChar: "%F0%9F%94%A5", hashChar: "%F0%9F%94%A5", decodedChar: "🔥" },
+  { char: "ä", pathChar: "%C3%A4", searchChar: "%C3%A4", hashChar: "%C3%A4", decodedChar: "ä" },
+  { char: "Ä", pathChar: "%C3%84", searchChar: "%C3%84", hashChar: "%C3%84", decodedChar: "Ä" },
+  { char: "ø", pathChar: "%C3%B8", searchChar: "%C3%B8", hashChar: "%C3%B8", decodedChar: "ø" },
+  { char: "山", pathChar: "%E5%B1%B1", searchChar: "%E5%B1%B1", hashChar: "%E5%B1%B1", decodedChar: "山" },
+  { char: "人", pathChar: "%E4%BA%BA", searchChar: "%E4%BA%BA", hashChar: "%E4%BA%BA", decodedChar: "人" },
+  { char: "口", pathChar: "%E5%8F%A3", searchChar: "%E5%8F%A3", hashChar: "%E5%8F%A3", decodedChar: "口" },
+  { char: "刀", pathChar: "%E5%88%80", searchChar: "%E5%88%80", hashChar: "%E5%88%80", decodedChar: "刀" },
+  { char: "木", pathChar: "%E6%9C%A8", searchChar: "%E6%9C%A8", hashChar: "%E6%9C%A8", decodedChar: "木" },
 
   // Add a few multi-char space use cases for good measure
   { char: "a b", pathChar: "a%20b", searchChar: "a%20b", hashChar: "a%20b", decodedChar: "a b" },
@@ -177,27 +113,9 @@ let specialChars = [
   // we provide a `decodedChar` so we can assert the param value gets decoded
   // properly and so we can ensure we can match these decoded values in static
   // paths
-  {
-    char: "a%25b",
-    pathChar: "a%25b",
-    searchChar: "a%25b",
-    hashChar: "a%25b",
-    decodedChar: "a%b",
-  },
-  {
-    char: "a%23b%25c",
-    pathChar: "a%23b%25c",
-    searchChar: "a%23b%25c",
-    hashChar: "a%23b%25c",
-    decodedChar: "a#b%c",
-  },
-  {
-    char: "a%26b%25c",
-    pathChar: "a%26b%25c",
-    searchChar: "a%26b%25c",
-    hashChar: "a%26b%25c",
-    decodedChar: "a&b%c",
-  },
+  { char: "a%25b", pathChar: "a%25b", searchChar: "a%25b", hashChar: "a%25b", decodedChar: "a%b" },
+  { char: "a%23b%25c", pathChar: "a%23b%25c", searchChar: "a%23b%25c", hashChar: "a%23b%25c", decodedChar: "a#b%c" },
+  { char: "a%26b%25c", pathChar: "a%26b%25c", searchChar: "a%26b%25c", hashChar: "a%26b%25c", decodedChar: "a&b%c" },
 ];
 
 describe("special character tests", () => {
@@ -607,6 +525,79 @@ describe("special character tests", () => {
           search: "",
           hash: `#hash-${hashChar}`,
         });
+      }
+    });
+
+    it("does not trim trailing spaces on ancestor splat route segments", async () => {
+      let ctx = render(
+        <BrowserRouter window={getWindow("/parent/child/%20%20param%20%20")}>
+          <App />
+        </BrowserRouter>
+      );
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href="/parent/child/%20%20param%20%20/grandchild"
+          >
+            Link to grandchild
+          </a>
+        </div>"
+      `);
+
+      await fireEvent.click(screen.getByText("Link to grandchild"));
+      await waitFor(() => screen.getByText("Grandchild"));
+
+      expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
+        "<div>
+          <a
+            href="/parent/child/%20%20param%20%20/grandchild"
+          >
+            Link to grandchild
+          </a>
+          <h1>
+            Grandchild
+          </h1>
+          <pre>
+            {"*":"grandchild","param":"  param  "}
+          </pre>
+        </div>"
+      `);
+
+      function App() {
+        return (
+          <Routes>
+            <Route path="/parent/*" element={<Parent />} />
+          </Routes>
+        );
+      }
+
+      function Parent() {
+        return (
+          <Routes>
+            <Route path="child/:param/*" element={<Child />} />
+          </Routes>
+        );
+      }
+
+      function Child() {
+        return (
+          <>
+            <Link to="./grandchild">Link to grandchild</Link>
+            <Routes>
+              <Route path="grandchild" element={<Grandchild />} />
+            </Routes>
+          </>
+        );
+      }
+
+      function Grandchild() {
+        return (
+          <>
+            <h1>Grandchild</h1>
+            <pre>{JSON.stringify(useParams())}</pre>
+          </>
+        );
       }
     });
   });
