@@ -98,8 +98,8 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
-  unstable_Blocker,
-  unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
   ErrorResponse,
@@ -396,6 +396,8 @@ const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
 const FLUSH_SYNC = "flushSync";
 const flushSyncImpl = ReactDOM[FLUSH_SYNC];
+const USE_ID = "useId";
+const useIdImpl = React[USE_ID];
 
 function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
@@ -634,7 +636,8 @@ export function RouterProvider({
   React.useEffect(() => {
     warning(
       fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+      "`<RouterProvider fallbackElement>` is deprecated when using " +
+        "`v7_partialHydration`, use a `HydrateFallback` component instead"
     );
     // Only log this once on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -667,9 +670,6 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
-      future: {
-        v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-      },
     }),
     [router, navigator, basename]
   );
@@ -691,8 +691,11 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
+                future={{
+                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+                }}
               >
-                {state.initialized ? (
+                {state.initialized || router.future.v7_partialHydration ? (
                   <DataRoutes
                     routes={router.routes}
                     future={router.future}
@@ -1025,7 +1028,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
-    let { navigator } = React.useContext(NavigationContext);
+    let { navigator, basename } = React.useContext(NavigationContext);
     let isTransitioning =
       routerState != null &&
       // Conditional usage is OK here because the usage of a data router is static
@@ -1048,6 +1051,11 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ? nextLocationPathname.toLowerCase()
         : null;
       toPathname = toPathname.toLowerCase();
+    }
+
+    if (nextLocationPathname && basename) {
+      nextLocationPathname =
+        stripBasename(nextLocationPathname, basename) || nextLocationPathname;
     }
 
     // If the `to` has a trailing slash, look at that exact spot.  Otherwise,
@@ -1633,10 +1641,14 @@ export function useFetcher<TData = any>({
   );
 
   // Fetcher key handling
-  let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
+  // OK to call conditionally to feature detect `useId`
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  let defaultKey = useIdImpl ? useIdImpl() : "";
+  let [fetcherKey, setFetcherKey] = React.useState<string>(key || defaultKey);
   if (key && key !== fetcherKey) {
     setFetcherKey(key);
   } else if (!fetcherKey) {
+    // We will only fall through here when `useId` is not available
     setFetcherKey(getUniqueFetcherId());
   }
 

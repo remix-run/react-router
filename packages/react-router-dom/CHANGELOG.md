@@ -1,10 +1,177 @@
 # `react-router-dom`
 
+## 6.21.3
+
+### Patch Changes
+
+- Fix `NavLink` `isPending` when a `basename` is used ([#11195](https://github.com/remix-run/react-router/pull/11195))
+- Remove leftover `unstable_` prefix from `Blocker`/`BlockerFunction` types ([#11187](https://github.com/remix-run/react-router/pull/11187))
+- Updated dependencies:
+  - `react-router@6.21.3`
+
+## 6.21.2
+
+### Patch Changes
+
+- Leverage `useId` for internal fetcher keys when available ([#11166](https://github.com/remix-run/react-router/pull/11166))
+- Updated dependencies:
+  - `@remix-run/router@1.14.2`
+  - `react-router@6.21.2`
+
+## 6.21.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@6.21.1`
+  - `@remix-run/router@1.14.1`
+
+## 6.21.0
+
+### Minor Changes
+
+- Add a new `future.v7_relativeSplatPath` flag to implement a breaking bug fix to relative routing when inside a splat route. ([#11087](https://github.com/remix-run/react-router/pull/11087))
+
+  This fix was originally added in [#10983](https://github.com/remix-run/react-router/issues/10983) and was later reverted in [#11078](https://github.com/remix-run/react-router/pull/11078) because it was determined that a large number of existing applications were relying on the buggy behavior (see [#11052](https://github.com/remix-run/react-router/issues/11052))
+
+  **The Bug**
+  The buggy behavior is that without this flag, the default behavior when resolving relative paths is to _ignore_ any splat (`*`) portion of the current route path.
+
+  **The Background**
+  This decision was originally made thinking that it would make the concept of nested different sections of your apps in `<Routes>` easier if relative routing would _replace_ the current splat:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="dashboard/*" element={<Dashboard />} />
+    </Routes>
+  </BrowserRouter>
+  ```
+
+  Any paths like `/dashboard`, `/dashboard/team`, `/dashboard/projects` will match the `Dashboard` route. The dashboard component itself can then render nested `<Routes>`:
+
+  ```jsx
+  function Dashboard() {
+    return (
+      <div>
+        <h2>Dashboard</h2>
+        <nav>
+          <Link to="/">Dashboard Home</Link>
+          <Link to="team">Team</Link>
+          <Link to="projects">Projects</Link>
+        </nav>
+
+        <Routes>
+          <Route path="/" element={<DashboardHome />} />
+          <Route path="team" element={<DashboardTeam />} />
+          <Route path="projects" element={<DashboardProjects />} />
+        </Routes>
+      </div>
+    );
+  }
+  ```
+
+  Now, all links and route paths are relative to the router above them. This makes code splitting and compartmentalizing your app really easy. You could render the `Dashboard` as its own independent app, or embed it into your large app without making any changes to it.
+
+  **The Problem**
+
+  The problem is that this concept of ignoring part of a path breaks a lot of other assumptions in React Router - namely that `"."` always means the current location pathname for that route. When we ignore the splat portion, we start getting invalid paths when using `"."`:
+
+  ```jsx
+  // If we are on URL /dashboard/team, and we want to link to /dashboard/team:
+  function DashboardTeam() {
+    // ❌ This is broken and results in <a href="/dashboard">
+    return <Link to=".">A broken link to the Current URL</Link>;
+
+    // ✅ This is fixed but super unintuitive since we're already at /dashboard/team!
+    return <Link to="./team">A broken link to the Current URL</Link>;
+  }
+  ```
+
+  We've also introduced an issue that we can no longer move our `DashboardTeam` component around our route hierarchy easily - since it behaves differently if we're underneath a non-splat route, such as `/dashboard/:widget`. Now, our `"."` links will, properly point to ourself _inclusive of the dynamic param value_ so behavior will break from it's corresponding usage in a `/dashboard/*` route.
+
+  Even worse, consider a nested splat route configuration:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>
+      <Route path="dashboard">
+        <Route path="*" element={<Dashboard />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+  ```
+
+  Now, a `<Link to=".">` and a `<Link to="..">` inside the `Dashboard` component go to the same place! That is definitely not correct!
+
+  Another common issue arose in Data Routers (and Remix) where any `<Form>` should post to it's own route `action` if you the user doesn't specify a form action:
+
+  ```jsx
+  let router = createBrowserRouter({
+    path: "/dashboard",
+    children: [
+      {
+        path: "*",
+        action: dashboardAction,
+        Component() {
+          // ❌ This form is broken!  It throws a 405 error when it submits because
+          // it tries to submit to /dashboard (without the splat value) and the parent
+          // `/dashboard` route doesn't have an action
+          return <Form method="post">...</Form>;
+        },
+      },
+    ],
+  });
+  ```
+
+  This is just a compounded issue from the above because the default location for a `Form` to submit to is itself (`"."`) - and if we ignore the splat portion, that now resolves to the parent route.
+
+  **The Solution**
+  If you are leveraging this behavior, it's recommended to enable the future flag, move your splat to it's own route, and leverage `../` for any links to "sibling" pages:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>
+      <Route path="dashboard">
+        <Route index path="*" element={<Dashboard />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+
+  function Dashboard() {
+    return (
+      <div>
+        <h2>Dashboard</h2>
+        <nav>
+          <Link to="..">Dashboard Home</Link>
+          <Link to="../team">Team</Link>
+          <Link to="../projects">Projects</Link>
+        </nav>
+
+        <Routes>
+          <Route path="/" element={<DashboardHome />} />
+          <Route path="team" element={<DashboardTeam />} />
+          <Route path="projects" element={<DashboardProjects />} />
+        </Router>
+      </div>
+    );
+  }
+  ```
+
+  This way, `.` means "the full current pathname for my route" in all cases (including static, dynamic, and splat routes) and `..` always means "my parents pathname".
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.14.0`
+  - `react-router@6.21.0`
+
 ## 6.20.1
 
 ### Patch Changes
 
-- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
+- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see <https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329>). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
 - Updated dependencies:
   - `react-router@6.20.1`
   - `@remix-run/router@1.13.1`
@@ -259,7 +426,7 @@
 
 ## 6.12.1
 
-> [!WARNING]
+> \[!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.1`. This version suffers from a `webpack`/`terser` minification issue resulting in invalid minified code in your resulting production bundles which can cause issues in your application. See [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
 
 ### Patch Changes
@@ -594,7 +761,7 @@
 
 ## 6.4.0
 
-Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs][rr-docs], especially the [feature overview][rr-feature-overview] and the [tutorial][rr-tutorial].
+Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs](https://reactrouter.com), especially the [feature overview](https://reactrouter.com/start/overview) and the [tutorial](https://reactrouter.com/start/tutorial).
 
 **New APIs**
 
@@ -620,7 +787,3 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 **Updated Dependencies**
 
 - `react-router@6.4.0`
-
-[rr-docs]: https://reactrouter.com
-[rr-feature-overview]: https://reactrouter.com/start/overview
-[rr-tutorial]: https://reactrouter.com/start/tutorial

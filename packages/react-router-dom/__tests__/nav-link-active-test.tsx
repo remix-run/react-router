@@ -942,6 +942,46 @@ describe("NavLink using a data router", () => {
     expect(screen.getByText("Link to Bar").className).toBe("");
     expect(screen.getByText("Link to Baz").className).toBe("active");
   });
+
+  it("applies the default 'active'/'pending' classNames when a basename is used", async () => {
+    let dfd = createDeferred();
+    let router = createBrowserRouter(
+      createRoutesFromElements(
+        <Route path="/" element={<Layout />}>
+          <Route path="foo" element={<p>Foo page</p>} />
+          <Route
+            path="bar"
+            loader={() => dfd.promise}
+            element={<p>Bar page</p>}
+          />
+        </Route>
+      ),
+      {
+        window: getWindow("/base/foo"),
+        basename: "/base",
+      }
+    );
+    render(<RouterProvider router={router} />);
+
+    function Layout() {
+      return (
+        <>
+          <NavLink to="/foo">Link to Foo</NavLink>
+          <NavLink to="/bar">Link to Bar</NavLink>
+          <Outlet />
+        </>
+      );
+    }
+
+    expect(screen.getByText("Link to Bar").className).toBe("");
+
+    fireEvent.click(screen.getByText("Link to Bar"));
+    expect(screen.getByText("Link to Bar").className).toBe("pending");
+
+    dfd.resolve(null);
+    await waitFor(() => screen.getByText("Bar page"));
+    expect(screen.getByText("Link to Bar").className).toBe("active");
+  });
 });
 
 describe("NavLink under a Routes with a basename", () => {

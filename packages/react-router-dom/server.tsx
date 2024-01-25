@@ -114,9 +114,6 @@ export function StaticRouterProvider({
     static: true,
     staticContext: context,
     basename: context.basename || "/",
-    future: {
-      v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-    },
   };
 
   let fetchersContext = new Map();
@@ -151,6 +148,9 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
+                future={{
+                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+                }}
               >
                 <DataRoutes
                   routes={router.routes}
