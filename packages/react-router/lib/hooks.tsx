@@ -338,9 +338,10 @@ export function useResolvedPath(
  */
 export function useRoutes(
   routes: RouteObject[],
-  locationArg?: Partial<Location> | string
+  locationArg?: Partial<Location> | string,
+  absolute?: boolean
 ): React.ReactElement | null {
-  return useRoutesImpl(routes, locationArg);
+  return useRoutesImpl(routes, locationArg, undefined, undefined, absolute);
 }
 
 // Internal implementation with accept optional param for RouterProvider usage
@@ -348,7 +349,8 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: RemixRouter["state"],
-  future?: RemixRouter["future"]
+  future?: RemixRouter["future"],
+  absolute?: boolean
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -423,7 +425,7 @@ export function useRoutesImpl(
 
   let pathname = location.pathname || "/";
   let remainingPathname =
-    parentPathnameBase === "/"
+    parentPathnameBase === "/" || absolute
       ? pathname
       : pathname.slice(parentPathnameBase.length) || "/";
 

@@ -492,6 +492,7 @@ export function Router({
 export interface RoutesProps {
   children?: React.ReactNode;
   location?: Partial<Location> | string;
+  absolute?: boolean;
 }
 
 /**
@@ -503,8 +504,9 @@ export interface RoutesProps {
 export function Routes({
   children,
   location,
+  absolute,
 }: RoutesProps): React.ReactElement | null {
-  return useRoutes(createRoutesFromChildren(children), location);
+  return useRoutes(createRoutesFromChildren(children), location, absolute);
 }
 
 export interface AwaitResolveRenderFunction {

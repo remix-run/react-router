@@ -1,6 +1,14 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { MemoryRouter, Outlet, Routes, Route, useParams } from "react-router";
+import {
+  MemoryRouter,
+  Outlet,
+  Routes,
+  Route,
+  useParams,
+  createRoutesFromElements,
+  useRoutes,
+} from "react-router";
 import type { InitialEntry } from "@remix-run/router";
 
 describe("Descendant <Routes> splat matching", () => {
@@ -58,9 +66,161 @@ describe("Descendant <Routes> splat matching", () => {
         </div>
       `);
     });
+
+    describe("<Routes>/useRoutes absolute config", () => {
+      it("<Routes> treats descendant route leading-slash paths as relative by default", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/auth/login"]}>
+              <Routes>
+                <Route path="/auth/*" element={<Auth />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Auth() {
+          return (
+            <Routes>
+              <Route path="/auth/login" element={<h2>Auth Login</h2>} />
+              <Route path="*" element={<h2>Not Found</h2>} />
+            </Routes>
+          );
+        }
+
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h2>
+            Not Found
+          </h2>
+        `);
+
+        let renderer2: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer2 = TestRenderer.create(
+            <MemoryRouter initialEntries={["/auth/auth/login"]}>
+              <Routes>
+                <Route path="/auth/*" element={<Auth />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        expect(renderer2.toJSON()).toMatchInlineSnapshot(`
+          <h2>
+            Auth Login
+          </h2>
+        `);
+      });
+
+      it("<Routes> treats descendant route leading-slash paths as absolute when specified", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/auth/login"]}>
+              <Routes>
+                <Route path="/auth/*" element={<Auth />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Auth() {
+          return (
+            <Routes absolute>
+              <Route path="/auth/login" element={<h2>Auth Login</h2>} />
+              <Route path="*" element={<h2>Not Found</h2>} />
+            </Routes>
+          );
+        }
+
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h2>
+            Auth Login
+          </h2>
+        `);
+      });
+
+      it("useRoutes() treats descendant route leading-slash paths as relative by default", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/auth/login"]}>
+              <Routes>
+                <Route path="/auth/*" element={<Auth />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Auth() {
+          let childRoutes = createRoutesFromElements(
+            <>
+              <Route path="/auth/login" element={<h2>Auth Login</h2>} />
+              <Route path="*" element={<h2>Not Found</h2>} />
+            </>
+          );
+
+          return useRoutes(childRoutes);
+        }
+
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h2>
+            Not Found
+          </h2>
+        `);
+
+        let renderer2: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer2 = TestRenderer.create(
+            <MemoryRouter initialEntries={["/auth/auth/login"]}>
+              <Routes>
+                <Route path="/auth/*" element={<Auth />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        expect(renderer2.toJSON()).toMatchInlineSnapshot(`
+          <h2>
+            Auth Login
+          </h2>
+        `);
+      });
+
+      it("useRoutes() treats descendant route leading-slash paths as absolute when specified", () => {
+        let renderer: TestRenderer.ReactTestRenderer;
+        TestRenderer.act(() => {
+          renderer = TestRenderer.create(
+            <MemoryRouter initialEntries={["/auth/login"]}>
+              <Routes>
+                <Route path="/auth/*" element={<Auth />} />
+              </Routes>
+            </MemoryRouter>
+          );
+        });
+
+        function Auth() {
+          let childRoutes = createRoutesFromElements(
+            <>
+              <Route path="/auth/login" element={<h2>Auth Login</h2>} />
+              <Route path="*" element={<h2>Not Found</h2>} />
+            </>
+          );
+          return useRoutes(childRoutes, null, true);
+        }
+
+        expect(renderer.toJSON()).toMatchInlineSnapshot(`
+          <h2>
+            Auth Login
+          </h2>
+        `);
+      });
+    });
+
     describe("works with paths beginning with special characters", () => {
       function PrintParams() {
-        return <p>The params are {JSON.stringify(useParams())}</p>;
+        return <p>The params are{JSON.stringify(useParams())}</p>;
       }
       function ReactCourses() {
         return (
@@ -124,7 +284,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are 
+                  The params are
                   {"*":"-react-fundamentals","splat":"-react-fundamentals"}
                 </p>
               </div>
@@ -132,6 +292,7 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
+
       it("allows `.` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/.react-fundamentals",
@@ -150,7 +311,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are 
+                  The params are
                   {"*":".react-fundamentals","splat":".react-fundamentals"}
                 </p>
               </div>
@@ -158,6 +319,7 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
+
       it("allows `~` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/~react-fundamentals",
@@ -176,7 +338,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are 
+                  The params are
                   {"*":"~react-fundamentals","splat":"~react-fundamentals"}
                 </p>
               </div>
@@ -184,6 +346,7 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
+
       it("allows `@` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/@react-fundamentals",
@@ -202,7 +365,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are 
+                  The params are
                   {"*":"@react-fundamentals","splat":"@react-fundamentals"}
                 </p>
               </div>
@@ -210,6 +373,7 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
+
       it("allows url-encoded entities to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/%20react-fundamentals",
@@ -228,7 +392,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are 
+                  The params are
                   {"*":" react-fundamentals","splat":" react-fundamentals"}
                 </p>
               </div>
