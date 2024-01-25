@@ -9,6 +9,7 @@ import babel from "@babel/core";
 import {
   type ServerBuild,
   unstable_setDevServerHooks as setDevServerHooks,
+  createRequestHandler,
 } from "@remix-run/server-runtime";
 import {
   init as initEsModuleLexer,
@@ -27,7 +28,11 @@ import {
 } from "../config";
 import { type Manifest as BrowserManifest } from "../manifest";
 import invariant from "../invariant";
-import { createRequestHandler } from "./node/adapter";
+import {
+  type NodeRequestHandler,
+  fromNodeRequest,
+  toNodeRequest,
+} from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
 import { resolveFileUrl } from "./resolve-file-url";
@@ -124,13 +129,16 @@ type AdapterRemixConfigOverrides = Pick<
 >;
 
 type AdapterConfig = AdapterRemixConfigOverrides & {
+  loadContext?: Record<string, unknown>;
   buildEnd?: BuildEndHook;
+  viteConfig: Vite.UserConfig;
 };
 
 type Adapter = Omit<AdapterConfig, AdapterRemixConfigOverrideKey>;
 
 export type VitePluginAdapter = (args: {
   remixConfig: VitePluginConfig;
+  viteConfig: Vite.UserConfig;
 }) => AdapterConfig | Promise<AdapterConfig>;
 
 export type VitePluginConfig = RemixEsbuildUserConfigJsdocOverrides &
@@ -454,6 +462,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           // We only pass in the plugin config that the user defined. We don't
           // know the final resolved config until the adapter has been resolved.
           remixConfig: remixUserConfig,
+          viteConfig: viteUserConfig,
         })
       : undefined;
     let adapter: Adapter | undefined =
@@ -738,7 +747,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           )
         );
 
-        return {
+        let defaults = {
           __remixPluginContext: ctx,
           appType: "custom",
           experimental: { hmrPartialAccept: true },
@@ -784,13 +793,11 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           ...(viteCommand === "build" && {
             base: ctx.remixConfig.publicPath,
             build: {
-              ...viteUserConfig.build,
               ...(!viteConfigEnv.isSsrBuild
                 ? {
                     manifest: true,
                     outDir: getClientBuildDirectory(ctx.remixConfig),
                     rollupOptions: {
-                      ...viteUserConfig.build?.rollupOptions,
                       preserveEntrySignatures: "exports-only",
                       input: [
                         ctx.entryClientFilePath,
@@ -815,7 +822,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
                     manifest: true, // We need the manifest to detect SSR-only assets
                     outDir: getServerBuildDirectory(ctx),
                     rollupOptions: {
-                      ...viteUserConfig.build?.rollupOptions,
                       preserveEntrySignatures: "exports-only",
                       input: serverBuildId,
                       output: {
@@ -827,6 +833,10 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             },
           }),
         };
+        return vite.mergeConfig(
+          defaults,
+          ctx.remixConfig.adapter?.viteConfig ?? {}
+        );
       },
       async configResolved(resolvedViteConfig) {
         await initEsModuleLexer;
@@ -944,7 +954,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           );
         }
       },
-      configureServer(viteDevServer) {
+      async configureServer(viteDevServer) {
         setDevServerHooks({
           // Give the request handler access to the critical CSS in dev to avoid a
           // flash of unstyled content since Vite injects CSS file contents via JS
@@ -1004,11 +1014,17 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
                   serverBuildId
                 )) as ServerBuild;
 
-                let handle = createRequestHandler(build, {
-                  mode: "development",
-                });
-
-                await handle(req, res);
+                let handler = createRequestHandler(build, "development");
+                let nodeHandler: NodeRequestHandler = async (
+                  nodeReq,
+                  nodeRes
+                ) => {
+                  let req = fromNodeRequest(nodeReq);
+                  let { adapter } = ctx.remixConfig;
+                  let res = await handler(req, adapter?.loadContext);
+                  await toNodeRequest(res, nodeRes);
+                };
+                await nodeHandler(req, res);
               } catch (error) {
                 next(error);
               }

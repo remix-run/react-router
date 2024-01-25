@@ -36,6 +36,7 @@
     "type-fest": "^4.0.0",
     "typescript": "^5.1.0",
     "vite-env-only": "^2.0.0",
-    "vite-tsconfig-paths": "^4.2.2"
+    "vite-tsconfig-paths": "^4.2.2",
+    "wrangler": "^3.24.0"
   }
 }

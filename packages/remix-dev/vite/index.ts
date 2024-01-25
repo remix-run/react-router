@@ -12,3 +12,5 @@ export const unstable_vitePlugin: RemixVitePlugin = (...args) => {
   let { remixVitePlugin } = require("./plugin") as typeof import("./plugin");
   return remixVitePlugin(...args);
 };
+
+export { adapter as unstable_vitePluginAdapterCloudflare } from "./adapters/cloudflare";

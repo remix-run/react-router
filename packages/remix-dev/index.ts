@@ -10,4 +10,7 @@ export type {
   Unstable_BuildManifest,
   Unstable_VitePluginAdapter,
 } from "./vite";
-export { unstable_vitePlugin } from "./vite";
+export {
+  unstable_vitePlugin,
+  unstable_vitePluginAdapterCloudflare,
+} from "./vite";
