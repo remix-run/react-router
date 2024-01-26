@@ -46,7 +46,8 @@ function derive(build: ServerBuild, mode?: string) {
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     future: {
-      v7_relativeSplatPath: build.future?.v3_relativeSplatPath,
+      v7_relativeSplatPath: build.future?.v3_relativeSplatPath === true,
+      v7_throwAbortReason: build.future?.v3_throwAbortReason === true,
     },
   });
 
@@ -240,7 +241,9 @@ async function handleDataRequestRR(
     }
 
     let errorInstance =
-      error instanceof Error ? error : new Error("Unexpected Server Error");
+      error instanceof Error || error instanceof DOMException
+        ? error
+        : new Error("Unexpected Server Error");
     handleError(errorInstance);
     return routerJson(serializeError(errorInstance, serverMode), {
       status: 500,

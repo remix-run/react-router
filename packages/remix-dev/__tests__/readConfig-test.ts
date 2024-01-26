@@ -38,6 +38,7 @@ describe("readConfig", () => {
         "future": {
           "v3_fetcherPersist": false,
           "v3_relativeSplatPath": false,
+          "v3_throwAbortReason": false,
         },
         "mdx": undefined,
         "postcss": true,

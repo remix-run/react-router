@@ -36,6 +36,7 @@ type Dev = {
 interface FutureConfig {
   v3_fetcherPersist: boolean;
   v3_relativeSplatPath: boolean;
+  v3_throwAbortReason: boolean;
 }
 
 type NodeBuiltinsPolyfillOptions = Pick<
@@ -596,6 +597,7 @@ export async function resolveConfig(
   let future: FutureConfig = {
     v3_fetcherPersist: appConfig.future?.v3_fetcherPersist === true,
     v3_relativeSplatPath: appConfig.future?.v3_relativeSplatPath === true,
+    v3_throwAbortReason: appConfig.future?.v3_throwAbortReason === true,
   };
 
   if (appConfig.future) {

@@ -407,6 +407,101 @@ describe("shared server runtime", () => {
       expect((await result.text()).includes(message)).toBe(true);
       expect(spy.console.mock.calls.length).toBe(1);
     });
+
+    test("aborts request", async () => {
+      let rootLoader = jest.fn(() => {
+        return "root";
+      });
+      let resourceLoader = jest.fn(async () => {
+        await new Promise((r) => setTimeout(r, 10));
+        return "resource";
+      });
+      let build = mockServerBuild({
+        root: {
+          default: {},
+          loader: rootLoader,
+        },
+        "routes/resource": {
+          loader: resourceLoader,
+          path: "resource",
+        },
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let controller = new AbortController();
+      let request = new Request(`${baseUrl}/resource`, {
+        method: "get",
+        signal: controller.signal,
+      });
+
+      let resultPromise = handler(request);
+      controller.abort();
+      let result = await resultPromise;
+      expect(result.status).toBe(500);
+      expect(await result.text()).toMatchInlineSnapshot(`
+        "Unexpected Server Error
+
+        Error: queryRoute() call aborted: GET http://test.com/resource"
+      `);
+    });
+
+    test("aborts request (v3_throwAbortReason)", async () => {
+      let rootLoader = jest.fn(() => {
+        return "root";
+      });
+      let resourceLoader = jest.fn(async () => {
+        await new Promise((r) => setTimeout(r, 10));
+        return "resource";
+      });
+      let handleErrorSpy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            default: {},
+            loader: rootLoader,
+          },
+          "routes/resource": {
+            loader: resourceLoader,
+            path: "resource",
+          },
+        },
+        {
+          future: {
+            v3_throwAbortReason: true,
+          },
+          handleError: handleErrorSpy,
+        }
+      );
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let controller = new AbortController();
+      let request = new Request(`${baseUrl}/resource`, {
+        method: "get",
+        signal: controller.signal,
+      });
+
+      let resultPromise = handler(request);
+      controller.abort();
+      let result = await resultPromise;
+      expect(result.status).toBe(500);
+      expect(await result.text()).toMatchInlineSnapshot(`
+        "Unexpected Server Error
+
+        AbortError: This operation was aborted"
+      `);
+      expect(handleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
+        true
+      );
+      expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
+      expect(handleErrorSpy.mock.calls[0][0].message).toBe(
+        "This operation was aborted"
+      );
+      expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
+      expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
+        "http://test.com/resource"
+      );
+    });
   });
 
   describe("data requests", () => {
@@ -805,6 +900,99 @@ describe("shared server runtime", () => {
       expect(await result.json()).toBe("index");
       expect(rootLoader.mock.calls.length).toBe(0);
       expect(indexAction.mock.calls.length).toBe(1);
+    });
+
+    test("aborts request", async () => {
+      let rootLoader = jest.fn(() => {
+        return "root";
+      });
+      let indexLoader = jest.fn(() => {
+        return "index";
+      });
+      let build = mockServerBuild({
+        root: {
+          default: {},
+          loader: rootLoader,
+        },
+        "routes/_index": {
+          parentId: "root",
+          loader: indexLoader,
+          index: true,
+        },
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let controller = new AbortController();
+      let request = new Request(`${baseUrl}/?_data=routes/_index`, {
+        method: "get",
+        signal: controller.signal,
+      });
+
+      let resultPromise = handler(request);
+      controller.abort();
+      let result = await resultPromise;
+      expect(result.status).toBe(500);
+      expect(await result.text()).toMatchInlineSnapshot(
+        `"{"message":"Unexpected Server Error"}"`
+      );
+    });
+
+    test("aborts request (v3_throwAbortReason)", async () => {
+      let rootLoader = jest.fn(() => {
+        return "root";
+      });
+      let indexLoader = jest.fn(() => {
+        return "index";
+      });
+      let handleErrorSpy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            default: {},
+            loader: rootLoader,
+          },
+          "routes/_index": {
+            parentId: "root",
+            loader: indexLoader,
+            index: true,
+          },
+        },
+        {
+          future: {
+            v3_throwAbortReason: true,
+          },
+          handleError: handleErrorSpy,
+        }
+      );
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let controller = new AbortController();
+      let request = new Request(`${baseUrl}/?_data=routes/_index`, {
+        method: "get",
+        signal: controller.signal,
+      });
+
+      let resultPromise = handler(request);
+      controller.abort();
+      let result = await resultPromise;
+      expect(result.status).toBe(500);
+      let error = await result.json();
+      expect(error.message).toBe("This operation was aborted");
+      expect(
+        error.stack.startsWith("AbortError: This operation was aborted")
+      ).toBe(true);
+      expect(handleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
+        true
+      );
+      expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
+      expect(handleErrorSpy.mock.calls[0][0].message).toBe(
+        "This operation was aborted"
+      );
+      expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
+      expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
+        "http://test.com/?_data=routes/_index"
+      );
     });
   });
 
@@ -1787,6 +1975,109 @@ describe("shared server runtime", () => {
         ],
         [new Error("second error thrown from handleDocumentRequest")],
       ]);
+    });
+
+    test("aborts request", async () => {
+      let rootLoader = jest.fn(() => {
+        return "root";
+      });
+      let indexLoader = jest.fn(async () => {
+        await new Promise((r) => setTimeout(r, 10));
+        return "index";
+      });
+      let handleErrorSpy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            default() {},
+            loader: rootLoader,
+          },
+          "routes/_index": {
+            loader: indexLoader,
+            index: true,
+            default: {},
+          },
+        },
+        {
+          handleError: handleErrorSpy,
+        }
+      );
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let controller = new AbortController();
+      let request = new Request(`${baseUrl}/`, {
+        method: "get",
+        signal: controller.signal,
+      });
+
+      let resultPromise = handler(request);
+      controller.abort();
+      let result = await resultPromise;
+      expect(result.status).toBe(500);
+      expect(build.entry.module.default.mock.calls.length).toBe(0);
+
+      expect(handleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(handleErrorSpy.mock.calls[0][0] instanceof Error).toBe(true);
+      expect(handleErrorSpy.mock.calls[0][0].name).toBe("Error");
+      expect(handleErrorSpy.mock.calls[0][0].message).toBe(
+        "query() call aborted: GET http://test.com/"
+      );
+    });
+
+    test("aborts request (v3_throwAbortReason)", async () => {
+      let rootLoader = jest.fn(() => {
+        return "root";
+      });
+      let indexLoader = jest.fn(async () => {
+        await new Promise((r) => setTimeout(r, 10));
+        return "index";
+      });
+      let handleErrorSpy = jest.fn();
+      let build = mockServerBuild(
+        {
+          root: {
+            default: {},
+            loader: rootLoader,
+          },
+          "routes/resource": {
+            loader: indexLoader,
+            index: true,
+            default: {},
+          },
+        },
+        {
+          future: {
+            v3_throwAbortReason: true,
+          },
+          handleError: handleErrorSpy,
+        }
+      );
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let controller = new AbortController();
+      let request = new Request(`${baseUrl}/`, {
+        method: "get",
+        signal: controller.signal,
+      });
+
+      let resultPromise = handler(request);
+      controller.abort();
+      let result = await resultPromise;
+      expect(result.status).toBe(500);
+      expect(build.entry.module.default.mock.calls.length).toBe(0);
+
+      expect(handleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(handleErrorSpy.mock.calls[0][0] instanceof DOMException).toBe(
+        true
+      );
+      expect(handleErrorSpy.mock.calls[0][0].name).toBe("AbortError");
+      expect(handleErrorSpy.mock.calls[0][0].message).toBe(
+        "This operation was aborted"
+      );
+      expect(handleErrorSpy.mock.calls[0][1].request.method).toBe("GET");
+      expect(handleErrorSpy.mock.calls[0][1].request.url).toBe(
+        "http://test.com/"
+      );
     });
   });
 
