@@ -3,7 +3,11 @@
  */
 
 import type { StaticHandler, StaticHandlerContext } from "../router";
-import { UNSAFE_DEFERRED_SYMBOL, createStaticHandler } from "../router";
+import {
+  UNSAFE_DEFERRED_SYMBOL,
+  createStaticHandler,
+  getStaticContextFromError,
+} from "../router";
 import {
   ErrorResponseImpl,
   defer,
@@ -13,7 +17,7 @@ import {
 } from "../utils";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";
-import { createRequest, createSubmitRequest } from "./utils/utils";
+import { createRequest, createSubmitRequest, invariant } from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
   trackedPromise(data?: any, error?: any, aborted?: boolean): R;
@@ -1383,6 +1387,58 @@ describe("ssr", () => {
         expect(Array.from(context.actionHeaders.child.entries())).toEqual([
           ["one", "1"],
         ]);
+      });
+    });
+
+    describe("getStaticContextFromError", () => {
+      it("should provide a context for a second-pass render for a thrown error", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context = await query(createRequest("/"));
+        expect(context).toMatchObject({
+          errors: null,
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 200,
+        });
+
+        let error = new Error("💥");
+        invariant(!(context instanceof Response), "Uh oh");
+        context = getStaticContextFromError(SSR_ROUTES, context, error);
+        expect(context).toMatchObject({
+          errors: {
+            index: error,
+          },
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 500,
+        });
+      });
+
+      it("should accept a thrown response from entry.server", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context = await query(createRequest("/"));
+        expect(context).toMatchObject({
+          errors: null,
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 200,
+        });
+
+        let errorResponse = new ErrorResponseImpl(400, "Bad Request", "Oops!");
+        invariant(!(context instanceof Response), "Uh oh");
+        context = getStaticContextFromError(SSR_ROUTES, context, errorResponse);
+        expect(context).toMatchObject({
+          errors: {
+            index: errorResponse,
+          },
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 400,
+        });
       });
     });
   });
