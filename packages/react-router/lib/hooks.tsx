@@ -338,10 +338,41 @@ export function useResolvedPath(
  */
 export function useRoutes(
   routes: RouteObject[],
-  locationArg?: Partial<Location> | string,
-  absolute?: boolean
+  locationArg?: Partial<Location> | string
 ): React.ReactElement | null {
-  return useRoutesImpl(routes, locationArg, undefined, undefined, absolute);
+  return useRoutesImpl(routes, locationArg);
+}
+
+/**
+ * @deprecated
+ * Returns the element of the route that matched the current location using
+ * absolute path matching, prepared with the correct context to render the
+ * remainder of the route tree. Route elements in the tree must render an
+ * `<Outlet>` to render their child route's element.
+ *
+ * IMPORTANT: This is strictly a utility to be used to assist in migration
+ * from v5 to v6 so that folks can use absolute paths in descendant route
+ * definitions (which was a common pattern in RR v5).  The intent is to remove
+ * this hook in v7 so it is marked "deprecated" from the start as a reminder
+ * to work on moving your route definitions upwards out of descendant routes.
+ *
+ * We expect the concept of "descendant routes" to be replaced by "Lazy Route
+ * Discovery" when that feature lands, so the plan is that folks can use
+ * `useAbsoluteRoutes` to migrate from v5->v6.  Then, incrementally migrate those
+ * descendant routes to lazily discovered route `children` while on v6.  Then
+ * when an eventual v7 releases, there will be no need for `useAbsoluteRoutes`
+ * and it can be safely removed.
+ *
+ * See the RFC for Lazy Route Discovery in:
+ * https://github.com/remix-run/react-router/discussions/11113)
+ *
+ * @see https://reactrouter.com/hooks/use-absolute-routes
+ */
+export function useAbsoluteRoutes(
+  routes: RouteObject[],
+  locationArg?: Partial<Location> | string
+): React.ReactElement | null {
+  return useRoutesImpl(routes, locationArg, undefined, undefined, true);
 }
 
 // Internal implementation with accept optional param for RouterProvider usage

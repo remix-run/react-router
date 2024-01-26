@@ -49,6 +49,7 @@ import {
 } from "@remix-run/router";
 
 import type {
+  AbsoluteRoutesProps,
   AwaitProps,
   FutureConfig,
   IndexRouteProps,
@@ -63,6 +64,7 @@ import type {
   RoutesProps,
 } from "./lib/components";
 import {
+  AbsoluteRoutes,
   Await,
   MemoryRouter,
   Navigate,
@@ -93,6 +95,7 @@ import {
 } from "./lib/context";
 import type { NavigateFunction } from "./lib/hooks";
 import {
+  useAbsoluteRoutes,
   useActionData,
   useAsyncError,
   useAsyncValue,
@@ -125,6 +128,7 @@ type Search = string;
 
 // Expose react-router public API
 export type {
+  AbsoluteRoutesProps,
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
@@ -176,6 +180,7 @@ export type {
 };
 export {
   AbortedDeferredError,
+  AbsoluteRoutes,
   Await,
   MemoryRouter,
   Navigate,
@@ -200,6 +205,7 @@ export {
   renderMatches,
   resolvePath,
   useBlocker,
+  useAbsoluteRoutes,
   useActionData,
   useAsyncError,
   useAsyncValue,

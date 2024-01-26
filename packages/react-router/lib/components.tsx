@@ -41,6 +41,7 @@ import {
 } from "./context";
 import {
   _renderMatches,
+  useAbsoluteRoutes,
   useAsyncValue,
   useInRouterContext,
   useLocation,
@@ -492,7 +493,6 @@ export function Router({
 export interface RoutesProps {
   children?: React.ReactNode;
   location?: Partial<Location> | string;
-  absolute?: boolean;
 }
 
 /**
@@ -504,9 +504,40 @@ export interface RoutesProps {
 export function Routes({
   children,
   location,
-  absolute,
 }: RoutesProps): React.ReactElement | null {
-  return useRoutes(createRoutesFromChildren(children), location, absolute);
+  return useRoutes(createRoutesFromChildren(children), location);
+}
+
+export interface AbsoluteRoutesProps extends RoutesProps {}
+
+/**
+ * @deprecated
+ * A container for a nested tree of `<Route>` elements that renders the branch
+ * that best matches the current location using absolute path matching.
+ *
+ * IMPORTANT: This is strictly a utility to be used to assist in migration
+ * from v5 to v6 so that folks can use absolute paths in descendant route
+ * definitions (which was a common pattern in RR v5).  The intent is to remove
+ * this component in v7 so it is marked "deprecated" from the start as a reminder
+ * to work on moving your route definitions upwards out of descendant routes.
+ *
+ * We expect the concept of "descendant routes" to be replaced by "Lazy Route
+ * Discovery" when that feature lands, so the plan is that folks can use
+ * `<AbsoluteRoutes>` to migrate from v5->v6.  Then, incrementally migrate those
+ * descendant routes to lazily discovered route `children` while on v6.  Then
+ * when an eventual v7 releases, there will be no need for AbsoluteRoutes and
+ * it can be safely removed.
+ *
+ * See the RFC for Lazy Route Discovery in:
+ * https://github.com/remix-run/react-router/discussions/11113)
+ *
+ * @see https://reactrouter.com/components/absolute-routes
+ */
+export function AbsoluteRoutes({
+  children,
+  location,
+}: AbsoluteRoutesProps): React.ReactElement | null {
+  return useAbsoluteRoutes(createRoutesFromChildren(children), location);
 }
 
 export interface AwaitResolveRenderFunction {
