@@ -750,7 +750,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         let defaults = {
           __remixPluginContext: ctx,
           appType: "custom",
-          experimental: { hmrPartialAccept: true },
           optimizeDeps: {
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
