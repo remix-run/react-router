@@ -47,6 +47,7 @@
  *   deprecate the deep require if we wanted to avoid the duplication here.
  */
 export type {
+  AbsoluteRoutesProps,
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
@@ -112,6 +113,7 @@ export type {
 } from "./react-router-dom";
 export {
   AbortedDeferredError,
+  AbsoluteRoutes,
   Await,
   BrowserRouter,
   Form,
@@ -155,6 +157,7 @@ export {
   unstable_HistoryRouter,
   useBlocker,
   unstable_usePrompt,
+  useAbsoluteRoutes,
   useActionData,
   useAsyncError,
   useAsyncValue,

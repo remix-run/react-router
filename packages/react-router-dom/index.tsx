@@ -95,6 +95,7 @@ export { createSearchParams };
 
 // Note: Keep in sync with react-router exports!
 export type {
+  AbsoluteRoutesProps,
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
@@ -146,6 +147,7 @@ export type {
 } from "react-router";
 export {
   AbortedDeferredError,
+  AbsoluteRoutes,
   Await,
   MemoryRouter,
   Navigate,
@@ -169,6 +171,7 @@ export {
   redirectDocument,
   renderMatches,
   resolvePath,
+  useAbsoluteRoutes,
   useActionData,
   useAsyncError,
   useAsyncValue,
