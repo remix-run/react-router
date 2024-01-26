@@ -58,10 +58,9 @@ describe("Descendant <Routes> splat matching", () => {
         </div>
       `);
     });
-
     describe("works with paths beginning with special characters", () => {
       function PrintParams() {
-        return <p>The params are{JSON.stringify(useParams())}</p>;
+        return <p>The params are {JSON.stringify(useParams())}</p>;
       }
       function ReactCourses() {
         return (
@@ -125,7 +124,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":"-react-fundamentals","splat":"-react-fundamentals"}
                 </p>
               </div>
@@ -133,7 +132,6 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
-
       it("allows `.` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/.react-fundamentals",
@@ -152,7 +150,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":".react-fundamentals","splat":".react-fundamentals"}
                 </p>
               </div>
@@ -160,7 +158,6 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
-
       it("allows `~` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/~react-fundamentals",
@@ -179,7 +176,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":"~react-fundamentals","splat":"~react-fundamentals"}
                 </p>
               </div>
@@ -187,7 +184,6 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
-
       it("allows `@` to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/@react-fundamentals",
@@ -206,7 +202,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":"@react-fundamentals","splat":"@react-fundamentals"}
                 </p>
               </div>
@@ -214,7 +210,6 @@ describe("Descendant <Routes> splat matching", () => {
           </div>
         `);
       });
-
       it("allows url-encoded entities to appear at the beginning", () => {
         let renderer = renderNestedSplatRoute([
           "/courses/react/%20react-fundamentals",
@@ -233,7 +228,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":" react-fundamentals","splat":" react-fundamentals"}
                 </p>
               </div>
