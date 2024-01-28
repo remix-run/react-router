@@ -35,6 +35,10 @@ async function resolveViteConfig({
     "production" // default NODE_ENV
   );
 
+  if (typeof viteConfig.build.manifest === "string") {
+    throw new Error("Custom Vite manifest paths are not supported");
+  }
+
   return viteConfig;
 }
 
@@ -202,19 +206,48 @@ async function getServerBuilds(ctx: RemixPluginContext): Promise<{
   };
 }
 
-async function cleanServerBuildDirectory(
+async function cleanBuildDirectory(
   viteConfig: Vite.ResolvedConfig,
   ctx: RemixPluginContext
 ) {
-  let serverBuildDirectory = getServerBuildDirectory(ctx);
+  let buildDirectory = ctx.remixConfig.buildDirectory;
   let isWithinRoot = () => {
-    let relativePath = path.relative(ctx.rootDirectory, serverBuildDirectory);
+    let relativePath = path.relative(ctx.rootDirectory, buildDirectory);
     return !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
   };
 
   if (viteConfig.build.emptyOutDir ?? isWithinRoot()) {
-    await fse.remove(serverBuildDirectory);
+    await fse.remove(buildDirectory);
   }
+}
+
+function getViteManifestPaths(
+  ctx: RemixPluginContext,
+  serverBuilds: Array<RemixViteServerBuildArgs>
+) {
+  let buildRelative = (pathname: string) =>
+    path.resolve(ctx.remixConfig.buildDirectory, pathname);
+
+  let viteManifestPaths: Array<{ srcPath: string; destPath: string }> = [
+    {
+      srcPath: "client/.vite/manifest.json",
+      destPath: ".vite/client-manifest.json",
+    },
+    ...serverBuilds.map(({ serverBundleBuildConfig }) => {
+      let serverBundleId = serverBundleBuildConfig?.serverBundleId;
+      let serverBundlePath = serverBundleId ? serverBundleId + "/" : "";
+      let serverBundleSuffix = serverBundleId ? serverBundleId + "-" : "";
+      return {
+        srcPath: `server/${serverBundlePath}.vite/manifest.json`,
+        destPath: `.vite/server-${serverBundleSuffix}manifest.json`,
+      };
+    }),
+  ].map(({ srcPath, destPath }) => ({
+    srcPath: buildRelative(srcPath),
+    destPath: buildRelative(destPath),
+  }));
+
+  return viteManifestPaths;
 }
 
 export interface ViteBuildOptions {
@@ -270,23 +303,42 @@ export async function build(
     });
   }
 
-  // Since we're potentially running multiple Vite server builds with different
-  // output directories, we need to clean the root server build directory
-  // ourselves rather than relying on Vite to do it, otherwise you can end up
-  // with stale server bundle directories in your build output
-  await cleanServerBuildDirectory(viteConfig, ctx);
+  await cleanBuildDirectory(viteConfig, ctx);
 
   // Run the Vite client build first
   await viteBuild({ ssr: false });
 
   // Then run Vite SSR builds in parallel
   let { serverBuilds, buildManifest } = await getServerBuilds(ctx);
-
   await Promise.all(serverBuilds.map(viteBuild));
 
+  let viteManifestPaths = getViteManifestPaths(ctx, serverBuilds);
+  await Promise.all(
+    viteManifestPaths.map(async ({ srcPath, destPath }) => {
+      let manifestExists = await fse.pathExists(srcPath);
+      if (!manifestExists) return;
+
+      // Move/delete original Vite manifest file
+      if (ctx.viteManifestEnabled) {
+        await fse.ensureDir(path.dirname(destPath));
+        await fse.move(srcPath, destPath);
+      } else {
+        await fse.remove(srcPath);
+      }
+
+      // Remove .vite dir if it's now empty
+      let viteDir = path.dirname(srcPath);
+      let viteDirFiles = await fse.readdir(viteDir);
+      if (viteDirFiles.length === 0) {
+        await fse.remove(viteDir);
+      }
+    })
+  );
+
   if (ctx.remixConfig.manifest) {
+    await fse.ensureDir(path.join(ctx.remixConfig.buildDirectory, ".remix"));
     await fse.writeFile(
-      path.join(ctx.remixConfig.buildDirectory, "manifest.json"),
+      path.join(ctx.remixConfig.buildDirectory, ".remix", "manifest.json"),
       JSON.stringify(buildManifest, null, 2),
       "utf-8"
     );

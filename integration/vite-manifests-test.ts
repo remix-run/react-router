@@ -46,14 +46,13 @@ const files = {
 
 test.describe(() => {
   let cwd: string;
-  let devPort: number;
 
   test.beforeAll(async () => {
-    devPort = await getPort();
     cwd = await createProject({
       "vite.config.ts": await VITE_CONFIG({
-        port: devPort,
+        port: await getPort(),
         pluginOptions: "{ manifest: true }",
+        viteManifest: true,
       }),
       ...files,
     });
@@ -61,10 +60,18 @@ test.describe(() => {
     await viteBuild({ cwd });
   });
 
-  test("Vite / build manifest", async () => {
-    expect(
-      JSON.parse(fs.readFileSync(path.join(cwd, "build/manifest.json"), "utf8"))
-    ).toEqual({
+  test("Vite / manifests enabled / Vite manifests", () => {
+    let viteManifestFiles = fs.readdirSync(path.join(cwd, "build", ".vite"));
+
+    expect(viteManifestFiles).toEqual([
+      "client-manifest.json",
+      "server-manifest.json",
+    ]);
+  });
+
+  test("Vite / manifests enabled / Remix manifest", async () => {
+    let manifestPath = path.join(cwd, "build", ".remix", "manifest.json");
+    expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
       routes: {
         root: {
           file: "root.tsx",
@@ -91,5 +98,28 @@ test.describe(() => {
         },
       },
     });
+  });
+});
+
+test.describe(() => {
+  let cwd: string;
+
+  test.beforeAll(async () => {
+    cwd = await createProject({
+      "vite.config.ts": await VITE_CONFIG({ port: await getPort() }),
+      ...files,
+    });
+
+    await viteBuild({ cwd });
+  });
+
+  test("Vite / manifest disabled / Vite manifests", () => {
+    let manifestDir = path.join(cwd, "build", ".vite");
+    expect(fs.existsSync(manifestDir)).toBe(false);
+  });
+
+  test("Vite / manifest disabled / Remix manifest doesn't exist", async () => {
+    let manifestDir = path.join(cwd, "build", ".remix");
+    expect(fs.existsSync(manifestDir)).toBe(false);
   });
 });

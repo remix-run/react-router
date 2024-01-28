@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { test, expect } from "@playwright/test";
 
 import {
@@ -274,6 +276,7 @@ test.describe("SPA Mode", () => {
             import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
             export default defineConfig({
+              build: { manifest: true },
               plugins: [remix({ unstable_ssr: false })],
             });
           `,
@@ -587,6 +590,14 @@ test.describe("SPA Mode", () => {
       expect(await page.locator("[data-error]").textContent()).toBe(
         'Error: You cannot call serverAction() in SPA Mode (routeId: "routes/error")'
       );
+    });
+
+    test("only generates client Vite manifest", () => {
+      let viteManifestFiles = fs.readdirSync(
+        path.join(fixture.projectDir, "build", ".vite")
+      );
+
+      expect(viteManifestFiles).toEqual(["client-manifest.json"]);
     });
   });
 });
