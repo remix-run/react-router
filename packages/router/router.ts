@@ -667,7 +667,7 @@ interface RevalidatingFetcher extends FetchLoadMatch {
 
 /**
  * Wrapper object to allow us to throw any response out from callLoaderOrAction
- * for queryRouter while preserving whether or not it was thrown or returned
+ * for `queryRoute` while preserving whether or not it was thrown or returned
  * from the loader/action
  */
 interface QueryRouteResponse {
@@ -757,9 +757,6 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
-  const dataStrategy = init.unstable_dataStrategy || defaultDataStrategy;
-  const callLoaderOrAction = createCallLoaderOrAction(dataStrategy);
-
   let mapRouteProperties: MapRoutePropertiesFunction;
   if (init.mapRouteProperties) {
     mapRouteProperties = init.mapRouteProperties;
@@ -784,6 +781,7 @@ export function createRouter(init: RouterInit): Router {
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
+  let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
   // Config driven behavior flags
   let future: FutureConfig = {
     v7_fetcherPersist: false,
@@ -1575,16 +1573,13 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      result = await callLoaderOrAction(
+      let results = await dataStrategy(
         "action",
         request,
-        actionMatch,
-        matches,
-        manifest,
-        mapRouteProperties,
-        basename,
-        future.v7_relativeSplatPath
+        [actionMatch],
+        matches
       );
+      result = results[0];
 
       if (request.signal.aborted) {
         return { shortCircuited: true };
@@ -1770,7 +1765,7 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let { loaderResults, fetcherResults } =
-      await loadDataAndMaybeResolveDeferred(
+      await callLoadersAndMaybeResolveData(
         state.matches,
         matches,
         matchesToLoad,
@@ -1969,16 +1964,13 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let actionResult = await callLoaderOrAction(
+    let actionResults = await dataStrategy(
       "action",
       fetchRequest,
-      match,
-      requestMatches,
-      manifest,
-      mapRouteProperties,
-      basename,
-      future.v7_relativeSplatPath
+      [match],
+      requestMatches
     );
+    let actionResult = actionResults[0];
 
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
@@ -2101,7 +2093,7 @@ export function createRouter(init: RouterInit): Router {
     );
 
     let { loaderResults, fetcherResults } =
-      await loadDataAndMaybeResolveDeferred(
+      await callLoadersAndMaybeResolveData(
         state.matches,
         matches,
         matchesToLoad,
@@ -2220,16 +2212,8 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let result: DataResult = await callLoaderOrAction(
-      "loader",
-      fetchRequest,
-      match,
-      matches,
-      manifest,
-      mapRouteProperties,
-      basename,
-      future.v7_relativeSplatPath
-    );
+    let results = await dataStrategy("loader", fetchRequest, [match], matches);
+    let result = results[0];
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
     // as a normal load.  resolveDeferredData will return undefined if this
@@ -2407,7 +2391,28 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  async function loadDataAndMaybeResolveDeferred(
+  // Utility wrapper for calling dataStrategy without having to pass around the
+  // manifest, mapRouteProperties, etc.
+  function dataStrategy(
+    type: "loader" | "action",
+    request: Request,
+    matchesToLoad: AgnosticDataRouteMatch[],
+    matches: AgnosticDataRouteMatch[]
+  ): Promise<DataResult[]> {
+    return callDataStrategy(
+      dataStrategyImpl,
+      type,
+      request,
+      matchesToLoad,
+      matches,
+      manifest,
+      mapRouteProperties,
+      basename,
+      future.v7_relativeSplatPath
+    );
+  }
+
+  async function callLoadersAndMaybeResolveData(
     currentMatches: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
     matchesToLoad: AgnosticDataRouteMatch[],
@@ -2416,30 +2421,22 @@ export function createRouter(init: RouterInit): Router {
   ) {
     let [loaderResults, ...fetcherResults] = await Promise.all([
       matchesToLoad.length
-        ? dataStrategy({
-            matches: matchesToLoad.map((m) =>
-              finesseToAgnosticDataStrategyMatch(
-                m,
-                mapRouteProperties,
-                manifest
-              )
-            ),
-            request,
-            type: "loader",
-            defaultStrategy(match) {
-              return callLoaderOrActionImplementation(
-                "loader",
-                request,
-                match,
-                matches,
-                basename,
-                future.v7_relativeSplatPath
-              );
-            },
-          })
+        ? dataStrategy("loader", request, matchesToLoad, matches)
         : [],
       ...fetchersToLoad.map((f) => {
-        if (!f.matches || !f.match || !f.controller) {
+        if (f.matches && f.match && f.controller) {
+          let fetcherRequest = createClientSideRequest(
+            init.history,
+            f.path,
+            f.controller.signal
+          );
+          return dataStrategy(
+            "loader",
+            fetcherRequest,
+            [f.match],
+            f.matches
+          ).then((r) => r[0]);
+        } else {
           return Promise.resolve<DataResult>({
             type: ResultType.error,
             error: getInternalRouterError(404, {
@@ -2447,41 +2444,6 @@ export function createRouter(init: RouterInit): Router {
             }),
           });
         }
-
-        return dataStrategy({
-          matches: [
-            finesseToAgnosticDataStrategyMatch(
-              f.match!,
-              mapRouteProperties,
-              manifest
-            ),
-          ],
-          request,
-          type: "loader",
-          defaultStrategy(match) {
-            invariant(
-              f.controller,
-              "Expected controller for fetcher in defaultStrategy"
-            );
-            invariant(
-              f.matches,
-              "Expected matches for fetcher in defaultStrategy"
-            );
-
-            return callLoaderOrActionImplementation(
-              "loader",
-              createClientSideRequest(
-                init.history,
-                f.path,
-                f.controller.signal
-              ),
-              match,
-              f.matches,
-              basename,
-              future.v7_relativeSplatPath
-            );
-          },
-        }).then((r) => r[0]);
       }),
     ]);
 
@@ -2873,7 +2835,7 @@ export interface CreateStaticHandlerOptions {
    * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
-  dataStrategy?: DataStrategyFunction;
+  unstable_dataStrategy?: DataStrategyFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<StaticHandlerFutureConfig>;
 }
@@ -2887,11 +2849,9 @@ export function createStaticHandler(
     "You must provide a non-empty routes array to createStaticHandler"
   );
 
-  const dataStrategy = opts?.dataStrategy || defaultDataStrategy;
-  const callLoaderOrAction = createCallLoaderOrAction(dataStrategy);
-
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
+  let dataStrategyImpl = opts?.unstable_dataStrategy || defaultDataStrategy;
   let mapRouteProperties: MapRoutePropertiesFunction;
   if (opts?.mapRouteProperties) {
     mapRouteProperties = opts.mapRouteProperties;
@@ -3163,17 +3123,18 @@ export function createStaticHandler(
         error,
       };
     } else {
-      result = await callLoaderOrAction(
+      let results = await dataStrategy(
         "action",
         request,
-        actionMatch,
+        [actionMatch],
         matches,
-        manifest,
-        mapRouteProperties,
-        basename,
-        future.v7_relativeSplatPath,
-        { isStaticRequest: true, isRouteRequest, requestContext }
+        {
+          isStaticRequest: true,
+          isRouteRequest,
+          requestContext,
+        }
       );
+      result = results[0];
 
       if (request.signal.aborted) {
         let method = isRouteRequest ? "queryRoute" : "query";
@@ -3330,24 +3291,13 @@ export function createStaticHandler(
       };
     }
 
-    let results = await dataStrategy({
-      matches: matchesToLoad.map((m) =>
-        finesseToAgnosticDataStrategyMatch(m, mapRouteProperties, manifest)
-      ),
+    let results = await dataStrategy(
+      "loader",
       request,
-      type: "loader",
-      defaultStrategy(match) {
-        return callLoaderOrActionImplementation(
-          "loader",
-          request,
-          match,
-          matches,
-          basename,
-          future.v7_relativeSplatPath,
-          { isStaticRequest: true, isRouteRequest, requestContext }
-        );
-      },
-    });
+      matchesToLoad,
+      matches,
+      { isStaticRequest: true, isRouteRequest, requestContext }
+    );
 
     if (request.signal.aborted) {
       let method = isRouteRequest ? "queryRoute" : "query";
@@ -3384,6 +3334,31 @@ export function createStaticHandler(
           ? Object.fromEntries(activeDeferreds.entries())
           : null,
     };
+  }
+
+  function dataStrategy(
+    type: "loader" | "action",
+    request: Request,
+    matchesToLoad: AgnosticDataRouteMatch[],
+    matches: AgnosticDataRouteMatch[],
+    opts: {
+      isStaticRequest?: boolean;
+      isRouteRequest?: boolean;
+      requestContext?: unknown;
+    } = {}
+  ): Promise<DataResult[]> {
+    return callDataStrategy(
+      dataStrategyImpl,
+      type,
+      request,
+      matchesToLoad,
+      matches,
+      manifest,
+      mapRouteProperties,
+      basename,
+      future.v7_relativeSplatPath,
+      opts
+    );
   }
 
   return {
@@ -3980,68 +3955,59 @@ async function loadLazyRouteModule(
   return routeToUpdate;
 }
 
-function createCallLoaderOrAction(dataStrategy: DataStrategyFunction) {
-  return async (
-    type: "loader" | "action",
-    request: Request,
-    match: AgnosticDataRouteMatch,
-    matches: AgnosticDataRouteMatch[],
-    manifest: RouteManifest,
-    mapRouteProperties: MapRoutePropertiesFunction,
-    basename: string,
-    v7_relativeSplatPath: boolean,
-    opts: {
-      isStaticRequest?: boolean;
-      isRouteRequest?: boolean;
-      requestContext?: unknown;
-    } = {}
-  ): Promise<DataResult> => {
-    let [result] = await dataStrategy({
-      matches: [
-        finesseToAgnosticDataStrategyMatch(match, mapRouteProperties, manifest),
-      ],
-      request,
-      type,
-      defaultStrategy(match) {
-        return callLoaderOrActionImplementation(
-          type,
-          request,
-          match,
-          matches,
-          basename,
-          v7_relativeSplatPath,
-          opts
-        );
-      },
-    });
-
-    return result;
-  };
+function callDataStrategy(
+  dataStrategy: DataStrategyFunction,
+  type: "loader" | "action",
+  request: Request,
+  matchesToLoad: AgnosticDataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  basename: string,
+  v7_relativeSplatPath: boolean,
+  opts: {
+    isStaticRequest?: boolean;
+    isRouteRequest?: boolean;
+    requestContext?: unknown;
+  } = {}
+) {
+  return dataStrategy({
+    matches: matchesToLoad.map((m) =>
+      createDataStrategyMatch(m, mapRouteProperties, manifest)
+    ),
+    request,
+    type,
+    defaultStrategy(match) {
+      return callLoaderOrAction(
+        type,
+        request,
+        match,
+        matches,
+        basename,
+        v7_relativeSplatPath,
+        opts
+      );
+    },
+  });
 }
 
-function finesseToAgnosticDataStrategyMatch(
+// Given a route match, convert `match.route` to a Promise that encapsulates the
+// potential laziness of the route - and also has all non-lazy route properties
+// spread onto it.  This is so we can hand matches off to dataStrategy and let
+// them handle loading lazy routes as they see fit and avoid `route.lazy`
+// executions from blocking `route.loader` executions for other routes.  Yes,
+// this means we can't add properties such as `then`/`catch`/`finally` as `route`
+// props :)
+function createDataStrategyMatch(
   match: AgnosticDataRouteMatch,
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest
 ): AgnosticDataStrategyMatch {
-  let loadRoutePromise: Promise<AgnosticDataRouteObject> | undefined;
+  let loadRoutePromise = match.route.lazy
+    ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
+    : Promise.resolve(match.route);
 
-  if (match.route.lazy) {
-    try {
-      loadRoutePromise = loadLazyRouteModule(
-        match.route,
-        mapRouteProperties,
-        manifest
-      );
-    } catch (error) {
-      loadRoutePromise = Promise.reject(error);
-    }
-  }
-
-  if (!loadRoutePromise) {
-    loadRoutePromise = Promise.resolve(match.route);
-  }
-
+  // Avoid unhandled rejection errors
   loadRoutePromise.catch(() => {});
 
   return {
@@ -4053,7 +4019,8 @@ function finesseToAgnosticDataStrategyMatch(
   };
 }
 
-async function callLoaderOrActionImplementation(
+// Default logic for calling a loader/action is the user has no specified a dataStrategy
+async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataStrategyMatch,
@@ -4193,7 +4160,7 @@ async function callLoaderOrActionImplementation(
         }
       }
 
-      // Don't process redirects in the router during static requests requests.
+      // Don't process redirects in the router during static requests.
       // Instead, throw the Response and let the server handle it with an HTTP
       // redirect.  We also update the Location header in place in this flow so
       // basename and relative routing is taken into account

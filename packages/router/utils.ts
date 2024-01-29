@@ -412,7 +412,7 @@ export interface AgnosticRouteMatch<
 export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
 
-export type LazyRoutePromise = PromiseLike<AgnosticDataRouteObject> &
+export type LazyRoutePromise = Promise<AgnosticDataRouteObject> &
   AgnosticDataRouteObject;
 
 export interface AgnosticDataStrategyMatch

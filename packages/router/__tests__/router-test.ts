@@ -2517,9 +2517,9 @@ describe("a router", () => {
       });
 
       it("should allow a custom implementation to passthrough to default behavior", async () => {
-        let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
-          return Promise.all(matches.map((match) => defaultStrategy(match)));
-        });
+        let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
+          Promise.all(matches.map((match) => defaultStrategy(match)))
+        );
         let t = setup({
           routes: [
             {

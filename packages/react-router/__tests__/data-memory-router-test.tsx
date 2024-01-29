@@ -1,9 +1,4 @@
-import type {
-  DataResult,
-  DataStrategyFunctionArgs,
-  ErrorResponse,
-} from "@remix-run/router";
-import { ResultType } from "@remix-run/router";
+import type { ErrorResponse } from "@remix-run/router";
 import "@testing-library/jest-dom";
 import {
   fireEvent,
@@ -35,10 +30,10 @@ import {
   useRouteLoaderData,
 } from "react-router";
 
+import urlDataStrategy from "../../router/__tests__/utils/urlDataStrategy";
 import { createDeferred } from "../../router/__tests__/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
-import {} from "@remix-run/router";
 
 describe("createMemoryRouter", () => {
   let consoleWarn: jest.SpyInstance;
@@ -3279,43 +3274,3 @@ describe("createMemoryRouter", () => {
     });
   });
 });
-
-async function urlDataStrategy({
-  matches,
-  request,
-  type,
-}: DataStrategyFunctionArgs): Promise<DataResult[]> {
-  return Promise.all(
-    matches.map<Promise<DataResult>>((match) => {
-      try {
-        let handler =
-          type === "loader" ? match.route.loader : match.route.action;
-        return Promise.resolve(handler!({ params: match.params, request }))
-          .then(async (response) => {
-            if (
-              !(response instanceof Response) ||
-              !response.headers
-                .get("Content-Type")
-                ?.match(/\bapplication\/x-www-form-urlencoded\b/)
-            ) {
-              throw new Error("Invalid response");
-            }
-            return new URLSearchParams(await response.text());
-          })
-          .then<DataResult>((data) => ({
-            type: ResultType.data,
-            data,
-          }))
-          .catch((error) => ({
-            type: ResultType.error,
-            error,
-          }));
-      } catch (error) {
-        return Promise.resolve({
-          type: ResultType.error,
-          error,
-        });
-      }
-    })
-  );
-}

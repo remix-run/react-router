@@ -1,14 +1,13 @@
+import urlDataStrategy from "./utils/urlDataStrategy";
 import type { StaticHandler, StaticHandlerContext } from "../router";
 import { UNSAFE_DEFERRED_SYMBOL, createStaticHandler } from "../router";
 import {
   ErrorResponseImpl,
-  ResultType,
   defer,
   isRouteErrorResponse,
   json,
   redirect,
 } from "../utils";
-import type { DataResult, DataStrategyFunctionArgs } from "../utils";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";
 import { createRequest, createSubmitRequest } from "./utils/utils";
@@ -1295,7 +1294,7 @@ describe("ssr", () => {
     describe("router dataStrategy", () => {
       it("should support document load navigations with custom dataStrategy", async () => {
         let { query } = createStaticHandler(SSR_ROUTES, {
-          dataStrategy: urlDataStrategy,
+          unstable_dataStrategy: urlDataStrategy,
         });
 
         let context = await query(createRequest("/custom"));
@@ -2227,55 +2226,14 @@ describe("ssr", () => {
     describe("router dataStrategy", () => {
       it("should match routes automatically if no routeId is provided", async () => {
         let { queryRoute } = createStaticHandler(SSR_ROUTES, {
-          dataStrategy: urlDataStrategy,
+          unstable_dataStrategy: urlDataStrategy,
         });
         let data;
 
         data = await queryRoute(createRequest("/custom"));
-        console.log(data);
         expect(data).toBeInstanceOf(URLSearchParams);
         expect((data as URLSearchParams).get("foo")).toBe("bar");
       });
     });
   });
 });
-
-async function urlDataStrategy({
-  matches,
-  request,
-  type,
-}: DataStrategyFunctionArgs): Promise<DataResult[]> {
-  return Promise.all(
-    matches.map<Promise<DataResult>>((match) => {
-      try {
-        let handler =
-          type === "loader" ? match.route.loader : match.route.action;
-        return Promise.resolve(handler!({ params: match.params, request }))
-          .then(async (response) => {
-            if (
-              !(response instanceof Response) ||
-              !response.headers
-                .get("Content-Type")
-                ?.match(/\bapplication\/x-www-form-urlencoded\b/)
-            ) {
-              throw new Error("Invalid response");
-            }
-            return new URLSearchParams(await response.text());
-          })
-          .then<DataResult>((data) => ({
-            type: ResultType.data,
-            data,
-          }))
-          .catch((error) => ({
-            type: ResultType.error,
-            error,
-          }));
-      } catch (error) {
-        return Promise.resolve({
-          type: ResultType.error,
-          error,
-        });
-      }
-    })
-  );
-}
