@@ -7,6 +7,9 @@ import type { AppLoadContext } from "./data";
  * The output of the compiler for the server build.
  */
 export interface ServerBuild {
+  // v3 TODO:
+  // - Deprecate when we deprecate the old compiler
+  // - Remove in v3
   mode: string;
   entry: {
     module: ServerEntryModule;

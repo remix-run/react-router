@@ -562,6 +562,13 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
   };
 
   let getServerEntry = async () => {
+    invariant(viteConfig, "viteconfig required to generate the server entry");
+
+    // v3 TODO:
+    // - Deprecate `ServerBuild.mode` once we officially stabilize vite and
+    //   mark the old compiler as deprecated
+    // - Remove `ServerBuild.mode` in v3
+
     return `
     import * as entryServer from ${JSON.stringify(
       resolveFileUrl(ctx, ctx.entryServerFilePath)
@@ -577,6 +584,11 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         )};`;
       })
       .join("\n")}
+      /**
+       * \`mode\` is only relevant for the old Remix compiler but
+       * is included here to satisfy the \`ServerBuild\` typings.
+       */
+      export const mode = ${JSON.stringify(viteConfig.mode)};
       export { default as assets } from ${JSON.stringify(serverManifestId)};
       export const assetsBuildDirectory = ${JSON.stringify(
         path.relative(
