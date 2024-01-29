@@ -1584,7 +1584,7 @@ export function createRouter(init: RouterInit): Router {
         }),
       };
     } else {
-      let results = await dataStrategy(
+      let results = await callDataStrategy(
         "action",
         request,
         [actionMatch],
@@ -1975,7 +1975,7 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let actionResults = await dataStrategy(
+    let actionResults = await callDataStrategy(
       "action",
       fetchRequest,
       [match],
@@ -2223,7 +2223,12 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
-    let results = await dataStrategy("loader", fetchRequest, [match], matches);
+    let results = await callDataStrategy(
+      "loader",
+      fetchRequest,
+      [match],
+      matches
+    );
     let result = results[0];
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2404,23 +2409,29 @@ export function createRouter(init: RouterInit): Router {
 
   // Utility wrapper for calling dataStrategy without having to pass around the
   // manifest, mapRouteProperties, etc.
-  function dataStrategy(
+  function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[]
   ): Promise<DataResult[]> {
-    return callDataStrategy(
-      dataStrategyImpl,
-      type,
+    return dataStrategyImpl({
+      matches: matchesToLoad.map((m) =>
+        createDataStrategyMatch(m, mapRouteProperties, manifest)
+      ),
       request,
-      matchesToLoad,
-      matches,
-      manifest,
-      mapRouteProperties,
-      basename,
-      future.v7_relativeSplatPath
-    );
+      type,
+      defaultStrategy(match) {
+        return callLoaderOrAction(
+          type,
+          request,
+          match,
+          matches,
+          basename,
+          future.v7_relativeSplatPath
+        );
+      },
+    });
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -2432,7 +2443,7 @@ export function createRouter(init: RouterInit): Router {
   ) {
     let [loaderResults, ...fetcherResults] = await Promise.all([
       matchesToLoad.length
-        ? dataStrategy("loader", request, matchesToLoad, matches)
+        ? callDataStrategy("loader", request, matchesToLoad, matches)
         : [],
       ...fetchersToLoad.map((f) => {
         if (f.matches && f.match && f.controller) {
@@ -2441,7 +2452,7 @@ export function createRouter(init: RouterInit): Router {
             f.path,
             f.controller.signal
           );
-          return dataStrategy(
+          return callDataStrategy(
             "loader",
             fetcherRequest,
             [f.match],
@@ -3136,7 +3147,7 @@ export function createStaticHandler(
         error,
       };
     } else {
-      let results = await dataStrategy(
+      let results = await callDataStrategy(
         "action",
         request,
         [actionMatch],
@@ -3301,7 +3312,7 @@ export function createStaticHandler(
       };
     }
 
-    let results = await dataStrategy(
+    let results = await callDataStrategy(
       "loader",
       request,
       matchesToLoad,
@@ -3343,29 +3354,35 @@ export function createStaticHandler(
     };
   }
 
-  function dataStrategy(
+  function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
-    opts: {
+    staticOpts: {
       isStaticRequest?: boolean;
       isRouteRequest?: boolean;
       requestContext?: unknown;
     } = {}
   ): Promise<DataResult[]> {
-    return callDataStrategy(
-      dataStrategyImpl,
-      type,
+    return dataStrategyImpl({
+      matches: matchesToLoad.map((m) =>
+        createDataStrategyMatch(m, mapRouteProperties, manifest)
+      ),
       request,
-      matchesToLoad,
-      matches,
-      manifest,
-      mapRouteProperties,
-      basename,
-      future.v7_relativeSplatPath,
-      opts
-    );
+      type,
+      defaultStrategy(match) {
+        return callLoaderOrAction(
+          type,
+          request,
+          match,
+          matches,
+          basename,
+          future.v7_relativeSplatPath,
+          staticOpts
+        );
+      },
+    });
   }
 
   return {
@@ -3380,13 +3397,6 @@ export function createStaticHandler(
 ////////////////////////////////////////////////////////////////////////////////
 //#region Helpers
 ////////////////////////////////////////////////////////////////////////////////
-
-function defaultDataStrategy({
-  defaultStrategy,
-  matches,
-}: DataStrategyFunctionArgs) {
-  return Promise.all(matches.map((match) => defaultStrategy(match)));
-}
 
 /**
  * Given an existing StaticHandlerContext and an error thrown at render time,
@@ -3964,45 +3974,17 @@ async function loadLazyRouteModule(
   return routeToUpdate;
 }
 
-function callDataStrategy(
-  dataStrategy: DataStrategyFunction,
-  type: "loader" | "action",
-  request: Request,
-  matchesToLoad: AgnosticDataRouteMatch[],
-  matches: AgnosticDataRouteMatch[],
-  manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction,
-  basename: string,
-  v7_relativeSplatPath: boolean,
-  opts: {
-    isStaticRequest?: boolean;
-    isRouteRequest?: boolean;
-    requestContext?: unknown;
-  } = {}
-) {
-  return dataStrategy({
-    matches: matchesToLoad.map((m) =>
-      createDataStrategyMatch(m, mapRouteProperties, manifest)
-    ),
-    request,
-    type,
-    defaultStrategy(match) {
-      return callLoaderOrAction(
-        type,
-        request,
-        match,
-        matches,
-        basename,
-        v7_relativeSplatPath,
-        opts
-      );
-    },
-  });
+// Default implementation of `dataStrategy` which fetches all loaders in parallel
+function defaultDataStrategy({
+  defaultStrategy,
+  matches,
+}: DataStrategyFunctionArgs) {
+  return Promise.all(matches.map((match) => defaultStrategy(match)));
 }
 
 // Given a route match, convert `match.route` to a Promise that encapsulates the
 // potential laziness of the route - and also has all non-lazy route properties
-// spread onto it.  This is so we can hand matches off to dataStrategy and let
+// spread onto it.  This is so we can hand matches off to `dataStrategy` and let
 // them handle loading lazy routes as they see fit and avoid `route.lazy`
 // executions from blocking `route.loader` executions for other routes.  Yes,
 // this means we can't add properties such as `then`/`catch`/`finally` as `route`
@@ -4036,7 +4018,7 @@ async function callLoaderOrAction(
   matches: AgnosticDataRouteMatch[],
   basename: string,
   v7_relativeSplatPath: boolean,
-  opts: {
+  staticOpts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
     requestContext?: unknown;
@@ -4056,7 +4038,7 @@ async function callLoaderOrAction(
       handler({
         request,
         params: match.params,
-        context: opts.requestContext,
+        context: staticOpts.requestContext,
       }),
       abortPromise,
     ]);
@@ -4155,7 +4137,7 @@ async function callLoaderOrAction(
           location,
           v7_relativeSplatPath
         );
-      } else if (!opts.isStaticRequest) {
+      } else if (!staticOpts.isStaticRequest) {
         // Strip off the protocol+origin for same-origin + same-basename absolute
         // redirects. If this is a static request, we can let it go back to the
         // browser as-is
@@ -4173,7 +4155,7 @@ async function callLoaderOrAction(
       // Instead, throw the Response and let the server handle it with an HTTP
       // redirect.  We also update the Location header in place in this flow so
       // basename and relative routing is taken into account
-      if (opts.isStaticRequest) {
+      if (staticOpts.isStaticRequest) {
         result.headers.set("Location", location);
         throw result;
       }
@@ -4190,7 +4172,7 @@ async function callLoaderOrAction(
     // For SSR single-route requests, we want to hand Responses back directly
     // without unwrapping.  We do this with the QueryRouteResponse wrapper
     // interface so we can know whether it was returned or thrown
-    if (opts.isRouteRequest) {
+    if (staticOpts.isRouteRequest) {
       let queryRouteResponse: QueryRouteResponse = {
         type:
           resultType === ResultType.error ? ResultType.error : ResultType.data,
