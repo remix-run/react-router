@@ -7,8 +7,10 @@ const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
 const typescript = require("@rollup/plugin-typescript");
 const {
+  babelPluginReplaceVersionPlaceholder,
   createBanner,
   getBuildDirectories,
+  validateReplacedVersion,
   PRETTY,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
@@ -57,7 +59,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         typescript({
@@ -71,6 +76,7 @@ module.exports = function rollup() {
           ],
           verbose: true,
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];
@@ -110,13 +116,17 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
@@ -152,7 +162,10 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
@@ -160,6 +173,7 @@ module.exports = function rollup() {
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
         terser(),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];

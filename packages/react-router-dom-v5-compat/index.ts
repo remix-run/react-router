@@ -107,8 +107,8 @@ export type {
   To,
   URLSearchParamsInit,
   UIMatch,
-  unstable_Blocker,
-  unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
 } from "./react-router-dom";
 export {
   AbortedDeferredError,

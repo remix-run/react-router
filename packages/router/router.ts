@@ -823,19 +823,34 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // "Initialized" here really means "Can `RouterProvider` render my route tree?"
-  // Prior to `route.HydrateFallback`, we only had a root `fallbackElement` so we used
-  // `state.initialized` to render that instead of `<DataRoutes>`.  Now that we
-  // support route level fallbacks we can always render and we'll just render
-  // as deep as we have data for and detect the nearest ancestor HydrateFallback
-  let initialized =
-    future.v7_partialHydration ||
+  let initialized: boolean;
+  let hasLazyRoutes = initialMatches.some((m) => m.route.lazy);
+  let hasLoaders = initialMatches.some((m) => m.route.loader);
+  if (hasLazyRoutes) {
     // All initialMatches need to be loaded before we're ready.  If we have lazy
     // functions around still then we'll need to run them in initialize()
-    (!initialMatches.some((m) => m.route.lazy) &&
-      // And we have to either have no loaders or have been provided hydrationData
-      (!initialMatches.some((m) => m.route.loader) ||
-        init.hydrationData != null));
+    initialized = false;
+  } else if (!hasLoaders) {
+    // If we've got no loaders to run, then we're good to go
+    initialized = true;
+  } else if (future.v7_partialHydration) {
+    // If partial hydration is enabled, we're initialized so long as we were
+    // provided with hydrationData for every route with a loader, and no loaders
+    // were marked for explicit hydration
+    let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
+    let errors = init.hydrationData ? init.hydrationData.errors : null;
+    initialized = initialMatches.every(
+      (m) =>
+        m.route.loader &&
+        m.route.loader.hydrate !== true &&
+        ((loaderData && loaderData[m.route.id] !== undefined) ||
+          (errors && errors[m.route.id] !== undefined))
+    );
+  } else {
+    // Without partial hydration - we're initialized if we were provided any
+    // hydrationData - which is expected to be complete
+    initialized = init.hydrationData != null;
+  }
 
   let router: Router;
   let state: RouterState = {
@@ -1016,11 +1031,7 @@ export function createRouter(init: RouterInit): Router {
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
     // resolved prior to router creation since we can't go into a fallbackElement
     // UI for SSR'd apps
-    if (
-      !state.initialized ||
-      (future.v7_partialHydration &&
-        state.matches.some((m) => isUnhydratedRoute(state, m.route)))
-    ) {
+    if (!state.initialized) {
       startNavigation(HistoryAction.Pop, state.location, {
         initialHydration: true,
       });
@@ -2827,6 +2838,7 @@ export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
  */
 export interface StaticHandlerFutureConfig {
   v7_relativeSplatPath: boolean;
+  v7_throwAbortReason: boolean;
 }
 
 export interface CreateStaticHandlerOptions {
@@ -2867,6 +2879,7 @@ export function createStaticHandler(
   // Config driven behavior flags
   let future: StaticHandlerFutureConfig = {
     v7_relativeSplatPath: false,
+    v7_throwAbortReason: false,
     ...(opts ? opts.future : null),
   };
 
@@ -3137,10 +3150,7 @@ export function createStaticHandler(
       result = results[0];
 
       if (request.signal.aborted) {
-        let method = isRouteRequest ? "queryRoute" : "query";
-        throw new Error(
-          `${method}() call aborted: ${request.method} ${request.url}`
-        );
+        throwStaticHandlerAbortedError(request, isRouteRequest, future);
       }
     }
 
@@ -3300,10 +3310,7 @@ export function createStaticHandler(
     );
 
     if (request.signal.aborted) {
-      let method = isRouteRequest ? "queryRoute" : "query";
-      throw new Error(
-        `${method}() call aborted: ${request.method} ${request.url}`
-      );
+      throwStaticHandlerAbortedError(request, isRouteRequest, future);
     }
 
     // Process and commit output from loaders
@@ -3392,12 +3399,25 @@ export function getStaticContextFromError(
 ) {
   let newContext: StaticHandlerContext = {
     ...context,
-    statusCode: 500,
+    statusCode: isRouteErrorResponse(error) ? error.status : 500,
     errors: {
       [context._deepestRenderedBoundaryId || routes[0].id]: error,
     },
   };
   return newContext;
+}
+
+function throwStaticHandlerAbortedError(
+  request: Request,
+  isRouteRequest: boolean,
+  future: StaticHandlerFutureConfig
+) {
+  if (future.v7_throwAbortReason && request.signal.reason !== undefined) {
+    throw request.signal.reason;
+  }
+
+  let method = isRouteRequest ? "queryRoute" : "query";
+  throw new Error(`${method}() call aborted: ${request.method} ${request.url}`);
 }
 
 function isSubmissionNavigation(
@@ -3675,19 +3695,25 @@ function getMatchesToLoad(
   let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
-    if (isInitialLoad) {
-      // On initial hydration we don't do any shouldRevalidate stuff - we just
-      // call the unhydrated loaders
-      return isUnhydratedRoute(state, match.route);
-    }
-
-    if (match.route.lazy) {
+    let { route } = match;
+    if (route.lazy) {
       // We haven't loaded this route yet so we don't know if it's got a loader!
       return true;
     }
 
-    if (match.route.loader == null) {
+    if (route.loader == null) {
       return false;
+    }
+
+    if (isInitialLoad) {
+      if (route.loader.hydrate) {
+        return true;
+      }
+      return (
+        state.loaderData[route.id] === undefined &&
+        // Don't re-run if the loader ran and threw an error
+        (!state.errors || state.errors[route.id] === undefined)
+      );
     }
 
     // Always call the loader on new route instances and pending defer cancellations
@@ -3807,23 +3833,6 @@ function getMatchesToLoad(
   });
 
   return [navigationMatches, revalidatingFetchers];
-}
-
-// Is this route unhydrated (when v7_partialHydration=true) such that we need
-// to call it's loader on the initial router creation
-function isUnhydratedRoute(state: RouterState, route: AgnosticDataRouteObject) {
-  if (!route.loader) {
-    return false;
-  }
-  if (route.loader.hydrate) {
-    return true;
-  }
-  return (
-    state.loaderData[route.id] === undefined &&
-    (!state.errors ||
-      // Loader ran but errored - don't re-run
-      state.errors[route.id] === undefined)
-  );
 }
 
 function isNewLoader(
@@ -4197,7 +4206,11 @@ async function callLoaderOrAction(
       // Check between word boundaries instead of startsWith() due to the last
       // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
       if (contentType && /\bapplication\/json\b/.test(contentType)) {
-        data = await result.json();
+        if (result.body == null) {
+          data = null;
+        } else {
+          data = await result.json();
+        }
       } else {
         data = await result.text();
       }

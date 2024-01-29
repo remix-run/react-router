@@ -43,6 +43,104 @@ describe("lazily loaded route modules", () => {
     },
   ];
 
+  describe("initialization", () => {
+    it("fetches lazy route modules on router initialization", async () => {
+      let dfd = createDeferred();
+      let router = createRouter({
+        routes: [
+          {
+            path: "/lazy",
+            lazy: () => dfd.promise,
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+      });
+
+      expect(router.state.initialized).toBe(false);
+
+      router.initialize();
+
+      let route = { Component: () => null };
+      await dfd.resolve(route);
+
+      expect(router.state.location.pathname).toBe("/lazy");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.matches[0].route).toMatchObject(route);
+    });
+
+    it("fetches lazy route modules and executes loaders on router initialization", async () => {
+      let dfd = createDeferred();
+      let router = createRouter({
+        routes: [
+          {
+            path: "/lazy",
+            lazy: () => dfd.promise,
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+      });
+
+      expect(router.state.initialized).toBe(false);
+
+      router.initialize();
+
+      let loaderDfd = createDeferred();
+      let route = {
+        Component: () => null,
+        loader: () => loaderDfd.promise,
+      };
+      await dfd.resolve(route);
+      expect(router.state.initialized).toBe(false);
+
+      await loaderDfd.resolve("LOADER");
+      expect(router.state.location.pathname).toBe("/lazy");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.loaderData).toEqual({
+        "0": "LOADER",
+      });
+      expect(router.state.matches[0].route).toMatchObject(route);
+    });
+
+    it("fetches lazy route modules and executes loaders with v7_partialHydration enabled", async () => {
+      let dfd = createDeferred();
+      let router = createRouter({
+        routes: [
+          {
+            path: "/lazy",
+            lazy: () => dfd.promise,
+          },
+        ],
+        history: createMemoryHistory({ initialEntries: ["/lazy"] }),
+        future: {
+          v7_partialHydration: true,
+        },
+      });
+
+      expect(router.state.initialized).toBe(false);
+
+      router.initialize();
+
+      let loaderDfd = createDeferred();
+      let route = {
+        Component: () => null,
+        loader: () => loaderDfd.promise,
+      };
+      await dfd.resolve(route);
+      expect(router.state.initialized).toBe(false);
+
+      await loaderDfd.resolve("LOADER");
+      expect(router.state.location.pathname).toBe("/lazy");
+      expect(router.state.navigation.state).toBe("idle");
+      expect(router.state.initialized).toBe(true);
+      expect(router.state.loaderData).toEqual({
+        "0": "LOADER",
+      });
+      expect(router.state.matches[0].route).toMatchObject(route);
+    });
+  });
+
   describe("happy path", () => {
     it("fetches lazy route modules on loading navigation", async () => {
       let t = setup({ routes: LAZY_ROUTES });

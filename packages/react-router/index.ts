@@ -172,8 +172,8 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  Blocker as unstable_Blocker,
-  BlockerFunction as unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
 };
 export {
   AbortedDeferredError,

@@ -30,6 +30,9 @@ jobs:
       - name: 📥 Install deps
         run: yarn --frozen-lockfile
 
+      - name: 🔃 Sort contributors.yml
+        run: sort --ignore-case --output contributors.yml contributors.yml
+
       - name: 👔 Format
         run: yarn format
 
