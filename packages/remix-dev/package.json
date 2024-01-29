@@ -29,7 +29,7 @@
     "@mdx-js/mdx": "^2.3.0",
     "@npmcli/package-json": "^4.0.1",
     "@remix-run/node": "2.5.1",
-    "@remix-run/router": "0.0.0-experimental-c9f8a7b2",
+    "@remix-run/router": "0.0.0-experimental-add6f8aa",
     "@remix-run/server-runtime": "2.5.1",
     "@types/mdx": "^2.0.5",
     "@vanilla-extract/integration": "^6.2.0",

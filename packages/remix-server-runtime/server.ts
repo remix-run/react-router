@@ -9,6 +9,7 @@ import {
   isRouteErrorResponse,
   createStaticHandler,
   json as routerJson,
+  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
 } from "@remix-run/router";
 
 import type { AppLoadContext } from "./data";
@@ -323,11 +324,41 @@ async function handleDocumentRequestRR(
   } catch (error: unknown) {
     handleError(error);
 
+    let errorForSecondRender = error;
+
+    // If they threw a response, unwrap it into an ErrorResponse like we would
+    // have for a loader/action
+    if (isResponse(error)) {
+      let data;
+      try {
+        let contentType = error.headers.get("Content-Type");
+        // Check between word boundaries instead of startsWith() due to the last
+        // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
+        if (contentType && /\bapplication\/json\b/.test(contentType)) {
+          if (error.body == null) {
+            data = null;
+          } else {
+            data = await error.json();
+          }
+        } else {
+          data = await error.text();
+        }
+
+        errorForSecondRender = new ErrorResponseImpl(
+          error.status,
+          error.statusText,
+          data
+        );
+      } catch (e) {
+        // If we can't unwrap the response - just leave it as-is
+      }
+    }
+
     // Get a new StaticHandlerContext that contains the error at the right boundary
     context = getStaticContextFromError(
       staticHandler.dataRoutes,
       context,
-      error
+      errorForSecondRender
     );
 
     // Sanitize errors outside of development environments
