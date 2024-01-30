@@ -260,6 +260,8 @@ export interface ViteBuildOptions {
   minify?: Vite.BuildOptions["minify"];
   mode?: string;
   profile?: boolean;
+  sourcemapClient?: boolean | "inline" | "hidden";
+  sourcemapServer?: boolean | "inline" | "hidden";
 }
 
 export async function build(
@@ -273,6 +275,8 @@ export async function build(
     logLevel,
     minify,
     mode,
+    sourcemapClient = false,
+    sourcemapServer = false,
   }: ViteBuildOptions
 ) {
   // Ensure Vite's ESM build is preloaded at the start of the process
@@ -293,7 +297,13 @@ export async function build(
       root,
       mode,
       configFile,
-      build: { assetsInlineLimit, emptyOutDir, minify, ssr },
+      build: {
+        assetsInlineLimit,
+        emptyOutDir,
+        minify,
+        ssr,
+        sourcemap: ssr ? sourcemapServer : sourcemapClient,
+      },
       optimizeDeps: { force },
       clearScreen,
       logLevel,
