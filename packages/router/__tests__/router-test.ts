@@ -3,9 +3,9 @@ import { createMemoryHistory, createRouter, IDLE_NAVIGATION } from "../index";
 import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
-  DataResult,
+  LoaderFunction,
 } from "../utils";
-import { ErrorResponseImpl, ResultType } from "../utils";
+import { ErrorResponseImpl, json, ResultType } from "../utils";
 
 import {
   deferredData,
@@ -2478,7 +2478,7 @@ describe("a router", () => {
   });
 
   describe("router dataStrategy", () => {
-    describe("loader", () => {
+    describe("loaders", () => {
       it("should unwrap json and text by default", async () => {
         let t = setup({
           routes: [
@@ -2542,13 +2542,12 @@ describe("a router", () => {
         });
 
         let A = await t.navigate("/test");
-        await A.loaders.json.resolve(
-          new Response(JSON.stringify({ message: "hello json" }), {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-        );
+
+        // Should be called in parallel
+        expect(A.loaders.json.stub).toHaveBeenCalledTimes(1);
+        expect(A.loaders.text.stub).toHaveBeenCalledTimes(1);
+
+        await A.loaders.json.resolve(json({ message: "hello json" }));
         await A.loaders.text.resolve(new Response("hello text"));
 
         expect(t.router.state.loaderData).toEqual({
@@ -2559,7 +2558,7 @@ describe("a router", () => {
           expect.objectContaining({
             type: "loader",
             request: expect.any(Request),
-            matches: expect.arrayContaining([
+            matches: [
               expect.objectContaining({
                 route: expect.objectContaining({
                   id: "json",
@@ -2570,7 +2569,7 @@ describe("a router", () => {
                   id: "text",
                 }),
               }),
-            ]),
+            ],
           })
         );
       });
@@ -2588,6 +2587,13 @@ describe("a router", () => {
               id: "json",
               path: "/test",
               lazy: true,
+              children: [
+                {
+                  id: "text",
+                  index: true,
+                  lazy: true,
+                },
+              ],
             },
           ],
           dataStrategy,
@@ -2597,20 +2603,29 @@ describe("a router", () => {
         await A.lazy.json.resolve({
           loader: () => ({ message: "hello json" }),
         });
+        await A.lazy.text.resolve({
+          loader: () => "hello text",
+        });
         expect(t.router.state.loaderData).toEqual({
           json: { message: "hello json" },
+          text: "hello text",
         });
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
             type: "loader",
             request: expect.any(Request),
-            matches: expect.arrayContaining([
+            matches: [
               expect.objectContaining({
                 route: expect.objectContaining({
                   id: "json",
                 }),
               }),
-            ]),
+              expect.objectContaining({
+                route: expect.objectContaining({
+                  id: "text",
+                }),
+              }),
+            ],
           })
         );
       });
@@ -2627,45 +2642,25 @@ describe("a router", () => {
               loader: true,
             },
           ],
-          dataStrategy({ matches, request }) {
-            return Promise.all(
-              matches.map(async (match) =>
-                Promise.resolve(
-                  (await match.route).loader!({ params: match.params, request })
-                ).then(async (response): Promise<DataResult> => {
-                  if (response instanceof Response) {
-                    if (
-                      response.headers.get("Content-Type") ===
-                      "application/x-www-form-urlencoded"
-                    ) {
-                      let text = await response.text();
-                      const data = new URLSearchParams(text);
-                      return {
-                        type: ResultType.data,
-                        data,
-                        statusCode: response.status,
-                        headers: response.headers,
-                      };
-                    }
-                  }
-                  throw new Error("Unknown Content-Type");
-                })
-              )
-            );
+          async dataStrategy({ request, params, matches }) {
+            // We only have one match in this simple setup
+            let handler = matches[0].route.loader! as LoaderFunction;
+            let result = await handler({ request, params });
+            return [
+              {
+                type: ResultType.data,
+                data: `Route ID "${matches[0].route.id}" returned "${result}"`,
+              },
+            ];
           },
         });
 
         let A = await t.navigate("/test");
-        await A.loaders.test.resolve(
-          new Response(new URLSearchParams({ a: "1", b: "2" }).toString(), {
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          })
-        );
+        await A.loaders.test.resolve("TEST");
 
-        expect(t.router.state.loaderData.test).toBeInstanceOf(URLSearchParams);
-        expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
+        expect(t.router.state.loaderData).toMatchObject({
+          test: 'Route ID "test" returned "TEST"',
+        });
       });
 
       it("should allow custom implementations to override default behavior with lazy", async () => {
@@ -2680,74 +2675,26 @@ describe("a router", () => {
               lazy: true,
             },
           ],
-          async dataStrategy({ type, matches, request }) {
-            // const handles = await getMatchRouteModulesAndGetHandles(matches);
-
-            // return fetchStuffFromSomewhere(handles).then((response) =>
-            //   decodeIntoIndivualMatches(response).map((data) => ({
-            //     type: ResultType.data,
-            //     data,
-            //   }))
-            // );
-
-            // return Promise.all(
-            //   matches.map(async (match) => {
-            //     const routeModule = await match.route;
-            //     const handler = routeModule[type];
-            //     return Promise.resolve(
-            //       handler({ params: match.params, request })
-            //     )
-            //       .then((response) => ({
-            //         type: ResultType.data,
-            //         data: decodeResponse(response),
-            //       }))
-            //       .catch((error) => ({
-            //         type: ResultType.error,
-            //         error,
-            //       }));
-            //   })
-            // );
-
-            return Promise.all(
-              matches.map(async (match) =>
-                Promise.resolve(
-                  (await match.route).loader!({ params: match.params, request })
-                ).then(async (response): Promise<DataResult> => {
-                  if (response instanceof Response) {
-                    if (
-                      response.headers.get("Content-Type") ===
-                      "application/x-www-form-urlencoded"
-                    ) {
-                      let text = await response.text();
-                      const data = new URLSearchParams(text);
-                      return {
-                        type: ResultType.data,
-                        data,
-                        statusCode: response.status,
-                        headers: response.headers,
-                      };
-                    }
-                  }
-                  throw new Error("Unknown Content-Type");
-                })
-              )
-            );
+          async dataStrategy({ request, params, matches }) {
+            // We only have one match in this simple setup
+            let route = await matches[0].route;
+            let handler = route.loader! as LoaderFunction;
+            let result = await handler({ request, params });
+            return [
+              {
+                type: ResultType.data,
+                data: `Route ID "${matches[0].route.id}" returned "${result}"`,
+              },
+            ];
           },
         });
 
         let A = await t.navigate("/test");
-        await A.lazy.test.resolve({
-          loader: () =>
-            new Response(new URLSearchParams({ a: "1", b: "2" }).toString(), {
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-              },
-            }),
-        });
+        await A.lazy.test.resolve({ loader: () => "TEST" });
 
-        expect(t.router.state.errors).toMatchInlineSnapshot(`null`);
-        expect(t.router.state.loaderData.test).toBeInstanceOf(URLSearchParams);
-        expect(t.router.state.loaderData.test.toString()).toBe("a=1&b=2");
+        expect(t.router.state.loaderData).toMatchObject({
+          test: 'Route ID "test" returned "TEST"',
+        });
       });
 
       it("handles errors at the proper boundary", async () => {
@@ -2774,33 +2721,79 @@ describe("a router", () => {
               ],
             },
           ],
-          dataStrategy({ matches, request }) {
+          dataStrategy({ matches, request, params }) {
             return Promise.all(
-              matches.map((match) =>
-                Promise.resolve(
-                  match.route.loader!({ params: match.params, request })
-                ).then(async (response): Promise<DataResult> => {
+              matches.map(async (match) => {
+                try {
+                  let result = await match.route.loader?.({ request, params });
+                  return {
+                    type: ResultType.data,
+                    data: result,
+                  };
+                } catch (error) {
                   return {
                     type: ResultType.error,
-                    error: new Error("Unable to unwrap response"),
+                    error,
                   };
-                })
-              )
+                }
+              })
             );
           },
         });
 
         let A = await t.navigate("/parent/child");
-        await A.loaders.test.resolve(new Response("hello world"));
+        await A.loaders.test.reject(new Error("ERROR"));
 
         expect(t.router.state.loaderData.test).toBeUndefined();
-        expect(t.router.state.errors?.child.message).toBe(
-          "Unable to unwrap response"
-        );
+        expect(t.router.state.errors?.child.message).toBe("ERROR");
       });
     });
+
     describe("action", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
+        let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
+          Promise.all(matches.map((match) => defaultStrategy(match)))
+        );
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "json",
+              path: "/test",
+              action: true,
+            },
+          ],
+          dataStrategy,
+        });
+
+        let A = await t.navigate("/test", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+
+        await A.actions.json.resolve(json({ message: "hello json" }));
+
+        expect(t.router.state.actionData).toEqual({
+          json: { message: "hello json" },
+        });
+        expect(dataStrategy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            type: "action",
+            request: expect.any(Request),
+            matches: [
+              expect.objectContaining({
+                route: expect.objectContaining({
+                  id: "json",
+                }),
+              }),
+            ],
+          })
+        );
+      });
+
+      it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
           return Promise.all(matches.map((match) => defaultStrategy(match)));
         });
@@ -2812,51 +2805,393 @@ describe("a router", () => {
             {
               id: "json",
               path: "/test",
-              loader: true,
-              children: [
-                {
-                  id: "text",
-                  index: true,
-                  loader: true,
-                },
-              ],
+              lazy: true,
             },
           ],
           dataStrategy,
         });
 
-        let A = await t.navigate("/test");
-        await A.loaders.json.resolve(
-          new Response(JSON.stringify({ message: "hello json" }), {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-        );
-        await A.loaders.text.resolve(new Response("hello text"));
-
-        expect(t.router.state.loaderData).toEqual({
+        let A = await t.navigate("/test", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        await A.lazy.json.resolve({
+          action: () => ({ message: "hello json" }),
+        });
+        expect(t.router.state.actionData).toEqual({
           json: { message: "hello json" },
-          text: "hello text",
         });
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
-            type: "loader",
+            type: "action",
             request: expect.any(Request),
-            matches: expect.arrayContaining([
+            matches: [
               expect.objectContaining({
                 route: expect.objectContaining({
                   id: "json",
                 }),
               }),
-              expect.objectContaining({
-                route: expect.objectContaining({
-                  id: "text",
-                }),
-              }),
-            ]),
+            ],
           })
         );
+      });
+    });
+
+    describe("fetchers", () => {
+      describe("loaders", () => {
+        it("should allow a custom implementation to passthrough to default behavior", async () => {
+          let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
+            Promise.all(matches.map((match) => defaultStrategy(match)))
+          );
+          let t = setup({
+            routes: [
+              {
+                path: "/",
+              },
+              {
+                id: "json",
+                path: "/test",
+                loader: true,
+              },
+            ],
+            dataStrategy,
+          });
+
+          let key = "key";
+          let A = await t.fetch("/test", key);
+
+          await A.loaders.json.resolve(json({ message: "hello json" }));
+
+          expect(t.router.state.fetchers.get(key)?.data.message).toBe(
+            "hello json"
+          );
+
+          expect(dataStrategy).toHaveBeenCalledWith(
+            expect.objectContaining({
+              type: "loader",
+              request: expect.any(Request),
+              matches: [
+                expect.objectContaining({
+                  route: expect.objectContaining({
+                    id: "json",
+                  }),
+                }),
+              ],
+            })
+          );
+        });
+
+        it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
+          let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
+            return Promise.all(matches.map((match) => defaultStrategy(match)));
+          });
+          let t = setup({
+            routes: [
+              {
+                path: "/",
+              },
+              {
+                id: "json",
+                path: "/test",
+                lazy: true,
+              },
+            ],
+            dataStrategy,
+          });
+
+          let key = "key";
+          let A = await t.fetch("/test", key);
+          await A.lazy.json.resolve({
+            loader: () => ({ message: "hello json" }),
+          });
+          expect(t.router.state.fetchers.get(key)?.data.message).toBe(
+            "hello json"
+          );
+          expect(dataStrategy).toHaveBeenCalledWith(
+            expect.objectContaining({
+              type: "loader",
+              request: expect.any(Request),
+              matches: [
+                expect.objectContaining({
+                  route: expect.objectContaining({
+                    id: "json",
+                  }),
+                }),
+              ],
+            })
+          );
+        });
+      });
+
+      describe("actions", () => {
+        it("should allow a custom implementation to passthrough to default behavior", async () => {
+          let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
+            Promise.all(matches.map((match) => defaultStrategy(match)))
+          );
+          let t = setup({
+            routes: [
+              {
+                path: "/",
+              },
+              {
+                id: "json",
+                path: "/test",
+                action: true,
+              },
+            ],
+            dataStrategy,
+          });
+
+          let key = "key";
+          let A = await t.fetch("/test", key, {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+
+          await A.actions.json.resolve(json({ message: "hello json" }));
+
+          expect(t.router.state.fetchers.get(key)?.data.message).toBe(
+            "hello json"
+          );
+
+          expect(dataStrategy).toHaveBeenCalledWith(
+            expect.objectContaining({
+              type: "action",
+              request: expect.any(Request),
+              matches: expect.arrayContaining([
+                expect.objectContaining({
+                  route: expect.objectContaining({
+                    id: "json",
+                  }),
+                }),
+              ]),
+            })
+          );
+        });
+
+        it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
+          let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
+            return Promise.all(matches.map((match) => defaultStrategy(match)));
+          });
+          let t = setup({
+            routes: [
+              {
+                path: "/",
+              },
+              {
+                id: "json",
+                path: "/test",
+                lazy: true,
+              },
+            ],
+            dataStrategy,
+          });
+
+          let key = "key";
+          let A = await t.fetch("/test", key, {
+            formMethod: "post",
+            formData: createFormData({}),
+          });
+          await A.lazy.json.resolve({
+            action: () => ({ message: "hello json" }),
+          });
+
+          expect(t.router.state.fetchers.get(key)?.data.message).toBe(
+            "hello json"
+          );
+
+          expect(dataStrategy).toHaveBeenCalledWith(
+            expect.objectContaining({
+              type: "action",
+              request: expect.any(Request),
+              matches: expect.arrayContaining([
+                expect.objectContaining({
+                  route: expect.objectContaining({
+                    id: "json",
+                  }),
+                }),
+              ]),
+            })
+          );
+        });
+      });
+    });
+
+    describe("use-cases", () => {
+      it("allows a single-fetch type approach", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              loader: true,
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: true,
+                },
+              ],
+            },
+          ],
+          async dataStrategy({ request, params, matches }) {
+            // Mock response from server
+            let result = {
+              loaderData: {
+                parent: "PARENT",
+                child: "CHILD",
+              },
+              errors: null,
+            };
+            return matches.map((m) => ({
+              type: ResultType.data,
+              data: result.loaderData[m.route.id],
+            }));
+          },
+        });
+
+        await t.navigate("/parent/child");
+
+        // We don't even have to resolve the loader here because it'll never
+        // be called in this test
+        await tick();
+
+        expect(t.router.state.loaderData).toMatchObject({
+          parent: "PARENT",
+          child: "CHILD",
+        });
+      });
+
+      it("allows middleware/context implementations", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              loader: true,
+              handle: {
+                context: {
+                  parent: () => ({ id: "parent" }),
+                },
+                middleware(context) {
+                  context.parent.whatever = "PARENT MIDDLEWARE";
+                },
+              },
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: true,
+                  handle: {
+                    context: {
+                      child: () => ({ id: "child" }),
+                    },
+                    middleware(context) {
+                      context.child.whatever = "CHILD MIDDLEWARE";
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+          async dataStrategy({ request, params, matches }) {
+            // Run context/middleware sequentially
+            let context = matches.reduce((acc, m) => {
+              if (m.route.handle?.context) {
+                let matchContext = Object.entries(
+                  m.route.handle.context
+                ).reduce(
+                  (acc, [key, value]) =>
+                    Object.assign(acc, {
+                      // @ts-expect-error
+                      [key]: value(),
+                    }),
+                  {}
+                );
+                Object.assign(acc, matchContext);
+              }
+              if (m.route.handle?.middleware) {
+                m.route.handle.middleware(acc);
+              }
+              return acc;
+            }, {});
+
+            // Run loaders in parallel only exposing contexts from above
+            return Promise.all(
+              matches.map(async (m, i) => {
+                try {
+                  let data = await m.route.loader?.({
+                    request,
+                    params,
+                    // Only provide context values up to this level in the matches
+                    context: matches.slice(0, i + 1).reduce((acc, m) => {
+                      Object.keys(m.route.handle?.context).forEach((k) => {
+                        acc[k] = context[k];
+                      });
+                      return acc;
+                    }, {}),
+                  });
+                  return {
+                    type: ResultType.data,
+                    data,
+                  };
+                } catch (error) {
+                  return {
+                    type: ResultType.error,
+                    error,
+                  };
+                }
+              })
+            );
+          },
+        });
+
+        let A = await t.navigate("/parent/child");
+
+        // Loaders are called with context from their level and above, and
+        // context reflects any values set by middleware
+        expect(A.loaders.parent.stub).toHaveBeenCalledWith(
+          expect.objectContaining({
+            context: {
+              parent: {
+                id: "parent",
+                whatever: "PARENT MIDDLEWARE",
+              },
+            },
+          })
+        );
+
+        expect(A.loaders.child.stub).toHaveBeenCalledWith(
+          expect.objectContaining({
+            context: {
+              parent: {
+                id: "parent",
+                whatever: "PARENT MIDDLEWARE",
+              },
+              child: {
+                id: "child",
+                whatever: "CHILD MIDDLEWARE",
+              },
+            },
+          })
+        );
+
+        await A.loaders.parent.resolve("PARENT LOADER");
+        expect(t.router.state.navigation.state).toBe("loading");
+
+        await A.loaders.child.resolve("CHILD LOADER");
+        expect(t.router.state.navigation.state).toBe("idle");
+
+        expect(t.router.state.loaderData).toMatchObject({
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
+        });
       });
     });
   });

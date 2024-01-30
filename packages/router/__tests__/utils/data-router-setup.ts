@@ -34,7 +34,7 @@ import { isRedirect, tick } from "./utils";
 // by our test harness
 export type TestIndexRouteObject = Pick<
   AgnosticIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate"
+  "id" | "index" | "path" | "shouldRevalidate" | "handle"
 > & {
   lazy?: boolean;
   loader?: boolean;
@@ -44,7 +44,7 @@ export type TestIndexRouteObject = Pick<
 
 export type TestNonIndexRouteObject = Pick<
   AgnosticNonIndexRouteObject,
-  "id" | "index" | "path" | "shouldRevalidate"
+  "id" | "index" | "path" | "shouldRevalidate" | "handle"
 > & {
   lazy?: boolean;
   loader?: boolean;

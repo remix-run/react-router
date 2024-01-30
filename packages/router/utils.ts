@@ -223,8 +223,8 @@ export interface DetectErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
 }
 
-export interface DataStrategyFunctionArgs {
-  request: Request;
+export interface DataStrategyFunctionArgs<Context = any>
+  extends DataFunctionArgs<Context> {
   matches: AgnosticDataStrategyMatch[];
   type: "loader" | "action";
   defaultStrategy(match: AgnosticDataStrategyMatch): Promise<DataResult>;
