@@ -37,8 +37,8 @@ test.describe("Vite build", () => {
               assetsInlineLimit: 0,
             },
             plugins: [
-              remix(),
               mdx(),
+              remix(),
             ],
           });
         `,

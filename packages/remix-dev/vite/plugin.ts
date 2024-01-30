@@ -1229,7 +1229,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     },
     {
       name: "remix-dot-client",
-      enforce: "post",
       async transform(code, id, options) {
         if (!options?.ssr) return;
         let clientFileRE = /\.client(\.[cm]?[jt]sx?)?$/;
@@ -1251,7 +1250,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     },
     {
       name: "remix-route-exports",
-      enforce: "post", // Ensure we're operating on the transformed code to support MDX etc.
       async transform(code, id, options) {
         if (options?.ssr) return;
 
@@ -1294,7 +1292,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     },
     {
       name: "remix-remix-react-proxy",
-      enforce: "post", // Ensure we're operating on the transformed code to support MDX etc.
       resolveId(id) {
         if (id === remixReactProxyId) {
           return VirtualModule.resolve(remixReactProxyId);
@@ -1389,7 +1386,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     },
     {
       name: "remix-react-refresh-babel",
-      enforce: "post", // jsx and typescript (in ts, jsx, tsx files) are already transpiled by vite
       async transform(code, id, options) {
         if (viteCommand !== "serve") return;
         if (id.includes("/node_modules/")) return;

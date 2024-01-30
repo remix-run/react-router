@@ -34,8 +34,8 @@ test.describe("Vite dev", () => {
               strictPort: true,
             },
             plugins: [
-              remix(),
               mdx(),
+              remix(),
             ],
           });
         `,
