@@ -1,5 +1,17 @@
 # `react-router-dom-v5-compat`
 
+## 6.22.0-pre.0
+
+### Minor Changes
+
+- Include a window tag for CWV Report detection ([#11222](https://github.com/remix-run/react-router/pull/11222))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router-dom@6.22.0-pre.0`
+  - `react-router@6.22.0-pre.0`
+
 ## 6.21.3
 
 ### Patch Changes

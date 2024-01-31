@@ -1,5 +1,17 @@
 # `@remix-run/router`
 
+## 1.15.0-pre.0
+
+### Minor Changes
+
+- Add a `createStaticHandler` `future.v7_throwAbortReason` flag to throw `request.signal.reason` (defaults to a `DOMException`) when a request is aborted instead of an `Error` such as `new Error("query() call aborted: GET /path")` ([#11104](https://github.com/remix-run/react-router/pull/11104))
+
+  - Please note that `DOMException` was added in Node v17 so you will not get a `DOMException` on Node 16 and below.
+
+### Patch Changes
+
+- Respect the `ErrorResponse` status code if passed to `getStaticContextFormError` ([#11213](https://github.com/remix-run/react-router/pull/11213))
+
 ## 1.14.2
 
 ### Patch Changes
