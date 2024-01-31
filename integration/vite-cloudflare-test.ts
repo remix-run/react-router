@@ -51,7 +51,8 @@ test.describe("Vite / cloudflare", async () => {
       ),
       "vite.config.ts": await VITE_CONFIG({
         port,
-        pluginOptions: `{ adapter: (await import("@remix-run/dev")).unstable_vitePluginAdapterCloudflare() }`,
+        viteSsrResolveExternalConditions: ["workerd", "worker"],
+        pluginOptions: `{ presets: [(await import("@remix-run/dev")).unstable_vitePluginPresetCloudflare()] }`,
       }),
       "functions/[[page]].ts": `
         import { createPagesFunctionHandler } from "@remix-run/cloudflare-pages";
