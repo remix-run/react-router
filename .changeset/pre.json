@@ -8,5 +8,9 @@
     "react-router-native": "6.21.3",
     "@remix-run/router": "1.14.2"
   },
-  "changesets": []
+  "changesets": [
+    "cwv-report-id",
+    "static-context-error-status-code",
+    "throw-abort-reason"
+  ]
 }
