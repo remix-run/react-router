@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.6.0-pre.1
+
+### Patch Changes
+
+- Vite: add dev load context option to Cloudflare preset ([#8649](https://github.com/remix-run/remix/pull/8649))
+- Updated dependencies:
+  - `@remix-run/node@2.6.0-pre.1`
+  - `@remix-run/server-runtime@2.6.0-pre.1`
+
 ## 2.6.0-pre.0
 
 ### Minor Changes
