@@ -34,7 +34,7 @@ const files = {
     });
   `,
   "app/root.tsx": `
-    import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+    import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
     export default function Root() {
       return (
@@ -46,7 +46,6 @@ const files = {
           <body>
             <Outlet />
             <Scripts />
-            <LiveReload />
           </body>
         </html>
       );
