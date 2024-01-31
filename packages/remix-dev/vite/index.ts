@@ -4,7 +4,7 @@
 import type { RemixVitePlugin } from "./plugin";
 export type {
   BuildManifest as Unstable_BuildManifest,
-  VitePluginPreset as Unstable_VitePluginPreset,
+  Preset as Unstable_Preset,
 } from "./plugin";
 
 export const unstable_vitePlugin: RemixVitePlugin = (...args) => {
@@ -13,4 +13,4 @@ export const unstable_vitePlugin: RemixVitePlugin = (...args) => {
   return remixVitePlugin(...args);
 };
 
-export { preset as unstable_vitePluginPresetCloudflare } from "./presets/cloudflare";
+export { preset as unstable_cloudflarePreset } from "./presets/cloudflare";

@@ -124,7 +124,7 @@ type ExcludedRemixConfigPresetKey =
 
 type RemixConfigPreset = Omit<VitePluginConfig, ExcludedRemixConfigPresetKey>;
 
-export type VitePluginPreset = {
+export type Preset = {
   name: string;
   remixConfig?: () => RemixConfigPreset | Promise<RemixConfigPreset>;
   remixConfigResolved?: (args: {
@@ -155,7 +155,7 @@ export type VitePluginConfig = RemixEsbuildUserConfigJsdocOverrides &
      * An array of Remix config presets to ease integration with other platforms
      * and tools.
      */
-    presets?: Array<VitePluginPreset>;
+    presets?: Array<Preset>;
     /**
      * The file name of the server build output. This file
      * should end in a `.js` extension and should be deployed to your server.

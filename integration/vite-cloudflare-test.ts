@@ -52,7 +52,13 @@ test.describe("Vite / cloudflare", async () => {
       "vite.config.ts": await VITE_CONFIG({
         port,
         viteSsrResolveExternalConditions: ["workerd", "worker"],
-        pluginOptions: `{ presets: [(await import("@remix-run/dev")).unstable_vitePluginPresetCloudflare()] }`,
+        pluginOptions: `{
+          presets: [
+            (await import("@remix-run/dev")).unstable_cloudflarePreset({
+              getRemixDevLoadContext: (ctx) => ({ ...ctx, extra: "stuff" })
+            })
+          ]
+        }`,
       }),
       "functions/[[page]].ts": `
         import { createPagesFunctionHandler } from "@remix-run/cloudflare-pages";
@@ -83,7 +89,7 @@ test.describe("Vite / cloudflare", async () => {
         export async function loader({ context }: LoaderFunctionArgs) {
           const { MY_KV } = context.env;
           const value = await MY_KV.get(key);
-          return json({ value });
+          return json({ value, extra: context.extra });
         }
 
         export async function action({ request, context }: ActionFunctionArgs) {
@@ -105,10 +111,11 @@ test.describe("Vite / cloudflare", async () => {
         }
 
         export default function Index() {
-          const { value } = useLoaderData<typeof loader>();
+          const { value, extra } = useLoaderData<typeof loader>();
           return (
             <div>
               <h1>Welcome to Remix</h1>
+              <p data-extra>Extra: {extra}</p>
               {value ? (
                 <>
                   <p data-text>Value: {value}</p>
@@ -142,6 +149,7 @@ test.describe("Vite / cloudflare", async () => {
       await page.goto(`http://localhost:${port}/`, {
         waitUntil: "networkidle",
       });
+      await expect(page.locator("[data-extra]")).toHaveText("Extra: stuff");
       await expect(page.locator("[data-text]")).toHaveText("No value");
 
       await page.getByLabel("Set value:").fill("my-value");

@@ -1,14 +1,34 @@
-import { type VitePluginPreset, setRemixDevLoadContext } from "../plugin";
+import { type Preset, setRemixDevLoadContext } from "../plugin";
 
-export const preset: () => VitePluginPreset = () => ({
+type GetRemixDevLoadContext = (
+  loadContext: Record<string, unknown>
+) => Record<string, unknown> | Promise<Record<string, unknown>>;
+
+const importWrangler = async () => {
+  try {
+    return await import("wrangler");
+  } catch (_) {
+    throw Error("Could not import `wrangler`. Do you have it installed?");
+  }
+};
+
+/**
+ * @param options.getRemixDevLoadContext - Augment the load context.
+ */
+export const preset = (
+  options: {
+    getRemixDevLoadContext?: GetRemixDevLoadContext;
+  } = {}
+): Preset => ({
   name: "cloudflare",
   remixConfig: async () => {
-    let { getBindingsProxy } = await import("wrangler");
+    let { getBindingsProxy } = await importWrangler();
     let { bindings } = await getBindingsProxy();
-    let loadContext = bindings && { env: bindings };
-
+    let loadContext: Record<string, unknown> = { env: bindings };
+    if (options.getRemixDevLoadContext) {
+      loadContext = await options.getRemixDevLoadContext(loadContext);
+    }
     setRemixDevLoadContext(loadContext);
-
     return {};
   },
 });
