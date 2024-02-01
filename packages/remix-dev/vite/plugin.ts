@@ -90,7 +90,7 @@ export const configRouteToBranchRoute = (
   configRoute: ConfigRoute
 ): BranchRoute => pick(configRoute, branchRouteProperties);
 
-type ServerBundlesFunction = (args: {
+export type ServerBundlesFunction = (args: {
   branch: BranchRoute[];
 }) => string | Promise<string>;
 

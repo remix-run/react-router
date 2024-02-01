@@ -5,6 +5,8 @@ import type { RemixVitePlugin } from "./plugin";
 export type {
   BuildManifest as Unstable_BuildManifest,
   Preset as Unstable_Preset,
+  VitePluginConfig as Unstable_VitePluginConfig,
+  ServerBundlesFunction as Unstable_ServerBundlesFunction,
 } from "./plugin";
 
 export const unstable_vitePlugin: RemixVitePlugin = (...args) => {
