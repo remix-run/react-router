@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.6.0-pre.2
+
+### Patch Changes
+
+- Vite: Provide `Unstable_ServerBundlesFunction` and `Unstable_VitePluginConfig` types ([#8654](https://github.com/remix-run/remix/pull/8654))
+- Updated dependencies:
+  - `@remix-run/node@2.6.0-pre.2`
+  - `@remix-run/server-runtime@2.6.0-pre.2`
+
 ## 2.6.0-pre.1
 
 ### Patch Changes
