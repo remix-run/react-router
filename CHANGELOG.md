@@ -13,136 +13,141 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   <summary>Table of Contents</summary>
 
 - [React Router Releases](#react-router-releases)
-  - [v6.21.3](#v6213)
-    - [Patch Changes](#patch-changes)
-  - [v6.21.2](#v6212)
-    - [Patch Changes](#patch-changes-1)
-  - [v6.21.1](#v6211)
-    - [Patch Changes](#patch-changes-2)
-  - [v6.21.0](#v6210)
+  - [v6.22.0](#v6220)
     - [What's Changed](#whats-changed)
+      - [Core Web Vitals Technology Report Flag](#core-web-vitals-technology-report-flag)
+    - [Minor Changes](#minor-changes)
+    - [Patch Changes](#patch-changes)
+  - [v6.21.3](#v6213)
+    - [Patch Changes](#patch-changes-1)
+  - [v6.21.2](#v6212)
+    - [Patch Changes](#patch-changes-2)
+  - [v6.21.1](#v6211)
+    - [Patch Changes](#patch-changes-3)
+  - [v6.21.0](#v6210)
+    - [What's Changed](#whats-changed-1)
       - [`future.v7_relativeSplatPath`](#futurev7_relativesplatpath)
       - [Partial Hydration](#partial-hydration)
-    - [Minor Changes](#minor-changes)
-    - [Patch Changes](#patch-changes-3)
-  - [v6.20.1](#v6201)
-    - [Patch Changes](#patch-changes-4)
-  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-1)
+    - [Patch Changes](#patch-changes-4)
+  - [v6.20.1](#v6201)
     - [Patch Changes](#patch-changes-5)
-  - [v6.19.0](#v6190)
-    - [What's Changed](#whats-changed-1)
-      - [`unstable_flushSync` API](#unstable_flushsync-api)
+  - [v6.20.0](#v6200)
     - [Minor Changes](#minor-changes-2)
     - [Patch Changes](#patch-changes-6)
-  - [v6.18.0](#v6180)
+  - [v6.19.0](#v6190)
     - [What's Changed](#whats-changed-2)
-      - [New Fetcher APIs](#new-fetcher-apis)
-      - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
+      - [`unstable_flushSync` API](#unstable_flushsync-api)
     - [Minor Changes](#minor-changes-3)
     - [Patch Changes](#patch-changes-7)
-  - [v6.17.0](#v6170)
+  - [v6.18.0](#v6180)
     - [What's Changed](#whats-changed-3)
-      - [View Transitions 🚀](#view-transitions-)
+      - [New Fetcher APIs](#new-fetcher-apis)
+      - [Persistence Future Flag (`future.v7_fetcherPersist`)](#persistence-future-flag-futurev7_fetcherpersist)
     - [Minor Changes](#minor-changes-4)
     - [Patch Changes](#patch-changes-8)
-  - [v6.16.0](#v6160)
+  - [v6.17.0](#v6170)
+    - [What's Changed](#whats-changed-4)
+      - [View Transitions 🚀](#view-transitions-)
     - [Minor Changes](#minor-changes-5)
     - [Patch Changes](#patch-changes-9)
-  - [v6.15.0](#v6150)
+  - [v6.16.0](#v6160)
     - [Minor Changes](#minor-changes-6)
     - [Patch Changes](#patch-changes-10)
-  - [v6.14.2](#v6142)
-    - [Patch Changes](#patch-changes-11)
-  - [v6.14.1](#v6141)
-    - [Patch Changes](#patch-changes-12)
-  - [v6.14.0](#v6140)
-    - [What's Changed](#whats-changed-4)
-      - [JSON/Text Submissions](#jsontext-submissions)
+  - [v6.15.0](#v6150)
     - [Minor Changes](#minor-changes-7)
+    - [Patch Changes](#patch-changes-11)
+  - [v6.14.2](#v6142)
+    - [Patch Changes](#patch-changes-12)
+  - [v6.14.1](#v6141)
     - [Patch Changes](#patch-changes-13)
-  - [v6.13.0](#v6130)
+  - [v6.14.0](#v6140)
     - [What's Changed](#whats-changed-5)
+      - [JSON/Text Submissions](#jsontext-submissions)
     - [Minor Changes](#minor-changes-8)
     - [Patch Changes](#patch-changes-14)
-  - [v6.12.1](#v6121)
-    - [Patch Changes](#patch-changes-15)
-  - [v6.12.0](#v6120)
+  - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-6)
-      - [`React.startTransition` support](#reactstarttransition-support)
     - [Minor Changes](#minor-changes-9)
+    - [Patch Changes](#patch-changes-15)
+  - [v6.12.1](#v6121)
     - [Patch Changes](#patch-changes-16)
-  - [v6.11.2](#v6112)
-    - [Patch Changes](#patch-changes-17)
-  - [v6.11.1](#v6111)
-    - [Patch Changes](#patch-changes-18)
-  - [v6.11.0](#v6110)
-    - [Minor Changes](#minor-changes-10)
-    - [Patch Changes](#patch-changes-19)
-  - [v6.10.0](#v6100)
+  - [v6.12.0](#v6120)
     - [What's Changed](#whats-changed-7)
+      - [`React.startTransition` support](#reactstarttransition-support)
+    - [Minor Changes](#minor-changes-10)
+    - [Patch Changes](#patch-changes-17)
+  - [v6.11.2](#v6112)
+    - [Patch Changes](#patch-changes-18)
+  - [v6.11.1](#v6111)
+    - [Patch Changes](#patch-changes-19)
+  - [v6.11.0](#v6110)
     - [Minor Changes](#minor-changes-11)
     - [Patch Changes](#patch-changes-20)
-  - [v6.9.0](#v690)
+  - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-8)
-      - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
-      - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
     - [Minor Changes](#minor-changes-12)
     - [Patch Changes](#patch-changes-21)
-  - [v6.8.2](#v682)
-    - [Patch Changes](#patch-changes-22)
-  - [v6.8.1](#v681)
-    - [Patch Changes](#patch-changes-23)
-  - [v6.8.0](#v680)
+  - [v6.9.0](#v690)
+    - [What's Changed](#whats-changed-9)
+      - [`Component`/`ErrorBoundary` route properties](#componenterrorboundary-route-properties)
+      - [Introducing Lazy Route Modules](#introducing-lazy-route-modules)
     - [Minor Changes](#minor-changes-13)
+    - [Patch Changes](#patch-changes-22)
+  - [v6.8.2](#v682)
+    - [Patch Changes](#patch-changes-23)
+  - [v6.8.1](#v681)
     - [Patch Changes](#patch-changes-24)
-  - [v6.7.0](#v670)
+  - [v6.8.0](#v680)
     - [Minor Changes](#minor-changes-14)
     - [Patch Changes](#patch-changes-25)
-  - [v6.6.2](#v662)
-    - [Patch Changes](#patch-changes-26)
-  - [v6.6.1](#v661)
-    - [Patch Changes](#patch-changes-27)
-  - [v6.6.0](#v660)
-    - [What's Changed](#whats-changed-9)
+  - [v6.7.0](#v670)
     - [Minor Changes](#minor-changes-15)
+    - [Patch Changes](#patch-changes-26)
+  - [v6.6.2](#v662)
+    - [Patch Changes](#patch-changes-27)
+  - [v6.6.1](#v661)
     - [Patch Changes](#patch-changes-28)
-  - [v6.5.0](#v650)
+  - [v6.6.0](#v660)
     - [What's Changed](#whats-changed-10)
     - [Minor Changes](#minor-changes-16)
     - [Patch Changes](#patch-changes-29)
-  - [v6.4.5](#v645)
-    - [Patch Changes](#patch-changes-30)
-  - [v6.4.4](#v644)
-    - [Patch Changes](#patch-changes-31)
-  - [v6.4.3](#v643)
-    - [Patch Changes](#patch-changes-32)
-  - [v6.4.2](#v642)
-    - [Patch Changes](#patch-changes-33)
-  - [v6.4.1](#v641)
-    - [Patch Changes](#patch-changes-34)
-  - [v6.4.0](#v640)
+  - [v6.5.0](#v650)
     - [What's Changed](#whats-changed-11)
-      - [Remix Data APIs](#remix-data-apis)
-    - [Patch Changes](#patch-changes-35)
-  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-17)
-  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-30)
+  - [v6.4.5](#v645)
+    - [Patch Changes](#patch-changes-31)
+  - [v6.4.4](#v644)
+    - [Patch Changes](#patch-changes-32)
+  - [v6.4.3](#v643)
+    - [Patch Changes](#patch-changes-33)
+  - [v6.4.2](#v642)
+    - [Patch Changes](#patch-changes-34)
+  - [v6.4.1](#v641)
+    - [Patch Changes](#patch-changes-35)
+  - [v6.4.0](#v640)
+    - [What's Changed](#whats-changed-12)
+      - [Remix Data APIs](#remix-data-apis)
     - [Patch Changes](#patch-changes-36)
-  - [v6.2.1](#v621)
-    - [Patch Changes](#patch-changes-37)
-  - [v6.2.0](#v620)
+  - [v6.3.0](#v630)
     - [Minor Changes](#minor-changes-18)
+  - [v6.2.2](#v622)
+    - [Patch Changes](#patch-changes-37)
+  - [v6.2.1](#v621)
     - [Patch Changes](#patch-changes-38)
-  - [v6.1.1](#v611)
-    - [Patch Changes](#patch-changes-39)
-  - [v6.1.0](#v610)
+  - [v6.2.0](#v620)
     - [Minor Changes](#minor-changes-19)
+    - [Patch Changes](#patch-changes-39)
+  - [v6.1.1](#v611)
     - [Patch Changes](#patch-changes-40)
-  - [v6.0.2](#v602)
+  - [v6.1.0](#v610)
+    - [Minor Changes](#minor-changes-20)
     - [Patch Changes](#patch-changes-41)
-  - [v6.0.1](#v601)
+  - [v6.0.2](#v602)
     - [Patch Changes](#patch-changes-42)
+  - [v6.0.1](#v601)
+    - [Patch Changes](#patch-changes-43)
   - [v6.0.0](#v600)
 
 </details>
@@ -165,6 +170,36 @@ Date: YYYY-MM-DD
 
 **Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 -->
+
+## v6.22.0
+
+Date: 2024-02-01
+
+### What's Changed
+
+#### Core Web Vitals Technology Report Flag
+
+In 2021, the HTTP Archive launched the [Core Web Vitals Technology Report dashboard](https://discuss.httparchive.org/t/new-dashboard-the-core-web-vitals-technology-report/2178):
+
+> By combining the powers of real-user experiences in the Chrome UX Report 26 (CrUX) dataset with web technology detections in HTTP Archive 30, we can get a glimpse into how architectural decisions like choices of CMS platform or JavaScript framework play a role in sites’ CWV performance.
+
+They use a tool called [`wappalyzer`](https://github.com/HTTPArchive/wappalyzer) to identify what technologies a given website is using by looking for certain scripts, global JS variables, or other identifying characteristics. For example, for Remix applications, they [look for the global `__remixContext`](https://github.com/HTTPArchive/wappalyzer/blob/c2a24ee7c2d07bf9c521f02584ae2dcf603ac0b7/src/technologies/r.json#L1328) variable to identify that a website is using Remix.
+
+It was brought to our attention that React Router was unable to be reliably identified because there are no identifying global aspects. They are currently [looking for external scripts with `react-router`](https://github.com/HTTPArchive/wappalyzer/blob/c2a24ee7c2d07bf9c521f02584ae2dcf603ac0b7/src/technologies/r.json#L637) in the name. This will identify sites using React Router from a CDN such as `unpkg` - but it will miss the **vast** majority of sites that are installing React Router from the npm registry and bundling it into their JS files. This results in [drastically under-reporting](https://lookerstudio.google.com/s/pixHkNmGbN4) the usage of React Router on the web.
+
+Starting with version `6.22.0`, sites using `react-router-dom` will begin adding a `window.__reactRouterVersion` variable that will be set to a string value of the SemVer major version number (i.e., `window.__reactRouterVersion = "6";`) so that they can be properly identified.
+
+### Minor Changes
+
+- Include a `window.__reactRouterVersion` for CWV Report detection ([#11222](https://github.com/remix-run/react-router/pull/11222))
+- Add a `createStaticHandler` `future.v7_throwAbortReason` flag to throw `request.signal.reason` (defaults to a `DOMException`) when a request is aborted instead of an `Error` such as `new Error("query() call aborted: GET /path")` ([#11104](https://github.com/remix-run/react-router/pull/11104))
+  - Please note that `DOMException` was added in Node v17 so you will not get a `DOMException` on Node 16 and below.
+
+### Patch Changes
+
+- Respect the `ErrorResponse` status code if passed to `getStaticContextFormError` ([#11213](https://github.com/remix-run/react-router/pull/11213))
+
+**Full Changelog**: [`v6.21.3...v6.22.0`](https://github.com/remix-run/react-router/compare/react-router@6.21.3...react-router@6.22.0)
 
 ## v6.21.3
 
@@ -1113,17 +1148,17 @@ Date: 2022-11-01
 
 ### Patch Changes
 
-- Generate correct `<a href>` values when using `createHashRouter` (#9409)
-- Better handle encoding/matching with special characters in URLs and route paths (#9477, #9496)
-- Generate correct `formAction` pathnames when an `index` route also has a `path` (#9486)
+- Generate correct `<a href>` values when using `createHashRouter` ([#9409](https://github.com/remix-run/react-router/pull/9409))
+- Better handle encoding/matching with special characters in URLs and route paths ([#9477](https://github.com/remix-run/react-router/pull/9477), [#9496](https://github.com/remix-run/react-router/pull/9496))
+- Generate correct `formAction` pathnames when an `index` route also has a `path` ([#9486](https://github.com/remix-run/react-router/pull/9486))
 - Respect `relative=path` prop on `NavLink` ([#9453](https://github.com/remix-run/react-router/pull/9453))
-- Fix `NavLink` behavior for root urls (#9497)
-- `useRoutes` should be able to return `null` when passing `locationArg` (#9485)
-- Fix `initialEntries` type in `createMemoryRouter` (#9498)
-- Support `basename` and relative routing in `loader`/`action` redirects (#9447)
-- Ignore pathless layout routes when looking for proper submission `action` function (#9455)
-- Add UMD build for `@remix-run/router` (#9446)
-- Fix `createURL` in local file execution in Firefox (#9464)
+- Fix `NavLink` behavior for root urls ([#9497](https://github.com/remix-run/react-router/pull/9497))
+- `useRoutes` should be able to return `null` when passing `locationArg` ([#9485](https://github.com/remix-run/react-router/pull/9485))
+- Fix `initialEntries` type in `createMemoryRouter` ([#9498](https://github.com/remix-run/react-router/pull/9498))
+- Support `basename` and relative routing in `loader`/`action` redirects ([#9447](https://github.com/remix-run/react-router/pull/9447))
+- Ignore pathless layout routes when looking for proper submission `action` function ([#9455](https://github.com/remix-run/react-router/pull/9455))
+- Add UMD build for `@remix-run/router` ([#9446](https://github.com/remix-run/react-router/pull/9446))
+- Fix `createURL` in local file execution in Firefox ([#9464](https://github.com/remix-run/react-router/pull/9464))
 
 **Full Changelog**: [`v6.4.2...v6.4.3`](https://github.com/remix-run/react-router/compare/react-router@6.4.2...react-router@6.4.3)
 
@@ -1176,13 +1211,13 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 - Perform in-page data loads and mutations with `useFetcher()`
 - Defer non-critical data with `defer` and `Await`
 - Manage scroll position with `<ScrollRestoration>`
-- Perform path-relative navigations with `<Link relative="path">` (#9160)
+- Perform path-relative navigations with `<Link relative="path">` ([#9160](https://github.com/remix-run/react-router/pull/9160))
 
 ### Patch Changes
 
-- Path resolution is now trailing slash agnostic (#8861)
-- `useLocation` returns the scoped location inside a `<Routes location>` component (#9094)
-- Respect the `<Link replace>` prop if it is defined (#8779)
+- Path resolution is now trailing slash agnostic ([#8861](https://github.com/remix-run/react-router/pull/8861))
+- `useLocation` returns the scoped location inside a `<Routes location>` component ([#9094](https://github.com/remix-run/react-router/pull/9094))
+- Respect the `<Link replace>` prop if it is defined ([#8779](https://github.com/remix-run/react-router/pull/8779))
 
 **Full Changelog**: [`v6.3.0...v6.4.0`](https://github.com/remix-run/react-router/compare/v6.3.0...react-router%406.4.0)
 
@@ -1202,8 +1237,8 @@ Date: 2022-02-28
 
 ### Patch Changes
 
-- Fixed nested splat routes that begin with special URL-safe characters (#8563)
-- Fixed a bug where index routes were missing route context in some cases (#8497)
+- Fixed nested splat routes that begin with special URL-safe characters ([#8563](https://github.com/remix-run/react-router/pull/8563))
+- Fixed a bug where index routes were missing route context in some cases ([#8497](https://github.com/remix-run/react-router/pull/8497))
 
 **Full Changelog**: [`v6.2.1...v6.2.2`](https://github.com/remix-run/react-router/compare/v6.2.1...v6.2.2)
 
@@ -1227,8 +1262,8 @@ Date: 2021-12-17
 
 ### Patch Changes
 
-- Fixed the `RouteProps` `element` type, which should be a `ReactNode` (#8473)
-- Fixed a bug with `useOutlet` for top-level routes (#8483)
+- Fixed the `RouteProps` `element` type, which should be a `ReactNode` ([#8473](https://github.com/remix-run/react-router/pull/8473))
+- Fixed a bug with `useOutlet` for top-level routes ([#8483](https://github.com/remix-run/react-router/pull/8483))
 
 **Full Changelog**: [`v6.1.1...v6.2.0`](https://github.com/remix-run/react-router/compare/v6.1.1...v6.2.0)
 
@@ -1238,7 +1273,7 @@ Date: 2021-12-11
 
 ### Patch Changes
 
-- In v6.1.0 we inadvertently shipped a new, undocumented API that will likely introduce bugs (#7586). We have flagged `HistoryRouter` as `unstable_HistoryRouter`, as this API will likely need to change before a new major release.
+- In v6.1.0 we inadvertently shipped a new, undocumented API that will likely introduce bugs ([#7586](https://github.com/remix-run/react-router/pull/7586)). We have flagged `HistoryRouter` as `unstable_HistoryRouter`, as this API will likely need to change before a new major release.
 
 **Full Changelog**: [`v6.1.0...v6.1.1`](https://github.com/remix-run/react-router/compare/v6.1.0...v6.1.1)
 
@@ -1248,14 +1283,14 @@ Date: 2021-12-10
 
 ### Minor Changes
 
-- `<Outlet>` can now receive a `context` prop. This value is passed to child routes and is accessible via the new `useOutletContext` hook. See [the API docs](https://reactrouter.com/docs/en/v6/api#useoutletcontext) for details. (#8461)
-- `<NavLink>` can now receive a child function for access to its props. (#8164)
-- Improved TypeScript signature for `useMatch` and `matchPath`. For example, when you call `useMatch("foo/:bar/:baz")`, the path is parsed and the return type will be `PathMatch<"bar" | "baz">`. (#8030)
+- `<Outlet>` can now receive a `context` prop. This value is passed to child routes and is accessible via the new `useOutletContext` hook. See [the API docs](https://reactrouter.com/docs/en/v6/api#useoutletcontext) for details. ([#8461](https://github.com/remix-run/react-router/pull/8461))
+- `<NavLink>` can now receive a child function for access to its props. ([#8164](https://github.com/remix-run/react-router/pull/8164))
+- Improved TypeScript signature for `useMatch` and `matchPath`. For example, when you call `useMatch("foo/:bar/:baz")`, the path is parsed and the return type will be `PathMatch<"bar" | "baz">`. ([#8030](https://github.com/remix-run/react-router/pull/8030))
 
 ### Patch Changes
 
-- Fixed a bug that broke support for base64 encoded IDs on nested routes (#8291)
-- A few error message improvements (#8202)
+- Fixed a bug that broke support for base64 encoded IDs on nested routes ([#8291](https://github.com/remix-run/react-router/pull/8291))
+- A few error message improvements ([#8202](https://github.com/remix-run/react-router/pull/8202))
 
 **Full Changelog**: [`v6.0.2...v6.1.0`](https://github.com/remix-run/react-router/compare/v6.0.2...v6.1.0)
 
@@ -1265,7 +1300,7 @@ Date: 2021-11-09
 
 ### Patch Changes
 
-- Added the `reloadDocument` prop to `<Link>`. This allows `<Link>` to function like a normal anchor tag by reloading the document after navigation while maintaining the relative `to` resolution (#8283)
+- Added the `reloadDocument` prop to `<Link>`. This allows `<Link>` to function like a normal anchor tag by reloading the document after navigation while maintaining the relative `to` resolution ([#8283](https://github.com/remix-run/react-router/pull/8283))
 
 **Full Changelog**: [`v6.0.1...v6.0.2`](https://github.com/remix-run/react-router/compare/v6.0.1...v6.0.2)
 
@@ -1275,8 +1310,8 @@ Date: 2021-11-05
 
 ### Patch Changes
 
-- Add a default `<StaticRouter location>` value (#8243)
-- Add invariant for using `<Route>` inside `<Routes>` to help people make the change (#8238)
+- Add a default `<StaticRouter location>` value ([#8243](https://github.com/remix-run/react-router/pull/8243))
+- Add invariant for using `<Route>` inside `<Routes>` to help people make the change ([#8238](https://github.com/remix-run/react-router/pull/8238))
 
 **Full Changelog**: [`v6.0.0...v6.0.1`](https://github.com/remix-run/react-router/compare/v6.0.0...v6.0.1)
 
