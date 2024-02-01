@@ -2834,6 +2834,7 @@ export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
  */
 export interface StaticHandlerFutureConfig {
   v7_relativeSplatPath: boolean;
+  v7_throwAbortReason: boolean;
 }
 
 export interface CreateStaticHandlerOptions {
@@ -2872,6 +2873,7 @@ export function createStaticHandler(
   // Config driven behavior flags
   let future: StaticHandlerFutureConfig = {
     v7_relativeSplatPath: false,
+    v7_throwAbortReason: false,
     ...(opts ? opts.future : null),
   };
 
@@ -3141,10 +3143,7 @@ export function createStaticHandler(
       );
 
       if (request.signal.aborted) {
-        let method = isRouteRequest ? "queryRoute" : "query";
-        throw new Error(
-          `${method}() call aborted: ${request.method} ${request.url}`
-        );
+        throwStaticHandlerAbortedError(request, isRouteRequest, future);
       }
     }
 
@@ -3312,10 +3311,7 @@ export function createStaticHandler(
     ]);
 
     if (request.signal.aborted) {
-      let method = isRouteRequest ? "queryRoute" : "query";
-      throw new Error(
-        `${method}() call aborted: ${request.method} ${request.url}`
-      );
+      throwStaticHandlerAbortedError(request, isRouteRequest, future);
     }
 
     // Process and commit output from loaders
@@ -3372,12 +3368,25 @@ export function getStaticContextFromError(
 ) {
   let newContext: StaticHandlerContext = {
     ...context,
-    statusCode: 500,
+    statusCode: isRouteErrorResponse(error) ? error.status : 500,
     errors: {
       [context._deepestRenderedBoundaryId || routes[0].id]: error,
     },
   };
   return newContext;
+}
+
+function throwStaticHandlerAbortedError(
+  request: Request,
+  isRouteRequest: boolean,
+  future: StaticHandlerFutureConfig
+) {
+  if (future.v7_throwAbortReason && request.signal.reason !== undefined) {
+    throw request.signal.reason;
+  }
+
+  let method = isRouteRequest ? "queryRoute" : "query";
+  throw new Error(`${method}() call aborted: ${request.method} ${request.url}`);
 }
 
 function isSubmissionNavigation(

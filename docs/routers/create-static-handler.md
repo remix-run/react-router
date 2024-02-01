@@ -54,11 +54,26 @@ export async function renderHtml(req) {
 
 ```ts
 declare function createStaticHandler(
-  routes: RouteObject[],
-  opts?: {
-    basename?: string;
-  }
+  routes: AgnosticRouteObject[],
+  opts?: CreateStaticHandlerOptions
 ): StaticHandler;
+
+interface CreateStaticHandlerOptions {
+  basename?: string;
+  future?: Partial<StaticHandlerFutureConfig>;
+  mapRouteProperties?: MapRoutePropertiesFunction;
+}
+
+interface StaticHandlerFutureConfig {
+  v7_relativeSplatPath: boolean;
+  v7_throwAbortReason: boolean;
+}
+
+interface MapRoutePropertiesFunction {
+  (route: AgnosticRouteObject): {
+    hasErrorBoundary: boolean;
+  } & Record<string, any>;
+}
 
 interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
@@ -85,6 +100,8 @@ These are the same `routes`/`basename` you would pass to [`createBrowserRouter`]
 ## `handler.query(request, opts)`
 
 The `handler.query()` method takes in a Fetch request, performs route matching, and executes all relevant route action/loader methods depending on the request. The return `context` value contains all of the information required to render the HTML document for the request (route-level `actionData`, `loaderData`, `errors`, etc.). If any of the matched routes return or throw a redirect response, then `query()` will return that redirect in the form of Fetch `Response`.
+
+If a request is aborted, `query` will throw an error such as `Error("query() call aborted: GET /path")`. If you want to throw the native `AbortSignal.reason` (by default a `DOMException`) you can opt-in into the `future.v7_throwAbortReason` future flag. `DOMException` was added in Node 17 so you must be on Node 17 or higher for this to work properly.
 
 ### `opts.requestContext`
 
@@ -114,6 +131,8 @@ export async function render(req: express.Request) {
 ## `handler.queryRoute(request, opts)`
 
 The `handler.queryRoute` is a more-targeted version that queries a singular route and runs it's loader or action based on the request. By default, it will match the target route based on the request URL. The return value is the values returned from the loader or action, which is usually a `Response` object.
+
+If a request is aborted, `query` will throw an error such as `Error("queryRoute() call aborted: GET /path")`. If you want to throw the native `AbortSignal.reason` (by default a `DOMException`) you can opt-in into the `future.v7_throwAbortReason` future flag. `DOMException` was added in Node 17 so you must be on Node 17 or higher for this to work properly.
 
 ### `opts.routeId`
 

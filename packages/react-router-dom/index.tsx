@@ -218,9 +218,26 @@ export {
 
 declare global {
   var __staticRouterHydrationData: HydrationState | undefined;
+  var __reactRouterVersion: string;
   interface Document {
     startViewTransition(cb: () => Promise<void> | void): ViewTransition;
   }
+}
+
+// HEY YOU! DON'T TOUCH THIS VARIABLE!
+//
+// It is replaced with the proper version at build time via a babel plugin in
+// the rollup config.
+//
+// Export a global property onto the window for React Router detection by the
+// Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
+// to detect and properly classify live websites as being built with React Router:
+// https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
+const REACT_ROUTER_VERSION = "0";
+try {
+  window.__reactRouterVersion = REACT_ROUTER_VERSION;
+} catch (e) {
+  // no-op
 }
 
 ////////////////////////////////////////////////////////////////////////////////
