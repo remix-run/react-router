@@ -23,6 +23,7 @@ import type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
+  HandlerResult,
   ImmutableRouteKey,
   LazyRoutePromise,
   LoaderFunction,
@@ -1608,7 +1609,10 @@ export function createRouter(init: RouterInit): Router {
         replace =
           result.location === state.location.pathname + state.location.search;
       }
-      await startRedirectNavigation(state, result, { submission, replace });
+      await startRedirectNavigation(request, result, {
+        submission,
+        replace,
+      });
       return { shortCircuited: true };
     }
 
@@ -1810,7 +1814,9 @@ export function createRouter(init: RouterInit): Router {
           revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
         fetchRedirectIds.add(fetcherKey);
       }
-      await startRedirectNavigation(state, redirect.result, { replace });
+      await startRedirectNavigation(request, redirect.result, {
+        replace,
+      });
       return { shortCircuited: true };
     }
 
@@ -2014,7 +2020,7 @@ export function createRouter(init: RouterInit): Router {
         } else {
           fetchRedirectIds.add(key);
           updateFetcherState(key, getLoadingFetcher(submission));
-          return startRedirectNavigation(state, actionResult, {
+          return startRedirectNavigation(fetchRequest, actionResult, {
             fetcherSubmission: submission,
           });
         }
@@ -2135,7 +2141,7 @@ export function createRouter(init: RouterInit): Router {
           revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
         fetchRedirectIds.add(fetcherKey);
       }
-      return startRedirectNavigation(state, redirect.result);
+      return startRedirectNavigation(revalidationRequest, redirect.result);
     }
 
     // Process and commit output from loaders
@@ -2267,7 +2273,7 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         fetchRedirectIds.add(key);
-        await startRedirectNavigation(state, result);
+        await startRedirectNavigation(fetchRequest, result);
         return;
       }
     }
@@ -2304,7 +2310,7 @@ export function createRouter(init: RouterInit): Router {
    * the history action from the original navigation (PUSH or REPLACE).
    */
   async function startRedirectNavigation(
-    state: RouterState,
+    request: Request,
     redirect: RedirectResult,
     {
       submission,
@@ -2327,6 +2333,22 @@ export function createRouter(init: RouterInit): Router {
       redirectLocation,
       "Expected a location on the redirect navigation"
     );
+
+    if (ABSOLUTE_URL_REGEX.test(redirect.location)) {
+      // Strip off the protocol+origin for same-origin + same-basename absolute redirects
+      let normalizedLocation = redirect.location;
+      let currentUrl = new URL(request.url);
+      let url = normalizedLocation.startsWith("//")
+        ? new URL(currentUrl.protocol + normalizedLocation)
+        : new URL(normalizedLocation);
+      let isSameBasename = stripBasename(url.pathname, basename) != null;
+      if (url.origin === currentUrl.origin && isSameBasename) {
+        normalizedLocation = url.pathname + url.search + url.hash;
+        redirectLocation = createLocation(state.location, normalizedLocation, {
+          _isRedirect: true,
+        });
+      }
+    }
 
     if (isBrowser) {
       let isDocumentReload = false;
@@ -2420,16 +2442,19 @@ export function createRouter(init: RouterInit): Router {
         createDataStrategyMatch(m, mapRouteProperties, manifest)
       ),
       request,
+      params: matches[0].params,
       type,
-      defaultStrategy(match) {
-        return callLoaderOrAction(
-          type,
+      async defaultStrategy(match) {
+        let handlerResult = await callLoaderOrAction(type, request, match);
+        let dataResult = await decodeLoaderOrActionResult(
+          handlerResult,
           request,
           match,
           matches,
           basename,
           future.v7_relativeSplatPath
         );
+        return dataResult;
       },
     });
   }
@@ -3370,17 +3395,28 @@ export function createStaticHandler(
         createDataStrategyMatch(m, mapRouteProperties, manifest)
       ),
       request,
+      params: matches[0].params,
       type,
-      defaultStrategy(match) {
-        return callLoaderOrAction(
+      async defaultStrategy(match) {
+        let handlerResult = await callLoaderOrAction(
           type,
+          request,
+          match,
+          staticOpts.requestContext
+        );
+        let dataResult = await decodeLoaderOrActionResult(
+          handlerResult,
           request,
           match,
           matches,
           basename,
           future.v7_relativeSplatPath,
-          staticOpts
+          {
+            isStaticRequest: staticOpts.isStaticRequest === true,
+            isRouteRequest: staticOpts.isRouteRequest === true,
+          }
         );
+        return dataResult;
       },
     });
   }
@@ -4015,16 +4051,8 @@ async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataStrategyMatch,
-  matches: AgnosticDataRouteMatch[],
-  basename: string,
-  v7_relativeSplatPath: boolean,
-  staticOpts: {
-    isStaticRequest?: boolean;
-    isRouteRequest?: boolean;
-    requestContext?: unknown;
-  } = {}
-): Promise<DataResult> {
-  let resultType;
+  staticContext?: unknown
+): Promise<HandlerResult> {
   let result;
   let onReject: (() => void) | undefined;
 
@@ -4038,7 +4066,7 @@ async function callLoaderOrAction(
       handler({
         request,
         params: match.params,
-        context: staticOpts.requestContext,
+        context: staticContext,
       }),
       abortPromise,
     ]);
@@ -4085,7 +4113,7 @@ async function callLoaderOrAction(
         } else {
           // lazy() route has no loader to run.  Short circuit here so we don't
           // hit the invariant below that errors on returning undefined.
-          return { type: ResultType.data, data: undefined };
+          return { type: ResultType.data, result: undefined };
         }
       }
     } else if (!handler) {
@@ -4105,19 +4133,41 @@ async function callLoaderOrAction(
         `function. Please return a value or \`null\`.`
     );
   } catch (e) {
-    resultType = ResultType.error;
-    result = e;
+    return { type: ResultType.error, result: e };
   } finally {
     if (onReject) {
       request.signal.removeEventListener("abort", onReject);
     }
   }
 
+  return { type: ResultType.data, result };
+}
+
+async function decodeLoaderOrActionResult(
+  handlerResult: HandlerResult,
+  request: Request,
+  match: AgnosticDataRouteMatch,
+  matches: AgnosticDataRouteMatch[],
+  basename: string,
+  v7_relativeSplatPath: boolean,
+  staticOpts: { isStaticRequest: boolean; isRouteRequest: boolean } = {
+    isStaticRequest: false,
+    isRouteRequest: false,
+  }
+): Promise<DataResult> {
+  let { result, type } = handlerResult;
+
   if (isResponse(result)) {
     let status = result.status;
 
     // Process redirects
     if (redirectStatusCodes.has(status)) {
+      // TODO: Move this logic into a post-process step after dataStrategy
+      // Change RedirectResult to just hold the raw response and then we can look
+      // for the headers on our own to avoid a leaky abstraction
+      // All we should need is:
+      // { type: ResultType.redirect, response }
+
       let location = result.headers.get("Location");
       invariant(
         location,
@@ -4137,18 +4187,6 @@ async function callLoaderOrAction(
           location,
           v7_relativeSplatPath
         );
-      } else if (!staticOpts.isStaticRequest) {
-        // Strip off the protocol+origin for same-origin + same-basename absolute
-        // redirects. If this is a static request, we can let it go back to the
-        // browser as-is
-        let currentUrl = new URL(request.url);
-        let url = location.startsWith("//")
-          ? new URL(currentUrl.protocol + location)
-          : new URL(location);
-        let isSameBasename = stripBasename(url.pathname, basename) != null;
-        if (url.origin === currentUrl.origin && isSameBasename) {
-          location = url.pathname + url.search + url.hash;
-        }
       }
 
       // Don't process redirects in the router during static requests.
@@ -4174,8 +4212,7 @@ async function callLoaderOrAction(
     // interface so we can know whether it was returned or thrown
     if (staticOpts.isRouteRequest) {
       let queryRouteResponse: QueryRouteResponse = {
-        type:
-          resultType === ResultType.error ? ResultType.error : ResultType.data,
+        type: type === ResultType.error ? ResultType.error : ResultType.data,
         response: result,
       };
       throw queryRouteResponse;
@@ -4200,9 +4237,9 @@ async function callLoaderOrAction(
       return { type: ResultType.error, error: e };
     }
 
-    if (resultType === ResultType.error) {
+    if (type === ResultType.error) {
       return {
-        type: resultType,
+        type,
         error: new ErrorResponseImpl(status, result.statusText, data),
         headers: result.headers,
       };
@@ -4216,8 +4253,8 @@ async function callLoaderOrAction(
     };
   }
 
-  if (resultType === ResultType.error) {
-    return { type: resultType, error: result };
+  if (type === ResultType.error) {
+    return { type, error: result };
   }
 
   if (isDeferredData(result)) {

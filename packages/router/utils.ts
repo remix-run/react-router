@@ -64,6 +64,14 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
+/**
+ * Result from a loader or action called via dataStrategy
+ */
+export interface HandlerResult {
+  type: ResultType.data | ResultType.error;
+  result: any; // data, Error, Response, DeferredData
+}
+
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 
