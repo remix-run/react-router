@@ -1,32 +1,11 @@
 # `@remix-run/express`
 
-## 2.6.0-pre.3
+## 2.6.0
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@remix-run/node@2.6.0-pre.3`
-
-## 2.6.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.6.0-pre.2`
-
-## 2.6.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.6.0-pre.1`
-
-## 2.6.0-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.6.0-pre.0`
+  - `@remix-run/node@2.6.0`
 
 ## 2.5.1
 
