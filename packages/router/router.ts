@@ -11,7 +11,7 @@ import type {
   ActionFunction,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
-  AgnosticDataStrategyMatch,
+  DataStrategyMatch,
   AgnosticRouteObject,
   DataResult,
   DataStrategyFunction,
@@ -2431,32 +2431,53 @@ export function createRouter(init: RouterInit): Router {
 
   // Utility wrapper for calling dataStrategy without having to pass around the
   // manifest, mapRouteProperties, etc.
-  function callDataStrategy(
+  async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[]
   ): Promise<DataResult[]> {
-    return dataStrategyImpl({
-      matches: matchesToLoad.map((m) =>
-        createDataStrategyMatch(m, mapRouteProperties, manifest)
+    let routeIdsToLoad: Record<string, boolean> = matchesToLoad.reduce(
+      (acc, m) => Object.assign(acc, { [m.route.id]: true }),
+      {}
+    );
+
+    // We send all matches here to allow for a middleware-type implementation
+    // in dataStrategy.  If a match doesn't need to run/be revalidated then its
+    // handler function is a no-op from createDataStrategyMatch and we filter
+    // those results back out below.
+    let results = await dataStrategyImpl({
+      matches: matches.map((m) =>
+        createDataStrategyMatch(
+          type,
+          request,
+          m,
+          mapRouteProperties,
+          manifest,
+          routeIdsToLoad[m.route.id] === true
+        )
       ),
       request,
       params: matches[0].params,
-      type,
-      async defaultStrategy(match) {
-        let handlerResult = await callLoaderOrAction(type, request, match);
-        let dataResult = await decodeLoaderOrActionResult(
-          handlerResult,
+    });
+
+    // Filter out any middleware-only matches for which we didn't need to run handlers
+    let matchesToLoadResults = results.filter(
+      (_, i) => routeIdsToLoad[matches[i].route.id] === true
+    );
+
+    return await Promise.all(
+      matchesToLoadResults.map((result, i) =>
+        decodeLoaderOrActionResult(
+          result,
           request,
-          match,
+          matchesToLoad[i],
           matches,
           basename,
           future.v7_relativeSplatPath
-        );
-        return dataResult;
-      },
-    });
+        )
+      )
+    );
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -3379,7 +3400,7 @@ export function createStaticHandler(
     };
   }
 
-  function callDataStrategy(
+  async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
@@ -3390,24 +3411,28 @@ export function createStaticHandler(
       requestContext?: unknown;
     } = {}
   ): Promise<DataResult[]> {
-    return dataStrategyImpl({
+    let results = await dataStrategyImpl({
       matches: matchesToLoad.map((m) =>
-        createDataStrategyMatch(m, mapRouteProperties, manifest)
+        createDataStrategyMatch(
+          type,
+          request,
+          m,
+          mapRouteProperties,
+          manifest,
+          // TODO: Is this all we need?  Always run for SSR?
+          true,
+          staticOpts.requestContext
+        )
       ),
       request,
       params: matches[0].params,
-      type,
-      async defaultStrategy(match) {
-        let handlerResult = await callLoaderOrAction(
-          type,
+    });
+    return await Promise.all(
+      results.map((result, i) =>
+        decodeLoaderOrActionResult(
+          result,
           request,
-          match,
-          staticOpts.requestContext
-        );
-        let dataResult = await decodeLoaderOrActionResult(
-          handlerResult,
-          request,
-          match,
+          matchesToLoad[i],
           matches,
           basename,
           future.v7_relativeSplatPath,
@@ -3415,10 +3440,9 @@ export function createStaticHandler(
             isStaticRequest: staticOpts.isStaticRequest === true,
             isRouteRequest: staticOpts.isRouteRequest === true,
           }
-        );
-        return dataResult;
-      },
-    });
+        )
+      )
+    );
   }
 
   return {
@@ -4011,11 +4035,10 @@ async function loadLazyRouteModule(
 }
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
-function defaultDataStrategy({
-  defaultStrategy,
-  matches,
-}: DataStrategyFunctionArgs) {
-  return Promise.all(matches.map((match) => defaultStrategy(match)));
+function defaultDataStrategy(
+  opts: DataStrategyFunctionArgs
+): ReturnType<DataStrategyFunction> {
+  return Promise.all(opts.matches.map((m) => m.handler()));
 }
 
 // Given a route match, convert `match.route` to a Promise that encapsulates the
@@ -4026,10 +4049,14 @@ function defaultDataStrategy({
 // this means we can't add properties such as `then`/`catch`/`finally` as `route`
 // props :)
 function createDataStrategyMatch(
+  type: "loader" | "action",
+  request: Request,
   match: AgnosticDataRouteMatch,
   mapRouteProperties: MapRoutePropertiesFunction,
-  manifest: RouteManifest
-): AgnosticDataStrategyMatch {
+  manifest: RouteManifest,
+  shouldRun: boolean,
+  staticContext?: unknown
+): DataStrategyMatch {
   let loadRoutePromise = match.route.lazy
     ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
     : Promise.resolve(match.route);
@@ -4037,20 +4064,35 @@ function createDataStrategyMatch(
   // Avoid unhandled rejection errors
   loadRoutePromise.catch(() => {});
 
-  return {
+  let handler: DataStrategyMatch["handler"] = shouldRun
+    ? (handlerCtx) =>
+        callLoaderOrAction(
+          type,
+          request,
+          dataStrategyMatch,
+          handlerCtx,
+          staticContext
+        )
+    : () => Promise.resolve({ type: ResultType.data, result: undefined });
+
+  let dataStrategyMatch: DataStrategyMatch = {
     ...match,
+    // TODO: Can this go away?
     route: Object.assign(
       loadRoutePromise,
       match.route
     ) as unknown as LazyRoutePromise,
+    handler,
   };
+  return dataStrategyMatch;
 }
 
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
 async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
-  match: AgnosticDataStrategyMatch,
+  match: DataStrategyMatch,
+  handlerCtx?: Record<string, unknown>,
   staticContext?: unknown
 ): Promise<HandlerResult> {
   let result;
@@ -4063,11 +4105,14 @@ async function callLoaderOrAction(
     onReject = () => reject();
     request.signal.addEventListener("abort", onReject);
     return Promise.race([
-      handler({
-        request,
-        params: match.params,
-        context: staticContext,
-      }),
+      handler(
+        {
+          request,
+          params: match.params,
+          context: staticContext,
+        },
+        ...(handlerCtx ? [handlerCtx] : [])
+      ),
       abortPromise,
     ]);
   };

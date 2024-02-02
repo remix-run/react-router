@@ -36,14 +36,15 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
-  DataResult,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  DataStrategyMatch,
   Fetcher,
   FormEncType,
   FormMethod,
   FutureConfig as RouterFutureConfig,
   GetScrollRestorationKeyFunction,
+  HandlerResult,
   HashHistory,
   History,
   HTMLFormMethod,
@@ -87,12 +88,13 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
-  DataResult,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
+  DataStrategyMatch,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
+  HandlerResult,
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,

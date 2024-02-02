@@ -178,7 +178,7 @@ type DataFunctionValue = Response | NonNullable<unknown> | null;
  * Route loader function signature
  */
 export type LoaderFunction<Context = any> = {
-  (args: LoaderFunctionArgs<Context>):
+  (args: LoaderFunctionArgs<Context>, handlerCtx?: Record<string, unknown>):
     | Promise<DataFunctionValue>
     | DataFunctionValue;
 } & { hydrate?: boolean };
@@ -187,7 +187,7 @@ export type LoaderFunction<Context = any> = {
  * Route action function signature
  */
 export interface ActionFunction<Context = any> {
-  (args: ActionFunctionArgs<Context>):
+  (args: ActionFunctionArgs<Context>, handlerCtx?: Record<string, unknown>):
     | Promise<DataFunctionValue>
     | DataFunctionValue;
 }
@@ -231,15 +231,19 @@ export interface DetectErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
 }
 
+export interface DataStrategyMatch
+  extends Omit<AgnosticRouteMatch<string, AgnosticDataRouteObject>, "route"> {
+  route: LazyRoutePromise;
+  handler: (ctx?: Record<string, unknown>) => Promise<HandlerResult>;
+}
+
 export interface DataStrategyFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {
-  matches: AgnosticDataStrategyMatch[];
-  type: "loader" | "action";
-  defaultStrategy(match: AgnosticDataStrategyMatch): Promise<DataResult>;
+  matches: DataStrategyMatch[];
 }
 
 export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<DataResult[]>;
+  (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
 }
 
 /**
@@ -422,11 +426,6 @@ export interface AgnosticDataRouteMatch
 
 export type LazyRoutePromise = Promise<AgnosticDataRouteObject> &
   AgnosticDataRouteObject;
-
-export interface AgnosticDataStrategyMatch
-  extends Omit<AgnosticRouteMatch<string, AgnosticDataRouteObject>, "route"> {
-  route: LazyRoutePromise;
-}
 
 function isIndexRoute(
   route: AgnosticRouteObject

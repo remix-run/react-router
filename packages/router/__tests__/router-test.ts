@@ -3,7 +3,7 @@ import { createMemoryHistory, createRouter, IDLE_NAVIGATION } from "../index";
 import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
-  LoaderFunction,
+  DataStrategyFunction,
 } from "../utils";
 import { ErrorResponseImpl, json, ResultType } from "../utils";
 
@@ -2478,47 +2478,17 @@ describe("a router", () => {
   });
 
   describe("router dataStrategy", () => {
+    function mockDataStrategy(fn: DataStrategyFunction) {
+      return jest.fn<
+        ReturnType<DataStrategyFunction>,
+        Parameters<DataStrategyFunction>
+      >(fn);
+    }
+
     describe("loaders", () => {
-      it("should unwrap json and text by default", async () => {
-        let t = setup({
-          routes: [
-            {
-              path: "/",
-            },
-            {
-              id: "json",
-              path: "/test",
-              loader: true,
-              children: [
-                {
-                  id: "text",
-                  index: true,
-                  loader: true,
-                },
-              ],
-            },
-          ],
-        });
-
-        let A = await t.navigate("/test");
-        await A.loaders.json.resolve(
-          new Response(JSON.stringify({ message: "hello json" }), {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-        );
-        await A.loaders.text.resolve(new Response("hello text"));
-
-        expect(t.router.state.loaderData).toEqual({
-          json: { message: "hello json" },
-          text: "hello text",
-        });
-      });
-
       it("should allow a custom implementation to passthrough to default behavior", async () => {
-        let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
-          Promise.all(matches.map((match) => defaultStrategy(match)))
+        let dataStrategy = mockDataStrategy(({ matches }) =>
+          Promise.all(matches.map((m) => m.handler()))
         );
         let t = setup({
           routes: [
@@ -2556,8 +2526,8 @@ describe("a router", () => {
         });
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
-            type: "loader",
             request: expect.any(Request),
+            params: {},
             matches: [
               expect.objectContaining({
                 route: expect.objectContaining({
@@ -2575,9 +2545,9 @@ describe("a router", () => {
       });
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
-        let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
-          return Promise.all(matches.map((match) => defaultStrategy(match)));
-        });
+        let dataStrategy = mockDataStrategy(({ matches }) =>
+          Promise.all(matches.map((m) => m.handler()))
+        );
         let t = setup({
           routes: [
             {
@@ -2612,7 +2582,6 @@ describe("a router", () => {
         });
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
-            type: "loader",
             request: expect.any(Request),
             matches: [
               expect.objectContaining({
@@ -2642,14 +2611,13 @@ describe("a router", () => {
               loader: true,
             },
           ],
-          async dataStrategy({ request, params, matches }) {
+          async dataStrategy({ matches }) {
             // We only have one match in this simple setup
-            let handler = matches[0].route.loader! as LoaderFunction;
-            let result = await handler({ request, params });
+            let result = await matches[0].handler();
             return [
               {
                 type: ResultType.data,
-                data: `Route ID "${matches[0].route.id}" returned "${result}"`,
+                result: `Route ID "${matches[0].route.id}" returned "${result.result}"`,
               },
             ];
           },
@@ -2675,15 +2643,13 @@ describe("a router", () => {
               lazy: true,
             },
           ],
-          async dataStrategy({ request, params, matches }) {
+          async dataStrategy({ matches }) {
             // We only have one match in this simple setup
-            let route = await matches[0].route;
-            let handler = route.loader! as LoaderFunction;
-            let result = await handler({ request, params });
+            let result = await matches[0].handler();
             return [
               {
                 type: ResultType.data,
-                data: `Route ID "${matches[0].route.id}" returned "${result}"`,
+                result: `Route ID "${matches[0].route.id}" returned "${result.result}"`,
               },
             ];
           },
@@ -2721,38 +2687,34 @@ describe("a router", () => {
               ],
             },
           ],
-          dataStrategy({ matches, request, params }) {
+          dataStrategy({ matches }) {
             return Promise.all(
               matches.map(async (match) => {
-                try {
-                  let result = await match.route.loader?.({ request, params });
-                  return {
-                    type: ResultType.data,
-                    data: result,
-                  };
-                } catch (error) {
-                  return {
-                    type: ResultType.error,
-                    error,
-                  };
-                }
+                let result = await match.handler();
+                return {
+                  type:
+                    result.result instanceof Error
+                      ? ResultType.error
+                      : ResultType.data,
+                  result: result.result,
+                };
               })
             );
           },
         });
 
         let A = await t.navigate("/parent/child");
-        await A.loaders.test.reject(new Error("ERROR"));
+        await A.loaders.test.resolve(new Error("ERROR"));
 
         expect(t.router.state.loaderData.test).toBeUndefined();
         expect(t.router.state.errors?.child.message).toBe("ERROR");
       });
     });
 
-    describe("action", () => {
+    describe("actions", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
-        let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
-          Promise.all(matches.map((match) => defaultStrategy(match)))
+        let dataStrategy = mockDataStrategy(({ matches }) =>
+          Promise.all(matches.map((m) => m.handler()))
         );
         let t = setup({
           routes: [
@@ -2780,7 +2742,6 @@ describe("a router", () => {
         });
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
-            type: "action",
             request: expect.any(Request),
             matches: [
               expect.objectContaining({
@@ -2794,9 +2755,9 @@ describe("a router", () => {
       });
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
-        let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
-          return Promise.all(matches.map((match) => defaultStrategy(match)));
-        });
+        let dataStrategy = mockDataStrategy(({ matches }) =>
+          Promise.all(matches.map((m) => m.handler()))
+        );
         let t = setup({
           routes: [
             {
@@ -2823,7 +2784,6 @@ describe("a router", () => {
         });
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
-            type: "action",
             request: expect.any(Request),
             matches: [
               expect.objectContaining({
@@ -2840,8 +2800,8 @@ describe("a router", () => {
     describe("fetchers", () => {
       describe("loaders", () => {
         it("should allow a custom implementation to passthrough to default behavior", async () => {
-          let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
-            Promise.all(matches.map((match) => defaultStrategy(match)))
+          let dataStrategy = mockDataStrategy(({ matches }) =>
+            Promise.all(matches.map((m) => m.handler()))
           );
           let t = setup({
             routes: [
@@ -2868,7 +2828,6 @@ describe("a router", () => {
 
           expect(dataStrategy).toHaveBeenCalledWith(
             expect.objectContaining({
-              type: "loader",
               request: expect.any(Request),
               matches: [
                 expect.objectContaining({
@@ -2882,9 +2841,9 @@ describe("a router", () => {
         });
 
         it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
-          let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
-            return Promise.all(matches.map((match) => defaultStrategy(match)));
-          });
+          let dataStrategy = mockDataStrategy(({ matches }) =>
+            Promise.all(matches.map((m) => m.handler()))
+          );
           let t = setup({
             routes: [
               {
@@ -2909,7 +2868,6 @@ describe("a router", () => {
           );
           expect(dataStrategy).toHaveBeenCalledWith(
             expect.objectContaining({
-              type: "loader",
               request: expect.any(Request),
               matches: [
                 expect.objectContaining({
@@ -2925,8 +2883,8 @@ describe("a router", () => {
 
       describe("actions", () => {
         it("should allow a custom implementation to passthrough to default behavior", async () => {
-          let dataStrategy = jest.fn(({ matches, defaultStrategy }) =>
-            Promise.all(matches.map((match) => defaultStrategy(match)))
+          let dataStrategy = mockDataStrategy(({ matches }) =>
+            Promise.all(matches.map((m) => m.handler()))
           );
           let t = setup({
             routes: [
@@ -2956,7 +2914,6 @@ describe("a router", () => {
 
           expect(dataStrategy).toHaveBeenCalledWith(
             expect.objectContaining({
-              type: "action",
               request: expect.any(Request),
               matches: expect.arrayContaining([
                 expect.objectContaining({
@@ -2970,9 +2927,9 @@ describe("a router", () => {
         });
 
         it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
-          let dataStrategy = jest.fn(({ matches, defaultStrategy }) => {
-            return Promise.all(matches.map((match) => defaultStrategy(match)));
-          });
+          let dataStrategy = mockDataStrategy(({ matches }) =>
+            Promise.all(matches.map((m) => m.handler()))
+          );
           let t = setup({
             routes: [
               {
@@ -3002,7 +2959,6 @@ describe("a router", () => {
 
           expect(dataStrategy).toHaveBeenCalledWith(
             expect.objectContaining({
-              type: "action",
               request: expect.any(Request),
               matches: expect.arrayContaining([
                 expect.objectContaining({
@@ -3037,7 +2993,7 @@ describe("a router", () => {
               ],
             },
           ],
-          async dataStrategy({ request, params, matches }) {
+          async dataStrategy({ matches }) {
             // Mock response from server
             let result = {
               loaderData: {
@@ -3048,7 +3004,7 @@ describe("a router", () => {
             };
             return matches.map((m) => ({
               type: ResultType.data,
-              data: result.loaderData[m.route.id],
+              result: result.loaderData[m.route.id],
             }));
           },
         });
@@ -3100,7 +3056,7 @@ describe("a router", () => {
               ],
             },
           ],
-          async dataStrategy({ request, params, matches }) {
+          async dataStrategy({ matches }) {
             // Run context/middleware sequentially
             let context = matches.reduce((acc, m) => {
               if (m.route.handle?.context) {
@@ -3124,30 +3080,17 @@ describe("a router", () => {
 
             // Run loaders in parallel only exposing contexts from above
             return Promise.all(
-              matches.map(async (m, i) => {
-                try {
-                  let data = await m.route.loader?.({
-                    request,
-                    params,
-                    // Only provide context values up to this level in the matches
-                    context: matches.slice(0, i + 1).reduce((acc, m) => {
-                      Object.keys(m.route.handle?.context).forEach((k) => {
-                        acc[k] = context[k];
-                      });
-                      return acc;
-                    }, {}),
-                  });
-                  return {
-                    type: ResultType.data,
-                    data,
-                  };
-                } catch (error) {
-                  return {
-                    type: ResultType.error,
-                    error,
-                  };
-                }
-              })
+              matches.map((m, i) =>
+                m.handler({
+                  // Only provide context values up to this level in the matches
+                  context: matches.slice(0, i + 1).reduce((acc, m) => {
+                    Object.keys(m.route.handle?.context).forEach((k) => {
+                      acc[k] = context[k];
+                    });
+                    return acc;
+                  }, {}),
+                })
+              )
             );
           },
         });
@@ -3157,6 +3100,10 @@ describe("a router", () => {
         // Loaders are called with context from their level and above, and
         // context reflects any values set by middleware
         expect(A.loaders.parent.stub).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.any(Request),
+            params: expect.any(Object),
+          }),
           expect.objectContaining({
             context: {
               parent: {
@@ -3168,6 +3115,10 @@ describe("a router", () => {
         );
 
         expect(A.loaders.child.stub).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.any(Request),
+            params: expect.any(Object),
+          }),
           expect.objectContaining({
             context: {
               parent: {
@@ -3191,6 +3142,111 @@ describe("a router", () => {
         expect(t.router.state.loaderData).toMatchObject({
           parent: "PARENT LOADER",
           child: "CHILD LOADER",
+        });
+      });
+
+      it("allows middleware/context implementations when some routes don't need to revalidate", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              loader: true,
+              handle: {
+                context: {
+                  parent: () => ({ id: "parent" }),
+                },
+                middleware(context) {
+                  context.parent.whatever = "PARENT MIDDLEWARE";
+                },
+              },
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: true,
+                  handle: {
+                    context: {
+                      child: () => ({ id: "child" }),
+                    },
+                    middleware(context) {
+                      context.child.whatever = "CHILD MIDDLEWARE";
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+          async dataStrategy({ matches }) {
+            // Run context/middleware sequentially
+            let context = matches.reduce((acc, m) => {
+              if (m.route.handle?.context) {
+                let matchContext = Object.entries(
+                  m.route.handle.context
+                ).reduce(
+                  (acc, [key, value]) =>
+                    Object.assign(acc, {
+                      // @ts-expect-error
+                      [key]: value(),
+                    }),
+                  {}
+                );
+                Object.assign(acc, matchContext);
+              }
+              if (m.route.handle?.middleware) {
+                m.route.handle.middleware(acc);
+              }
+              return acc;
+            }, {});
+
+            // Run loaders in parallel only exposing contexts from above
+            return Promise.all(
+              matches.map((m, i) =>
+                m.handler({
+                  // Only provide context values up to this level in the matches
+                  context: matches.slice(0, i + 1).reduce((acc, m) => {
+                    Object.keys(m.route.handle?.context).forEach((k) => {
+                      acc[k] = context[k];
+                    });
+                    return acc;
+                  }, {}),
+                })
+              )
+            );
+          },
+        });
+
+        let A = await t.navigate("/parent");
+        await A.loaders.parent.resolve("PARENT");
+        expect(t.router.state.navigation.state).toBe("idle");
+        expect(t.router.state.loaderData).toMatchObject({
+          parent: "PARENT",
+        });
+
+        let B = await t.navigate("/parent/child");
+
+        // Loaders are called with context from their level and above, and
+        // context reflects any values set by middleware
+        expect(B.loaders.child.stub.mock.calls[0][1].context).toEqual({
+          parent: {
+            id: "parent",
+            whatever: "PARENT MIDDLEWARE",
+          },
+          child: {
+            id: "child",
+            whatever: "CHILD MIDDLEWARE",
+          },
+        });
+
+        await B.loaders.child.resolve("CHILD");
+        expect(t.router.state.navigation.state).toBe("idle");
+
+        expect(t.router.state.loaderData).toMatchObject({
+          parent: "PARENT",
+          child: "CHILD",
         });
       });
     });

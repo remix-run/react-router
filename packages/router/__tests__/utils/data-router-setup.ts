@@ -238,7 +238,7 @@ export function setup({
         };
       }
       if (r.loader) {
-        enhancedRoute.loader = (args) => {
+        enhancedRoute.loader = (...args) => {
           let navigationId =
             activeLoaderType === "fetch"
               ? activeLoaderFetchId
@@ -246,13 +246,13 @@ export function setup({
           let helperKey = `${activeLoaderType}:${navigationId}:loader:${enhancedRoute.id}`;
           let helpers = activeHelpers.get(helperKey);
           invariant(helpers, `No helpers found for: ${helperKey}`);
-          helpers.stub(args);
-          helpers._signal = args.request.signal;
+          helpers.stub(...args);
+          helpers._signal = args[0].request.signal;
           return helpers.dfd.promise;
         };
       }
       if (r.action) {
-        enhancedRoute.action = (args) => {
+        enhancedRoute.action = (...args) => {
           let type = activeActionType;
           let navigationId =
             activeActionType === "fetch"
@@ -261,8 +261,8 @@ export function setup({
           let helperKey = `${activeActionType}:${navigationId}:action:${enhancedRoute.id}`;
           let helpers = activeHelpers.get(helperKey);
           invariant(helpers, `No helpers found for: ${helperKey}`);
-          helpers.stub(args);
-          helpers._signal = args.request.signal;
+          helpers.stub(...args);
+          helpers._signal = args[0].request.signal;
           return helpers.dfd.promise.then(
             (result) => {
               // After a successful non-redirect action, ensure we call the right

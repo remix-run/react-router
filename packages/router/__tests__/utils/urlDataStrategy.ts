@@ -1,18 +1,17 @@
-import type { DataStrategyFunctionArgs, DataResult } from "@remix-run/router";
+import type {
+  DataStrategyFunctionArgs,
+  HandlerResult,
+} from "@remix-run/router";
 import { ResultType } from "@remix-run/router";
 import { invariant } from "./utils";
 
 export default async function urlDataStrategy({
   matches,
-  request,
-  type,
-}: DataStrategyFunctionArgs): Promise<DataResult[]> {
+}: DataStrategyFunctionArgs): Promise<HandlerResult[]> {
   return Promise.all(
     matches.map(async (match) => {
       try {
-        let handler =
-          type === "loader" ? match.route.loader : match.route.action;
-        let response = await handler!({ params: match.params, request });
+        let { result: response } = await match.handler();
         invariant(response instanceof Response, "Expected a response");
         let contentType = response.headers.get("Content-Type");
         invariant(
@@ -21,12 +20,12 @@ export default async function urlDataStrategy({
         );
         return {
           type: ResultType.data,
-          data: new URLSearchParams(await response.text()),
+          result: new URLSearchParams(await response.text()),
         };
       } catch (error) {
         return {
           type: ResultType.error,
-          error,
+          result: error,
         };
       }
     })
