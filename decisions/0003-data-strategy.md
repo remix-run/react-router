@@ -12,16 +12,14 @@ In order to implement "Single Fetch" in Remix ([Issue][single-fetch-issue], [RFC
 
 ### `dataStrategy`
 
-To achieve the above, we landed on an optional `dataStrategy` configuration which can be passed in by the application. The ides is that `dataStratgy` will accept an array of `matches` to load and will return a parallel array of `DataResult`'s for those matches. `DataResult` is currently an implementation detail buw we'd be exposing it for use with `dataStrategy`. Also worth nothing that we send a `type = 'loader' | 'action'` so the user knows what handler to run.
+To achieve the above, we propose to add an optional `dataStrategy` config which can be passed in by the application. The idea is that `dataStrategy` will accept an array of `matches` to load and will return a parallel array of results for those matches.
 
 ```js
 function dataStrategy(arg: DataStrategyFunctionArgs): DataResult[];
 
 interface DataStrategyFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {
-  type: "loader" | "action";
   matches: AgnosticDataStrategyMatch[];
-  defaultStrategy(match: AgnosticDataStrategyMatch): Promise<DataResult>;
 }
 
 interface DataFunctionArgs<Context> {
@@ -29,31 +27,64 @@ interface DataFunctionArgs<Context> {
   params: Params;
   context?: Context;
 }
-
-// Note: how can we simplify this surface?  Need per-match success/error - but want to preserve as much unwrapping to RR if possible.  I think a `ResponseResult`can help us here...
-// TODO:
-
-export type DataResult =
-  | SuccessResult
-  | DeferredResult
-  | RedirectResult
-  | ErrorResult;
 ```
 
-There's a [comment][responsibilities-comment] here from Jacob which does a good job of outlining the current responsibilities, but basically React Router in it's current state handles 4 aspects when it comes to executing loaders for a given URL:
+There's a [comment][responsibilities-comment] here from Jacob which does a good job of outlining the current responsibilities, but basically React Router in it's current state handles 4 aspects when it comes to executing loaders for a given URL - `dataStrategy` is largely intended to handle step 3:
 
 1. Match routes for URL
 2. Determine what routes to load (via `shouldRevalidate`)
 3. Call `loader` functions in parallel
 4. Decode Responses
 
-Initially, we intended for `dataStrategy` to handle (3), and considered an optional `decodeResponse` API for (4) - but we decided that the decoding of responses was a small enough undertaking using standard Fetch APIs (i.e., `res.json`) that it didn't warrant a custom property - and they could just call those APIs directly. The `defaultStrategy` parameter would handle performing 3 the normal way that RR would. Thus, re-implementing current behavior would be as simple as:
+### Inputs
+
+The primary input is `matches`, since the user needs to know what routes match and eed to have loaders executed. We also wanted to provide a way for the user to call the "default" internal behavior so they could easily change from parallel to sequential without having to re-invent the wheel and manually call loaders, decode responses, etc. The first idea for this API was to pass a `defaultStrategy(match)` parameter so they could call that per-match:
 
 ```js
-function dataStrategy({ matches, defaultStrategy }) {
-  return Promise.all(matches.map((m) => defaultStrategy(m)));
+function dataStrategy({ matches }) {
+  // Call in parallel
+  return Promise.all(matches.map(m => defaultStrategy((m))));
+
+  // Call sequentially
+  let results = []
+  for (let match of matches) {
+    results.push(await defaultStrategy(match))
+  }
+  return results;
 }
 ```
+
+⚠️ `defaultStrategy` was eliminated in favor of `match.handler`.
+
+We also originally intended to expose a `type: 'loader' | 'action`' field as a way to presumably let them call `match.route.loader`/`match.route.action` directly - but we have since decided against that with the `match.handler` API.
+
+⚠️ `type` was eliminated in favor of `match.handler`.
+
+`dataStrategy` is control _when_ handlers are called, not _how_. RR is in charge of calling them with the right parameters.
+
+### Outputs
+
+Originally, we planned on making the `DataResult` API public, which is a union of the different types of results (`SuccessResult`, `ErrorResult`, `RedirectResult`, `DeferResult`). However, as we kept evolving and did some internal refactoring to separate calling loaders from decoding results - we realized that all we really need is a simpler `HandlerResult`:
+
+```ts
+interface HandlerResult {
+  type: ResultType.success | ResultType.error;
+  result: any;
+}
+```
+
+If the user returns us one of those per-match, we can internally convert it to a `DataResult`.
+
+- If `result` is a `Response` then we can handle unwrapping the data and processing any redirects (may produce a `SuccessResult`, `ErrorResult`, or `RedirectResult`)
+- If `result` is a `DeferredData` instance, convert to `DeferResult`
+- If result is anything else we don't touch the data, it's either a `SuccessResult` or `ErrorResult` based on `type`
+  - This is important because it's lets the end user opt into a different decoding strategy of their choice. If they return us a Response, we decode it. If not, we don't touch it.
+
+### Decoding Responses
+
+Initially, we intended for `dataStrategy` to handle (3), and considered an optional `decodeResponse` API for (4) - but we decided that the decoding of responses was a small enough undertaking using standard Fetch APIs (i.e., `res.json`) that it didn't warrant a custom property - and they could just call those APIs directly. The `defaultStrategy` parameter would handle performing 3 the normal way that RR would.
+
+⚠️ `decodeResponse` is made obsolete by `HandlerResult`
 
 ### Handling `route.lazy`
 
@@ -77,7 +108,7 @@ This is no bueno. Instead, we want option (2) where the users can run these sequ
 |-- route b lazy  ------------------------>|-- route b loader -->|
 ```
 
-Therefore, we're introducing the concept of a `DataStrategyMatch`which is just like a `RouteMatch` but the `match.route` field is a `Promise<Route>`. We'll kick off the executions of route.lazy and then you can wait for them to complete prior to calling the loader:
+Therefore, we're introducing the concept of a `DataStrategyMatch` which is just like a `RouteMatch` but the `match.route` field is a `Promise<Route>`. We'll kick off the executions of route.lazy and then you can wait for them to complete prior to calling the loader:
 
 ```js
 function dataStrategy({ matches, defaultStrategy }) {
@@ -98,9 +129,11 @@ function dataStrategy({ matches, defaultStrategy }) {
 }
 ```
 
+⚠️ We are actively seeing if we can eliminate this via `match.handler`
+
 ### Handling `shouldRevalidate` behavior
 
-We need to figure out how to handle `shouldRevalidate` behavior. There's sort of 2 basic approaches:
+We considered how to handle `shouldRevalidate` behavior. There's sort of 2 basic approaches:
 
 1. We pre-filter and only hand the user `matchesToLoad`
 2. We hand the user all matches and let them filter
@@ -109,6 +142,8 @@ We need to figure out how to handle `shouldRevalidate` behavior. There's sort of
 I _think_ (1) is preferred to keep the API at a minimum and avoid leaking into _other_ ways to opt-out of revalidation. We already have an API for that so let's lean into it.
 
 Additionally, another big con of (2) is that if we want to let them make revalidation decisions inside `dataStrategy` - we need to expose all of the informaiton required for that (`currentUrl`, `currentParams`, `nextUrl`, `nextParams`, `submission` info, `actionResult`, etc.) - the API becomes a mess.
+
+Therefore we are aiming to stick with one and let `shouldRevalidate` be the only way to opt-out of revalidation.
 
 ### Handling actions and fetchers
 
@@ -164,7 +199,7 @@ function dataStrategy({ request, params, matches, type }) {
 
 ### What about middlewares?
 
-As we thought more and more about this API, it became clear that the concept of "process data for a route" (step 3 above) was not necessarily limited to the `loader`/`action` and that there are data-related APIs on the horizon such as `middleware` and `context`that would also fall under the `dataStrategy` umbrella! In fact, a well-implemented `dataStrategy` could alleviate the need for first-class APIs - even if only initially. Early adopters could use dataStrategy top implement their own middlewares and we could see which patterns rise to the top and adopt them as first class `route.middleware` or whatever.
+As we thought more and more about this API, it became clear that the concept of "process data for a route" (step 3 above) was not necessarily limited to the `loader`/`action` and that there are data-related APIs on the horizon such as `middleware` and `context` that would also fall under the `dataStrategy` umbrella! In fact, a well-implemented `dataStrategy` could alleviate the need for first-class APIs - even if only initially. Early adopters could use `dataStrategy` to implement their own middlewares and we could see which patterns rise to the top and adopt them as first class `route.middleware` or whatever.
 
 So how would middleware work? The general idea is that middleware runs sequentially top-down prior to the loaders running. And if you bring `context` into the equation - they also run top down and middlewares/loaders/actions receive the context from their level and above in the tree - but they do not "see" any context from below them in the tree.
 
@@ -230,7 +265,7 @@ async function dataStrategy({ request, params, matches, type }) {
 
 ❌ Nope - this doesn't actually work!
 
-Remember above where we decided to pre-filter the matches? That breaks any concept of middleware since even if we don't intend to load a route, we need to run middleware on all parents before the loader. So we _must_ expose at least the matches at or above that level in the tree - and more likely _all_ matches to `dataStrategy` if it's to be able to implement middleware.
+Remember above where we decided to _pre-filter_ the matches based on `shouldRevalidate`? That breaks any concept of middleware since even if we don't intend to load a route, we need to run middleware on all parents before the loader. So we _must_ expose at least the `matches` at or above that level in the tree - and more likely _all_ matches to `dataStrategy` if it's to be able to implement middleware.
 
 And then, once we expose _multiple_ matches - we need to tell the user if they're supposed to actually run the handlers on those matches or only on a leaf/target match.
 
@@ -285,7 +320,37 @@ async function dataStrategy({ request, params, matches, type }) {
 }
 ```
 
-Or maybe we could even just add a `match.handler` field which _is_ the `loader`/`action` when it needs to be run? Then we could potentially remove the `type` parameter too? It would wrap up the `lazy` behavior too.
+**Option 3 - new function on `DataStrategyMatch`**
+
+Extending on the idea above - it all started to feel super leaky and full of implementation-details. Why are users manually filtering? Or manually passing parameters to loaders/actions? Using a `type` field to know which to call? Waiting on a `match.route` Promise before calling the loader?
+
+That's wayyyy to many rough edges for us to document and users to get wrong (rightfully so!).
+
+Why can't we just do it all? LE'ts wrap _all_ of that up into a single `match.handler()` function that:
+
+- Waits for `route.lazy` to resolve (if needed)
+- No-ops if the route isn't supposed to revalidate
+  - Open question here if we return the _current_ data from these no-ops or return `undefined`?
+- Knows whether to call the `loader` or the `action`
+- Allows users to pass _additional_ params to loaders/actions for middleware/context use cases.
+
+```js
+function dataStrategy({ matches }) {
+  // No more type, defaultStrategy, or match.route promise APIs!
+
+  // Can implement middleware as above since you now get all matches
+  let context = runMiddlewares(matches);
+
+  // Call all loaders in parallel (no params to pass) but you _can_ pass you
+  // own argument to `handler` and it will come in as `loader({ request }, handlerArg)`
+  // So you can send middleware context through to loaders/actions
+  return Promise.all(matches.map(m => m.handler(context));
+
+  // Note we don't do any filtering above - if a match doesn't need to load,
+  // `match.handler` is no-op.  Just like `serverLoader` is a no-op in `clientLoader`
+  // when it doesn't need to run
+}
+```
 
 ## Consequences
 
