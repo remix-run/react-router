@@ -232,8 +232,7 @@ export interface DetectErrorBoundaryFunction {
 }
 
 export interface DataStrategyMatch
-  extends Omit<AgnosticRouteMatch<string, AgnosticDataRouteObject>, "route"> {
-  route: LazyRoutePromise;
+  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
   handler: (ctx?: Record<string, unknown>) => Promise<HandlerResult>;
 }
 
@@ -423,9 +422,6 @@ export interface AgnosticRouteMatch<
 
 export interface AgnosticDataRouteMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {}
-
-export type LazyRoutePromise = Promise<AgnosticDataRouteObject> &
-  AgnosticDataRouteObject;
 
 function isIndexRoute(
   route: AgnosticRouteObject

@@ -4,6 +4,7 @@ import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
   DataStrategyFunction,
+  DataStrategyMatch,
 } from "../utils";
 import { ErrorResponseImpl, json, ResultType } from "../utils";
 
@@ -3247,6 +3248,120 @@ describe("a router", () => {
         expect(t.router.state.loaderData).toMatchObject({
           parent: "PARENT",
           child: "CHILD",
+        });
+      });
+
+      it("allows automatic caching of loader results", async () => {
+        let cache: Record<string, unknown> = {};
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              loader: true,
+              handle: {
+                cacheKey: (url: string) => new URL(url).pathname,
+              },
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: true,
+                  action: true,
+                },
+              ],
+            },
+          ],
+          async dataStrategy({ request, matches }) {
+            const getCacheKey = (m: DataStrategyMatch) =>
+              m.route.handle?.cacheKey
+                ? [m.route.id, m.route.handle.cacheKey(request.url)].join("-")
+                : null;
+
+            return Promise.all(
+              matches.map(async (m) => {
+                if (request.method !== "GET") {
+                  // invalidate on actions
+                  cache = {};
+                  return m.handler();
+                }
+
+                let key = getCacheKey(m);
+                if (key && cache[key]) {
+                  return {
+                    type: ResultType.data,
+                    result: cache[key],
+                  };
+                }
+
+                let handlerResult = await m.handler();
+                if (handlerResult.type === ResultType.data && key) {
+                  cache[key] = handlerResult.result;
+                }
+
+                return handlerResult;
+              })
+            );
+          },
+        });
+
+        let A = await t.navigate("/parent/child");
+        await A.loaders.parent.resolve("PARENT");
+        await A.loaders.child.resolve("CHILD");
+
+        expect(t.router.state).toMatchObject({
+          navigation: { state: "idle" },
+          loaderData: {
+            parent: "PARENT",
+            child: "CHILD",
+          },
+        });
+
+        // Changing search params should force revalidation, but pathname-based
+        // cache will serve the old data
+        let B = await t.navigate("/parent/child?a=b");
+        await B.loaders.child.resolve("CHILD*");
+
+        expect(t.router.state).toMatchObject({
+          navigation: { state: "idle" },
+          loaderData: {
+            parent: "PARENT",
+            child: "CHILD*",
+          },
+        });
+
+        // Useless resolution - handler was never called for parent
+        await B.loaders.parent.resolve("PARENT*");
+
+        expect(t.router.state).toMatchObject({
+          navigation: { state: "idle" },
+          loaderData: {
+            parent: "PARENT",
+            child: "CHILD*",
+          },
+        });
+
+        // Action to invalidate the cache
+        let C = await t.navigate("/parent/child?a=b", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        await C.actions.child.resolve("ACTION");
+        await C.loaders.parent.resolve("PARENT**");
+        await C.loaders.child.resolve("CHILD**");
+
+        expect(t.router.state).toMatchObject({
+          navigation: { state: "idle" },
+          actionData: {
+            child: "ACTION",
+          },
+          loaderData: {
+            parent: "PARENT**",
+            child: "CHILD**",
+          },
         });
       });
     });

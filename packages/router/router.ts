@@ -25,7 +25,6 @@ import type {
   HTMLFormMethod,
   HandlerResult,
   ImmutableRouteKey,
-  LazyRoutePromise,
   LoaderFunction,
   MapRoutePropertiesFunction,
   MutationFormMethod,
@@ -2452,8 +2451,8 @@ export function createRouter(init: RouterInit): Router {
           type,
           request,
           m,
-          mapRouteProperties,
           manifest,
+          mapRouteProperties,
           routeIdsToLoad[m.route.id] === true
         )
       ),
@@ -3417,8 +3416,8 @@ export function createStaticHandler(
           type,
           request,
           m,
-          mapRouteProperties,
           manifest,
+          mapRouteProperties,
           // TODO: Is this all we need?  Always run for SSR?
           true,
           staticOpts.requestContext
@@ -4052,37 +4051,30 @@ function createDataStrategyMatch(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataRouteMatch,
-  mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction,
   shouldRun: boolean,
   staticContext?: unknown
 ): DataStrategyMatch {
-  let loadRoutePromise = match.route.lazy
-    ? loadLazyRouteModule(match.route, mapRouteProperties, manifest)
-    : Promise.resolve(match.route);
-
-  // Avoid unhandled rejection errors
-  loadRoutePromise.catch(() => {});
-
-  let handler: DataStrategyMatch["handler"] = shouldRun
-    ? (handlerCtx) =>
-        callLoaderOrAction(
-          type,
-          request,
-          dataStrategyMatch,
-          handlerCtx,
-          staticContext
-        )
-    : () => Promise.resolve({ type: ResultType.data, result: undefined });
-
   let dataStrategyMatch: DataStrategyMatch = {
     ...match,
-    // TODO: Can this go away?
-    route: Object.assign(
-      loadRoutePromise,
-      match.route
-    ) as unknown as LazyRoutePromise,
-    handler,
+    handler: shouldRun
+      ? (handlerCtx) =>
+          callLoaderOrAction(
+            type,
+            request,
+            dataStrategyMatch,
+            manifest,
+            mapRouteProperties,
+            handlerCtx,
+            staticContext
+          )
+      : // TODO: What's the best thing to do here - return an empty "success" result?
+        // Or return a success result with the current route loader/action data?
+        // We strip these results out if the route didn't need to be revalidated in
+        // `callDataStrategy` so it doesn't matter for us.  It's more of a question
+        // of whether exposing the current data to the user is useful?
+        () => Promise.resolve({ type: ResultType.data, result: undefined }),
   };
   return dataStrategyMatch;
 }
@@ -4092,6 +4084,8 @@ async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: DataStrategyMatch,
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction,
   handlerCtx?: Record<string, unknown>,
   staticContext?: unknown
 ): Promise<HandlerResult> {
@@ -4131,7 +4125,7 @@ async function callLoaderOrAction(
           runHandler(handler).catch((e) => {
             handlerError = e;
           }),
-          match.route,
+          loadLazyRouteModule(match.route, mapRouteProperties, manifest),
         ]);
         if (handlerError) {
           throw handlerError;
@@ -4139,11 +4133,11 @@ async function callLoaderOrAction(
         result = values[0];
       } else {
         // Load lazy route module, then run any returned handler
-        let route = await match.route;
+        await loadLazyRouteModule(match.route, mapRouteProperties, manifest);
 
-        handler = route[type];
+        handler = match.route[type];
         if (handler) {
-          // Handler still run even if we got interrupted to maintain consistency
+          // Handler still runs even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or
           // previously-lazy-loaded routes
           result = await runHandler(handler);
