@@ -39,10 +39,7 @@ export interface DeferredResult {
  */
 export interface RedirectResult {
   type: ResultType.redirect;
-  status: number;
-  location: string;
-  revalidate: boolean;
-  reloadDocument?: boolean;
+  response: Response;
 }
 
 /**

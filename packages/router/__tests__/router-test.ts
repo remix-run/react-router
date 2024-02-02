@@ -2975,6 +2975,68 @@ describe("a router", () => {
     });
 
     describe("use-cases", () => {
+      it("permits users to take control over response decoding", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "json",
+              path: "/test",
+              loader: true,
+              children: [
+                {
+                  id: "reverse",
+                  index: true,
+                  loader: true,
+                },
+              ],
+            },
+          ],
+          async dataStrategy({ matches }) {
+            return Promise.all(
+              matches.map(async (m) => {
+                let result = await m.handler();
+                if (
+                  result.result instanceof Response &&
+                  result.result.headers.get("Content-Type") ===
+                    "application/reverse"
+                ) {
+                  let str = await result.result.text();
+                  return {
+                    type: ResultType.data,
+                    result: {
+                      original: str,
+                      reversed: str.split("").reverse().join(""),
+                    },
+                  };
+                }
+                // This will be a JSON response we expect to be decoded the normal
+                // way
+                return result;
+              })
+            );
+          },
+        });
+
+        let A = await t.navigate("/test");
+        await A.loaders.json.resolve(json({ message: "hello json" }));
+        await A.loaders.reverse.resolve(
+          new Response("hello text", {
+            headers: { "Content-Type": "application/reverse" },
+          })
+        );
+
+        expect(t.router.state.loaderData).toEqual({
+          json: { message: "hello json" },
+          reverse: {
+            original: "hello text",
+            reversed: "txet olleh",
+          },
+        });
+      });
+
       it("allows a single-fetch type approach", async () => {
         let t = setup({
           routes: [

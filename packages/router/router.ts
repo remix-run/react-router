@@ -665,16 +665,6 @@ interface RevalidatingFetcher extends FetchLoadMatch {
   controller: AbortController | null;
 }
 
-/**
- * Wrapper object to allow us to throw any response out from callLoaderOrAction
- * for `queryRoute` while preserving whether or not it was thrown or returned
- * from the loader/action
- */
-interface QueryRouteResponse {
-  type: ResultType.data | ResultType.error;
-  response: Response;
-}
-
 const validMutationMethodsArr: MutationFormMethod[] = [
   "post",
   "put",
@@ -1606,7 +1596,8 @@ export function createRouter(init: RouterInit): Router {
         // we redirected to the exact same location we're currently at to avoid
         // double back-buttons
         replace =
-          result.location === state.location.pathname + state.location.search;
+          result.response.headers.get("Location") ===
+          state.location.pathname + state.location.search;
       }
       await startRedirectNavigation(request, result, {
         submission,
@@ -2321,21 +2312,19 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
     } = {}
   ) {
-    if (redirect.revalidate) {
+    if (redirect.response.headers.has("X-Remix-Revalidate")) {
       isRevalidationRequired = true;
     }
 
-    let redirectLocation = createLocation(state.location, redirect.location, {
+    let location = redirect.response.headers.get("Location");
+    invariant(location, "Expected a Location header on the redirect Response");
+    let redirectLocation = createLocation(state.location, location, {
       _isRedirect: true,
     });
-    invariant(
-      redirectLocation,
-      "Expected a location on the redirect navigation"
-    );
 
-    if (ABSOLUTE_URL_REGEX.test(redirect.location)) {
+    if (ABSOLUTE_URL_REGEX.test(location)) {
       // Strip off the protocol+origin for same-origin + same-basename absolute redirects
-      let normalizedLocation = redirect.location;
+      let normalizedLocation = location;
       let currentUrl = new URL(request.url);
       let url = normalizedLocation.startsWith("//")
         ? new URL(currentUrl.protocol + normalizedLocation)
@@ -2352,11 +2341,11 @@ export function createRouter(init: RouterInit): Router {
     if (isBrowser) {
       let isDocumentReload = false;
 
-      if (redirect.reloadDocument) {
+      if (redirect.response.headers.has("X-Remix-Reload-Document")) {
         // Hard reload if the response contained X-Remix-Reload-Document
         isDocumentReload = true;
-      } else if (ABSOLUTE_URL_REGEX.test(redirect.location)) {
-        const url = init.history.createURL(redirect.location);
+      } else if (ABSOLUTE_URL_REGEX.test(location)) {
+        const url = init.history.createURL(location);
         isDocumentReload =
           // Hard reload if it's an absolute URL to a new origin
           url.origin !== routerWindow.location.origin ||
@@ -2366,9 +2355,9 @@ export function createRouter(init: RouterInit): Router {
 
       if (isDocumentReload) {
         if (replace) {
-          routerWindow.location.replace(redirect.location);
+          routerWindow.location.replace(location);
         } else {
-          routerWindow.location.assign(redirect.location);
+          routerWindow.location.assign(location);
         }
         return;
       }
@@ -2399,14 +2388,14 @@ export function createRouter(init: RouterInit): Router {
     // redirected location
     let activeSubmission = submission || fetcherSubmission;
     if (
-      redirectPreserveMethodStatusCodes.has(redirect.status) &&
+      redirectPreserveMethodStatusCodes.has(redirect.response.status) &&
       activeSubmission &&
       isMutationMethod(activeSubmission.formMethod)
     ) {
       await startNavigation(redirectHistoryAction, redirectLocation, {
         submission: {
           ...activeSubmission,
-          formAction: redirect.location,
+          formAction: location,
         },
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
@@ -2428,54 +2417,42 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  // Utility wrapper for calling dataStrategy without having to pass around the
-  // manifest, mapRouteProperties, etc.
+  // Utility wrapper for calling dataStrategy client-side without having to
+  // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[]
   ): Promise<DataResult[]> {
-    let routeIdsToLoad: Record<string, boolean> = matchesToLoad.reduce(
-      (acc, m) => Object.assign(acc, { [m.route.id]: true }),
-      {}
-    );
-
-    // We send all matches here to allow for a middleware-type implementation
-    // in dataStrategy.  If a match doesn't need to run/be revalidated then its
-    // handler function is a no-op from createDataStrategyMatch and we filter
-    // those results back out below.
-    let results = await dataStrategyImpl({
-      matches: matches.map((m) =>
-        createDataStrategyMatch(
-          type,
-          request,
-          m,
-          manifest,
-          mapRouteProperties,
-          routeIdsToLoad[m.route.id] === true
-        )
-      ),
+    let results = await callDataStrategyImpl(
+      dataStrategyImpl,
+      type,
       request,
-      params: matches[0].params,
-    });
-
-    // Filter out any middleware-only matches for which we didn't need to run handlers
-    let matchesToLoadResults = results.filter(
-      (_, i) => routeIdsToLoad[matches[i].route.id] === true
+      matchesToLoad,
+      matches,
+      manifest,
+      mapRouteProperties
     );
 
     return await Promise.all(
-      matchesToLoadResults.map((result, i) =>
-        decodeLoaderOrActionResult(
-          result,
-          request,
-          matchesToLoad[i],
-          matches,
-          basename,
-          future.v7_relativeSplatPath
-        )
-      )
+      results.map((result, i) => {
+        if (isRedirectHandlerResult(result)) {
+          return {
+            type: ResultType.redirect,
+            response: normalizeRelativeRoutingRedirectResponse(
+              result.result,
+              request,
+              matchesToLoad[i].route.id,
+              matches,
+              basename,
+              future.v7_relativeSplatPath
+            ),
+          };
+        }
+
+        return convertHandlerResultToDataResult(result);
+      })
     );
   }
 
@@ -3151,14 +3128,14 @@ export function createStaticHandler(
             actionHeaders: {},
           };
     } catch (e) {
-      // If the user threw/returned a Response in callLoaderOrAction, we throw
-      // it to bail out and then return or throw here based on whether the user
-      // returned or threw
-      if (isQueryRouteResponse(e)) {
+      // If the user threw/returned a Response in callLoaderOrAction for a
+      // `queryRoute` call, we throw the `HandlerResult` to bail out early
+      // and then return or throw the raw Response here accordingly
+      if (isHandlerResult(e) && isResponse(e.result)) {
         if (e.type === ResultType.error) {
-          throw e.response;
+          throw e.result;
         }
-        return e.response;
+        return e.result;
       }
       // Redirects are always returned since they don't propagate to catch
       // boundaries
@@ -3197,11 +3174,8 @@ export function createStaticHandler(
         request,
         [actionMatch],
         matches,
-        {
-          isStaticRequest: true,
-          isRouteRequest,
-          requestContext,
-        }
+        isRouteRequest,
+        requestContext
       );
       result = results[0];
 
@@ -3216,9 +3190,9 @@ export function createStaticHandler(
       // can get back on the "throw all redirect responses" train here should
       // this ever happen :/
       throw new Response(null, {
-        status: result.status,
+        status: result.response.status,
         headers: {
-          Location: result.location,
+          Location: result.response.headers.get("Location")!,
         },
       });
     }
@@ -3370,7 +3344,8 @@ export function createStaticHandler(
       request,
       matchesToLoad,
       matches,
-      { isStaticRequest: true, isRouteRequest, requestContext }
+      isRouteRequest,
+      requestContext
     );
 
     if (request.signal.aborted) {
@@ -3407,48 +3382,49 @@ export function createStaticHandler(
     };
   }
 
+  // Utility wrapper for calling dataStrategy server-side without having to
+  // pass around the manifest, mapRouteProperties, etc.
   async function callDataStrategy(
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
-    staticOpts: {
-      isStaticRequest?: boolean;
-      isRouteRequest?: boolean;
-      requestContext?: unknown;
-    } = {}
+    isRouteRequest: boolean,
+    requestContext: unknown
   ): Promise<DataResult[]> {
-    let results = await dataStrategyImpl({
-      matches: matchesToLoad.map((m) =>
-        createDataStrategyMatch(
-          type,
-          request,
-          m,
-          manifest,
-          mapRouteProperties,
-          // TODO: Is this all we need?  Always run for SSR?
-          true,
-          staticOpts.requestContext
-        )
-      ),
+    let results = await callDataStrategyImpl(
+      dataStrategyImpl,
+      type,
       request,
-      params: matches[0].params,
-    });
+      matchesToLoad,
+      matches,
+      manifest,
+      mapRouteProperties,
+      requestContext
+    );
+
     return await Promise.all(
-      results.map((result, i) =>
-        decodeLoaderOrActionResult(
-          result,
-          request,
-          matchesToLoad[i],
-          matches,
-          basename,
-          future.v7_relativeSplatPath,
-          {
-            isStaticRequest: staticOpts.isStaticRequest === true,
-            isRouteRequest: staticOpts.isRouteRequest === true,
-          }
-        )
-      )
+      results.map((result, i) => {
+        if (isRedirectHandlerResult(result)) {
+          // Throw redirects and let the server handle them with an HTTP redirect
+          throw normalizeRelativeRoutingRedirectResponse(
+            result.result,
+            request,
+            matchesToLoad[i].route.id,
+            matches,
+            basename,
+            future.v7_relativeSplatPath
+          );
+        }
+        if (isResponse(result.result) && isRouteRequest) {
+          // For SSR single-route requests, we want to hand Responses back directly
+          // without unwrapping.  We do this with the QueryRouteResponse wrapper
+          // interface so we can know whether it was returned or thrown
+          throw result;
+        }
+
+        return convertHandlerResultToDataResult(result);
+      })
     );
   }
 
@@ -4048,6 +4024,44 @@ function defaultDataStrategy(
   return Promise.all(opts.matches.map((m) => m.handler()));
 }
 
+async function callDataStrategyImpl(
+  dataStrategyImpl: DataStrategyFunction,
+  type: "loader" | "action",
+  request: Request,
+  matchesToLoad: AgnosticDataRouteMatch[],
+  matches: AgnosticDataRouteMatch[],
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  requestContext?: unknown
+): Promise<HandlerResult[]> {
+  let routeIdsToLoad = matchesToLoad.reduce(
+    (acc, m) => acc.add(m.route.id),
+    new Set<string>()
+  );
+
+  // Send all matches here to allow for a middleware-type implementation.
+  // handler will be a no-op for unneeded routes and we filter those results
+  // back out below.
+  let results = await dataStrategyImpl({
+    matches: matches.map((m) =>
+      createDataStrategyMatch(
+        type,
+        request,
+        m,
+        manifest,
+        mapRouteProperties,
+        routeIdsToLoad.has(m.route.id),
+        requestContext
+      )
+    ),
+    request,
+    params: matches[0].params,
+  });
+
+  // Filter out any middleware-only matches for which we didn't need to run handlers
+  return results.filter((_, i) => routeIdsToLoad.has(matches[i].route.id));
+}
+
 // Given a route match, convert `match.route` to a Promise that encapsulates the
 // potential laziness of the route - and also has all non-lazy route properties
 // spread onto it.  This is so we can hand matches off to `dataStrategy` and let
@@ -4190,81 +4204,12 @@ async function callLoaderOrAction(
   return { type: ResultType.data, result };
 }
 
-async function decodeLoaderOrActionResult(
-  handlerResult: HandlerResult,
-  request: Request,
-  match: AgnosticDataRouteMatch,
-  matches: AgnosticDataRouteMatch[],
-  basename: string,
-  v7_relativeSplatPath: boolean,
-  staticOpts: { isStaticRequest: boolean; isRouteRequest: boolean } = {
-    isStaticRequest: false,
-    isRouteRequest: false,
-  }
+async function convertHandlerResultToDataResult(
+  handlerResult: HandlerResult
 ): Promise<DataResult> {
   let { result, type } = handlerResult;
 
   if (isResponse(result)) {
-    let status = result.status;
-
-    // Process redirects
-    if (redirectStatusCodes.has(status)) {
-      // TODO: Move this logic into a post-process step after dataStrategy
-      // Change RedirectResult to just hold the raw response and then we can look
-      // for the headers on our own to avoid a leaky abstraction
-      // All we should need is:
-      // { type: ResultType.redirect, response }
-
-      let location = result.headers.get("Location");
-      invariant(
-        location,
-        "Redirects returned/thrown from loaders/actions must have a Location header"
-      );
-
-      // Support relative routing in internal redirects
-      if (!ABSOLUTE_URL_REGEX.test(location)) {
-        location = normalizeTo(
-          new URL(request.url),
-          matches.slice(
-            0,
-            matches.findIndex((m) => m.route.id === match.route.id) + 1
-          ),
-          basename,
-          true,
-          location,
-          v7_relativeSplatPath
-        );
-      }
-
-      // Don't process redirects in the router during static requests.
-      // Instead, throw the Response and let the server handle it with an HTTP
-      // redirect.  We also update the Location header in place in this flow so
-      // basename and relative routing is taken into account
-      if (staticOpts.isStaticRequest) {
-        result.headers.set("Location", location);
-        throw result;
-      }
-
-      return {
-        type: ResultType.redirect,
-        status,
-        location,
-        revalidate: result.headers.get("X-Remix-Revalidate") !== null,
-        reloadDocument: result.headers.get("X-Remix-Reload-Document") !== null,
-      };
-    }
-
-    // For SSR single-route requests, we want to hand Responses back directly
-    // without unwrapping.  We do this with the QueryRouteResponse wrapper
-    // interface so we can know whether it was returned or thrown
-    if (staticOpts.isRouteRequest) {
-      let queryRouteResponse: QueryRouteResponse = {
-        type: type === ResultType.error ? ResultType.error : ResultType.data,
-        response: result,
-      };
-      throw queryRouteResponse;
-    }
-
     let data: any;
 
     try {
@@ -4287,7 +4232,7 @@ async function decodeLoaderOrActionResult(
     if (type === ResultType.error) {
       return {
         type,
-        error: new ErrorResponseImpl(status, result.statusText, data),
+        error: new ErrorResponseImpl(result.status, result.statusText, data),
         response: result,
       };
     }
@@ -4313,6 +4258,40 @@ async function decodeLoaderOrActionResult(
   }
 
   return { type: ResultType.data, data: result };
+}
+
+// Support relative routing in internal redirects
+function normalizeRelativeRoutingRedirectResponse(
+  response: Response,
+  request: Request,
+  routeId: string,
+  matches: AgnosticDataRouteMatch[],
+  basename: string,
+  v7_relativeSplatPath: boolean
+) {
+  let location = response.headers.get("Location");
+  invariant(
+    location,
+    "Redirects returned/thrown from loaders/actions must have a Location header"
+  );
+
+  if (!ABSOLUTE_URL_REGEX.test(location)) {
+    let trimmedMatches = matches.slice(
+      0,
+      matches.findIndex((m) => m.route.id === routeId) + 1
+    );
+    location = normalizeTo(
+      new URL(request.url),
+      trimmedMatches,
+      basename,
+      true,
+      location,
+      v7_relativeSplatPath
+    );
+    response.headers.set("Location", location);
+  }
+
+  return response;
 }
 
 // Utility method for creating the Request instances for loaders/actions during
@@ -4707,6 +4686,22 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   return false;
 }
 
+function isHandlerResult(result: unknown): result is HandlerResult {
+  return (
+    result != null &&
+    typeof result === "object" &&
+    "type" in result &&
+    "result" in result &&
+    (result.type === ResultType.data || result.type === ResultType.error)
+  );
+}
+
+function isRedirectHandlerResult(result: HandlerResult) {
+  return (
+    isResponse(result.result) && redirectStatusCodes.has(result.result.status)
+  );
+}
+
 function isDeferredResult(result: DataResult): result is DeferredResult {
   return result.type === ResultType.deferred;
 }
@@ -4749,14 +4744,6 @@ function isRedirectResponse(result: any): result is Response {
   let status = result.status;
   let location = result.headers.get("Location");
   return status >= 300 && status <= 399 && location != null;
-}
-
-function isQueryRouteResponse(obj: any): obj is QueryRouteResponse {
-  return (
-    obj &&
-    isResponse(obj.response) &&
-    (obj.type === ResultType.data || obj.type === ResultType.error)
-  );
 }
 
 function isValidMethod(method: string): method is FormMethod | V7_FormMethod {
