@@ -3277,7 +3277,9 @@ export function createStaticHandler(
           : 500,
         actionData: null,
         actionHeaders: {
-          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+          ...(result.response
+            ? { [actionMatch.route.id]: result.response.headers }
+            : {}),
         },
       };
     }
@@ -3292,14 +3294,20 @@ export function createStaticHandler(
 
     return {
       ...context,
-      // action status codes take precedence over loader status codes
-      ...(result.statusCode ? { statusCode: result.statusCode } : {}),
       actionData: {
         [actionMatch.route.id]: result.data,
       },
-      actionHeaders: {
-        ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
-      },
+      // action status codes take precedence over loader status codes
+      ...(result.response
+        ? {
+            statusCode: result.response.status,
+            actionHeaders: {
+              [actionMatch.route.id]: result.response.headers,
+            },
+          }
+        : {
+            actionHeaders: {},
+          }),
     };
   }
 
@@ -4280,15 +4288,14 @@ async function decodeLoaderOrActionResult(
       return {
         type,
         error: new ErrorResponseImpl(status, result.statusText, data),
-        headers: result.headers,
+        response: result,
       };
     }
 
     return {
       type: ResultType.data,
       data,
-      statusCode: result.status,
-      headers: result.headers,
+      response: result,
     };
   }
 
@@ -4426,28 +4433,35 @@ function processRouteLoaderData(
           ? result.error.status
           : 500;
       }
-      if (result.headers) {
-        loaderHeaders[id] = result.headers;
+      if (result.response) {
+        loaderHeaders[id] = result.response.headers;
       }
     } else {
       if (isDeferredResult(result)) {
         activeDeferreds.set(id, result.deferredData);
         loaderData[id] = result.deferredData.data;
+        // Error status codes always override success status codes, but if all
+        // loaders are successful we take the deepest status code.
+        if (
+          result.statusCode != null &&
+          result.statusCode !== 200 &&
+          !foundError
+        ) {
+          statusCode = result.statusCode;
+        }
+        if (result.headers) {
+          loaderHeaders[id] = result.headers;
+        }
       } else {
         loaderData[id] = result.data;
-      }
-
-      // Error status codes always override success status codes, but if all
-      // loaders are successful we take the deepest status code.
-      if (
-        result.statusCode != null &&
-        result.statusCode !== 200 &&
-        !foundError
-      ) {
-        statusCode = result.statusCode;
-      }
-      if (result.headers) {
-        loaderHeaders[id] = result.headers;
+        // Error status codes always override success status codes, but if all
+        // loaders are successful we take the deepest status code.
+        if (result.response) {
+          if (result.response.status !== 200 && !foundError) {
+            statusCode = result.response.status;
+          }
+          loaderHeaders[id] = result.response.headers;
+        }
       }
     }
   });

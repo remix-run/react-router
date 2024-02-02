@@ -21,8 +21,7 @@ export enum ResultType {
 export interface SuccessResult {
   type: ResultType.data;
   data: any;
-  statusCode?: number;
-  headers?: Headers;
+  response?: Response;
 }
 
 /**
@@ -52,7 +51,7 @@ export interface RedirectResult {
 export interface ErrorResult {
   type: ResultType.error;
   error: any;
-  headers?: Headers;
+  response?: Response;
 }
 
 /**
