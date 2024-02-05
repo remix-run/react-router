@@ -13,11 +13,35 @@ import {
   EXPRESS_SERVER,
 } from "./helpers/vite.js";
 
+const js = String.raw;
+const css = String.raw;
+
 const PADDING = "20px";
 const NEW_PADDING = "30px";
 
 const files = {
-  "app/entry.client.tsx": `
+  "postcss.config.js": js`
+    export default ({
+      plugins: [
+        {
+          // Minimal PostCSS plugin to test that it's being used
+          postcssPlugin: 'replace',
+          Declaration (decl) {
+            decl.value = decl.value
+              .replace(
+                /NEW_PADDING_INJECTED_VIA_POSTCSS/g,
+                ${JSON.stringify(NEW_PADDING)},
+              )
+              .replace(
+                /PADDING_INJECTED_VIA_POSTCSS/g,
+                ${JSON.stringify(PADDING)},
+              );
+          },
+        },
+      ],
+    });
+  `,
+  "app/entry.client.tsx": js`
     import "./entry.client.css";
   
     import { RemixBrowser } from "@remix-run/react";
@@ -33,7 +57,7 @@ const files = {
       );
     });
   `,
-  "app/root.tsx": `
+  "app/root.tsx": js`
     import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
     export default function Root() {
@@ -51,31 +75,31 @@ const files = {
       );
     }
   `,
-  "app/entry.client.css": `
+  "app/entry.client.css": css`
     .entry-client {
       background: pink;
       padding: ${PADDING};
     }
   `,
-  "app/styles-bundled.css": `
+  "app/styles-bundled.css": css`
     .index_bundled {
       background: papayawhip;
       padding: ${PADDING};
     }
   `,
-  "app/styles-linked.css": `
-    .index_linked {
+  "app/styles-postcss-linked.css": css`
+    .index_postcss_linked {
       background: salmon;
-      padding: ${PADDING};
+      padding: PADDING_INJECTED_VIA_POSTCSS;
     }
   `,
-  "app/styles.module.css": `
+  "app/styles.module.css": css`
     .index {
       background: peachpuff;
       padding: ${PADDING};
     }
   `,
-  "app/styles-vanilla-global.css.ts": `
+  "app/styles-vanilla-global.css.ts": js`
     import { createVar, globalStyle } from "@vanilla-extract/css";
 
     globalStyle(".index_vanilla_global", {
@@ -83,7 +107,7 @@ const files = {
       padding: "${PADDING}",
     });
   `,
-  "app/styles-vanilla-local.css.ts": `
+  "app/styles-vanilla-local.css.ts": js`
     import { style } from "@vanilla-extract/css";
 
     export const index = style({
@@ -91,15 +115,15 @@ const files = {
       padding: "${PADDING}",
     });
   `,
-  "app/routes/_index.tsx": `
+  "app/routes/_index.tsx": js`
     import "../styles-bundled.css";
-    import linkedStyles from "../styles-linked.css?url";
+    import postcssLinkedStyles from "../styles-postcss-linked.css?url";
     import cssModulesStyles from "../styles.module.css";
     import "../styles-vanilla-global.css";
     import * as stylesVanillaLocal from "../styles-vanilla-local.css";
 
     export function links() {
-      return [{ rel: "stylesheet", href: linkedStyles }];
+      return [{ rel: "stylesheet", href: postcssLinkedStyles }];
     }
 
     export default function IndexRoute() {
@@ -108,7 +132,7 @@ const files = {
           <input />
           <div id="entry-client" className="entry-client">
             <div id="css-modules" className={cssModulesStyles.index}>
-              <div id="css-linked" className="index_linked">
+              <div id="css-postcss-linked" className="index_postcss_linked">
                 <div id="css-bundled" className="index_bundled">
                   <div id="css-vanilla-global" className="index_vanilla_global">
                     <div id="css-vanilla-local" className={stylesVanillaLocal.index}>
@@ -241,7 +265,7 @@ async function pageLoadWorkflow({ page, port }: { page: Page; port: number }) {
   await Promise.all(
     [
       "#css-bundled",
-      "#css-linked",
+      "#css-postcss-linked",
       "#css-modules",
       "#css-vanilla-global",
       "#css-vanilla-local",
@@ -274,20 +298,26 @@ async function hmrWorkflow({
   await expect(input).toHaveValue("stateful");
 
   let edit = createEditor(cwd);
-  let modifyCss = (contents: string) => contents.replace(PADDING, NEW_PADDING);
+  let modifyCss = (contents: string) =>
+    contents
+      .replace(PADDING, NEW_PADDING)
+      .replace(
+        "PADDING_INJECTED_VIA_POSTCSS",
+        "NEW_PADDING_INJECTED_VIA_POSTCSS"
+      );
 
   await Promise.all([
     edit("app/styles-bundled.css", modifyCss),
-    edit("app/styles-linked.css", modifyCss),
     edit("app/styles.module.css", modifyCss),
     edit("app/styles-vanilla-global.css.ts", modifyCss),
     edit("app/styles-vanilla-local.css.ts", modifyCss),
+    edit("app/styles-postcss-linked.css", modifyCss),
   ]);
 
   await Promise.all(
     [
       "#css-bundled",
-      "#css-linked",
+      "#css-postcss-linked",
       "#css-modules",
       "#css-vanilla-global",
       "#css-vanilla-local",

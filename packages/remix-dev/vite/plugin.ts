@@ -909,6 +909,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           ...(viteCommand === "build" && {
             base: ctx.remixConfig.publicPath,
             build: {
+              cssMinify: viteUserConfig.build?.cssMinify ?? true,
               ...(!viteConfigEnv.isSsrBuild
                 ? {
                     manifest: true,
