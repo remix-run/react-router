@@ -2425,35 +2425,44 @@ export function createRouter(init: RouterInit): Router {
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[]
   ): Promise<DataResult[]> {
-    let results = await callDataStrategyImpl(
-      dataStrategyImpl,
-      type,
-      request,
-      matchesToLoad,
-      matches,
-      manifest,
-      mapRouteProperties
-    );
+    try {
+      let results = await callDataStrategyImpl(
+        dataStrategyImpl,
+        type,
+        request,
+        matchesToLoad,
+        matches,
+        manifest,
+        mapRouteProperties
+      );
 
-    return await Promise.all(
-      results.map((result, i) => {
-        if (isRedirectHandlerResult(result)) {
-          return {
-            type: ResultType.redirect,
-            response: normalizeRelativeRoutingRedirectResponse(
-              result.result,
-              request,
-              matchesToLoad[i].route.id,
-              matches,
-              basename,
-              future.v7_relativeSplatPath
-            ),
-          };
-        }
+      return await Promise.all(
+        results.map((result, i) => {
+          if (isRedirectHandlerResult(result)) {
+            return {
+              type: ResultType.redirect,
+              response: normalizeRelativeRoutingRedirectResponse(
+                result.result,
+                request,
+                matchesToLoad[i].route.id,
+                matches,
+                basename,
+                future.v7_relativeSplatPath
+              ),
+            };
+          }
 
-        return convertHandlerResultToDataResult(result);
-      })
-    );
+          return convertHandlerResultToDataResult(result);
+        })
+      );
+    } catch (e) {
+      // If the outer dataStrategy method throws, just return the error for all
+      // matches - and it'll naturally bubble to the root
+      return matchesToLoad.map(() => ({
+        type: ResultType.error,
+        error: e,
+      }));
+    }
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -4021,7 +4030,7 @@ async function loadLazyRouteModule(
 function defaultDataStrategy(
   opts: DataStrategyFunctionArgs
 ): ReturnType<DataStrategyFunction> {
-  return Promise.all(opts.matches.map((m) => m.handler()));
+  return Promise.all(opts.matches.map((m) => m.bikeshed_loadRoute()));
 }
 
 async function callDataStrategyImpl(
@@ -4038,77 +4047,75 @@ async function callDataStrategyImpl(
     (acc, m) => acc.add(m.route.id),
     new Set<string>()
   );
+  let loadedMatches = new Set<string>();
 
   // Send all matches here to allow for a middleware-type implementation.
   // handler will be a no-op for unneeded routes and we filter those results
   // back out below.
   let results = await dataStrategyImpl({
-    matches: matches.map((m) =>
-      createDataStrategyMatch(
-        type,
-        request,
-        m,
-        manifest,
-        mapRouteProperties,
-        routeIdsToLoad.has(m.route.id),
-        requestContext
-      )
-    ),
+    matches: matches.map((match) => {
+      // `bikeshed_loadRoute` encapsulates the route.lazy, executing the
+      // loader/action, and mapping return values/thrown errors to a
+      // HandlerResult.  Users can pass a callback to take fine-grained control
+      // over the execution of the loader/action
+      let bikeshed_loadRoute: DataStrategyMatch["bikeshed_loadRoute"] = (
+        bikeshed_handlerOverride
+      ) => {
+        loadedMatches.add(match.route.id);
+        return routeIdsToLoad.has(match.route.id)
+          ? callLoaderOrAction(
+              type,
+              request,
+              match,
+              manifest,
+              mapRouteProperties,
+              bikeshed_handlerOverride,
+              requestContext
+            )
+          : // TODO: What's the best thing to do here - return an empty "success" result?
+            // Or return a success result with the current route loader/action data?
+            // We strip these results out if the route didn't need to be revalidated in
+            // `callDataStrategy` so it doesn't matter for us.  It's more of a question
+            // of whether exposing the current data to the user is useful?
+            Promise.resolve({ type: ResultType.data, result: undefined });
+      };
+
+      return {
+        ...match,
+        bikeshed_loadRoute,
+      };
+    }),
     request,
     params: matches[0].params,
   });
 
+  // Throw if any loadRoute implementations not called since they are what
+  // ensures a route is fully loaded
+  // Throw if any loadRoute implementations not called since they are what
+  // ensure a route is fully loaded
+  matches.forEach((m) =>
+    invariant(
+      loadedMatches.has(m.route.id),
+      `\`match.bikeshed_loadRoute()\` was not called for route id "${m.route.id}". ` +
+        "You must call `match.bikeshed_loadRoute()` on every match passed to " +
+        "`dataStrategy` to ensure all routes are properly loaded."
+    )
+  );
+
   // Filter out any middleware-only matches for which we didn't need to run handlers
   return results.filter((_, i) => routeIdsToLoad.has(matches[i].route.id));
-}
-
-// Given a route match, convert `match.route` to a Promise that encapsulates the
-// potential laziness of the route - and also has all non-lazy route properties
-// spread onto it.  This is so we can hand matches off to `dataStrategy` and let
-// them handle loading lazy routes as they see fit and avoid `route.lazy`
-// executions from blocking `route.loader` executions for other routes.  Yes,
-// this means we can't add properties such as `then`/`catch`/`finally` as `route`
-// props :)
-function createDataStrategyMatch(
-  type: "loader" | "action",
-  request: Request,
-  match: AgnosticDataRouteMatch,
-  manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction,
-  shouldRun: boolean,
-  staticContext?: unknown
-): DataStrategyMatch {
-  let dataStrategyMatch: DataStrategyMatch = {
-    ...match,
-    handler: shouldRun
-      ? (handlerCtx) =>
-          callLoaderOrAction(
-            type,
-            request,
-            dataStrategyMatch,
-            manifest,
-            mapRouteProperties,
-            handlerCtx,
-            staticContext
-          )
-      : // TODO: What's the best thing to do here - return an empty "success" result?
-        // Or return a success result with the current route loader/action data?
-        // We strip these results out if the route didn't need to be revalidated in
-        // `callDataStrategy` so it doesn't matter for us.  It's more of a question
-        // of whether exposing the current data to the user is useful?
-        () => Promise.resolve({ type: ResultType.data, result: undefined }),
-  };
-  return dataStrategyMatch;
 }
 
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
 async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
-  match: DataStrategyMatch,
+  match: AgnosticDataRouteMatch,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  handlerCtx?: Record<string, unknown>,
+  bikeshed_handlerOverride: Parameters<
+    DataStrategyMatch["bikeshed_loadRoute"]
+  >[0],
   staticContext?: unknown
 ): Promise<HandlerResult> {
   let result;
@@ -4120,17 +4127,19 @@ async function callLoaderOrAction(
     let abortPromise = new Promise((_, r) => (reject = r));
     onReject = () => reject();
     request.signal.addEventListener("abort", onReject);
-    return Promise.race([
-      handler(
-        {
-          request,
-          params: match.params,
-          context: staticContext,
-        },
-        ...(handlerCtx ? [handlerCtx] : [])
-      ),
-      abortPromise,
-    ]);
+
+    let handlerArg = {
+      request,
+      params: match.params,
+      context: staticContext,
+    };
+    let handlerPromise = bikeshed_handlerOverride
+      ? bikeshed_handlerOverride(async (ctx: unknown) =>
+          ctx !== undefined ? handler(handlerArg, ctx) : handler(handlerArg)
+        )
+      : handler(handlerArg);
+
+    return Promise.race([handlerPromise, abortPromise]);
   };
 
   try {

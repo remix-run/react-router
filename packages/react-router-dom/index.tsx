@@ -60,7 +60,6 @@ import {
   createBrowserHistory,
   createHashHistory,
   joinPaths,
-  ResultType,
   stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   UNSAFE_invariant as invariant,
@@ -100,11 +99,7 @@ export type {
   URLSearchParamsInit,
   V7_FormMethod,
 };
-export {
-  createSearchParams,
-  ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
-  ResultType,
-};
+export { createSearchParams, ErrorResponseImpl as UNSAFE_ErrorResponseImpl };
 
 // Note: Keep in sync with react-router exports!
 export type {

@@ -6,7 +6,7 @@ import type {
   DataStrategyFunction,
   DataStrategyMatch,
 } from "../utils";
-import { ErrorResponseImpl, json, ResultType } from "../utils";
+import { ErrorResponseImpl, json } from "../utils";
 
 import {
   deferredData,
@@ -2489,7 +2489,7 @@ describe("a router", () => {
     describe("loaders", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.handler()))
+          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
         );
         let t = setup({
           routes: [
@@ -2547,7 +2547,7 @@ describe("a router", () => {
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.handler()))
+          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
         );
         let t = setup({
           routes: [
@@ -2613,14 +2613,14 @@ describe("a router", () => {
             },
           ],
           async dataStrategy({ matches }) {
-            // We only have one match in this simple setup
-            let result = await matches[0].handler();
-            return [
-              {
-                type: ResultType.data,
-                result: `Route ID "${matches[0].route.id}" returned "${result.result}"`,
-              },
-            ];
+            return Promise.all(
+              matches.map((m) =>
+                m.bikeshed_loadRoute(async (handler) => {
+                  let result = await handler();
+                  return `Route ID "${m.route.id}" returned "${result}"`;
+                })
+              )
+            );
           },
         });
 
@@ -2645,14 +2645,14 @@ describe("a router", () => {
             },
           ],
           async dataStrategy({ matches }) {
-            // We only have one match in this simple setup
-            let result = await matches[0].handler();
-            return [
-              {
-                type: ResultType.data,
-                result: `Route ID "${matches[0].route.id}" returned "${result.result}"`,
-              },
-            ];
+            return Promise.all(
+              matches.map((m) =>
+                m.bikeshed_loadRoute(async (handler) => {
+                  let result = await handler();
+                  return `Route ID "${m.route.id}" returned "${result}"`;
+                })
+              )
+            );
           },
         });
 
@@ -2690,32 +2690,162 @@ describe("a router", () => {
           ],
           dataStrategy({ matches }) {
             return Promise.all(
-              matches.map(async (match) => {
-                let result = await match.handler();
-                return {
-                  type:
-                    result.result instanceof Error
-                      ? ResultType.error
-                      : ResultType.data,
-                  result: result.result,
-                };
+              matches.map(async (match) => match.bikeshed_loadRoute())
+            );
+          },
+        });
+
+        let A = await t.navigate("/parent/child");
+        await A.loaders.test.reject(new Error("ERROR"));
+
+        expect(t.router.state.loaderData.test).toBeUndefined();
+        expect(t.router.state.errors?.child.message).toBe("ERROR");
+      });
+
+      it("handles errors at the proper boundary with a custom implementation", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              path: "/parent",
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  hasErrorBoundary: true,
+                  children: [
+                    {
+                      id: "test",
+                      index: true,
+                      loader: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          dataStrategy({ matches }) {
+            return Promise.all(
+              matches.map((match) => {
+                return match.bikeshed_loadRoute(async (handler) => {
+                  let val = await handler();
+                  // Won't get here since handler will throw
+                  return val;
+                });
               })
             );
           },
         });
 
         let A = await t.navigate("/parent/child");
-        await A.loaders.test.resolve(new Error("ERROR"));
+        await A.loaders.test.reject(new Error("ERROR"));
 
         expect(t.router.state.loaderData.test).toBeUndefined();
         expect(t.router.state.errors?.child.message).toBe("ERROR");
+      });
+
+      it("bubbles to the root if dataStrategy throws", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              loader: true,
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  loader: true,
+                },
+              ],
+            },
+          ],
+          dataStrategy({ matches }) {
+            throw new Error("Uh oh");
+          },
+        });
+
+        let A = await t.navigate("/parent/child");
+        await A.loaders.parent.resolve("PARENT");
+
+        expect(t.router.state).toMatchObject({
+          actionData: null,
+          errors: {
+            parent: new Error("Uh oh"),
+          },
+          loaderData: {},
+          navigation: {
+            state: "idle",
+          },
+        });
+      });
+
+      it("throws an error if an implementation does not call bikeshed_loadRoute", async () => {
+        let t = setup({
+          routes: [
+            {
+              path: "/",
+            },
+            {
+              id: "parent",
+              path: "/parent",
+              loader: true,
+              hasErrorBoundary: true,
+              children: [
+                {
+                  id: "child",
+                  path: "child",
+                  lazy: true,
+                },
+              ],
+            },
+          ],
+          // @ts-expect-error
+          dataStrategy({ matches }) {
+            return Promise.all(
+              matches.map(async (match) => {
+                if (match.route.id === "child") {
+                  // noop to cause error
+                  return "forgot to load child";
+                }
+                return match.bikeshed_loadRoute();
+              })
+            );
+          },
+        });
+
+        let A = await t.navigate("/parent/child");
+        await A.loaders.parent.resolve("PARENT");
+
+        expect(t.router.state).toMatchObject({
+          actionData: null,
+          errors: {
+            parent: new Error(
+              '`match.bikeshed_loadRoute()` was not called for route id "child". ' +
+                "You must call `match.bikeshed_loadRoute()` on every match passed " +
+                "to `dataStrategy` to ensure all routes are properly loaded."
+            ),
+          },
+          loaderData: {
+            child: undefined,
+            parent: undefined,
+          },
+          navigation: {
+            state: "idle",
+          },
+        });
       });
     });
 
     describe("actions", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.handler()))
+          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
         );
         let t = setup({
           routes: [
@@ -2757,7 +2887,7 @@ describe("a router", () => {
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.handler()))
+          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
         );
         let t = setup({
           routes: [
@@ -2802,7 +2932,7 @@ describe("a router", () => {
       describe("loaders", () => {
         it("should allow a custom implementation to passthrough to default behavior", async () => {
           let dataStrategy = mockDataStrategy(({ matches }) =>
-            Promise.all(matches.map((m) => m.handler()))
+            Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
           );
           let t = setup({
             routes: [
@@ -2843,7 +2973,7 @@ describe("a router", () => {
 
         it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
           let dataStrategy = mockDataStrategy(({ matches }) =>
-            Promise.all(matches.map((m) => m.handler()))
+            Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
           );
           let t = setup({
             routes: [
@@ -2885,7 +3015,7 @@ describe("a router", () => {
       describe("actions", () => {
         it("should allow a custom implementation to passthrough to default behavior", async () => {
           let dataStrategy = mockDataStrategy(({ matches }) =>
-            Promise.all(matches.map((m) => m.handler()))
+            Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
           );
           let t = setup({
             routes: [
@@ -2929,7 +3059,7 @@ describe("a router", () => {
 
         it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
           let dataStrategy = mockDataStrategy(({ matches }) =>
-            Promise.all(matches.map((m) => m.handler()))
+            Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
           );
           let t = setup({
             routes: [
@@ -2997,24 +3127,22 @@ describe("a router", () => {
           async dataStrategy({ matches }) {
             return Promise.all(
               matches.map(async (m) => {
-                let result = await m.handler();
-                if (
-                  result.result instanceof Response &&
-                  result.result.headers.get("Content-Type") ===
-                    "application/reverse"
-                ) {
-                  let str = await result.result.text();
-                  return {
-                    type: ResultType.data,
-                    result: {
+                return await m.bikeshed_loadRoute(async (handler) => {
+                  let result = await handler();
+                  if (
+                    result instanceof Response &&
+                    result.headers.get("Content-Type") === "application/reverse"
+                  ) {
+                    let str = await result.text();
+                    return {
                       original: str,
                       reversed: str.split("").reverse().join(""),
-                    },
-                  };
-                }
-                // This will be a JSON response we expect to be decoded the normal
-                // way
-                return result;
+                    };
+                  }
+                  // This will be a JSON response we expect to be decoded the normal
+                  // way
+                  return result;
+                });
               })
             );
           },
@@ -3057,7 +3185,25 @@ describe("a router", () => {
             },
           ],
           async dataStrategy({ matches }) {
-            // Mock response from server
+            // Hold a deferred for each route we need to load
+            let routeDeferreds: Map<
+              string,
+              ReturnType<typeof createDeferred>
+            > = new Map();
+
+            // Use bikeshed_loadRoute's to create and await a deferred for each
+            // route that needs to load
+            let matchPromises = matches.map((m) =>
+              m.bikeshed_loadRoute(() => {
+                // Don't call handler, just create a deferred we can resolve from
+                // the single fetch response and return it's promise
+                let dfd = createDeferred();
+                routeDeferreds.set(m.route.id, dfd);
+                return dfd.promise;
+              })
+            );
+
+            // Mocked single fetch call response for the routes that need loading
             let result = {
               loaderData: {
                 parent: "PARENT",
@@ -3065,10 +3211,12 @@ describe("a router", () => {
               },
               errors: null,
             };
-            return matches.map((m) => ({
-              type: ResultType.data,
-              result: result.loaderData[m.route.id],
-            }));
+
+            // Resolve the deferred's above and return the mapped match promises
+            routeDeferreds.forEach((dfd, routeId) =>
+              dfd.resolve(result.loaderData[routeId])
+            );
+            return Promise.all(matchPromises);
           },
         });
 
@@ -3144,14 +3292,15 @@ describe("a router", () => {
             // Run loaders in parallel only exposing contexts from above
             return Promise.all(
               matches.map((m, i) =>
-                m.handler({
+                m.bikeshed_loadRoute((handler) => {
                   // Only provide context values up to this level in the matches
-                  context: matches.slice(0, i + 1).reduce((acc, m) => {
+                  let handlerCtx = matches.slice(0, i + 1).reduce((acc, m) => {
                     Object.keys(m.route.handle?.context).forEach((k) => {
                       acc[k] = context[k];
                     });
                     return acc;
-                  }, {}),
+                  }, {});
+                  return handler(handlerCtx);
                 })
               )
             );
@@ -3167,14 +3316,12 @@ describe("a router", () => {
             request: expect.any(Request),
             params: expect.any(Object),
           }),
-          expect.objectContaining({
-            context: {
-              parent: {
-                id: "parent",
-                whatever: "PARENT MIDDLEWARE",
-              },
+          {
+            parent: {
+              id: "parent",
+              whatever: "PARENT MIDDLEWARE",
             },
-          })
+          }
         );
 
         expect(A.loaders.child.stub).toHaveBeenCalledWith(
@@ -3182,18 +3329,16 @@ describe("a router", () => {
             request: expect.any(Request),
             params: expect.any(Object),
           }),
-          expect.objectContaining({
-            context: {
-              parent: {
-                id: "parent",
-                whatever: "PARENT MIDDLEWARE",
-              },
-              child: {
-                id: "child",
-                whatever: "CHILD MIDDLEWARE",
-              },
+          {
+            parent: {
+              id: "parent",
+              whatever: "PARENT MIDDLEWARE",
             },
-          })
+            child: {
+              id: "child",
+              whatever: "CHILD MIDDLEWARE",
+            },
+          }
         );
 
         await A.loaders.parent.resolve("PARENT LOADER");
@@ -3268,14 +3413,15 @@ describe("a router", () => {
             // Run loaders in parallel only exposing contexts from above
             return Promise.all(
               matches.map((m, i) =>
-                m.handler({
+                m.bikeshed_loadRoute((callHandler) => {
                   // Only provide context values up to this level in the matches
-                  context: matches.slice(0, i + 1).reduce((acc, m) => {
+                  let handlerCtx = matches.slice(0, i + 1).reduce((acc, m) => {
                     Object.keys(m.route.handle?.context).forEach((k) => {
                       acc[k] = context[k];
                     });
                     return acc;
-                  }, {}),
+                  }, {});
+                  return callHandler(handlerCtx);
                 })
               )
             );
@@ -3293,16 +3439,22 @@ describe("a router", () => {
 
         // Loaders are called with context from their level and above, and
         // context reflects any values set by middleware
-        expect(B.loaders.child.stub.mock.calls[0][1].context).toEqual({
-          parent: {
-            id: "parent",
-            whatever: "PARENT MIDDLEWARE",
-          },
-          child: {
-            id: "child",
-            whatever: "CHILD MIDDLEWARE",
-          },
-        });
+        expect(B.loaders.child.stub).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.any(Request),
+            params: expect.any(Object),
+          }),
+          {
+            parent: {
+              id: "parent",
+              whatever: "PARENT MIDDLEWARE",
+            },
+            child: {
+              id: "child",
+              whatever: "CHILD MIDDLEWARE",
+            },
+          }
+        );
 
         await B.loaders.child.resolve("CHILD");
         expect(t.router.state.navigation.state).toBe("idle");
@@ -3345,26 +3497,25 @@ describe("a router", () => {
 
             return Promise.all(
               matches.map(async (m) => {
-                if (request.method !== "GET") {
-                  // invalidate on actions
-                  cache = {};
-                  return m.handler();
-                }
+                return m.bikeshed_loadRoute(async (handler) => {
+                  if (request.method !== "GET") {
+                    // invalidate on actions
+                    cache = {};
+                    return handler();
+                  }
 
-                let key = getCacheKey(m);
-                if (key && cache[key]) {
-                  return {
-                    type: ResultType.data,
-                    result: cache[key],
-                  };
-                }
+                  let key = getCacheKey(m);
+                  if (key && cache[key]) {
+                    return cache[key];
+                  }
 
-                let handlerResult = await m.handler();
-                if (handlerResult.type === ResultType.data && key) {
-                  cache[key] = handlerResult.result;
-                }
+                  let handlerResult = await handler();
+                  if (key) {
+                    cache[key] = handlerResult;
+                  }
 
-                return handlerResult;
+                  return handlerResult;
+                });
               })
             );
           },

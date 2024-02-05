@@ -49,7 +49,6 @@ export {
   redirectDocument,
   resolvePath,
   resolveTo,
-  ResultType,
   stripBasename,
 } from "./utils";
 

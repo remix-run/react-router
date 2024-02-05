@@ -170,22 +170,26 @@ export interface ActionFunctionArgs<Context = any>
  */
 type DataFunctionValue = Response | NonNullable<unknown> | null;
 
+type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+
 /**
  * Route loader function signature
  */
 export type LoaderFunction<Context = any> = {
-  (args: LoaderFunctionArgs<Context>, handlerCtx?: Record<string, unknown>):
-    | Promise<DataFunctionValue>
-    | DataFunctionValue;
+  (
+    args: LoaderFunctionArgs<Context>,
+    handlerCtx?: unknown
+  ): DataFunctionReturnValue;
 } & { hydrate?: boolean };
 
 /**
  * Route action function signature
  */
 export interface ActionFunction<Context = any> {
-  (args: ActionFunctionArgs<Context>, handlerCtx?: Record<string, unknown>):
-    | Promise<DataFunctionValue>
-    | DataFunctionValue;
+  (
+    args: ActionFunctionArgs<Context>,
+    handlerCtx?: unknown
+  ): DataFunctionReturnValue;
 }
 
 /**
@@ -229,7 +233,12 @@ export interface DetectErrorBoundaryFunction {
 
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
-  handler: (ctx?: Record<string, unknown>) => Promise<HandlerResult>;
+  // TODO: What to call these?
+  bikeshed_loadRoute: (
+    bikeshed_handlerOverride?: (
+      bikeshed_handler: (ctx?: unknown) => DataFunctionReturnValue
+    ) => DataFunctionReturnValue
+  ) => Promise<HandlerResult>;
 }
 
 export interface DataStrategyFunctionArgs<Context = any>
