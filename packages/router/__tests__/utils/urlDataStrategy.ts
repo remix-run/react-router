@@ -1,12 +1,12 @@
 import type {
+  DataStrategyFunction,
   DataStrategyFunctionArgs,
-  HandlerResult,
 } from "@remix-run/router";
 import { invariant } from "./utils";
 
 export default async function urlDataStrategy({
   matches,
-}: DataStrategyFunctionArgs): Promise<HandlerResult[]> {
+}: DataStrategyFunctionArgs): ReturnType<DataStrategyFunction> {
   return Promise.all(
     matches.map((match) =>
       match.bikeshed_loadRoute(async (handler) => {

@@ -15,7 +15,6 @@ export type {
   ErrorResponse,
   FormEncType,
   FormMethod,
-  HandlerResult,
   HTMLFormMethod,
   JsonFunction,
   LazyRouteFunction,

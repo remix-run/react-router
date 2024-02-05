@@ -33,7 +33,6 @@ export type {
   ErrorResponse,
   Fetcher,
   FutureConfig,
-  HandlerResult,
   Hash,
   IndexRouteObject,
   IndexRouteProps,

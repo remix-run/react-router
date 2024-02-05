@@ -64,7 +64,6 @@ export type {
   FormProps,
   FutureConfig,
   GetScrollRestorationKeyFunction,
-  HandlerResult,
   Hash,
   HashRouterProps,
   HistoryRouterProps,
