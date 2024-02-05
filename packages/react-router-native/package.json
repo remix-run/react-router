@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "6.21.3",
+  "version": "0.0.0-experimental-1a608034",
   "description": "Declarative routing for React Native applications",
   "keywords": [
     "react",
@@ -22,7 +22,7 @@
   "types": "./dist/index.d.ts",
   "dependencies": {
     "@ungap/url-search-params": "^0.2.2",
-    "react-router": "6.21.3"
+    "react-router": "0.0.0-experimental-1a608034"
   },
   "devDependencies": {
     "react": "^18.2.0",
