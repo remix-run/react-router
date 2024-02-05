@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
+import dedent from "dedent";
 
 import {
   createProject,
@@ -9,8 +10,8 @@ import {
   viteBuild,
   viteRemixServe,
   customDev,
-  VITE_CONFIG,
   EXPRESS_SERVER,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const js = String.raw;
@@ -149,8 +150,15 @@ const files = {
   `,
 };
 
-const vitePlugins =
-  '(await import("@vanilla-extract/vite-plugin")).vanillaExtractPlugin()';
+const VITE_CONFIG = async (port: number) => dedent`
+  import { unstable_vitePlugin as remix } from "@remix-run/dev";
+  import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
+
+  export default {
+    ${await viteConfig.server({ port })}
+    plugins: [remix(), vanillaExtractPlugin()],
+  }
+`;
 
 test.describe(() => {
   test.describe(async () => {
@@ -161,7 +169,7 @@ test.describe(() => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "vite.config.ts": await VITE_CONFIG({ port, vitePlugins }),
+        "vite.config.ts": await VITE_CONFIG(port),
         ...files,
       });
       stop = await viteDev({ cwd, port });
@@ -192,7 +200,7 @@ test.describe(() => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "vite.config.ts": await VITE_CONFIG({ port, vitePlugins }),
+        "vite.config.ts": await VITE_CONFIG(port),
         "server.mjs": EXPRESS_SERVER({ port }),
         ...files,
       });
@@ -224,7 +232,7 @@ test.describe(() => {
     test.beforeAll(async () => {
       port = await getPort();
       cwd = await createProject({
-        "vite.config.ts": await VITE_CONFIG({ port, vitePlugins }),
+        "vite.config.ts": await VITE_CONFIG(port),
         ...files,
       });
 

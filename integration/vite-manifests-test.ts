@@ -2,8 +2,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
+import dedent from "dedent";
 
-import { createProject, viteBuild, VITE_CONFIG } from "./helpers/vite.js";
+import { createProject, viteBuild, viteConfig } from "./helpers/vite.js";
 
 function createRoute(path: string) {
   return {
@@ -49,15 +50,18 @@ test.describe(() => {
 
   test.beforeAll(async () => {
     cwd = await createProject({
-      "vite.config.ts": await VITE_CONFIG({
-        port: await getPort(),
-        pluginOptions: "{ manifest: true }",
-        viteManifest: true,
-      }),
+      "vite.config.ts": dedent`
+        import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+        export default {
+          build: { manifest: true },
+          plugins: [remix({ manifest: true })],
+        }
+      `,
       ...files,
     });
 
-    await viteBuild({ cwd });
+    viteBuild({ cwd });
   });
 
   test("Vite / manifests enabled / Vite manifests", () => {
@@ -106,11 +110,11 @@ test.describe(() => {
 
   test.beforeAll(async () => {
     cwd = await createProject({
-      "vite.config.ts": await VITE_CONFIG({ port: await getPort() }),
+      "vite.config.ts": await viteConfig.basic({ port: await getPort() }),
       ...files,
     });
 
-    await viteBuild({ cwd });
+    viteBuild({ cwd });
   });
 
   test("Vite / manifest disabled / Vite manifests", () => {

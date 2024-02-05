@@ -2,13 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { type Page, test, expect } from "@playwright/test";
 import getPort from "get-port";
+import dedent from "dedent";
 
 import {
   createProject,
   viteDev,
   viteBuild,
   viteRemixServe,
-  VITE_CONFIG,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const withBundleServer = async (
@@ -112,48 +113,52 @@ const expectRenderedRoutes = async (page: Page, routeFiles: string[]) => {
 
 test.describe(() => {
   let cwd: string;
-  let devPort: number;
+  let port: number;
 
   test.beforeAll(async () => {
-    devPort = await getPort();
+    port = await getPort();
     cwd = await createProject({
-      "vite.config.ts": await VITE_CONFIG({
-        port: devPort,
-        viteManifest: true,
-        pluginOptions: `{
-          manifest: true,
-          serverBundles: async ({ branch }) => {
-            // Smoke test to ensure we can read the route files via 'route.file'
-            await Promise.all(branch.map(async (route) => {
-              const fs = await import("node:fs/promises");
-              const routeFileContents = await fs.readFile(route.file, "utf8");
-              if (!routeFileContents.includes(${JSON.stringify(
-                ROUTE_FILE_COMMENT
-              )})) {
-                throw new Error("Couldn't file route file test comment");
+      "vite.config.ts": dedent`
+        import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+        export default {
+          ${await viteConfig.server({ port })}
+          build: { manifest: true },
+          plugins: [remix({
+            manifest: true,
+            serverBundles: async ({ branch }) => {
+              // Smoke test to ensure we can read the route files via 'route.file'
+              await Promise.all(branch.map(async (route) => {
+                const fs = await import("node:fs/promises");
+                const routeFileContents = await fs.readFile(route.file, "utf8");
+                if (!routeFileContents.includes(${JSON.stringify(
+                  ROUTE_FILE_COMMENT
+                )})) {
+                  throw new Error("Couldn't file route file test comment");
+                }
+              }));
+
+              if (branch.some((route) => route.id === "routes/_index")) {
+                return "root";
               }
-            }));
 
-            if (branch.some((route) => route.id === "routes/_index")) {
-              return "root";
+              if (branch.some((route) => route.id === "routes/bundle-a")) {
+                return "bundle-a";
+              }
+
+              if (branch.some((route) => route.id === "routes/bundle-b")) {
+                return "bundle-b";
+              }
+
+              if (branch.some((route) => route.id === "routes/_pathless.bundle-c")) {
+                return "bundle-c";
+              }
+
+              throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
             }
-
-            if (branch.some((route) => route.id === "routes/bundle-a")) {
-              return "bundle-a";
-            }
-
-            if (branch.some((route) => route.id === "routes/bundle-b")) {
-              return "bundle-b";
-            }
-
-            if (branch.some((route) => route.id === "routes/_pathless.bundle-c")) {
-              return "bundle-c";
-            }
-
-            throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
-          }
-        }`,
-      }),
+          })]
+        }
+      `,
       ...files,
     });
   });
@@ -161,7 +166,7 @@ test.describe(() => {
   test.describe(() => {
     let stop: () => void;
     test.beforeAll(async () => {
-      stop = await viteDev({ cwd, port: devPort });
+      stop = await viteDev({ cwd, port });
     });
 
     test.afterAll(() => stop());
@@ -172,16 +177,16 @@ test.describe(() => {
       let pageErrors: Error[] = [];
       page.on("pageerror", (error) => pageErrors.push(error));
 
-      await page.goto(`http://localhost:${devPort}/`);
+      await page.goto(`http://localhost:${port}/`);
       await expectRenderedRoutes(page, ["_index.tsx"]);
 
-      await page.goto(`http://localhost:${devPort}/bundle-a`);
+      await page.goto(`http://localhost:${port}/bundle-a`);
       await expectRenderedRoutes(page, ["bundle-a.tsx", "bundle-a._index.tsx"]);
 
-      await page.goto(`http://localhost:${devPort}/bundle-b`);
+      await page.goto(`http://localhost:${port}/bundle-b`);
       await expectRenderedRoutes(page, ["bundle-b.tsx"]);
 
-      await page.goto(`http://localhost:${devPort}/bundle-c`);
+      await page.goto(`http://localhost:${port}/bundle-c`);
       await expectRenderedRoutes(page, [
         "_pathless.tsx",
         "_pathless.bundle-c.tsx",

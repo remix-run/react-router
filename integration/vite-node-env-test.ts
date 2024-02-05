@@ -6,7 +6,7 @@ import {
   viteDev,
   viteBuild,
   viteRemixServe,
-  VITE_CONFIG,
+  viteConfig,
 } from "./helpers/vite.js";
 
 let files = {
@@ -18,21 +18,21 @@ let files = {
 };
 
 test.describe(async () => {
-  let devPort: number;
+  let port: number;
   let cwd: string;
   let stop: () => void;
 
   test.beforeAll(async () => {
-    devPort = await getPort();
+    port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await VITE_CONFIG({ port: devPort }),
+      "vite.config.js": await viteConfig.basic({ port: port }),
       ...files,
     });
   });
 
   test.describe(() => {
     test.beforeAll(async () => {
-      stop = await viteDev({ cwd, port: devPort });
+      stop = await viteDev({ cwd, port });
     });
     test.afterAll(() => stop());
 
@@ -40,7 +40,7 @@ test.describe(async () => {
       let pageErrors: unknown[] = [];
       page.on("pageerror", (error) => pageErrors.push(error));
 
-      await page.goto(`http://localhost:${devPort}/node_env`, {
+      await page.goto(`http://localhost:${port}/node_env`, {
         waitUntil: "networkidle",
       });
       expect(pageErrors).toEqual([]);

@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
+import dedent from "dedent";
 
-import { VITE_CONFIG, createProject, using, viteDev } from "./helpers/vite.js";
+import { viteConfig, createProject, using, viteDev } from "./helpers/vite.js";
 
 test.describe("Vite / cloudflare", async () => {
   let port: number;
@@ -49,17 +50,30 @@ test.describe("Vite / cloudflare", async () => {
         null,
         2
       ),
-      "vite.config.ts": await VITE_CONFIG({
-        port,
-        viteSsrResolveExternalConditions: ["workerd", "worker"],
-        pluginOptions: `{
-          presets: [
-            (await import("@remix-run/dev")).unstable_cloudflarePreset({
-              getRemixDevLoadContext: (ctx) => ({ ...ctx, extra: "stuff" })
+      "vite.config.ts": dedent`
+        import {
+          unstable_vitePlugin as remix,
+          unstable_cloudflarePreset as cloudflare,
+        } from "@remix-run/dev";
+
+        export default {
+          ${await viteConfig.server({ port })}
+          ssr: {
+            resolve: {
+              externalConditions: ["workerd", "worker"],
+            },
+          },
+          plugins: [
+            remix({
+              presets: [
+                cloudflare({
+                  getRemixDevLoadContext: (ctx) => ({ ...ctx, extra: "stuff" })
+                })
+              ]
             })
-          ]
-        }`,
-      }),
+          ],
+        }
+      `,
       "functions/[[page]].ts": `
         import { createPagesFunctionHandler } from "@remix-run/cloudflare-pages";
 

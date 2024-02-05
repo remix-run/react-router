@@ -2,13 +2,14 @@ import * as path from "node:path";
 import { test, expect } from "@playwright/test";
 import stripAnsi from "strip-ansi";
 import getPort from "get-port";
+import dedent from "dedent";
 
 import {
-  VITE_CONFIG,
   createProject,
   grep,
   using,
   viteBuild,
+  viteConfig,
   viteDev,
   viteRemixServe,
 } from "./helpers/vite.js";
@@ -222,11 +223,16 @@ test.describe("Vite / server-only escape hatch", async () => {
   test.beforeAll(async () => {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.ts": await VITE_CONFIG({
-        port,
-        vitePlugins:
-          '(await import("vite-env-only")).default(), (await import("vite-tsconfig-paths")).default()',
-      }),
+      "vite.config.ts": dedent`
+        import { unstable_vitePlugin as remix } from "@remix-run/dev";
+        import envOnly from "vite-env-only";
+        import tsconfigPaths from "vite-tsconfig-paths";
+
+        export default {
+          ${await viteConfig.server({ port })}
+          plugins: [remix(), envOnly(), tsconfigPaths()],
+        }
+      `,
       "app/utils.server.ts": serverOnlyModule,
       "app/.server/utils.ts": serverOnlyModule,
       "app/routes/_index.tsx": String.raw`

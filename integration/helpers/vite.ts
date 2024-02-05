@@ -9,43 +9,29 @@ import waitOn from "wait-on";
 import getPort from "get-port";
 import shell from "shelljs";
 import glob from "glob";
+import dedent from "dedent";
 
 const remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const VITE_CONFIG = async (args: {
-  port: number;
-  pluginOptions?: string;
-  vitePlugins?: string;
-  viteManifest?: boolean;
-  viteSsrResolveExternalConditions?: string[];
-}) => {
-  let hmrPort = await getPort();
-  return String.raw`
-    import { defineConfig } from "vite";
-    import { unstable_vitePlugin as remix } from "@remix-run/dev";
+export const viteConfig = {
+  server: async (args: { port: number }) => {
+    let hmrPort = await getPort();
+    let text = dedent`
+      server: { port: ${args.port}, strictPort: true, hmr: { port: ${hmrPort} } },
+    `;
+    return text;
+  },
+  basic: async (args: { port: number }) => {
+    return dedent`
+      import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
-    export default defineConfig({
-      ssr: {
-        resolve: {
-          externalConditions: ${JSON.stringify(
-            args.viteSsrResolveExternalConditions ?? []
-          )},
-        },
-      },
-      server: {
-        port: ${args.port},
-        strictPort: true,
-        hmr: {
-          port: ${hmrPort}
-        }
-      },
-      build: {
-        manifest: ${String(args.viteManifest ?? false)},
-      },
-      plugins: [remix(${args.pluginOptions}),${args.vitePlugins ?? ""}],
-    });
-  `;
+      export default {
+        ${await viteConfig.server(args)}
+        plugins: [remix()]
+      }
+    `;
+  },
 };
 
 export const EXPRESS_SERVER = (args: {

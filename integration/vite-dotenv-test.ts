@@ -5,7 +5,7 @@ import {
   createProject,
   customDev,
   EXPRESS_SERVER,
-  VITE_CONFIG,
+  viteConfig,
 } from "./helpers/vite.js";
 
 let files = {
@@ -51,7 +51,7 @@ test.describe(async () => {
   test.beforeAll(async () => {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await VITE_CONFIG({ port }),
+      "vite.config.js": await viteConfig.basic({ port }),
       "server.mjs": EXPRESS_SERVER({ port }),
       ...files,
     });

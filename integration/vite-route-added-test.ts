@@ -3,7 +3,7 @@ import path from "node:path";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
-import { createProject, viteDev, VITE_CONFIG } from "./helpers/vite.js";
+import { createProject, viteDev, viteConfig } from "./helpers/vite.js";
 
 const files = {
   "app/routes/_index.tsx": String.raw`
@@ -31,12 +31,12 @@ test.describe(async () => {
   test.beforeAll(async () => {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await VITE_CONFIG({ port }),
+      "vite.config.js": await viteConfig.basic({ port }),
       ...files,
     });
     stop = await viteDev({ cwd, port });
   });
-  test.afterAll(async () => await stop());
+  test.afterAll(() => stop());
 
   test("Vite / dev / route added", async ({ page }) => {
     let pageErrors: Error[] = [];

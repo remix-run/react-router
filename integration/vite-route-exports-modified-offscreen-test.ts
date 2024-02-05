@@ -5,7 +5,7 @@ import {
   createProject,
   createEditor,
   viteDev,
-  VITE_CONFIG,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const files = {
@@ -49,7 +49,7 @@ test.describe(async () => {
   test.beforeAll(async () => {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await VITE_CONFIG({ port }),
+      "vite.config.js": await viteConfig.basic({ port }),
       ...files,
     });
     stop = await viteDev({ cwd, port });
