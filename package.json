@@ -116,7 +116,7 @@
   },
   "filesize": {
     "packages/router/dist/router.umd.min.js": {
-      "none": "51.2 kB"
+      "none": "51.3 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
       "none": "14.7 kB"
