@@ -664,6 +664,11 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     };
   };
 
+  let pluginIndex = (pluginName: string) => {
+    invariant(viteConfig);
+    return viteConfig.plugins.findIndex((plugin) => plugin.name === pluginName);
+  };
+
   let getServerEntry = async () => {
     invariant(viteConfig, "viteconfig required to generate the server entry");
 
@@ -955,6 +960,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         await initEsModuleLexer;
 
         viteConfig = resolvedViteConfig;
+        invariant(viteConfig);
 
         // We load the same Vite config file again for the child compiler so
         // that both parent and child compiler's plugins have independent state.
@@ -985,6 +991,22 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           childCompilerConfigFile,
           "Vite config file was unable to be resolved for Remix child compiler"
         );
+
+        // Validate that commonly used Rollup plugins that need to run before
+        // Remix are in the correct order. This is because Rollup plugins can't
+        // set `enforce: "pre"` like Vite plugins can. Explicitly validating
+        // this provides a much nicer developer experience.
+        let rollupPrePlugins = [
+          { pluginName: "@mdx-js/rollup", displayName: "@mdx-js/rollup" },
+        ];
+        for (let prePlugin of rollupPrePlugins) {
+          let prePluginIndex = pluginIndex(prePlugin.pluginName);
+          if (prePluginIndex >= 0 && prePluginIndex > pluginIndex("remix")) {
+            throw new Error(
+              `The "${prePlugin.displayName}" plugin should be placed before the Remix plugin in your Vite config file`
+            );
+          }
+        }
 
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
