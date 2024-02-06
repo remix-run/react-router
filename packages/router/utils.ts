@@ -485,16 +485,14 @@ export function matchRoutes<
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
-    matches = matchRouteBranch<string, RouteObjectType>(
-      branches[i],
-      // Incoming pathnames are generally encoded from either window.location
-      // or from router.navigate, but we want to match against the unencoded
-      // paths in the route definitions.  Memory router locations won't be
-      // encoded here but there also shouldn't be anything to decode so this
-      // should be a safe operation.  This avoids needing matchRoutes to be
-      // history-aware.
-      safelyDecodeURI(pathname)
-    );
+    // Incoming pathnames are generally encoded from either window.location
+    // or from router.navigate, but we want to match against the unencoded
+    // paths in the route definitions.  Memory router locations won't be
+    // encoded here but there also shouldn't be anything to decode so this
+    // should be a safe operation.  This avoids needing matchRoutes to be
+    // history-aware.
+    let decoded = decodePath(pathname);
+    matches = matchRouteBranch<string, RouteObjectType>(branches[i], decoded);
   }
 
   return matches;
@@ -930,7 +928,7 @@ export function matchPath<
       if (isOptional && !value) {
         memo[paramName] = undefined;
       } else {
-        memo[paramName] = safelyDecodeURIComponent(value || "", paramName);
+        memo[paramName] = (value || "").replace(/%2F/g, "/");
       }
       return memo;
     },
@@ -1002,30 +1000,18 @@ function compilePath(
   return [matcher, params];
 }
 
-function safelyDecodeURI(value: string) {
+function decodePath(value: string) {
   try {
-    return decodeURI(value);
+    return value
+      .split("/")
+      .map((v) => decodeURIComponent(v).replace(/\//g, "%2F"))
+      .join("/");
   } catch (error) {
     warning(
       false,
       `The URL path "${value}" could not be decoded because it is is a ` +
         `malformed URL segment. This is probably due to a bad percent ` +
         `encoding (${error}).`
-    );
-
-    return value;
-  }
-}
-
-function safelyDecodeURIComponent(value: string, paramName: string) {
-  try {
-    return decodeURIComponent(value);
-  } catch (error) {
-    warning(
-      false,
-      `The value for the URL param "${paramName}" will not be decoded because` +
-        ` the string "${value}" is a malformed URL segment. This is probably` +
-        ` due to a bad percent encoding (${error}).`
     );
 
     return value;
