@@ -84,6 +84,11 @@ function babelPluginReplaceVersionPlaceholder() {
               return;
             }
 
+            // Skip for experimental releases
+            if (version.startsWith("0.0.0")) {
+              return;
+            }
+
             let { kind, declarations } = path.node;
             if (
               kind === KIND &&
