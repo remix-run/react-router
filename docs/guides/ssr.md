@@ -139,6 +139,8 @@ app.get("*", async (req, res) => {
 });
 ```
 
+<docs-info>We use [`renderToString`][rendertostring] here for simplicity since we've already loaded our data in `handler.query` and we're not using any streaming features in this simple example. If you need to support streaming features, you would need to use [`renderToPipeableStream`][rendertopipeablestream].<br/><br/>If you wish to support [`defer`][defer], you will also need to manage serializing the server-side Promises over the wire to the client (hint, just use [Remix][remix] where this is handled for you via the `Scripts` component 😉).</docs-info>
+
 Once we've sent the HTML back to the browser, we'll need to "hydrate" the application on the client using `createBrowserRouter()` and `<RouterProvider>`:
 
 ```jsx filename=entry-client.jsx lines=[10-15]
@@ -280,6 +282,8 @@ app.get("*", (req, res) => {
 app.listen(3000);
 ```
 
+<docs-info>We use [`renderToString`][rendertostring] here for simplicity since we're not using any streaming features in this simple example. If you need to support streaming features, you would need to use [`renderToPipeableStream`][rendertopipeablestream].</docs-info>
+
 And finally, you'll need a similar file to "hydrate" the app with your JavaScript bundle that includes the very same `App` component. Note the use of `BrowserRouter` instead of `StaticRouter`.
 
 ```js filename=client.entry.js
@@ -320,3 +324,6 @@ Again, we recommend you give [Remix](https://remix.run) a look. It's the best wa
 [hydration]: https://react.dev/reference/react-dom/client/hydrateRoot
 [hydrate-false]: ../routers/static-router-provider#hydrate
 [partialhydration]: ../routers/create-browser-router#partial-hydration-data
+[rendertostring]: https://react.dev/reference/react-dom/server/renderToString
+[rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
+[defer]: https://reactrouter.com/en/main/utils/defer
