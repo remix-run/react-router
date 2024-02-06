@@ -8,6 +8,7 @@ throw new Error(
 
 export const mode: ServerBuild["mode"] = undefined!;
 export const assets: ServerBuild["assets"] = undefined!;
+export const basename: ServerBuild["basename"] = undefined!;
 export const entry: ServerBuild["entry"] = undefined!;
 export const routes: ServerBuild["routes"] = undefined!;
 export const future: ServerBuild["future"] = undefined!;

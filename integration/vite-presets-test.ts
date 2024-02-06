@@ -157,6 +157,7 @@ test.describe(async () => {
     // Smoke test the resolved config
     expect(Object.keys(buildEndArgs.remixConfig)).toEqual([
       "appDirectory",
+      "basename",
       "buildDirectory",
       "buildEnd",
       "future",

@@ -9,6 +9,7 @@ import {
   isRouteErrorResponse,
   createStaticHandler,
   json as routerJson,
+  stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
 } from "@remix-run/router";
 
@@ -46,6 +47,7 @@ function derive(build: ServerBuild, mode?: string) {
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
+    basename: build.basename,
     future: {
       v7_relativeSplatPath: build.future?.v3_relativeSplatPath === true,
       v7_throwAbortReason: build.future?.v3_throwAbortReason === true,
@@ -100,7 +102,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
     let url = new URL(request.url);
 
-    let matches = matchServerRoutes(routes, url.pathname);
+    let matches = matchServerRoutes(routes, url.pathname, _build.basename);
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
         getDevServerHooks()?.processRequestError?.(error);
@@ -119,6 +121,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
       response = await handleDataRequestRR(
         serverMode,
+        _build,
         staticHandler,
         routeId,
         request,
@@ -177,6 +180,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
 async function handleDataRequestRR(
   serverMode: ServerMode,
+  build: ServerBuild,
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
@@ -194,7 +198,13 @@ async function handleDataRequestRR(
       // redirects. So we use the `X-Remix-Redirect` header to indicate the
       // next URL, and then "follow" the redirect manually on the client.
       let headers = new Headers(response.headers);
-      headers.set("X-Remix-Redirect", headers.get("Location")!);
+      let redirectUrl = headers.get("Location")!;
+      headers.set(
+        "X-Remix-Redirect",
+        build.basename
+          ? stripBasename(redirectUrl, build.basename) || redirectUrl
+          : redirectUrl
+      );
       headers.set("X-Remix-Status", response.status);
       headers.delete("Location");
       if (response.headers.get("Set-Cookie") !== null) {
@@ -298,6 +308,7 @@ async function handleDocumentRequestRR(
     criticalCss,
     serverHandoffString: createServerHandoffString({
       url: context.location.pathname,
+      basename: build.basename,
       criticalCss,
       state: {
         loaderData: context.loaderData,
@@ -372,6 +383,7 @@ async function handleDocumentRequestRR(
       staticHandlerContext: context,
       serverHandoffString: createServerHandoffString({
         url: context.location.pathname,
+        basename: build.basename,
         state: {
           loaderData: context.loaderData,
           actionData: context.actionData,

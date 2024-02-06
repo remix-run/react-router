@@ -21,6 +21,7 @@ export function createServerHandoffString<T>(serverHandoff: {
   state: ValidateShape<T, HydrationState>;
   criticalCss?: string;
   url: string;
+  basename: string | undefined;
   future: FutureConfig;
   isSpaMode: boolean;
 }): string {

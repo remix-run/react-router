@@ -122,10 +122,12 @@ export const viteRemixServe = async ({
   cwd,
   port,
   serverBundle,
+  basename,
 }: {
   cwd: string;
   port: number;
   serverBundle?: string;
+  basename?: string;
 }) => {
   let nodeBin = process.argv[0];
   let serveProc = spawn(
@@ -140,25 +142,37 @@ export const viteRemixServe = async ({
       env: { NODE_ENV: "production", PORT: port.toFixed(0) },
     }
   );
-  await waitForServer(serveProc, { port });
+  await waitForServer(serveProc, { port, basename });
   return () => serveProc.kill();
 };
 
 type ServerArgs = {
   cwd: string;
   port: number;
+  env?: Record<string, string>;
+  basename?: string;
 };
 
 const createDev =
   (nodeArgs: string[]) =>
-  async ({ cwd, port }: ServerArgs): Promise<() => unknown> => {
-    let proc = node(nodeArgs, { cwd });
-    await waitForServer(proc, { port });
+  async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
+    let proc = node(nodeArgs, { cwd, env });
+    await waitForServer(proc, { port, basename });
     return () => proc.kill();
   };
 
 export const viteDev = createDev([remixBin, "vite:dev"]);
 export const customDev = createDev(["./server.mjs"]);
+
+// Used for testing errors thrown on build when we don't want to start and
+// wait for the server
+export const viteDevCmd = ({ cwd }: { cwd: string }) => {
+  let nodeBin = process.argv[0];
+  return spawnSync(nodeBin, [remixBin, "vite:dev"], {
+    cwd,
+    env: { ...process.env },
+  });
+};
 
 export const using = async (
   cleanup: () => unknown | Promise<unknown>,
@@ -171,12 +185,18 @@ export const using = async (
   }
 };
 
-function node(args: string[], options: { cwd: string }) {
+function node(
+  args: string[],
+  options: { cwd: string; env?: Record<string, string> }
+) {
   let nodeBin = process.argv[0];
 
   let proc = spawn(nodeBin, args, {
     cwd: options.cwd,
-    env: process.env,
+    env: {
+      ...process.env,
+      ...options.env,
+    },
     stdio: "pipe",
   });
   return proc;
@@ -184,13 +204,13 @@ function node(args: string[], options: { cwd: string }) {
 
 async function waitForServer(
   proc: ChildProcess & { stdout: Readable; stderr: Readable },
-  args: { port: number }
+  args: { port: number; basename?: string }
 ) {
   let devStdout = bufferize(proc.stdout);
   let devStderr = bufferize(proc.stderr);
 
   await waitOn({
-    resources: [`http://localhost:${args.port}/`],
+    resources: [`http://localhost:${args.port}${args.basename ?? "/"}`],
     timeout: 10000,
   }).catch((err) => {
     let stdout = devStdout();

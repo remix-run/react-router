@@ -1,17 +1,14 @@
-import type {
-  IncomingHttpHeaders,
-  IncomingMessage,
-  ServerResponse,
-} from "node:http";
+import type { IncomingHttpHeaders, ServerResponse } from "node:http";
 import { once } from "node:events";
 import { Readable } from "node:stream";
 import { splitCookiesString } from "set-cookie-parser";
 import { createReadableStreamFromReadable } from "@remix-run/node";
+import type * as Vite from "vite";
 
 import invariant from "../invariant";
 
 export type NodeRequestHandler = (
-  req: IncomingMessage,
+  req: Vite.Connect.IncomingMessage,
   res: ServerResponse
 ) => Promise<void>;
 
@@ -34,14 +31,19 @@ function fromNodeHeaders(nodeHeaders: IncomingHttpHeaders): Headers {
 }
 
 // Based on `createRemixRequest` in packages/remix-express/server.ts
-export function fromNodeRequest(nodeReq: IncomingMessage): Request {
+export function fromNodeRequest(
+  nodeReq: Vite.Connect.IncomingMessage
+): Request {
   let origin =
     nodeReq.headers.origin && "null" !== nodeReq.headers.origin
       ? nodeReq.headers.origin
       : `http://${nodeReq.headers.host}`;
-  invariant(nodeReq.url, 'Expected "req.url" to be defined');
-  let url = new URL(nodeReq.url, origin);
-
+  // Use `req.originalUrl` so Remix is aware of the full path
+  invariant(
+    nodeReq.originalUrl,
+    "Expected `nodeReq.originalUrl` to be defined"
+  );
+  let url = new URL(nodeReq.originalUrl, origin);
   let init: RequestInit = {
     method: nodeReq.method,
     headers: fromNodeHeaders(nodeReq.headers),

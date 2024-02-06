@@ -195,7 +195,7 @@ export const getStylesForUrl = async ({
   let routes = createRoutes(build.routes);
   let appPath = path.relative(process.cwd(), remixConfig.appDirectory);
   let documentRouteFiles =
-    matchRoutes(routes, url)?.map((match) =>
+    matchRoutes(routes, url, build.basename)?.map((match) =>
       path.join(appPath, remixConfig.routes[match.route.id].file)
     ) ?? [];
 
