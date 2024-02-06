@@ -10,6 +10,8 @@ import getPort from "get-port";
 import shell from "shelljs";
 import glob from "glob";
 import dedent from "dedent";
+import type { Page } from "@playwright/test";
+import { test as base, expect } from "@playwright/test";
 
 const remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -174,16 +176,71 @@ export const viteDevCmd = ({ cwd }: { cwd: string }) => {
   });
 };
 
-export const using = async (
-  cleanup: () => unknown | Promise<unknown>,
-  task: () => unknown | Promise<unknown>
-) => {
-  try {
-    await task();
-  } finally {
-    await cleanup();
+declare module "@playwright/test" {
+  interface Page {
+    errors: Error[];
   }
+}
+
+export type Files = (args: { port: number }) => Promise<Record<string, string>>;
+type Fixtures = {
+  page: Page;
+  viteDev: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  customDev: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  viteRemixServe: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
 };
+
+export const test = base.extend<Fixtures>({
+  page: async ({ page }, use) => {
+    page.errors = [];
+    page.on("pageerror", (error: Error) => page.errors.push(error));
+    await use(page);
+  },
+  // eslint-disable-next-line no-empty-pattern
+  viteDev: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+      stop = await viteDev({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  // eslint-disable-next-line no-empty-pattern
+  customDev: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+      stop = await customDev({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  // eslint-disable-next-line no-empty-pattern
+  viteRemixServe: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+      let { status } = viteBuild({ cwd });
+      expect(status).toBe(0);
+      stop = await viteRemixServe({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+});
 
 function node(
   args: string[],
