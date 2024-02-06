@@ -832,7 +832,8 @@ export function createRouter(init: RouterInit): Router {
     initialized = initialMatches.every(
       (m) =>
         m.route.loader &&
-        m.route.loader.hydrate !== true &&
+        (typeof m.route.loader !== "function" ||
+          m.route.loader.hydrate !== true) &&
         ((loaderData && loaderData[m.route.id] !== undefined) ||
           (errors && errors[m.route.id] !== undefined))
     );
@@ -3768,7 +3769,7 @@ function getMatchesToLoad(
     }
 
     if (isInitialLoad) {
-      if (route.loader.hydrate) {
+      if (typeof route.loader !== "function" || route.loader.hydrate) {
         return true;
       }
       return (
@@ -4059,7 +4060,7 @@ async function callDataStrategyImpl(
       // HandlerResult.  Users can pass a callback to take fine-grained control
       // over the execution of the loader/action
       let bikeshed_loadRoute: DataStrategyMatch["bikeshed_loadRoute"] = (
-        bikeshed_handlerOverride
+        handlerOverride
       ) => {
         loadedMatches.add(match.route.id);
         return routeIdsToLoad.has(match.route.id)
@@ -4069,7 +4070,7 @@ async function callDataStrategyImpl(
               match,
               manifest,
               mapRouteProperties,
-              bikeshed_handlerOverride,
+              handlerOverride,
               requestContext
             )
           : // TODO: What's the best thing to do here - return an empty "success" result?
@@ -4113,31 +4114,43 @@ async function callLoaderOrAction(
   match: AgnosticDataRouteMatch,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  bikeshed_handlerOverride: Parameters<
-    DataStrategyMatch["bikeshed_loadRoute"]
-  >[0],
+  handlerOverride: Parameters<DataStrategyMatch["bikeshed_loadRoute"]>[0],
   staticContext?: unknown
 ): Promise<HandlerResult> {
   let result;
   let onReject: (() => void) | undefined;
 
-  let runHandler = (handler: ActionFunction | LoaderFunction) => {
+  let runHandler = (
+    handler: AgnosticRouteObject["loader"] | AgnosticRouteObject["action"]
+  ) => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;
     let abortPromise = new Promise((_, r) => (reject = r));
     onReject = () => reject();
     request.signal.addEventListener("abort", onReject);
 
-    let handlerArg = {
-      request,
-      params: match.params,
-      context: staticContext,
+    let runHandlerForReal = (ctx?: unknown) => {
+      if (typeof handler !== "function") {
+        return Promise.reject(
+          new Error(
+            `You cannot call the handler for a route which defines a boolean ` +
+              `"${type}" [routeId: ${match.route.id}]`
+          )
+        );
+      }
+      return handler(
+        {
+          request,
+          params: match.params,
+          context: staticContext,
+        },
+        ...(ctx !== undefined ? [ctx] : [])
+      );
     };
-    let handlerPromise = bikeshed_handlerOverride
-      ? bikeshed_handlerOverride(async (ctx: unknown) =>
-          ctx !== undefined ? handler(handlerArg, ctx) : handler(handlerArg)
-        )
-      : handler(handlerArg);
+
+    let handlerPromise = handlerOverride
+      ? handlerOverride(async (ctx: unknown) => runHandlerForReal(ctx))
+      : runHandlerForReal();
 
     return Promise.race([handlerPromise, abortPromise]);
   };

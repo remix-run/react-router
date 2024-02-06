@@ -235,8 +235,8 @@ export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
   // TODO: What to call these?
   bikeshed_loadRoute: (
-    bikeshed_handlerOverride?: (
-      bikeshed_handler: (ctx?: unknown) => DataFunctionReturnValue
+    handlerOverride?: (
+      handler: (ctx?: unknown) => DataFunctionReturnValue
     ) => DataFunctionReturnValue
   ) => Promise<HandlerResult>;
 }
@@ -304,8 +304,8 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  loader?: LoaderFunction;
-  action?: ActionFunction;
+  loader?: LoaderFunction | boolean;
+  action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
