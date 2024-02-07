@@ -485,9 +485,15 @@ let mergeRemixConfig = (...configs: VitePluginConfig[]): VitePluginConfig => {
   return configs.reduce(reducer, {});
 };
 
-let remixDevLoadContext: Record<string, unknown> | undefined;
+type MaybePromise<T> = T | Promise<T>;
 
-export let setRemixDevLoadContext = (loadContext: Record<string, unknown>) => {
+let remixDevLoadContext: (
+  request: Request
+) => MaybePromise<Record<string, unknown>> = () => ({});
+
+export let setRemixDevLoadContext = (
+  loadContext: (request: Request) => MaybePromise<Record<string, unknown>>
+) => {
   remixDevLoadContext = loadContext;
 };
 
@@ -1175,7 +1181,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
                   nodeRes
                 ) => {
                   let req = fromNodeRequest(nodeReq);
-                  let res = await handler(req, remixDevLoadContext);
+                  let res = await handler(req, await remixDevLoadContext(req));
                   await toNodeRequest(res, nodeRes);
                 };
                 await nodeHandler(req, res);

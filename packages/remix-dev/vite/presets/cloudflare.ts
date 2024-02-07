@@ -1,34 +1,50 @@
+import { type AppLoadContext } from "@remix-run/server-runtime";
+
 import { type Preset, setRemixDevLoadContext } from "../plugin";
 
-type GetRemixDevLoadContext = (
-  loadContext: Record<string, unknown>
-) => Record<string, unknown> | Promise<Record<string, unknown>>;
+type MaybePromise<T> = T | Promise<T>;
 
-const importWrangler = async () => {
-  try {
-    return await import("wrangler");
-  } catch (_) {
-    throw Error("Could not import `wrangler`. Do you have it installed?");
-  }
-};
+type GetRemixDevLoadContext = (args: {
+  request: Request;
+  env: AppLoadContext["env"];
+}) => MaybePromise<Record<string, unknown>>;
+
+type GetLoadContext = (
+  request: Request
+) => MaybePromise<Record<string, unknown>>;
+
+type GetBindingsProxy = () => Promise<{ bindings: Record<string, unknown> }>;
 
 /**
  * @param options.getRemixDevLoadContext - Augment the load context.
  */
 export const preset = (
+  getBindingsProxy: GetBindingsProxy,
   options: {
     getRemixDevLoadContext?: GetRemixDevLoadContext;
   } = {}
 ): Preset => ({
   name: "cloudflare",
   remixConfig: async () => {
-    let { getBindingsProxy } = await importWrangler();
-    let { bindings } = await getBindingsProxy();
-    let loadContext: Record<string, unknown> = { env: bindings };
-    if (options.getRemixDevLoadContext) {
-      loadContext = await options.getRemixDevLoadContext(loadContext);
+    let getLoadContext: GetLoadContext = async () => {
+      let { bindings } = await getBindingsProxy();
+      return { env: bindings };
+    };
+
+    // eslint-disable-next-line prefer-let/prefer-let
+    const { getRemixDevLoadContext } = options;
+    if (getRemixDevLoadContext) {
+      getLoadContext = async (request: Request) => {
+        let { bindings } = await getBindingsProxy();
+        let loadContext = await getRemixDevLoadContext({
+          env: bindings,
+          request,
+        });
+        return loadContext;
+      };
     }
-    setRemixDevLoadContext(loadContext);
+
+    setRemixDevLoadContext(getLoadContext);
     return {};
   },
 });
