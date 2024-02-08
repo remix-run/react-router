@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { ServerMode } from "../packages/remix-server-runtime/mode.js";
+import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
 import {
   createAppFixture,
   createFixture,

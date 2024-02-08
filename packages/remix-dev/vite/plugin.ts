@@ -59,6 +59,7 @@ const CLIENT_ROUTE_EXPORTS = [
   "ErrorBoundary",
   "handle",
   "HydrateFallback",
+  "Layout",
   "links",
   "meta",
   "shouldRevalidate",
