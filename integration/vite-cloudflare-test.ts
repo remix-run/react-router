@@ -33,7 +33,7 @@ const files: Files = async ({ port }) => ({
         "@types/react-dom": "^18.2.7",
         "node-fetch": "^3.3.2",
         typescript: "^5.1.6",
-        vite: "^5.0.0",
+        vite: "^5.1.0",
         "vite-tsconfig-paths": "^4.2.1",
         wrangler: "^3.24.0",
       },
