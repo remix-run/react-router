@@ -944,6 +944,8 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             ],
           },
           base: viteUserConfig.base,
+
+          // Vite config options for building
           ...(viteCommand === "build"
             ? {
                 build: {
@@ -987,9 +989,11 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
                       }),
                 },
               }
-            : viteCommand === "serve" && ctx.remixConfig.unstable_ssr === false
+            : undefined),
+
+          // Vite config options for SPA preview mode
+          ...(viteCommand === "serve" && ctx.remixConfig.unstable_ssr === false
             ? {
-                base: ctx.remixConfig.publicPath,
                 build: {
                   manifest: true,
                   outDir: getClientBuildDirectory(ctx.remixConfig),
