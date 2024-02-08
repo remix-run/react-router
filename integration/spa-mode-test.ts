@@ -25,7 +25,7 @@ test.describe("SPA Mode", () => {
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ unstable_ssr: false })],
+            plugins: [remix({ ssr: false })],
           });
         `,
           "app/routes/invalid-exports.tsx": String.raw`
@@ -56,7 +56,7 @@ test.describe("SPA Mode", () => {
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ unstable_ssr: false })],
+            plugins: [remix({ ssr: false })],
           });
         `,
           "app/routes/invalid-exports.tsx": String.raw`
@@ -85,7 +85,7 @@ test.describe("SPA Mode", () => {
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ unstable_ssr: false })],
+            plugins: [remix({ ssr: false })],
           });
         `,
           "app/entry.server.tsx": js`
@@ -157,7 +157,7 @@ test.describe("SPA Mode", () => {
           import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ unstable_ssr: false })],
+            plugins: [remix({ ssr: false })],
           });
         `,
           "app/root.tsx": String.raw`
@@ -186,7 +186,7 @@ test.describe("SPA Mode", () => {
             import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
             export default defineConfig({
-              plugins: [remix({ unstable_ssr: false })],
+              plugins: [remix({ ssr: false })],
             });
           `,
           "app/root.tsx": js`
@@ -232,7 +232,7 @@ test.describe("SPA Mode", () => {
             import { unstable_vitePlugin as remix } from "@remix-run/dev";
 
             export default defineConfig({
-              plugins: [remix({ unstable_ssr: false })],
+              plugins: [remix({ ssr: false })],
             });
           `,
           "app/root.tsx": js`
@@ -276,8 +276,8 @@ test.describe("SPA Mode", () => {
             export default defineConfig({
               plugins: [remix({
                 basename: "/base/",
-                unstable_ssr: false },
-              )],
+                ssr: false
+              })],
             });
           `,
           "app/root.tsx": js`
@@ -336,9 +336,137 @@ test.describe("SPA Mode", () => {
 
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/base/");
-      console.log(await app.getHtml());
-      await new Promise((r) => setTimeout(r, 1000));
-      console.log(await app.getHtml());
+      await page.waitForSelector("[data-mounted]");
+      expect(await page.locator("[data-route]").textContent()).toBe("Index");
+      expect(await page.locator("[data-loader-data]").textContent()).toBe(
+        "Index Loader Data"
+      );
+    });
+
+    test("can be used to hydrate only a div", async ({ page }) => {
+      fixture = await createFixture({
+        compiler: "vite",
+        spaMode: true,
+        files: {
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+            export default defineConfig({
+              plugins: [remix({ ssr: false })],
+            });
+          `,
+          "app/index.html": String.raw`
+            <!DOCTYPE html>
+            <html lang="en">
+              <head>
+                <title>Not from Remix!</title>
+              </head>
+              <body>
+                <div id="app"><!-- Remix-SPA--></div>
+              </body>
+            </html>
+          `,
+          "app/entry.client.tsx": js`
+            import { RemixBrowser } from "@remix-run/react";
+            import { startTransition, StrictMode } from "react";
+            import { hydrateRoot } from "react-dom/client";
+
+            startTransition(() => {
+              hydrateRoot(
+                document.querySelector("#app"),
+                <StrictMode>
+                  <RemixBrowser />
+                </StrictMode>
+              );
+            });
+          `,
+          "app/entry.server.tsx": js`
+            import fs from "node:fs";
+            import path from "node:path";
+
+            import type { EntryContext } from "@remix-run/node";
+            import { RemixServer } from "@remix-run/react";
+            import { renderToString } from "react-dom/server";
+
+            export default function handleRequest(
+              request: Request,
+              responseStatusCode: number,
+              responseHeaders: Headers,
+              remixContext: EntryContext
+            ) {
+              const shellHtml = fs
+                .readFileSync(
+                  path.join(process.cwd(), "app/index.html")
+                )
+                .toString();
+
+              const appHtml = renderToString(
+                <RemixServer context={remixContext} url={request.url} />
+              );
+
+              const html = shellHtml.replace(
+                "<!-- Remix-SPA-->",
+                appHtml
+              );
+
+              return new Response(html, {
+                headers: { "Content-Type": "text/html" },
+                status: responseStatusCode,
+              });
+            }
+          `,
+          "app/root.tsx": js`
+            import { Outlet, Scripts } from "@remix-run/react";
+
+            export default function Root() {
+              return (
+                <>
+                  <h1 data-root>Root</h1>
+                  <Outlet />
+                  <Scripts />
+                </>
+              );
+            }
+
+            export function HydrateFallback() {
+              return (
+                <>
+                  <h1 data-loading>Loading SPA...</h1>
+                  <Scripts />
+                </>
+              );
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            import * as React  from "react";
+            import { useLoaderData } from "@remix-run/react";
+
+            export async function clientLoader({ request }) {
+              return "Index Loader Data";
+            }
+
+            export default function Component() {
+              let data = useLoaderData();
+              const [mounted, setMounted] = React.useState(false);
+              React.useEffect(() => setMounted(true), []);
+
+              return (
+                <>
+                  <h2 data-route>Index</h2>
+                  <p data-loader-data>{data}</p>
+                  {!mounted ? <h3>Unmounted</h3> : <h3 data-mounted>Mounted</h3>}
+                </>
+              );
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      expect(await page.locator("title").textContent()).toBe("Not from Remix!");
       await page.waitForSelector("[data-mounted]");
       expect(await page.locator("[data-route]").textContent()).toBe("Index");
       expect(await page.locator("[data-loader-data]").textContent()).toBe(
@@ -359,7 +487,7 @@ test.describe("SPA Mode", () => {
 
             export default defineConfig({
               build: { manifest: true },
-              plugins: [remix({ unstable_ssr: false })],
+              plugins: [remix({ ssr: false })],
             });
           `,
           "public/styles-root.css": css`

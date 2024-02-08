@@ -470,7 +470,7 @@ export async function resolveConfig(
     // This is a super-simple default since we don't need streaming in SPA Mode.
     // We can include this in a remix-spa template, but right now `npx remix reveal`
     // will still expose the streaming template since that command doesn't have
-    // access to the `unstable_ssr:false` flag in the vite config (the streaming template
+    // access to the `ssr:false` flag in the vite config (the streaming template
     // works just fine so maybe instea dof having this we _only have this version
     // in the template...).  We let users manage an entry.server file in SPA Mode
     // so they can de ide if they want to hydrate the full document or just an
