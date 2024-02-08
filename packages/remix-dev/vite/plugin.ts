@@ -897,7 +897,12 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
 
         return {
           __remixPluginContext: ctx,
-          appType: "custom",
+          appType:
+            viteCommand === "serve" &&
+            viteConfigEnv.mode === "production" &&
+            ctx.remixConfig.unstable_ssr === false
+              ? "spa"
+              : "custom",
           optimizeDeps: {
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,
@@ -938,48 +943,58 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             ],
           },
           base: viteUserConfig.base,
-          ...(viteCommand === "build" && {
-            build: {
-              cssMinify: viteUserConfig.build?.cssMinify ?? true,
-              ...(!viteConfigEnv.isSsrBuild
-                ? {
-                    manifest: true,
-                    outDir: getClientBuildDirectory(ctx.remixConfig),
-                    rollupOptions: {
-                      preserveEntrySignatures: "exports-only",
-                      input: [
-                        ctx.entryClientFilePath,
-                        ...Object.values(ctx.remixConfig.routes).map(
-                          (route) =>
-                            `${path.resolve(
-                              ctx.remixConfig.appDirectory,
-                              route.file
-                            )}${CLIENT_ROUTE_QUERY_STRING}`
-                        ),
-                      ],
-                    },
-                  }
-                : {
-                    // We move SSR-only assets to client assets. Note that the
-                    // SSR build can also emit code-split JS files (e.g. by
-                    // dynamic import) under the same assets directory
-                    // regardless of "ssrEmitAssets" option, so we also need to
-                    // keep these JS files have to be kept as-is.
-                    ssrEmitAssets: true,
-                    copyPublicDir: false, // Assets in the public directory are only used by the client
-                    manifest: true, // We need the manifest to detect SSR-only assets
-                    outDir: getServerBuildDirectory(ctx),
-                    rollupOptions: {
-                      preserveEntrySignatures: "exports-only",
-                      input: serverBuildId,
-                      output: {
-                        entryFileNames: ctx.remixConfig.serverBuildFile,
-                        format: ctx.remixConfig.serverModuleFormat,
-                      },
-                    },
-                  }),
-            },
-          }),
+          ...(viteCommand === "build"
+            ? {
+                build: {
+                  cssMinify: viteUserConfig.build?.cssMinify ?? true,
+                  ...(!viteConfigEnv.isSsrBuild
+                    ? {
+                        manifest: true,
+                        outDir: getClientBuildDirectory(ctx.remixConfig),
+                        rollupOptions: {
+                          preserveEntrySignatures: "exports-only",
+                          input: [
+                            ctx.entryClientFilePath,
+                            ...Object.values(ctx.remixConfig.routes).map(
+                              (route) =>
+                                `${path.resolve(
+                                  ctx.remixConfig.appDirectory,
+                                  route.file
+                                )}${CLIENT_ROUTE_QUERY_STRING}`
+                            ),
+                          ],
+                        },
+                      }
+                    : {
+                        // We move SSR-only assets to client assets. Note that the
+                        // SSR build can also emit code-split JS files (e.g. by
+                        // dynamic import) under the same assets directory
+                        // regardless of "ssrEmitAssets" option, so we also need to
+                        // keep these JS files have to be kept as-is.
+                        ssrEmitAssets: true,
+                        copyPublicDir: false, // Assets in the public directory are only used by the client
+                        manifest: true, // We need the manifest to detect SSR-only assets
+                        outDir: getServerBuildDirectory(ctx),
+                        rollupOptions: {
+                          preserveEntrySignatures: "exports-only",
+                          input: serverBuildId,
+                          output: {
+                            entryFileNames: ctx.remixConfig.serverBuildFile,
+                            format: ctx.remixConfig.serverModuleFormat,
+                          },
+                        },
+                      }),
+                },
+              }
+            : viteCommand === "serve" && ctx.remixConfig.unstable_ssr === false
+            ? {
+                base: ctx.remixConfig.publicPath,
+                build: {
+                  manifest: true,
+                  outDir: getClientBuildDirectory(ctx.remixConfig),
+                },
+              }
+            : undefined),
         };
       },
       async configResolved(resolvedViteConfig) {
