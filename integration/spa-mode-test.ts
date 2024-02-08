@@ -263,6 +263,88 @@ test.describe("SPA Mode", () => {
       expect(html).toMatch(/^<div>/);
       expect(html).not.toMatch(/<!DOCTYPE html>/);
     });
+
+    test("works when combined with a basename", async ({ page }) => {
+      fixture = await createFixture({
+        compiler: "vite",
+        spaMode: true,
+        files: {
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { unstable_vitePlugin as remix } from "@remix-run/dev";
+
+            export default defineConfig({
+              plugins: [remix({
+                basename: "/base/",
+                unstable_ssr: false },
+              )],
+            });
+          `,
+          "app/root.tsx": js`
+            import { Outlet, Scripts } from "@remix-run/react";
+
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head></head>
+                  <body>
+                    <h1 data-root>Root</h1>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export function HydrateFallback() {
+              return (
+                <html lang="en">
+                  <head></head>
+                  <body>
+                    <h1 data-loading>Loading SPA...</h1>
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            import * as React  from "react";
+            import { useLoaderData } from "@remix-run/react";
+
+            export async function clientLoader({ request }) {
+              return "Index Loader Data";
+            }
+
+            export default function Component() {
+              let data = useLoaderData();
+              const [mounted, setMounted] = React.useState(false);
+              React.useEffect(() => setMounted(true), []);
+
+              return (
+                <>
+                  <h2 data-route>Index</h2>
+                  <p data-loader-data>{data}</p>
+                  {!mounted ? <h3>Unmounted</h3> : <h3 data-mounted>Mounted</h3>}
+                </>
+              );
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/base/");
+      console.log(await app.getHtml());
+      await new Promise((r) => setTimeout(r, 1000));
+      console.log(await app.getHtml());
+      await page.waitForSelector("[data-mounted]");
+      expect(await page.locator("[data-route]").textContent()).toBe("Index");
+      expect(await page.locator("[data-loader-data]").textContent()).toBe(
+        "Index Loader Data"
+      );
+    });
   });
 
   test.describe("normal apps", () => {

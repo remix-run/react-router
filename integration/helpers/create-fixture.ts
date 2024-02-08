@@ -216,7 +216,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
         app.get("*", (_, res, next) =>
           res.sendFile(
-            path.join(process.cwd(), "build/client/index.html"),
+            path.join(fixture.projectDir, "build/client/index.html"),
             next
           )
         );
