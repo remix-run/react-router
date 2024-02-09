@@ -151,7 +151,7 @@ const files = {
 };
 
 const VITE_CONFIG = async (port: number) => dedent`
-  import { unstable_vitePlugin as remix } from "@remix-run/dev";
+  import { vitePlugin as remix } from "@remix-run/dev";
   import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
   export default {

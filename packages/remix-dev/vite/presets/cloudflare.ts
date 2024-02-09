@@ -18,7 +18,7 @@ type GetBindingsProxy = () => Promise<{ bindings: Record<string, unknown> }>;
 /**
  * @param options.getRemixDevLoadContext - Augment the load context.
  */
-export const preset = (
+export const cloudflarePreset = (
   getBindingsProxy: GetBindingsProxy,
   options: {
     getRemixDevLoadContext?: GetRemixDevLoadContext;

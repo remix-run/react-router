@@ -26,7 +26,7 @@ export const viteConfig = {
   },
   basic: async (args: { port: number }) => {
     return dedent`
-      import { unstable_vitePlugin as remix } from "@remix-run/dev";
+      import { vitePlugin as remix } from "@remix-run/dev";
 
       export default {
         ${await viteConfig.server(args)}

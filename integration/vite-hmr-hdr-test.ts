@@ -61,7 +61,7 @@ test("Vite / HMR & HDR / mdx", async ({ page, viteDev }) => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": `
       import { defineConfig } from "vite";
-      import { unstable_vitePlugin as remix } from "@remix-run/dev";
+      import { vitePlugin as remix } from "@remix-run/dev";
       import mdx from "@mdx-js/rollup";
 
       export default defineConfig({

@@ -9,7 +9,7 @@ import { viteBuild, test, createProject } from "./helpers/vite.js";
 
 const files = {
   "vite.config.ts": dedent`
-    import { unstable_vitePlugin as remix } from "@remix-run/dev";
+    import { vitePlugin as remix } from "@remix-run/dev";
     import fs from "node:fs/promises";
     import serializeJs from "serialize-javascript";
 

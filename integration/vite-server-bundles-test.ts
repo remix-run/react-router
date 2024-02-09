@@ -119,7 +119,7 @@ test.describe(() => {
     port = await getPort();
     cwd = await createProject({
       "vite.config.ts": dedent`
-        import { unstable_vitePlugin as remix } from "@remix-run/dev";
+        import { vitePlugin as remix } from "@remix-run/dev";
 
         export default {
           ${await viteConfig.server({ port })}

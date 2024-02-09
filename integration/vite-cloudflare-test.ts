@@ -46,8 +46,8 @@ const files: Files = async ({ port }) => ({
   ),
   "vite.config.ts": dedent`
     import {
-      unstable_vitePlugin as remix,
-      unstable_cloudflarePreset as cloudflare,
+      vitePlugin as remix,
+      cloudflarePreset as cloudflare,
     } from "@remix-run/dev";
     import { getBindingsProxy } from "wrangler";
     import { getLoadContext } from "./get-load-context";

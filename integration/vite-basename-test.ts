@@ -65,7 +65,7 @@ async function viteConfigFile({
   basename?: string;
 }) {
   return js`
-    import { unstable_vitePlugin as remix } from "@remix-run/dev";
+    import { vitePlugin as remix } from "@remix-run/dev";
 
     export default {
       ${base !== "/" ? 'base: "' + base + '",' : ""}

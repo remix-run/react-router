@@ -28,7 +28,7 @@ test.describe("Vite build", () => {
         `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { unstable_vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as remix } from "@remix-run/dev";
           import mdx from "@mdx-js/rollup";
 
           export default defineConfig({

@@ -217,7 +217,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 test.describe("Vite / server-only escape hatch", async () => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": dedent`
-      import { unstable_vitePlugin as remix } from "@remix-run/dev";
+      import { vitePlugin as remix } from "@remix-run/dev";
       import envOnly from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
