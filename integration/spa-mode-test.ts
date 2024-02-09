@@ -176,7 +176,7 @@ test.describe("SPA Mode", () => {
       });
     });
 
-    test("prepends DOCTYPE to <html> documents if not present", async () => {
+    test("prepends DOCTYPE to HTML in the default entry.server.tsx", async () => {
       let fixture = await createFixture({
         compiler: "vite",
         spaMode: true,
@@ -220,48 +220,6 @@ test.describe("SPA Mode", () => {
       });
       let res = await fixture.requestDocument("/");
       expect(await res.text()).toMatch(/^<!DOCTYPE html>\n<html lang="en">/);
-    });
-
-    test("does not prepend DOCTYPE if user is not hydrating the document", async () => {
-      let fixture = await createFixture({
-        compiler: "vite",
-        spaMode: true,
-        files: {
-          "vite.config.ts": js`
-            import { defineConfig } from "vite";
-            import { vitePlugin as remix } from "@remix-run/dev";
-
-            export default defineConfig({
-              plugins: [remix({ ssr: false })],
-            });
-          `,
-          "app/root.tsx": js`
-            import { Outlet, Scripts } from "@remix-run/react";
-
-            export default function Root() {
-              return (
-                <div>
-                  <h1 data-root>Root</h1>
-                  <Scripts />
-                </div>
-              );
-            }
-
-            export function HydrateFallback() {
-              return (
-                <div>
-                  <h1>Loading SPA...</h1>
-                  <Scripts />
-                </div>
-              );
-            }
-          `,
-        },
-      });
-      let res = await fixture.requestDocument("/");
-      let html = await res.text();
-      expect(html).toMatch(/^<div>/);
-      expect(html).not.toMatch(/<!DOCTYPE html>/);
     });
 
     test("works when combined with a basename", async ({ page }) => {
@@ -363,7 +321,7 @@ test.describe("SPA Mode", () => {
                 <title>Not from Remix!</title>
               </head>
               <body>
-                <div id="app"><!-- Remix-SPA--></div>
+                <div id="app"><!-- Remix SPA --></div>
               </body>
             </html>
           `,
@@ -406,7 +364,7 @@ test.describe("SPA Mode", () => {
               );
 
               const html = shellHtml.replace(
-                "<!-- Remix-SPA-->",
+                "<!-- Remix SPA -->",
                 appHtml
               );
 
