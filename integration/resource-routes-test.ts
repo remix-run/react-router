@@ -57,6 +57,11 @@ test.describe("loader in an app", async () => {
         "app/routes/redirect-destination.tsx": js`
           export default () => <div data-testid="redirect-destination">You made it!</div>
         `,
+        "app/routes/defer.tsx": js`
+          import { defer } from "@remix-run/node";
+
+          export let loader = () => defer({ data: 'whatever' });
+        `,
         "app/routes/data[.]json.tsx": js`
           import { json } from "@remix-run/node";
           export let loader = () => json({hello: "world"});
@@ -250,6 +255,18 @@ test.describe("loader in an app", async () => {
     expect(html).toMatch("405 Method Not Allowed");
     expect(logs[0]).toContain(
       'Route "routes/no-action" does not have an action'
+    );
+  });
+
+  test("should error if a defer is returned from a resource route", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    let res = await app.goto("/defer");
+    expect(res.status()).toBe(500);
+    expect(await res.text()).toMatch(
+      "You cannot return a `defer()` response from a Resource Route.  " +
+        'Did you forget to export a default UI component from the "routes/defer" route?'
     );
   });
 });

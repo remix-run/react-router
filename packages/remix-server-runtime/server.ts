@@ -425,6 +425,11 @@ async function handleResourceRequestRR(
       routeId,
       requestContext: loadContext,
     });
+    invariant(
+      !(DEFERRED_SYMBOL in response),
+      `You cannot return a \`defer()\` response from a Resource Route.  Did you ` +
+        `forget to export a default UI component from the "${routeId}" route?`
+    );
     // callRouteLoader/callRouteAction always return responses
     invariant(
       isResponse(response),
