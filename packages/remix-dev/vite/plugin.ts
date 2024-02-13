@@ -248,6 +248,13 @@ const getHash = (source: BinaryLike, maxLength?: number): string => {
   return typeof maxLength === "number" ? hash.slice(0, maxLength) : hash;
 };
 
+const isClientRoute = (id: string): boolean => {
+  return (
+    id.endsWith(CLIENT_ROUTE_QUERY_STRING) ||
+    id.endsWith(`${CLIENT_ROUTE_QUERY_STRING}=`) // Needed in case url gets preprocessed by any WHATWG searchParam serializer
+  );
+};
+
 const resolveChunk = (
   ctx: RemixPluginContext,
   viteManifest: Vite.Manifest,
@@ -1090,8 +1097,12 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           cssModulesManifest[id] = code;
         }
 
-        if (id.endsWith(CLIENT_ROUTE_QUERY_STRING)) {
+        if (isClientRoute(id)) {
           let routeModuleId = id.replace(CLIENT_ROUTE_QUERY_STRING, "");
+          routeModuleId = routeModuleId.replace(
+            `${CLIENT_ROUTE_QUERY_STRING}=`,
+            ""
+          );
           let sourceExports = await getRouteModuleExports(
             viteChildCompiler,
             ctx,
@@ -1520,7 +1531,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         let useFastRefresh = !ssr && (isJSX || code.includes(devRuntime));
         if (!useFastRefresh) return;
 
-        if (id.endsWith(CLIENT_ROUTE_QUERY_STRING)) {
+        if (isClientRoute(id)) {
           return { code: addRefreshWrapper(ctx.remixConfig, code, id) };
         }
 
@@ -1607,7 +1618,7 @@ function addRefreshWrapper(
 ): string {
   let route = getRoute(remixConfig, id);
   let acceptExports =
-    route || id.endsWith(CLIENT_ROUTE_QUERY_STRING)
+    route || isClientRoute(id)
       ? [
           "clientAction",
           "clientLoader",
