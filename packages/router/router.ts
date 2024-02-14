@@ -8,7 +8,6 @@ import {
   warning,
 } from "./history";
 import type {
-  ActionFunction,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   DataStrategyMatch,
@@ -25,7 +24,6 @@ import type {
   HTMLFormMethod,
   HandlerResult,
   ImmutableRouteKey,
-  LoaderFunction,
   MapRoutePropertiesFunction,
   MutationFormMethod,
   RedirectResult,
@@ -4214,7 +4212,7 @@ async function callLoaderOrAction(
           }),
           loadLazyRouteModule(match.route, mapRouteProperties, manifest),
         ]);
-        if (handlerError) {
+        if (handlerError !== undefined) {
           throw handlerError;
         }
         result = values[0];
