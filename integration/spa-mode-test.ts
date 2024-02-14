@@ -431,6 +431,90 @@ test.describe("SPA Mode", () => {
         "Index Loader Data"
       );
     });
+
+    test("works for migration apps with only a root route and no loader", async ({
+      page,
+    }) => {
+      fixture = await createFixture({
+        compiler: "vite",
+        spaMode: true,
+        files: {
+          "vite.config.ts": js`
+            import { defineConfig } from "vite";
+            import { vitePlugin as remix } from "@remix-run/dev";
+
+            export default defineConfig({
+              plugins: [remix({
+                // We don't want to pick up the app/routes/_index.tsx file from
+                // the template and instead want to use only the src/root.tsx
+                // file below
+                appDirectory: "src",
+                ssr: false,
+              })],
+            });
+          `,
+          "src/root.tsx": js`
+            import {
+              Meta,
+              Links,
+              Outlet,
+              Routes,
+              Route,
+              Scripts,
+              ScrollRestoration,
+            } from "@remix-run/react";
+
+            export function Layout({ children }: { children: React.ReactNode }) {
+              return (
+                <html>
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    {children}
+                    <ScrollRestoration />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+
+            export default function Root() {
+              return (
+                <>
+                  <h1 data-root>Root</h1>
+                  <Routes>
+                    <Route path="/" element={<h2 data-index>Index</h2>} />
+                  </Routes>
+                </>
+              );
+            }
+
+            export function HydrateFallback() {
+              return <h1 data-loading>Loading SPA...</h1>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+
+      let res = await fixture.requestDocument("/");
+      let html = await res.text();
+      expect(html).toMatch('<h1 data-loading="true">Loading SPA...</h1>');
+
+      let logs: string[] = [];
+      page.on("console", (msg) => logs.push(msg.text()));
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+      await page.waitForSelector("[data-root]");
+      expect(await page.locator("[data-root]").textContent()).toBe("Root");
+      expect(await page.locator("[data-index]").textContent()).toBe("Index");
+
+      // Hydrates without issues
+      expect(logs).toEqual([]);
+    });
   });
 
   test.describe("normal apps", () => {
