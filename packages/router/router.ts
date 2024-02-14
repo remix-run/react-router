@@ -1605,7 +1605,7 @@ export function createRouter(init: RouterInit): Router {
         replace =
           result.location === state.location.pathname + state.location.search;
       }
-      await startRedirectNavigation(state, result, { submission, replace });
+      await startRedirectNavigation(state, result, { submission, replace, location });
       return { shortCircuited: true };
     }
 
@@ -1807,7 +1807,7 @@ export function createRouter(init: RouterInit): Router {
           revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
         fetchRedirectIds.add(fetcherKey);
       }
-      await startRedirectNavigation(state, redirect.result, { replace });
+      await startRedirectNavigation(state, redirect.result, { replace, location });
       return { shortCircuited: true };
     }
 
@@ -2313,10 +2313,12 @@ export function createRouter(init: RouterInit): Router {
       submission,
       fetcherSubmission,
       replace,
+      location,
     }: {
       submission?: Submission;
       fetcherSubmission?: Submission;
       replace?: boolean;
+      location?: Location
     } = {}
   ) {
     if (redirect.revalidate) {
@@ -2325,6 +2327,7 @@ export function createRouter(init: RouterInit): Router {
 
     let redirectLocation = createLocation(state.location, redirect.location, {
       _isRedirect: true,
+      _previousState: location?.state ?? null
     });
     invariant(
       redirectLocation,
