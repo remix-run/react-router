@@ -65,7 +65,9 @@ const CLIENT_ROUTE_EXPORTS = [
   "shouldRevalidate",
 ];
 
-const CLIENT_ROUTE_QUERY_STRING = "?client-route";
+// The "=1" suffix ensures client route requests can be processed before hitting
+// the Vite plugin since "?client-route" can be serialized as "?client-route="
+const CLIENT_ROUTE_QUERY_STRING = "?client-route=1";
 
 // Only expose a subset of route properties to the "serverBundles" function
 const branchRouteProperties = [
@@ -249,10 +251,7 @@ const getHash = (source: BinaryLike, maxLength?: number): string => {
 };
 
 const isClientRoute = (id: string): boolean => {
-  return (
-    id.endsWith(CLIENT_ROUTE_QUERY_STRING) ||
-    id.endsWith(`${CLIENT_ROUTE_QUERY_STRING}=`) // Needed in case url gets preprocessed by any WHATWG searchParam serializer
-  );
+  return id.endsWith(CLIENT_ROUTE_QUERY_STRING);
 };
 
 const resolveChunk = (
@@ -1099,10 +1098,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
 
         if (isClientRoute(id)) {
           let routeModuleId = id.replace(CLIENT_ROUTE_QUERY_STRING, "");
-          routeModuleId = routeModuleId.replace(
-            `${CLIENT_ROUTE_QUERY_STRING}=`,
-            ""
-          );
           let sourceExports = await getRouteModuleExports(
             viteChildCompiler,
             ctx,
