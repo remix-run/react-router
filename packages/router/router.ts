@@ -405,7 +405,7 @@ export interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
   query(
     request: Request,
-    opts?: { requestContext?: unknown }
+    opts?: { loadRouteIds?: string[]; requestContext?: unknown }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
     request: Request,
@@ -2951,10 +2951,18 @@ export function createStaticHandler(
    * redirect response is returned or thrown from any action/loader.  We
    * propagate that out and return the raw Response so the HTTP server can
    * return it directly.
+   *
+   * - `opts.loadRouteIds` is an optional array of routeIds if you wish to only
+   *    run a subset of route loaders on a GET request
+   * - `opts.requestContext` is an optional server context that will be passed
+   *    to actions/loaders in the `context` parameter
    */
   async function query(
     request: Request,
-    { requestContext }: { requestContext?: unknown } = {}
+    {
+      loadRouteIds,
+      requestContext,
+    }: { loadRouteIds?: string[]; requestContext?: unknown } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method;
@@ -3000,7 +3008,14 @@ export function createStaticHandler(
       };
     }
 
-    let result = await queryImpl(request, location, matches, requestContext);
+    let result = await queryImpl(
+      request,
+      location,
+      matches,
+      requestContext,
+      loadRouteIds || null,
+      null
+    );
     if (isResponse(result)) {
       return result;
     }
@@ -3030,6 +3045,12 @@ export function createStaticHandler(
    * serialize the error as they see fit while including the proper response
    * code.  Examples here are 404 and 405 errors that occur prior to reaching
    * any user-defined loaders.
+   *
+   * - `opts.routeId` allows you to specify the specific route handler to call.
+   *   If not provided the handler will determine the proper route by matching
+   *   against `request.url`
+   * - `opts.requestContext` is an optional server context that will be passed
+   *    to actions/loaders in the `context` parameter
    */
   async function queryRoute(
     request: Request,
@@ -3069,6 +3090,7 @@ export function createStaticHandler(
       location,
       matches,
       requestContext,
+      null,
       match
     );
     if (isResponse(result)) {
@@ -3105,7 +3127,8 @@ export function createStaticHandler(
     location: Location,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
-    routeMatch?: AgnosticDataRouteMatch
+    loadRouteIds: string[] | null,
+    routeMatch: AgnosticDataRouteMatch | null
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
       request.signal,
@@ -3119,6 +3142,7 @@ export function createStaticHandler(
           matches,
           routeMatch || getTargetMatch(matches, location),
           requestContext,
+          loadRouteIds,
           routeMatch != null
         );
         return result;
@@ -3128,6 +3152,7 @@ export function createStaticHandler(
         request,
         matches,
         requestContext,
+        loadRouteIds,
         routeMatch
       );
       return isResponse(result)
@@ -3161,6 +3186,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
+    loadRouteIds: string[] | null,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -3239,15 +3265,23 @@ export function createStaticHandler(
       };
     }
 
+    // Create a GET request for the loaders
+    let loaderRequest = new Request(request.url, {
+      headers: request.headers,
+      redirect: request.redirect,
+      signal: request.signal,
+    });
+
     if (isErrorResult(result)) {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
       let context = await loadRouteData(
-        request,
+        loaderRequest,
         matches,
         requestContext,
-        undefined,
+        loadRouteIds,
+        null,
         {
           [boundaryMatch.route.id]: result.error,
         }
@@ -3268,13 +3302,13 @@ export function createStaticHandler(
       };
     }
 
-    // Create a GET request for the loaders
-    let loaderRequest = new Request(request.url, {
-      headers: request.headers,
-      redirect: request.redirect,
-      signal: request.signal,
-    });
-    let context = await loadRouteData(loaderRequest, matches, requestContext);
+    let context = await loadRouteData(
+      loaderRequest,
+      matches,
+      requestContext,
+      loadRouteIds,
+      null
+    );
 
     return {
       ...context,
@@ -3299,7 +3333,8 @@ export function createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
-    routeMatch?: AgnosticDataRouteMatch,
+    loadRouteIds: string[] | null,
+    routeMatch: AgnosticDataRouteMatch | null,
     pendingActionError?: RouteData
   ): Promise<
     | Omit<
@@ -3332,6 +3367,12 @@ export function createStaticHandler(
     let matchesToLoad = requestMatches.filter(
       (m) => m.route.loader || m.route.lazy
     );
+
+    if (loadRouteIds) {
+      matchesToLoad = matchesToLoad.filter((m) =>
+        loadRouteIds.includes(m.route.id)
+      );
+    }
 
     // Short circuit if we have no loaders to run (query())
     if (matchesToLoad.length === 0) {
@@ -4055,6 +4096,7 @@ async function callDataStrategyImpl(
   // back out below.
   let results = await dataStrategyImpl({
     matches: matches.map((match) => {
+      let bikeshed_load = routeIdsToLoad.has(match.route.id);
       // `bikeshed_loadRoute` encapsulates the route.lazy, executing the
       // loader/action, and mapping return values/thrown errors to a
       // HandlerResult.  Users can pass a callback to take fine-grained control
@@ -4063,7 +4105,7 @@ async function callDataStrategyImpl(
         handlerOverride
       ) => {
         loadedMatches.add(match.route.id);
-        return routeIdsToLoad.has(match.route.id)
+        return bikeshed_load
           ? callLoaderOrAction(
               type,
               request,
@@ -4083,6 +4125,7 @@ async function callDataStrategyImpl(
 
       return {
         ...match,
+        bikeshed_load,
         bikeshed_loadRoute,
       };
     }),

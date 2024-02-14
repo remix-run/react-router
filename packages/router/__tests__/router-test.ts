@@ -5,6 +5,7 @@ import type {
   AgnosticRouteObject,
   DataStrategyFunction,
   DataStrategyMatch,
+  HandlerResult,
 } from "../utils";
 import { ErrorResponseImpl, json } from "../utils";
 
@@ -2838,6 +2839,141 @@ describe("a router", () => {
           navigation: {
             state: "idle",
           },
+        });
+      });
+
+      it("indicates which routes need to load via match.bikeshed_load", async () => {
+        let dataStrategy = jest.fn<
+          ReturnType<DataStrategyFunction>,
+          Parameters<DataStrategyFunction>
+        >(({ matches }) => {
+          return Promise.all(matches.map((m) => m.bikeshed_loadRoute()));
+        });
+        let t = setup({
+          routes: [
+            {
+              id: "root",
+              path: "/",
+              loader: true,
+              children: [
+                {
+                  id: "parent",
+                  path: "parent",
+                  loader: true,
+                  action: true,
+                  children: [
+                    {
+                      id: "child",
+                      path: "child",
+                      lazy: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          dataStrategy,
+          hydrationData: {
+            // don't call dataStrategy on hydration
+            loaderData: { root: null },
+          },
+        });
+
+        let A = await t.navigate("/");
+        expect(dataStrategy.mock.calls[0][0].matches).toEqual([
+          expect.objectContaining({
+            bikeshed_load: true,
+            route: expect.objectContaining({ id: "root" }),
+          }),
+        ]);
+        await A.loaders.root.resolve("ROOT");
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT",
+        });
+
+        let B = await t.navigate("/parent");
+        expect(dataStrategy.mock.calls[1][0].matches).toEqual([
+          expect.objectContaining({
+            bikeshed_load: false,
+            route: expect.objectContaining({ id: "root" }),
+          }),
+          expect.objectContaining({
+            bikeshed_load: true,
+            route: expect.objectContaining({ id: "parent" }),
+          }),
+        ]);
+        await B.loaders.parent.resolve("PARENT");
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT",
+          parent: "PARENT",
+        });
+
+        let C = await t.navigate("/parent/child");
+        expect(dataStrategy.mock.calls[2][0].matches).toEqual([
+          expect.objectContaining({
+            bikeshed_load: false,
+            route: expect.objectContaining({ id: "root" }),
+          }),
+          expect.objectContaining({
+            bikeshed_load: false,
+            route: expect.objectContaining({ id: "parent" }),
+          }),
+          expect.objectContaining({
+            bikeshed_load: true,
+            route: expect.objectContaining({ id: "child" }),
+          }),
+        ]);
+        await C.lazy.child.resolve({
+          action: () => "CHILD ACTION",
+          loader: () => "CHILD",
+          shouldRevalidate: () => false,
+        });
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT",
+          parent: "PARENT",
+          child: "CHILD",
+        });
+
+        await t.navigate("/parent/child", {
+          formMethod: "post",
+          formData: createFormData({}),
+        });
+        await tick();
+        expect(dataStrategy.mock.calls[3][0].matches).toEqual([
+          expect.objectContaining({
+            bikeshed_load: false,
+            route: expect.objectContaining({ id: "root" }),
+          }),
+          expect.objectContaining({
+            bikeshed_load: false,
+            route: expect.objectContaining({ id: "parent" }),
+          }),
+          expect.objectContaining({
+            bikeshed_load: true, // action
+            route: expect.objectContaining({ id: "child" }),
+          }),
+        ]);
+        expect(dataStrategy.mock.calls[4][0].matches).toEqual([
+          expect.objectContaining({
+            bikeshed_load: true,
+            route: expect.objectContaining({ id: "root" }),
+          }),
+          expect.objectContaining({
+            bikeshed_load: true,
+            route: expect.objectContaining({ id: "parent" }),
+          }),
+          expect.objectContaining({
+            bikeshed_load: false, // shouldRevalidate=false
+            route: expect.objectContaining({ id: "child" }),
+          }),
+        ]);
+        expect(t.router.state.actionData).toMatchObject({
+          child: "CHILD ACTION",
+        });
+        expect(t.router.state.loaderData).toMatchObject({
+          root: "ROOT",
+          parent: "PARENT",
+          child: "CHILD",
         });
       });
     });

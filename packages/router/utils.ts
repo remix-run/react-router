@@ -233,7 +233,8 @@ export interface DetectErrorBoundaryFunction {
 
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
-  // TODO: What to call these?
+  // TODO: What to call these?  load/resolve()?
+  bikeshed_load: boolean;
   bikeshed_loadRoute: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
