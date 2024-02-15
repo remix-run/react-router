@@ -4070,7 +4070,7 @@ async function loadLazyRouteModule(
 function defaultDataStrategy(
   opts: DataStrategyFunctionArgs
 ): ReturnType<DataStrategyFunction> {
-  return Promise.all(opts.matches.map((m) => m.bikeshed_loadRoute()));
+  return Promise.all(opts.matches.map((m) => m.resolve()));
 }
 
 async function callDataStrategyImpl(
@@ -4094,16 +4094,14 @@ async function callDataStrategyImpl(
   // back out below.
   let results = await dataStrategyImpl({
     matches: matches.map((match) => {
-      let bikeshed_load = routeIdsToLoad.has(match.route.id);
-      // `bikeshed_loadRoute` encapsulates the route.lazy, executing the
+      let shouldLoad = routeIdsToLoad.has(match.route.id);
+      // `resolve` encapsulates the route.lazy, executing the
       // loader/action, and mapping return values/thrown errors to a
       // HandlerResult.  Users can pass a callback to take fine-grained control
       // over the execution of the loader/action
-      let bikeshed_loadRoute: DataStrategyMatch["bikeshed_loadRoute"] = (
-        handlerOverride
-      ) => {
+      let resolve: DataStrategyMatch["resolve"] = (handlerOverride) => {
         loadedMatches.add(match.route.id);
-        return bikeshed_load
+        return shouldLoad
           ? callLoaderOrAction(
               type,
               request,
@@ -4123,8 +4121,8 @@ async function callDataStrategyImpl(
 
       return {
         ...match,
-        bikeshed_load,
-        bikeshed_loadRoute,
+        shouldLoad,
+        resolve,
       };
     }),
     request,
@@ -4138,8 +4136,8 @@ async function callDataStrategyImpl(
   matches.forEach((m) =>
     invariant(
       loadedMatches.has(m.route.id),
-      `\`match.bikeshed_loadRoute()\` was not called for route id "${m.route.id}". ` +
-        "You must call `match.bikeshed_loadRoute()` on every match passed to " +
+      `\`match.resolve()\` was not called for route id "${m.route.id}". ` +
+        "You must call `match.resolve()` on every match passed to " +
         "`dataStrategy` to ensure all routes are properly loaded."
     )
   );
@@ -4155,7 +4153,7 @@ async function callLoaderOrAction(
   match: AgnosticDataRouteMatch,
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  handlerOverride: Parameters<DataStrategyMatch["bikeshed_loadRoute"]>[0],
+  handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
   staticContext?: unknown
 ): Promise<HandlerResult> {
   let result;

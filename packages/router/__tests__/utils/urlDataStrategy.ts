@@ -9,7 +9,7 @@ export default async function urlDataStrategy({
 }: DataStrategyFunctionArgs): ReturnType<DataStrategyFunction> {
   return Promise.all(
     matches.map((match) =>
-      match.bikeshed_loadRoute(async (handler) => {
+      match.resolve(async (handler) => {
         let response = await handler();
         invariant(response instanceof Response, "Expected a response");
         let contentType = response.headers.get("Content-Type");

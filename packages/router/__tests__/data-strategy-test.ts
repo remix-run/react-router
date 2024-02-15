@@ -14,7 +14,7 @@ describe("router dataStrategy", () => {
   describe("loaders", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+        Promise.all(matches.map((m) => m.resolve()))
       );
       let t = setup({
         routes: [
@@ -72,7 +72,7 @@ describe("router dataStrategy", () => {
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+        Promise.all(matches.map((m) => m.resolve()))
       );
       let t = setup({
         routes: [
@@ -140,7 +140,7 @@ describe("router dataStrategy", () => {
         async dataStrategy({ matches }) {
           return Promise.all(
             matches.map((m) =>
-              m.bikeshed_loadRoute(async (handler) => {
+              m.resolve(async (handler) => {
                 let result = await handler();
                 return `Route ID "${m.route.id}" returned "${result}"`;
               })
@@ -172,7 +172,7 @@ describe("router dataStrategy", () => {
         async dataStrategy({ matches }) {
           return Promise.all(
             matches.map((m) =>
-              m.bikeshed_loadRoute(async (handler) => {
+              m.resolve(async (handler) => {
                 let result = await handler();
                 return `Route ID "${m.route.id}" returned "${result}"`;
               })
@@ -214,9 +214,7 @@ describe("router dataStrategy", () => {
           },
         ],
         dataStrategy({ matches }) {
-          return Promise.all(
-            matches.map(async (match) => match.bikeshed_loadRoute())
-          );
+          return Promise.all(matches.map(async (match) => match.resolve()));
         },
       });
 
@@ -254,7 +252,7 @@ describe("router dataStrategy", () => {
         dataStrategy({ matches }) {
           return Promise.all(
             matches.map((match) => {
-              return match.bikeshed_loadRoute(async (handler) => {
+              return match.resolve(async (handler) => {
                 let val = await handler();
                 // Won't get here since handler will throw
                 return val;
@@ -310,7 +308,7 @@ describe("router dataStrategy", () => {
       });
     });
 
-    it("throws an error if an implementation does not call bikeshed_loadRoute", async () => {
+    it("throws an error if an implementation does not call resolve", async () => {
       let t = setup({
         routes: [
           {
@@ -338,7 +336,7 @@ describe("router dataStrategy", () => {
                 // noop to cause error
                 return "forgot to load child";
               }
-              return match.bikeshed_loadRoute();
+              return match.resolve();
             })
           );
         },
@@ -351,8 +349,8 @@ describe("router dataStrategy", () => {
         actionData: null,
         errors: {
           parent: new Error(
-            '`match.bikeshed_loadRoute()` was not called for route id "child". ' +
-              "You must call `match.bikeshed_loadRoute()` on every match passed " +
+            '`match.resolve()` was not called for route id "child". ' +
+              "You must call `match.resolve()` on every match passed " +
               "to `dataStrategy` to ensure all routes are properly loaded."
           ),
         },
@@ -366,12 +364,12 @@ describe("router dataStrategy", () => {
       });
     });
 
-    it("indicates which routes need to load via match.bikeshed_load", async () => {
+    it("indicates which routes need to load via match.shouldLoad", async () => {
       let dataStrategy = jest.fn<
         ReturnType<DataStrategyFunction>,
         Parameters<DataStrategyFunction>
       >(({ matches }) => {
-        return Promise.all(matches.map((m) => m.bikeshed_loadRoute()));
+        return Promise.all(matches.map((m) => m.resolve()));
       });
       let t = setup({
         routes: [
@@ -406,7 +404,7 @@ describe("router dataStrategy", () => {
       let A = await t.navigate("/");
       expect(dataStrategy.mock.calls[0][0].matches).toEqual([
         expect.objectContaining({
-          bikeshed_load: true,
+          shouldLoad: true,
           route: expect.objectContaining({ id: "root" }),
         }),
       ]);
@@ -418,11 +416,11 @@ describe("router dataStrategy", () => {
       let B = await t.navigate("/parent");
       expect(dataStrategy.mock.calls[1][0].matches).toEqual([
         expect.objectContaining({
-          bikeshed_load: false,
+          shouldLoad: false,
           route: expect.objectContaining({ id: "root" }),
         }),
         expect.objectContaining({
-          bikeshed_load: true,
+          shouldLoad: true,
           route: expect.objectContaining({ id: "parent" }),
         }),
       ]);
@@ -435,15 +433,15 @@ describe("router dataStrategy", () => {
       let C = await t.navigate("/parent/child");
       expect(dataStrategy.mock.calls[2][0].matches).toEqual([
         expect.objectContaining({
-          bikeshed_load: false,
+          shouldLoad: false,
           route: expect.objectContaining({ id: "root" }),
         }),
         expect.objectContaining({
-          bikeshed_load: false,
+          shouldLoad: false,
           route: expect.objectContaining({ id: "parent" }),
         }),
         expect.objectContaining({
-          bikeshed_load: true,
+          shouldLoad: true,
           route: expect.objectContaining({ id: "child" }),
         }),
       ]);
@@ -465,29 +463,29 @@ describe("router dataStrategy", () => {
       await tick();
       expect(dataStrategy.mock.calls[3][0].matches).toEqual([
         expect.objectContaining({
-          bikeshed_load: false,
+          shouldLoad: false,
           route: expect.objectContaining({ id: "root" }),
         }),
         expect.objectContaining({
-          bikeshed_load: false,
+          shouldLoad: false,
           route: expect.objectContaining({ id: "parent" }),
         }),
         expect.objectContaining({
-          bikeshed_load: true, // action
+          shouldLoad: true, // action
           route: expect.objectContaining({ id: "child" }),
         }),
       ]);
       expect(dataStrategy.mock.calls[4][0].matches).toEqual([
         expect.objectContaining({
-          bikeshed_load: true,
+          shouldLoad: true,
           route: expect.objectContaining({ id: "root" }),
         }),
         expect.objectContaining({
-          bikeshed_load: true,
+          shouldLoad: true,
           route: expect.objectContaining({ id: "parent" }),
         }),
         expect.objectContaining({
-          bikeshed_load: false, // shouldRevalidate=false
+          shouldLoad: false, // shouldRevalidate=false
           route: expect.objectContaining({ id: "child" }),
         }),
       ]);
@@ -505,7 +503,7 @@ describe("router dataStrategy", () => {
   describe("actions", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+        Promise.all(matches.map((m) => m.resolve()))
       );
       let t = setup({
         routes: [
@@ -547,7 +545,7 @@ describe("router dataStrategy", () => {
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+        Promise.all(matches.map((m) => m.resolve()))
       );
       let t = setup({
         routes: [
@@ -592,7 +590,7 @@ describe("router dataStrategy", () => {
     describe("loaders", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+          Promise.all(matches.map((m) => m.resolve()))
         );
         let t = setup({
           routes: [
@@ -633,7 +631,7 @@ describe("router dataStrategy", () => {
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+          Promise.all(matches.map((m) => m.resolve()))
         );
         let t = setup({
           routes: [
@@ -675,7 +673,7 @@ describe("router dataStrategy", () => {
     describe("actions", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+          Promise.all(matches.map((m) => m.resolve()))
         );
         let t = setup({
           routes: [
@@ -719,7 +717,7 @@ describe("router dataStrategy", () => {
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.bikeshed_loadRoute()))
+          Promise.all(matches.map((m) => m.resolve()))
         );
         let t = setup({
           routes: [
@@ -787,7 +785,7 @@ describe("router dataStrategy", () => {
         async dataStrategy({ matches }) {
           return Promise.all(
             matches.map(async (m) => {
-              return await m.bikeshed_loadRoute(async (handler) => {
+              return await m.resolve(async (handler) => {
                 let result = await handler();
                 if (
                   result instanceof Response &&
@@ -851,10 +849,10 @@ describe("router dataStrategy", () => {
             ReturnType<typeof createDeferred>
           > = new Map();
 
-          // Use bikeshed_loadRoute's to create and await a deferred for each
+          // Use resolve's to create and await a deferred for each
           // route that needs to load
           let matchPromises = matches.map((m) =>
-            m.bikeshed_loadRoute(() => {
+            m.resolve(() => {
               // Don't call handler, just create a deferred we can resolve from
               // the single fetch response and return it's promise
               let dfd = createDeferred();
@@ -950,7 +948,7 @@ describe("router dataStrategy", () => {
           // Run loaders in parallel only exposing contexts from above
           return Promise.all(
             matches.map((m, i) =>
-              m.bikeshed_loadRoute((handler) => {
+              m.resolve((handler) => {
                 // Only provide context values up to this level in the matches
                 let handlerCtx = matches.slice(0, i + 1).reduce((acc, m) => {
                   Object.keys(m.route.handle?.context).forEach((k) => {
@@ -1069,7 +1067,7 @@ describe("router dataStrategy", () => {
           // Run loaders in parallel only exposing contexts from above
           return Promise.all(
             matches.map((m, i) =>
-              m.bikeshed_loadRoute((callHandler) => {
+              m.resolve((callHandler) => {
                 // Only provide context values up to this level in the matches
                 let handlerCtx = matches.slice(0, i + 1).reduce((acc, m) => {
                   Object.keys(m.route.handle?.context).forEach((k) => {
@@ -1153,7 +1151,7 @@ describe("router dataStrategy", () => {
 
           return Promise.all(
             matches.map(async (m) => {
-              return m.bikeshed_loadRoute(async (handler) => {
+              return m.resolve(async (handler) => {
                 if (request.method !== "GET") {
                   // invalidate on actions
                   cache = {};
