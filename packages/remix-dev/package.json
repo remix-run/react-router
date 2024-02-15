@@ -91,12 +91,14 @@
     "msw": "^1.2.3",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0",
-    "vite": "5.1.0"
+    "vite": "5.1.0",
+    "wrangler": "^3.28.2"
   },
   "peerDependencies": {
     "@remix-run/serve": "^2.6.0",
     "typescript": "^5.1.0",
-    "vite": "^5.1.0"
+    "vite": "^5.1.0",
+    "wrangler": "^3.28.2"
   },
   "peerDependenciesMeta": {
     "@remix-run/serve": {
@@ -106,6 +108,9 @@
       "optional": true
     },
     "vite": {
+      "optional": true
+    },
+    "wrangler": {
       "optional": true
     }
   },
