@@ -37,7 +37,9 @@ const getStylesForFiles = async ({
 
   try {
     for (let file of files) {
-      let normalizedPath = path.resolve(file).replace(/\\/g, "/");
+      let normalizedPath = path
+        .resolve(rootDirectory, file)
+        .replace(/\\/g, "/");
       let node = await viteDevServer.moduleGraph.getModuleById(normalizedPath);
 
       // If the module is only present in the client module graph, the module
