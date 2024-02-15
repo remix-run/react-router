@@ -67,7 +67,9 @@ export interface AppConfig {
    */
   routes?: (
     defineRoutes: DefineRoutesFunction
-  ) => Promise<ReturnType<DefineRoutesFunction>>;
+  ) =>
+    | ReturnType<DefineRoutesFunction>
+    | Promise<ReturnType<DefineRoutesFunction>>;
 
   /**
    * The path to the browser build, relative to `remix.config.js`. Defaults to
