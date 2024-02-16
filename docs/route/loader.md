@@ -47,7 +47,7 @@ createBrowserRouter([
 ]);
 ```
 
-Note that the `:teamId` in the path is parsed as provided as `params.teamId` by the same name.
+Note that the `:teamId` in the path is parsed and provided as `params.teamId` by the same name.
 
 ## `request`
 
