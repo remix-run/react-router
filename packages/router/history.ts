@@ -36,17 +36,17 @@ export interface Path {
   /**
    * A URL pathname, beginning with a /.
    */
-  pathname: string;
+  pathname: "" | `/${string}`;
 
   /**
    * A URL search string, beginning with a ?.
    */
-  search: string;
+  search: "" | `?${string}`;
 
   /**
    * A URL fragment identifier, beginning with a #.
    */
-  hash: string;
+  hash: "" | `#${string}`;
 }
 
 // TODO: (v7) Change the Location generic default from `any` to `unknown` and
