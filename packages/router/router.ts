@@ -4352,7 +4352,11 @@ async function convertHandlerResultToDataResult(
   }
 
   if (type === ResultType.error) {
-    return { type, error: result };
+    return {
+      type,
+      error: result,
+      statusCode: isRouteErrorResponse(result) ? result.status : undefined,
+    };
   }
 
   if (isDeferredData(result)) {
