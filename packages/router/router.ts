@@ -44,6 +44,7 @@ import {
   getPathContributingMatches,
   getResolveToMatches,
   immutableRouteKeys,
+  isDecodedResponse,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -359,6 +360,7 @@ export interface FutureConfig {
   v7_partialHydration: boolean;
   v7_prependBasename: boolean;
   v7_relativeSplatPath: boolean;
+  v7_skipActionErrorRevalidation: boolean;
 }
 
 /**
@@ -619,18 +621,14 @@ interface ShortCircuitable {
   shortCircuited?: boolean;
 }
 
+type PendingActionResult = [string, SuccessResult | ErrorResult];
+
 interface HandleActionResult extends ShortCircuitable {
   /**
-   * Error thrown from the current action, keyed by the route containing the
-   * error boundary to render the error.  To be committed to the state after
-   * loaders have completed
+   * Tuple for the returned or thrown value from the current action.  The routeId
+   * is the action route for success and the bubbled boundary route for errors.
    */
-  pendingActionError?: RouteData;
-  /**
-   * Data returned from the current action, keyed by the route owning the action.
-   * To be committed to the state after loaders have completed
-   */
-  pendingActionData?: RouteData;
+  pendingActionResult?: PendingActionResult;
 }
 
 interface HandleLoadersResult extends ShortCircuitable {
@@ -777,6 +775,7 @@ export function createRouter(init: RouterInit): Router {
     v7_partialHydration: false,
     v7_prependBasename: false,
     v7_relativeSplatPath: false,
+    v7_skipActionErrorRevalidation: true,
     ...init.future,
   };
   // Cleanup function for history
@@ -1474,24 +1473,24 @@ export function createRouter(init: RouterInit): Router {
       pendingNavigationController.signal,
       opts && opts.submission
     );
-    let pendingActionData: RouteData | undefined;
-    let pendingError: RouteData | undefined;
+    let pendingActionResult: PendingActionResult | undefined;
 
     if (opts && opts.pendingError) {
       // If we have a pendingError, it means the user attempted a GET submission
       // with binary FormData so assign here and skip to handleLoaders.  That
       // way we handle calling loaders above the boundary etc.  It's not really
       // different from an actionError in that sense.
-      pendingError = {
-        [findNearestBoundary(matches).route.id]: opts.pendingError,
-      };
+      pendingActionResult = [
+        findNearestBoundary(matches).route.id,
+        { type: ResultType.error, error: opts.pendingError },
+      ];
     } else if (
       opts &&
       opts.submission &&
       isMutationMethod(opts.submission.formMethod)
     ) {
       // Call action if we received an action submission
-      let actionOutput = await handleAction(
+      let actionResult = await handleAction(
         request,
         location,
         opts.submission,
@@ -1499,17 +1498,20 @@ export function createRouter(init: RouterInit): Router {
         { replace: opts.replace, flushSync }
       );
 
-      if (actionOutput.shortCircuited) {
+      if (actionResult.shortCircuited) {
         return;
       }
 
-      pendingActionData = actionOutput.pendingActionData;
-      pendingError = actionOutput.pendingActionError;
+      pendingActionResult = actionResult.pendingActionResult;
       loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
 
       // Create a GET request for the loaders
-      request = new Request(request.url, { signal: request.signal });
+      request = createClientSideRequest(
+        init.history,
+        request.url,
+        request.signal
+      );
     }
 
     // Call loaders
@@ -1523,8 +1525,7 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.replace,
       opts && opts.initialHydration === true,
       flushSync,
-      pendingActionData,
-      pendingError
+      pendingActionResult
     );
 
     if (shortCircuited) {
@@ -1538,7 +1539,7 @@ export function createRouter(init: RouterInit): Router {
 
     completeNavigation(location, {
       matches,
-      ...(pendingActionData ? { actionData: pendingActionData } : {}),
+      ...getActionDataForCommit(pendingActionResult),
       loaderData,
       errors,
     });
@@ -1605,6 +1606,10 @@ export function createRouter(init: RouterInit): Router {
       return { shortCircuited: true };
     }
 
+    if (isDeferredResult(result)) {
+      throw getInternalRouterError(400, { type: "defer-action" });
+    }
+
     if (isErrorResult(result)) {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
@@ -1619,18 +1624,12 @@ export function createRouter(init: RouterInit): Router {
       }
 
       return {
-        // Send back an empty object we can use to clear out any prior actionData
-        pendingActionData: {},
-        pendingActionError: { [boundaryMatch.route.id]: result.error },
+        pendingActionResult: [boundaryMatch.route.id, result],
       };
     }
 
-    if (isDeferredResult(result)) {
-      throw getInternalRouterError(400, { type: "defer-action" });
-    }
-
     return {
-      pendingActionData: { [actionMatch.route.id]: result.data },
+      pendingActionResult: [actionMatch.route.id, result],
     };
   }
 
@@ -1646,8 +1645,7 @@ export function createRouter(init: RouterInit): Router {
     replace?: boolean,
     initialHydration?: boolean,
     flushSync?: boolean,
-    pendingActionData?: RouteData,
-    pendingError?: RouteData
+    pendingActionResult?: PendingActionResult
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
@@ -1668,6 +1666,7 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission,
       location,
       future.v7_partialHydration && initialHydration === true,
+      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -1676,8 +1675,7 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
-      pendingActionData,
-      pendingError
+      pendingActionResult
     );
 
     // Cancel pending deferreds for no-longer-matched routes or routes we're
@@ -1700,8 +1698,11 @@ export function createRouter(init: RouterInit): Router {
           matches,
           loaderData: {},
           // Commit pending error if we're short circuiting
-          errors: pendingError || null,
-          ...(pendingActionData ? { actionData: pendingActionData } : {}),
+          errors:
+            pendingActionResult && isErrorResult(pendingActionResult[1])
+              ? { [pendingActionResult[0]]: pendingActionResult[1].error }
+              : null,
+          ...getActionDataForCommit(pendingActionResult),
           ...(updatedFetchers ? { fetchers: new Map(state.fetchers) } : {}),
         },
         { flushSync }
@@ -1727,15 +1728,27 @@ export function createRouter(init: RouterInit): Router {
         );
         state.fetchers.set(rf.key, revalidatingFetcher);
       });
-      let actionData = pendingActionData || state.actionData;
+
+      let actionData: Record<string, RouteData> | null | undefined;
+      if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
+        // This is cast to `any` currently because `RouteData`uses any and it
+        // would be a breaking change to use any.
+        // TODO: v7 - change `RouteData` to use `unknown` instead of `any`
+        actionData = {
+          [pendingActionResult[0]]: pendingActionResult[1].data as any,
+        };
+      } else if (state.actionData) {
+        if (Object.keys(state.actionData).length === 0) {
+          actionData = null;
+        } else {
+          actionData = state.actionData;
+        }
+      }
+
       updateState(
         {
           navigation: loadingNavigation,
-          ...(actionData
-            ? Object.keys(actionData).length === 0
-              ? { actionData: null }
-              : { actionData }
-            : {}),
+          ...(actionData !== undefined ? { actionData } : {}),
           ...(revalidatingFetchers.length > 0
             ? { fetchers: new Map(state.fetchers) }
             : {}),
@@ -1815,7 +1828,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       matchesToLoad,
       loaderResults,
-      pendingError,
+      pendingActionResult,
       revalidatingFetchers,
       fetcherResults,
       activeDeferreds
@@ -2055,6 +2068,7 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       false,
+      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -2063,8 +2077,7 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
-      { [match.route.id]: actionResult.data },
-      undefined // No need to send through errors since we short circuit above
+      [match.route.id, actionResult]
     );
 
     // Put all revalidating fetchers into the loading state, except for the
@@ -3280,9 +3293,7 @@ export function createStaticHandler(
         requestContext,
         loadRouteIds,
         null,
-        {
-          [boundaryMatch.route.id]: result.error,
-        }
+        [boundaryMatch.route.id, result]
       );
 
       // action status codes take precedence over loader status codes
@@ -3293,9 +3304,7 @@ export function createStaticHandler(
           : 500,
         actionData: null,
         actionHeaders: {
-          ...(result.response
-            ? { [actionMatch.route.id]: result.response.headers }
-            : {}),
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
         },
       };
     }
@@ -3314,16 +3323,10 @@ export function createStaticHandler(
         [actionMatch.route.id]: result.data,
       },
       // action status codes take precedence over loader status codes
-      ...(result.response
-        ? {
-            statusCode: result.response.status,
-            actionHeaders: {
-              [actionMatch.route.id]: result.response.headers,
-            },
-          }
-        : {
-            actionHeaders: {},
-          }),
+      ...(result.statusCode ? { statusCode: result.statusCode } : {}),
+      actionHeaders: result.headers
+        ? { [actionMatch.route.id]: result.headers }
+        : {},
     };
   }
 
@@ -3333,7 +3336,7 @@ export function createStaticHandler(
     requestContext: unknown,
     loadRouteIds: string[] | null,
     routeMatch: AgnosticDataRouteMatch | null,
-    pendingActionError?: RouteData
+    pendingActionResult?: PendingActionResult
   ): Promise<
     | Omit<
         StaticHandlerContext,
@@ -3358,10 +3361,9 @@ export function createStaticHandler(
 
     let requestMatches = routeMatch
       ? [routeMatch]
-      : getLoaderMatchesUntilBoundary(
-          matches,
-          Object.keys(pendingActionError || {})[0]
-        );
+      : pendingActionResult && isErrorResult(pendingActionResult[1])
+      ? getLoaderMatchesUntilBoundary(matches, pendingActionResult[0])
+      : matches;
     let matchesToLoad = requestMatches.filter(
       (m) => m.route.loader || m.route.lazy
     );
@@ -3381,7 +3383,12 @@ export function createStaticHandler(
           (acc, m) => Object.assign(acc, { [m.route.id]: null }),
           {}
         ),
-        errors: pendingActionError || null,
+        errors:
+          pendingActionResult && isErrorResult(pendingActionResult[1])
+            ? {
+                [pendingActionResult[0]]: pendingActionResult[1].error,
+              }
+            : null,
         statusCode: 200,
         loaderHeaders: {},
         activeDeferreds: null,
@@ -3407,7 +3414,7 @@ export function createStaticHandler(
       matches,
       matchesToLoad,
       results,
-      pendingActionError,
+      pendingActionResult,
       activeDeferreds
     );
 
@@ -3753,7 +3760,7 @@ function normalizeNavigateOptions(
 // render so we don't need to load them
 function getLoaderMatchesUntilBoundary(
   matches: AgnosticDataRouteMatch[],
-  boundaryId?: string
+  boundaryId: string
 ) {
   let boundaryMatches = matches;
   if (boundaryId) {
@@ -3772,6 +3779,7 @@ function getMatchesToLoad(
   submission: Submission | undefined,
   location: Location,
   isInitialLoad: boolean,
+  skipActionErrorRevalidation: boolean,
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
@@ -3780,21 +3788,33 @@ function getMatchesToLoad(
   fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
   basename: string | undefined,
-  pendingActionData?: RouteData,
-  pendingError?: RouteData
+  pendingActionResult?: PendingActionResult
 ): [AgnosticDataRouteMatch[], RevalidatingFetcher[]] {
-  let actionResult = pendingError
-    ? Object.values(pendingError)[0]
-    : pendingActionData
-    ? Object.values(pendingActionData)[0]
+  let actionResult = pendingActionResult
+    ? isErrorResult(pendingActionResult[1])
+      ? pendingActionResult[1].error
+      : pendingActionResult[1].data
     : undefined;
-
   let currentUrl = history.createURL(state.location);
   let nextUrl = history.createURL(location);
 
   // Pick navigation matches that are net-new or qualify for revalidation
-  let boundaryId = pendingError ? Object.keys(pendingError)[0] : undefined;
-  let boundaryMatches = getLoaderMatchesUntilBoundary(matches, boundaryId);
+  let boundaryId =
+    pendingActionResult && isErrorResult(pendingActionResult[1])
+      ? pendingActionResult[0]
+      : undefined;
+  let boundaryMatches = boundaryId
+    ? getLoaderMatchesUntilBoundary(matches, boundaryId)
+    : matches;
+
+  // Don't revalidate loaders by default after action 4xx/5xx responses
+  // when the flag is enabled.  They can still opt-into revalidation via
+  // `shouldRevalidate` via `actionResult`
+  let shouldSkipRevalidation =
+    skipActionErrorRevalidation &&
+    pendingActionResult &&
+    typeof pendingActionResult[1].statusCode === "number" &&
+    pendingActionResult[1].statusCode >= 400;
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
     let { route } = match;
@@ -3840,15 +3860,15 @@ function getMatchesToLoad(
       nextParams: nextRouteMatch.params,
       ...submission,
       actionResult,
-      defaultShouldRevalidate:
-        // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
-        isRevalidationRequired ||
-        // Clicked the same link, resubmitted a GET form
-        currentUrl.pathname + currentUrl.search ===
-          nextUrl.pathname + nextUrl.search ||
-        // Search params affect all loaders
-        currentUrl.search !== nextUrl.search ||
-        isNewRouteInstance(currentRouteMatch, nextRouteMatch),
+      defaultShouldRevalidate: shouldSkipRevalidation
+        ? false
+        : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
+          isRevalidationRequired ||
+          currentUrl.pathname + currentUrl.search ===
+            nextUrl.pathname + nextUrl.search ||
+          // Search params affect all loaders
+          currentUrl.search !== nextUrl.search ||
+          isNewRouteInstance(currentRouteMatch, nextRouteMatch),
     });
   });
 
@@ -3918,7 +3938,9 @@ function getMatchesToLoad(
         nextParams: matches[matches.length - 1].params,
         ...submission,
         actionResult,
-        defaultShouldRevalidate: isRevalidationRequired,
+        defaultShouldRevalidate: shouldSkipRevalidation
+          ? false
+          : isRevalidationRequired,
       });
     }
 
@@ -4294,14 +4316,38 @@ async function convertHandlerResultToDataResult(
       return {
         type,
         error: new ErrorResponseImpl(result.status, result.statusText, data),
-        response: result,
+        statusCode: result.status,
+        headers: result.headers,
       };
     }
 
     return {
       type: ResultType.data,
       data,
-      response: result,
+      statusCode: result.status,
+      headers: result.headers,
+    };
+  }
+
+  if (isDecodedResponse(result)) {
+    if (type === ResultType.error) {
+      return {
+        type,
+        error: new ErrorResponseImpl(
+          result.status,
+          result.statusText,
+          result.data
+        ),
+        statusCode: result.status,
+        headers: result.headers,
+      };
+    }
+
+    return {
+      type: ResultType.data,
+      data: result.data,
+      statusCode: result.status,
+      headers: result.headers,
     };
   }
 
@@ -4420,7 +4466,7 @@ function processRouteLoaderData(
   matches: AgnosticDataRouteMatch[],
   matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
-  pendingError: RouteData | undefined,
+  pendingActionResult: PendingActionResult | undefined,
   activeDeferreds: Map<string, DeferredData>
 ): {
   loaderData: RouterState["loaderData"];
@@ -4434,6 +4480,10 @@ function processRouteLoaderData(
   let statusCode: number | undefined;
   let foundError = false;
   let loaderHeaders: Record<string, Headers> = {};
+  let pendingError =
+    pendingActionResult && isErrorResult(pendingActionResult[1])
+      ? pendingActionResult[1].error
+      : undefined;
 
   // Process loader results into state.loaderData/state.errors
   results.forEach((result, index) => {
@@ -4450,8 +4500,8 @@ function processRouteLoaderData(
       // If we have a pending action error, we report it at the highest-route
       // that throws a loader error, and then clear it out to indicate that
       // it was consumed
-      if (pendingError) {
-        error = Object.values(pendingError)[0];
+      if (pendingError !== undefined) {
+        error = pendingError;
         pendingError = undefined;
       }
 
@@ -4473,8 +4523,8 @@ function processRouteLoaderData(
           ? result.error.status
           : 500;
       }
-      if (result.response) {
-        loaderHeaders[id] = result.response.headers;
+      if (result.headers) {
+        loaderHeaders[id] = result.headers;
       }
     } else {
       if (isDeferredResult(result)) {
@@ -4496,11 +4546,11 @@ function processRouteLoaderData(
         loaderData[id] = result.data;
         // Error status codes always override success status codes, but if all
         // loaders are successful we take the deepest status code.
-        if (result.response) {
-          if (result.response.status !== 200 && !foundError) {
-            statusCode = result.response.status;
-          }
-          loaderHeaders[id] = result.response.headers;
+        if (result.statusCode && result.statusCode !== 200 && !foundError) {
+          statusCode = result.statusCode;
+        }
+        if (result.headers) {
+          loaderHeaders[id] = result.headers;
         }
       }
     }
@@ -4509,9 +4559,9 @@ function processRouteLoaderData(
   // If we didn't consume the pending action error (i.e., all loaders
   // resolved), then consume it here.  Also clear out any loaderData for the
   // throwing route
-  if (pendingError) {
-    errors = pendingError;
-    loaderData[Object.keys(pendingError)[0]] = undefined;
+  if (pendingError !== undefined && pendingActionResult) {
+    errors = { [pendingActionResult[0]]: pendingError };
+    loaderData[pendingActionResult[0]] = undefined;
   }
 
   return {
@@ -4527,7 +4577,7 @@ function processLoaderData(
   matches: AgnosticDataRouteMatch[],
   matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
-  pendingError: RouteData | undefined,
+  pendingActionResult: PendingActionResult | undefined,
   revalidatingFetchers: RevalidatingFetcher[],
   fetcherResults: DataResult[],
   activeDeferreds: Map<string, DeferredData>
@@ -4539,7 +4589,7 @@ function processLoaderData(
     matches,
     matchesToLoad,
     results,
-    pendingError,
+    pendingActionResult,
     activeDeferreds
   );
 
@@ -4611,6 +4661,24 @@ function mergeLoaderData(
     }
   }
   return mergedLoaderData;
+}
+
+function getActionDataForCommit(
+  pendingActionResult: PendingActionResult | undefined
+) {
+  if (!pendingActionResult) {
+    return {};
+  }
+  return isErrorResult(pendingActionResult[1])
+    ? {
+        // Clear out prior actionData on errors
+        actionData: {},
+      }
+    : {
+        actionData: {
+          [pendingActionResult[0]]: pendingActionResult[1].data,
+        },
+      };
 }
 
 // Find the nearest error boundary, looking upwards from the leaf route (or the

@@ -35,6 +35,7 @@ export type {
 
 export {
   AbortedDeferredError,
+  DecodedResponse,
   defer,
   generatePath,
   getToPathname,

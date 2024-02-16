@@ -20,8 +20,9 @@ export enum ResultType {
  */
 export interface SuccessResult {
   type: ResultType.data;
-  data: any;
-  response?: Response;
+  data: unknown;
+  statusCode?: number;
+  headers?: Headers;
 }
 
 /**
@@ -39,6 +40,7 @@ export interface DeferredResult {
  */
 export interface RedirectResult {
   type: ResultType.redirect;
+  // We keep the raw Response for redirects so we can return it verbatim
   response: Response;
 }
 
@@ -47,8 +49,9 @@ export interface RedirectResult {
  */
 export interface ErrorResult {
   type: ResultType.error;
-  error: any;
-  response?: Response;
+  error: unknown;
+  statusCode?: number;
+  headers?: Headers;
 }
 
 /**
@@ -1611,6 +1614,32 @@ export class ErrorResponseImpl implements ErrorResponse {
 }
 
 /**
+ * Utility class we use to hold unwrapped Responses while preserving status
+ * codes and headers.  This is most useful for dataStrategy implementations
+ * where implementors want to use a custom decoding mechanism and return
+ * pre-decoded data while also preserving response meta information
+ */
+export class DecodedResponse {
+  status: number;
+  statusText: string;
+  headers: Headers;
+  data: unknown;
+  private _isDecodedResponse: boolean = true;
+
+  constructor(
+    status: number,
+    statusText: string,
+    headers: Headers,
+    data: unknown
+  ) {
+    this.status = status;
+    this.statusText = statusText;
+    this.headers = headers;
+    this.data = data;
+  }
+}
+
+/**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx
  * Response thrown from an action/loader
  */
@@ -1621,5 +1650,19 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     typeof error.statusText === "string" &&
     typeof error.internal === "boolean" &&
     "data" in error
+  );
+}
+
+/**
+ * Check if the given error is an DecodedResponse
+ */
+export function isDecodedResponse(value: any): value is DecodedResponse {
+  return (
+    value != null &&
+    value._isDecodedResponse === true &&
+    typeof value.status === "number" &&
+    typeof value.statusText === "string" &&
+    value.headers != null &&
+    "data" in value
   );
 }

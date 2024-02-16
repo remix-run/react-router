@@ -108,6 +108,7 @@ export type {
   BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  DecodedResponse,
   ErrorResponse,
   Fetcher,
   FutureConfig,

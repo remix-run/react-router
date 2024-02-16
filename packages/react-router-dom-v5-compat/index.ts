@@ -56,6 +56,7 @@ export type {
   DataStrategyMatch,
   DataRouteMatch,
   DataRouteObject,
+  DecodedResponse,
   ErrorResponse,
   Fetcher,
   FetcherWithComponents,

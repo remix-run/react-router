@@ -30,6 +30,7 @@ export type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
+  DecodedResponse,
   ErrorResponse,
   Fetcher,
   FutureConfig,
