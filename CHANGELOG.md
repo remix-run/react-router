@@ -181,7 +181,7 @@ Date: 2024-02-16
 
 - Fix encoding/decoding issues with pre-encoded dynamic parameter values ([#11199](https://github.com/remix-run/react-router/pull/11199))
 
-**Full Changelog**: [`v6.22.0...v6.22.Y`](https://github.com/remix-run/react-router/compare/react-router@6.22.0...react-router@6.22.1)
+**Full Changelog**: [`v6.22.0...v6.22.1`](https://github.com/remix-run/react-router/compare/react-router@6.22.0...react-router@6.22.1)
 
 ## v6.22.0
 
