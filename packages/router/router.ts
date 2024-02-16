@@ -360,7 +360,7 @@ export interface FutureConfig {
   v7_partialHydration: boolean;
   v7_prependBasename: boolean;
   v7_relativeSplatPath: boolean;
-  v7_skipActionErrorRevalidation: boolean;
+  unstable_skipActionErrorRevalidation: boolean;
 }
 
 /**
@@ -775,7 +775,7 @@ export function createRouter(init: RouterInit): Router {
     v7_partialHydration: false,
     v7_prependBasename: false,
     v7_relativeSplatPath: false,
-    v7_skipActionErrorRevalidation: true,
+    unstable_skipActionErrorRevalidation: true,
     ...init.future,
   };
   // Cleanup function for history
@@ -1666,7 +1666,7 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission,
       location,
       future.v7_partialHydration && initialHydration === true,
-      future.v7_skipActionErrorRevalidation,
+      future.unstable_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -2068,7 +2068,7 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       false,
-      future.v7_skipActionErrorRevalidation,
+      future.unstable_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -3473,9 +3473,8 @@ export function createStaticHandler(
           );
         }
         if (isResponse(result.result) && isRouteRequest) {
-          // For SSR single-route requests, we want to hand Responses back directly
-          // without unwrapping.  We do this with the QueryRouteResponse wrapper
-          // interface so we can know whether it was returned or thrown
+          // For SSR single-route requests, we want to hand Responses back
+          // directly without unwrapping
           throw result;
         }
 
@@ -4017,9 +4016,9 @@ async function loadLazyRouteModule(
   route: AgnosticDataRouteObject,
   mapRouteProperties: MapRoutePropertiesFunction,
   manifest: RouteManifest
-): Promise<AgnosticDataRouteObject> {
+) {
   if (!route.lazy) {
-    return route;
+    return;
   }
 
   let lazyRoute = await route.lazy();
@@ -4028,7 +4027,7 @@ async function loadLazyRouteModule(
   // call then we can return - first lazy() to finish wins because the return
   // value of lazy is expected to be static
   if (!route.lazy) {
-    return route;
+    return;
   }
 
   let routeToUpdate = manifest[route.id];
@@ -4084,8 +4083,6 @@ async function loadLazyRouteModule(
     ...mapRouteProperties(routeToUpdate),
     lazy: undefined,
   });
-
-  return routeToUpdate;
 }
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
@@ -4223,7 +4220,7 @@ async function callLoaderOrAction(
       if (handler) {
         // Run statically defined handler in parallel with lazy()
         let handlerError;
-        let values = await Promise.all([
+        let [value] = await Promise.all([
           // If the handler throws, don't let it immediately bubble out,
           // since we need to let the lazy() execution finish so we know if this
           // route has a boundary that can handle the error
@@ -4235,7 +4232,7 @@ async function callLoaderOrAction(
         if (handlerError !== undefined) {
           throw handlerError;
         }
-        result = values[0];
+        result = value;
       } else {
         // Load lazy route module, then run any returned handler
         await loadLazyRouteModule(match.route, mapRouteProperties, manifest);

@@ -315,7 +315,7 @@ export function createStaticRouter(
         v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
         v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
-        v7_skipActionErrorRevalidation: false,
+        unstable_skipActionErrorRevalidation: false,
       };
     },
     get state() {
