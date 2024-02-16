@@ -1,12 +1,12 @@
 # `react-router`
 
-## 6.22.1-pre.0
+## 6.22.1
 
 ### Patch Changes
 
 - Fix encoding/decoding issues with pre-encoded dynamic parameter values ([#11199](https://github.com/remix-run/react-router/pull/11199))
 - Updated dependencies:
-  - `@remix-run/router@1.15.1-pre.0`
+  - `@remix-run/router@1.15.1`
 
 ## 6.22.0
 

@@ -1,11 +1,11 @@
 # `react-router-native`
 
-## 6.22.1-pre.0
+## 6.22.1
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `react-router@6.22.1-pre.0`
+  - `react-router@6.22.1`
 
 ## 6.22.0
 
