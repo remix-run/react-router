@@ -1234,16 +1234,26 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           let clientViteManifest = await loadViteManifest(clientBuildDirectory);
 
           let clientAssetPaths = new Set(
-            Object.values(clientViteManifest).flatMap(
-              (chunk) => chunk.assets ?? []
-            )
+            Object.values(clientViteManifest).flatMap((chunk) => [
+              ...(chunk.css ?? []),
+              ...(chunk.assets ?? []),
+            ])
           );
 
-          let ssrAssetPaths = new Set(
-            Object.values(ssrViteManifest).flatMap(
-              (chunk) => chunk.assets ?? []
-            )
+          // Handle `.css?url` files that only exist in SSR module graph
+          let ssrCssUrlFilePaths = Object.values(ssrViteManifest)
+            .filter((chunk) => chunk.file.endsWith(".css"))
+            .map((chunk) => chunk.file);
+
+          // Handle generic assets that only exist in SSR module graph
+          let ssrChunkAssetPaths = Object.values(ssrViteManifest).flatMap(
+            (chunk) => chunk.assets ?? []
           );
+
+          let ssrAssetPaths = new Set<string>([
+            ...ssrCssUrlFilePaths,
+            ...ssrChunkAssetPaths,
+          ]);
 
           // We only move assets that aren't in the client build, otherwise we
           // remove them. These assets only exist because we explicitly set
@@ -1263,7 +1273,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             }
           }
 
-          // We assume CSS files from the SSR build are unnecessary and remove
+          // We assume CSS assets from the SSR build are unnecessary and remove
           // them for the same reasons as above.
           let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
             (chunk) => chunk.css ?? []
