@@ -1,5 +1,15 @@
 # `@remix-run/dev`
 
+## 2.7.0-pre.2
+
+### Patch Changes
+
+- Vite: fix server exports dead-code elimination for routes outside of app directory ([#8795](https://github.com/remix-run/remix/pull/8795))
+- Vite: Ensure CSS file URLs that are only referenced in the server build are available on the client ([#8796](https://github.com/remix-run/remix/pull/8796))
+- Updated dependencies:
+  - `@remix-run/node@2.7.0-pre.2`
+  - `@remix-run/server-runtime@2.7.0-pre.2`
+
 ## 2.7.0-pre.1
 
 ### Patch Changes
