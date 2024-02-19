@@ -1674,7 +1674,6 @@ function getRoute(
   file: string
 ): ConfigRoute | undefined {
   let vite = importViteEsmSync();
-  if (!file.startsWith(vite.normalizePath(pluginConfig.appDirectory))) return;
   let routePath = vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file)
   );
