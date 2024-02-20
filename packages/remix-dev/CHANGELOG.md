@@ -1,5 +1,18 @@
 # `@remix-run/dev`
 
+## 2.7.0-pre.4
+
+### Patch Changes
+
+- Vite: reliably detect non-root routes in Windows ([#8806](https://github.com/remix-run/remix/pull/8806))
+
+  Sometimes route `file` will be unnormalized Windows path with `\` instead of `/`.
+
+- Always ignore route files starting with `.` ([#8801](https://github.com/remix-run/remix/pull/8801))
+- Updated dependencies:
+  - `@remix-run/node@2.7.0-pre.4`
+  - `@remix-run/server-runtime@2.7.0-pre.4`
+
 ## 2.7.0-pre.3
 
 ### Patch Changes
