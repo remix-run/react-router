@@ -118,7 +118,9 @@ type RemixConfigPreset = Omit<VitePluginConfig, ExcludedRemixConfigPresetKey>;
 
 export type Preset = {
   name: string;
-  remixConfig?: () => RemixConfigPreset | Promise<RemixConfigPreset>;
+  remixConfig?: (args: {
+    remixUserConfig: VitePluginConfig;
+  }) => RemixConfigPreset | Promise<RemixConfigPreset>;
   remixConfigResolved?: (args: {
     remixConfig: ResolvedVitePluginConfig;
   }) => void | Promise<void>;
@@ -527,6 +529,9 @@ let deepFreeze = (o: any) => {
 
 export type RemixVitePlugin = (config?: VitePluginConfig) => Vite.Plugin[];
 export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
+  // Prevent mutations to the user config
+  remixUserConfig = deepFreeze(remixUserConfig);
+
   let viteCommand: Vite.ResolvedConfig["command"];
   let viteUserConfig: Vite.UserConfig;
   let viteConfigEnv: Vite.ConfigEnv;
@@ -556,7 +561,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           }
 
           let remixConfigPreset: VitePluginConfig = omit(
-            await preset.remixConfig(),
+            await preset.remixConfig({ remixUserConfig }),
             excludedRemixConfigPresetKeys
           );
 
@@ -1234,16 +1239,26 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           let clientViteManifest = await loadViteManifest(clientBuildDirectory);
 
           let clientAssetPaths = new Set(
-            Object.values(clientViteManifest).flatMap(
-              (chunk) => chunk.assets ?? []
-            )
+            Object.values(clientViteManifest).flatMap((chunk) => [
+              ...(chunk.css ?? []),
+              ...(chunk.assets ?? []),
+            ])
           );
 
-          let ssrAssetPaths = new Set(
-            Object.values(ssrViteManifest).flatMap(
-              (chunk) => chunk.assets ?? []
-            )
+          // Handle `.css?url` files that only exist in SSR module graph
+          let ssrCssUrlFilePaths = Object.values(ssrViteManifest)
+            .filter((chunk) => chunk.file.endsWith(".css"))
+            .map((chunk) => chunk.file);
+
+          // Handle generic assets that only exist in SSR module graph
+          let ssrChunkAssetPaths = Object.values(ssrViteManifest).flatMap(
+            (chunk) => chunk.assets ?? []
           );
+
+          let ssrAssetPaths = new Set<string>([
+            ...ssrCssUrlFilePaths,
+            ...ssrChunkAssetPaths,
+          ]);
 
           // We only move assets that aren't in the client build, otherwise we
           // remove them. These assets only exist because we explicitly set
@@ -1263,7 +1278,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             }
           }
 
-          // We assume CSS files from the SSR build are unnecessary and remove
+          // We assume CSS assets from the SSR build are unnecessary and remove
           // them for the same reasons as above.
           let ssrCssPaths = Object.values(ssrViteManifest).flatMap(
             (chunk) => chunk.css ?? []
@@ -1674,12 +1689,11 @@ function getRoute(
   file: string
 ): ConfigRoute | undefined {
   let vite = importViteEsmSync();
-  if (!file.startsWith(vite.normalizePath(pluginConfig.appDirectory))) return;
   let routePath = vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file)
   );
   let route = Object.values(pluginConfig.routes).find(
-    (r) => r.file === routePath
+    (r) => vite.normalizePath(r.file) === routePath
   );
   return route;
 }

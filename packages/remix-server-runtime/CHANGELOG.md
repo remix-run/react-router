@@ -1,5 +1,16 @@
 # `@remix-run/server-runtime`
 
+## 2.7.0
+
+### Minor Changes
+
+- Allow an optional `Layout` export from the root route ([#8709](https://github.com/remix-run/remix/pull/8709))
+- Vite: Add a new `basename` option to the Vite plugin, allowing users to set the internal React Router [`basename`](https://reactrouter.com/en/main/routers/create-browser-router#basename) in order to to serve their applications underneath a subpath ([#8145](https://github.com/remix-run/remix/pull/8145))
+
+### Patch Changes
+
+- Add a more specific error if a user returns a `defer` response from a resource route ([#8726](https://github.com/remix-run/remix/pull/8726))
+
 ## 2.6.0
 
 ### Minor Changes

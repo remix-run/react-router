@@ -188,28 +188,43 @@ test.describe("Vite build", () => {
           }
         `,
 
-        "app/routes/ssr-assets.tsx": js`
-          import url1 from "../assets/test1.txt?url";
-          import url2 from "../assets/test2.txt?url";
+        "app/assets/test.txt": "test",
+        "app/routes/ssr-only-assets.tsx": js`
+          import txtUrl from "../assets/test.txt?url";
           import { useLoaderData } from "@remix-run/react"
 
           export const loader: LoaderFunction = () => {
-            return { url2 };
+            return { txtUrl };
           };
 
-          export default function SsrAssetRoute() {
+          export default function SsrOnlyAssetsRoute() {
             const loaderData = useLoaderData();
             return (
               <div>
-                <a href={url1}>url1</a>
-                <a href={loaderData.url2}>url2</a>
+                <a href={loaderData.txtUrl}>txtUrl</a>
               </div>
             );
           }
         `,
 
-        "app/assets/test1.txt": "test1",
-        "app/assets/test2.txt": "test2",
+        "app/assets/test.css": ".test{color:red}",
+        "app/routes/ssr-only-css-url-files.tsx": js`
+          import cssUrl from "../assets/test.css?url";
+          import { useLoaderData } from "@remix-run/react"
+
+          export const loader: LoaderFunction = () => {
+            return { cssUrl };
+          };
+
+          export default function SsrOnlyCssUrlFilesRoute() {
+            const loaderData = useLoaderData();
+            return (
+              <div>
+                <a href={loaderData.cssUrl}>cssUrl</a>
+              </div>
+            );
+          }
+        `,
 
         "app/routes/ssr-code-split.tsx": js`
           import { useLoaderData } from "@remix-run/react"
@@ -301,19 +316,26 @@ test.describe("Vite build", () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test("emits SSR assets to the client assets directory", async ({ page }) => {
+  test("emits SSR-only assets to the client assets directory", async ({
+    page,
+  }) => {
     let app = new PlaywrightFixture(appFixture, page);
-    await app.goto("/ssr-assets");
+    await app.goto("/ssr-only-assets");
 
-    // verify asset files are emitted and served correctly
-    await page.getByRole("link", { name: "url1" }).click();
-    await page.waitForURL("**/assets/test1-*.txt");
-    await page.getByText("test1").click();
-    await page.goBack();
+    await page.getByRole("link", { name: "txtUrl" }).click();
+    await page.waitForURL("**/assets/test-*.txt");
+    await expect(page.getByText("test")).toBeVisible();
+  });
 
-    await page.getByRole("link", { name: "url2" }).click();
-    await page.waitForURL("**/assets/test2-*.txt");
-    await page.getByText("test2").click();
+  test("emits SSR-only .css?url files to the client assets directory", async ({
+    page,
+  }) => {
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/ssr-only-css-url-files");
+
+    await page.getByRole("link", { name: "cssUrl" }).click();
+    await page.waitForURL("**/assets/test-*.css");
+    await expect(page.getByText(".test{")).toBeVisible();
   });
 
   test("supports code-split JS from SSR build", async ({ page }) => {

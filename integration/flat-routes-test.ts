@@ -67,6 +67,20 @@ test.describe("flat routes", () => {
           }
         `,
 
+        "app/routes/.dotfile": `
+          DOTFILE SHOULD BE IGNORED
+        `,
+
+        "app/routes/.route-with-unescaped-leading-dot.tsx": js`
+          throw new Error("This file should be ignored as a route");
+        `,
+
+        "app/routes/[.]route-with-escaped-leading-dot.tsx": js`
+          export default function () {
+            return <h2>Route With Escaped Leading Dot</h2>;
+          }
+        `,
+
         "app/routes/dashboard/route.tsx": js`
           import { Outlet } from "@remix-run/react";
 
@@ -145,6 +159,17 @@ test.describe("flat routes", () => {
       expect(await app.getHtml("#content")).toBe(`<div id="content">
   <h1>Root</h1>
   <h2>Flat File</h2>
+</div>`);
+    });
+
+    test("renders matching routes (route with escaped leading dot)", async ({
+      page,
+    }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/.route-with-escaped-leading-dot");
+      expect(await app.getHtml("#content")).toBe(`<div id="content">
+  <h1>Root</h1>
+  <h2>Route With Escaped Leading Dot</h2>
 </div>`);
     });
 

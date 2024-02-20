@@ -7,15 +7,46 @@ import dedent from "dedent";
 
 import { viteBuild, test, createProject } from "./helpers/vite.js";
 
+const js = String.raw;
+
 const files = {
-  "vite.config.ts": dedent`
+  "vite.config.ts": dedent(js`
     import { vitePlugin as remix } from "@remix-run/dev";
     import fs from "node:fs/promises";
     import serializeJs from "serialize-javascript";
 
+    let isDeepFrozen = (obj: any) =>
+      Object.isFrozen(obj) &&
+      Object.keys(obj).every(
+        prop => typeof obj[prop] !== 'object' || isDeepFrozen(obj[prop])
+      );
+
     export default {
       plugins: [remix({
         presets: [
+          // Ensure user config is passed to remixConfig hook
+          {
+            name: "test-preset",
+            remixConfig: async ({ remixUserConfig: { presets, ...restUserConfig } }) => {
+              if (!Array.isArray(presets)) {
+                throw new Error("Remix user config doesn't have presets array.");
+              }
+
+              let expected = JSON.stringify({ appDirectory: "app"});
+              let actual = JSON.stringify(restUserConfig);
+
+              if (actual !== expected) {
+                throw new Error([
+                  "Remix user config wasn't passed to remixConfig hook.",
+                  "Expected: " + expected,
+                  "Actual: " + actual,
+                ].join(" "));
+              }
+
+              return {};
+            },
+          },
+          
           // Ensure preset config takes lower precedence than user config
           {
             name: "test-preset",
@@ -46,16 +77,20 @@ const files = {
             }),
           },
 
+          // Ensure remixConfig is called with a frozen Remix user config
+          {
+            name: "test-preset",
+            remixConfig: async ({ remixUserConfig }) => {
+              await fs.writeFile("PRESET_REMIX_CONFIG_META.json", JSON.stringify({
+                remixUserConfigFrozen: isDeepFrozen(remixUserConfig),
+              }), "utf-8");
+            }
+          },
+
           // Ensure remixConfigResolved is called with a frozen Remix config
           {
             name: "test-preset",
             remixConfigResolved: async ({ remixConfig }) => {
-              let isDeepFrozen = (obj: any) =>
-                Object.isFrozen(obj) &&
-                Object.keys(obj).every(
-                  prop => typeof obj[prop] !== 'object' || isDeepFrozen(obj[prop])
-                );
-
               await fs.writeFile("PRESET_REMIX_CONFIG_RESOLVED_META.json", JSON.stringify({
                 remixConfigFrozen: isDeepFrozen(remixConfig),
               }), "utf-8");
@@ -90,7 +125,7 @@ const files = {
         appDirectory: "app",
       })],
     }
-  `,
+  `),
 };
 
 test("Vite / presets", async () => {
@@ -123,6 +158,18 @@ test("Vite / presets", async () => {
 
   // Ensure preset config takes lower precedence than user config
   expect(remixConfig.serverModuleFormat).toBe("esm");
+
+  // Ensure `remixConfig` is called with a frozen Remix user config
+  expect(
+    JSON.parse(
+      await fs.readFile(
+        path.join(cwd, "PRESET_REMIX_CONFIG_META.json"),
+        "utf-8"
+      )
+    )
+  ).toEqual({
+    remixUserConfigFrozen: true,
+  });
 
   // Ensure `remixConfigResolved` is called with a frozen Remix config
   expect(
