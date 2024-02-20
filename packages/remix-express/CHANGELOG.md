@@ -1,34 +1,6 @@
 # `@remix-run/express`
 
-## 2.7.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.7.0-pre.4`
-
-## 2.7.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.7.0-pre.3`
-
-## 2.7.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.7.0-pre.2`
-
-## 2.7.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.7.0-pre.1`
-
-## 2.7.0-pre.0
+## 2.7.0
 
 ### Minor Changes
 
@@ -41,7 +13,7 @@
   - Remix relies on the knowing the full URL to ensure that server and client code can function together, and does not support URL rewriting prior to the Remix handler
 
 - Updated dependencies:
-  - `@remix-run/node@2.7.0-pre.0`
+  - `@remix-run/node@2.7.0`
 
 ## 2.6.0
 
