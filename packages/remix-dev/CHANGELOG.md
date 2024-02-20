@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.7.0-pre.3
+
+### Patch Changes
+
+- Vite: Pass `remixUserConfig` to preset `remixConfig` hook ([#8797](https://github.com/remix-run/remix/pull/8797))
+- Updated dependencies:
+  - `@remix-run/node@2.7.0-pre.3`
+  - `@remix-run/server-runtime@2.7.0-pre.3`
+
 ## 2.7.0-pre.2
 
 ### Patch Changes
