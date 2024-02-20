@@ -5,7 +5,7 @@ import {
   createProject,
   createEditor,
   viteDev,
-  VITE_CONFIG,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const files = {
@@ -44,19 +44,19 @@ const files = {
 test.describe(async () => {
   let port: number;
   let cwd: string;
-  let stop: () => Promise<void>;
+  let stop: () => void;
 
   test.beforeAll(async () => {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.js": await VITE_CONFIG({ port }),
+      "vite.config.js": await viteConfig.basic({ port }),
       ...files,
     });
     stop = await viteDev({ cwd, port });
   });
-  test.afterAll(async () => await stop());
+  test.afterAll(() => stop());
 
-  test("Vite / dev / invalidate manifest on route exports change", async ({
+  test("Vite / dev / route exports modified offscreen", async ({
     page,
     context,
     browserName,

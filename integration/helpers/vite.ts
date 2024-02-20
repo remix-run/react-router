@@ -3,38 +3,37 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
-import execa from "execa";
 import fse from "fs-extra";
 import stripIndent from "strip-indent";
 import waitOn from "wait-on";
 import getPort from "get-port";
 import shell from "shelljs";
 import glob from "glob";
+import dedent from "dedent";
+import type { Page } from "@playwright/test";
+import { test as base, expect } from "@playwright/test";
 
 const remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const VITE_CONFIG = async (args: {
-  port: number;
-  pluginOptions?: string;
-  vitePlugins?: string;
-}) => {
-  let hmrPort = await getPort();
-  return String.raw`
-    import { defineConfig } from "vite";
-    import { unstable_vitePlugin as remix } from "@remix-run/dev";
+export const viteConfig = {
+  server: async (args: { port: number }) => {
+    let hmrPort = await getPort();
+    let text = dedent`
+      server: { port: ${args.port}, strictPort: true, hmr: { port: ${hmrPort} } },
+    `;
+    return text;
+  },
+  basic: async (args: { port: number }) => {
+    return dedent`
+      import { vitePlugin as remix } from "@remix-run/dev";
 
-    export default defineConfig({
-      server: {
-        port: ${args.port},
-        strictPort: true,
-        hmr: {
-          port: ${hmrPort}
-        }
-      },
-      plugins: [remix(${args.pluginOptions}),${args.vitePlugins ?? ""}],
-    });
-  `;
+      export default {
+        ${await viteConfig.server(args)}
+        plugins: [remix()]
+      }
+    `;
+  },
 };
 
 export const EXPRESS_SERVER = (args: {
@@ -112,19 +111,6 @@ export async function createProject(files: Record<string, string> = {}) {
   return projectDir;
 }
 
-type ServerArgs = {
-  cwd: string;
-  port: number;
-};
-
-const createDev =
-  (nodeArgs: string[]) =>
-  async ({ cwd, port }: ServerArgs): Promise<() => Promise<void>> => {
-    let proc = node(nodeArgs, { cwd });
-    await waitForServer(proc, { port });
-    return async () => await kill(proc.pid!);
-  };
-
 export const viteBuild = ({ cwd }: { cwd: string }) => {
   let nodeBin = process.argv[0];
 
@@ -138,10 +124,12 @@ export const viteRemixServe = async ({
   cwd,
   port,
   serverBundle,
+  basename,
 }: {
   cwd: string;
   port: number;
   serverBundle?: string;
+  basename?: string;
 }) => {
   let nodeBin = process.argv[0];
   let serveProc = spawn(
@@ -156,72 +144,177 @@ export const viteRemixServe = async ({
       env: { NODE_ENV: "production", PORT: port.toFixed(0) },
     }
   );
-
-  await waitForServer(serveProc, { port });
-
-  return () => {
-    serveProc.kill();
-  };
+  await waitForServer(serveProc, { port, basename });
+  return () => serveProc.kill();
 };
+
+export const wranglerPagesDev = async ({
+  cwd,
+  port,
+}: {
+  cwd: string;
+  port: number;
+}) => {
+  let nodeBin = process.argv[0];
+
+  // grab wrangler bin from remix-run/remix root node_modules since its not copied into integration project's node_modules
+  let wranglerBin = path.resolve("node_modules/wrangler/bin/wrangler.js");
+
+  let proc = spawn(
+    nodeBin,
+    [wranglerBin, "pages", "dev", "./build/client", "--port", String(port)],
+    {
+      cwd,
+      stdio: "pipe",
+      env: { NODE_ENV: "production" },
+    }
+  );
+  await waitForServer(proc, { port });
+  return () => proc.kill();
+};
+
+type ServerArgs = {
+  cwd: string;
+  port: number;
+  env?: Record<string, string>;
+  basename?: string;
+};
+
+const createDev =
+  (nodeArgs: string[]) =>
+  async ({ cwd, port, env, basename }: ServerArgs): Promise<() => unknown> => {
+    let proc = node(nodeArgs, { cwd, env });
+    await waitForServer(proc, { port, basename });
+    return () => proc.kill();
+  };
 
 export const viteDev = createDev([remixBin, "vite:dev"]);
 export const customDev = createDev(["./server.mjs"]);
 
-function node(args: string[], options: { cwd: string }) {
+// Used for testing errors thrown on build when we don't want to start and
+// wait for the server
+export const viteDevCmd = ({ cwd }: { cwd: string }) => {
+  let nodeBin = process.argv[0];
+  return spawnSync(nodeBin, [remixBin, "vite:dev"], {
+    cwd,
+    env: { ...process.env },
+  });
+};
+
+declare module "@playwright/test" {
+  interface Page {
+    errors: Error[];
+  }
+}
+
+export type Files = (args: { port: number }) => Promise<Record<string, string>>;
+type Fixtures = {
+  page: Page;
+  viteDev: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  customDev: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  viteRemixServe: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+  wranglerPagesDev: (files: Files) => Promise<{
+    port: number;
+    cwd: string;
+  }>;
+};
+
+export const test = base.extend<Fixtures>({
+  page: async ({ page }, use) => {
+    page.errors = [];
+    page.on("pageerror", (error: Error) => page.errors.push(error));
+    await use(page);
+  },
+  // eslint-disable-next-line no-empty-pattern
+  viteDev: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+      stop = await viteDev({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  // eslint-disable-next-line no-empty-pattern
+  customDev: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+      stop = await customDev({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  // eslint-disable-next-line no-empty-pattern
+  viteRemixServe: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+      let { status } = viteBuild({ cwd });
+      expect(status).toBe(0);
+      stop = await viteRemixServe({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+  // eslint-disable-next-line no-empty-pattern
+  wranglerPagesDev: async ({}, use) => {
+    let stop: (() => unknown) | undefined;
+    await use(async (files) => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+      let { status } = viteBuild({ cwd });
+      expect(status).toBe(0);
+      stop = await wranglerPagesDev({ cwd, port });
+      return { port, cwd };
+    });
+    stop?.();
+  },
+});
+
+function node(
+  args: string[],
+  options: { cwd: string; env?: Record<string, string> }
+) {
   let nodeBin = process.argv[0];
 
   let proc = spawn(nodeBin, args, {
     cwd: options.cwd,
-    env: process.env,
+    env: {
+      ...process.env,
+      ...options.env,
+    },
     stdio: "pipe",
   });
   return proc;
 }
 
-async function kill(pid: number) {
-  if (!isAlive(pid)) return;
-
-  let isWindows = process.platform === "win32";
-  if (isWindows) {
-    await execa("taskkill", ["/F", "/PID", pid.toString()]).catch((error) => {
-      // taskkill 128 -> the process is already dead
-      if (error.exitCode === 128) return;
-      if (/There is no running instance of the task./.test(error.message))
-        return;
-      console.warn(error.message);
-    });
-    return;
-  }
-  await execa("kill", ["-9", pid.toString()]).catch((error) => {
-    // process is already dead
-    if (/No such process/.test(error.message)) return;
-    console.warn(error.message);
-  });
-}
-
-function isAlive(pid: number) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
 async function waitForServer(
   proc: ChildProcess & { stdout: Readable; stderr: Readable },
-  args: { port: number }
+  args: { port: number; basename?: string }
 ) {
   let devStdout = bufferize(proc.stdout);
   let devStderr = bufferize(proc.stderr);
 
   await waitOn({
-    resources: [`http://localhost:${args.port}/`],
+    resources: [`http://localhost:${args.port}${args.basename ?? "/"}`],
     timeout: 10000,
   }).catch((err) => {
     let stdout = devStdout();
     let stderr = devStderr();
-    kill(proc.pid!);
+    proc.kill();
     throw new Error(
       [
         err.message,

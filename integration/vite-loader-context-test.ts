@@ -5,17 +5,17 @@ import {
   createProject,
   customDev,
   EXPRESS_SERVER,
-  VITE_CONFIG,
+  viteConfig,
 } from "./helpers/vite.js";
 
 let port: number;
 let cwd: string;
-let stop: () => Promise<void>;
+let stop: () => void;
 
 test.beforeAll(async () => {
   port = await getPort();
   cwd = await createProject({
-    "vite.config.js": await VITE_CONFIG({ port }),
+    "vite.config.js": await viteConfig.basic({ port }),
     "server.mjs": EXPRESS_SERVER({ port, loadContext: { value: "value" } }),
     "app/routes/_index.tsx": String.raw`
       import { json } from "@remix-run/node";
@@ -37,7 +37,7 @@ test.beforeAll(async () => {
   });
   stop = await customDev({ cwd, port });
 });
-test.afterAll(async () => await stop());
+test.afterAll(() => stop());
 
 test("Vite / Load context / express", async ({ page }) => {
   let pageErrors: Error[] = [];

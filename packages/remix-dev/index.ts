@@ -6,5 +6,10 @@ export * as cli from "./cli/index";
 
 export type { Manifest as AssetsManifest } from "./manifest";
 export { getDependenciesToBundle } from "./dependencies";
-export type { Unstable_ServerBundlesManifest } from "./vite";
-export { unstable_vitePlugin } from "./vite";
+export type {
+  BuildManifest,
+  Preset,
+  ServerBundlesFunction,
+  VitePluginConfig,
+} from "./vite";
+export { vitePlugin, cloudflareDevProxyVitePlugin } from "./vite";

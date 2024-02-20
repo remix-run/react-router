@@ -1,5 +1,295 @@
 # `@remix-run/dev`
 
+## 2.7.0
+
+### Minor Changes
+
+- Allow an optional `Layout` export from the root route ([#8709](https://github.com/remix-run/remix/pull/8709))
+
+- Vite: Cloudflare Proxy as a Vite plugin ([#8749](https://github.com/remix-run/remix/pull/8749))
+
+  **This is a breaking change for projects relying on Cloudflare support from the unstable Vite plugin**
+
+  The Cloudflare preset (`unstable_cloudflarePreset`) as been removed and replaced with a new Vite plugin:
+
+  ```diff
+   import {
+      unstable_vitePlugin as remix,
+  -   unstable_cloudflarePreset as cloudflare,
+  +   cloudflareDevProxyVitePlugin as remixCloudflareDevProxy,
+    } from "@remix-run/dev";
+    import { defineConfig } from "vite";
+
+    export default defineConfig({
+      plugins: [
+  +     remixCloudflareDevProxy(),
+  +     remix(),
+  -     remix({
+  -       presets: [cloudflare()],
+  -     }),
+      ],
+  -   ssr: {
+  -     resolve: {
+  -       externalConditions: ["workerd", "worker"],
+  -     },
+  -   },
+    });
+  ```
+
+  `remixCloudflareDevProxy` must come _before_ the `remix` plugin so that it can override Vite's dev server middleware to be compatible with Cloudflare's proxied environment.
+
+  Because it is a Vite plugin, `remixCloudflareDevProxy` can set `ssr.resolve.externalConditions` to be `workerd`-compatible for you.
+
+  `remixCloudflareDevProxy` accepts a `getLoadContext` function that replaces the old `getRemixDevLoadContext`.
+  If you were using a `nightly` version that required `getBindingsProxy` or `getPlatformProxy`, that is no longer required.
+  Any options you were passing to `getBindingsProxy` or `getPlatformProxy` should now be passed to `remixCloudflareDevProxy` instead.
+
+  This API also better aligns with future plans to support Cloudflare with a framework-agnostic Vite plugin that makes use of Vite's (experimental) Runtime API.
+
+- Vite: Stabilize the Remix Vite plugin, Cloudflare preset, and all related types by removing all `unstable_` / `Unstable_` prefixes. ([#8713](https://github.com/remix-run/remix/pull/8713))
+
+  While this is a breaking change for existing Remix Vite plugin consumers, now that the plugin has stabilized, there will no longer be any breaking changes outside of a major release. Thank you to all of our early adopters and community contributors for helping us get here! 🙏
+
+- Vite: Stabilize "SPA Mode" by renaming the Remix vite plugin config from `unstable_ssr -> ssr` ([#8692](https://github.com/remix-run/remix/pull/8692))
+
+- Vite: Add a new `basename` option to the Vite plugin, allowing users to set the internal React Router [`basename`](https://reactrouter.com/en/main/routers/create-browser-router#basename) in order to to serve their applications underneath a subpath ([#8145](https://github.com/remix-run/remix/pull/8145))
+
+### Patch Changes
+
+- Vite: fix server exports dead-code elimination for routes outside of app directory ([#8795](https://github.com/remix-run/remix/pull/8795))
+
+- Always prepend DOCTYPE in SPA mode entry.server.tsx, can opt out via remix reveal ([#8725](https://github.com/remix-run/remix/pull/8725))
+
+- Fix build issue in SPA mode when using a `basename` ([#8720](https://github.com/remix-run/remix/pull/8720))
+
+- Vite: Validate that the MDX Rollup plugin, if present, is placed before Remix in Vite config ([#8690](https://github.com/remix-run/remix/pull/8690))
+
+- Vite: reliably detect non-root routes in Windows ([#8806](https://github.com/remix-run/remix/pull/8806))
+
+  Sometimes route `file` will be unnormalized Windows path with `\` instead of `/`.
+
+- Vite: Pass `remixUserConfig` to preset `remixConfig` hook ([#8797](https://github.com/remix-run/remix/pull/8797))
+
+- Vite: Fix issue resolving critical CSS during development when the current working directory differs from the project root ([#8752](https://github.com/remix-run/remix/pull/8752))
+
+- Vite: Ensure CSS file URLs that are only referenced in the server build are available on the client ([#8796](https://github.com/remix-run/remix/pull/8796))
+
+- Vite: Require version 5.1.0 to support `.css?url` imports ([#8723](https://github.com/remix-run/remix/pull/8723))
+
+- Fix type error in Remix config for synchronous `routes` function ([#8745](https://github.com/remix-run/remix/pull/8745))
+
+- Vite: Support Vite v5.1.0's `.css?url` imports ([#8684](https://github.com/remix-run/remix/pull/8684))
+
+- Always ignore route files starting with `.` ([#8801](https://github.com/remix-run/remix/pull/8801))
+
+- Vite: Enable use of [`vite preview`](https://main.vitejs.dev/guide/static-deploy.html#deploying-a-static-site) to preview Remix SPA applications ([#8624](https://github.com/remix-run/remix/pull/8624))
+
+  - In the SPA template, `npm run start` has been renamed to `npm run preview` which uses `vite preview` instead of a standalone HTTP server such as `http-server` or `serv-cli`
+
+- Vite: Remove the ability to pass `publicPath` as an option to the Remix vite plugin ([#8145](https://github.com/remix-run/remix/pull/8145))
+
+  - ⚠️ **This is a breaking change for projects using the unstable Vite plugin with a `publicPath`**
+  - This is already handled in Vite via the [`base`](https://vitejs.dev/guide/build.html#public-base-path) config so we now set the Remix `publicPath` from the Vite `base` config
+
+- Vite: Fix issue where client route file requests fail if search params have been parsed and serialized before reaching the Remix Vite plugin ([#8740](https://github.com/remix-run/remix/pull/8740))
+
+- Vite: Enable HMR for .md and .mdx files ([#8711](https://github.com/remix-run/remix/pull/8711))
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.7.0`
+  - `@remix-run/node@2.7.0`
+
+## 2.6.0
+
+### Minor Changes
+
+- Add `future.v3_throwAbortReason` flag to throw `request.signal.reason` when a request is aborted instead of an `Error` such as `new Error("query() call aborted: GET /path")` ([#8251](https://github.com/remix-run/remix/pull/8251))
+
+### Patch Changes
+
+- Vite: Add `manifest` option to Vite plugin to enable writing a `.remix/manifest.json` file to the build directory ([#8575](https://github.com/remix-run/remix/pull/8575))
+
+  **This is a breaking change for consumers of the Vite plugin's "server bundles" feature.**
+
+  The `build/server/bundles.json` file has been superseded by the more general `build/.remix/manifest.json`. While the old server bundles manifest was always written to disk when generating server bundles, the build manifest file must be explicitly enabled via the `manifest` option.
+
+- Vite: Provide `Unstable_ServerBundlesFunction` and `Unstable_VitePluginConfig` types ([#8654](https://github.com/remix-run/remix/pull/8654))
+
+- Vite: add `--sourcemapClient` and `--sourcemapServer` flags to `remix vite:build` ([#8613](https://github.com/remix-run/remix/pull/8613))
+
+  - `--sourcemapClient`
+
+  - `--sourcemapClient=inline`
+
+  - `--sourcemapClient=hidden`
+
+  - `--sourcemapServer`
+
+  - `--sourcemapServer=inline`
+
+  - `--sourcemapServer=hidden`
+
+  See <https://vitejs.dev/config/build-options.html#build-sourcemap>
+
+- Vite: Validate IDs returned from the `serverBundles` function to ensure they only contain alphanumeric characters, hyphens and underscores ([#8598](https://github.com/remix-run/remix/pull/8598))
+
+- Vite: fix "could not fast refresh" false alarm ([#8580](https://github.com/remix-run/remix/pull/8580))
+
+  HMR is already functioning correctly but was incorrectly logging that it "could not fast refresh" on internal client routes.
+  Now internal client routes correctly register Remix exports like `meta` for fast refresh,
+  which removes the false alarm.
+
+- Vite: Cloudflare Pages support ([#8531](https://github.com/remix-run/remix/pull/8531))
+
+  To get started with Cloudflare, you can use the \[`unstable-vite-cloudflare`]\[template-vite-cloudflare] template:
+
+  ```shellscript nonumber
+  npx create-remix@latest --template remix-run/remix/templates/unstable-vite-cloudflare
+  ```
+
+  Or read the new docs at [Future > Vite > Cloudflare](https://remix.run/docs/en/main/future/vite#cloudflare) and
+  [Future > Vite > Migrating > Migrating Cloudflare Functions](https://remix.run/docs/en/main/future/vite#migrating-cloudflare-functions).
+
+- Vite: Remove undocumented backwards compatibility layer for Vite v4 ([#8581](https://github.com/remix-run/remix/pull/8581))
+
+- Vite: rely on Vite plugin ordering ([#8627](https://github.com/remix-run/remix/pull/8627))
+
+  **This is a breaking change for projects using the unstable Vite plugin.**
+
+  The Remix plugin expects to process JavaScript or TypeScript files, so any transpilation from other languages must be done first.
+  For example, that means putting the MDX plugin _before_ the Remix plugin:
+
+  ```diff
+    import mdx from "@mdx-js/rollup";
+    import { unstable_vitePlugin as remix } from "@remix-run/dev";
+    import { defineConfig } from "vite";
+
+    export default defineConfig({
+      plugins: [
+  +     mdx(),
+        remix()
+  -     mdx(),
+      ],
+    });
+  ```
+
+  Previously, the Remix plugin misused `enforce: "post"` from Vite's plugin API to ensure that it ran last.
+  However, this caused other unforeseen issues.
+  Instead, we now rely on standard Vite semantics for plugin ordering.
+
+  The official [Vite React SWC plugin](https://github.com/vitejs/vite-plugin-react-swc/blob/main/src/index.ts#L97-L116) also relies on plugin ordering for MDX.
+
+- Vite: Add `presets` option to ease integration with different platforms and tools. ([#8514](https://github.com/remix-run/remix/pull/8514))
+
+- Vite: Remove interop with `<LiveReload />`, rely on `<Scripts />` instead ([#8636](https://github.com/remix-run/remix/pull/8636))
+
+  **This is a breaking change for projects using the unstable Vite plugin.**
+
+  Vite provides a robust client-side runtime for development features like HMR,
+  making the `<LiveReload />` component obsolete.
+
+  In fact, having a separate dev scripts component was causing issues with script execution order.
+  To work around this, the Remix Vite plugin used to override `<LiveReload />` into a bespoke
+  implementation that was compatible with Vite.
+
+  Instead of all this indirection, now the Remix Vite plugin instructs the `<Scripts />` component
+  to automatically include Vite's client-side runtime and other dev-only scripts.
+
+  ```diff
+    import {
+  -   LiveReload,
+      Outlet,
+      Scripts,
+    }
+
+    export default function App() {
+      return (
+        <html>
+          <head>
+          </head>
+          <body>
+            <Outlet />
+            <Scripts />
+  -         <LiveReload />
+          </body>
+        </html>
+      )
+    }
+  ```
+
+- Vite: Add `buildEnd` hook ([#8620](https://github.com/remix-run/remix/pull/8620))
+
+- Vite: add dev load context option to Cloudflare preset ([#8649](https://github.com/remix-run/remix/pull/8649))
+
+- Vite: Add `mode` field into generated server build ([#8539](https://github.com/remix-run/remix/pull/8539))
+
+- Vite: Only write Vite manifest files if `build.manifest` is enabled within the Vite config ([#8599](https://github.com/remix-run/remix/pull/8599))
+
+  **This is a breaking change for consumers of Vite's `manifest.json` files.**
+
+  To explicitly enable generation of Vite manifest files, you must set `build.manifest` to `true` in your Vite config.
+
+  ```ts
+  export default defineConfig({
+    build: { manifest: true },
+    // ...
+  });
+  ```
+
+- Vite: reduce network calls for route modules during HMR ([#8591](https://github.com/remix-run/remix/pull/8591))
+
+- Vite: Add new `buildDirectory` option with a default value of `"build"`. This replaces the old `assetsBuildDirectory` and `serverBuildDirectory` options which defaulted to `"build/client"` and `"build/server"` respectively. ([#8575](https://github.com/remix-run/remix/pull/8575))
+
+  **This is a breaking change for consumers of the Vite plugin that were using the `assetsBuildDirectory` and `serverBuildDirectory` options.**
+
+  The Remix Vite plugin now builds into a single directory containing `client` and `server` directories. If you've customized your build output directories, you'll need to migrate to the new `buildDirectory` option, e.g.
+
+  ```diff
+  import { unstable_vitePlugin as remix } from "@remix-run/dev";
+  import { defineConfig } from "vite";
+
+  export default defineConfig({
+    plugins: [
+      remix({
+  -      serverBuildDirectory: "dist/server",
+  -      assetsBuildDirectory: "dist/client",
+  +      buildDirectory: "dist",
+      })
+    ],
+  });
+  ```
+
+- Vite: Remove `unstable` prefix from `serverBundles` option. ([#8596](https://github.com/remix-run/remix/pull/8596))
+
+- Vite: Write Vite manifest files to `build/.vite` directory rather than being nested within `build/client` and `build/server` directories. ([#8599](https://github.com/remix-run/remix/pull/8599))
+
+  **This is a breaking change for consumers of Vite's `manifest.json` files.**
+
+  Vite manifest files are now written to the Remix build directory. Since all Vite manifests are now in the same directory, they're no longer named `manifest.json`. Instead, they're named `build/.vite/client-manifest.json` and `build/.vite/server-manifest.json`, or `build/.vite/server-{BUNDLE_ID}-manifest.json` when using server bundles.
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.6.0`
+  - `@remix-run/node@2.6.0`
+
+## 2.5.1
+
+### Patch Changes
+
+- Add `isSpaMode` to `@remix-run/dev/server-build` virtual module ([#8492](https://github.com/remix-run/remix/pull/8492))
+- Automatically prepend `<!DOCTYPE html>` if not present to fix quirks mode warnings for SPA template ([#8495](https://github.com/remix-run/remix/pull/8495))
+- Vite: Errors for server-only code point to new docs ([#8488](https://github.com/remix-run/remix/pull/8488))
+- Vite: Fix HMR race condition when reading changed file contents ([#8479](https://github.com/remix-run/remix/pull/8479))
+- Vite: Tree-shake unused route exports in the client build ([#8468](https://github.com/remix-run/remix/pull/8468))
+- Vite: Performance profiling ([#8493](https://github.com/remix-run/remix/pull/8493))
+  - Run `remix vite:build --profile` to generate a `.cpuprofile` that can be shared or uploaded to speedscope.app
+  - In dev, press `p + enter` to start a new profiling session or stop the current session
+  - If you need to profile dev server startup, run `remix vite:dev --profile` to initialize the dev server with a running profiling session
+  - For more, see the new docs: Vite > Performance
+- Vite: Improve performance of dev server requests by invalidating Remix's virtual modules on relevant file changes rather than on every request ([#8164](https://github.com/remix-run/remix/pull/8164))
+- Updated dependencies:
+  - `@remix-run/node@2.5.1`
+  - `@remix-run/server-runtime@2.5.1`
+
 ## 2.5.0
 
 ### Minor Changes
@@ -66,12 +356,17 @@
 ### Patch Changes
 
 - Fix issue with `isbot` v4 released on 1/1/2024 ([#8415](https://github.com/remix-run/remix/pull/8415))
+
   - `remix dev` will now add `"isbot": "^4"` to `package.json` instead of using `latest`
   - Update built-in `entry.server` files to work with both `isbot@3` and `isbot@4` for backwards-compatibility with Remix apps that have pinned `isbot` to v3
   - Templates are updated to use `isbot@4` moving forward via `create-remix`
+
 - Vite: Fix HMR issues when altering exports for non-rendered routes ([#8157](https://github.com/remix-run/remix/pull/8157))
+
 - Vite: Default `NODE_ENV` to `"production"` when running `remix vite:build` command ([#8405](https://github.com/remix-run/remix/pull/8405))
+
 - Vite: Remove Vite plugin config option `serverBuildPath` in favor of separate `serverBuildDirectory` and `serverBuildFile` options ([#8332](https://github.com/remix-run/remix/pull/8332))
+
 - Vite: Loosen strict route exports restriction, reinstating support for non-Remix route exports ([#8420](https://github.com/remix-run/remix/pull/8420))
 
 - Updated dependencies:

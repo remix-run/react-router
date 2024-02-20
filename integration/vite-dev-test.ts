@@ -25,7 +25,7 @@ test.describe("Vite dev", () => {
         `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { unstable_vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as remix } from "@remix-run/dev";
           import mdx from "@mdx-js/rollup";
 
           export default defineConfig({
@@ -34,13 +34,13 @@ test.describe("Vite dev", () => {
               strictPort: true,
             },
             plugins: [
-              remix(),
               mdx(),
+              remix(),
             ],
           });
         `,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
           export default function Root() {
             return (
@@ -55,7 +55,6 @@ test.describe("Vite dev", () => {
                     <Outlet />
                   </div>
                   <Scripts />
-                  <LiveReload nonce="1234" />
                 </body>
               </html>
             );
@@ -329,9 +328,6 @@ test.describe("Vite dev", () => {
     await page.waitForLoadState("networkidle");
     await expect(hmrStatus).toHaveText("HMR updated: yes");
     await expect(input).toHaveValue("stateful");
-
-    // check LiveReload script has nonce
-    await expect(page.locator(`script[nonce="1234"]`)).toBeAttached();
 
     // Ensure no errors after HMR
     expect(pageErrors).toEqual([]);

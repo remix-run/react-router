@@ -29,6 +29,7 @@ export interface FixtureInit {
   config?: Partial<AppConfig>;
   useRemixServe?: boolean;
   compiler?: "remix" | "vite";
+  spaMode?: boolean;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -59,19 +60,26 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     );
   };
 
-  let isSpaMode =
-    compiler === "vite" &&
-    fse.existsSync(path.join(projectDir, "build/client/index.html"));
+  let isSpaMode = compiler === "vite" && init.spaMode;
 
   if (isSpaMode) {
+    let requestDocument = () => {
+      let html = fse.readFileSync(
+        path.join(projectDir, "build/client/index.html")
+      );
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html",
+        },
+      });
+    };
+
     return {
       projectDir,
       build: null,
       isSpaMode,
       compiler,
-      requestDocument: () => {
-        throw new Error("Cannot requestDocument in SPA Mode tests");
-      },
+      requestDocument,
       requestData: () => {
         throw new Error("Cannot requestData in SPA Mode tests");
       },
@@ -208,7 +216,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
         app.get("*", (_, res, next) =>
           res.sendFile(
-            path.join(process.cwd(), "build/client/index.html"),
+            path.join(fixture.projectDir, "build/client/index.html"),
             next
           )
         );

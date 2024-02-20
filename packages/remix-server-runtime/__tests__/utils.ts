@@ -1,6 +1,12 @@
 import prettier from "prettier";
 
-import type { ActionFunction, HeadersFunction, LoaderFunction } from "../";
+import type {
+  ActionFunction,
+  HandleErrorFunction,
+  HeadersFunction,
+  LoaderFunction,
+} from "../";
+import type { FutureConfig } from "../entry";
 import type { EntryRoute, ServerRoute, ServerRouteManifest } from "../routes";
 
 export function mockServerBuild(
@@ -16,9 +22,16 @@ export function mockServerBuild(
       headers?: HeadersFunction;
       loader?: LoaderFunction;
     }
-  >
+  >,
+  opts: {
+    future?: Partial<FutureConfig>;
+    handleError?: HandleErrorFunction;
+  } = {}
 ) {
   return {
+    future: {
+      ...opts.future,
+    },
     assets: {
       entry: {
         imports: [""],
@@ -59,6 +72,7 @@ export function mockServerBuild(
             })
         ),
         handleDataRequest: jest.fn(async (response) => response),
+        handleError: opts.handleError,
       },
     },
     routes: Object.entries(routes).reduce<ServerRouteManifest>(

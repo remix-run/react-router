@@ -2,13 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { type Page, test, expect } from "@playwright/test";
 import getPort from "get-port";
+import dedent from "dedent";
 
 import {
   createProject,
   viteDev,
   viteBuild,
   viteRemixServe,
-  VITE_CONFIG,
+  viteConfig,
 } from "./helpers/vite.js";
 
 const withBundleServer = async (
@@ -28,7 +29,7 @@ function createRoute(path: string) {
   return {
     [`app/routes/${path}`]: `
       ${ROUTE_FILE_COMMENT}
-      import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+      import { Outlet } from "@remix-run/react";
       import { useState, useEffect } from "react";
 
       export default function Route() {
@@ -74,7 +75,7 @@ const TEST_ROUTES = [
 const files = {
   "app/root.tsx": `
     ${ROUTE_FILE_COMMENT}
-    import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+    import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
     export default function Root() {
       return (
@@ -86,7 +87,6 @@ const files = {
           <body>
             <Outlet />
             <Scripts />
-            <LiveReload />
           </body>
         </html>
       );
@@ -113,59 +113,63 @@ const expectRenderedRoutes = async (page: Page, routeFiles: string[]) => {
 
 test.describe(() => {
   let cwd: string;
-  let devPort: number;
+  let port: number;
 
   test.beforeAll(async () => {
-    devPort = await getPort();
+    port = await getPort();
     cwd = await createProject({
-      "vite.config.ts": await VITE_CONFIG({
-        port: devPort,
-        pluginOptions: `{
-          unstable_serverBundles: async ({ branch }) => {
-            // Smoke test to ensure we can read the route files via 'route.file'
-            await Promise.all(branch.map(async (route) => {
-              const fs = await import("node:fs/promises");
-              const routeFileContents = await fs.readFile(route.file, "utf8");
-              if (!routeFileContents.includes(${JSON.stringify(
-                ROUTE_FILE_COMMENT
-              )})) {
-                throw new Error("Couldn't file route file test comment");
+      "vite.config.ts": dedent`
+        import { vitePlugin as remix } from "@remix-run/dev";
+
+        export default {
+          ${await viteConfig.server({ port })}
+          build: { manifest: true },
+          plugins: [remix({
+            manifest: true,
+            serverBundles: async ({ branch }) => {
+              // Smoke test to ensure we can read the route files via 'route.file'
+              await Promise.all(branch.map(async (route) => {
+                const fs = await import("node:fs/promises");
+                const routeFileContents = await fs.readFile(route.file, "utf8");
+                if (!routeFileContents.includes(${JSON.stringify(
+                  ROUTE_FILE_COMMENT
+                )})) {
+                  throw new Error("Couldn't file route file test comment");
+                }
+              }));
+
+              if (branch.some((route) => route.id === "routes/_index")) {
+                return "root";
               }
-            }));
 
-            if (branch.some((route) => route.id === "routes/_index")) {
-              return "root";
+              if (branch.some((route) => route.id === "routes/bundle-a")) {
+                return "bundle-a";
+              }
+
+              if (branch.some((route) => route.id === "routes/bundle-b")) {
+                return "bundle-b";
+              }
+
+              if (branch.some((route) => route.id === "routes/_pathless.bundle-c")) {
+                return "bundle-c";
+              }
+
+              throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
             }
-
-            if (branch.some((route) => route.id === "routes/bundle-a")) {
-              return "bundle-a";
-            }
-
-            if (branch.some((route) => route.id === "routes/bundle-b")) {
-              return "bundle-b";
-            }
-
-            if (branch.some((route) => route.id === "routes/_pathless.bundle-c")) {
-              return "bundle-c";
-            }
-
-            throw new Error("No bundle defined for route " + branch[branch.length - 1].id);
-          }
-        }`,
-      }),
+          })]
+        }
+      `,
       ...files,
     });
   });
 
   test.describe(() => {
-    let stop: () => Promise<void>;
+    let stop: () => void;
     test.beforeAll(async () => {
-      stop = await viteDev({ cwd, port: devPort });
+      stop = await viteDev({ cwd, port });
     });
 
-    test.afterAll(async () => {
-      await stop();
-    });
+    test.afterAll(() => stop());
 
     test("Vite / server bundles / dev", async ({ page }) => {
       // There are no server bundles in dev mode, this is just a smoke test to
@@ -173,16 +177,16 @@ test.describe(() => {
       let pageErrors: Error[] = [];
       page.on("pageerror", (error) => pageErrors.push(error));
 
-      await page.goto(`http://localhost:${devPort}/`);
+      await page.goto(`http://localhost:${port}/`);
       await expectRenderedRoutes(page, ["_index.tsx"]);
 
-      await page.goto(`http://localhost:${devPort}/bundle-a`);
+      await page.goto(`http://localhost:${port}/bundle-a`);
       await expectRenderedRoutes(page, ["bundle-a.tsx", "bundle-a._index.tsx"]);
 
-      await page.goto(`http://localhost:${devPort}/bundle-b`);
+      await page.goto(`http://localhost:${port}/bundle-b`);
       await expectRenderedRoutes(page, ["bundle-b.tsx"]);
 
-      await page.goto(`http://localhost:${devPort}/bundle-c`);
+      await page.goto(`http://localhost:${port}/bundle-c`);
       await expectRenderedRoutes(page, [
         "_pathless.tsx",
         "_pathless.bundle-c.tsx",
@@ -193,9 +197,7 @@ test.describe(() => {
   });
 
   test.describe(() => {
-    test.beforeAll(async () => {
-      await viteBuild({ cwd });
-    });
+    test.beforeAll(() => viteBuild({ cwd }));
 
     test("Vite / server bundles / build / server", async ({ page }) => {
       let pageErrors: Error[] = [];
@@ -292,12 +294,21 @@ test.describe(() => {
       expect(pageErrors).toEqual([]);
     });
 
-    test("Vite / server bundles / build / manifest", async () => {
-      expect(
-        JSON.parse(
-          fs.readFileSync(path.join(cwd, "build/server/bundles.json"), "utf8")
-        )
-      ).toEqual({
+    test("Vite / server bundles / build / Vite manifests", () => {
+      let viteManifestFiles = fs.readdirSync(path.join(cwd, "build", ".vite"));
+
+      expect(viteManifestFiles).toEqual([
+        "client-manifest.json",
+        "server-bundle-a-manifest.json",
+        "server-bundle-b-manifest.json",
+        "server-bundle-c-manifest.json",
+        "server-root-manifest.json",
+      ]);
+    });
+
+    test("Vite / server bundles / build / Remix manifest", () => {
+      let manifestPath = path.join(cwd, "build", ".remix", "manifest.json");
+      expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
         serverBundles: {
           "bundle-c": {
             id: "bundle-c",

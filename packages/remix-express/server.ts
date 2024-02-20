@@ -94,7 +94,8 @@ export function createRemixRequest(
   let port = hostnamePort || hostPort;
   // Use req.hostname here as it respects the "trust proxy" setting
   let resolvedHost = `${req.hostname}${port ? `:${port}` : ""}`;
-  let url = new URL(`${req.protocol}://${resolvedHost}${req.url}`);
+  // Use `req.originalUrl` so Remix is aware of the full path
+  let url = new URL(`${req.protocol}://${resolvedHost}${req.originalUrl}`);
 
   // Abort action/loaders once we can no longer write a response
   let controller = new AbortController();
