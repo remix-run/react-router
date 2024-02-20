@@ -1693,7 +1693,7 @@ function getRoute(
     path.relative(pluginConfig.appDirectory, file)
   );
   let route = Object.values(pluginConfig.routes).find(
-    (r) => r.file === routePath
+    (r) => vite.normalizePath(r.file) === routePath
   );
   return route;
 }
