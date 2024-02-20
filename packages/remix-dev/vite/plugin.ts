@@ -118,7 +118,9 @@ type RemixConfigPreset = Omit<VitePluginConfig, ExcludedRemixConfigPresetKey>;
 
 export type Preset = {
   name: string;
-  remixConfig?: () => RemixConfigPreset | Promise<RemixConfigPreset>;
+  remixConfig?: (args: {
+    remixUserConfig: VitePluginConfig;
+  }) => RemixConfigPreset | Promise<RemixConfigPreset>;
   remixConfigResolved?: (args: {
     remixConfig: ResolvedVitePluginConfig;
   }) => void | Promise<void>;
@@ -527,6 +529,9 @@ let deepFreeze = (o: any) => {
 
 export type RemixVitePlugin = (config?: VitePluginConfig) => Vite.Plugin[];
 export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
+  // Prevent mutations to the user config
+  remixUserConfig = deepFreeze(remixUserConfig);
+
   let viteCommand: Vite.ResolvedConfig["command"];
   let viteUserConfig: Vite.UserConfig;
   let viteConfigEnv: Vite.ConfigEnv;
@@ -556,7 +561,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           }
 
           let remixConfigPreset: VitePluginConfig = omit(
-            await preset.remixConfig(),
+            await preset.remixConfig({ remixUserConfig }),
             excludedRemixConfigPresetKeys
           );
 
