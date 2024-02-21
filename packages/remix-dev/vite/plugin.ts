@@ -758,6 +758,22 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     return JSON.parse(manifestContents) as Vite.Manifest;
   };
 
+  let getViteManifestAssetPaths = (
+    viteManifest: Vite.Manifest
+  ): Set<string> => {
+    // Get .css?url imports and CSS entry points
+    let cssUrlPaths = Object.values(viteManifest)
+      .filter((chunk) => chunk.file.endsWith(".css"))
+      .map((chunk) => chunk.file);
+
+    // Get bundled CSS files and generic asset types
+    let chunkAssetPaths = Object.values(viteManifest).flatMap(
+      (chunk) => chunk.assets ?? []
+    );
+
+    return new Set([...cssUrlPaths, ...chunkAssetPaths]);
+  };
+
   let createBrowserManifestForBuild = async (): Promise<BrowserManifest> => {
     let viteManifest = await loadViteManifest(
       getClientBuildDirectory(ctx.remixConfig)
@@ -1238,27 +1254,8 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let clientViteManifest = await loadViteManifest(clientBuildDirectory);
 
-          let clientAssetPaths = new Set(
-            Object.values(clientViteManifest).flatMap((chunk) => [
-              ...(chunk.css ?? []),
-              ...(chunk.assets ?? []),
-            ])
-          );
-
-          // Handle `.css?url` files that only exist in SSR module graph
-          let ssrCssUrlFilePaths = Object.values(ssrViteManifest)
-            .filter((chunk) => chunk.file.endsWith(".css"))
-            .map((chunk) => chunk.file);
-
-          // Handle generic assets that only exist in SSR module graph
-          let ssrChunkAssetPaths = Object.values(ssrViteManifest).flatMap(
-            (chunk) => chunk.assets ?? []
-          );
-
-          let ssrAssetPaths = new Set<string>([
-            ...ssrCssUrlFilePaths,
-            ...ssrChunkAssetPaths,
-          ]);
+          let clientAssetPaths = getViteManifestAssetPaths(clientViteManifest);
+          let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
 
           // We only move assets that aren't in the client build, otherwise we
           // remove them. These assets only exist because we explicitly set
