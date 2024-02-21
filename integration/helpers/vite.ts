@@ -111,12 +111,21 @@ export async function createProject(files: Record<string, string> = {}) {
   return projectDir;
 }
 
-export const viteBuild = ({ cwd }: { cwd: string }) => {
+export const viteBuild = ({
+  cwd,
+  env = {},
+}: {
+  cwd: string;
+  env?: Record<string, string>;
+}) => {
   let nodeBin = process.argv[0];
 
   return spawnSync(nodeBin, [remixBin, "vite:build"], {
     cwd,
-    env: { ...process.env },
+    env: {
+      ...process.env,
+      ...env,
+    },
   });
 };
 

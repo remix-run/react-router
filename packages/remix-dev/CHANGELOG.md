@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.7.2
+
+### Patch Changes
+
+- Vite: Fix error when building projects with `.css?url` imports ([#8829](https://github.com/remix-run/remix/pull/8829))
+- Updated dependencies:
+  - `@remix-run/node@2.7.2`
+  - `@remix-run/server-runtime@2.7.2`
+
 ## 2.7.1
 
 ### Patch Changes

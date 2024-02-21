@@ -241,7 +241,15 @@ test.describe(() => {
         contents.replace('"sideEffects": false', '"sideEffects": ["*.css.ts"]')
       );
 
-      viteBuild({ cwd });
+      let { stderr, status } = viteBuild({
+        cwd,
+        env: {
+          // Vanilla Extract uses Vite's CJS build which emits a warning to stderr
+          VITE_CJS_IGNORE_WARNING: "true",
+        },
+      });
+      expect(stderr.toString()).toBeFalsy();
+      expect(status).toBe(0);
       stop = await viteRemixServe({ cwd, port });
     });
     test.afterAll(() => stop());
