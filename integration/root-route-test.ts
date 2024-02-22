@@ -113,7 +113,9 @@ test.describe("root route", () => {
     console.error = oldConsoleError;
   });
 
-  test("renders the Layout around the default ErrorBoundary", async ({ page }) => {
+  test("renders the Layout around the default ErrorBoundary", async ({
+    page,
+  }) => {
     let oldConsoleError;
     oldConsoleError = console.error;
     console.error = () => {};
@@ -146,7 +148,7 @@ test.describe("root route", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await page.waitForSelector("h1");
-    console.log(await app.getHtml())
+    console.log(await app.getHtml());
     expect(await app.getHtml("title")).toMatch("Layout Title");
     expect(await app.getHtml("h1")).toMatch("Application Error");
 
