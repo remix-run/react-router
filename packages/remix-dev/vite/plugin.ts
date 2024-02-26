@@ -172,8 +172,9 @@ export type VitePluginConfig = SupportedRemixEsbuildUserConfig & {
 };
 
 type BuildEndHook = (args: {
-  remixConfig: ResolvedVitePluginConfig;
   buildManifest: BuildManifest | undefined;
+  remixConfig: ResolvedVitePluginConfig;
+  viteConfig: Vite.ResolvedConfig;
 }) => void | Promise<void>;
 
 export type ResolvedVitePluginConfig = Readonly<

@@ -357,5 +357,6 @@ export async function build(
   await remixConfig.buildEnd?.({
     buildManifest,
     remixConfig,
+    viteConfig,
   });
 }
