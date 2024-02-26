@@ -1835,17 +1835,13 @@ export function createRouter(init: RouterInit): Router {
       });
     });
 
-    // If we're in a partial hydration run, preserve any SSR errors that didn't
-    // need to re-run during hydration
+    // During partial hydration, preserve SSR errors for routes that don't re-run
     if (future.v7_partialHydration && initialHydration && state.errors) {
-      for (let [routeId, error] of Object.entries(state.errors)) {
-        if (!matchesToLoad.some((m) => m.route.id === routeId)) {
-          if (!errors) {
-            errors = {};
-          }
-          errors[routeId] = error;
-        }
-      }
+      Object.entries(state.errors)
+        .filter(([id]) => !matchesToLoad.some((m) => m.route.id === id))
+        .forEach(([routeId, error]) => {
+          errors = Object.assign(errors || {}, { [routeId]: error });
+        });
     }
 
     let updatedFetchers = markFetchRedirectsDone();
