@@ -1718,7 +1718,7 @@ export function createRouter(init: RouterInit): Router {
     // preserving any new action data or existing action data (in the case of
     // a revalidation interrupting an actionReload)
     // If we have partialHydration enabled, then don't update the state for the
-    // initial data load since iot's not a "navigation"
+    // initial data load since it's not a "navigation"
     if (
       !isUninterruptedRevalidation &&
       (!future.v7_partialHydration || !initialHydration)
@@ -1834,6 +1834,15 @@ export function createRouter(init: RouterInit): Router {
         }
       });
     });
+
+    // During partial hydration, preserve SSR errors for routes that don't re-run
+    if (future.v7_partialHydration && initialHydration && state.errors) {
+      Object.entries(state.errors)
+        .filter(([id]) => !matchesToLoad.some((m) => m.route.id === id))
+        .forEach(([routeId, error]) => {
+          errors = Object.assign(errors || {}, { [routeId]: error });
+        });
+    }
 
     let updatedFetchers = markFetchRedirectsDone();
     let didAbortFetchLoads = abortStaleFetchLoads(pendingNavigationLoadId);
