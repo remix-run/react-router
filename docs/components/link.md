@@ -91,6 +91,27 @@ function EditContact() {
 }
 ```
 
+Please note that `relative: "path"` only impacts the resolution of a relative path. It does not change the the "starting" location for that relative path resolution. This resolution is always relative to the current location in the Route hierarchy (i.e., the route `Link` is rendered in).
+
+If you wish to use path-relative routing against the current URL instead of the route hierarchy, you can do that with the current [`location`][use-location] and the `URL` constructor (note the trailing slash behavior):
+
+```js
+// Assume the current URL is https://remix.run/docs/en/main/start/quickstart
+let location = useLocation();
+
+// Without trailing slashes
+new URL(".", window.origin + location.pathname);
+// 'https://remix.run/docs/en/main/start/'
+new URL("..", window.origin + location.pathname);
+// 'https://remix.run/docs/en/main/'
+
+// With trailing slashes:
+new URL(".", window.origin + location.pathname + "/");
+// 'https://remix.run/docs/en/main/start/future-flags/'
+new URL("..", window.origin + location.pathname + "/");
+// 'https://remix.run/docs/en/main/start/'
+```
+
 ## `preventScrollReset`
 
 If you are using [`<ScrollRestoration>`][scrollrestoration], this lets you prevent the scroll position from being reset to the top of the window when the link is clicked.
@@ -205,3 +226,4 @@ function ImageLink(to) {
 [picking-a-router]: ../routers/picking-a-router
 [navlink]: ./nav-link
 [relativesplatpath]: ../hooks/use-resolved-path#splat-paths
+[use-location]: ../hooks/use-location

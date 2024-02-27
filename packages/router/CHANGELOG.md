@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.15.1
+
+### Patch Changes
+
+- Fix encoding/decoding issues with pre-encoded dynamic parameter values ([#11199](https://github.com/remix-run/react-router/pull/11199))
+
 ## 1.15.0
 
 ### Minor Changes
