@@ -8,5 +8,7 @@
     "react-router-native": "6.22.1",
     "@remix-run/router": "1.15.1"
   },
-  "changesets": []
+  "changesets": [
+    "partial-hydration-errors"
+  ]
 }
