@@ -15,7 +15,7 @@ declare function useOutletContext<
 
 </details>
 
-Often parent routes manage state or other values you want shared with child routes. You can create your own [context provider](https://reactjs.org/docs/context.html) if you like, but this is such a common situation that it's built-into `<Outlet />`:
+Often parent routes manage state or other values you want shared with child routes. You can create your own [context provider](https://react.dev/learn/passing-data-deeply-with-context) if you like, but this is such a common situation that it's built-into `<Outlet />`:
 
 ```tsx lines=[3]
 function Parent() {
