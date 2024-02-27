@@ -272,7 +272,7 @@ test.describe("headers export", () => {
     let response = await appFixture.requestDocument("/parent");
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-parent-loader", "success"],
       ])
     );
@@ -282,7 +282,7 @@ test.describe("headers export", () => {
     let response = await appFixture.requestDocument("/parent/child");
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-parent-loader", "success"],
       ])
     );
@@ -295,7 +295,7 @@ test.describe("headers export", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-parent-action", "success"],
         ["x-parent-loader", "success"],
       ])
@@ -309,7 +309,7 @@ test.describe("headers export", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-parent-loader", "success"],
       ])
     );
@@ -319,7 +319,7 @@ test.describe("headers export", () => {
     let response = await appFixture.requestDocument("/parent?throw=parent");
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-parent-loader", "error, error"], // Shows up in loaderHeaders and errorHeaders
       ])
     );
@@ -331,7 +331,7 @@ test.describe("headers export", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-child-loader", "error"],
         ["x-parent-loader", "success"],
       ])
@@ -344,7 +344,7 @@ test.describe("headers export", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-parent-loader", "error, error"], // Shows up in loaderHeaders and errorHeaders
       ])
     );
@@ -356,7 +356,7 @@ test.describe("headers export", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-child-loader", "error"],
         ["x-parent-loader", "success"],
       ])
@@ -370,7 +370,7 @@ test.describe("headers export", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-parent-action", "error, error"], // Shows up in actionHeaders and errorHeaders
       ])
     );
@@ -383,7 +383,7 @@ test.describe("headers export", () => {
     );
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["x-child-action", "error"],
       ])
     );
@@ -393,7 +393,7 @@ test.describe("headers export", () => {
     let response = await appFixture.requestDocument("/cookie/child");
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["set-cookie", "normal-cookie=true"],
       ])
     );
@@ -403,7 +403,7 @@ test.describe("headers export", () => {
     let response = await appFixture.requestDocument("/cookie/child?throw");
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["set-cookie", "thrown-cookie=true"],
       ])
     );
@@ -413,7 +413,7 @@ test.describe("headers export", () => {
     let response = await appFixture.requestDocument("/cookie?parent-throw");
     expect(JSON.stringify(Array.from(response.headers.entries()))).toBe(
       JSON.stringify([
-        ["content-type", "text/html"],
+        ["content-type", "text/html; charset=utf-8"],
         ["set-cookie", "parent-thrown-cookie=true"],
       ])
     );
