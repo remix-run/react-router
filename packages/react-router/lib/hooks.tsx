@@ -422,10 +422,27 @@ export function useRoutesImpl(
   }
 
   let pathname = location.pathname || "/";
-  let remainingPathname =
-    parentPathnameBase === "/"
-      ? pathname
-      : pathname.slice(parentPathnameBase.length) || "/";
+
+  let remainingPathname = pathname;
+  if (parentPathnameBase !== "/") {
+    // Determine the remaining pathname by removing the # of URL segments the
+    // parentPathnameBase has, instead of removing based on character count.
+    // This is because we can't guarantee that incoming/outgoing encodings/
+    // decodings will match exactly.
+    // We decode paths before matching on a per-segment basis with
+    // decodeURIComponent(), but we re-encode pathnames via `new URL()` so they
+    // match what `window.location.pathname` would reflect.  Those don't 100%
+    // align when it comes to encoded URI characters such as % and &.
+    //
+    // So we may end up with:
+    //   pathname:           "/descendant/a%25b/match"
+    //   parentPathnameBase: "/descendant/a%b"
+    //
+    // And the direct substring removal approach won't work :/
+    let parentSegments = parentPathnameBase.replace(/^\//, "").split("/");
+    let segments = pathname.replace(/^\//, "").split("/");
+    remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
+  }
 
   let matches = matchRoutes(routes, { pathname: remainingPathname });
 

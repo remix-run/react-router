@@ -690,6 +690,10 @@ function getUrlBasedHistory(
         : window.location.href;
 
     let href = typeof to === "string" ? to : createPath(to);
+    // Treating this as a full URL will strip any trailing spaces so we need to
+    // pre-encode them since they might be part of a matching splat param from
+    // an ancestor route
+    href = href.replace(/ $/, "%20");
     invariant(
       base,
       `No window.location.(origin|href) available to create URL for href: ${href}`
