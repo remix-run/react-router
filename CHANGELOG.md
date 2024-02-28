@@ -177,7 +177,7 @@ Date: YYYY-MM-DD
 
 ## v6.22.2
 
-Date: 2024-02-27
+Date: 2024-02-28
 
 ### Patch Changes
 
