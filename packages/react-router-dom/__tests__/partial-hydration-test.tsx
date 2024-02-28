@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 import type { LoaderFunction } from "react-router";
 import { RouterProvider as ReactRouter_RouterPRovider } from "react-router";
@@ -649,5 +649,90 @@ function testPartialHydration(
         </h2>
       </div>"
     `);
+  });
+
+  it("preserves hydrated errors for non-hydrating loaders", async () => {
+    let dfd = createDeferred();
+    let rootSpy: LoaderFunction = jest.fn(() => dfd.promise);
+    rootSpy.hydrate = true;
+
+    let indexSpy = jest.fn();
+
+    let router = createTestRouter(
+      [
+        {
+          id: "root",
+          path: "/",
+          loader: rootSpy,
+          Component() {
+            let data = useLoaderData() as string;
+            return (
+              <>
+                <h1>{`Home - ${data}`}</h1>
+                <Outlet />
+              </>
+            );
+          },
+          children: [
+            {
+              id: "index",
+              index: true,
+              loader: indexSpy,
+              Component() {
+                let data = useLoaderData() as string;
+                return <h2>{`Index - ${data}`}</h2>;
+              },
+              ErrorBoundary() {
+                let error = useRouteError() as string;
+                return <p>{error}</p>;
+              },
+            },
+          ],
+        },
+      ],
+      {
+        hydrationData: {
+          loaderData: {
+            root: "HYDRATED ROOT",
+          },
+          errors: {
+            index: "INDEX ERROR",
+          },
+        },
+        future: {
+          v7_partialHydration: true,
+        },
+      }
+    );
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Home - HYDRATED ROOT
+        </h1>
+        <p>
+          INDEX ERROR
+        </p>
+      </div>"
+    `);
+
+    expect(router.state.initialized).toBe(false);
+
+    await act(() => dfd.resolve("UPDATED ROOT"));
+
+    expect(getHtml(container)).toMatchInlineSnapshot(`
+      "<div>
+        <h1>
+          Home - UPDATED ROOT
+        </h1>
+        <p>
+          INDEX ERROR
+        </p>
+      </div>"
+    `);
+
+    expect(rootSpy).toHaveBeenCalledTimes(1);
+    expect(indexSpy).not.toHaveBeenCalled();
   });
 }

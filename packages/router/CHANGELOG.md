@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.15.2
+
+### Patch Changes
+
+- Preserve hydrated errors during partial hydration runs ([#11305](https://github.com/remix-run/react-router/pull/11305))
+
 ## 1.15.1
 
 ### Patch Changes
