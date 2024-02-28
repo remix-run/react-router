@@ -22,6 +22,9 @@ const files = {
       );
 
     export default {
+      build: {
+        assetsDir: "custom-assets-dir",
+      },
       plugins: [remix({
         presets: [
           // Ensure user config is passed to remixConfig hook
@@ -112,9 +115,16 @@ const files = {
             name: "test-preset",
             remixConfig: async () => ({
               async buildEnd(buildEndArgs) {
+                let { viteConfig, buildManifest, remixConfig } = buildEndArgs;
+
                 await fs.writeFile(
-                  "BUILD_END_ARGS.js",
-                  "export default " + serializeJs(buildEndArgs, { space: 2, unsafe: true }),
+                  "BUILD_END_META.js",
+                  [
+                    "export const keys = " + JSON.stringify(Object.keys(buildEndArgs)) + ";",
+                    "export const buildManifest = " + serializeJs(buildManifest, { space: 2, unsafe: true }) + ";",
+                    "export const remixConfig = " + serializeJs(remixConfig, { space: 2, unsafe: true }) + ";",
+                    "export const assetsDir = " + JSON.stringify(viteConfig.build.assetsDir) + ";",
+                  ].join("\\n"),
                   "utf-8"
                 );
               },
@@ -142,10 +152,14 @@ test("Vite / presets", async () => {
     return normalizePath(path.relative(cwd, pathname));
   }
 
-  let buildEndArgs: any = (
-    await import(URL.pathToFileURL(path.join(cwd, "BUILD_END_ARGS.js")).href)
-  ).default;
-  let { remixConfig } = buildEndArgs;
+  let buildEndArgsMeta: any = await import(
+    URL.pathToFileURL(path.join(cwd, "BUILD_END_META.js")).href
+  );
+
+  let { remixConfig } = buildEndArgsMeta;
+
+  // Smoke test Vite config
+  expect(buildEndArgsMeta.assetsDir).toBe("custom-assets-dir");
 
   // Before rewriting to relative paths, assert that paths are absolute within cwd
   expect(pathStartsWithCwd(remixConfig.buildDirectory)).toBe(true);
@@ -182,10 +196,16 @@ test("Vite / presets", async () => {
   ).toEqual({
     remixConfigFrozen: true,
   });
-  expect(Object.keys(buildEndArgs)).toEqual(["buildManifest", "remixConfig"]);
+
+  // Snapshot the buildEnd args keys
+  expect(buildEndArgsMeta.keys).toEqual([
+    "buildManifest",
+    "remixConfig",
+    "viteConfig",
+  ]);
 
   // Smoke test the resolved config
-  expect(Object.keys(buildEndArgs.remixConfig)).toEqual([
+  expect(Object.keys(remixConfig)).toEqual([
     "appDirectory",
     "basename",
     "buildDirectory",
@@ -201,7 +221,7 @@ test("Vite / presets", async () => {
   ]);
 
   // Ensure we get a valid build manifest
-  expect(buildEndArgs.buildManifest).toEqual({
+  expect(buildEndArgsMeta.buildManifest).toEqual({
     routeIdToServerBundleId: {
       "routes/_index": "preset-server-bundle-id",
     },

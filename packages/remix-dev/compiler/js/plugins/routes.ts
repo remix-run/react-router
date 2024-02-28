@@ -15,6 +15,7 @@ const browserSafeRouteExports: { [name: string]: boolean } = {
   clientLoader: true,
   ErrorBoundary: true,
   HydrateFallback: true,
+  Layout: true,
   default: true,
   handle: true,
   links: true,

@@ -294,6 +294,17 @@ test.describe(() => {
       expect(pageErrors).toEqual([]);
     });
 
+    test("Vite / server bundles / build / Remix browser manifest", () => {
+      let clientAssetFiles = fs.readdirSync(
+        path.join(cwd, "build", "client", "assets")
+      );
+      let manifestFiles = clientAssetFiles.filter((filename) =>
+        filename.startsWith("manifest-")
+      );
+
+      expect(manifestFiles.length).toEqual(1);
+    });
+
     test("Vite / server bundles / build / Vite manifests", () => {
       let viteManifestFiles = fs.readdirSync(path.join(cwd, "build", ".vite"));
 

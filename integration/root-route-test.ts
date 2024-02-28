@@ -112,4 +112,45 @@ test.describe("root route", () => {
 
     console.error = oldConsoleError;
   });
+
+  test("renders the Layout around the default ErrorBoundary", async ({
+    page,
+  }) => {
+    let oldConsoleError;
+    oldConsoleError = console.error;
+    console.error = () => {};
+
+    fixture = await createFixture(
+      {
+        files: {
+          "app/root.tsx": js`
+          export function Layout({ children }) {
+            return (
+              <html>
+                <head>
+                  <title>Layout Title</title>
+                </head>
+                <body>
+                  {children}
+                </body>
+              </html>
+            );
+          }
+          export default function Root() {
+            throw new Error('broken render')
+          }
+        `,
+        },
+      },
+      ServerMode.Development
+    );
+    appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await page.waitForSelector("h1");
+    expect(await app.getHtml("title")).toMatch("Layout Title");
+    expect(await app.getHtml("h1")).toMatch("Application Error");
+
+    console.error = oldConsoleError;
+  });
 });

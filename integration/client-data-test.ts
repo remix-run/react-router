@@ -780,6 +780,66 @@ test.describe("Client Data", () => {
       expect(html).not.toMatch("Should not see me");
       console.error = _consoleError;
     });
+
+    test("server loader errors are persisted for non-hydrating routes", async ({
+      page,
+    }) => {
+      let _consoleError = console.error;
+      console.error = () => {};
+      appFixture = await createAppFixture(
+        await createFixture(
+          {
+            files: {
+              ...getFiles({
+                parentClientLoader: true,
+                parentClientLoaderHydrate: false,
+                // Hydrate the parent clientLoader but don't add a HydrateFallback
+                parentAdditions: js`
+                  clientLoader.hydrate = true;
+                `,
+                childClientLoader: false,
+                childClientLoaderHydrate: false,
+              }),
+              "app/routes/parent.child.tsx": js`
+                import { json } from '@remix-run/node'
+                import { useRouteError } from '@remix-run/react'
+                export function loader() {
+                  throw json({ message: 'Child Server Error'});
+                }
+                export default function Component() {
+                  return <h1>Should not see me</h1>;
+                }
+                export function ErrorBoundary() {
+                  const error = useRouteError();
+                  return (
+                    <>
+                      <h1>Child Error</h1>
+                      <pre>{JSON.stringify(error, null, 2)}</pre>
+                    </>
+                  );
+                }
+              `,
+            },
+          },
+          ServerMode.Development // Avoid error sanitization
+        ),
+        ServerMode.Development // Avoid error sanitization
+      );
+      let app = new PlaywrightFixture(appFixture, page);
+
+      await app.goto("/parent/child");
+      let html = await app.getHtml("main");
+      expect(html).toMatch("Parent Server Loader</p>");
+      expect(html).toMatch("Child Server Error");
+      expect(html).not.toMatch("Should not see me");
+      // Ensure we hydrate and remain on the boundary
+      await new Promise((r) => setTimeout(r, 100));
+      html = await app.getHtml("main");
+      expect(html).toMatch("Parent Server Loader (mutated by client)</p>");
+      expect(html).toMatch("Child Server Error");
+      expect(html).not.toMatch("Should not see me");
+      console.error = _consoleError;
+    });
   });
 
   test.describe("clientLoader - lazy route module", () => {
