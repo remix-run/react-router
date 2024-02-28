@@ -120,14 +120,25 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "--tls-key": String,
       "--tls-cert": String,
 
+      ...(argv[0].startsWith("vite:") ||
+      argv[0] === "reveal" ||
+      argv[0] === "routes"
+        ? // Handle commands that support Vite's --config flag
+          {
+            "--config": String,
+            "-c": "--config",
+          }
+        : {
+            // Handle non Vite config commands
+            "-c": "--command",
+          }),
+
       ...(argv[0].startsWith("vite:")
         ? {
             // Vite commands
-            // --force and --port are already defined above
+            // --config, --force and --port are already defined above
             "--assetsInlineLimit": Number,
             "--clearScreen": Boolean,
-            "--config": String,
-            "-c": "--config",
             "--cors": Boolean,
             "--emptyOutDir": Boolean,
             "--host": isBooleanFlag("--host") ? Boolean : String,
@@ -148,7 +159,6 @@ export async function run(argv: string[] = process.argv.slice(2)) {
           }
         : {
             // Non Vite commands
-            "-c": "--command",
             "--sourcemap": Boolean,
           }),
     },
@@ -202,7 +212,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       });
       break;
     case "routes":
-      await commands.routes(input[1], flags.json ? "json" : "jsx");
+      await commands.routes(input[1], flags);
       break;
     case "build":
       if (!process.env.NODE_ENV) process.env.NODE_ENV = "production";
@@ -220,7 +230,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       break;
     case "reveal": {
       // TODO: simplify getting started guide
-      await commands.generateEntry(input[1], input[2], flags.typescript);
+      await commands.generateEntry(input[1], input[2], flags);
       break;
     }
     case "dev":

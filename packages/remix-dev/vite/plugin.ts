@@ -25,6 +25,7 @@ import {
   type AppConfig as RemixEsbuildUserConfig,
   type RemixConfig as ResolvedRemixEsbuildConfig,
   resolveConfig as resolveRemixEsbuildConfig,
+  findConfig,
 } from "../config";
 import { type Manifest as RemixManifest } from "../manifest";
 import invariant from "../invariant";
@@ -38,6 +39,70 @@ import * as VirtualModule from "./vmod";
 import { resolveFileUrl } from "./resolve-file-url";
 import { removeExports } from "./remove-exports";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
+
+export async function resolveViteConfig({
+  configFile,
+  mode,
+  root,
+}: {
+  configFile?: string;
+  mode?: string;
+  root: string;
+}) {
+  let vite = await import("vite");
+
+  let viteConfig = await vite.resolveConfig(
+    { mode, configFile, root },
+    "build", // command
+    "production", // default mode
+    "production" // default NODE_ENV
+  );
+
+  if (typeof viteConfig.build.manifest === "string") {
+    throw new Error("Custom Vite manifest paths are not supported");
+  }
+
+  return viteConfig;
+}
+
+export async function extractRemixPluginContext(
+  viteConfig: Vite.ResolvedConfig
+) {
+  return viteConfig["__remixPluginContext" as keyof typeof viteConfig] as
+    | RemixPluginContext
+    | undefined;
+}
+
+export async function loadVitePluginContext({
+  configFile,
+  root,
+}: {
+  configFile?: string;
+  root?: string;
+}) {
+  if (!root) {
+    root = process.env.REMIX_ROOT || process.cwd();
+  }
+
+  configFile =
+    configFile ??
+    findConfig(root, "vite.config", [
+      ".ts",
+      ".cts",
+      ".mts",
+      ".js",
+      ".cjs",
+      ".mjs",
+    ]);
+
+  // V3 TODO: Vite config should not be optional
+  if (!configFile) {
+    return;
+  }
+
+  let viteConfig = await resolveViteConfig({ configFile, root });
+  return await extractRemixPluginContext(viteConfig);
+}
 
 const supportedRemixEsbuildConfigKeys = [
   "appDirectory",

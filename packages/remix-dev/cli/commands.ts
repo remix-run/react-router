@@ -15,7 +15,8 @@ import type { RemixConfig } from "../config";
 import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
 import { readConfig } from "../config";
-import { formatRoutes, RoutesFormat, isRoutesFormat } from "../config/format";
+import { formatRoutes, type RoutesFormat } from "../config/format";
+import { loadVitePluginContext } from "../vite/plugin";
 import { detectPackageManager } from "./detectPackageManager";
 import { transpile as convertFileToJS } from "./useJavascript";
 import type { Options } from "../compiler/options";
@@ -82,13 +83,23 @@ export function setup() {
 
 export async function routes(
   remixRoot?: string,
-  formatArg?: string
+  flags: {
+    config?: string;
+    json?: boolean;
+  } = {}
 ): Promise<void> {
-  let config = await readConfig(remixRoot);
+  let ctx = await loadVitePluginContext({
+    root: remixRoot,
+    configFile: flags.config,
+  });
 
-  let format = isRoutesFormat(formatArg) ? formatArg : RoutesFormat.jsx;
+  let routes =
+    ctx?.remixConfig.routes ||
+    // v3 TODO: Remove this and require the presence of a Vite config
+    (await readConfig(remixRoot)).routes;
 
-  console.log(formatRoutes(config.routes, format));
+  let format: RoutesFormat = flags.json ? "json" : "jsx";
+  console.log(formatRoutes(routes, format));
 }
 
 export async function build(
@@ -227,14 +238,28 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
 export async function generateEntry(
   entry: string,
   remixRoot: string,
-  useTypeScript: boolean = true
+  flags: {
+    typescript?: boolean;
+    config?: string;
+  } = {}
 ) {
-  let config = await readConfig(remixRoot);
+  let ctx = await loadVitePluginContext({
+    root: remixRoot,
+    configFile: flags.config,
+  });
+
+  let { rootDirectory, appDirectory } = ctx
+    ? {
+        rootDirectory: ctx.rootDirectory,
+        appDirectory: ctx.remixConfig.appDirectory,
+      }
+    : // v3 TODO: Remove this and require the presence of a Vite config
+      await readConfig(remixRoot);
 
   // if no entry passed, attempt to create both
   if (!entry) {
-    await generateEntry("entry.client", remixRoot, useTypeScript);
-    await generateEntry("entry.server", remixRoot, useTypeScript);
+    await generateEntry("entry.client", remixRoot, flags);
+    await generateEntry("entry.server", remixRoot, flags);
     return;
   }
 
@@ -248,7 +273,7 @@ export async function generateEntry(
     return;
   }
 
-  let pkgJson = await PackageJson.load(config.rootDirectory);
+  let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
   let serverRuntime = deps["@remix-run/deno"]
@@ -278,30 +303,25 @@ export async function generateEntry(
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    `entry.server.${serverRuntime}.tsx`
+    ctx?.remixConfig.ssr === false
+      ? `entry.server.spa.tsx`
+      : `entry.server.${serverRuntime}.tsx`
   );
 
   let isServerEntry = entry === "entry.server";
 
   let contents = isServerEntry
-    ? await createServerEntry(
-        config.rootDirectory,
-        config.appDirectory,
-        defaultEntryServer
-      )
-    : await createClientEntry(
-        config.rootDirectory,
-        config.appDirectory,
-        defaultEntryClient
-      );
+    ? await createServerEntry(rootDirectory, appDirectory, defaultEntryServer)
+    : await createClientEntry(rootDirectory, appDirectory, defaultEntryClient);
 
+  let useTypeScript = flags.typescript ?? true;
   let outputExtension = useTypeScript ? "tsx" : "jsx";
   let outputEntry = `${entry}.${outputExtension}`;
-  let outputFile = path.resolve(config.appDirectory, outputEntry);
+  let outputFile = path.resolve(appDirectory, outputEntry);
 
   if (!useTypeScript) {
     let javascript = convertFileToJS(contents, {
-      cwd: config.rootDirectory,
+      cwd: rootDirectory,
       filename: isServerEntry ? defaultEntryServer : defaultEntryClient,
     });
     await fse.writeFile(outputFile, javascript, "utf-8");
@@ -312,7 +332,7 @@ export async function generateEntry(
   console.log(
     colors.blue(
       `Entry file ${entry} created at ${path.relative(
-        config.rootDirectory,
+        rootDirectory,
         outputFile
       )}.`
     )
