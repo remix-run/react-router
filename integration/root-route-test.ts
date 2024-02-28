@@ -148,7 +148,6 @@ test.describe("root route", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await page.waitForSelector("h1");
-    console.log(await app.getHtml());
     expect(await app.getHtml("title")).toMatch("Layout Title");
     expect(await app.getHtml("h1")).toMatch("Application Error");
 

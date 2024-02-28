@@ -1,5 +1,21 @@
 # `@remix-run/dev`
 
+## 2.8.0
+
+### Minor Changes
+
+- Pass resolved `viteConfig` to Remix Vite plugin's `buildEnd` hook ([#8885](https://github.com/remix-run/remix/pull/8885))
+
+### Patch Changes
+
+- Mark `Layout` as browser safe route export in `esbuild` compiler ([#8842](https://github.com/remix-run/remix/pull/8842))
+- Vite: Silence build warnings when dependencies include "use client" directives ([#8897](https://github.com/remix-run/remix/pull/8897))
+- Vite: Fix `serverBundles` issue where multiple browser manifests are generated ([#8864](https://github.com/remix-run/remix/pull/8864))
+- Support custom Vite `build.assetsDir` option ([#8843](https://github.com/remix-run/remix/pull/8843))
+- Updated dependencies:
+  - `@remix-run/node@2.8.0`
+  - `@remix-run/server-runtime@2.8.0`
+
 ## 2.7.2
 
 ### Patch Changes
