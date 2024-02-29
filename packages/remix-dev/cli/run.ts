@@ -11,6 +11,8 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
 
   ${colors.heading("Usage")}:
     $ remix init [${colors.arg("projectDir")}]
+    $ remix vite:build [${colors.arg("projectDir")}]
+    $ remix vite:dev [${colors.arg("projectDir")}]
     $ remix build [${colors.arg("projectDir")}]
     $ remix dev [${colors.arg("projectDir")}]
     $ remix routes [${colors.arg("projectDir")}]
@@ -20,8 +22,31 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     --help, -h          Print this help message and exit
     --version, -v       Print the CLI version and exit
     --no-color          Disable ANSI colors in console output
+  \`vite:build\` Options (Passed through to Vite):
+    --assetsInlineLimit Static asset base64 inline threshold in bytes (default: 4096) (number)
+    --clearScreen       Allow/disable clear screen when logging (boolean)
+    --config, -c        Use specified config file (string)
+    --emptyOutDir       Force empty outDir when it's outside of root (boolean)
+    --logLevel, -l      Info | warn | error | silent (string)
+    --minify            Enable/disable minification, or specify minifier to use (default: "esbuild") (boolean | "terser" | "esbuild")
+    --mode, -m          Set env mode (string)
+    --profile           Start built-in Node.js inspector
+    --sourcemapClient   Output source maps for client build (default: false) (boolean | "inline" | "hidden")
+    --sourcemapServer   Output source maps for server build (default: false) (boolean | "inline" | "hidden")
   \`build\` Options:
     --sourcemap         Generate source maps for production
+  \`vite:dev\` Options (Passed through to Vite):
+    --clearScreen       Allow/disable clear screen when logging (boolean)
+    --config, -c        Use specified config file (string)
+    --cors              Enable CORS (boolean)
+    --force             Force the optimizer to ignore the cache and re-bundle (boolean)
+    --host              Specify hostname (string)
+    --logLevel, -l      Info | warn | error | silent (string)
+    --mode, -m          Set env mode (string)
+    --open              Open browser on startup (boolean | string)
+    --port              Specify port (number)
+    --profile           Start built-in Node.js inspector
+    --strictPort        Exit if specified port is already in use (boolean)
   \`dev\` Options:
     --command, -c       Command used to run your app server
     --manual            Enable manual mode
@@ -31,7 +56,11 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
   \`init\` Options:
     --no-delete         Skip deleting the \`remix.init\` script
   \`routes\` Options:
+    --config, -c        Use specified Vite config file (string)
     --json              Print the routes as JSON
+  \`reveal\` Options:
+    --config, -c        Use specified Vite config file (string)
+    --no-typescript     Generate plain JavaScript files
 
   ${colors.heading("Values")}:
     - ${colors.arg("projectDir")}        The Remix project directory
@@ -46,18 +75,30 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
 
     $ remix init
 
-  ${colors.heading("Build your project")}:
+  ${colors.heading("Build your project (Vite)")}:
+
+    $ remix vite:build
+
+  ${colors.heading("Run your project locally in development (Vite)")}:
+
+    $ remix vite:dev
+
+  ${colors.heading("Build your project (Classic compiler)")}:
 
     $ remix build
     $ remix build --sourcemap
     $ remix build my-app
 
-  ${colors.heading("Run your project locally in development")}:
+  ${colors.heading(
+    "Run your project locally in development (Classic compiler)"
+  )}:
 
     $ remix dev
     $ remix dev -c "node ./server.js"
 
-  ${colors.heading("Start your server separately and watch for changes")}:
+  ${colors.heading(
+    "Start your server separately and watch for changes (Classic compiler)"
+  )}:
 
     # custom server start command, for example:
     $ remix watch
@@ -70,6 +111,7 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     $ remix routes
     $ remix routes my-app
     $ remix routes --json
+    $ remix routes --config vite.remix.config.ts
 
   ${colors.heading("Reveal the used entry point")}:
 
@@ -77,6 +119,7 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     $ remix reveal entry.server
     $ remix reveal entry.client --no-typescript
     $ remix reveal entry.server --no-typescript
+    $ remix reveal entry.server --config vite.remix.config.ts
 `;
 
 /**
