@@ -30,7 +30,6 @@ export type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
-  DecodedResponse,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -120,6 +119,8 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  unstable_DecodedResponse,
+  unstable_isDecodedResponse,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -56,7 +56,6 @@ export type {
   DataStrategyMatch,
   DataRouteMatch,
   DataRouteObject,
-  DecodedResponse,
   ErrorResponse,
   Fetcher,
   FetcherWithComponents,
@@ -186,6 +185,8 @@ export {
   useRoutes,
   useSearchParams,
   useSubmit,
+  unstable_DecodedResponse,
+  unstable_isDecodedResponse,
 } from "./react-router-dom";
 
 export type { StaticRouterProps } from "./lib/components";

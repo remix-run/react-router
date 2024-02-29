@@ -108,7 +108,6 @@ export type {
   BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
-  DecodedResponse,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -197,6 +196,8 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  unstable_DecodedResponse,
+  unstable_isDecodedResponse,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////

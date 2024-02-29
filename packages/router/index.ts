@@ -35,10 +35,11 @@ export type {
 
 export {
   AbortedDeferredError,
-  DecodedResponse,
+  DecodedResponse as unstable_DecodedResponse,
   defer,
   generatePath,
   getToPathname,
+  isDecodedResponse as unstable_isDecodedResponse,
   isRouteErrorResponse,
   joinPaths,
   json,

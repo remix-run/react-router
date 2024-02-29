@@ -7,7 +7,6 @@ import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
-  DecodedResponse,
   ErrorResponse,
   Fetcher,
   HydrationState,
@@ -50,6 +49,8 @@ import {
   redirectDocument,
   resolvePath,
   UNSAFE_warning as warning,
+  unstable_DecodedResponse,
+  unstable_isDecodedResponse,
 } from "@remix-run/router";
 
 import type {
@@ -137,7 +138,6 @@ export type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
   DataStrategyMatch,
-  DecodedResponse,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -228,6 +228,8 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  unstable_DecodedResponse,
+  unstable_isDecodedResponse,
 };
 
 function mapRouteProperties(route: RouteObject) {
