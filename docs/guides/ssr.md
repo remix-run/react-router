@@ -66,7 +66,7 @@ const app = express();
 let handler = createStaticHandler(routes);
 
 app.get("*", async (req, res) => {
-  let fetchRequest = createFetchRequest(req);
+  let fetchRequest = createFetchRequest(req, res);
   let context = await handler.query(fetchRequest);
 
   // We'll tackle rendering next...
@@ -81,13 +81,13 @@ const listener = app.listen(3000, () => {
 Note we have to first convert the incoming Express request into a Fetch request, which is what the static handler methods operate on. The `createFetchRequest` method is specific to an Express request and in this example is extracted from the `@remix-run/express` adapter:
 
 ```js filename=request.js
-module.exports = function createFetchRequest(req) {
+module.exports = function createFetchRequest(req, res) {
   let origin = `${req.protocol}://${req.get("host")}`;
   // Note: This had to take originalUrl into account for presumably vite's proxying
   let url = new URL(req.originalUrl || req.url, origin);
 
   let controller = new AbortController();
-  req.on("close", () => controller.abort());
+  res.on("close", () => controller.abort());
 
   let headers = new Headers();
 
@@ -121,7 +121,7 @@ Once we've loaded our data by executing all of the matched route loaders for the
 
 ```js filename=server.jsx lines=[5-16]
 app.get("*", async (req, res) => {
-  let fetchRequest = createFetchRequest(req);
+  let fetchRequest = createFetchRequest(req, res);
   let context = await handler.query(fetchRequest);
 
   let router = createStaticRouter(
@@ -181,7 +181,7 @@ If any loaders redirect, `handler.query` will return the `Response` directly so 
 
 ```js filename=server.jsx lines=[5-10]
 app.get("*", async (req, res) => {
-  let fetchRequest = createFetchRequest(req);
+  let fetchRequest = createFetchRequest(req, res);
   let context = await handler.query(fetchRequest);
 
   if (

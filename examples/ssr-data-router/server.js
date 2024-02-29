@@ -54,7 +54,7 @@ async function createServer() {
       }
 
       try {
-        let appHtml = await render(req);
+        let appHtml = await render(req, res);
         let html = template.replace("<!--app-html-->", appHtml);
         res.setHeader("Content-Type", "text/html");
         return res.status(200).end(html);
