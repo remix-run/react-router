@@ -7,46 +7,44 @@ import {
   parsePath,
   warning,
 } from "./history";
-import type {
+import {
   ActionFunction,
   AgnosticDataRouteMatch,
   AgnosticDataRouteObject,
   AgnosticRouteObject,
+  convertRouteMatchToUiMatch,
+  convertRoutesToDataRoutes,
   DataResult,
   DeferredData,
   DeferredResult,
   DetectErrorBoundaryFunction,
+  ErrorResponseImpl,
   ErrorResult,
   FormEncType,
   FormMethod,
+  getPathContributingMatches,
+  getResolveToMatches,
   HTMLFormMethod,
   ImmutableRouteKey,
+  immutableRouteKeys,
+  isRouteErrorResponse,
+  joinPaths,
   LoaderFunction,
   MapRoutePropertiesFunction,
+  matchRoutes,
   MutationFormMethod,
   RedirectResult,
+  resolveTo,
+  ResultType,
   RouteData,
   RouteManifest,
   ShouldRevalidateFunctionArgs,
+  stripBasename,
   Submission,
   SuccessResult,
   UIMatch,
   V7_FormMethod,
   V7_MutationFormMethod,
-} from "./utils";
-import {
-  ErrorResponseImpl,
-  ResultType,
-  convertRouteMatchToUiMatch,
-  convertRoutesToDataRoutes,
-  getPathContributingMatches,
-  getResolveToMatches,
-  immutableRouteKeys,
-  isRouteErrorResponse,
-  joinPaths,
-  matchRoutes,
-  resolveTo,
-  stripBasename,
 } from "./utils";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1586,7 +1584,8 @@ export function createRouter(init: RouterInit): Router {
         manifest,
         mapRouteProperties,
         basename,
-        future.v7_relativeSplatPath
+        future.v7_relativeSplatPath,
+        undefined
       );
 
       if (request.signal.aborted) {
@@ -1989,7 +1988,8 @@ export function createRouter(init: RouterInit): Router {
       manifest,
       mapRouteProperties,
       basename,
-      future.v7_relativeSplatPath
+      future.v7_relativeSplatPath,
+      undefined
     );
 
     if (fetchRequest.signal.aborted) {
@@ -2240,7 +2240,9 @@ export function createRouter(init: RouterInit): Router {
       manifest,
       mapRouteProperties,
       basename,
-      future.v7_relativeSplatPath
+      future.v7_relativeSplatPath,
+      // TODO
+      {}
     );
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
@@ -2426,22 +2428,70 @@ export function createRouter(init: RouterInit): Router {
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
+    // TODO: Can we do this in one place?
+
+    // We need to ensure that descendents loaders are started after their
+    // ancestors so that we can provide the loader result promise to the
+    // descendents. This means we must first start the loaders that have no
+    // ancestors. After starting those we then start their descendent loaders
+    // in descending order.
+    
+
+    const routesToLoad = new Map(matchesToLoad.map(match => [match.route.id, match]))
+    // For evey match, do a breadth first traversal down all the descendents,
+    // collecting the ancestors as we go.
+    // If we find a route to load then record all the ancestors.
+    // If the starting match already has ancestors then skip it as we have
+    // already traversed it (which is very likely).
+    const routeAncestorsToLoad = new Map<string, string[]>()
+    matchesToLoad.forEach(match => {
+      const queue = [{ routes: [match.route], ancestorsToLoad: [] as string[] }]
+      while (queue.length > 0) {
+        const { routes, ancestorsToLoad } = queue.shift()!
+        routes.forEach(route => {
+          if (!routeAncestorsToLoad.has(route.id)) {
+            routeAncestorsToLoad.set(route.id, ancestorsToLoad)
+            const nextRoutes = route.children ? route.children : []
+            const nextAncestorsToLoad = routesToLoad.has(route.id) ? [...ancestorsToLoad, route.id] : ancestorsToLoad
+            queue.push({ routes: nextRoutes, ancestorsToLoad: nextAncestorsToLoad })
+          }
+        })
+      }
+    })
+
+    const routeAncestorResults = new Map<string, Promise<DataResult>>()
+    const fewestAncestorsFirst = [...routeAncestorsToLoad.entries()].sort((a, b) => a[1].length - b[1].length)
+    while (fewestAncestorsFirst.length > 0) {
+      const index = fewestAncestorsFirst.findIndex(([id, ancestors]) => ancestors.length === 0)
+      if (index < 0) {
+        throw new Error('Failed to find the next loader')
+      }
+      const [routeId, ancestors] = fewestAncestorsFirst.splice(index, 1)[0]
+      const match = routesToLoad.get(routeId)!
+      const ancestorResults = Object.fromEntries(ancestors.map(id => {
+        const ancestorResult = routeAncestorResults.get(id)
+        const data = ancestorResult ? ancestorResult.then(result => result.type === ResultType.data ? result.data : undefined) : Promise.resolve(undefined)
+        return [id, data]
+      }))
+      const result = callLoaderOrAction(
+        "loader",
+        request,
+        match,
+        matches,
+        manifest,
+        mapRouteProperties,
+        basename,
+        future.v7_relativeSplatPath,
+        ancestorResults,
+      )
+      routeAncestorResults.set(routeId, result)
+    }
+
     // Call all navigation loaders and revalidating fetcher loaders in parallel,
     // then slice off the results into separate arrays so we can handle them
     // accordingly
     let results = await Promise.all([
-      ...matchesToLoad.map((match) =>
-        callLoaderOrAction(
-          "loader",
-          request,
-          match,
-          matches,
-          manifest,
-          mapRouteProperties,
-          basename,
-          future.v7_relativeSplatPath
-        )
-      ),
+      ...routeAncestorResults.values(),
       ...fetchersToLoad.map((f) => {
         if (f.matches && f.match && f.controller) {
           return callLoaderOrAction(
@@ -2452,7 +2502,9 @@ export function createRouter(init: RouterInit): Router {
             manifest,
             mapRouteProperties,
             basename,
-            future.v7_relativeSplatPath
+            future.v7_relativeSplatPath,
+            // TODO
+            {}
           );
         } else {
           let error: ErrorResult = {
@@ -3148,6 +3200,7 @@ export function createStaticHandler(
         mapRouteProperties,
         basename,
         future.v7_relativeSplatPath,
+        undefined,
         { isStaticRequest: true, isRouteRequest, requestContext }
       );
 
@@ -3314,6 +3367,8 @@ export function createStaticHandler(
           mapRouteProperties,
           basename,
           future.v7_relativeSplatPath,
+          // TODO:
+          {},
           { isStaticRequest: true, isRouteRequest, requestContext }
         )
       ),
@@ -3940,8 +3995,11 @@ async function loadLazyRouteModule(
   });
 }
 
-async function callLoaderOrAction(
-  type: "loader" | "action",
+type LoaderOrActionResults<T extends "loader" | "action"> =
+  T extends "loader" ? Record<string, Promise<any | undefined>> : undefined
+
+async function callLoaderOrAction<T extends "loader" | "action">(
+  type: T,
   request: Request,
   match: AgnosticDataRouteMatch,
   matches: AgnosticDataRouteMatch[],
@@ -3949,6 +4007,7 @@ async function callLoaderOrAction(
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
   v7_relativeSplatPath: boolean,
+  ancestorResults: LoaderOrActionResults<T>,
   opts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
@@ -3959,7 +4018,7 @@ async function callLoaderOrAction(
   let result;
   let onReject: (() => void) | undefined;
 
-  let runHandler = (handler: ActionFunction | LoaderFunction) => {
+  let runHandler = (handler: ActionFunction) => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;
     let abortPromise = new Promise((_, r) => (reject = r));
@@ -3975,8 +4034,21 @@ async function callLoaderOrAction(
     ]);
   };
 
+  function loaderToAction(loader: LoaderFunction, ancestorResults2: Record<string, Promise<any | undefined>>): ActionFunction {
+    function routeLoaderData(routeId: string) {
+      return ancestorResults2[routeId]
+    }
+    return (args) => loader({...args, routeLoaderData })
+  }
+
+  function getHandler() {
+    return type === "loader" ?
+      match.route.loader === undefined ? undefined : loaderToAction(match.route.loader, ancestorResults!) :
+      match.route.action
+  }
+
   try {
-    let handler = match.route[type];
+    let handler = getHandler();
 
     if (match.route.lazy) {
       if (handler) {
@@ -3999,7 +4071,7 @@ async function callLoaderOrAction(
         // Load lazy route module, then run any returned handler
         await loadLazyRouteModule(match.route, mapRouteProperties, manifest);
 
-        handler = match.route[type];
+        handler = getHandler();
         if (handler) {
           // Handler still run even if we got interrupted to maintain consistency
           // with un-abortable behavior of handler execution on non-lazy or

@@ -49,9 +49,17 @@ let router = createBrowserRouter([
         ],
       },
       {
+        id: "deferred",
         path: "deferred",
         loader: deferredLoader,
         Component: DeferredPage,
+        children: [
+          {
+            index: true,
+            loader: childLoader,
+            Component: DeferredChild
+          }
+        ]
       },
     ],
   },
@@ -378,6 +386,8 @@ export function DeferredPage() {
           <RenderAwaitedData />
         </Await>
       </React.Suspense>
+
+      <Outlet />
     </div>
   );
 }
@@ -396,4 +406,13 @@ function RenderAwaitedError() {
       {error.message} {error.stack}
     </p>
   );
+}
+
+export async function childLoader({ routeLoaderData }: LoaderFunctionArgs) {
+  const data = await routeLoaderData("deferred")! as DeferredRouteLoaderData
+  return data.lazy2.then((message) => message + " - from the child")
+}
+
+export function DeferredChild(): React.ReactElement {
+  return <>TODO</>
 }

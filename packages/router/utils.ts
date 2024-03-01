@@ -147,11 +147,19 @@ interface DataFunctionArgs<Context> {
 //   ActionFunction, ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs
 //   Also, make them a type alias instead of an interface
 
+interface RouteLoaderDataFunction {
+  (routeId: string):
+    | Promise<DataFunctionValue>
+    | undefined;
+}
+
 /**
  * Arguments passed to loader functions
  */
 export interface LoaderFunctionArgs<Context = any>
-  extends DataFunctionArgs<Context> {}
+  extends DataFunctionArgs<Context> {
+  routeLoaderData: RouteLoaderDataFunction
+}
 
 /**
  * Arguments passed to action functions
