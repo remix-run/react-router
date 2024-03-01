@@ -410,9 +410,16 @@ function RenderAwaitedError() {
 
 export async function childLoader({ routeLoaderData }: LoaderFunctionArgs) {
   const data = await routeLoaderData("deferred")! as DeferredRouteLoaderData
-  return data.lazy2.then((message) => message + " - from the child")
+  return data.lazy2.then((message) => "Child: " + message)
 }
 
 export function DeferredChild(): React.ReactElement {
-  return <>TODO</>
+  let data = useLoaderData() as Pick<DeferredRouteLoaderData, 'lazy2'>;
+  return <div>
+    <React.Suspense fallback={<p>Child: loading 2...</p>}>
+        <Await resolve={data.lazy2}>
+          <RenderAwaitedData />
+        </Await>
+      </React.Suspense>
+  </div>
 }
