@@ -2421,6 +2421,68 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
+  type MatchNode = {
+    match: AgnosticDataRouteMatch
+    ancestor?: MatchNode
+    descendents: MatchNode[]
+  }
+
+  function createMatcherForest(matches: AgnosticDataRouteMatch[]): MatchNode[] {
+    // Create all the nodes with no edges.
+    const forest = new Map<string, MatchNode>(matches.map(match => [match.route.id, {match, descendents: []}]))
+
+    // Keep track of the routes that we have visited already.
+    const visited = new Set<string>()
+
+    // We iterate over every match doing a breadth first traversal of all its
+    // descendents, creating edges between our nodes as we go. For any two
+    // matches, one is almost certainly forms a subtree of the other so most
+    // iterations will do nothing.
+    matches.forEach(match => {
+      // The queue has the remaining children at the front and the grandchildren
+      // at the back.
+      const queue: {
+        routes: AgnosticDataRouteObject[],
+        ancestor?: MatchNode
+      }[] = [{ routes: [match.route] }]
+      while (queue.length > 0) {
+        const next = queue.shift()
+        if (next) {
+          const { routes, ancestor } = next
+            routes.forEach(route => {
+              if (!visited.has(route.id)) {
+                visited.add(route.id)
+                // We only care about the routes with matches, but we still need
+                // to traverse the others.
+                const matchNode = forest.get(route.id)
+                let nextAncestor = ancestor
+                if (matchNode) {
+                  // Add the edge in both directions.
+                  matchNode.ancestor = ancestor
+                  if (ancestor) {
+                    ancestor.descendents.push(matchNode)
+                  }
+                  // The current node will be the ancestor for its descendents,
+                  // otherwise it will be the previous ancestor (we only track
+                  // the routes with matches).
+                  nextAncestor = matchNode
+                }
+                const nextRoutes = route.children ? route.children : []
+                queue.push({ routes: nextRoutes, ancestor: nextAncestor })
+              }
+            })
+        }
+      }
+    })
+
+    // Now we just need to find all the sources of each tree.
+    const sources: MatchNode[] = []
+    for (const matchNode of forest.values()) {
+      if (!matchNode.ancestor) sources.push(matchNode)
+    }
+    return sources
+  }
+
   async function callLoadersAndMaybeResolveData(
     currentMatches: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
@@ -2428,70 +2490,58 @@ export function createRouter(init: RouterInit): Router {
     fetchersToLoad: RevalidatingFetcher[],
     request: Request
   ) {
-    // TODO: Can we do this in one place?
-
     // We need to ensure that descendents loaders are started after their
     // ancestors so that we can provide the loader result promise to the
-    // descendents. This means we must first start the loaders that have no
-    // ancestors. After starting those we then start their descendent loaders
-    // in descending order.
-    
+    // descendents. To do this we create a forest of all routes to load and then
+    // traverse the forest from each source node.
+    const sources = createMatcherForest(matchesToLoad)
 
-    const routesToLoad = new Map(matchesToLoad.map(match => [match.route.id, match]))
-    // For evey match, do a breadth first traversal down all the descendents,
-    // collecting the ancestors as we go.
-    // If we find a route to load then record all the ancestors.
-    // If the starting match already has ancestors then skip it as we have
-    // already traversed it (which is very likely).
-    const routeAncestorsToLoad = new Map<string, string[]>()
-    matchesToLoad.forEach(match => {
-      const queue = [{ routes: [match.route], ancestorsToLoad: [] as string[] }]
+    // Now we do depth first traversal of each source, starting each loader,
+    // and keeping track of the ancestor loader results as we go.
+    const allResults: Promise<DataResult>[] = []
+    sources.forEach(source => {
+      const queue = [[source]]
+      const ancestorData : [string, Promise<any | undefined>][] = []
       while (queue.length > 0) {
-        const { routes, ancestorsToLoad } = queue.shift()!
-        routes.forEach(route => {
-          if (!routeAncestorsToLoad.has(route.id)) {
-            routeAncestorsToLoad.set(route.id, ancestorsToLoad)
-            const nextRoutes = route.children ? route.children : []
-            const nextAncestorsToLoad = routesToLoad.has(route.id) ? [...ancestorsToLoad, route.id] : ancestorsToLoad
-            queue.push({ routes: nextRoutes, ancestorsToLoad: nextAncestorsToLoad })
-          }
-        })
+        const nodes = queue[0]
+        const node = nodes.shift()
+        if (node) {
+          // Going down.
+          const resultPromise = callLoaderOrAction(
+            "loader",
+            request,
+            node.match,
+            matches,
+            manifest,
+            mapRouteProperties,
+            basename,
+            future.v7_relativeSplatPath,
+            // Need a shallow copy of these since we are mutating them.
+            Object.fromEntries(ancestorData),
+          )
+          allResults.push(resultPromise)
+          const data = resultPromise.then(result => {
+            if (result.type === ResultType.data) {
+              return result.data
+            } else if (isDeferredResult(result)) {
+              return resolveDeferredData(result, request.signal).then(resolved => resolved?.type === ResultType.data ? resolved.data : undefined)
+            }
+          })
+          ancestorData.push([node.match.route.id, data])
+          queue.unshift(node.descendents)
+        } else {
+          // Going back up.
+          ancestorData.shift()
+          queue.shift()
+        }
       }
     })
-
-    const routeAncestorResults = new Map<string, Promise<DataResult>>()
-    const fewestAncestorsFirst = [...routeAncestorsToLoad.entries()].sort((a, b) => a[1].length - b[1].length)
-    while (fewestAncestorsFirst.length > 0) {
-      const index = fewestAncestorsFirst.findIndex(([id, ancestors]) => ancestors.length === 0)
-      if (index < 0) {
-        throw new Error('Failed to find the next loader')
-      }
-      const [routeId, ancestors] = fewestAncestorsFirst.splice(index, 1)[0]
-      const match = routesToLoad.get(routeId)!
-      const ancestorResults = Object.fromEntries(ancestors.map(id => {
-        const ancestorResult = routeAncestorResults.get(id)
-        const data = ancestorResult ? ancestorResult.then(result => result.type === ResultType.data ? result.data : undefined) : Promise.resolve(undefined)
-        return [id, data]
-      }))
-      const result = callLoaderOrAction(
-        "loader",
-        request,
-        match,
-        matches,
-        manifest,
-        mapRouteProperties,
-        basename,
-        future.v7_relativeSplatPath,
-        ancestorResults,
-      )
-      routeAncestorResults.set(routeId, result)
-    }
 
     // Call all navigation loaders and revalidating fetcher loaders in parallel,
     // then slice off the results into separate arrays so we can handle them
     // accordingly
     let results = await Promise.all([
-      ...routeAncestorResults.values(),
+      ...allResults.values(),
       ...fetchersToLoad.map((f) => {
         if (f.matches && f.match && f.controller) {
           return callLoaderOrAction(
@@ -3995,7 +4045,7 @@ async function loadLazyRouteModule(
   });
 }
 
-type LoaderOrActionResults<T extends "loader" | "action"> =
+type LoaderOrActionResultData<T extends "loader" | "action"> =
   T extends "loader" ? Record<string, Promise<any | undefined>> : undefined
 
 async function callLoaderOrAction<T extends "loader" | "action">(
@@ -4007,7 +4057,7 @@ async function callLoaderOrAction<T extends "loader" | "action">(
   mapRouteProperties: MapRoutePropertiesFunction,
   basename: string,
   v7_relativeSplatPath: boolean,
-  ancestorResults: LoaderOrActionResults<T>,
+  ancestorData: LoaderOrActionResultData<T>,
   opts: {
     isStaticRequest?: boolean;
     isRouteRequest?: boolean;
@@ -4034,16 +4084,14 @@ async function callLoaderOrAction<T extends "loader" | "action">(
     ]);
   };
 
-  function loaderToAction(loader: LoaderFunction, ancestorResults2: Record<string, Promise<any | undefined>>): ActionFunction {
-    function routeLoaderData(routeId: string) {
-      return ancestorResults2[routeId]
-    }
+  function loaderToAction(loader: LoaderFunction, ancestorResults: Record<string, Promise<any | undefined>>): ActionFunction {
+    const routeLoaderData = (routeId: string) => ancestorResults[routeId]
     return (args) => loader({...args, routeLoaderData })
   }
 
   function getHandler() {
     return type === "loader" ?
-      match.route.loader === undefined ? undefined : loaderToAction(match.route.loader, ancestorResults!) :
+      match.route.loader === undefined ? undefined : loaderToAction(match.route.loader, ancestorData!) :
       match.route.action
   }
 
