@@ -71,6 +71,7 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
+  unstable_HandlerResult,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -119,8 +120,6 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
-  unstable_DecodedResponse,
-  unstable_isDecodedResponse,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -15,6 +15,7 @@ export type {
   ErrorResponse,
   FormEncType,
   FormMethod,
+  HandlerResult as unstable_HandlerResult,
   HTMLFormMethod,
   JsonFunction,
   LazyRouteFunction,
@@ -35,11 +36,9 @@ export type {
 
 export {
   AbortedDeferredError,
-  DecodedResponse as unstable_DecodedResponse,
   defer,
   generatePath,
   getToPathname,
-  isDecodedResponse as unstable_isDecodedResponse,
   isRouteErrorResponse,
   joinPaths,
   json,

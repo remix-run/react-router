@@ -17,7 +17,10 @@ export default async function urlDataStrategy({
           contentType === "application/x-www-form-urlencoded",
           "Invalid Response"
         );
-        return new URLSearchParams(await response.text());
+        return {
+          type: "data",
+          result: new URLSearchParams(await response.text()),
+        };
       })
     )
   );

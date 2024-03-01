@@ -112,6 +112,7 @@ export type {
   UIMatch,
   Blocker,
   BlockerFunction,
+  unstable_HandlerResult,
 } from "./react-router-dom";
 export {
   AbortedDeferredError,
@@ -185,8 +186,6 @@ export {
   useRoutes,
   useSearchParams,
   useSubmit,
-  unstable_DecodedResponse,
-  unstable_isDecodedResponse,
 } from "./react-router-dom";
 
 export type { StaticRouterProps } from "./lib/components";

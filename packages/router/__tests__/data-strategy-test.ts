@@ -142,7 +142,10 @@ describe("router dataStrategy", () => {
             matches.map((m) =>
               m.resolve(async (handler) => {
                 let result = await handler();
-                return `Route ID "${m.route.id}" returned "${result}"`;
+                return {
+                  type: "data",
+                  result: `Route ID "${m.route.id}" returned "${result}"`,
+                };
               })
             )
           );
@@ -174,7 +177,10 @@ describe("router dataStrategy", () => {
             matches.map((m) =>
               m.resolve(async (handler) => {
                 let result = await handler();
-                return `Route ID "${m.route.id}" returned "${result}"`;
+                return {
+                  type: "data",
+                  result: `Route ID "${m.route.id}" returned "${result}"`,
+                };
               })
             )
           );
@@ -253,9 +259,14 @@ describe("router dataStrategy", () => {
           return Promise.all(
             matches.map((match) => {
               return match.resolve(async (handler) => {
-                let val = await handler();
-                // Won't get here since handler will throw
-                return val;
+                try {
+                  return {
+                    type: "data",
+                    result: await handler(),
+                  };
+                } catch (e) {
+                  return { type: "error", result: e };
+                }
               });
             })
           );
@@ -793,13 +804,15 @@ describe("router dataStrategy", () => {
                 ) {
                   let str = await result.text();
                   return {
-                    original: str,
-                    reversed: str.split("").reverse().join(""),
+                    type: "data",
+                    result: {
+                      original: str,
+                      reversed: str.split("").reverse().join(""),
+                    },
                   };
                 }
-                // This will be a JSON response we expect to be decoded the normal
-                // way
-                return result;
+                // This will be a JSON response we expect to be decoded the normal way
+                return { type: "data", result };
               });
             })
           );
@@ -872,7 +885,7 @@ describe("router dataStrategy", () => {
 
           // Resolve the deferred's above and return the mapped match promises
           routeDeferreds.forEach((dfd, routeId) =>
-            dfd.resolve(result.loaderData[routeId])
+            dfd.resolve({ type: "data", result: result.loaderData[routeId] })
           );
           return Promise.all(matchPromises);
         },
@@ -948,7 +961,7 @@ describe("router dataStrategy", () => {
           // Run loaders in parallel only exposing contexts from above
           return Promise.all(
             matches.map((m, i) =>
-              m.resolve((handler) => {
+              m.resolve(async (handler) => {
                 // Only provide context values up to this level in the matches
                 let handlerCtx = matches.slice(0, i + 1).reduce((acc, m) => {
                   Object.keys(m.route.handle?.context).forEach((k) => {
@@ -956,7 +969,7 @@ describe("router dataStrategy", () => {
                   });
                   return acc;
                 }, {});
-                return handler(handlerCtx);
+                return { type: "data", result: await handler(handlerCtx) };
               })
             )
           );
@@ -1067,7 +1080,7 @@ describe("router dataStrategy", () => {
           // Run loaders in parallel only exposing contexts from above
           return Promise.all(
             matches.map((m, i) =>
-              m.resolve((callHandler) => {
+              m.resolve(async (callHandler) => {
                 // Only provide context values up to this level in the matches
                 let handlerCtx = matches.slice(0, i + 1).reduce((acc, m) => {
                   Object.keys(m.route.handle?.context).forEach((k) => {
@@ -1075,7 +1088,7 @@ describe("router dataStrategy", () => {
                   });
                   return acc;
                 }, {});
-                return callHandler(handlerCtx);
+                return { type: "data", result: await callHandler(handlerCtx) };
               })
             )
           );
@@ -1155,12 +1168,12 @@ describe("router dataStrategy", () => {
                 if (request.method !== "GET") {
                   // invalidate on actions
                   cache = {};
-                  return handler();
+                  return { type: "data", result: await handler() };
                 }
 
                 let key = getCacheKey(m);
                 if (key && cache[key]) {
-                  return cache[key];
+                  return { type: "data", result: cache[key] };
                 }
 
                 let handlerResult = await handler();
@@ -1168,7 +1181,7 @@ describe("router dataStrategy", () => {
                   cache[key] = handlerResult;
                 }
 
-                return handlerResult;
+                return { type: "data", result: handlerResult };
               });
             })
           );

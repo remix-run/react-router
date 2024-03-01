@@ -67,8 +67,9 @@ export type DataResult =
  * Result from a loader or action called via dataStrategy
  */
 export interface HandlerResult {
-  type: ResultType.data | ResultType.error;
+  type: "data" | "error";
   result: any; // data, Error, Response, DeferredData
+  status?: number;
 }
 
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -240,7 +241,7 @@ export interface DataStrategyMatch
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => DataFunctionReturnValue
+    ) => Promise<HandlerResult>
   ) => Promise<HandlerResult>;
 }
 
@@ -1614,32 +1615,6 @@ export class ErrorResponseImpl implements ErrorResponse {
 }
 
 /**
- * Utility class we use to hold unwrapped Responses while preserving status
- * codes and headers.  This is most useful for dataStrategy implementations
- * where implementors want to use a custom decoding mechanism and return
- * pre-decoded data while also preserving response meta information
- */
-export class DecodedResponse {
-  status: number;
-  statusText: string;
-  headers: Headers;
-  data: unknown;
-  private _isDecodedResponse: boolean = true;
-
-  constructor(
-    status: number,
-    statusText: string,
-    headers: Headers,
-    data: unknown
-  ) {
-    this.status = status;
-    this.statusText = statusText;
-    this.headers = headers;
-    this.data = data;
-  }
-}
-
-/**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx
  * Response thrown from an action/loader
  */
@@ -1650,19 +1625,5 @@ export function isRouteErrorResponse(error: any): error is ErrorResponse {
     typeof error.statusText === "string" &&
     typeof error.internal === "boolean" &&
     "data" in error
-  );
-}
-
-/**
- * Check if the given error is an DecodedResponse
- */
-export function isDecodedResponse(value: any): value is DecodedResponse {
-  return (
-    value != null &&
-    value._isDecodedResponse === true &&
-    typeof value.status === "number" &&
-    typeof value.statusText === "string" &&
-    value.headers != null &&
-    "data" in value
   );
 }

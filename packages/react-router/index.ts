@@ -31,6 +31,7 @@ import type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
+  unstable_HandlerResult,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -49,8 +50,6 @@ import {
   redirectDocument,
   resolvePath,
   UNSAFE_warning as warning,
-  unstable_DecodedResponse,
-  unstable_isDecodedResponse,
 } from "@remix-run/router";
 
 import type {
@@ -181,6 +180,7 @@ export type {
   UIMatch,
   Blocker,
   BlockerFunction,
+  unstable_HandlerResult,
 };
 export {
   AbortedDeferredError,
@@ -228,8 +228,6 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
-  unstable_DecodedResponse,
-  unstable_isDecodedResponse,
 };
 
 function mapRouteProperties(route: RouteObject) {

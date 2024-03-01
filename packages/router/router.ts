@@ -44,7 +44,6 @@ import {
   getPathContributingMatches,
   getResolveToMatches,
   immutableRouteKeys,
-  isDecodedResponse,
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
@@ -4184,19 +4183,21 @@ async function callLoaderOrAction(
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
   staticContext?: unknown
 ): Promise<HandlerResult> {
-  let result;
+  let result: HandlerResult;
   let onReject: (() => void) | undefined;
 
   let runHandler = (
     handler: AgnosticRouteObject["loader"] | AgnosticRouteObject["action"]
-  ) => {
+  ): Promise<HandlerResult> => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;
-    let abortPromise = new Promise((_, r) => (reject = r));
+    // This will never resolve so safe to type it as Promise<HandlerResult> to
+    // satisfy the function return value
+    let abortPromise = new Promise<HandlerResult>((_, r) => (reject = r));
     onReject = () => reject();
     request.signal.addEventListener("abort", onReject);
 
-    let runHandlerForReal = (ctx?: unknown) => {
+    let actualHandler = (ctx?: unknown) => {
       if (typeof handler !== "function") {
         return Promise.reject(
           new Error(
@@ -4215,9 +4216,19 @@ async function callLoaderOrAction(
       );
     };
 
-    let handlerPromise = handlerOverride
-      ? handlerOverride(async (ctx: unknown) => runHandlerForReal(ctx))
-      : runHandlerForReal();
+    let handlerPromise: Promise<HandlerResult>;
+    if (handlerOverride) {
+      handlerPromise = handlerOverride((ctx: unknown) => actualHandler(ctx));
+    } else {
+      handlerPromise = (async () => {
+        try {
+          let val = await actualHandler();
+          return { type: "data", result: val };
+        } catch (e) {
+          return { type: "error", result: e };
+        }
+      })();
+    }
 
     return Promise.race([handlerPromise, abortPromise]);
   };
@@ -4241,7 +4252,7 @@ async function callLoaderOrAction(
         if (handlerError !== undefined) {
           throw handlerError;
         }
-        result = value;
+        result = value!;
       } else {
         // Load lazy route module, then run any returned handler
         await loadLazyRouteModule(match.route, mapRouteProperties, manifest);
@@ -4277,12 +4288,15 @@ async function callLoaderOrAction(
     }
 
     invariant(
-      result !== undefined,
+      result.result !== undefined,
       `You defined ${type === "action" ? "an action" : "a loader"} for route ` +
         `"${match.route.id}" but didn't return anything from your \`${type}\` ` +
         `function. Please return a value or \`null\`.`
     );
   } catch (e) {
+    // We should already be catching and converting normal handler executions to
+    // HandlerResults and returning them, so anything that throws here is an
+    // unexpected error we still need to wrap
     return { type: ResultType.error, result: e };
   } finally {
     if (onReject) {
@@ -4290,13 +4304,13 @@ async function callLoaderOrAction(
     }
   }
 
-  return { type: ResultType.data, result };
+  return result;
 }
 
 async function convertHandlerResultToDataResult(
   handlerResult: HandlerResult
 ): Promise<DataResult> {
-  let { result, type } = handlerResult;
+  let { result, type, status } = handlerResult;
 
   if (isResponse(result)) {
     let data: any;
@@ -4320,7 +4334,7 @@ async function convertHandlerResultToDataResult(
 
     if (type === ResultType.error) {
       return {
-        type,
+        type: ResultType.error,
         error: new ErrorResponseImpl(result.status, result.statusText, data),
         statusCode: result.status,
         headers: result.headers,
@@ -4335,33 +4349,11 @@ async function convertHandlerResultToDataResult(
     };
   }
 
-  if (isDecodedResponse(result)) {
-    if (type === ResultType.error) {
-      return {
-        type,
-        error: new ErrorResponseImpl(
-          result.status,
-          result.statusText,
-          result.data
-        ),
-        statusCode: result.status,
-        headers: result.headers,
-      };
-    }
-
-    return {
-      type: ResultType.data,
-      data: result.data,
-      statusCode: result.status,
-      headers: result.headers,
-    };
-  }
-
   if (type === ResultType.error) {
     return {
-      type,
+      type: ResultType.error,
       error: result,
-      statusCode: isRouteErrorResponse(result) ? result.status : undefined,
+      statusCode: isRouteErrorResponse(result) ? result.status : status,
     };
   }
 
@@ -4374,7 +4366,7 @@ async function convertHandlerResultToDataResult(
     };
   }
 
-  return { type: ResultType.data, data: result };
+  return { type: ResultType.data, data: result, statusCode: status };
 }
 
 // Support relative routing in internal redirects
