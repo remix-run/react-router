@@ -409,8 +409,10 @@ function RenderAwaitedError() {
 }
 
 export async function childLoader({ routeLoaderData }: LoaderFunctionArgs) {
-  const data = await routeLoaderData("deferred")! as DeferredRouteLoaderData
-  return data.lazy2.then((message) => "Child: " + message)
+  const dataPromise = routeLoaderData("deferred")! as Promise<DeferredRouteLoaderData>
+  return defer({
+    lazy2: dataPromise.then(data => data.lazy2.then((message) => "Child: " + message))
+  })
 }
 
 export function DeferredChild(): React.ReactElement {
