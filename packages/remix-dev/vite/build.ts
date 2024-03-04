@@ -237,8 +237,8 @@ export async function build(
     logLevel,
     minify,
     mode,
-    sourcemapClient = false,
-    sourcemapServer = false,
+    sourcemapClient,
+    sourcemapServer,
   }: ViteBuildOptions
 ) {
   // Ensure Vite's ESM build is preloaded at the start of the process
