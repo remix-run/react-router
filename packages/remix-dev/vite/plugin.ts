@@ -347,7 +347,7 @@ const resolveChunk = (
   return entryChunk;
 };
 
-const resolveBuildAssetPaths = (
+const getRemixManifestBuildAssets = (
   ctx: RemixPluginContext,
   viteManifest: Vite.Manifest,
   entryFilePath: string,
@@ -366,7 +366,7 @@ const resolveBuildAssetPaths = (
   ]);
 
   return {
-    module: `${ctx.remixConfig.publicPath}${entryChunk.file}${CLIENT_ROUTE_QUERY_STRING}`,
+    module: `${ctx.remixConfig.publicPath}${entryChunk.file}`,
     imports:
       dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
         return `${ctx.remixConfig.publicPath}${viteManifest[imported].file}`;
@@ -856,7 +856,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       getClientBuildDirectory(ctx.remixConfig)
     );
 
-    let entry = resolveBuildAssetPaths(
+    let entry = getRemixManifestBuildAssets(
       ctx,
       viteManifest,
       ctx.entryClientFilePath
@@ -886,7 +886,7 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         hasClientAction: sourceExports.includes("clientAction"),
         hasClientLoader: sourceExports.includes("clientLoader"),
         hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
-        ...resolveBuildAssetPaths(
+        ...getRemixManifestBuildAssets(
           ctx,
           viteManifest,
           routeFilePath,
