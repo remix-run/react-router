@@ -17,14 +17,20 @@ const remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 export const viteConfig = {
-  server: async (args: { port: number }) => {
+  server: async (args: { port: number; fsAllow?: string[] }) => {
+    let { port, fsAllow } = args;
     let hmrPort = await getPort();
     let text = dedent`
-      server: { port: ${args.port}, strictPort: true, hmr: { port: ${hmrPort} } },
+      server: {
+        port: ${port},
+        strictPort: true,
+        hmr: { port: ${hmrPort} },
+        fs: { allow: ${fsAllow ? JSON.stringify(fsAllow) : "undefined"} }
+      },
     `;
     return text;
   },
-  basic: async (args: { port: number }) => {
+  basic: async (args: { port: number; fsAllow?: string[] }) => {
     return dedent`
       import { vitePlugin as remix } from "@remix-run/dev";
 
