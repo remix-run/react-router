@@ -8,5 +8,8 @@
     "react-router-native": "6.22.2",
     "@remix-run/router": "1.15.2"
   },
-  "changesets": []
+  "changesets": [
+    "partial-hydration-bubbled-error",
+    "partial-hydration-no-loader"
+  ]
 }
