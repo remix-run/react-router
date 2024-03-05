@@ -1,7 +1,11 @@
 import type { AgnosticDataRouteObject } from "../../utils";
 
+export async function sleep(n: number) {
+  await new Promise((r) => setTimeout(r, n));
+}
+
 export async function tick() {
-  await new Promise((r) => setTimeout(r, 0));
+  await sleep(0);
 }
 
 export function invariant(value: boolean, message?: string): asserts value;

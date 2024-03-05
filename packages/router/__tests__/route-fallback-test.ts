@@ -401,7 +401,7 @@ describe("future.v7_partialHydration", () => {
       });
     });
 
-    it("does not kick off initial data load if errors exist", async () => {
+    it("does not kick off initial data load if errors exist (parent error)", async () => {
       let consoleWarnSpy = jest
         .spyOn(console, "warn")
         .mockImplementation(() => {});
@@ -457,5 +457,103 @@ describe("future.v7_partialHydration", () => {
       router.dispose();
       consoleWarnSpy.mockReset();
     });
+
+    it("does not kick off initial data load if errors exist (bubbled child error)", async () => {
+      let consoleWarnSpy = jest
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
+      let parentDfd = createDeferred();
+      let parentSpy = jest.fn(() => parentDfd.promise);
+      let childDfd = createDeferred();
+      let childSpy = jest.fn(() => childDfd.promise);
+      let router = createRouter({
+        history: createMemoryHistory({ initialEntries: ["/child"] }),
+        routes: [
+          {
+            path: "/",
+            loader: parentSpy,
+            children: [
+              {
+                path: "child",
+                loader: childSpy,
+              },
+            ],
+          },
+        ],
+        future: {
+          v7_partialHydration: true,
+        },
+        hydrationData: {
+          errors: {
+            "0": "CHILD ERROR",
+          },
+          loaderData: {
+            "0": "PARENT DATA",
+          },
+        },
+      });
+      router.initialize();
+
+      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(parentSpy).not.toHaveBeenCalled();
+      expect(childSpy).not.toHaveBeenCalled();
+      expect(router.state).toMatchObject({
+        historyAction: "POP",
+        location: expect.objectContaining({ pathname: "/child" }),
+        matches: [{ route: { path: "/" } }, { route: { path: "child" } }],
+        initialized: true,
+        navigation: IDLE_NAVIGATION,
+        errors: {
+          "0": "CHILD ERROR",
+        },
+        loaderData: {
+          "0": "PARENT DATA",
+        },
+      });
+
+      router.dispose();
+      consoleWarnSpy.mockReset();
+    });
+  });
+
+  it("does not kick off initial data load for routes that don't have loaders", async () => {
+    let consoleWarnSpy = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+    let parentDfd = createDeferred();
+    let parentSpy = jest.fn(() => parentDfd.promise);
+    let router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/child"] }),
+      routes: [
+        {
+          path: "/",
+          loader: parentSpy,
+          children: [
+            {
+              path: "child",
+            },
+          ],
+        },
+      ],
+      future: {
+        v7_partialHydration: true,
+      },
+      hydrationData: {
+        loaderData: {
+          "0": "PARENT DATA",
+        },
+      },
+    });
+    expect(router.state).toMatchObject({
+      // already initialized so calling initialize() won't kick off loaders
+      initialized: true,
+      navigation: IDLE_NAVIGATION,
+      loaderData: {
+        "0": "PARENT DATA",
+      },
+    });
+
+    router.dispose();
+    consoleWarnSpy.mockReset();
   });
 });
