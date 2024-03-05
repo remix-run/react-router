@@ -833,11 +833,17 @@ export function createRouter(init: RouterInit): Router {
     // were marked for explicit hydration
     let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
     let errors = init.hydrationData ? init.hydrationData.errors : null;
-    let isRouteInitialized = (m: AgnosticDataRouteMatch) =>
-      m.route.loader &&
-      m.route.loader.hydrate !== true &&
-      ((loaderData && loaderData[m.route.id] !== undefined) ||
-        (errors && errors[m.route.id] !== undefined));
+    let isRouteInitialized = (m: AgnosticDataRouteMatch) => {
+      // No loader, nothing to initialize
+      if (!m.route.loader) return true;
+      // Explicitly opting-in to running on hydration
+      if (m.route.loader.hydrate === true) return false;
+      // Otherwise, initialized if hydrated with data or an error
+      return (
+        (loaderData && loaderData[m.route.id] !== undefined) ||
+        (errors && errors[m.route.id] !== undefined)
+      );
+    };
 
     // If errors exist, don't consider routes below the boundary
     if (errors) {
