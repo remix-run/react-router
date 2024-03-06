@@ -187,7 +187,7 @@ This way, the user's implementation can just always operate on the `matches` arr
 
 ```js
 // Sample strategy to run sequentially
-function dataStrategy({ request, params, matches, type }) {
+async function dataStrategy({ request, params, matches, type }) {
   let results = [];
   for (let match of matches) {
     let result = await match.route[type]({ request, params });
