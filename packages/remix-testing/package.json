@@ -15,13 +15,18 @@
   "main": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "module": "./dist/esm/index.js",
+  "scripts": {
+    "tsc": "tsc"
+  },
   "dependencies": {
-    "@remix-run/node": "2.8.0",
-    "@remix-run/react": "2.8.0",
+    "@remix-run/node": "workspace:*",
+    "@remix-run/react": "workspace:*",
     "@remix-run/router": "1.15.3-pre.0",
     "react-router-dom": "6.22.3-pre.0"
   },
   "devDependencies": {
+    "@remix-run/server-runtime": "workspace:*",
+    "@remix-run/testing": "workspace:*",
     "@types/node": "^18.17.1",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",

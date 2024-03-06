@@ -15,11 +15,5 @@
     "noEmit": true,
 
     "rootDir": "."
-  },
-  "references": [
-    { "path": "../packages/remix-dev" },
-    { "path": "../packages/remix-express" },
-    { "path": "../packages/remix-react" },
-    { "path": "../packages/remix-server-runtime" }
-  ]
+  }
 }

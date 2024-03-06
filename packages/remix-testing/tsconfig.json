@@ -6,7 +6,6 @@
     "target": "ES2022",
     "module": "ES2022",
     "skipLibCheck": true,
-    "composite": true,
 
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,

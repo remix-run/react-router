@@ -2,10 +2,9 @@
   "include": ["**/*.ts"],
   "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
-    "lib": ["ES2022"],
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "target": "ES2022",
     "module": "ES2022",
-    "composite": true,
 
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,

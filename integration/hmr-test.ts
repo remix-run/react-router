@@ -7,12 +7,7 @@ import execa from "execa";
 import getPort from "get-port";
 
 import type { FixtureInit } from "./helpers/create-fixture.js";
-import {
-  createFixtureProject,
-  css,
-  js,
-  json,
-} from "./helpers/create-fixture.js";
+import { createFixtureProject, css, js } from "./helpers/create-fixture.js";
 import { killtree } from "./helpers/killtree.js";
 
 test.setTimeout(150_000);
@@ -177,40 +172,6 @@ whatsup
     `,
 };
 
-let packageJson = (options: { devScript: string; deps?: string[] }) =>
-  json({
-    name: "remix-template-express",
-    private: true,
-    sideEffects: false,
-    type: "module",
-    scripts: {
-      dev: options.devScript,
-    },
-    dependencies: deps([
-      ...(options.deps ?? []),
-      "@remix-run/css-bundle",
-      "@remix-run/express",
-      "@remix-run/node",
-      "@remix-run/react",
-      "express",
-      "isbot",
-      "react",
-      "react-dom",
-
-      "postcss-import",
-      "tailwindcss",
-    ]),
-    devDependencies: deps([
-      "@remix-run/dev",
-      "@types/react",
-      "@types/react-dom",
-      "typescript",
-    ]),
-    engines: {
-      node: ">=18.0.0",
-    },
-  });
-
 let customServer = (options: { appPort: number; devReady: string }) => {
   return js`
       import path from "node:path";
@@ -251,56 +212,46 @@ let remix = "node ./node_modules/@remix-run/dev/dist/cli.js";
 let serve = "node ./node_modules/@remix-run/serve/dist/cli.js";
 
 test("HMR for remix-serve", async ({ page }) => {
-  await dev(page, {
-    files: (appPort) => ({
-      ...files,
-      "package.json": packageJson({
-        devScript: `cross-env PORT=${appPort} ${remix} dev -c "${serve} ./build/index.js"`,
-        deps: ["@remix-run/serve"],
-      }),
-    }),
+  await dev(page, (appPort) => ({
+    files,
+    devScript: `PORT=${appPort} ${remix} dev --manual -c "${serve} ./build/index.js"`,
     appReadyPattern: /\[remix-serve\] /,
-  });
+  }));
 });
 
 test("HMR for custom server with broadcast", async ({ page }) => {
-  await dev(page, {
-    files: (appPort) => ({
+  await dev(page, (appPort) => ({
+    files: {
       ...files,
-      "package.json": packageJson({
-        devScript: `${remix} dev -c "node ./server.js"`,
-        deps: ["@remix-run/express"],
-      }),
       "server.js": customServer({
         appPort,
         devReady: "broadcastDevReady",
       }),
-    }),
+    },
+    devScript: `${remix} dev -c "node ./server.js"`,
     appReadyPattern: /✅ app ready: /,
-  });
+  }));
 });
 
 test("HMR for custom server with log", async ({ page }) => {
-  await dev(page, {
-    files: (appPort) => ({
+  await dev(page, (appPort) => ({
+    files: {
       ...files,
-      "package.json": packageJson({
-        devScript: `${remix} dev -c "node ./server.js"`,
-        deps: ["@remix-run/express"],
-      }),
       "server.js": customServer({
         appPort,
         devReady: "logDevReady",
       }),
-    }),
+    },
+    devScript: `${remix} dev -c "node ./server.js"`,
     appReadyPattern: /✅ app ready: /,
-  });
+  }));
 });
 
 async function dev(
   page: Page,
-  options: {
-    files: (appPort: number) => Record<string, string>;
+  getOptions: (appPort: number) => {
+    files: Record<string, string>;
+    devScript: string;
     appReadyPattern: RegExp;
   }
 ) {
@@ -318,18 +269,30 @@ async function dev(
   let appPort = await getPort();
   let devPort = await getPort();
 
+  let options = getOptions(appPort);
+
   let fixture: FixtureInit = {
     config: {
       dev: {
         port: devPort,
       },
     },
-    files: options.files(appPort),
+    files: options.files,
   };
 
   let projectDir = await createFixtureProject(fixture);
 
-  let devProc = execa("npm", ["run", "dev"], { cwd: projectDir });
+  // inject dev script
+  let pkgJson = JSON.parse(
+    fs.readFileSync(path.join(projectDir, "package.json"), "utf8")
+  );
+  pkgJson.scripts.dev = options.devScript;
+  fs.writeFileSync(
+    path.join(projectDir, "package.json"),
+    JSON.stringify(pkgJson, null, 2)
+  );
+
+  let devProc = execa("pnpm", ["run", "dev"], { cwd: projectDir });
   let devStdout = bufferize(devProc.stdout!);
   let devStderr = bufferize(devProc.stderr!);
 
@@ -703,10 +666,4 @@ let expectConsoleError = (
     }
     unexpected(error);
   };
-};
-
-let deps = (packages: string[]): Record<string, string> => {
-  return Object.fromEntries(
-    packages.map((pkg) => [pkg, "0.0.0-local-version"])
-  );
 };

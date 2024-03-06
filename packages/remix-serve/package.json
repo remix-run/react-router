@@ -14,9 +14,12 @@
   "bin": {
     "remix-serve": "dist/cli.js"
   },
+  "scripts": {
+    "tsc": "tsc"
+  },
   "dependencies": {
-    "@remix-run/express": "2.8.0",
-    "@remix-run/node": "2.8.0",
+    "@remix-run/express": "workspace:*",
+    "@remix-run/node": "workspace:*",
     "chokidar": "^3.5.3",
     "compression": "^1.7.4",
     "express": "^4.17.1",

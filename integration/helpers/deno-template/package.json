@@ -1,27 +1,26 @@
 {
-  "name": "remix-template-deno",
+  "name": "integration-deno-template",
+  "version": "0.0.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",
-    "dev": "node ../../../node_modules/npm-run-all/bin/npm-run-all/index.js build --parallel \"dev:*\"",
-    "dev:deno": "node ../../../node_modules/cross-env/src/bin/cross-env.js NODE_ENV=development deno run --unstable --watch --allow-net --allow-read --allow-env ./build/index.js",
-    "dev:remix": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js watch",
-    "start": "node ../../../node_modules/cross-env/src/bin/cross-env.js NODE_ENV=production deno run --unstable --allow-net --allow-read --allow-env ./build/index.js"
+    "build": "node ./node_modules/@remix-run/dev/dist/cli.js build",
+    "dev": "pnpm run \"/^dev:.*/\"",
+    "dev:deno": "NODE_ENV=development deno run --unstable --watch --allow-net --allow-read --allow-env ./build/index.js",
+    "dev:remix": "node ./node_modules/@remix-run/dev/dist/cli.js watch",
+    "start": "NODE_ENV=production deno run --unstable --allow-net --allow-read --allow-env ./build/index.js"
   },
   "dependencies": {
-    "@remix-run/css-bundle": "0.0.0-local-version",
-    "@remix-run/deno": "0.0.0-local-version",
-    "@remix-run/react": "0.0.0-local-version",
-    "isbot": "0.0.0-local-version",
-    "react": "0.0.0-local-version",
-    "react-dom": "0.0.0-local-version"
+    "@remix-run/css-bundle": "workspace:*",
+    "@remix-run/deno": "workspace:*",
+    "@remix-run/react": "workspace:*",
+    "isbot": "^4.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "0.0.0-local-version",
-    "cross-env": "0.0.0-local-version",
-    "npm-run-all": "0.0.0-local-version"
+    "@remix-run/dev": "workspace:*"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -6,45 +6,6 @@ import type { Files } from "./helpers/vite.js";
 import { test, viteConfig } from "./helpers/vite.js";
 
 const files: Files = async ({ port }) => ({
-  "package.json": JSON.stringify(
-    {
-      private: true,
-      sideEffects: false,
-      type: "module",
-      scripts: {
-        dev: "remix vite:dev",
-        build: "remix vite:build",
-        start: "wrangler pages dev ./build/client",
-        deploy: "wrangler pages deploy ./build/client",
-        typecheck: "tsc",
-      },
-      dependencies: {
-        "@remix-run/cloudflare": "*",
-        "@remix-run/cloudflare-pages": "*",
-        "@remix-run/react": "*",
-        isbot: "^4.1.0",
-        miniflare: "^3.20231030.4",
-        react: "^18.2.0",
-        "react-dom": "^18.2.0",
-      },
-      devDependencies: {
-        "@cloudflare/workers-types": "^4.20230518.0",
-        "@remix-run/dev": "*",
-        "@types/react": "^18.2.20",
-        "@types/react-dom": "^18.2.7",
-        "node-fetch": "^3.3.2",
-        typescript: "^5.1.6",
-        vite: "^5.1.0",
-        "vite-tsconfig-paths": "^4.2.1",
-        wrangler: "^3.28.2",
-      },
-      engines: {
-        node: ">=18.0.0",
-      },
-    },
-    null,
-    2
-  ),
   "vite.config.ts": dedent`
     import {
       vitePlugin as remix,
@@ -172,7 +133,7 @@ const files: Files = async ({ port }) => ({
 });
 
 test("vite dev", async ({ page, viteDev }) => {
-  let { port } = await viteDev(files);
+  let { port } = await viteDev(files, "vite-cloudflare-template");
   await workflow({ page, port });
 });
 

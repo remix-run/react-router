@@ -1,5 +1,4 @@
-import type { UploadHandler } from "@remix-run/server-runtime";
-
+import type { UploadHandler } from "../formData";
 import { MaxPartSizeExceededError } from "./errors";
 
 export type MemoryUploadHandlerFilterArgs = {

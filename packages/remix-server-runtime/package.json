@@ -15,6 +15,9 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "module": "dist/esm/index.js",
+  "scripts": {
+    "tsc": "tsc"
+  },
   "dependencies": {
     "@remix-run/router": "1.15.3-pre.0",
     "@types/cookie": "^0.6.0",

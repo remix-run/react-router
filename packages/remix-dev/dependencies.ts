@@ -60,12 +60,14 @@ function getPackageDependenciesRecursive(
 
   let pkgPath: string;
   try {
-    pkgPath = require.resolve(pkg);
+    pkgPath = require.resolve(pkg, { paths: [__dirname, process.cwd()] });
   } catch (err) {
     if (isErrorWithCode(err) && err.code === "ERR_PACKAGE_PATH_NOT_EXPORTED") {
       // Handle packages without main exports.
       // They at least need to have package.json exported.
-      pkgPath = require.resolve(`${pkg}/package.json`);
+      pkgPath = require.resolve(`${pkg}/package.json`, {
+        paths: [__dirname, process.cwd()],
+      });
     } else {
       throw err;
     }

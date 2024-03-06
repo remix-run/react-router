@@ -15,6 +15,8 @@ import { test as base, expect } from "@playwright/test";
 
 const remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
+const root = path.resolve(__dirname, "../..");
+const TMP_DIR = path.join(root, ".tmp/integration");
 
 export const viteConfig = {
   server: async (args: { port: number; fsAllow?: string[] }) => {
@@ -88,15 +90,19 @@ export const EXPRESS_SERVER = (args: {
     app.listen(port, () => console.log('http://localhost:' + port));
   `;
 
-const TMP_DIR = path.join(process.cwd(), ".tmp/integration");
-export async function createProject(files: Record<string, string> = {}) {
+type TemplateName = "vite-template" | "vite-cloudflare-template";
+
+export async function createProject(
+  files: Record<string, string> = {},
+  templateName: TemplateName = "vite-template"
+) {
   let projectName = `remix-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
   await fse.ensureDir(projectDir);
 
   // base template
-  let template = path.resolve(__dirname, "vite-template");
-  await fse.copy(template, projectDir, { errorOnExist: true });
+  let templateDir = path.resolve(__dirname, templateName);
+  await fse.copy(templateDir, projectDir, { errorOnExist: true });
 
   // user-defined files
   await Promise.all(
@@ -105,13 +111,6 @@ export async function createProject(files: Record<string, string> = {}) {
       await fse.ensureDir(path.dirname(filepath));
       await fse.writeFile(filepath, stripIndent(contents));
     })
-  );
-
-  // node_modules: overwrite with locally built Remix packages
-  await fse.copy(
-    path.join(__dirname, "../../build/node_modules"),
-    path.join(projectDir, "node_modules"),
-    { overwrite: true }
   );
 
   return projectDir;
@@ -225,7 +224,10 @@ declare module "@playwright/test" {
 export type Files = (args: { port: number }) => Promise<Record<string, string>>;
 type Fixtures = {
   page: Page;
-  viteDev: (files: Files) => Promise<{
+  viteDev: (
+    files: Files,
+    templateName?: TemplateName
+  ) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -252,9 +254,9 @@ export const test = base.extend<Fixtures>({
   // eslint-disable-next-line no-empty-pattern
   viteDev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
-    await use(async (files) => {
+    await use(async (files, template) => {
       let port = await getPort();
-      let cwd = await createProject(await files({ port }));
+      let cwd = await createProject(await files({ port }), template);
       stop = await viteDev({ cwd, port });
       return { port, cwd };
     });
@@ -289,7 +291,10 @@ export const test = base.extend<Fixtures>({
     let stop: (() => unknown) | undefined;
     await use(async (files) => {
       let port = await getPort();
-      let cwd = await createProject(await files({ port }));
+      let cwd = await createProject(
+        await files({ port }),
+        "vite-cloudflare-template"
+      );
       let { status } = viteBuild({ cwd });
       expect(status).toBe(0);
       stop = await wranglerPagesDev({ cwd, port });

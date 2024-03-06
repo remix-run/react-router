@@ -13,8 +13,11 @@
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "scripts": {
+    "tsc": "tsc"
+  },
   "dependencies": {
-    "@remix-run/node": "2.8.0"
+    "@remix-run/node": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "^4.17.9",

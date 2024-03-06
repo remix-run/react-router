@@ -1,27 +1,36 @@
 {
-  "name": "remix-template-remix",
+  "name": "integration-node-template",
+  "version": "0.0.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",
-    "dev": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js dev",
-    "start": "node ../../../build/node_modules/@remix-run/serve/dist/cli.js ./build/index.js"
+    "build": "node ./node_modules/@remix-run/dev/dist/cli.js build",
+    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js dev",
+    "start": "node ./node_modules/@remix-run/serve/dist/cli.js ./build/index.js"
   },
   "dependencies": {
-    "@remix-run/css-bundle": "0.0.0-local-version",
-    "@remix-run/node": "0.0.0-local-version",
-    "@remix-run/react": "0.0.0-local-version",
-    "@remix-run/serve": "0.0.0-local-version",
-    "isbot": "0.0.0-local-version",
-    "react": "0.0.0-local-version",
-    "react-dom": "0.0.0-local-version"
+    "@remix-run/css-bundle": "workspace:*",
+    "@remix-run/express": "workspace:*",
+    "@remix-run/node": "workspace:*",
+    "@remix-run/react": "workspace:*",
+    "@remix-run/serve": "workspace:*",
+    "@remix-run/server-runtime": "workspace:*",
+    "express": "^4.17.1",
+    "isbot": "^4.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "0.0.0-local-version",
-    "@types/react": "0.0.0-local-version",
-    "@types/react-dom": "0.0.0-local-version",
-    "typescript": "0.0.0-local-version"
+    "@remix-run/dev": "workspace:*",
+    "@vanilla-extract/css": "^1.10.0",
+    "@vanilla-extract/vite-plugin": "^3.9.2",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "getos": "^3.2.1",
+    "postcss-import": "^15.1.0",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.1.0"
   },
   "engines": {
     "node": ">=18.0.0"

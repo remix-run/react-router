@@ -11,7 +11,7 @@ test.describe("ErrorBoundary", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
   let _consoleError: any;
-  let errorLogs: any[];
+  let errorLogs: any[] = [];
 
   test.beforeAll(async () => {
     _consoleError = console.error;

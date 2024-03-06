@@ -55,7 +55,7 @@ const mtimeDir = async (dir: string): Promise<Date> => {
 export const run = async (args: string[], options: execa.Options = {}) => {
   // // Running build `.js` is ~8x faster than running source `.ts` via `esbuild-register`,
   // // so unless source code changes are not yet reflected in the build, prefer running the built `.js`.
-  // // To get speed ups in dev, make sure you build before running tests or are running `yarn watch`
+  // // To get speed ups in dev, make sure you build before running tests or are running `pnpm watch`
   let sourceDir = path.resolve(__dirname, "../..");
   let sourceTS = path.resolve(sourceDir, "cli.ts");
   // // when the most recent change happened _anywhere_ within `packages/remix-dev/`
@@ -69,7 +69,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
   let builtJS = path.resolve(buildDir, "dist/cli.js");
   let buildModified = await mtimeDir(buildDir);
 
-  // sometimes `yarn watch` is so fast that the build mtime is reported
+  // sometimes `pnpm watch` is so fast that the build mtime is reported
   // to be _before_ the mtime for the change in source that _caused_ the build
   // so we only use source if changes there are at least 5ms newer than latest build change
   let thresholdMs = 5;

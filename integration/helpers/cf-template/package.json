@@ -1,29 +1,30 @@
 {
-  "name": "remix-template-cloudflare-workers",
+  "name": "integration-cf-template",
+  "version": "0.0.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js build",
-    "dev": "node ../../../build/node_modules/@remix-run/dev/dist/cli.js dev --manual -c \"npm start\"",
-    "start": "node ../../../node_modules/wrangler/bin/wrangler.js dev ./build/index.js"
+    "build": "node ./node_modules/@remix-run/dev/dist/cli.js build",
+    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js dev --manual -c \"npm start\"",
+    "start": "wrangler dev ./build/index.js"
   },
   "dependencies": {
-    "@cloudflare/kv-asset-handler": "0.0.0-local-version",
-    "@remix-run/cloudflare": "0.0.0-local-version",
-    "@remix-run/css-bundle": "0.0.0-local-version",
-    "@remix-run/react": "0.0.0-local-version",
-    "isbot": "0.0.0-local-version",
-    "react": "0.0.0-local-version",
-    "react-dom": "0.0.0-local-version"
+    "@cloudflare/kv-asset-handler": "^0.3.0",
+    "@remix-run/cloudflare": "workspace:*",
+    "@remix-run/css-bundle": "workspace:*",
+    "@remix-run/react": "workspace:*",
+    "isbot": "^4.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "0.0.0-local-version",
-    "@remix-run/dev": "0.0.0-local-version",
-    "@types/react": "0.0.0-local-version",
-    "@types/react-dom": "0.0.0-local-version",
-    "typescript": "0.0.0-local-version",
-    "wrangler": "0.0.0-local-version"
+    "@cloudflare/workers-types": "^4.20230518.0",
+    "@remix-run/dev": "workspace:*",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.1.0",
+    "wrangler": "^3.24.0"
   },
   "engines": {
     "node": ">=18.0.0"

@@ -5,11 +5,11 @@
     "build": "remix build",
     "deploy": "deployctl deploy --prod --include=build,public --project=<your deno deploy project> ./build/index.js",
     "dev": "npm-run-all build --parallel \"dev:*\"",
-    "dev:deno": "cross-env NODE_ENV=development deno run --unstable --watch --allow-net --allow-read --allow-env ./build/index.js",
+    "dev:deno": "NODE_ENV=development deno run --unstable --watch --allow-net --allow-read --allow-env ./build/index.js",
     "dev:remix": "remix watch",
     "format": "deno fmt --ignore=node_modules,build,public/build",
     "lint": "deno lint --ignore=node_modules,build,public/build",
-    "start": "cross-env NODE_ENV=production deno run --unstable --allow-net --allow-read --allow-env ./build/index.js",
+    "start": "NODE_ENV=production deno run --unstable --allow-net --allow-read --allow-env ./build/index.js",
     "typecheck": "deno check"
   },
   "dependencies": {
@@ -22,7 +22,6 @@
   },
   "devDependencies": {
     "@remix-run/dev": "*",
-    "cross-env": "^7.0.3",
     "npm-run-all": "^4.1.5"
   },
   "engines": {

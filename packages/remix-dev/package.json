@@ -17,6 +17,9 @@
   "bin": {
     "remix": "dist/cli.js"
   },
+  "scripts": {
+    "tsc": "tsc"
+  },
   "dependencies": {
     "@babel/core": "^7.21.8",
     "@babel/generator": "^7.21.5",
@@ -28,9 +31,9 @@
     "@babel/types": "^7.22.5",
     "@mdx-js/mdx": "^2.3.0",
     "@npmcli/package-json": "^4.0.1",
-    "@remix-run/node": "2.8.0",
+    "@remix-run/node": "workspace:*",
     "@remix-run/router": "1.15.3-pre.0",
-    "@remix-run/server-runtime": "2.8.0",
+    "@remix-run/server-runtime": "workspace:*",
     "@types/mdx": "^2.0.5",
     "@vanilla-extract/integration": "^6.2.0",
     "arg": "^5.0.1",
@@ -73,9 +76,16 @@
     "ws": "^7.4.5"
   },
   "devDependencies": {
-    "@remix-run/serve": "2.8.0",
+    "@remix-run/cloudflare": "workspace:*",
+    "@remix-run/deno": "workspace:*",
+    "@remix-run/serve": "workspace:*",
+    "@remix-run/testing": "workspace:*",
+    "@types/babel__core": "^7.20.5",
+    "@types/babel__generator": "^7.6.8",
+    "@types/babel__traverse": "^7.20.5",
     "@types/cacache": "^17.0.0",
     "@types/cross-spawn": "^6.0.2",
+    "@types/express": "^4.17.9",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/jsesc": "^3.0.1",
     "@types/lodash.debounce": "^4.0.6",
@@ -83,6 +93,7 @@
     "@types/npmcli__package-json": "^4.0.0",
     "@types/picomatch": "^2.3.0",
     "@types/prettier": "^2.7.3",
+    "@types/set-cookie-parser": "^2.4.1",
     "@types/shelljs": "^0.8.11",
     "@types/tar-fs": "^2.0.1",
     "@types/ws": "^7.4.1",
@@ -95,6 +106,7 @@
     "wrangler": "^3.28.2"
   },
   "peerDependencies": {
+    "@remix-run/react": "^2.8.0",
     "@remix-run/serve": "^2.8.0",
     "typescript": "^5.1.0",
     "vite": "^5.1.0",

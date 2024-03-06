@@ -1052,6 +1052,27 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
             ctx.remixConfig.ssr === false
               ? "spa"
               : "custom",
+
+          ssr: {
+            external: [
+              // This is only necessary for development within the Remix repo
+              // because these packages are symlinked and Vite treats them as
+              // internal source code. For consumers this is a no-op.
+              "@remix-run/architect",
+              "@remix-run/cloudflare-pages",
+              "@remix-run/cloudflare-workers",
+              "@remix-run/cloudflare",
+              "@remix-run/css-bundle",
+              "@remix-run/deno",
+              "@remix-run/dev",
+              "@remix-run/express",
+              "@remix-run/netlify",
+              "@remix-run/node",
+              "@remix-run/react",
+              "@remix-run/serve",
+              "@remix-run/server-runtime",
+            ],
+          },
           optimizeDeps: {
             include: [
               // Pre-bundle React dependencies to avoid React duplicates,

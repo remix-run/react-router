@@ -28,19 +28,19 @@ let appFixture: AppFixture;
 // the project, run this:
 //
 //    ```
-//    yarn && yarn build
+//    pnpm install && pnpm build
 //    ```
 //
 // Now try running this test:
 //
 //    ```
-//    yarn bug-report-test
+//    pnpm bug-report-test
 //    ```
 //
 // You can add `--watch` to the end to have it re-run on file changes:
 //
 //    ```
-//    yarn bug-report-test --watch
+//    pnpm bug-report-test --watch
 //    ```
 ////////////////////////////////////////////////////////////////////////////////
 
