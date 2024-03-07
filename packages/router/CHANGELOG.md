@@ -1,5 +1,12 @@
 # `@remix-run/router`
 
+## 1.15.3
+
+### Patch Changes
+
+- Fix a `future.v7_partialHydration` bug that would re-run loaders below the boundary on hydration if SSR loader errors bubbled to a parent boundary ([#11324](https://github.com/remix-run/react-router/pull/11324))
+- Fix a `future.v7_partialHydration` bug that would consider the router uninitialized if a route did not have a loader ([#11325](https://github.com/remix-run/react-router/pull/11325))
+
 ## 1.15.2
 
 ### Patch Changes

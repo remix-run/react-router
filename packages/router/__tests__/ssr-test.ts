@@ -17,7 +17,12 @@ import {
 } from "../utils";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";
-import { createRequest, createSubmitRequest, invariant } from "./utils/utils";
+import {
+  createRequest,
+  createSubmitRequest,
+  invariant,
+  sleep,
+} from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
   trackedPromise(data?: any, error?: any, aborted?: boolean): R;
@@ -290,6 +295,74 @@ describe("ssr", () => {
         activeDeferreds: {
           deferred: expect.deferredData(true),
         },
+      });
+    });
+
+    it("should support route.lazy", async () => {
+      let { query } = createStaticHandler([
+        {
+          id: "root",
+          path: "/",
+          async lazy() {
+            await sleep(100);
+            return {
+              async loader() {
+                await sleep(100);
+                return "ROOT LOADER";
+              },
+            };
+          },
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          async lazy() {
+            await sleep(100);
+            return {
+              async loader() {
+                await sleep(100);
+                return "PARENT LOADER";
+              },
+            };
+          },
+          children: [
+            {
+              id: "child",
+              path: "child",
+              async lazy() {
+                await sleep(100);
+                return {
+                  async loader() {
+                    await sleep(100);
+                    return "CHILD LOADER";
+                  },
+                };
+              },
+            },
+          ],
+        },
+      ]);
+
+      let context = await query(createRequest("/"));
+      expect(context).toMatchObject({
+        loaderData: {
+          root: "ROOT LOADER",
+        },
+        errors: null,
+        location: { pathname: "/" },
+        matches: [{ route: { id: "root" } }],
+      });
+
+      context = await query(createRequest("/parent/child"));
+      expect(context).toMatchObject({
+        actionData: null,
+        loaderData: {
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
+        },
+        errors: null,
+        location: { pathname: "/parent/child" },
+        matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
       });
     });
 
