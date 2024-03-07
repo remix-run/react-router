@@ -1,5 +1,13 @@
 # `@remix-run/dev`
 
+## 2.8.1-pre.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/node@2.8.1-pre.1`
+  - `@remix-run/server-runtime@2.8.1-pre.1`
+
 ## 2.8.1-pre.0
 
 ### Patch Changes
