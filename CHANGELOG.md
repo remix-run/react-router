@@ -179,7 +179,7 @@ Date: YYYY-MM-DD
 
 ## v6.22.3
 
-Date: 2024-03-06
+Date: 2024-03-07
 
 ### Patch Changes
 
