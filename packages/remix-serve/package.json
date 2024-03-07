@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/serve",
-  "version": "2.8.1-pre.1",
+  "version": "2.8.1",
   "description": "Production application server for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"
@@ -15,8 +15,8 @@
     "remix-serve": "dist/cli.js"
   },
   "dependencies": {
-    "@remix-run/express": "2.8.1-pre.1",
-    "@remix-run/node": "2.8.1-pre.1",
+    "@remix-run/express": "2.8.1",
+    "@remix-run/node": "2.8.1",
     "chokidar": "^3.5.3",
     "compression": "^1.7.4",
     "express": "^4.17.1",

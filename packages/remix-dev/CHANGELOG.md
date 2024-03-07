@@ -1,14 +1,6 @@
 # `@remix-run/dev`
 
-## 2.8.1-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.8.1-pre.1`
-  - `@remix-run/server-runtime@2.8.1-pre.1`
-
-## 2.8.1-pre.0
+## 2.8.1
 
 ### Patch Changes
 
@@ -18,9 +10,8 @@
 - Clean up redundant client route query strings on route JavaScript files in production builds ([#8969](https://github.com/remix-run/remix/pull/8969))
 - Vite: Fix error when using Vite's `server.fs.allow` option without a client entry file ([#8966](https://github.com/remix-run/remix/pull/8966))
 - Updated dependencies:
-  - `@remix-run/node@2.8.1-pre.0`
-  - `@remix-run/serve@2.8.1-pre.0`
-  - `@remix-run/server-runtime@2.8.1-pre.0`
+  - `@remix-run/node@2.8.1`
+  - `@remix-run/server-runtime@2.8.1`
 
 ## 2.8.0
 
