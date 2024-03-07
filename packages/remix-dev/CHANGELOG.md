@@ -1,5 +1,18 @@
 # `@remix-run/dev`
 
+## 2.8.1
+
+### Patch Changes
+
+- Support reading from Vite config when running `remix reveal` and `remix routes` CLI commands ([#8916](https://github.com/remix-run/remix/pull/8916))
+- Add Vite commands to Remix CLI `--help` output ([#8939](https://github.com/remix-run/remix/pull/8939))
+- Vite: Fix support for `build.sourcemap` option in Vite config ([#8965](https://github.com/remix-run/remix/pull/8965))
+- Clean up redundant client route query strings on route JavaScript files in production builds ([#8969](https://github.com/remix-run/remix/pull/8969))
+- Vite: Fix error when using Vite's `server.fs.allow` option without a client entry file ([#8966](https://github.com/remix-run/remix/pull/8966))
+- Updated dependencies:
+  - `@remix-run/node@2.8.1`
+  - `@remix-run/server-runtime@2.8.1`
+
 ## 2.8.0
 
 ### Minor Changes

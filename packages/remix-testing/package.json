@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/testing",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "Testing utilities for Remix apps",
   "homepage": "https://remix.run",
   "bugs": {
@@ -21,8 +21,8 @@
   "dependencies": {
     "@remix-run/node": "workspace:*",
     "@remix-run/react": "workspace:*",
-    "@remix-run/router": "1.15.3-pre.0",
-    "react-router-dom": "6.22.3-pre.0"
+    "@remix-run/router": "1.15.3",
+    "react-router-dom": "6.22.3"
   },
   "devDependencies": {
     "@remix-run/server-runtime": "workspace:*",
