@@ -259,14 +259,10 @@ describe("router dataStrategy", () => {
           return Promise.all(
             matches.map((match) => {
               return match.resolve(async (handler) => {
-                try {
-                  return {
-                    type: "data",
-                    result: await handler(),
-                  };
-                } catch (e) {
-                  return { type: "error", result: e };
-                }
+                return {
+                  type: "data",
+                  result: await handler(),
+                };
               });
             })
           );

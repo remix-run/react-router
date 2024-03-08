@@ -25,6 +25,7 @@ interface ShouldRevalidateFunctionArgs {
   formData?: Submission["formData"];
   json?: Submission["json"];
   actionResult?: any;
+  unstable_actionStatus?: number;
   defaultShouldRevalidate: boolean;
 }
 ```

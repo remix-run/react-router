@@ -36,9 +36,9 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
-  DataStrategyFunction,
-  DataStrategyFunctionArgs,
-  DataStrategyMatch,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -86,9 +86,9 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
-  DataStrategyFunction,
-  DataStrategyFunctionArgs,
-  DataStrategyMatch,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -255,7 +255,7 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: DataStrategyFunction;
+  unstable_dataStrategy?: unstable_DataStrategyFunction;
   window?: Window;
 }
 

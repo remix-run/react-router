@@ -487,6 +487,51 @@ describe("redirects", () => {
     expect(t.window.location.replace).not.toHaveBeenCalled();
   });
 
+  it("automatically replaces in the history stack if you redirect to the same location (root relative)", async () => {
+    let t = setup({ routes: REDIRECT_ROUTES });
+
+    let A = await t.navigate("/parent");
+    await A.loaders.parent.resolve("PARENT");
+
+    let B = await t.navigate("/parent", {
+      formMethod: "post",
+      formData: createFormData({}),
+    });
+    let C = await B.actions.parent.redirectReturn("/parent");
+    await C.loaders.parent.resolve("PARENT*");
+
+    expect(t.router.state.location).toMatchObject({ pathname: "/parent" });
+
+    // Because we redirected to the current location it defaults to a replace
+    await t.router.navigate(-1);
+    expect(t.router.state.location).toMatchObject({ pathname: "/" });
+  });
+
+  it("automatically replaces in the history stack if you redirect to the same location (absolute)", async () => {
+    let t = setup({ routes: REDIRECT_ROUTES });
+
+    let A = await t.navigate("/parent");
+    await A.loaders.parent.resolve("PARENT");
+
+    let B = await t.navigate("/parent", {
+      formMethod: "post",
+      formData: createFormData({}),
+    });
+    let C = await B.actions.parent.redirectReturn(
+      "http://localhost/parent",
+      undefined,
+      undefined,
+      ["parent"]
+    );
+    await C.loaders.parent.resolve("PARENT*");
+
+    expect(t.router.state.location).toMatchObject({ pathname: "/parent" });
+
+    // Because we redirected to the current location it defaults to a replace
+    await t.router.navigate(-1);
+    expect(t.router.state.location).toMatchObject({ pathname: "/" });
+  });
+
   it("preserves action revalidation across multiple redirects", async () => {
     let t = setup({
       initialEntries: ["/action"],

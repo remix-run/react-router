@@ -2122,6 +2122,7 @@ describe("fetchers", () => {
           },
           "nextUrl": "http://localhost/two/three",
           "text": undefined,
+          "unstable_actionStatus": undefined,
         }
       `);
 

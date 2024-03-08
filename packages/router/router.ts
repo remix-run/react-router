@@ -1614,9 +1614,12 @@ export function createRouter(init: RouterInit): Router {
         // If the user didn't explicity indicate replace behavior, replace if
         // we redirected to the exact same location we're currently at to avoid
         // double back-buttons
-        replace =
-          result.response.headers.get("Location") ===
-          state.location.pathname + state.location.search;
+        let location = normalizeRedirectLocation(
+          result.response.headers.get("Location")!,
+          new URL(request.url),
+          basename
+        );
+        replace = location === state.location.pathname + state.location.search;
       }
       await startRedirectNavigation(request, result, {
         submission,
@@ -2358,25 +2361,14 @@ export function createRouter(init: RouterInit): Router {
 
     let location = redirect.response.headers.get("Location");
     invariant(location, "Expected a Location header on the redirect Response");
+    location = normalizeRedirectLocation(
+      location,
+      new URL(request.url),
+      basename
+    );
     let redirectLocation = createLocation(state.location, location, {
       _isRedirect: true,
     });
-
-    if (ABSOLUTE_URL_REGEX.test(location)) {
-      // Strip off the protocol+origin for same-origin + same-basename absolute redirects
-      let normalizedLocation = location;
-      let currentUrl = new URL(request.url);
-      let url = normalizedLocation.startsWith("//")
-        ? new URL(currentUrl.protocol + normalizedLocation)
-        : new URL(normalizedLocation);
-      let isSameBasename = stripBasename(url.pathname, basename) != null;
-      if (url.origin === currentUrl.origin && isSameBasename) {
-        normalizedLocation = url.pathname + url.search + url.hash;
-        redirectLocation = createLocation(state.location, normalizedLocation, {
-          _isRedirect: true,
-        });
-      }
-    }
 
     if (isBrowser) {
       let isDocumentReload = false;
@@ -3837,11 +3829,11 @@ function getMatchesToLoad(
   // Don't revalidate loaders by default after action 4xx/5xx responses
   // when the flag is enabled.  They can still opt-into revalidation via
   // `shouldRevalidate` via `actionResult`
+  let actionStatus = pendingActionResult
+    ? pendingActionResult[1].statusCode
+    : undefined;
   let shouldSkipRevalidation =
-    skipActionErrorRevalidation &&
-    pendingActionResult &&
-    typeof pendingActionResult[1].statusCode === "number" &&
-    pendingActionResult[1].statusCode >= 400;
+    skipActionErrorRevalidation && actionStatus && actionStatus >= 400;
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
     let { route } = match;
@@ -3887,6 +3879,7 @@ function getMatchesToLoad(
       nextParams: nextRouteMatch.params,
       ...submission,
       actionResult,
+      unstable_actionStatus: actionStatus,
       defaultShouldRevalidate: shouldSkipRevalidation
         ? false
         : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
@@ -3965,6 +3958,7 @@ function getMatchesToLoad(
         nextParams: matches[matches.length - 1].params,
         ...submission,
         actionResult,
+        unstable_actionStatus: actionStatus,
         defaultShouldRevalidate: shouldSkipRevalidation
           ? false
           : isRevalidationRequired,
@@ -4158,12 +4152,7 @@ async function callDataStrategyImpl(
               handlerOverride,
               requestContext
             )
-          : // TODO: What's the best thing to do here - return an empty "success" result?
-            // Or return a success result with the current route loader/action data?
-            // We strip these results out if the route didn't need to be revalidated in
-            // `callDataStrategy` so it doesn't matter for us.  It's more of a question
-            // of whether exposing the current data to the user is useful?
-            Promise.resolve({ type: ResultType.data, result: undefined });
+          : Promise.resolve({ type: ResultType.data, result: undefined });
       };
 
       return {
@@ -4421,6 +4410,25 @@ function normalizeRelativeRoutingRedirectResponse(
   }
 
   return response;
+}
+
+function normalizeRedirectLocation(
+  location: string,
+  currentUrl: URL,
+  basename: string
+): string {
+  if (ABSOLUTE_URL_REGEX.test(location)) {
+    // Strip off the protocol+origin for same-origin + same-basename absolute redirects
+    let normalizedLocation = location;
+    let url = normalizedLocation.startsWith("//")
+      ? new URL(currentUrl.protocol + normalizedLocation)
+      : new URL(normalizedLocation);
+    let isSameBasename = stripBasename(url.pathname, basename) != null;
+    if (url.origin === currentUrl.origin && isSameBasename) {
+      return url.pathname + url.search + url.hash;
+    }
+  }
+  return location;
 }
 
 // Utility method for creating the Request instances for loaders/actions during

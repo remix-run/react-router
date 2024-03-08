@@ -664,6 +664,7 @@ describe("shouldRevalidate", () => {
         "nextParams": {},
         "nextUrl": "http://localhost/",
         "text": undefined,
+        "unstable_actionStatus": undefined,
       }
     `);
     expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
@@ -727,6 +728,7 @@ describe("shouldRevalidate", () => {
         "nextParams": {},
         "nextUrl": "http://localhost/",
         "text": undefined,
+        "unstable_actionStatus": undefined,
       }
     `);
 
