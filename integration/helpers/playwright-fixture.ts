@@ -277,13 +277,12 @@ async function doAndWait(
   page.on("requestfailed", onRequestDone);
   page.on("load", networkSettledCallback); // e.g. navigation with javascript disabled
 
-  let timeoutId: NodeJS.Timer | undefined;
-  if (DEBUG) {
-    timeoutId = setInterval(() => {
-      console.log(`${requestCounter} requests pending:`);
-      for (let request of pending) console.log(`  ${request.url()}`);
-    }, 5000);
-  }
+  let timeoutId = DEBUG
+    ? setInterval(() => {
+        console.log(`${requestCounter} requests pending:`);
+        for (let request of pending) console.log(`  ${request.url()}`);
+      }, 5000)
+    : undefined;
 
   let result = await action();
   actionDone = true;

@@ -116,6 +116,14 @@ export async function createProject(
   return projectDir;
 }
 
+// Avoid "Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env
+// being set" in vite-ecosystem-ci which breaks empty stderr assertions. To fix
+// this we always ensure that only NO_COLOR is set after spreading process.env.
+const colorEnv = {
+  FORCE_COLOR: undefined,
+  NO_COLOR: "1",
+} as const;
+
 export const viteBuild = ({
   cwd,
   env = {},
@@ -129,6 +137,7 @@ export const viteBuild = ({
     cwd,
     env: {
       ...process.env,
+      ...colorEnv,
       ...env,
     },
   });
@@ -314,6 +323,7 @@ function node(
     cwd: options.cwd,
     env: {
       ...process.env,
+      ...colorEnv,
       ...options.env,
     },
     stdio: "pipe",
