@@ -116,13 +116,14 @@ const router = createBrowserRouter(routes, {
 
 The following future flags are currently available:
 
-| Flag                                        | Description                                                           |
-| ------------------------------------------- | --------------------------------------------------------------------- |
-| `v7_fetcherPersist`                         | Delay active fetcher cleanup until they return to an `idle` state     |
-| `v7_normalizeFormMethod`                    | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method |
-| `v7_partialHydration`                       | Support partial hydration for Server-rendered apps                    |
-| `v7_prependBasename`                        | Prepend the router basename to navigate/fetch paths                   |
-| [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                    |
+| Flag                                        | Description                                                             |
+| ------------------------------------------- | ----------------------------------------------------------------------- |
+| `v7_fetcherPersist`                         | Delay active fetcher cleanup until they return to an `idle` state       |
+| `v7_normalizeFormMethod`                    | Normalize `useNavigation().formMethod` to be an uppercase HTTP Method   |
+| `v7_partialHydration`                       | Support partial hydration for Server-rendered apps                      |
+| `v7_prependBasename`                        | Prepend the router basename to navigate/fetch paths                     |
+| [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                      |
+| `unstable_skipActionErrorRevalidation`      | Do not revalidate by default if the action returns a 4xx/5xx `Response` |
 
 ## `hydrationData`
 
@@ -181,6 +182,179 @@ const router = createBrowserRouter(
 );
 ```
 
+## `unstable_dataStrategy`
+
+<docs-warn>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warn>>
+
+By default, React Router is opinionated about how your data is loaded/submitted - and most notably, executes all of your loaders in parallel for optimal data fetching. While we think this is the right behavior for most use-cases, we realize that there is no "one size fits all" solution when it comes to data fetching for the wide landscape of application requirements.
+
+The `unstable_dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
+
+### Type Declaration
+
+```ts
+interface DataStrategyFunction {
+  (args: DataStrategyFunctionArgs): Promise<
+    HandlerResult[]
+  >;
+}
+
+interface DataStrategyFunctionArgs<Context = any> {
+  request: Request;
+  params: Params;
+  context?: Context;
+  matches: DataStrategyMatch[];
+}
+
+interface DataStrategyMatch
+  extends AgnosticRouteMatch<
+    string,
+    AgnosticDataRouteObject
+  > {
+  shouldLoad: boolean;
+  resolve: (
+    handlerOverride?: (
+      handler: (ctx?: unknown) => DataFunctionReturnValue
+    ) => Promise<HandlerResult>
+  ) => Promise<HandlerResult>;
+}
+
+interface HandlerResult {
+  type: "data" | "error";
+  result: any; // data, Error, Response, DeferredData
+  status?: number;
+}
+```
+
+`unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives a `matches` array which is an array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
+
+- `match.resolve` - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
+  - You should call `match.resolve` for _all_ matches every time to ensure that all lazy routes are properly resolved
+  - This does not mean you're calling the loader/action (the "handler") - resolve will only call the handler internally if needed and if you don['t pass your own `handlerOverride` function parameter
+  - See the examples below for how to implement custom handler execution via `match.resolve`
+- `match.shouldLoad` - A boolean value indicating whether this route handler needs go be called in this pass
+  - This array always includes _all_ matched routes even when only _some_ route handlers need to be called so that things like middleware can be implemented
+  - This is usually only needed if you are skipping the route handler entirely and implementing custom handler logic - since it lets you determine if that custom logic should run for this route or not
+  - For example:
+    - If you are on `/parent/child/a` and you navigate to `/parent/child/b` - you'll get an array of three matches (`[parent, child, b]`), but only `b` will have `shouldLoad=true` because the data for `parent` and `child` is already loaded
+    - If you are on `/parent/child/a` and you submit to `a`'s `action`, then only `a` will have `shouldLoad=true` for the action execution of `dataStrategy`
+      - After the `action`, `dataStrategy` will be called again for the `loader` revalidation, and all matches will have `shouldLoad=true` (assuming no custom `shouldRevalidate` implementations)
+
+The `dataStrategy` function should return a parallel array of `HandlerResult` instances, which is just an object of `{ type: 'data', result: unknown }` or `{ type: 'error', result: unknown }` depending on if the handler was successful or not. If the returned `handlerResult.result` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but preserve the status code, you can return the decoded value in `handlerResult.result` and send the status along via `handlerResult.status` (for example, when using the `future.unstable_skipActionRevalidation` flag). `match.resolve()` will return a `HandlerResult` if you are not passing it a handler override function. If you are, then you need to wrap the `handler` result in a `HandlerResult` (see examples below).
+
+### Example Use Cases
+
+#### Adding logging
+
+In the simplest case, let's look at hooking into this API to add some logging for when our route loaders/actions execute:
+
+```ts
+let router = createBrowserRouter(routes, {
+  unstable_dataStrategy({ request, matches }) {
+    return Promise.all(
+      matches.map(async (match) => {
+        console.log(`Processing route ${match.route.id}`);
+        // Don't override anything - just resolve route.lazy + call loader
+        let result = await m.resolve();
+        console.log(`Done processing route ${match.route.id}`);
+        return result.
+      })
+    )
+  },
+});
+```
+
+#### Middleware
+
+Let's define a middleware on each route via `handle` and call middleware sequentially first, then call all loaders in parallel - providing any data made available via the middleware:
+
+```ts
+const routes [
+  {
+    id: "parent",
+    path: "/parent",
+    loader({ request }, context) { /*...*/ },
+    handle: {
+      async middleware({ request }, context) {
+        context.parent = "PARENT MIDDLEWARE";
+      },
+    },
+    children: [
+      {
+        id: "child",
+        path: "child",
+        loader({ request }, context) { /*...*/ },
+        handle: {
+          async middleware({ request }, context) {
+            context.child = "CHILD MIDDLEWARE";
+          },
+        },
+      },
+    ],
+  },
+];
+
+let router = createBrowserRouter(routes, {
+  unstable_dataStrategy({ request, params, matches }) {
+    // Run middleware sequentially and let them add data to `context`
+    let context = {};
+    for (match of matches) {
+      if (match.route.handle?.middleware) {
+        await m.route.handle.middleware({ request, params }, context);
+      }
+    });
+
+    // Run loaders in parallel with the `context` value
+    return Promise.all(
+      matches.map((m, i) =>
+        m.resolve(async (handler) => {
+          let result = await handler(context);
+          return { type: "data", result };
+        })
+      )
+    );
+  },
+});
+```
+
+#### Custom Handler
+
+It's also possible you don't even want to define a loader implementation at the route level. Maybe you want to just determine the routes and issue a single GraphQL request for all of your data? You can do that by setting your `route.loader=true` so it qualifies as "having a loader", and then store GQL fragments on `route.handle`:
+
+```ts
+const routes [
+  {
+    id: "parent",
+    path: "/parent",
+    loader: true,
+    handle: {
+      gql: gql`fragment Parent on Whatever { parentField }`
+    },
+    children: [
+      {
+        id: "child",
+        path: "child",
+        loader: true,
+        handle: {
+          gql: gql`fragment Child on Whatever { childField }`
+        },
+      },
+    ],
+  },
+];
+
+let router = createBrowserRouter(routes, {
+  unstable_dataStrategy({ request, params, matches }) {
+    // Compose route fragments into a single GQL payload
+    let gql = getFragmentsFromRouteHandles(matches);
+    let data = await fetchGql(gql);
+    // Parse results back out into individual route level HandlerResult's
+    let results = parseResultsFromGql(data);
+    return results;
+  },
+});
+```
+
 ## `window`
 
 Useful for environments like browser devtool plugins or testing to use a different window than the global `window`.
@@ -199,3 +373,4 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [clientloader]: https://remix.run/route/client-loader
 [hydratefallback]: ../route/hydrate-fallback-element
 [relativesplatpath]: ../hooks/use-resolved-path#splat-paths
+[currying]: https://stackoverflow.com/questions/36314/what-is-currying
