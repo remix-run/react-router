@@ -54,11 +54,11 @@ function dataStrategy({ matches }) {
 }
 ```
 
-⚠️ `defaultStrategy` was eliminated in favor of `match.handler`.
+⚠️ `defaultStrategy` was eliminated in favor of `match.resolve`.
 
-We also originally intended to expose a `type: 'loader' | 'action`' field as a way to presumably let them call `match.route.loader`/`match.route.action` directly - but we have since decided against that with the `match.handler` API.
+We also originally intended to expose a `type: 'loader' | 'action`' field as a way to presumably let them call `match.route.loader`/`match.route.action` directly - but we have since decided against that with the `match.resolve` API.
 
-⚠️ `type` was eliminated in favor of `match.handler`.
+⚠️ `type` was eliminated in favor of `match.resolve`.
 
 `dataStrategy` is control _when_ handlers are called, not _how_. RR is in charge of calling them with the right parameters.
 
@@ -89,7 +89,7 @@ Initially, we intended for `dataStrategy` to handle (3), and considered an optio
 ### Handling `route.lazy`
 
 There's a nuanced step we missed in our sequential steps above. If a route was
-using `route.lazy`, we may need to load the rout before we can execute the `loader`. There's two options here:
+using `route.lazy`, we may need to load the route before we can execute the `loader`. There's two options here:
 
 1. We pre-execute all `route.lazy` methods before calling `dataStrategy`
 2. We let `dataStrategy` execute them accordingly
@@ -129,7 +129,7 @@ function dataStrategy({ matches, defaultStrategy }) {
 }
 ```
 
-⚠️ We are actively seeing if we can eliminate this via `match.handler`
+⚠️ This match.route as a function API was removed in favor of `match.resolve`
 
 ### Handling `shouldRevalidate` behavior
 
@@ -326,33 +326,94 @@ Extending on the idea above - it all started to feel super leaky and full of imp
 
 That's wayyyy to many rough edges for us to document and users to get wrong (rightfully so!).
 
-Why can't we just do it all? LE'ts wrap _all_ of that up into a single `match.handler()` function that:
+Why can't we just do it all? Let's wrap _all_ of that up into a single `match.resolve()` function that:
 
 - Waits for `route.lazy` to resolve (if needed)
 - No-ops if the route isn't supposed to revalidate
   - Open question here if we return the _current_ data from these no-ops or return `undefined`?
+  - We decided _not_ to expose this data for now since we don't have a good use case
 - Knows whether to call the `loader` or the `action`
 - Allows users to pass _additional_ params to loaders/actions for middleware/context use cases.
 
 ```js
+// Simplest case - call all loaders in parallel just like current behavior
 function dataStrategy({ matches }) {
   // No more type, defaultStrategy, or match.route promise APIs!
+  return Promise.all(matches.map(match => {
+    // resolve `route.lazy` if needed and call loader/action
+    return m.resolve();
+  });
+}
 
+// More advanced case - call loader sequentially passing a context through
+async function dataStrategy({ matches }) {
+  let ctx = {};
+  let results = [];
+  for (let match of matches) {
+    // You can pass a "handlerOverride" function to resolve giving you control
+    // over how/if to call the handler.  The argument passed to `handler` will
+    // be passed as the second argument to your `loader`/`action`:
+    // function loader({ request }, ctx) {...}
+    let result = await m.resolve((handler) => {
+      return handler(ctx);
+    });
+    results.push(result);
+  });
+  return results;
+}
+
+// More performant case leveraging a middleware type abstraction which lets loaders
+// still run in parallel after sequential middlewares:
+function dataStrategy({ matches }) {
   // Can implement middleware as above since you now get all matches
   let context = runMiddlewares(matches);
 
   // Call all loaders in parallel (no params to pass) but you _can_ pass you
-  // own argument to `handler` and it will come in as `loader({ request }, handlerArg)`
+  // own argument to `resolve` and it will come in as `loader({ request }, handlerArg)`
   // So you can send middleware context through to loaders/actions
-  return Promise.all(matches.map(m => m.handler(context));
+  return Promise.all(matches.map(match => {
+    return m.resolve(context);
+  });
 
   // Note we don't do any filtering above - if a match doesn't need to load,
-  // `match.handler` is no-op.  Just like `serverLoader` is a no-op in `clientLoader`
+  // `match.resolve` is no-op.  Just like `serverLoader` is a no-op in `clientLoader`
   // when it doesn't need to run
+}
+
+// Advanced case - single-fetch type approach
+// More advanced case - call loader sequentially passing a context through
+async function dataStrategy({ matches }) {
+  let singleFetchData = await makeSingleFetchCall()
+  // Assume we get back:
+  // { data: { [routeId]: unknown }, errors: { [routeId]: unknown } }
+  let results = [];
+  for (let match of matches) {
+    // Don't even call the handler since we have the data we need from single fetch
+    let result = await m.resolve(() => {
+      if (singleFetchData.errors?.[m.route.id]) {
+        return {
+          type: 'error',
+          result: singleFetchData.errors?.[m.route.id]
+        }
+      }
+      return {
+        type: 'data',
+        result: singleFetchData.data?.[m.route.id]
+      }
+    });
+    results.push(result);
+  });
+  return results;
 }
 ```
 
-## Consequences
+## Status codes
+
+Initially, we thought we could just let the `handlerOverride`return or throw and then internally we could convert the returned/thrown valuer into a `HandlerResult`. However, this didn't work for the `unstable_skipActionRevalidation` behavior we wanted to implement with Single Fetch.
+
+If users returned normal Response's it would be fine, since we could decode the response internally and also know the status. However, if user's wanted to do custom response decoding (i.e., use `turbo-stream` like we did in single fetch) then there was no way to return/throw data _and the status code from the response_ without introducing something like the `ErrorResponse` API which holds a status and data. We decided to make `HandlerResult` public API and put an optional `status` field on it.
+
+This means that if you just call resolve with no `handlerOverride` you never need to know about `HandlerResult`. If you do pass a `handlerOverride`, then you need to return a proper HandlerResult with `type:"data"|"error"`.
 
 [single-fetch-issue]: https://github.com/remix-run/remix/issues/7641
 [single-fetch-rfc]: https://github.com/remix-run/remix/discussions/7640

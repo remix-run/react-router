@@ -404,7 +404,11 @@ export interface StaticHandler {
   dataRoutes: AgnosticDataRouteObject[];
   query(
     request: Request,
-    opts?: { loadRouteIds?: string[]; requestContext?: unknown }
+    opts?: {
+      loadRouteIds?: string[];
+      requestContext?: unknown;
+      skipLoaderErrorBubbling?: boolean;
+    }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
     request: Request,
@@ -774,7 +778,7 @@ export function createRouter(init: RouterInit): Router {
     v7_partialHydration: false,
     v7_prependBasename: false,
     v7_relativeSplatPath: false,
-    unstable_skipActionErrorRevalidation: true,
+    unstable_skipActionErrorRevalidation: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -2471,10 +2475,11 @@ export function createRouter(init: RouterInit): Router {
       return await Promise.all(
         results.map((result, i) => {
           if (isRedirectHandlerResult(result)) {
+            let response = result.result as Response;
             return {
               type: ResultType.redirect,
               response: normalizeRelativeRoutingRedirectResponse(
-                result.result,
+                response,
                 request,
                 matchesToLoad[i].route.id,
                 matches,
@@ -2984,16 +2989,25 @@ export function createStaticHandler(
    * return it directly.
    *
    * - `opts.loadRouteIds` is an optional array of routeIds if you wish to only
-   *    run a subset of route loaders on a GET request
+   *   run a subset of route loaders on a GET request
    * - `opts.requestContext` is an optional server context that will be passed
-   *    to actions/loaders in the `context` parameter
+   *   to actions/loaders in the `context` parameter
+   * - `opts.skipLoaderErrorBubbling` is an optional parameter that will prevent
+   *   the bubbling of loader errors which allows single-fetch-type implementations
+   *   where the client will handle the bubbling and we may need to return data
+   *   for the handling route
    */
   async function query(
     request: Request,
     {
       loadRouteIds,
       requestContext,
-    }: { loadRouteIds?: string[]; requestContext?: unknown } = {}
+      skipLoaderErrorBubbling,
+    }: {
+      loadRouteIds?: string[];
+      requestContext?: unknown;
+      skipLoaderErrorBubbling?: boolean;
+    } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
     let method = request.method;
@@ -3045,6 +3059,7 @@ export function createStaticHandler(
       matches,
       requestContext,
       loadRouteIds || null,
+      skipLoaderErrorBubbling === true,
       null
     );
     if (isResponse(result)) {
@@ -3122,6 +3137,7 @@ export function createStaticHandler(
       matches,
       requestContext,
       null,
+      false,
       match
     );
     if (isResponse(result)) {
@@ -3159,6 +3175,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     loadRouteIds: string[] | null,
+    skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -3174,6 +3191,7 @@ export function createStaticHandler(
           routeMatch || getTargetMatch(matches, location),
           requestContext,
           loadRouteIds,
+          skipLoaderErrorBubbling,
           routeMatch != null
         );
         return result;
@@ -3184,6 +3202,7 @@ export function createStaticHandler(
         matches,
         requestContext,
         loadRouteIds,
+        skipLoaderErrorBubbling,
         routeMatch
       );
       return isResponse(result)
@@ -3218,6 +3237,7 @@ export function createStaticHandler(
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
     loadRouteIds: string[] | null,
+    skipLoaderErrorBubbling: boolean,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -3312,6 +3332,7 @@ export function createStaticHandler(
         matches,
         requestContext,
         loadRouteIds,
+        skipLoaderErrorBubbling,
         null,
         [boundaryMatch.route.id, result]
       );
@@ -3334,6 +3355,7 @@ export function createStaticHandler(
       matches,
       requestContext,
       loadRouteIds,
+      skipLoaderErrorBubbling,
       null
     );
 
@@ -3355,6 +3377,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     loadRouteIds: string[] | null,
+    skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
     pendingActionResult?: PendingActionResult
   ): Promise<
@@ -3435,7 +3458,8 @@ export function createStaticHandler(
       matchesToLoad,
       results,
       pendingActionResult,
-      activeDeferreds
+      activeDeferreds,
+      skipLoaderErrorBubbling
     );
 
     // Add a null for any non-loader matches for proper revalidation on the client
@@ -3482,9 +3506,10 @@ export function createStaticHandler(
     return await Promise.all(
       results.map((result, i) => {
         if (isRedirectHandlerResult(result)) {
+          let response = result.result as Response;
           // Throw redirects and let the server handle them with an HTTP redirect
           throw normalizeRelativeRoutingRedirectResponse(
-            result.result,
+            response,
             request,
             matchesToLoad[i].route.id,
             matches,
@@ -4167,8 +4192,6 @@ async function callDataStrategyImpl(
 
   // Throw if any loadRoute implementations not called since they are what
   // ensures a route is fully loaded
-  // Throw if any loadRoute implementations not called since they are what
-  // ensure a route is fully loaded
   matches.forEach((m) =>
     invariant(
       loadedMatches.has(m.route.id),
@@ -4497,7 +4520,8 @@ function processRouteLoaderData(
   matchesToLoad: AgnosticDataRouteMatch[],
   results: DataResult[],
   pendingActionResult: PendingActionResult | undefined,
-  activeDeferreds: Map<string, DeferredData>
+  activeDeferreds: Map<string, DeferredData>,
+  skipLoaderErrorBubbling: boolean
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"] | null;
@@ -4523,9 +4547,6 @@ function processRouteLoaderData(
       "Cannot handle redirect results in processLoaderData"
     );
     if (isErrorResult(result)) {
-      // Look upwards from the matched route for the closest ancestor
-      // error boundary, defaulting to the root match
-      let boundaryMatch = findNearestBoundary(matches, id);
       let error = result.error;
       // If we have a pending action error, we report it at the highest-route
       // that throws a loader error, and then clear it out to indicate that
@@ -4537,9 +4558,16 @@ function processRouteLoaderData(
 
       errors = errors || {};
 
-      // Prefer higher error values if lower errors bubble to the same boundary
-      if (errors[boundaryMatch.route.id] == null) {
-        errors[boundaryMatch.route.id] = error;
+      if (skipLoaderErrorBubbling) {
+        errors[id] = error;
+      } else {
+        // Look upwards from the matched route for the closest ancestor error
+        // boundary, defaulting to the root match.  Prefer higher error values
+        // if lower errors bubble to the same boundary
+        let boundaryMatch = findNearestBoundary(matches, id);
+        if (errors[boundaryMatch.route.id] == null) {
+          errors[boundaryMatch.route.id] = error;
+        }
       }
 
       // Clear our any prior loaderData for the throwing route
@@ -4620,7 +4648,8 @@ function processLoaderData(
     matchesToLoad,
     results,
     pendingActionResult,
-    activeDeferreds
+    activeDeferreds,
+    false // This method is only called client side so we always want to bubble
   );
 
   // Process results from our revalidating fetchers

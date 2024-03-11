@@ -68,7 +68,7 @@ export type DataResult =
  */
 export interface HandlerResult {
   type: "data" | "error";
-  result: any; // data, Error, Response, DeferredData
+  result: unknown; // data, Error, Response, DeferredData
   status?: number;
 }
 

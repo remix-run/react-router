@@ -688,6 +688,33 @@ describe("ssr", () => {
       });
     });
 
+    it("should skip bubbling loader errors when skipLoaderErrorBubbling is passed", async () => {
+      let routes = [
+        {
+          id: "root",
+          path: "/",
+          hasErrorBoundary: true,
+          children: [
+            {
+              id: "child",
+              path: "child",
+              loader: () => Promise.reject("CHILD"),
+            },
+          ],
+        },
+      ];
+
+      let { query } = createStaticHandler(routes);
+      let context;
+
+      context = await query(createRequest("/child"), {
+        skipLoaderErrorBubbling: true,
+      });
+      expect(context.errors).toEqual({
+        child: "CHILD",
+      });
+    });
+
     it("should handle aborted load requests", async () => {
       let dfd = createDeferred();
       let controller = new AbortController();
