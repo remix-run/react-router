@@ -697,7 +697,7 @@ export function _renderMatches(
   let errors = dataRouterState?.errors;
   if (errors != null) {
     let errorIndex = renderedMatches.findIndex(
-      (m) => m.route.id && errors?.[m.route.id]
+      (m) => m.route.id && errors?.[m.route.id] !== undefined
     );
     invariant(
       errorIndex >= 0,

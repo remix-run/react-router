@@ -2122,6 +2122,7 @@ describe("fetchers", () => {
           },
           "nextUrl": "http://localhost/two/three",
           "text": undefined,
+          "unstable_actionStatus": undefined,
         }
       `);
 
@@ -2850,6 +2851,7 @@ describe("fetchers", () => {
 
       let key = "KEY";
       await t.fetch("/parent");
+      await tick();
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
           "parent": ErrorResponseImpl {
@@ -2885,6 +2887,7 @@ describe("fetchers", () => {
 
       let key = "KEY";
       await t.fetch("/parent?index");
+      await tick();
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
           "parent": ErrorResponseImpl {
