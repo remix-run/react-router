@@ -1,6 +1,6 @@
 import type { DataStrategyFunction, DataStrategyMatch } from "../utils";
 import { json } from "../utils";
-import { cleanup, createDeferred, setup } from "./utils/data-router-setup";
+import { createDeferred, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
 describe("router dataStrategy", () => {
