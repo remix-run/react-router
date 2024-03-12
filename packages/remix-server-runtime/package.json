@@ -19,12 +19,13 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@remix-run/router": "1.15.3",
+    "@remix-run/router": "0.0.0-experimental-c7dd3d3a",
     "@types/cookie": "^0.6.0",
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie": "^0.6.0",
     "set-cookie-parser": "^2.4.8",
-    "source-map": "^0.7.3"
+    "source-map": "^0.7.3",
+    "turbo-stream": "^2.0.0"
   },
   "devDependencies": {
     "@types/set-cookie-parser": "^2.4.1",

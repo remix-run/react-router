@@ -14,6 +14,7 @@
     "@remix-run/dev": "workspace:*",
     "@remix-run/express": "workspace:*",
     "@remix-run/node": "workspace:*",
+    "@remix-run/router": "0.0.0-experimental-c7dd3d3a",
     "@remix-run/server-runtime": "workspace:*",
     "@types/express": "^4.17.9",
     "@vanilla-extract/css": "^1.10.0",

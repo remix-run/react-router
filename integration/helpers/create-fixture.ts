@@ -16,6 +16,7 @@ import type { ServerBuild } from "../../build/node_modules/@remix-run/server-run
 import { createRequestHandler } from "../../build/node_modules/@remix-run/server-runtime/dist/index.js";
 import { createRequestHandler as createExpressHandler } from "../../build/node_modules/@remix-run/express/dist/index.js";
 import { installGlobals } from "../../build/node_modules/@remix-run/node/dist/index.js";
+import { decodeViaTurboStream } from "../../build/node_modules/@remix-run/react/dist/single-fetch.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
@@ -83,6 +84,12 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       requestData: () => {
         throw new Error("Cannot requestData in SPA Mode tests");
       },
+      requestResource: () => {
+        throw new Error("Cannot requestResource in SPA Mode tests");
+      },
+      requestSingleFetchData: () => {
+        throw new Error("Cannot requestSingleFetchData in SPA Mode tests");
+      },
       postDocument: () => {
         throw new Error("Cannot postDocument in SPA Mode tests");
       },
@@ -116,6 +123,29 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     return handler(request);
   };
 
+  let requestResource = async (href: string, init?: RequestInit) => {
+    init = init || {};
+    init.signal = init.signal || new AbortController().signal;
+    let url = new URL(href, "test://test");
+    let request = new Request(url.toString(), init);
+    return handler(request);
+  };
+
+  let requestSingleFetchData = async (href: string, init?: RequestInit) => {
+    init = init || {};
+    init.signal = init.signal || new AbortController().signal;
+    let url = new URL(href, "test://test");
+    let request = new Request(url.toString(), init);
+    let response = await handler(request);
+    let decoded = await decodeViaTurboStream(response.body!, global);
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      data: decoded.value,
+    };
+  };
+
   let postDocument = async (href: string, data: URLSearchParams | FormData) => {
     return requestDocument(href, {
       method: "POST",
@@ -136,6 +166,8 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     compiler,
     requestDocument,
     requestData,
+    requestResource,
+    requestSingleFetchData,
     postDocument,
     getBrowserAsset,
     useRemixServe: init.useRemixServe,

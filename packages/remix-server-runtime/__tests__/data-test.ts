@@ -22,6 +22,11 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -61,6 +66,11 @@ describe("loaders", () => {
           handleError() {},
         },
       },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -99,6 +109,11 @@ describe("loaders", () => {
         module: {
           handleError() {},
         },
+      },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
       },
     } as unknown as ServerBuild;
 
@@ -142,6 +157,11 @@ describe("loaders", () => {
           handleError() {},
         },
       },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -183,6 +203,11 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -222,6 +247,11 @@ describe("loaders", () => {
           handleError() {},
         },
       },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -259,6 +289,11 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
@@ -293,6 +328,11 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);

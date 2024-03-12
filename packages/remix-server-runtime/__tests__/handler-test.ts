@@ -15,6 +15,8 @@ describe("createRequestHandler", () => {
       },
       assets: {} as any,
       entry: { module: {} as any },
+      // @ts-expect-error
+      future: {},
     });
 
     let response = await handler(

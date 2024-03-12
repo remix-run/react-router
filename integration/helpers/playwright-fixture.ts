@@ -19,12 +19,21 @@ export class PlaywrightFixture {
    * Visits the href with a document request.
    *
    * @param href The href you want to visit
-   * @param waitForHydration Will wait for the network to be idle, so
-   * everything should be loaded and ready to go
+   * @param waitForHydration Wait for the page to full load/hydrate?
+   *  - `undefined` to wait for the document `load` event
+   *  - `true` wait for the network to be idle, so everything should be loaded
+   *    and ready to go
+   *  - `false` to wait only until the initial doc to be returned and the document
+   *    to start loading (mostly useful for testing deferred responses)
    */
-  async goto(href: string, waitForHydration?: true): Promise<Response> {
+  async goto(href: string, waitForHydration?: boolean): Promise<Response> {
     let response = await this.page.goto(this.app.serverUrl + href, {
-      waitUntil: waitForHydration ? "networkidle" : undefined,
+      waitUntil:
+        waitForHydration === true
+          ? "networkidle"
+          : waitForHydration === false
+          ? "commit"
+          : "load",
     });
     if (response == null)
       throw new Error(
@@ -156,7 +165,16 @@ export class PlaywrightFixture {
    * were called (or not).
    */
   collectDataResponses() {
-    return collectDataResponses(this.page);
+    return this.collectResponses((url) => url.searchParams.has("_data"));
+  }
+
+  /**
+   * Collects single fetch data responses from the network, usually after a
+   * link click or form submission. This is useful for asserting that specific
+   * loaders were called (or not).
+   */
+  collectSingleFetchResponses() {
+    return this.collectResponses((url) => url.pathname.endsWith(".data"));
   }
 
   /**
@@ -164,8 +182,16 @@ export class PlaywrightFixture {
    * form submission. A filter can be provided to only collect responses
    * that meet a certain criteria.
    */
-  collectResponses(filter?: UrlFilter) {
-    return collectResponses(this.page, filter);
+  collectResponses(filter?: (url: URL) => boolean) {
+    let responses: Response[] = [];
+
+    this.page.on("response", (res) => {
+      if (!filter || filter(new URL(res.url()))) {
+        responses.push(res);
+      }
+    });
+
+    return responses;
   }
 
   /**
@@ -326,22 +352,4 @@ async function doAndWait(
   }
 
   return result;
-}
-
-type UrlFilter = (url: URL) => boolean;
-
-function collectResponses(page: Page, filter?: UrlFilter): Response[] {
-  let responses: Response[] = [];
-
-  page.on("response", (res) => {
-    if (!filter || filter(new URL(res.url()))) {
-      responses.push(res);
-    }
-  });
-
-  return responses;
-}
-
-function collectDataResponses(page: Page) {
-  return collectResponses(page, (url) => url.searchParams.has("_data"));
 }

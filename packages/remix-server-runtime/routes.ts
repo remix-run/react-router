@@ -99,6 +99,7 @@ export function createStaticHandlerDataRoutes(
               loadContext: args.context,
               loader: route.module.loader!,
               routeId: route.id,
+              singleFetch: future.unstable_singleFetch === true,
             })
         : undefined,
       action: route.module.action
@@ -109,6 +110,7 @@ export function createStaticHandlerDataRoutes(
               loadContext: args.context,
               action: route.module.action!,
               routeId: route.id,
+              singleFetch: future.unstable_singleFetch === true,
             })
         : undefined,
       handle: route.module.handle,

@@ -36,6 +36,7 @@ describe("readConfig", () => {
         "entryServerFile": "entry.server.tsx",
         "entryServerFilePath": Any<String>,
         "future": {
+          "unstable_singleFetch": false,
           "v3_fetcherPersist": false,
           "v3_relativeSplatPath": false,
           "v3_throwAbortReason": false,

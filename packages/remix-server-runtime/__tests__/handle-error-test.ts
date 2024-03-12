@@ -25,6 +25,7 @@ function getHandler(routeModule = {}, entryServerModule = {}) {
         ...entryServerModule,
       },
     },
+    future: {},
   } as unknown as ServerBuild;
 
   return {

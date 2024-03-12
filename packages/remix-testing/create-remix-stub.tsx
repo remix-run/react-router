@@ -106,6 +106,7 @@ export function createRemixStub(
         future: {
           v3_fetcherPersist: future?.v3_fetcherPersist === true,
           v3_relativeSplatPath: future?.v3_relativeSplatPath === true,
+          unstable_singleFetch: future?.unstable_singleFetch === true,
         },
         manifest: {
           routes: {},

@@ -5,7 +5,14 @@ export {
   parseMultipartFormData as unstable_parseMultipartFormData,
 } from "./formData";
 export { defer, json, redirect, redirectDocument } from "./responses";
-export { createRequestHandler } from "./server";
+export type {
+  SingleFetchResult as UNSAFE_SingleFetchResult,
+  SingleFetchResults as UNSAFE_SingleFetchResults,
+} from "./server";
+export {
+  createRequestHandler,
+  SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
+} from "./server";
 export {
   createSession,
   createSessionStorageFactory,

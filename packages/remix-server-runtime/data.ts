@@ -33,12 +33,14 @@ export async function callRouteActionRR({
   params,
   request,
   routeId,
+  singleFetch,
 }: {
   request: Request;
   action: ActionFunction;
   params: ActionFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
+  singleFetch: boolean;
 }) {
   let result = await action({
     request: stripDataParam(stripIndexParam(request)),
@@ -53,6 +55,11 @@ export async function callRouteActionRR({
     );
   }
 
+  // Allow naked object returns when single fetch is enabled
+  if (singleFetch) {
+    return result;
+  }
+
   return isResponse(result) ? result : json(result);
 }
 
@@ -62,12 +69,14 @@ export async function callRouteLoaderRR({
   params,
   request,
   routeId,
+  singleFetch,
 }: {
   request: Request;
   loader: LoaderFunction;
   params: LoaderFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
+  singleFetch: boolean;
 }) {
   let result = await loader({
     request: stripDataParam(stripIndexParam(request)),
@@ -89,6 +98,11 @@ export async function callRouteLoaderRR({
         result.init
       );
     }
+    return result;
+  }
+
+  // Allow naked object returns when single fetch is enabled
+  if (singleFetch) {
     return result;
   }
 

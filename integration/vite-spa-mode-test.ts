@@ -833,7 +833,7 @@ test.describe("SPA Mode", () => {
 
     test("hydrates a proper useId value", async ({ page }) => {
       // SSR'd useId value we can assert against pre- and post-hydration
-      let USE_ID_VALUE = ":R1:";
+      let USE_ID_VALUE = ":R5:";
 
       // Ensure we SSR a proper useId value
       let res = await fixture.requestDocument("/");

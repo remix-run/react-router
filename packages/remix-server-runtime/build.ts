@@ -54,4 +54,5 @@ export interface ServerEntryModule {
   default: HandleDocumentRequestFunction;
   handleDataRequest?: HandleDataRequestFunction;
   handleError?: HandleErrorFunction;
+  streamTimeout?: number;
 }

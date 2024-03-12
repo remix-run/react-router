@@ -12,15 +12,22 @@ import {
   stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
 } from "@remix-run/router";
+import { encode } from "turbo-stream";
 
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
 import { createEntryRouteModules } from "./entry";
-import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
-import { getDocumentHeadersRR } from "./headers";
+import {
+  sanitizeError,
+  sanitizeErrors,
+  serializeError,
+  serializeErrors,
+} from "./errors";
+import { getDocumentHeadersRR as getDocumentHeaders } from "./headers";
 import invariant from "./invariant";
 import { ServerMode, isServerMode } from "./mode";
+import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
@@ -103,6 +110,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     let url = new URL(request.url);
 
     let matches = matchServerRoutes(routes, url.pathname, _build.basename);
+    let params = matches && matches.length > 0 ? matches[0].params : {};
     let handleError = (error: unknown) => {
       if (mode === ServerMode.Development) {
         getDevServerHooks()?.processRequestError?.(error);
@@ -110,16 +118,24 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
       errorHandler(error, {
         context: loadContext,
-        params: matches && matches.length > 0 ? matches[0].params : {},
+        params,
         request,
       });
     };
 
     let response: Response;
     if (url.searchParams.has("_data")) {
+      if (_build.future.unstable_singleFetch) {
+        handleError(
+          new Error(
+            "Warning: Single fetch-enabled apps should not be making ?_data requests, " +
+              "this is likely to break in the future"
+          )
+        );
+      }
       let routeId = url.searchParams.get("_data")!;
 
-      response = await handleDataRequestRR(
+      response = await handleDataRequest(
         serverMode,
         _build,
         staticHandler,
@@ -132,7 +148,40 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       if (_build.entry.module.handleDataRequest) {
         response = await _build.entry.module.handleDataRequest(response, {
           context: loadContext,
-          params: matches?.find((m) => m.route.id == routeId)?.params || {},
+          params,
+          request,
+        });
+      }
+    } else if (
+      _build.future.unstable_singleFetch &&
+      url.pathname.endsWith(".data")
+    ) {
+      let handlerUrl = new URL(request.url);
+      handlerUrl.pathname = handlerUrl.pathname
+        .replace(/\.data$/, "")
+        .replace(/^\/_root$/, "/");
+
+      let matches = matchServerRoutes(
+        routes,
+        handlerUrl.pathname,
+        _build.basename
+      );
+
+      response = await handleSingleFetchRequest(
+        serverMode,
+        _build,
+        staticHandler,
+        matches,
+        request,
+        handlerUrl,
+        loadContext,
+        handleError
+      );
+
+      if (_build.entry.module.handleDataRequest) {
+        response = await _build.entry.module.handleDataRequest(response, {
+          context: loadContext,
+          params,
           request,
         });
       }
@@ -141,7 +190,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       matches[matches.length - 1].route.module.default == null &&
       matches[matches.length - 1].route.module.ErrorBoundary == null
     ) {
-      response = await handleResourceRequestRR(
+      response = await handleResourceRequest(
         serverMode,
         staticHandler,
         matches.slice(-1)[0].route.id,
@@ -155,7 +204,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
           ? await getDevServerHooks()?.getCriticalCss?.(_build, url.pathname)
           : undefined;
 
-      response = await handleDocumentRequestRR(
+      response = await handleDocumentRequest(
         serverMode,
         _build,
         staticHandler,
@@ -178,7 +227,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   };
 };
 
-async function handleDataRequestRR(
+async function handleDataRequest(
   serverMode: ServerMode,
   build: ServerBuild,
   staticHandler: StaticHandler,
@@ -245,9 +294,7 @@ async function handleDataRequestRR(
     }
 
     if (isRouteErrorResponse(error)) {
-      if (error) {
-        handleError(error);
-      }
+      handleError(error);
       return errorResponseToJson(error, serverMode);
     }
 
@@ -265,7 +312,217 @@ async function handleDataRequestRR(
   }
 }
 
-async function handleDocumentRequestRR(
+export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
+
+type SingleFetchRedirectResult = {
+  redirect: string;
+  status: number;
+  revalidate: boolean;
+  reload: boolean;
+};
+export type SingleFetchResult =
+  | { data: unknown }
+  | { error: unknown }
+  | SingleFetchRedirectResult;
+
+export type SingleFetchResults = {
+  [key: string]: SingleFetchResult;
+  [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult;
+};
+
+async function handleSingleFetchRequest(
+  serverMode: ServerMode,
+  build: ServerBuild,
+  staticHandler: StaticHandler,
+  matches: RouteMatch<ServerRoute>[] | null,
+  request: Request,
+  handlerUrl: URL,
+  loadContext: AppLoadContext,
+  handleError: (err: unknown) => void
+): Promise<Response> {
+  let { result, headers, status } =
+    request.method !== "GET"
+      ? await singleFetchAction(
+          request,
+          handlerUrl,
+          staticHandler,
+          loadContext,
+          handleError
+        )
+      : await singleFetchLoaders(
+          request,
+          handlerUrl,
+          staticHandler,
+          matches,
+          loadContext,
+          handleError,
+          serverMode,
+          build
+        );
+
+  // Mark all successful responses with a header so we can identify in-flight
+  // network errors that are missing this header
+  let resultHeaders = new Headers(headers);
+  resultHeaders.set("X-Remix-Response", "yes");
+  resultHeaders.set("Content-Type", "text/x-turbo");
+
+  // Note: Deferred data is already just Promises, so we don't have to mess
+  // `activeDeferreds` or anything :)
+  return new Response(
+    encodeViaTurboStream(
+      result,
+      request.signal,
+      build.entry.module.streamTimeout,
+      serverMode
+    ),
+    {
+      status: status || 200,
+      headers: resultHeaders,
+    }
+  );
+}
+
+async function singleFetchAction(
+  request: Request,
+  handlerUrl: URL,
+  staticHandler: StaticHandler,
+  loadContext: AppLoadContext,
+  handleError: (err: unknown) => void
+): Promise<{ result: SingleFetchResult; headers: Headers; status: number }> {
+  try {
+    let handlerRequest = new Request(handlerUrl, {
+      method: request.method,
+      body: request.body,
+      headers: request.headers,
+      signal: request.signal,
+      ...(request.body ? { duplex: "half" } : undefined),
+    });
+    let result = await staticHandler.queryRoute(handlerRequest, {
+      requestContext: loadContext,
+    });
+
+    // Unlike `handleDataRequest`, when singleFetch is enabled, queryRoute does
+    // let non-Response return values through
+    if (!isResponse(result)) {
+      return { result: { data: result }, headers: new Headers(), status: 200 };
+    }
+
+    if (isRedirectResponse(result)) {
+      return {
+        result: getSingleFetchRedirect(result),
+        headers: result.headers,
+        status: 200, // Don't trigger a redirect on the `fetch`
+      };
+    }
+    return {
+      result: { data: await unwrapResponse(result) },
+      headers: result.headers,
+      status: result.status,
+    };
+  } catch (error) {
+    if (isResponse(error)) {
+      return {
+        result: {
+          error: new ErrorResponseImpl(
+            error.status,
+            error.statusText,
+            await unwrapResponse(error)
+          ),
+        },
+        headers: error.headers,
+        status: error.status,
+      };
+    } else {
+      handleError(error);
+      return {
+        result: { error },
+        headers: new Headers(),
+        status: isRouteErrorResponse(error) ? error.status : 500,
+      };
+    }
+  }
+}
+
+async function singleFetchLoaders(
+  request: Request,
+  handlerUrl: URL,
+  staticHandler: StaticHandler,
+  matches: RouteMatch<ServerRoute>[] | null,
+  loadContext: AppLoadContext,
+  handleError: (err: unknown) => void,
+  serverMode: ServerMode,
+  build: ServerBuild
+): Promise<{ result: SingleFetchResults; headers: Headers; status: number }> {
+  try {
+    let handlerRequest = new Request(handlerUrl, {
+      headers: request.headers,
+      signal: request.signal,
+    });
+    let loadRouteIds =
+      new URL(request.url).searchParams.get("_routes")?.split(",") || undefined;
+
+    let result = await staticHandler.query(handlerRequest, {
+      requestContext: loadContext,
+      loadRouteIds,
+      skipLoaderErrorBubbling: true,
+    });
+    if (isResponse(result)) {
+      return {
+        result: {
+          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(result),
+        },
+        headers: result.headers,
+        status: 200, // Don't want the `fetch` call to follow the redirect
+      };
+    }
+
+    let context = result;
+
+    // Sanitize errors outside of development environments
+    if (context.errors) {
+      Object.values(context.errors).forEach((err) => {
+        // @ts-expect-error This is "private" from users but intended for internal use
+        if (!isRouteErrorResponse(err) || err.error) {
+          handleError(err);
+        }
+      });
+      context.errors = sanitizeErrors(context.errors, serverMode);
+    }
+
+    // Aggregate results based on the matches we intended to load since we get
+    // `null` values back in `context.loaderData` for routes we didn't load
+    let results: SingleFetchResults = {};
+    let loadedMatches = loadRouteIds
+      ? context.matches.filter(
+          (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
+        )
+      : context.matches;
+    loadedMatches.forEach((m) => {
+      let data = context.loaderData?.[m.route.id];
+      let error = context.errors?.[m.route.id];
+      if (error !== undefined) {
+        results[m.route.id] = { error };
+      } else if (data !== undefined) {
+        results[m.route.id] = { data };
+      }
+    });
+
+    return {
+      result: results,
+      headers: getDocumentHeaders(build, context),
+      status: context.statusCode,
+    };
+  } catch (error: unknown) {
+    handleError(error);
+    return {
+      result: { root: { error } },
+      headers: new Headers(),
+      status: 500,
+    };
+  }
+}
+
+async function handleDocumentRequest(
   serverMode: ServerMode,
   build: ServerBuild,
   staticHandler: StaticHandler,
@@ -299,8 +556,16 @@ async function handleDocumentRequestRR(
     context.errors = sanitizeErrors(context.errors, serverMode);
   }
 
-  let headers = getDocumentHeadersRR(build, context);
+  let headers = getDocumentHeaders(build, context);
 
+  // Server UI state to send to the client.
+  // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
+  // - Otherwise it's stringified into `serverHandoffString`
+  let state = {
+    loaderData: context.loaderData,
+    actionData: context.actionData,
+    errors: serializeErrors(context.errors, serverMode),
+  };
   let entryContext: EntryContext = {
     manifest: build.assets,
     routeModules: createEntryRouteModules(build.routes),
@@ -310,14 +575,21 @@ async function handleDocumentRequestRR(
       url: context.location.pathname,
       basename: build.basename,
       criticalCss,
-      state: {
-        loaderData: context.loaderData,
-        actionData: context.actionData,
-        errors: serializeErrors(context.errors, serverMode),
-      },
       future: build.future,
       isSpaMode: build.isSpaMode,
+      ...(!build.future.unstable_singleFetch ? { state } : null),
     }),
+    ...(build.future.unstable_singleFetch
+      ? {
+          serverHandoffStream: encodeViaTurboStream(
+            state,
+            request.signal,
+            build.entry.module.streamTimeout,
+            serverMode
+          ),
+          renderMeta: {},
+        }
+      : null),
     future: build.future,
     isSpaMode: build.isSpaMode,
     serializeError: (err) => serializeError(err, serverMode),
@@ -340,21 +612,8 @@ async function handleDocumentRequestRR(
     // If they threw a response, unwrap it into an ErrorResponse like we would
     // have for a loader/action
     if (isResponse(error)) {
-      let data;
       try {
-        let contentType = error.headers.get("Content-Type");
-        // Check between word boundaries instead of startsWith() due to the last
-        // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
-        if (contentType && /\bapplication\/json\b/.test(contentType)) {
-          if (error.body == null) {
-            data = null;
-          } else {
-            data = await error.json();
-          }
-        } else {
-          data = await error.text();
-        }
-
+        let data = await unwrapResponse(error);
         errorForSecondRender = new ErrorResponseImpl(
           error.status,
           error.statusText,
@@ -377,21 +636,36 @@ async function handleDocumentRequestRR(
       context.errors = sanitizeErrors(context.errors, serverMode);
     }
 
-    // Update entryContext for the second render pass
+    // Get a new entryContext for the second render pass
+    // Server UI state to send to the client.
+    // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
+    // - Otherwise it's stringified into `serverHandoffString`
+    let state = {
+      loaderData: context.loaderData,
+      actionData: context.actionData,
+      errors: serializeErrors(context.errors, serverMode),
+    };
     entryContext = {
       ...entryContext,
       staticHandlerContext: context,
       serverHandoffString: createServerHandoffString({
         url: context.location.pathname,
         basename: build.basename,
-        state: {
-          loaderData: context.loaderData,
-          actionData: context.actionData,
-          errors: serializeErrors(context.errors, serverMode),
-        },
         future: build.future,
         isSpaMode: build.isSpaMode,
+        ...(!build.future.unstable_singleFetch ? { state } : null),
       }),
+      ...(build.future.unstable_singleFetch
+        ? {
+            serverHandoffStream: encodeViaTurboStream(
+              state,
+              request.signal,
+              build.entry.module.streamTimeout,
+              serverMode
+            ),
+            renderMeta: {},
+          }
+        : null),
     };
 
     try {
@@ -409,7 +683,7 @@ async function handleDocumentRequestRR(
   }
 }
 
-async function handleResourceRequestRR(
+async function handleResourceRequest(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   routeId: string,
@@ -425,12 +699,15 @@ async function handleResourceRequestRR(
       routeId,
       requestContext: loadContext,
     });
-    invariant(
-      !(DEFERRED_SYMBOL in response),
-      `You cannot return a \`defer()\` response from a Resource Route.  Did you ` +
-        `forget to export a default UI component from the "${routeId}" route?`
-    );
-    // callRouteLoader/callRouteAction always return responses
+    if (typeof response === "object") {
+      invariant(
+        !(DEFERRED_SYMBOL in response),
+        `You cannot return a \`defer()\` response from a Resource Route.  Did you ` +
+          `forget to export a default UI component from the "${routeId}" route?`
+      );
+    }
+    // callRouteLoader/callRouteAction always return responses (w/o single fetch).
+    // With single fetch, users should always be Responses from resource routes
     invariant(
       isResponse(response),
       "Expected a Response to be returned from queryRoute"
@@ -489,5 +766,87 @@ function returnLastResortErrorResponse(error: any, serverMode?: ServerMode) {
     headers: {
       "Content-Type": "text/plain",
     },
+  });
+}
+
+function unwrapResponse(response: Response) {
+  let contentType = response.headers.get("Content-Type");
+  // Check between word boundaries instead of startsWith() due to the last
+  // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
+  return contentType && /\bapplication\/json\b/.test(contentType)
+    ? response.body == null
+      ? null
+      : response.json()
+    : response.text();
+}
+
+function getSingleFetchRedirect(response: Response): SingleFetchRedirectResult {
+  return {
+    redirect: response.headers.get("Location")!,
+    status: response.status,
+    revalidate:
+      // Technically X-Remix-Revalidate isn't needed here - that was an implementation
+      // detail of ?_data requests as our way to tell the front end to revalidate when
+      // we didn't have a response body to include that information in.
+      // With single fetch, we tell the front end via this revalidate boolean field.
+      // However, we're respecting it for now because it may be something folks have
+      // used in their own responses
+      // TODO(v3): Consider removing or making this official public API
+      response.headers.has("X-Remix-Revalidate") ||
+      response.headers.has("Set-Cookie"),
+    reload: response.headers.has("X-Remix-Reload-Document"),
+  };
+}
+
+// Note: If you change this function please change the corresponding
+// decodeViaTurboStream function in server-runtime
+function encodeViaTurboStream(
+  data: any,
+  requestSignal: AbortSignal,
+  streamTimeout: number | undefined,
+  serverMode: ServerMode
+) {
+  let controller = new AbortController();
+  // How long are we willing to wait for all of the promises in `data` to resolve
+  // before timing out?  We default this to 50ms shorter than the default value for
+  // `ABORT_DELAY` in our built-in `entry.server.tsx` so that once we reject we
+  // have time to flush the rejections down through React's rendering stream before `
+  // we call abort() on that.  If the user provides their own it's up to them to
+  // decouple the aborting of the stream from the aborting of React's renderToPipeableStream
+  let timeoutId = setTimeout(
+    () => controller.abort(new Error("Server Timeout")),
+    typeof streamTimeout === "number" ? streamTimeout : 4950
+  );
+  requestSignal.addEventListener("abort", () => clearTimeout(timeoutId));
+
+  return encode(data, {
+    signal: controller.signal,
+    plugins: [
+      (value) => {
+        // Even though we sanitized errors on context.errors prior to responding,
+        // we still need to handle this for any deferred data that rejects with an
+        // Error - as those will not be sanitized yet
+        if (value instanceof Error) {
+          let { name, message, stack } =
+            serverMode === ServerMode.Production
+              ? sanitizeError(value, serverMode)
+              : value;
+          return ["SanitizedError", name, message, stack];
+        }
+
+        if (value instanceof ErrorResponseImpl) {
+          let { data, status, statusText } = value;
+          return ["ErrorResponse", data, status, statusText];
+        }
+
+        if (
+          value &&
+          typeof value === "object" &&
+          SingleFetchRedirectSymbol in value
+        ) {
+          return ["SingleFetchRedirect", value[SingleFetchRedirectSymbol]];
+        }
+      },
+    ],
   });
 }

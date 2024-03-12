@@ -37,6 +37,7 @@ interface FutureConfig {
   v3_fetcherPersist: boolean;
   v3_relativeSplatPath: boolean;
   v3_throwAbortReason: boolean;
+  unstable_singleFetch: boolean;
 }
 
 type NodeBuiltinsPolyfillOptions = Pick<
@@ -600,6 +601,7 @@ export async function resolveConfig(
     v3_fetcherPersist: appConfig.future?.v3_fetcherPersist === true,
     v3_relativeSplatPath: appConfig.future?.v3_relativeSplatPath === true,
     v3_throwAbortReason: appConfig.future?.v3_throwAbortReason === true,
+    unstable_singleFetch: appConfig.future?.unstable_singleFetch === true,
   };
 
   if (appConfig.future) {
