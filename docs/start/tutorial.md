@@ -256,14 +256,14 @@ Instead of a 404 "Not Found" page, we want to actually render something at the U
 👉 **Create the contact route module**
 
 ```sh
-touch src/routes/contact.jsx
+touch src/routes/contacts.jsx
 ```
 
 👉 **Add the contact component UI**
 
 It's just a bunch of elements, feel free to copy/paste.
 
-```jsx filename=src/routes/contact.jsx
+```jsx filename=src/routes/contacts.jsx
 import { Form } from "react-router-dom";
 
 export default function Contact() {
@@ -362,7 +362,7 @@ Now that we've got a component, let's hook it up to a new route.
 
 ```js filename=src/main.jsx lines=[2,10-13]
 /* existing imports */
-import Contact from "./routes/contact";
+import Contact from "./routes/contacts";
 
 const router = createBrowserRouter([
   {
