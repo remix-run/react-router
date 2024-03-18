@@ -14,6 +14,7 @@ declare function HashRouter(
 
 interface HashRouterProps {
   basename?: string;
+  hashType?: HashType
   children?: React.ReactNode;
   future?: FutureConfig;
   window?: Window;
@@ -49,6 +50,22 @@ function App() {
     <HashRouter basename="/app">
       <Routes>
         <Route path="/" /> {/* 👈 Renders at /#/app/ */}
+      </Routes>
+    </HashRouter>
+  );
+}
+```
+
+## `hashType`
+
+Decide wether to put a slash after the '#' in the URL (default: 'slash')
+
+```jsx
+function App() {
+  return (
+    <HashRouter hashType='noslash'>
+      <Routes>
+        <Route path="/bookmark" /> {/* 👈 Renders at /#bookmark/ */}
       </Routes>
     </HashRouter>
   );

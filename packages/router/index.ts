@@ -57,6 +57,7 @@ export type {
   BrowserHistoryOptions,
   HashHistory,
   HashHistoryOptions,
+  HashType,
   History,
   InitialEntry,
   Location,

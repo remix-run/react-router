@@ -26,6 +26,9 @@ describe("v7_partialHydration", () => {
   describe("createHashRouter", () => {
     testPartialHydration(createHashRouter, ReactRouterDom_RouterProvider);
   });
+  describe("createHashRouter with noslash", () => {
+    testPartialHydration((routes, opts) => createHashRouter(routes, {...opts, hashType:'noslash'}), ReactRouterDom_RouterProvider);
+  });
 
   describe("createMemoryRouter", () => {
     testPartialHydration(createMemoryRouter, ReactRouter_RouterPRovider);
