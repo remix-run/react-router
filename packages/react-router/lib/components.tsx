@@ -11,6 +11,7 @@ import type {
   TrackedPromise,
   unstable_DataStrategyFunction,
   unstable_AgnosticPatchRoutesOnMissFunction,
+  HashType
 } from "./router";
 import {
   Action as NavigationType,
@@ -383,6 +384,7 @@ export interface RouterProps {
   navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
+  hashType?: HashType;
 }
 
 /**
