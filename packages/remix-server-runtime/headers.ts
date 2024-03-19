@@ -3,9 +3,10 @@ import { splitCookiesString } from "set-cookie-parser";
 
 import type { ServerBuild } from "./build";
 
-export function getDocumentHeadersRR(
+export function getDocumentHeaders(
   build: ServerBuild,
-  context: StaticHandlerContext
+  context: StaticHandlerContext,
+  loadRouteIds?: string[]
 ): Headers {
   let boundaryIdx = context.errors
     ? context.matches.findIndex((m) => context.errors![m.route.id])
@@ -14,6 +15,10 @@ export function getDocumentHeadersRR(
     boundaryIdx >= 0
       ? context.matches.slice(0, boundaryIdx + 1)
       : context.matches;
+
+  if (loadRouteIds) {
+    matches = matches.filter((m) => loadRouteIds.includes(m.route.id));
+  }
 
   let errorHeaders: Headers | undefined;
 

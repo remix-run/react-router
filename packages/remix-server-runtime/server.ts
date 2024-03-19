@@ -24,7 +24,7 @@ import {
   serializeError,
   serializeErrors,
 } from "./errors";
-import { getDocumentHeadersRR as getDocumentHeaders } from "./headers";
+import { getDocumentHeaders } from "./headers";
 import invariant from "./invariant";
 import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
@@ -353,7 +353,6 @@ async function handleSingleFetchRequest(
           request,
           handlerUrl,
           staticHandler,
-          matches,
           loadContext,
           handleError,
           serverMode,
@@ -447,7 +446,6 @@ async function singleFetchLoaders(
   request: Request,
   handlerUrl: URL,
   staticHandler: StaticHandler,
-  matches: RouteMatch<ServerRoute>[] | null,
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void,
   serverMode: ServerMode,
@@ -509,7 +507,7 @@ async function singleFetchLoaders(
 
     return {
       result: results,
-      headers: getDocumentHeaders(build, context),
+      headers: getDocumentHeaders(build, context, loadRouteIds),
       status: context.statusCode,
     };
   } catch (error: unknown) {

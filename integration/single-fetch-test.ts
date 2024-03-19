@@ -416,7 +416,7 @@ test.describe("single-fetch", () => {
     expect(urls).toEqual([]);
   });
 
-  test("returns loader headers through the headers function", async () => {
+  test("handles headers correctly for loader and action calls", async () => {
     let fixture = await createFixture({
       config: {
         future: {
@@ -474,6 +474,114 @@ test.describe("single-fetch", () => {
     });
     expect(res.headers.get("x-action-error")).toEqual("true");
     expect(res.headers.get("x-headers-function")).toEqual(null);
+  });
+
+  test("scopes loader headers to the _routes param if present", async () => {
+    let fixture = await createFixture({
+      config: {
+        future: {
+          unstable_singleFetch: true,
+        },
+      },
+      files: {
+        ...files,
+        "app/routes/a.tsx": js`
+          export function headers({ loaderHeaders }) {
+            let headers = new Headers(loaderHeaders);
+            headers.set('x-a-headers', 'true')
+            return headers;
+          }
+
+          export function loader({ request }) {
+            return new Response(null, { headers: { "x-a-loader": "true" } });
+          }
+
+          export default function Comp() {
+            return null;
+          }
+        `,
+        "app/routes/a.b.tsx": js`
+          export function headers({ loaderHeaders, parentHeaders }) {
+            let headers = new Headers(parentHeaders);
+            loaderHeaders.forEach((value, name) => headers.set(name, value));
+            headers.set('x-b-headers', 'true')
+            return headers;
+          }
+
+          export function loader({ request }) {
+            return new Response(null, { headers: { "x-b-loader": "true" } });
+          }
+
+          export default function Comp() {
+            return null;
+          }
+        `,
+        "app/routes/a.b.c.tsx": js`
+          export function headers({ loaderHeaders, parentHeaders }) {
+            let headers = new Headers(parentHeaders);
+            loaderHeaders.forEach((value, name) => headers.set(name, value));
+            headers.set('x-c-headers', 'true')
+            return headers;
+          }
+
+          export function loader({ request }) {
+            return new Response(null, { headers: { "x-c-loader": "true" } });
+          }
+
+          export default function Comp() {
+            return null;
+          }
+        `,
+      },
+    });
+
+    let res = await fixture.requestSingleFetchData("/a/b/c.data");
+    expect(res.headers.get("x-a-loader")).toEqual("true");
+    expect(res.headers.get("x-a-headers")).toEqual("true");
+    expect(res.headers.get("x-b-loader")).toEqual("true");
+    expect(res.headers.get("x-b-headers")).toEqual("true");
+    expect(res.headers.get("x-c-loader")).toEqual("true");
+    expect(res.headers.get("x-c-headers")).toEqual("true");
+
+    res = await fixture.requestSingleFetchData(
+      "/a/b/c.data?_routes=routes%2Fa,routes%2Fa.b"
+    );
+    expect(res.headers.get("x-a-loader")).toEqual("true");
+    expect(res.headers.get("x-a-headers")).toEqual("true");
+    expect(res.headers.get("x-b-loader")).toEqual("true");
+    expect(res.headers.get("x-b-headers")).toEqual("true");
+    expect(res.headers.get("x-c-loader")).toBeNull();
+    expect(res.headers.get("x-c-headers")).toBeNull();
+
+    res = await fixture.requestSingleFetchData(
+      "/a/b/c.data?_routes=routes%2Fa"
+    );
+    expect(res.headers.get("x-a-loader")).toEqual("true");
+    expect(res.headers.get("x-a-headers")).toEqual("true");
+    expect(res.headers.get("x-b-loader")).toBeNull();
+    expect(res.headers.get("x-b-headers")).toBeNull();
+    expect(res.headers.get("x-c-loader")).toBeNull();
+    expect(res.headers.get("x-c-headers")).toBeNull();
+
+    res = await fixture.requestSingleFetchData(
+      "/a/b/c.data?_routes=routes%2Fa.b.c"
+    );
+    expect(res.headers.get("x-a-loader")).toBeNull();
+    expect(res.headers.get("x-a-headers")).toBeNull();
+    expect(res.headers.get("x-b-loader")).toBeNull();
+    expect(res.headers.get("x-b-headers")).toBeNull();
+    expect(res.headers.get("x-c-loader")).toEqual("true");
+    expect(res.headers.get("x-c-headers")).toEqual("true");
+
+    res = await fixture.requestSingleFetchData(
+      "/a/b/c.data?_routes=routes%2Fa,routes%2Fa.b.c"
+    );
+    expect(res.headers.get("x-a-loader")).toEqual("true");
+    expect(res.headers.get("x-a-loader")).toEqual("true");
+    expect(res.headers.get("x-b-headers")).toBeNull();
+    expect(res.headers.get("x-b-headers")).toBeNull();
+    expect(res.headers.get("x-c-loader")).toEqual("true");
+    expect(res.headers.get("x-c-headers")).toEqual("true");
   });
 
   test.describe("client loaders", () => {
