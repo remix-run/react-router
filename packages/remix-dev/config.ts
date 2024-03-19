@@ -469,7 +469,7 @@ export async function resolveConfig(
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  if (isSpaMode) {
+  if (isSpaMode && appConfig.future?.unstable_singleFetch != true) {
     // This is a super-simple default since we don't need streaming in SPA Mode.
     // We can include this in a remix-spa template, but right now `npx remix reveal`
     // will still expose the streaming template since that command doesn't have
