@@ -7,7 +7,7 @@ For more, check out the [Remix docs](https://remix.run/docs).
 ## Install
 
 ```sh
-npx create-remix@latest --template remix-run/remix/templates/deno
+npx create-remix@latest --template remix-run/remix/templates/classic-remix-compiler/deno
 ```
 
 ## Managing dependencies
