@@ -1009,7 +1009,11 @@ test.describe("single-fetch", () => {
               import {  Link } from "@remix-run/react";
 
               export default function Index() {
-                return <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                return (
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                );
               }
             `,
             "app/routes/a.tsx": js`
@@ -1070,18 +1074,15 @@ test.describe("single-fetch", () => {
         ServerMode.Development
       );
 
-      let urls: string[] = [];
-      page.on("request", (req) => {
-        if (req.method() === "GET" && req.url().includes(".data")) {
-          urls.push(req.url());
-        }
-      });
-
       let appFixture = await createAppFixture(fixture, ServerMode.Development);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       // No clientLoaders so we can make a single parameter-less fetch
-      expect(urls).toEqual([expect.stringMatching(/\/a\/b\/c\.data$/)]);
+      await page.waitForSelector(
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data']",
+        { state: "attached" }
+      );
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
     });
 
     test("when one route has a client loader", async ({ page }) => {
@@ -1098,7 +1099,11 @@ test.describe("single-fetch", () => {
               import {  Link } from "@remix-run/react";
 
               export default function Index() {
-                return <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                return (
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                );
               }
             `,
             "app/routes/a.tsx": js`
@@ -1164,23 +1169,16 @@ test.describe("single-fetch", () => {
         ServerMode.Development
       );
 
-      let urls: string[] = [];
-      page.on("request", (req) => {
-        if (req.method() === "GET" && req.url().includes(".data")) {
-          urls.push(req.url());
-        }
-      });
-
       let appFixture = await createAppFixture(fixture, ServerMode.Development);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
       // A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
-      expect(urls.sort()).toEqual([
-        expect.stringMatching(
-          /\/a\/b\/c\.data\?_routes=routes%2Fa%2Croutes%2Fa\.b$/
-        ),
-      ]);
+      await page.waitForSelector(
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=routes%2Fa%2Croutes%2Fa.b']",
+        { state: "attached" }
+      );
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
     });
 
     test("when multiple routes have client loaders", async ({ page }) => {
@@ -1197,7 +1195,11 @@ test.describe("single-fetch", () => {
               import {  Link } from "@remix-run/react";
 
               export default function Index() {
-                return <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                return (
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                );
               }
             `,
             "app/routes/a.tsx": js`
@@ -1268,21 +1270,16 @@ test.describe("single-fetch", () => {
         ServerMode.Development
       );
 
-      let urls: string[] = [];
-      page.on("request", (req) => {
-        if (req.method() === "GET" && req.url().includes(".data")) {
-          urls.push(req.url());
-        }
-      });
-
       let appFixture = await createAppFixture(fixture, ServerMode.Development);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
       // Only A can get prefetched, B/C can't due to `clientLoader`
-      expect(urls.sort()).toEqual([
-        expect.stringMatching(/\/a\/b\/c\.data\?_routes=routes%2Fa$/),
-      ]);
+      await page.waitForSelector(
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=routes%2Fa']",
+        { state: "attached" }
+      );
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
     });
 
     test("when all routes have client loaders", async ({ page }) => {
@@ -1299,7 +1296,11 @@ test.describe("single-fetch", () => {
               import {  Link } from "@remix-run/react";
 
               export default function Index() {
-                return <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                return (
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                );
               }
             `,
             "app/routes/a.tsx": js`
@@ -1375,19 +1376,12 @@ test.describe("single-fetch", () => {
         ServerMode.Development
       );
 
-      let urls: string[] = [];
-      page.on("request", (req) => {
-        if (req.method() === "GET" && req.url().includes(".data")) {
-          urls.push(req.url());
-        }
-      });
-
       let appFixture = await createAppFixture(fixture, ServerMode.Development);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
       // No prefetching due to clientLoaders
-      expect(urls.sort()).toEqual([]);
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(0);
     });
   });
 });
