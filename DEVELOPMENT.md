@@ -16,7 +16,7 @@ Changesets will do most of the heavy lifting for our releases. When changes are 
 ### Starting a new pre-release
 
 - Ensure you are on the new `release-*` branch.
-- Enter Changesets pre-release mode using the `pre` tag: `yarn changeset pre enter pre`.
+- Enter Changesets pre-release mode using the `pre` tag: `pnpm changeset pre enter pre`.
 - Commit the change and push the `release-*` branch to GitHub.
 - Wait for the release workflow to finish. The Changesets action in the workflow will open a PR that will increment all versions and generate the changelogs.
 - Review the updated `CHANGELOG` files and make any adjustments necessary, then merge the PR into the `release-*` branch.
@@ -32,7 +32,7 @@ Changesets will do most of the heavy lifting for our releases. When changes are 
 You may need to make changes to a pre-release prior to publishing a final stable release. To do so:
 
 - Make whatever changes you need.
-- Create a new changeset: `yarn changeset`.
+- Create a new changeset: `pnpm changeset`.
   - **IMPORTANT:** This is required even if you ultimately don't want to include these changes in the logs. Remember, changelogs can be edited prior to publishing, but the Changeset version script needs to see new changesets in order to create a new version.
 - Commit the changesets and push the `release-*` branch to GitHub.
 - Wait for the release workflow to finish and the Changesets action to open its PR that will increment all versions.
@@ -42,7 +42,7 @@ You may need to make changes to a pre-release prior to publishing a final stable
 
 ### Publishing the stable release
 
-- Exit Changesets pre-release mode: `yarn changeset pre exit`.
+- Exit Changesets pre-release mode: `pnpm changeset pre exit`.
 - Commit the edited pre-release file along with any unpublished changesets, and push the `release-*` branch to GitHub.
 - Wait for the release workflow to finish. The Changesets action in the workflow will open a PR that will increment all versions and generate the changelogs for the stable release.
 - Review the updated `CHANGELOG` files and make any adjustments necessary.
@@ -71,6 +71,6 @@ Experimental releases and hot-fixes do not need to be branched off of `dev`. Exp
 
 - Create a new branch for the release: `git checkout -b release-experimental`
 - Make whatever changes you need and commit them: `git add . && git commit "experimental changes!"`
-- Update version numbers and create a release tag: `yarn run version:experimental`
+- Update version numbers and create a release tag: `pnpm run version:experimental`
 - Push to GitHub: `git push origin --follow-tags`
 - The CI workflow should automatically trigger from the experimental tag to publish the release to npm

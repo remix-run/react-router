@@ -27,14 +27,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: "yarn"
+          cache: "pnpm"
 
       - name: 📥 Install deps
-        run: yarn --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: 🔐 Setup npm auth
         run: |
@@ -50,10 +53,10 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: yarn run version
+          version: pnpm run version
           commit: "chore: Update version for release"
           title: "chore: Update version for release"
-          publish: yarn run release
+          publish: pnpm run release
           createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -70,11 +73,14 @@ jobs:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
 
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
         with:
           node-version: 16
-          cache: "npm"
+          cache: "pnpm"
 
       - id: find_package_version
         run: |

@@ -29,7 +29,7 @@ import type {
   Location,
   RouteObject,
   To,
-} from "react-router-dom";
+} from "./index";
 import {
   createPath,
   parsePath,
@@ -38,7 +38,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_FetchersContext as FetchersContext,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
-} from "react-router-dom";
+} from "./index";
 
 export interface StaticRouterProps {
   basename?: string;

@@ -21,20 +21,23 @@ jobs:
         with:
           token: ${{ secrets.FORMAT_PAT }}
 
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
         with:
-          cache: yarn
+          cache: pnpm
           node-version-file: ".nvmrc"
 
       - name: 📥 Install deps
-        run: yarn --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: 🔃 Sort contributors.yml
         run: sort --ignore-case --output contributors.yml contributors.yml
 
       - name: 👔 Format
-        run: yarn format
+        run: pnpm format
 
       - name: 💪 Commit
         run: |

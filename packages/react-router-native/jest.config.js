@@ -8,9 +8,7 @@ module.exports = {
   globals: {
     __DEV__: true,
   },
-  modulePaths: [
-    "<rootDir>/node_modules", // for react-native
-  ],
+  transformIgnorePatterns: [],
   setupFiles: ["<rootDir>/__tests__/setup.ts"],
   moduleNameMapper: {
     "^@remix-run/router$": "<rootDir>/../router/index.ts",

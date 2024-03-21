@@ -1,5 +1,6 @@
 /fixtures/
 node_modules/
+pnpm-lock.yaml
 /docs/api
 examples/**/dist/
 packages/**/dist/
