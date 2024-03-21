@@ -38,8 +38,8 @@
     ]
   },
   "resolutions": {
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
+    "@types/react": "npm:types-react@19.0.0",
+    "@types/react-dom": "npm:types-react@19.0.0",
     "jsdom": "22.1.0"
   },
   "dependencies": {
