@@ -903,6 +903,46 @@ describe("shared server runtime", () => {
       expect(indexAction.mock.calls.length).toBe(1);
     });
 
+    test("data request handleDataRequest redirects are handled", async () => {
+      let rootLoader = jest.fn(() => {
+        return "root";
+      });
+      let indexLoader = jest.fn(() => {
+        return "index";
+      });
+      let build = mockServerBuild({
+        root: {
+          default: {},
+          loader: rootLoader,
+        },
+        "routes/_index": {
+          parentId: "root",
+          loader: indexLoader,
+          index: true,
+        },
+      });
+      build.entry.module.handleDataRequest.mockImplementation(async () => {
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: "/redirect",
+          },
+        });
+      });
+      let handler = createRequestHandler(build, ServerMode.Test);
+
+      let request = new Request(`${baseUrl}/?_data=routes/_index`, {
+        method: "get",
+      });
+
+      let result = await handler(request);
+      expect(result.status).toBe(204);
+      expect(result.headers.get("X-Remix-Redirect")).toBe("/redirect");
+      expect(result.headers.get("X-Remix-Status")).toBe("302");
+      expect(rootLoader.mock.calls.length).toBe(0);
+      expect(indexLoader.mock.calls.length).toBe(1);
+    });
+
     test("aborts request", async () => {
       let rootLoader = jest.fn(() => {
         return "root";

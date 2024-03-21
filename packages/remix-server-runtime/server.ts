@@ -151,6 +151,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
           params,
           request,
         });
+
+        if (isRedirectResponse(response)) {
+          response = createRemixRedirectResponse(response, _build.basename);
+        }
       }
     } else if (
       _build.future.unstable_singleFetch &&
@@ -184,6 +188,10 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
           params,
           request,
         });
+
+        if (isRedirectResponse(response)) {
+          response = createRemixRedirectResponse(response, _build.basename);
+        }
       }
     } else if (
       matches &&
@@ -243,27 +251,7 @@ async function handleDataRequest(
     });
 
     if (isRedirectResponse(response)) {
-      // We don't have any way to prevent a fetch request from following
-      // redirects. So we use the `X-Remix-Redirect` header to indicate the
-      // next URL, and then "follow" the redirect manually on the client.
-      let headers = new Headers(response.headers);
-      let redirectUrl = headers.get("Location")!;
-      headers.set(
-        "X-Remix-Redirect",
-        build.basename
-          ? stripBasename(redirectUrl, build.basename) || redirectUrl
-          : redirectUrl
-      );
-      headers.set("X-Remix-Status", response.status);
-      headers.delete("Location");
-      if (response.headers.get("Set-Cookie") !== null) {
-        headers.set("X-Remix-Revalidate", "yes");
-      }
-
-      return new Response(null, {
-        status: 204,
-        headers,
-      });
+      return createRemixRedirectResponse(response, build.basename);
     }
 
     if (DEFERRED_SYMBOL in response) {
@@ -846,5 +834,30 @@ function encodeViaTurboStream(
         }
       },
     ],
+  });
+}
+
+function createRemixRedirectResponse(
+  response: Response,
+  basename: string | undefined
+) {
+  // We don't have any way to prevent a fetch request from following
+  // redirects. So we use the `X-Remix-Redirect` header to indicate the
+  // next URL, and then "follow" the redirect manually on the client.
+  let headers = new Headers(response.headers);
+  let redirectUrl = headers.get("Location")!;
+  headers.set(
+    "X-Remix-Redirect",
+    basename ? stripBasename(redirectUrl, basename) || redirectUrl : redirectUrl
+  );
+  headers.set("X-Remix-Status", String(response.status));
+  headers.delete("Location");
+  if (response.headers.get("Set-Cookie") !== null) {
+    headers.set("X-Remix-Revalidate", "yes");
+  }
+
+  return new Response(null, {
+    status: 204,
+    headers,
   });
 }
