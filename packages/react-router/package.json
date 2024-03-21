@@ -23,10 +23,11 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@remix-run/router": "1.15.3"
+    "@remix-run/router": "workspace:*"
   },
   "devDependencies": {
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "react-router-dom": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=16.8"
