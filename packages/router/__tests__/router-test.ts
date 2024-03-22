@@ -1892,7 +1892,7 @@ describe("a router", () => {
       expect(
         A.actions.root.stub.mock.calls[0][0].request.headers.get("Content-Type")
       ).toMatch(
-        /^multipart\/form-data; boundary=NodeFetchFormDataBoundary[a-z0-9]+/
+        /^multipart\/form-data; boundary=----formdata-undici-[a-z0-9]+/
       );
     });
 
