@@ -171,7 +171,7 @@ describe("navigations", () => {
       expect(t.router.state.loaderData).toEqual({});
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
-          "foo": [SyntaxError: Unexpected non-whitespace character after JSON at position 15],
+          "foo": [SyntaxError: Unexpected token } in JSON at position 15],
         }
       `);
     });
@@ -206,7 +206,7 @@ describe("navigations", () => {
       expect(t.router.state.loaderData).toEqual({});
       expect(t.router.state.errors).toMatchInlineSnapshot(`
         {
-          "root": [SyntaxError: Unexpected non-whitespace character after JSON at position 15],
+          "root": [SyntaxError: Unexpected token } in JSON at position 15],
         }
       `);
     });
