@@ -178,7 +178,7 @@ describe("express createRemixHeaders", () => {
         "x-foo": ["bar", "baz"],
         "x-bar": "baz",
       });
-      expect(headers.getAll("x-foo")).toEqual(["bar", "baz"]);
+      expect(headers.get("x-foo")).toEqual("bar, baz");
       expect(headers.get("x-bar")).toBe("baz");
     });
 
@@ -189,7 +189,7 @@ describe("express createRemixHeaders", () => {
           "__other=some_other_value; Path=/; Secure; HttpOnly; Expires=Wed, 21 Oct 2015 07:28:00 GMT; SameSite=Lax",
         ],
       });
-      expect(headers.getAll("set-cookie")).toEqual([
+      expect(headers.getSetCookie()).toEqual([
         "__session=some_value; Path=/; Secure; HttpOnly; MaxAge=7200; SameSite=Lax",
         "__other=some_other_value; Path=/; Secure; HttpOnly; Expires=Wed, 21 Oct 2015 07:28:00 GMT; SameSite=Lax",
       ]);

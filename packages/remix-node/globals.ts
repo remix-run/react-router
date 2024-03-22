@@ -5,22 +5,7 @@ import {
   Headers as NodeHeaders,
   Request as NodeRequest,
   Response as NodeResponse,
-} from "@remix-run/web-fetch";
-import {
-  ByteLengthQueuingStrategy as NodeByteLengthQueuingStrategy,
-  CountQueuingStrategy as NodeCountQueuingStrategy,
-  ReadableByteStreamController as NodeReadableByteStreamController,
-  ReadableStream as NodeReadableStream,
-  ReadableStreamBYOBReader as NodeReadableStreamBYOBReader,
-  ReadableStreamBYOBRequest as NodeReadableStreamBYOBRequest,
-  ReadableStreamDefaultController as NodeReadableStreamDefaultController,
-  ReadableStreamDefaultReader as NodeReadableStreamDefaultReader,
-  TransformStream as NodeTransformStream,
-  TransformStreamDefaultController as NodeTransformStreamDefaultController,
-  WritableStream as NodeWritableStream,
-  WritableStreamDefaultController as NodeWritableStreamDefaultController,
-  WritableStreamDefaultWriter as NodeWritableStreamDefaultWriter,
-} from "@remix-run/web-stream";
+} from "undici";
 
 declare global {
   namespace NodeJS {
@@ -41,30 +26,23 @@ declare global {
       WritableStream: typeof WritableStream;
     }
   }
+
+  interface RequestInit {
+    duplex?: "half";
+  }
 }
 
 export function installGlobals() {
-  global.File = NodeFile;
+  global.File = NodeFile as unknown as typeof File;
 
-  global.Headers = NodeHeaders as typeof Headers;
-  global.Request = NodeRequest as typeof Request;
-  global.Response = NodeResponse as unknown as typeof Response;
-  global.fetch = nodeFetch as typeof fetch;
+  // @ts-expect-error - overriding globals
+  global.Headers = NodeHeaders;
+  // @ts-expect-error - overriding globals
+  global.Request = NodeRequest;
+  // @ts-expect-error - overriding globals
+  global.Response = NodeResponse;
+  // @ts-expect-error - overriding globals
+  global.fetch = nodeFetch;
+  // @ts-expect-error - overriding globals
   global.FormData = NodeFormData;
-
-  // Export everything from https://developer.mozilla.org/en-US/docs/Web/API/Streams_API
-  global.ByteLengthQueuingStrategy = NodeByteLengthQueuingStrategy;
-  global.CountQueuingStrategy = NodeCountQueuingStrategy;
-  global.ReadableByteStreamController = NodeReadableByteStreamController;
-  global.ReadableStream = NodeReadableStream;
-  global.ReadableStreamBYOBReader = NodeReadableStreamBYOBReader;
-  global.ReadableStreamBYOBRequest = NodeReadableStreamBYOBRequest;
-  global.ReadableStreamDefaultController = NodeReadableStreamDefaultController;
-  global.ReadableStreamDefaultReader = NodeReadableStreamDefaultReader;
-  global.TransformStream = NodeTransformStream;
-  global.TransformStreamDefaultController =
-    NodeTransformStreamDefaultController;
-  global.WritableStream = NodeWritableStream;
-  global.WritableStreamDefaultController = NodeWritableStreamDefaultController;
-  global.WritableStreamDefaultWriter = NodeWritableStreamDefaultWriter;
 }

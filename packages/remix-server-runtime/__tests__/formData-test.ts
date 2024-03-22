@@ -1,5 +1,11 @@
 import { parseMultipartFormData } from "../formData";
 
+declare global {
+  interface RequestInit {
+    duplex?: "half";
+  }
+}
+
 class CustomError extends Error {
   constructor() {
     super("test error");
@@ -21,7 +27,7 @@ describe("parseMultipartFormData", () => {
     let parsedFormData = await parseMultipartFormData(
       req,
       async ({ filename, data, contentType }) => {
-        let chunks = [];
+        let chunks: Uint8Array[] = [];
         for await (let chunk of data) {
           chunks.push(chunk);
         }
@@ -111,6 +117,7 @@ describe("parseMultipartFormData", () => {
         method: "post",
         body,
         headers: underlyingRequest.headers,
+        duplex: "half",
       });
 
       let error: Error;
@@ -151,6 +158,7 @@ describe("parseMultipartFormData", () => {
         method: "post",
         body,
         headers: underlyingRequest.headers,
+        duplex: "half",
       });
 
       let error: Error;

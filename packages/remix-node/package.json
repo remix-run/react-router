@@ -21,13 +21,11 @@
   },
   "dependencies": {
     "@remix-run/server-runtime": "workspace:*",
-    "@remix-run/web-fetch": "^4.4.2",
-    "@remix-run/web-file": "^3.1.0",
-    "@remix-run/web-stream": "^1.1.0",
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie-signature": "^1.1.0",
     "source-map-support": "^0.5.21",
-    "stream-slice": "^0.1.2"
+    "stream-slice": "^0.1.2",
+    "undici": "^6.10.1"
   },
   "devDependencies": {
     "@types/cookie-signature": "^1.0.3",
