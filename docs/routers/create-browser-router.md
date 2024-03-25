@@ -230,9 +230,9 @@ interface HandlerResult {
 
 - `match.resolve` - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
   - You should call `match.resolve` for _all_ matches every time to ensure that all lazy routes are properly resolved
-  - This does not mean you're calling the loader/action (the "handler") - resolve will only call the handler internally if needed and if you don['t pass your own `handlerOverride` function parameter
+  - This does not mean you're calling the loader/action (the "handler") - resolve will only call the handler internally if needed and if you don't pass your own `handlerOverride` function parameter
   - See the examples below for how to implement custom handler execution via `match.resolve`
-- `match.shouldLoad` - A boolean value indicating whether this route handler needs go be called in this pass
+- `match.shouldLoad` - A boolean value indicating whether this route handler needs to be called in this pass
   - This array always includes _all_ matched routes even when only _some_ route handlers need to be called so that things like middleware can be implemented
   - This is usually only needed if you are skipping the route handler entirely and implementing custom handler logic - since it lets you determine if that custom logic should run for this route or not
   - For example:
@@ -255,7 +255,7 @@ let router = createBrowserRouter(routes, {
       matches.map(async (match) => {
         console.log(`Processing route ${match.route.id}`);
         // Don't override anything - just resolve route.lazy + call loader
-        let result = await m.resolve();
+        let result = await match.resolve();
         console.log(`Done processing route ${match.route.id}`);
         return result.
       })
@@ -300,14 +300,14 @@ let router = createBrowserRouter(routes, {
     let context = {};
     for (match of matches) {
       if (match.route.handle?.middleware) {
-        await m.route.handle.middleware({ request, params }, context);
+        await match.route.handle.middleware({ request, params }, context);
       }
     });
 
     // Run loaders in parallel with the `context` value
     return Promise.all(
-      matches.map((m, i) =>
-        m.resolve(async (handler) => {
+      matches.map((match, i) =>
+        match.resolve(async (handler) => {
           let result = await handler(context);
           return { type: "data", result };
         })
