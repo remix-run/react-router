@@ -90,7 +90,6 @@ test.describe("single-fetch", () => {
 
   test.beforeEach(() => {
     oldConsoleError = console.error;
-    console.error = () => {};
   });
 
   test.afterEach(() => {
@@ -138,6 +137,8 @@ test.describe("single-fetch", () => {
   });
 
   test("loads proper errors on single fetch loader requests", async () => {
+    console.error = () => {};
+
     let fixture = await createFixture(
       {
         config: {
@@ -582,6 +583,251 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("x-b-headers")).toBeNull();
     expect(res.headers.get("x-c-loader")).toEqual("true");
     expect(res.headers.get("x-c-headers")).toEqual("true");
+  });
+
+  test("processes loader redirects", async ({ page }) => {
+    let fixture = await createFixture({
+      config: {
+        future: {
+          unstable_singleFetch: true,
+        },
+      },
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@remix-run/node';
+          export function loader() {
+            return redirect('/target');
+          }
+          export default function Component() {
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes action redirects", async ({ page }) => {
+    let fixture = await createFixture(
+      {
+        config: {
+          future: {
+            unstable_singleFetch: true,
+          },
+        },
+        files: {
+          ...files,
+          "app/routes/data.tsx": js`
+            import { redirect } from '@remix-run/node';
+            export function action() {
+              return redirect('/target');
+            }
+            export default function Component() {
+              return null
+            }
+          `,
+          "app/routes/target.tsx": js`
+            export default function Component() {
+              return <h1 id="target">Target</h1>
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes redirects from handleDataRequest (after loaders)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      config: {
+        future: {
+          unstable_singleFetch: true,
+        },
+      },
+      files: {
+        ...files,
+        "app/entry.server.tsx": js`
+          import { PassThrough } from "node:stream";
+
+          import type { EntryContext } from "@remix-run/node";
+          import { createReadableStreamFromReadable } from "@remix-run/node";
+          import { RemixServer } from "@remix-run/react";
+          import { renderToPipeableStream } from "react-dom/server";
+
+          export default function handleRequest(
+            request: Request,
+            responseStatusCode: number,
+            responseHeaders: Headers,
+            remixContext: EntryContext
+          ) {
+            return new Promise((resolve, reject) => {
+              const { pipe } = renderToPipeableStream(
+                <RemixServer context={remixContext} url={request.url} />,
+                {
+                  onShellReady() {
+                    const body = new PassThrough();
+                    const stream = createReadableStreamFromReadable(body);
+                    responseHeaders.set("Content-Type", "text/html");
+                    resolve(
+                      new Response(stream, {
+                        headers: responseHeaders,
+                        status: responseStatusCode,
+                      })
+                    );
+                    pipe(body);
+                  },
+                  onShellError(error: unknown) {
+                    reject(error);
+                  },
+                  onError(error: unknown) {
+                    responseStatusCode = 500;
+                  },
+                }
+              );
+            });
+          }
+
+          export function handleDataRequest(response, { request }) {
+            if (request.url.endsWith("/data.data")) {
+              return new Response(null, {
+                status: 302,
+                headers: {
+                  Location: "/target",
+                },
+              });
+            }
+            return response;
+          }
+        `,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@remix-run/node';
+          export function loader() {
+            return redirect('/target');
+          }
+          export default function Component() {
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes redirects from handleDataRequest (after actions)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      config: {
+        future: {
+          unstable_singleFetch: true,
+        },
+      },
+      files: {
+        ...files,
+        "app/entry.server.tsx": js`
+          import { PassThrough } from "node:stream";
+
+          import type { EntryContext } from "@remix-run/node";
+          import { createReadableStreamFromReadable } from "@remix-run/node";
+          import { RemixServer } from "@remix-run/react";
+          import { renderToPipeableStream } from "react-dom/server";
+
+          export default function handleRequest(
+            request: Request,
+            responseStatusCode: number,
+            responseHeaders: Headers,
+            remixContext: EntryContext
+          ) {
+            return new Promise((resolve, reject) => {
+              const { pipe } = renderToPipeableStream(
+                <RemixServer context={remixContext} url={request.url} />,
+                {
+                  onShellReady() {
+                    const body = new PassThrough();
+                    const stream = createReadableStreamFromReadable(body);
+                    responseHeaders.set("Content-Type", "text/html");
+                    resolve(
+                      new Response(stream, {
+                        headers: responseHeaders,
+                        status: responseStatusCode,
+                      })
+                    );
+                    pipe(body);
+                  },
+                  onShellError(error: unknown) {
+                    reject(error);
+                  },
+                  onError(error: unknown) {
+                    responseStatusCode = 500;
+                  },
+                }
+              );
+            });
+          }
+
+          export function handleDataRequest(response, { request }) {
+            if (request.url.endsWith("/data.data")) {
+              return new Response(null, {
+                status: 302,
+                headers: {
+                  Location: "/target",
+                },
+              });
+            }
+            return response;
+          }
+        `,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@remix-run/node';
+          export function action() {
+            return redirect('/target');
+          }
+          export default function Component() {
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
   });
 
   test.describe("client loaders", () => {

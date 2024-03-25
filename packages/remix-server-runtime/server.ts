@@ -80,6 +80,8 @@ function derive(build: ServerBuild, mode?: string) {
   };
 }
 
+export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
+
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
   mode
@@ -190,7 +192,29 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         });
 
         if (isRedirectResponse(response)) {
-          response = createRemixRedirectResponse(response, _build.basename);
+          let result: SingleFetchResult | SingleFetchResults =
+            getSingleFetchRedirect(response);
+
+          if (request.method === "GET") {
+            result = {
+              [SingleFetchRedirectSymbol]: result,
+            };
+          }
+          let headers = new Headers(response.headers);
+          headers.set("Content-Type", "text/x-turbo");
+
+          return new Response(
+            encodeViaTurboStream(
+              result,
+              request.signal,
+              _build.entry.module.streamTimeout,
+              serverMode
+            ),
+            {
+              status: 200,
+              headers,
+            }
+          );
         }
       }
     } else if (
@@ -299,8 +323,6 @@ async function handleDataRequest(
     });
   }
 }
-
-export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
 type SingleFetchRedirectResult = {
   redirect: string;
