@@ -11,7 +11,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
   const cli = cac("rr");
 
   cli
-    .command("vite:dev [root]", "build for production")
+    .command("dev [root]", "build for production")
     .option(
       "--clearScreen",
       "Allow/disable clear screen when logging (boolean)"
@@ -35,11 +35,11 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       "Exit if specified port is already in use (boolean)"
     )
     .action(async (root: string, options) => {
-      console.log("vite:dev options", options);
+      console.log("dev options", options);
     });
 
   cli
-    .command("vite:build [root]", "build for production")
+    .command("build [root]", "build for production")
     .option(
       "--assetsInlineLimit <number>",
       "Static asset base64 inline threshold in bytes (default: 4096) (number)"
@@ -69,7 +69,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
       'Output source maps for server build (default: false) (boolean | "inline" | "hidden")'
     )
     .action(async (root: string, options) => {
-      console.log("vite:build options", options);
+      console.log("build options", options);
     });
 
   cli.version(require("../package.json").version);

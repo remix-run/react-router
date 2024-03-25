@@ -87,12 +87,12 @@ describe("rr CLI", () => {
           $ rr <command> [options]
 
         Commands:
-          vite:dev [root]    build for production
-          vite:build [root]  build for production
+          dev [root]    build for production
+          build [root]  build for production
 
         For more info, run any command with the \`--help\` flag:
-          $ rr vite:dev --help
-          $ rr vite:build --help
+          $ rr dev --help
+          $ rr build --help
 
         Options:
           -v, --version  Display version number 
@@ -100,15 +100,15 @@ describe("rr CLI", () => {
       `);
     });
 
-    it("prints vite:dev help info", async () => {
-      let { stdout } = await execCli(["vite:dev", "--help"]);
+    it("prints dev help info", async () => {
+      let { stdout } = await execCli(["dev", "--help"]);
       let version = require("../package.json").version;
       expect(stdout.trim().replace(version, "[VERSION]"))
         .toMatchInlineSnapshot(`
         "rr/[VERSION]
 
         Usage:
-          $ rr vite:dev [root]
+          $ rr dev [root]
 
         Options:
           --clearScreen           Allow/disable clear screen when logging (boolean) 
@@ -126,15 +126,15 @@ describe("rr CLI", () => {
       `);
     });
 
-    it("prints vite:build help info", async () => {
-      let { stdout } = await execCli(["vite:build", "--help"]);
+    it("prints build help info", async () => {
+      let { stdout } = await execCli(["build", "--help"]);
       let version = require("../package.json").version;
       expect(stdout.trim().replace(version, "[VERSION]"))
         .toMatchInlineSnapshot(`
         "rr/[VERSION]
 
         Usage:
-          $ rr vite:build [root]
+          $ rr build [root]
 
         Options:
           --assetsInlineLimit <number>  Static asset base64 inline threshold in bytes (default: 4096) (number) 
