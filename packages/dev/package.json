@@ -1,0 +1,34 @@
+{
+  "name": "@react-router/dev",
+  "version": "6.22.3",
+  "description": "Dev tools and CLI for React Router",
+  "bugs": {
+    "url": "https://github.com/remix-run/react-router/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/react-router",
+    "directory": "packages/react-router-dev"
+  },
+  "license": "MIT",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "bin": {
+    "rr": "dist/cli.js"
+  },
+  "dependencies": {
+    "cac": "^6.7.14"
+  },
+  "devDependencies": {
+    "esbuild-register": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ]
+}

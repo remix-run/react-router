@@ -51,8 +51,8 @@ function getBuildDirectories(packageName, folderName) {
   return { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR };
 }
 
-function createBanner(packageName, version) {
-  return `/**
+function createBanner(packageName, version, { executable = false } = {}) {
+  let banner = `/**
  * ${packageName} v${version}
  *
  * Copyright (c) Remix Software Inc.
@@ -62,6 +62,7 @@ function createBanner(packageName, version) {
  *
  * @license MIT
  */`;
+  return executable ? "#!/usr/bin/env node\n" + banner : banner;
 }
 
 // Babel plugin to replace `const REACT_ROUTER_VERSION = "0.0.0";` with the

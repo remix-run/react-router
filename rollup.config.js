@@ -3,6 +3,7 @@ const path = require("path");
 
 module.exports = function rollup(options) {
   return [
+    "dev",
     "router",
     "react-router",
     "react-router-dom",
