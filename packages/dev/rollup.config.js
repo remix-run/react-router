@@ -39,7 +39,7 @@ function getRollupConfig(
         babelHelpers: "bundled",
         exclude: /node_modules/,
         presets: [
-          ["@babel/preset-env", { loose: true }],
+          ["@babel/preset-env", { targets: { node: "18" } }],
           "@babel/preset-typescript",
         ],
         extensions: [".ts"],
