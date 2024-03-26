@@ -12,11 +12,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export const clientExport_1 = () => {};
     export const clientExport_2 = () => {};"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("arrow function with dependencies", () => {
@@ -34,13 +34,13 @@ describe("removeExports", () => {
 
       export const serverExport_1 = () => serverUtil()
       export const serverExport_2 = () => serverUtil()
-      
+
       export const clientExport_1 = () => clientUtil()
       export const clientExport_2 = () => clientUtil()
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "import { clientLib } from 'client-lib';
     import { sharedLib } from 'shared-lib';
     const sharedUtil = () => sharedLib();
@@ -48,7 +48,7 @@ describe("removeExports", () => {
     export const clientExport_1 = () => clientUtil();
     export const clientExport_2 = () => clientUtil();"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("function statement", () => {
@@ -62,11 +62,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export function clientExport_1() {}
     export function clientExport_2() {}"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("function statement with dependencies", () => {
@@ -90,7 +90,7 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "import { clientLib } from 'client-lib';
     import { sharedLib } from 'shared-lib';
     function sharedUtil() {
@@ -106,7 +106,7 @@ describe("removeExports", () => {
       return clientUtil();
     }"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("object", () => {
@@ -120,11 +120,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export const clientExport_1 = {};
     export const clientExport_2 = {};"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("object with dependencies", () => {
@@ -148,7 +148,7 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "import { clientLib } from 'client-lib';
     import { sharedLib } from 'shared-lib';
     const sharedUtil = () => sharedLib();
@@ -160,7 +160,7 @@ describe("removeExports", () => {
       value: clientUtil()
     };"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("function call", () => {
@@ -174,11 +174,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export const clientExport_1 = globalFunction();
     export const clientExport_2 = globalFunction();"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("function call with dependencies", () => {
@@ -202,7 +202,7 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "import { clientLib } from 'client-lib';
     import { sharedLib } from 'shared-lib';
     const sharedUtil = () => sharedLib();
@@ -210,7 +210,7 @@ describe("removeExports", () => {
     export const clientExport_1 = clientUtil();
     export const clientExport_2 = clientUtil();"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("iife", () => {
@@ -224,11 +224,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export const clientExport_1 = (() => {})();
     export const clientExport_2 = (() => {})();"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("iife with dependencies", () => {
@@ -252,7 +252,7 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "import { clientLib } from 'client-lib';
     import { sharedLib } from 'shared-lib';
     const sharedUtil = () => sharedLib();
@@ -260,7 +260,7 @@ describe("removeExports", () => {
     export const clientExport_1 = (() => clientUtil())();
     export const clientExport_2 = (() => clientUtil())();"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("re-export", () => {
@@ -274,11 +274,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export { clientExport_1 } from './client/1';
     export { clientExport_2 } from './client/2';"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("re-export multiple", () => {
@@ -290,10 +290,10 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(
+    expect(result.code).toMatchInlineSnapshot(
       "\"export { clientExport_1, clientExport_2 } from './client';\""
     );
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("re-export manual", () => {
@@ -312,13 +312,13 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "import { clientExport_1 } from './client/1';
     import { clientExport_2 } from './client/2';
     export { clientExport_1 };
     export { clientExport_2 };"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("number", () => {
@@ -332,11 +332,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export const clientExport_1 = 123;
     export const clientExport_2 = 123;"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("string", () => {
@@ -350,11 +350,11 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export const clientExport_1 = 'string';
     export const clientExport_2 = 'string';"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("string reference", () => {
@@ -371,12 +371,12 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "const CLIENT_STRING = 'CLIENT_STRING';
     export const clientExport_1 = CLIENT_STRING;
     export const clientExport_2 = CLIENT_STRING;"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 
   test("null", () => {
@@ -390,10 +390,10 @@ describe("removeExports", () => {
     `,
       ["serverExport_1", "serverExport_2"]
     );
-    expect(result).toMatchInlineSnapshot(`
+    expect(result.code).toMatchInlineSnapshot(`
     "export const clientExport_1 = null;
     export const clientExport_2 = null;"
   `);
-    expect(result).not.toMatch(/server/i);
+    expect(result.code).not.toMatch(/server/i);
   });
 });

@@ -1623,10 +1623,13 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
           }
         }
 
-        return {
-          code: removeExports(code, SERVER_ONLY_ROUTE_EXPORTS),
-          map: null,
-        };
+        let [filepath] = id.split("?");
+
+        return removeExports(code, SERVER_ONLY_ROUTE_EXPORTS, {
+          sourceMaps: true,
+          filename: id,
+          sourceFileName: filepath,
+        });
       },
     },
     {
