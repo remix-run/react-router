@@ -407,7 +407,9 @@ export interface StaticHandler {
     opts?: {
       loadRouteIds?: string[];
       requestContext?: unknown;
+      skipLoaders?: boolean;
       skipLoaderErrorBubbling?: boolean;
+      unstable_dataStrategy?: DataStrategyFunction;
     }
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
@@ -2926,7 +2928,6 @@ export interface CreateStaticHandlerOptions {
    * @deprecated Use `mapRouteProperties` instead
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
-  unstable_dataStrategy?: DataStrategyFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<StaticHandlerFutureConfig>;
 }
@@ -2942,7 +2943,6 @@ export function createStaticHandler(
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
-  let dataStrategyImpl = opts?.unstable_dataStrategy || defaultDataStrategy;
   let mapRouteProperties: MapRoutePropertiesFunction;
   if (opts?.mapRouteProperties) {
     mapRouteProperties = opts.mapRouteProperties;
@@ -2988,14 +2988,16 @@ export function createStaticHandler(
    * propagate that out and return the raw Response so the HTTP server can
    * return it directly.
    *
-   * - `opts.loadRouteIds` is an optional array of routeIds if you wish to only
-   *   run a subset of route loaders on a GET request
+   * - `opts.loadRouteIds` is an optional array of routeIds to run only a subset of
+   *   loaders during a query() call
    * - `opts.requestContext` is an optional server context that will be passed
    *   to actions/loaders in the `context` parameter
    * - `opts.skipLoaderErrorBubbling` is an optional parameter that will prevent
-   *   the bubbling of loader errors which allows single-fetch-type implementations
+   *   the bubbling of errors which allows single-fetch-type implementations
    *   where the client will handle the bubbling and we may need to return data
    *   for the handling route
+   * - `opts.skipLoaders` is an optional parameter that will prevent loaders
+   *   from running after an action
    */
   async function query(
     request: Request,
@@ -3003,10 +3005,14 @@ export function createStaticHandler(
       loadRouteIds,
       requestContext,
       skipLoaderErrorBubbling,
+      skipLoaders,
+      unstable_dataStrategy,
     }: {
       loadRouteIds?: string[];
       requestContext?: unknown;
       skipLoaderErrorBubbling?: boolean;
+      skipLoaders?: boolean;
+      unstable_dataStrategy?: DataStrategyFunction;
     } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3058,8 +3064,10 @@ export function createStaticHandler(
       location,
       matches,
       requestContext,
+      unstable_dataStrategy || null,
       loadRouteIds || null,
       skipLoaderErrorBubbling === true,
+      skipLoaders === true,
       null
     );
     if (isResponse(result)) {
@@ -3137,6 +3145,8 @@ export function createStaticHandler(
       matches,
       requestContext,
       null,
+      null,
+      false,
       false,
       match
     );
@@ -3174,8 +3184,10 @@ export function createStaticHandler(
     location: Location,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
+    unstable_dataStrategy: DataStrategyFunction | null,
     loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
+    skipLoaders: boolean,
     routeMatch: AgnosticDataRouteMatch | null
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -3190,8 +3202,10 @@ export function createStaticHandler(
           matches,
           routeMatch || getTargetMatch(matches, location),
           requestContext,
+          unstable_dataStrategy,
           loadRouteIds,
           skipLoaderErrorBubbling,
+          skipLoaders,
           routeMatch != null
         );
         return result;
@@ -3201,6 +3215,7 @@ export function createStaticHandler(
         request,
         matches,
         requestContext,
+        unstable_dataStrategy,
         loadRouteIds,
         skipLoaderErrorBubbling,
         routeMatch
@@ -3236,8 +3251,10 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
+    unstable_dataStrategy: DataStrategyFunction | null,
     loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
+    skipLoaders: boolean,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -3262,7 +3279,8 @@ export function createStaticHandler(
         [actionMatch],
         matches,
         isRouteRequest,
-        requestContext
+        requestContext,
+        unstable_dataStrategy
       );
       result = results[0];
 
@@ -3326,11 +3344,38 @@ export function createStaticHandler(
     if (isErrorResult(result)) {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
-      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+      let boundaryMatch = skipLoaderErrorBubbling
+        ? actionMatch
+        : findNearestBoundary(matches, actionMatch.route.id);
+      let statusCode = isRouteErrorResponse(result.error)
+        ? result.error.status
+        : result.statusCode != null
+        ? result.statusCode
+        : 500;
+      let actionHeaders = {
+        ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+      };
+
+      if (skipLoaders) {
+        return {
+          matches,
+          loaderData: {},
+          actionData: {},
+          errors: {
+            [boundaryMatch.route.id]: result.error,
+          },
+          statusCode,
+          loaderHeaders: {},
+          actionHeaders,
+          activeDeferreds: null,
+        };
+      }
+
       let context = await loadRouteData(
         loaderRequest,
         matches,
         requestContext,
+        unstable_dataStrategy,
         loadRouteIds,
         skipLoaderErrorBubbling,
         null,
@@ -3340,13 +3385,28 @@ export function createStaticHandler(
       // action status codes take precedence over loader status codes
       return {
         ...context,
-        statusCode: isRouteErrorResponse(result.error)
-          ? result.error.status
-          : 500,
+        statusCode,
         actionData: null,
-        actionHeaders: {
-          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        actionHeaders,
+      };
+    }
+
+    let actionHeaders = result.headers
+      ? { [actionMatch.route.id]: result.headers }
+      : {};
+
+    if (skipLoaders) {
+      return {
+        matches,
+        loaderData: {},
+        actionData: {
+          [actionMatch.route.id]: result.data,
         },
+        errors: null,
+        statusCode: result.statusCode || 200,
+        loaderHeaders: {},
+        actionHeaders,
+        activeDeferreds: null,
       };
     }
 
@@ -3354,6 +3414,7 @@ export function createStaticHandler(
       loaderRequest,
       matches,
       requestContext,
+      unstable_dataStrategy,
       loadRouteIds,
       skipLoaderErrorBubbling,
       null
@@ -3376,6 +3437,7 @@ export function createStaticHandler(
     request: Request,
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
+    unstable_dataStrategy: DataStrategyFunction | null,
     loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
@@ -3444,7 +3506,8 @@ export function createStaticHandler(
       matchesToLoad,
       matches,
       isRouteRequest,
-      requestContext
+      requestContext,
+      unstable_dataStrategy
     );
 
     if (request.signal.aborted) {
@@ -3490,10 +3553,11 @@ export function createStaticHandler(
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
     isRouteRequest: boolean,
-    requestContext: unknown
+    requestContext: unknown,
+    unstable_dataStrategy: DataStrategyFunction | null
   ): Promise<DataResult[]> {
     let results = await callDataStrategyImpl(
-      dataStrategyImpl,
+      unstable_dataStrategy || defaultDataStrategy,
       type,
       request,
       matchesToLoad,
@@ -4188,6 +4252,7 @@ async function callDataStrategyImpl(
     }),
     request,
     params: matches[0].params,
+    context: requestContext,
   });
 
   // Throw if any loadRoute implementations not called since they are what
