@@ -147,7 +147,13 @@ async function run() {
       });
     }
 
-    // 7. Commit and tag
+    // 7. Sync up the pnpm-lock.yaml for pnpm if this is an experimental release
+    if (isExperimental) {
+      console.log(chalk.green("  Syncing pnpm lockfile..."));
+      execSync("pnpm install --no-frozen-lockfile");
+    }
+
+    // 8. Commit and tag
     execSync(`git commit --all --message="Version ${version}"`);
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));
