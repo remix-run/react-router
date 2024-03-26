@@ -407,6 +407,7 @@ export interface StaticHandler {
     opts?: {
       loadRouteIds?: string[];
       requestContext?: unknown;
+      skipLoaders?: boolean;
       skipLoaderErrorBubbling?: boolean;
     }
   ): Promise<StaticHandlerContext | Response>;
@@ -2988,14 +2989,16 @@ export function createStaticHandler(
    * propagate that out and return the raw Response so the HTTP server can
    * return it directly.
    *
-   * - `opts.loadRouteIds` is an optional array of routeIds if you wish to only
-   *   run a subset of route loaders on a GET request
+   * - `opts.loadRouteIds` is an optional array of routeIds to run only a subset of
+   *   loaders during a query() call
    * - `opts.requestContext` is an optional server context that will be passed
    *   to actions/loaders in the `context` parameter
    * - `opts.skipLoaderErrorBubbling` is an optional parameter that will prevent
-   *   the bubbling of loader errors which allows single-fetch-type implementations
+   *   the bubbling of errors which allows single-fetch-type implementations
    *   where the client will handle the bubbling and we may need to return data
    *   for the handling route
+   * - `opts.skipLoaders` is an optional parameter that will prevent loaders
+   *   from running after an action
    */
   async function query(
     request: Request,
@@ -3003,10 +3006,12 @@ export function createStaticHandler(
       loadRouteIds,
       requestContext,
       skipLoaderErrorBubbling,
+      skipLoaders,
     }: {
       loadRouteIds?: string[];
       requestContext?: unknown;
       skipLoaderErrorBubbling?: boolean;
+      skipLoaders?: boolean;
     } = {}
   ): Promise<StaticHandlerContext | Response> {
     let url = new URL(request.url);
@@ -3060,6 +3065,7 @@ export function createStaticHandler(
       requestContext,
       loadRouteIds || null,
       skipLoaderErrorBubbling === true,
+      skipLoaders === true,
       null
     );
     if (isResponse(result)) {
@@ -3138,6 +3144,7 @@ export function createStaticHandler(
       requestContext,
       null,
       false,
+      false,
       match
     );
     if (isResponse(result)) {
@@ -3176,6 +3183,7 @@ export function createStaticHandler(
     requestContext: unknown,
     loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
+    skipLoaders: boolean,
     routeMatch: AgnosticDataRouteMatch | null
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -3192,6 +3200,7 @@ export function createStaticHandler(
           requestContext,
           loadRouteIds,
           skipLoaderErrorBubbling,
+          skipLoaders,
           routeMatch != null
         );
         return result;
@@ -3238,6 +3247,7 @@ export function createStaticHandler(
     requestContext: unknown,
     loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
+    skipLoaders: boolean,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -3326,7 +3336,33 @@ export function createStaticHandler(
     if (isErrorResult(result)) {
       // Store off the pending error - we use it to determine which loaders
       // to call and will commit it when we complete the navigation
-      let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
+      let boundaryMatch = skipLoaderErrorBubbling
+        ? actionMatch
+        : findNearestBoundary(matches, actionMatch.route.id);
+      let statusCode = isRouteErrorResponse(result.error)
+        ? result.error.status
+        : result.statusCode != null
+        ? result.statusCode
+        : 500;
+      let actionHeaders = {
+        ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+      };
+
+      if (skipLoaders) {
+        return {
+          matches,
+          loaderData: {},
+          actionData: {},
+          errors: {
+            [boundaryMatch.route.id]: result.error,
+          },
+          statusCode,
+          loaderHeaders: {},
+          actionHeaders,
+          activeDeferreds: null,
+        };
+      }
+
       let context = await loadRouteData(
         loaderRequest,
         matches,
@@ -3340,13 +3376,28 @@ export function createStaticHandler(
       // action status codes take precedence over loader status codes
       return {
         ...context,
-        statusCode: isRouteErrorResponse(result.error)
-          ? result.error.status
-          : 500,
+        statusCode,
         actionData: null,
-        actionHeaders: {
-          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
+        actionHeaders,
+      };
+    }
+
+    let actionHeaders = result.headers
+      ? { [actionMatch.route.id]: result.headers }
+      : {};
+
+    if (skipLoaders) {
+      return {
+        matches,
+        loaderData: {},
+        actionData: {
+          [actionMatch.route.id]: result.data,
         },
+        errors: null,
+        statusCode: result.statusCode || 200,
+        loaderHeaders: {},
+        actionHeaders,
+        activeDeferreds: null,
       };
     }
 
@@ -4188,6 +4239,7 @@ async function callDataStrategyImpl(
     }),
     request,
     params: matches[0].params,
+    context: requestContext,
   });
 
   // Throw if any loadRoute implementations not called since they are what
