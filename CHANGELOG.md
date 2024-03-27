@@ -177,6 +177,35 @@ Date: YYYY-MM-DD
 **Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 -->
 
+## v6.23.0
+
+Date: 2024-04-03
+
+### What's Changed
+
+#### Data Strategy (unstable)
+
+The new `unstable_dataStrategy` API is a low-level API designed for advanced use-cases where you need to take control over the data strategy for your `loader`/`action` functions. The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix ["Single Fetch"](https://remix.run/docs/en/main/guides/single-fetch), user-land middleware/context APIs, automatic loader caching, and more. Please see the [docs](https://reactrouter.com/en/main/routers/create-browser-router#unstable_datastrategy) for more information.
+
+#### Skip Action Error Revalidation (unstable)
+
+Currently, all active `loader`'s revalidate after any `action` submission, regardless of the `action` result. However, in the majority of cases a `4xx`/`5xx` response from an `action` means that no data was actually changed and the revalidation is unnecessary. We've introduced a new `future.unstable_skipActionErrorRevalidation` flag that changes the behavior here, and we plan to make this the default in future version of React Router.
+
+With this flag enabled, `action`'s that return/throw a `4xx`/`5xx` response status will no longer automatically revalidate. If you need to revalidate after a `4xx`/`5xx` result with this flag enabled, you can still do that via returning `true` from `shouldRevalidate` - which now also receives a new `unstable_actionStatus` argument alongside `actionResult` so you can make decision based on the status of the `action` response without having to encode it into the action data.
+
+### Minor Changes
+
+- Add a new `unstable_dataStrategy` configuration option ([#11098](https://github.com/remix-run/react-router/pull/11098))
+  - Move `unstable_dataStrategy` from `createStaticHandler` to `staticHandler.query` so it can be request-specific for use with the `ResponseStub` approach in Remix ([#11377](https://github.com/remix-run/react-router/pull/11377))
+    - It's not really applicable to `queryRoute` for now since that's a singular handler call anyway so any pre-processing/post/processing could be done there manually
+- `@remix-run/router` - Add a new `future.unstable_skipActionRevalidation` future flag ([#11098](https://github.com/remix-run/react-router/pull/11098))
+- `@remix-run/router` - SSR: Added 3 new options to the `staticHandler.query` method for use in Remix's Single Fetch implementation: ([#11098](https://github.com/remix-run/react-router/pull/11098), ([#11377](https://github.com/remix-run/react-router/pull/11377)))
+  - `loadRouteIds`: Optional array of route IDs to load a subset of the matched routes
+  - `skipLoaderErrorBubbling`: Disable error bubbling by the static handler
+  - `skipLoaders`: Only call the action on POST requests, don't call all of the loaders afterwards
+
+**Full Changelog**: [`v6.22.3...v6.23.0`](https://github.com/remix-run/react-router/compare/react-router@6.22.3...react-router@6.23.0)
+
 ## v6.22.3
 
 Date: 2024-03-07
