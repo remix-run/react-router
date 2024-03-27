@@ -14,14 +14,15 @@ import {
   AbortedDeferredError,
   Action as NavigationType,
   createMemoryHistory,
-  UNSAFE_getResolveToMatches as getResolveToMatches,
-  UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
   stripBasename,
+  UNSAFE_getResolveToMatches as getResolveToMatches,
+  UNSAFE_invariant as invariant,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
 import * as React from "react";
+import { useEffect, useRef } from "react";
 
 import type {
   DataRouteObject,
@@ -64,26 +65,26 @@ export interface RouterProviderProps {
 }
 
 /**
-  Webpack + React 17 fails to compile on any of the following because webpack
-  complains that `startTransition` doesn't exist in `React`:
-  * import { startTransition } from "react"
-  * import * as React from from "react";
-    "startTransition" in React ? React.startTransition(() => setState()) : setState()
-  * import * as React from from "react";
-    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
+ Webpack + React 17 fails to compile on any of the following because webpack
+ complains that `startTransition` doesn't exist in `React`:
+ * import { startTransition } from "react"
+ * import * as React from from "react";
+ "startTransition" in React ? React.startTransition(() => setState()) : setState()
+ * import * as React from from "react";
+ "startTransition" in React ? React["startTransition"](() => setState()) : setState()
 
-  Moving it to a constant such as the following solves the Webpack/React 17 issue:
-  * import * as React from from "react";
-    const START_TRANSITION = "startTransition";
-    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
+ Moving it to a constant such as the following solves the Webpack/React 17 issue:
+ * import * as React from from "react";
+ const START_TRANSITION = "startTransition";
+ START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
 
-  However, that introduces webpack/terser minification issues in production builds
-  in React 18 where minification/obfuscation ends up removing the call of
-  React.startTransition entirely from the first half of the ternary.  Grabbing
-  this exported reference once up front resolves that issue.
+ However, that introduces webpack/terser minification issues in production builds
+ in React 18 where minification/obfuscation ends up removing the call of
+ React.startTransition entirely from the first half of the ternary.  Grabbing
+ this exported reference once up front resolves that issue.
 
-  See https://github.com/remix-run/react-router/issues/10579
-*/
+ See https://github.com/remix-run/react-router/issues/10579
+ */
 const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
 
@@ -154,6 +155,14 @@ export function RouterProvider({
     [router, navigator, basename]
   );
 
+  const wasRouterPreviouslyInitialized = useRef(false);
+  const isRouterInitialized = router.state.initialized;
+  const routerReinitializing =
+    wasRouterPreviouslyInitialized && !isRouterInitialized;
+  useEffect(() => {
+    wasRouterPreviouslyInitialized.current = isRouterInitialized;
+  }, [wasRouterPreviouslyInitialized, isRouterInitialized]);
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -173,7 +182,7 @@ export function RouterProvider({
               v7_relativeSplatPath: router.future.v7_relativeSplatPath,
             }}
           >
-            {state.initialized || router.future.v7_partialHydration ? (
+            {(state.initialized && !routerReinitializing) || router.future.v7_partialHydration ? (
               <DataRoutes
                 routes={router.routes}
                 future={router.future}
