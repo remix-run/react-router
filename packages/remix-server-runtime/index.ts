@@ -8,11 +8,9 @@ export { defer, json, redirect, redirectDocument } from "./responses";
 export type {
   SingleFetchResult as UNSAFE_SingleFetchResult,
   SingleFetchResults as UNSAFE_SingleFetchResults,
-} from "./server";
-export {
-  createRequestHandler,
-  SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
-} from "./server";
+} from "./single-fetch";
+export { SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol } from "./single-fetch";
+export { createRequestHandler } from "./server";
 export {
   createSession,
   createSessionStorageFactory,
