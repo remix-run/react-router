@@ -1,0 +1,51 @@
+{
+  "name": "@remix-run/server-runtime",
+  "version": "2.9.0-pre.0",
+  "description": "Server runtime for Remix",
+  "bugs": {
+    "url": "https://github.com/remix-run/remix/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/remix",
+    "directory": "packages/remix-server-runtime"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "module": "dist/esm/index.js",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "@remix-run/router": "1.16.0-pre.0",
+    "@types/cookie": "^0.6.0",
+    "@web3-storage/multipart-parser": "^1.0.0",
+    "cookie": "^0.6.0",
+    "set-cookie-parser": "^2.4.8",
+    "source-map": "^0.7.3",
+    "turbo-stream": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/set-cookie-parser": "^2.4.1",
+    "typescript": "^5.1.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5.1.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ]
+}

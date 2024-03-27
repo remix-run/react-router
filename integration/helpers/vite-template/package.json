@@ -1,0 +1,42 @@
+{
+  "name": "integration-vite-template",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js vite:dev",
+    "build": "node ./node_modules/@remix-run/dev/dist/cli.js vite:build",
+    "start": "node ./node_modules/@remix-run/serve/dist/cli.js ./build/server/index.js",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@remix-run/express": "workspace:*",
+    "@remix-run/node": "workspace:*",
+    "@remix-run/react": "workspace:*",
+    "@remix-run/serve": "workspace:*",
+    "@vanilla-extract/css": "^1.10.0",
+    "@vanilla-extract/vite-plugin": "^3.9.2",
+    "express": "^4.17.1",
+    "isbot": "^4.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "serialize-javascript": "^6.0.1"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "workspace:*",
+    "@remix-run/eslint-config": "workspace:*",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "eslint": "^8.38.0",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.1.6",
+    "vite": "5.1.0",
+    "vite-env-only": "^2.0.0",
+    "vite-tsconfig-paths": "^4.2.1",
+    "wrangler": "^3.24.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "name": "@remix-run/testing",
+  "version": "2.9.0-pre.0",
+  "description": "Testing utilities for Remix apps",
+  "homepage": "https://remix.run",
+  "bugs": {
+    "url": "https://github.com/remix-run/remix/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/remix-run/remix",
+    "directory": "packages/remix-testing"
+  },
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "module": "./dist/esm/index.js",
+  "scripts": {
+    "tsc": "tsc"
+  },
+  "dependencies": {
+    "@remix-run/node": "workspace:*",
+    "@remix-run/react": "workspace:*",
+    "@remix-run/router": "1.16.0-pre.0",
+    "react-router-dom": "6.23.0-pre.0"
+  },
+  "devDependencies": {
+    "@remix-run/server-runtime": "workspace:*",
+    "@remix-run/testing": "workspace:*",
+    "@types/node": "^18.17.1",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "jest-environment-jsdom": "^29.7.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^5.1.6"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "typescript": "^5.1.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ]
+}
