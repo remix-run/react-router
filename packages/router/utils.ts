@@ -1300,7 +1300,7 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
-export interface TrackedPromise extends Promise<any> {
+export interface TrackedPromise<T = any> extends Promise<T> {
   _tracked?: boolean;
   _data?: any;
   _error?: any;
