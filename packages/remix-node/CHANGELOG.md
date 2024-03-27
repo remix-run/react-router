@@ -1,5 +1,16 @@
 # `@remix-run/node`
 
+## 2.9.0-pre.0
+
+### Minor Changes
+
+- Use undici as our fetch polyfill going forward. #9106 ([#9111](https://github.com/remix-run/remix/pull/9111))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/server-runtime@2.9.0-pre.0`
+
 ## 2.8.1
 
 ### Patch Changes

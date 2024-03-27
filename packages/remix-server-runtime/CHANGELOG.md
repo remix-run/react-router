@@ -1,5 +1,43 @@
 # `@remix-run/server-runtime`
 
+## 2.9.0-pre.0
+
+### Minor Changes
+
+- New `future.unstable_singleFetch` flag ([#8773](https://github.com/remix-run/remix/pull/8773))
+
+  - Naked objects returned from loaders/actions are no longer automatically converted to JSON responses. They'll be streamed as-is via `turbo-stream` so `Date`'s will become `Date` through `useLoaderData()`
+  - You can return naked objects with `Promise`'s without needing to use `defer()` - including nested `Promise`'s
+    - If you need to return a custom status code or custom response headers, you can still use the `defer` utility
+  - `<RemixServer abortDelay>` is no longer used. Instead, you should `export const streamTimeout` from `entry.server.tsx` and the remix server runtime will use that as the delay to abort the streamed response
+    - If you export your own streamTimeout, you should decouple that from aborting the react `renderToPipeableStream`. You should always ensure that react is aborted _afer_ the stream is aborted so that abort rejections can be flushed down
+  - Actions no longer automatically revalidate on 4xx/5xx responses (via RR `future.unstable_skipActionErrorRevalidation` flag) - you can return a 2xx to opt-into revalidation or use `shouldRevalidate`
+
+### Patch Changes
+
+- handle net new redirects created by handleDataRequest ([#9104](https://github.com/remix-run/remix/pull/9104))
+- Add `ResponseStub` header interface for single fetch and deprecate the `headers` export ([#9142](https://github.com/remix-run/remix/pull/9142))
+
+  - The `headers` export is no longer used when single fetch is enabled
+  - `loader`/`action` functions now receive a mutable `response` parameter
+    - `type ResponseStub = { status: numbers | undefined, headers: Headers }`
+  - To alter the status of a response, set the `status` field directly
+    - `response.status = 201`
+  - To set headers on the Response, you may use:
+    - `response.headers.set`
+    - `response.headers.append`
+    - `response.headers.delete`
+  - Each `loader`/`action`receives it's own unique `response` instance so you cannot see what other `loader`/`action` functions have set (which would be subject to race conditions)
+  - If all status codes are unset or have values <200, the deepest status code will be used for the HTTP response
+  - If any status codes are set to a value >=300, the highest >=300 value will be used for the HTTP Response
+  - Remix tracks header operations and will replay them in order (action if present, then loaders top-down) after all handlers have completed on a fresh `Headers` instance that will be applied to the HTTP Response
+    - `headers.set` on any child handler will overwrite values from parent handlers
+    - `headers.append` can be used to set the same header from both a parent and child handler
+    - `headers.delete` can be used to delete a value set by a parent handler, but not a value set from a child handler
+  - Because single fetch supports naked object returns, and you no longer need to return a `Response` instance to set status/headers, the `json`/`redirect`/`redirectDocument`/`defer` utilities are considered deprecated when using Single Fetch
+  - You may still continue returning normal `Response` instances and they'll apply status codes in the same way, and will apply all headers via `headers.set` - overwriting any same-named header values from parents
+    - If you need to append, you will need to switch from returning a `Response` instance to using the new `response` parameter
+
 ## 2.8.1
 
 No significant changes to this package were made in this release. [See the repo `CHANGELOG.md`](https://github.com/remix-run/remix/blob/main/CHANGELOG.md) for an overview of all changes in v2.8.1.

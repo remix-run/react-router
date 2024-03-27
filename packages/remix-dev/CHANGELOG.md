@@ -1,5 +1,29 @@
 # `@remix-run/dev`
 
+## 2.9.0-pre.0
+
+### Minor Changes
+
+- New `future.unstable_singleFetch` flag ([#8773](https://github.com/remix-run/remix/pull/8773))
+
+  - Naked objects returned from loaders/actions are no longer automatically converted to JSON responses. They'll be streamed as-is via `turbo-stream` so `Date`'s will become `Date` through `useLoaderData()`
+  - You can return naked objects with `Promise`'s without needing to use `defer()` - including nested `Promise`'s
+    - If you need to return a custom status code or custom response headers, you can still use the `defer` utility
+  - `<RemixServer abortDelay>` is no longer used. Instead, you should `export const streamTimeout` from `entry.server.tsx` and the remix server runtime will use that as the delay to abort the streamed response
+    - If you export your own streamTimeout, you should decouple that from aborting the react `renderToPipeableStream`. You should always ensure that react is aborted _afer_ the stream is aborted so that abort rejections can be flushed down
+  - Actions no longer automatically revalidate on 4xx/5xx responses (via RR `future.unstable_skipActionErrorRevalidation` flag) - you can return a 2xx to opt-into revalidation or use `shouldRevalidate`
+
+### Patch Changes
+
+- Improve `getDependenciesToBundle` resolution in monorepos ([#8848](https://github.com/remix-run/remix/pull/8848))
+- Fix SPA mode when single fetch is enabled by using streaming entry.server ([#9063](https://github.com/remix-run/remix/pull/9063))
+- Vite: added sourcemap support for transformed routes ([#8970](https://github.com/remix-run/remix/pull/8970))
+- Updated dependencies:
+  - `@remix-run/node@2.9.0-pre.0`
+  - `@remix-run/server-runtime@2.9.0-pre.0`
+  - `@remix-run/react@2.9.0-pre.0`
+  - `@remix-run/serve@2.9.0-pre.0`
+
 ## 2.8.1
 
 ### Patch Changes
