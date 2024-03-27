@@ -1,0 +1,22 @@
+{
+  "comment": [
+    "Resolve NPM imports for `packages/remix-deno`.",
+    "This import map is used solely for the denoland.vscode-deno extension.",
+    "Remix does not support import maps.",
+    "Dependency management is done through `npm` and `node_modules/` instead.",
+    "Deno-only dependencies may be imported via URL imports (without using import maps)."
+  ],
+  "imports": {
+    "@remix-run/css-bundle": "https://esm.sh/@remix-run/css-bundle@1.16.0",
+    "// `@remix-run/deno` code is already a Deno module, so just get types for it directly from `node_modules/`": "",
+    "@remix-run/deno": "../node_modules/@remix-run/deno/index.ts",
+    "@remix-run/dev/server-build": "https://esm.sh/@remix-run/dev@1.16.0/server-build",
+    "@remix-run/react": "https://esm.sh/@remix-run/react@1.16.0",
+    "@remix-run/server-runtime": "https://esm.sh/@remix-run/server-runtime@1.16.0",
+    "isbot": "https://esm.sh/isbot@^4.1.0",
+    "react": "https://esm.sh/react@^18.2.0",
+    "react-dom": "https://esm.sh/react-dom@^18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@^18.2.0/client",
+    "react-dom/server": "https://esm.sh/react-dom@^18.2.0/server"
+  }
+}

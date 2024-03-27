@@ -1,0 +1,20 @@
+{
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "__tests__", "node_modules"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "target": "ES2022",
+    "module": "ES2022",
+
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": ".",
+    "outDir": "../../build/node_modules/@remix-run/node/dist",
+
+    // Avoid naming conflicts between lib.dom.d.ts and globals.ts
+    "skipLibCheck": true
+  }
+}
