@@ -2,13 +2,13 @@ import * as React from "react";
 import type {
   Path,
   RevalidationState,
-  Router as RemixRouter,
+  RemixRouter,
   StaticHandlerContext,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
   RouterState,
   FutureConfig as RouterFutureConfig,
-} from "@remix-run/router";
+} from "react-router";
 import {
   IDLE_BLOCKER,
   IDLE_FETCHER,
@@ -18,7 +18,7 @@ import {
   isRouteErrorResponse,
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
-} from "@remix-run/router";
+} from "react-router";
 import {
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRoutesImpl as useRoutesImpl,

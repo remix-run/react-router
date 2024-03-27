@@ -515,7 +515,7 @@ export function matchRoutes<
   let branches = flattenRoutes(routes);
   rankRouteBranches(branches);
 
-  let matches = null;
+  let matches: AgnosticRouteMatch<string, RouteObjectType>[] | null = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
     // Incoming pathnames are generally encoded from either window.location
     // or from router.navigate, but we want to match against the unencoded

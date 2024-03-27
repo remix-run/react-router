@@ -1,7 +1,7 @@
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-} from "@remix-run/router";
+} from "react-router";
 import { invariant } from "./utils";
 
 export default async function urlDataStrategy({

@@ -79,18 +79,12 @@ async function run() {
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
 
     // 3. Ensure build versions match the release version
-    if (version.includes("experimental")) {
-      // FIXME: @remix-run/router is versioned differently and is only handled
-      // for experimental releases here
-      await ensureBuildVersion("router", version);
-    }
     await ensureBuildVersion("react-router", version);
     await ensureBuildVersion("react-router-dom", version);
     await ensureBuildVersion("react-router-dom-v5-compat", version);
     await ensureBuildVersion("react-router-native", version);
 
     // 4. Publish to npm
-    publishBuild("router", tag);
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
     publishBuild("react-router-dom-v5-compat", tag);

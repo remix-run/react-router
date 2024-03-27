@@ -143,7 +143,6 @@ type SetupOpts = {
   initialEntries?: InitialEntry[];
   initialIndex?: number;
   hydrationData?: HydrationState;
-  future?: FutureConfig;
   dataStrategy?: DataStrategyFunction;
   future?: Partial<FutureConfig>;
 };

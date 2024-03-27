@@ -14,7 +14,7 @@ import {
 } from "react-router-dom";
 
 import getHtml from "../../react-router/__tests__/utils/getHtml";
-import { createDeferred, tick } from "../../router/__tests__/utils/utils";
+import { createDeferred, tick } from "../../react-router/router/__tests__/utils/utils";
 
 let didAssertMissingHydrateFallback = false;
 

@@ -1,7 +1,6 @@
-import type { FormMethod } from "@remix-run/router";
-import { joinPaths } from "@remix-run/router";
 import * as React from "react";
-import { UNSAFE_DataRouterContext } from "react-router";
+import { joinPaths, UNSAFE_DataRouterContext } from "react-router";
+import type { FormMethod } from "react-router";
 
 export default function MemoryNavigate({
   to,

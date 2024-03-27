@@ -1,4 +1,4 @@
-import { createPath } from "@remix-run/router";
+import { createPath } from "react-router";
 
 describe("createPath", () => {
   describe("given only a pathname", () => {

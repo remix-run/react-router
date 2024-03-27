@@ -59,15 +59,11 @@ async function run() {
     ensureCleanWorkingDirectory();
 
     // 1. Get the next version number
-    let currentRouterVersion = await getPackageVersion("router");
     let currentVersion = await getPackageVersion("react-router");
     let version = semver.valid(givenVersion);
     if (version == null) {
       version = getNextVersion(currentVersion, givenVersion, prereleaseId);
     }
-
-    // We will only bump the router version if this is an experimental
-    let routerVersion = currentRouterVersion;
 
     // 2. Confirm the next version number
     let answer = await prompt(
@@ -76,34 +72,15 @@ async function run() {
 
     if (answer === false) return 0;
 
-    // We only handle @remix-run/router for experimental since in normal/pre
-    // releases it's versioned independently from the rest of the packages
-    if (isExperimental) {
-      routerVersion = version;
-      // 2.5. Update @remix-run/router version
-      await updatePackageConfig("router", (config) => {
-        config.version = routerVersion;
-      });
-      console.log(
-        chalk.green(`  Updated @remix-run/router to version ${version}`)
-      );
-    }
-
     // 3. Update react-router version
     await updatePackageConfig("react-router", (config) => {
       config.version = version;
-      if (isExperimental) {
-        config.dependencies["@remix-run/router"] = routerVersion;
-      }
     });
     console.log(chalk.green(`  Updated react-router to version ${version}`));
 
     // 4. Update react-router-dom version + react-router dep
     await updatePackageConfig("react-router-dom", (config) => {
       config.version = version;
-      if (isExperimental) {
-        config.dependencies["@remix-run/router"] = routerVersion;
-      }
       config.dependencies["react-router"] = version;
     });
     console.log(
@@ -135,9 +112,6 @@ async function run() {
       if (!stat.isDirectory()) continue;
 
       await updateExamplesPackageConfig(example, (config) => {
-        if (config.dependencies["@remix-run/router"]) {
-          config.dependencies["@remix-run/router"] = routerVersion;
-        }
         if (config.dependencies["react-router"]) {
           config.dependencies["react-router"] = version;
         }

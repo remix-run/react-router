@@ -48,12 +48,12 @@ import type {
   History,
   HTMLFormMethod,
   HydrationState,
-  Router as RemixRouter,
+  RemixRouter,
   V7_FormMethod,
   RouterState,
   RouterSubscriber,
   BlockerFunction,
-} from "@remix-run/router";
+} from "react-router";
 import {
   createRouter,
   createBrowserHistory,
@@ -65,7 +65,7 @@ import {
   UNSAFE_warning as warning,
   matchPath,
   IDLE_FETCHER,
-} from "@remix-run/router";
+} from "react-router";
 
 import type {
   SubmitOptions,
@@ -93,11 +93,12 @@ export type {
   FormMethod,
   GetScrollRestorationKeyFunction,
   ParamKeyValuePair,
+  RouterProviderProps,
   SubmitOptions,
   URLSearchParamsInit,
   V7_FormMethod,
 };
-export { createSearchParams, ErrorResponseImpl as UNSAFE_ErrorResponseImpl };
+export { createSearchParams };
 
 // Note: Keep in sync with react-router exports!
 export type {
@@ -142,7 +143,6 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
-  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
@@ -152,6 +152,7 @@ export type {
   unstable_HandlerResult,
 } from "react-router";
 export {
+  Action,
   AbortedDeferredError,
   Await,
   MemoryRouter,
@@ -161,13 +162,22 @@ export {
   Route,
   Router,
   Routes,
+  createBrowserHistory,
+  createHashHistory,
+  createMemoryHistory,
   createMemoryRouter,
   createPath,
+  createRouter,
   createRoutesFromChildren,
   createRoutesFromElements,
+  createStaticHandler,
   defer,
+  IDLE_BLOCKER,
+  IDLE_FETCHER,
+  IDLE_NAVIGATION,
   isRouteErrorResponse,
   generatePath,
+  joinPaths,
   json,
   matchPath,
   matchRoutes,
@@ -176,6 +186,12 @@ export {
   redirectDocument,
   renderMatches,
   resolvePath,
+  resolveTo,
+  stripBasename,
+  UNSAFE_convertRoutesToDataRoutes,
+  UNSAFE_ErrorResponseImpl,
+  UNSAFE_invariant,
+  UNSAFE_warning,
   useActionData,
   useAsyncError,
   useAsyncValue,

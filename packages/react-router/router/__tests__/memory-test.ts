@@ -1,7 +1,7 @@
 /* eslint-disable jest/expect-expect */
 
-import type { MemoryHistory } from "@remix-run/router";
-import { createMemoryHistory } from "@remix-run/router";
+import type { MemoryHistory } from "react-router";
+import { createMemoryHistory } from "react-router";
 
 import Listen from "./TestSequences/Listen";
 import InitialLocationHasKey from "./TestSequences/InitialLocationHasKey";
