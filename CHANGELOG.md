@@ -200,9 +200,7 @@ With this flag enabled, `action`'s that return/throw a `4xx`/`5xx` response stat
 
 ### Minor Changes
 
-- Add a new `unstable_dataStrategy` configuration option ([#11098](https://github.com/remix-run/react-router/pull/11098))
-  - Move `unstable_dataStrategy` from `createStaticHandler` to `staticHandler.query` so it can be request-specific for use with the `ResponseStub` approach in Remix ([#11377](https://github.com/remix-run/react-router/pull/11377))
-    - It's not really applicable to `queryRoute` for now since that's a singular handler call anyway so any pre-processing/post/processing could be done there manually
+- Add a new `unstable_dataStrategy` configuration option ([#11098](https://github.com/remix-run/react-router/pull/11098), ([#11377](https://github.com/remix-run/react-router/pull/11377)))
 - `@remix-run/router` - Add a new `future.unstable_skipActionRevalidation` future flag ([#11098](https://github.com/remix-run/react-router/pull/11098))
 - `@remix-run/router` - SSR: Added 3 new options to the `staticHandler.query` method for use in Remix's Single Fetch implementation: ([#11098](https://github.com/remix-run/react-router/pull/11098), ([#11377](https://github.com/remix-run/react-router/pull/11377)))
   - `loadRouteIds`: Optional array of route IDs to load a subset of the matched routes
