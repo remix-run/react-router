@@ -22,9 +22,6 @@
   "unpkg": "./dist/umd/react-router.production.min.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "dependencies": {
-    "@remix-run/router": "workspace:*"
-  },
   "devDependencies": {
     "react": "^18.2.0",
     "react-router-dom": "workspace:*"

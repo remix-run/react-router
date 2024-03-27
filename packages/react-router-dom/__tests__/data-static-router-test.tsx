@@ -4,11 +4,11 @@
 
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import { json } from "@remix-run/router";
 import {
   Form,
   Link,
   Outlet,
+  json,
   useLoaderData,
   useLocation,
   useMatches,

@@ -1,4 +1,4 @@
-import type { ErrorResponse, Fetcher } from "@remix-run/router";
+import type { ErrorResponse, Fetcher } from "react-router";
 import "@testing-library/jest-dom";
 import {
   act,
@@ -37,7 +37,7 @@ import {
 } from "react-router-dom";
 
 import getHtml from "../../react-router/__tests__/utils/getHtml";
-import { createDeferred } from "../../router/__tests__/utils/utils";
+import { createDeferred } from "../../react-router/router/__tests__/utils/utils";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)

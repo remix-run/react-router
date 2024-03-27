@@ -2,17 +2,17 @@
 
 import { JSDOM } from "jsdom";
 
-import type { BrowserHistory } from "@remix-run/router";
-import { createBrowserHistory } from "@remix-run/router";
+import type { HashHistory } from "react-router";
+import { createHashHistory } from "react-router";
 
-import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import Listen from "./TestSequences/Listen";
+import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import PushNewLocation from "./TestSequences/PushNewLocation";
 import PushSamePath from "./TestSequences/PushSamePath";
 import PushState from "./TestSequences/PushState";
 import PushStateInvalid from "./TestSequences/PushStateInvalid";
 import PushMissingPathname from "./TestSequences/PushMissingPathname";
-import PushRelativePathname from "./TestSequences/PushRelativePathname";
+import PushRelativePathnameWarning from "./TestSequences/PushRelativePathnameWarning";
 import ReplaceNewLocation from "./TestSequences/ReplaceNewLocation";
 import ReplaceSamePath from "./TestSequences/ReplaceSamePath";
 import ReplaceState from "./TestSequences/ReplaceState";
@@ -21,8 +21,12 @@ import GoBack from "./TestSequences/GoBack";
 import GoForward from "./TestSequences/GoForward";
 import ListenPopOnly from "./TestSequences/ListenPopOnly";
 
-describe("a browser history", () => {
-  let history: BrowserHistory;
+// TODO: Do we still need this?
+// const canGoWithoutReload = window.navigator.userAgent.indexOf('Firefox') === -1;
+// const describeGo = canGoWithoutReload ? describe : describe.skip;
+
+describe("a hash history", () => {
+  let history: HashHistory;
   let dom: JSDOM;
 
   beforeEach(() => {
@@ -30,8 +34,8 @@ describe("a browser history", () => {
     dom = new JSDOM(`<!DOCTYPE html><p>History Example</p>`, {
       url: "https://example.org/",
     });
-    dom.window.history.replaceState(null, "", "/");
-    history = createBrowserHistory({ window: dom.window as unknown as Window });
+    dom.window.history.replaceState(null, "", "#/");
+    history = createHashHistory({ window: dom.window as unknown as Window });
   });
 
   it("knows how to create hrefs from location objects", () => {
@@ -41,24 +45,44 @@ describe("a browser history", () => {
       hash: "#the-hash",
     });
 
-    expect(href).toEqual("/the/path?the=query#the-hash");
+    expect(href).toEqual("#/the/path?the=query#the-hash");
   });
 
   it("knows how to create hrefs from strings", () => {
     const href = history.createHref("/the/path?the=query#the-hash");
-    expect(href).toEqual("/the/path?the=query#the-hash");
+    expect(href).toEqual("#/the/path?the=query#the-hash");
   });
 
   it("does not encode the generated path", () => {
     const encodedHref = history.createHref({
       pathname: "/%23abc",
     });
-    expect(encodedHref).toEqual("/%23abc");
+    expect(encodedHref).toEqual("#/%23abc");
 
     const unencodedHref = history.createHref({
       pathname: "/#abc",
     });
-    expect(unencodedHref).toEqual("/#abc");
+    expect(unencodedHref).toEqual("#/#abc");
+  });
+
+  it("prefixes raw hash values with /", () => {
+    let spy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    dom.window.history.replaceState(null, "", "#hello");
+    history = createHashHistory({ window: dom.window as unknown as Window });
+    expect(history.location.pathname).toBe("/hello");
+
+    history.push("world");
+    expect(history.location.pathname).toBe("/world");
+
+    // Not supported but ensure we don't prefix here
+    history.push("./relative");
+    expect(history.location.pathname).toBe("./relative");
+
+    history.push("../relative");
+    expect(history.location.pathname).toBe("../relative");
+
+    spy.mockReset();
   });
 
   describe("listen", () => {
@@ -106,8 +130,8 @@ describe("a browser history", () => {
   });
 
   describe("push with a relative pathname", () => {
-    it("normalizes the pathname relative to the current location", () => {
-      PushRelativePathname(history);
+    it("issues a warning", () => {
+      PushRelativePathnameWarning(history);
     });
   });
 

@@ -2670,7 +2670,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function markFetchRedirectsDone(): boolean {
-    let doneKeys = [];
+    let doneKeys: string[] = [];
     let updatedFetchers = false;
     for (let key of fetchRedirectIds) {
       let fetcher = state.fetchers.get(key);
@@ -2686,7 +2686,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function abortStaleFetchLoads(landedId: number): boolean {
-    let yeetedKeys = [];
+    let yeetedKeys: string[] = [];
     for (let [key, id] of fetchReloadIds) {
       if (id < landedId) {
         let fetcher = state.fetchers.get(key);

@@ -1,4 +1,3 @@
-import type { ErrorResponse } from "@remix-run/router";
 import "@testing-library/jest-dom";
 import {
   fireEvent,
@@ -29,9 +28,10 @@ import {
   useRouteError,
   useRouteLoaderData,
 } from "react-router";
+import type { ErrorResponse } from "react-router";
 
-import urlDataStrategy from "../../router/__tests__/utils/urlDataStrategy";
-import { createDeferred } from "../../router/__tests__/utils/utils";
+import urlDataStrategy from "../router/__tests__/utils/urlDataStrategy";
+import { createDeferred } from "../router/__tests__/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
 

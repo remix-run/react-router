@@ -18,7 +18,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
-import { createDeferred } from "../../router/__tests__/utils/utils";
+import { createDeferred } from "react-router/router/__tests__/utils/utils";
 import getHtml from "react-router/__tests__/utils/getHtml";
 
 describe("Handles concurrent mode features during navigations", () => {

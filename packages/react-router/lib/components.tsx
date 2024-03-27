@@ -9,7 +9,7 @@ import type {
   RouterSubscriber,
   To,
   TrackedPromise,
-} from "@remix-run/router";
+} from "../router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
@@ -20,7 +20,7 @@ import {
   resolveTo,
   stripBasename,
   UNSAFE_warning as warning,
-} from "@remix-run/router";
+} from "../router";
 import * as React from "react";
 
 import type {
@@ -51,6 +51,7 @@ import {
 } from "./hooks";
 
 export interface FutureConfig {
+  v7_partialHydration: boolean;
   v7_relativeSplatPath: boolean;
   v7_startTransition: boolean;
 }

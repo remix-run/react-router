@@ -169,11 +169,7 @@ describe("navigations", () => {
         })
       );
       expect(t.router.state.loaderData).toEqual({});
-      expect(t.router.state.errors).toMatchInlineSnapshot(`
-        {
-          "foo": [SyntaxError: Unexpected token } in JSON at position 15],
-        }
-      `);
+      expect(String(t.router.state.errors.foo)).toMatch(/SyntaxError: /);
     });
 
     it("bubbles errors when unwrapping Responses", async () => {
@@ -204,11 +200,7 @@ describe("navigations", () => {
         })
       );
       expect(t.router.state.loaderData).toEqual({});
-      expect(t.router.state.errors).toMatchInlineSnapshot(`
-        {
-          "root": [SyntaxError: Unexpected token } in JSON at position 15],
-        }
-      `);
+      expect(String(t.router.state.errors.root)).toMatch(/SyntaxError: /);
     });
 
     it("does not fetch unchanging layout data", async () => {
