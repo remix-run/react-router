@@ -184,7 +184,9 @@ const router = createBrowserRouter(
 
 ## `unstable_dataStrategy`
 
-<docs-warn>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warn>>
+<docs-warn>This is a low-level API intended for advanced use-cases. This overrides Remix's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warn>
+
+<docs-warn>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warn>
 
 By default, React Router is opinionated about how your data is loaded/submitted - and most notably, executes all of your loaders in parallel for optimal data fetching. While we think this is the right behavior for most use-cases, we realize that there is no "one size fits all" solution when it comes to data fetching for the wide landscape of application requirements.
 
@@ -228,11 +230,11 @@ interface HandlerResult {
 
 `unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives a `matches` array which is an array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
 
-- `match.resolve` - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
+- **`match.resolve`** - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
   - You should call `match.resolve` for _all_ matches every time to ensure that all lazy routes are properly resolved
   - This does not mean you're calling the loader/action (the "handler") - resolve will only call the handler internally if needed and if you don't pass your own `handlerOverride` function parameter
   - See the examples below for how to implement custom handler execution via `match.resolve`
-- `match.shouldLoad` - A boolean value indicating whether this route handler needs to be called in this pass
+- **`match.shouldLoad`** - A boolean value indicating whether this route handler needs to be called in this pass
   - This array always includes _all_ matched routes even when only _some_ route handlers need to be called so that things like middleware can be implemented
   - This is usually only needed if you are skipping the route handler entirely and implementing custom handler logic - since it lets you determine if that custom logic should run for this route or not
   - For example:
