@@ -19,7 +19,7 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@remix-run/router": "0.0.0-experimental-0f302655",
+    "@remix-run/router": "1.16.0-pre.0",
     "@types/cookie": "^0.6.0",
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie": "^0.6.0",
