@@ -32,7 +32,7 @@
     "@mdx-js/mdx": "^2.3.0",
     "@npmcli/package-json": "^4.0.1",
     "@remix-run/node": "workspace:*",
-    "@remix-run/router": "0.0.0-experimental-c7dd3d3a",
+    "@remix-run/router": "0.0.0-experimental-0f302655",
     "@remix-run/server-runtime": "workspace:*",
     "@types/mdx": "^2.0.5",
     "@vanilla-extract/integration": "^6.2.0",

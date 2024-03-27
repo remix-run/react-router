@@ -5,8 +5,7 @@ import type { ServerBuild } from "./build";
 
 export function getDocumentHeaders(
   build: ServerBuild,
-  context: StaticHandlerContext,
-  loadRouteIds?: string[]
+  context: StaticHandlerContext
 ): Headers {
   let boundaryIdx = context.errors
     ? context.matches.findIndex((m) => context.errors![m.route.id])
@@ -15,10 +14,6 @@ export function getDocumentHeaders(
     boundaryIdx >= 0
       ? context.matches.slice(0, boundaryIdx + 1)
       : context.matches;
-
-  if (loadRouteIds) {
-    matches = matches.filter((m) => loadRouteIds.includes(m.route.id));
-  }
 
   let errorHeaders: Headers | undefined;
 

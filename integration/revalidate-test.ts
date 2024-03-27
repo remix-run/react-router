@@ -326,9 +326,9 @@ test.describe("single fetch", () => {
                           <li><Link to="/">/</Link></li>
                           <li><Link to="/parent">/parent</Link></li>
                           <li><Link to="/parent/child">/parent/child</Link></li>
-                          <li><Link to="/parent/child?revalidate=parent">/parent/child</Link></li>
-                          <li><Link to="/parent/child?revalidate=child">/parent/child</Link></li>
-                          <li><Link to="/parent/child?revalidate=parent,child">/parent/child</Link></li>
+                          <li><Link to="/parent/child?revalidate=parent">/parent/child?revalidate=parent</Link></li>
+                          <li><Link to="/parent/child?revalidate=child">/parent/child?revalidate=child</Link></li>
+                          <li><Link to="/parent/child?revalidate=parent,child">/parent/child?revalidate=parent,child</Link></li>
                         </ul>
                       </nav>
                       <Outlet />

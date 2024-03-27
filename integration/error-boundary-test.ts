@@ -2229,9 +2229,19 @@ test.describe("single fetch", () => {
         expect(await app.getHtml("#parent-error")).toEqual(
           '<p id="parent-error">Broken!</p>'
         );
-        expect(await app.getHtml("#parent-matches-data")).toEqual(
-          '<p id="parent-matches-data"></p>'
-        );
+        if (javaScriptEnabled) {
+          // This data remains in single fetch with JS because we don't revalidate
+          // due to the 500 action response
+          expect(await app.getHtml("#parent-matches-data")).toEqual(
+            '<p id="parent-matches-data">PARENT</p>'
+          );
+        } else {
+          // But without JS document requests call all loaders up to the
+          // boundary route so parent's data clears out
+          expect(await app.getHtml("#parent-matches-data")).toEqual(
+            '<p id="parent-matches-data"></p>'
+          );
+        }
         expect(await app.getHtml("#parent-data")).toEqual(
           '<p id="parent-data"></p>'
         );

@@ -2,6 +2,8 @@ import type {
   UNSAFE_DeferredData as DeferredData,
   ErrorResponse,
   StaticHandler,
+  unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
+  StaticHandlerContext,
 } from "@remix-run/router";
 import {
   UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
@@ -27,13 +29,16 @@ import {
 import { getDocumentHeaders } from "./headers";
 import invariant from "./invariant";
 import { ServerMode, isServerMode } from "./mode";
-import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
+import type { ResponseStub, ResponseStubOperation } from "./routeModules";
+import { ResponseStubOperationsSymbol } from "./routeModules";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
 import {
   createDeferredReadableStream,
+  isDeferredData,
   isRedirectResponse,
+  isRedirectStatusCode,
   isResponse,
 } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
@@ -81,6 +86,7 @@ function derive(build: ServerBuild, mode?: string) {
 }
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
+export const ResponseStubActionSymbol = Symbol("ResponseStubAction");
 
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
@@ -167,7 +173,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         .replace(/\.data$/, "")
         .replace(/^\/_root$/, "/");
 
-      let matches = matchServerRoutes(
+      let singleFetchMatches = matchServerRoutes(
         routes,
         handlerUrl.pathname,
         _build.basename
@@ -177,7 +183,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         serverMode,
         _build,
         staticHandler,
-        matches,
         request,
         handlerUrl,
         loadContext,
@@ -187,13 +192,13 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       if (_build.entry.module.handleDataRequest) {
         response = await _build.entry.module.handleDataRequest(response, {
           context: loadContext,
-          params,
+          params: singleFetchMatches ? singleFetchMatches[0].params : {},
           request,
         });
 
         if (isRedirectResponse(response)) {
           let result: SingleFetchResult | SingleFetchResults =
-            getSingleFetchRedirect(response);
+            getSingleFetchRedirect(response.status, response.headers);
 
           if (request.method === "GET") {
             result = {
@@ -344,7 +349,6 @@ async function handleSingleFetchRequest(
   serverMode: ServerMode,
   build: ServerBuild,
   staticHandler: StaticHandler,
-  matches: RouteMatch<ServerRoute>[] | null,
   request: Request,
   handlerUrl: URL,
   loadContext: AppLoadContext,
@@ -353,20 +357,20 @@ async function handleSingleFetchRequest(
   let { result, headers, status } =
     request.method !== "GET"
       ? await singleFetchAction(
+          serverMode,
+          staticHandler,
           request,
           handlerUrl,
-          staticHandler,
           loadContext,
           handleError
         )
       : await singleFetchLoaders(
+          serverMode,
+          staticHandler,
           request,
           handlerUrl,
-          staticHandler,
           loadContext,
-          handleError,
-          serverMode,
-          build
+          handleError
         );
 
   // Mark all successful responses with a header so we can identify in-flight
@@ -392,9 +396,10 @@ async function handleSingleFetchRequest(
 }
 
 async function singleFetchAction(
+  serverMode: ServerMode,
+  staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  staticHandler: StaticHandler,
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void
 ): Promise<{ result: SingleFetchResult; headers: Headers; status: number }> {
@@ -406,60 +411,79 @@ async function singleFetchAction(
       signal: request.signal,
       ...(request.body ? { duplex: "half" } : undefined),
     });
-    let result = await staticHandler.queryRoute(handlerRequest, {
+
+    let responseStubs = getResponseStubs();
+    let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
+      skipLoaderErrorBubbling: true,
+      skipLoaders: true,
+      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),
     });
 
     // Unlike `handleDataRequest`, when singleFetch is enabled, queryRoute does
     // let non-Response return values through
-    if (!isResponse(result)) {
-      return { result: { data: result }, headers: new Headers(), status: 200 };
+    if (isResponse(result)) {
+      return {
+        result: getSingleFetchRedirect(result.status, result.headers),
+        headers: result.headers,
+        status: 200,
+      };
     }
 
-    if (isRedirectResponse(result)) {
+    let context = result;
+
+    let singleFetchResult: SingleFetchResult;
+    let { statusCode, headers } = mergeResponseStubs(context, responseStubs);
+
+    if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
       return {
-        result: getSingleFetchRedirect(result),
-        headers: result.headers,
-        status: 200, // Don't trigger a redirect on the `fetch`
+        result: getSingleFetchRedirect(statusCode, headers),
+        headers,
+        status: 200, // Don't want the `fetch` call to follow the redirect
       };
     }
+
+    // Sanitize errors outside of development environments
+    if (context.errors) {
+      Object.values(context.errors).forEach((err) => {
+        // @ts-expect-error This is "private" from users but intended for internal use
+        if (!isRouteErrorResponse(err) || err.error) {
+          handleError(err);
+        }
+      });
+      context.errors = sanitizeErrors(context.errors, serverMode);
+    }
+
+    if (context.errors) {
+      let error = Object.values(context.errors)[0];
+      singleFetchResult = { error: isResponseStub(error) ? null : error };
+    } else {
+      singleFetchResult = { data: Object.values(context.actionData || {})[0] };
+    }
+
     return {
-      result: { data: await unwrapResponse(result) },
-      headers: result.headers,
-      status: result.status,
+      result: singleFetchResult,
+      headers,
+      status: statusCode,
     };
   } catch (error) {
-    if (isResponse(error)) {
-      return {
-        result: {
-          error: new ErrorResponseImpl(
-            error.status,
-            error.statusText,
-            await unwrapResponse(error)
-          ),
-        },
-        headers: error.headers,
-        status: error.status,
-      };
-    } else {
-      handleError(error);
-      return {
-        result: { error },
-        headers: new Headers(),
-        status: isRouteErrorResponse(error) ? error.status : 500,
-      };
-    }
+    handleError(error);
+    // These should only be internal remix errors, no need to deal with responseStubs
+    return {
+      result: { error },
+      headers: new Headers(),
+      status: 500,
+    };
   }
 }
 
 async function singleFetchLoaders(
+  serverMode: ServerMode,
+  staticHandler: StaticHandler,
   request: Request,
   handlerUrl: URL,
-  staticHandler: StaticHandler,
   loadContext: AppLoadContext,
-  handleError: (err: unknown) => void,
-  serverMode: ServerMode,
-  build: ServerBuild
+  handleError: (err: unknown) => void
 ): Promise<{ result: SingleFetchResults; headers: Headers; status: number }> {
   try {
     let handlerRequest = new Request(handlerUrl, {
@@ -469,15 +493,21 @@ async function singleFetchLoaders(
     let loadRouteIds =
       new URL(request.url).searchParams.get("_routes")?.split(",") || undefined;
 
+    let responseStubs = getResponseStubs();
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       loadRouteIds,
       skipLoaderErrorBubbling: true,
+      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),
     });
+
     if (isResponse(result)) {
       return {
         result: {
-          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(result),
+          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
+            result.status,
+            result.headers
+          ),
         },
         headers: result.headers,
         status: 200, // Don't want the `fetch` call to follow the redirect
@@ -485,6 +515,21 @@ async function singleFetchLoaders(
     }
 
     let context = result;
+
+    let { statusCode, headers } = mergeResponseStubs(context, responseStubs);
+
+    if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
+      return {
+        result: {
+          [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
+            statusCode,
+            headers
+          ),
+        },
+        headers,
+        status: 200, // Don't want the `fetch` call to follow the redirect
+      };
+    }
 
     // Sanitize errors outside of development environments
     if (context.errors) {
@@ -505,11 +550,16 @@ async function singleFetchLoaders(
           (m) => m.route.loader && loadRouteIds!.includes(m.route.id)
         )
       : context.matches;
+
     loadedMatches.forEach((m) => {
       let data = context.loaderData?.[m.route.id];
       let error = context.errors?.[m.route.id];
       if (error !== undefined) {
-        results[m.route.id] = { error };
+        if (isResponseStub(error)) {
+          results[m.route.id] = { error: null };
+        } else {
+          results[m.route.id] = { error };
+        }
       } else if (data !== undefined) {
         results[m.route.id] = { data };
       }
@@ -517,11 +567,12 @@ async function singleFetchLoaders(
 
     return {
       result: results,
-      headers: getDocumentHeaders(build, context, loadRouteIds),
-      status: context.statusCode,
+      headers,
+      status: statusCode,
     };
   } catch (error: unknown) {
     handleError(error);
+    // These should only be internal remix errors, no need to deal with responseStubs
     return {
       result: { root: { error } },
       headers: new Headers(),
@@ -540,9 +591,13 @@ async function handleDocumentRequest(
   criticalCss?: string
 ) {
   let context;
+  let responseStubs = getResponseStubs();
   try {
     context = await staticHandler.query(request, {
       requestContext: loadContext,
+      unstable_dataStrategy: build.future.unstable_singleFetch
+        ? getSingleFetchDataStrategy(responseStubs)
+        : undefined,
     });
   } catch (error: unknown) {
     handleError(error);
@@ -564,7 +619,23 @@ async function handleDocumentRequest(
     context.errors = sanitizeErrors(context.errors, serverMode);
   }
 
-  let headers = getDocumentHeaders(build, context);
+  let statusCode: number;
+  let headers: Headers;
+  if (build.future.unstable_singleFetch) {
+    let merged = mergeResponseStubs(context, responseStubs);
+    statusCode = merged.statusCode;
+    headers = merged.headers;
+
+    if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
+      return new Response(null, {
+        status: statusCode,
+        headers,
+      });
+    }
+  } else {
+    statusCode = context.statusCode;
+    headers = getDocumentHeaders(build, context);
+  }
 
   // Server UI state to send to the client.
   // - When single fetch is enabled, this is streamed down via `serverHandoffStream`
@@ -607,7 +678,7 @@ async function handleDocumentRequest(
   try {
     return await handleDocumentRequestFunction(
       request,
-      context.statusCode,
+      statusCode,
       headers,
       entryContext,
       loadContext
@@ -788,10 +859,163 @@ function unwrapResponse(response: Response) {
     : response.text();
 }
 
-function getSingleFetchRedirect(response: Response): SingleFetchRedirectResult {
+function getResponseStub(status?: number) {
+  let headers = new Headers();
+  let operations: ResponseStubOperation[] = [];
+  let headersProxy = new Proxy(headers, {
+    get(target, prop, receiver) {
+      if (prop === "set" || prop === "append" || prop === "delete") {
+        return (name: string, value: string) => {
+          operations.push([prop, name, value]);
+          Reflect.apply(target[prop], target, [name, value]);
+        };
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
   return {
-    redirect: response.headers.get("Location")!,
-    status: response.status,
+    status,
+    headers: headersProxy,
+    [ResponseStubOperationsSymbol]: operations,
+  };
+}
+
+function getSingleFetchDataStrategy(
+  responseStubs: ReturnType<typeof getResponseStubs>
+) {
+  return async ({ request, matches }: DataStrategyFunctionArgs) => {
+    let results = await Promise.all(
+      matches.map(async (match) => {
+        let responseStub: ResponseStub | undefined;
+        if (request.method !== "GET") {
+          responseStub = responseStubs[ResponseStubActionSymbol];
+        } else {
+          responseStub = responseStubs[match.route.id];
+        }
+
+        let result = await match.resolve(async (handler) => {
+          let data = await handler({ response: responseStub });
+          return { type: "data", result: data };
+        });
+
+        // Transfer raw Response status/headers to responseStubs
+        if (isResponse(result.result)) {
+          proxyResponseToResponseStub(
+            result.result.status,
+            result.result.headers,
+            responseStub
+          );
+        } else if (isDeferredData(result.result) && result.result.init) {
+          proxyResponseToResponseStub(
+            result.result.init.status,
+            new Headers(result.result.init.headers),
+            responseStub
+          );
+        }
+
+        return result;
+      })
+    );
+    return results;
+  };
+}
+
+function proxyResponseToResponseStub(
+  status: number | undefined,
+  headers: Headers,
+  responseStub: ResponseStub
+) {
+  if (status != null && responseStub.status == null) {
+    responseStub.status = status;
+  }
+  for (let [k, v] of headers) {
+    if (k.toLowerCase() !== "set-cookie") {
+      responseStub.headers.set(k, v);
+    }
+  }
+
+  // Unsure why this is complaining?  It's fine in VSCode but fails with tsc...
+  // @ts-ignore - ignoring instead of expecting because otherwise build fails locally
+  for (let v of headers.getSetCookie()) {
+    responseStub.headers.append("Set-Cookie", v);
+  }
+}
+
+function isResponseStub(value: any): value is ResponseStub {
+  return (
+    value && typeof value === "object" && ResponseStubOperationsSymbol in value
+  );
+}
+
+function getResponseStubs() {
+  return new Proxy({} as Record<string | symbol, ResponseStub>, {
+    get(responseStubCache, prop) {
+      let cached = responseStubCache[prop];
+      if (!cached) {
+        responseStubCache[prop] = cached = getResponseStub();
+      }
+      return cached;
+    },
+  });
+}
+
+function mergeResponseStubs(
+  context: StaticHandlerContext,
+  responseStubs: ReturnType<typeof getResponseStubs>
+) {
+  let statusCode: number | undefined = undefined;
+  let headers = new Headers();
+
+  // Action followed by top-down loaders
+  let actionStub = responseStubs[ResponseStubActionSymbol];
+  let stubs = [
+    actionStub,
+    ...context.matches.map((m) => responseStubs[m.route.id]),
+  ];
+
+  for (let stub of stubs) {
+    // Take the highest error/redirect, or the lowest success value - preferring
+    // action 200's over loader 200s
+    if (
+      // first status found on the way down
+      (statusCode === undefined && stub.status) ||
+      // deeper 2xx status found while not overriding the action status
+      (statusCode !== undefined &&
+        statusCode < 300 &&
+        stub.status &&
+        statusCode !== actionStub?.status)
+    ) {
+      statusCode = stub.status;
+    }
+
+    // Replay headers operations in order
+    let ops = stub[ResponseStubOperationsSymbol];
+    for (let [op, ...args] of ops) {
+      // @ts-expect-error
+      headers[op](...args);
+    }
+  }
+
+  // If no response stubs set it, use whatever we got back from the router
+  // context which handles internal ErrorResponse cases like 404/405's where
+  // we may never run a loader/action
+  if (statusCode === undefined) {
+    statusCode = context.statusCode;
+  }
+  if (statusCode === undefined) {
+    statusCode = 200;
+  }
+
+  return { statusCode, headers };
+}
+
+function getSingleFetchRedirect(
+  status: number,
+  headers: Headers
+): SingleFetchRedirectResult {
+  return {
+    redirect: headers.get("Location")!,
+    status,
     revalidate:
       // Technically X-Remix-Revalidate isn't needed here - that was an implementation
       // detail of ?_data requests as our way to tell the front end to revalidate when
@@ -800,9 +1024,8 @@ function getSingleFetchRedirect(response: Response): SingleFetchRedirectResult {
       // However, we're respecting it for now because it may be something folks have
       // used in their own responses
       // TODO(v3): Consider removing or making this official public API
-      response.headers.has("X-Remix-Revalidate") ||
-      response.headers.has("Set-Cookie"),
-    reload: response.headers.has("X-Remix-Reload-Document"),
+      headers.has("X-Remix-Revalidate") || headers.has("Set-Cookie"),
+    reload: headers.has("X-Remix-Reload-Document"),
   };
 }
 
