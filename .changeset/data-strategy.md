@@ -1,5 +1,9 @@
 ---
 "@remix-run/router": minor
+"react-router": minor
+"react-router-dom": minor
+"react-router-dom-v5-compat": minor
+"react-router-native": minor
 ---
 
 Add a new `unstable_dataStrategy` configuration option
