@@ -8,5 +8,10 @@
     "react-router-native": "6.22.3",
     "@remix-run/router": "1.15.3"
   },
-  "changesets": []
+  "changesets": [
+    "data-strategy",
+    "skip-action-revalidation",
+    "slow-flies-help",
+    "static-query-flags"
+  ]
 }
