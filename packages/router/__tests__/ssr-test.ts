@@ -1649,11 +1649,11 @@ describe("ssr", () => {
 
     describe("router dataStrategy", () => {
       it("should support document load navigations with custom dataStrategy", async () => {
-        let { query } = createStaticHandler(SSR_ROUTES, {
+        let { query } = createStaticHandler(SSR_ROUTES);
+
+        let context = await query(createRequest("/custom"), {
           unstable_dataStrategy: urlDataStrategy,
         });
-
-        let context = await query(createRequest("/custom"));
         expect(context).toMatchObject({
           actionData: null,
           loaderData: {
@@ -2677,19 +2677,6 @@ describe("ssr", () => {
       });
 
       /* eslint-enable jest/no-conditional-expect */
-    });
-
-    describe("router dataStrategy", () => {
-      it("should match routes automatically if no routeId is provided", async () => {
-        let { queryRoute } = createStaticHandler(SSR_ROUTES, {
-          unstable_dataStrategy: urlDataStrategy,
-        });
-        let data;
-
-        data = await queryRoute(createRequest("/custom"));
-        expect(data).toBeInstanceOf(URLSearchParams);
-        expect((data as URLSearchParams).get("foo")).toBe("bar");
-      });
     });
   });
 });
