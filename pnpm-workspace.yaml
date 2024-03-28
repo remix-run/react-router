@@ -1,4 +1,5 @@
 packages:
+  - "packages/dev"
   - "packages/react-router"
   - "packages/react-router-dom"
   - "packages/react-router-dom-v5-compat"
