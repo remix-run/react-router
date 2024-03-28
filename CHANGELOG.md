@@ -202,10 +202,7 @@ With this flag enabled, `action`'s that return/throw a `4xx`/`5xx` response stat
 
 - Add a new `unstable_dataStrategy` configuration option ([#11098](https://github.com/remix-run/react-router/pull/11098), ([#11377](https://github.com/remix-run/react-router/pull/11377)))
 - `@remix-run/router` - Add a new `future.unstable_skipActionRevalidation` future flag ([#11098](https://github.com/remix-run/react-router/pull/11098))
-- `@remix-run/router` - SSR: Added 3 new options to the `staticHandler.query` method for use in Remix's Single Fetch implementation: ([#11098](https://github.com/remix-run/react-router/pull/11098), ([#11377](https://github.com/remix-run/react-router/pull/11377)))
-  - `loadRouteIds`: Optional array of route IDs to load a subset of the matched routes
-  - `skipLoaderErrorBubbling`: Disable error bubbling by the static handler
-  - `skipLoaders`: Only call the action on POST requests, don't call all of the loaders afterwards
+- `@remix-run/router` - SSR: Added a new `skipLoaderErrorBubbling` options to the `staticHandler.query` method to disable error bubbling by the static handler for use in Remix's Single Fetch implementation ([#11098](https://github.com/remix-run/react-router/pull/11098), ([#11377](https://github.com/remix-run/react-router/pull/11377)))
 
 **Full Changelog**: [`v6.22.3...v6.23.0`](https://github.com/remix-run/react-router/compare/react-router@6.22.3...react-router@6.23.0)
 
