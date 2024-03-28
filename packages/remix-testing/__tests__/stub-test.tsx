@@ -52,6 +52,7 @@ test("renders a nested route", () => {
   expect(screen.getByText("INDEX")).toBeInTheDocument();
 });
 
+// eslint-disable-next-line jest/expect-expect
 test("loaders work", async () => {
   let RemixStub = createRemixStub([
     {
@@ -71,6 +72,7 @@ test("loaders work", async () => {
   await waitFor(() => screen.findByText("Message: hello"));
 });
 
+// eslint-disable-next-line jest/expect-expect
 test("actions work", async () => {
   let RemixStub = createRemixStub([
     {
@@ -96,6 +98,7 @@ test("actions work", async () => {
   await waitFor(() => screen.findByText("Message: hello"));
 });
 
+// eslint-disable-next-line jest/expect-expect
 test("fetchers work", async () => {
   let count = 0;
   let RemixStub = createRemixStub([
@@ -127,6 +130,7 @@ test("fetchers work", async () => {
   await waitFor(() => screen.findByText("idle 2"));
 });
 
+// eslint-disable-next-line jest/expect-expect
 test("can pass a predefined loader", () => {
   async function loader(_args: LoaderFunctionArgs) {
     return json({ hi: "there" });
@@ -218,7 +222,7 @@ test("all routes have ids", () => {
   render(<RemixStub />);
 
   let matchesTextContent = screen.getByTestId("matches").textContent;
-  // eslint-disable-next-line jest-dom/prefer-in-document
+
   expect(matchesTextContent).toBeDefined();
   let matches = JSON.parse(matchesTextContent!);
   let matchesWithoutIds = matches.filter((match: any) => match.id == null);

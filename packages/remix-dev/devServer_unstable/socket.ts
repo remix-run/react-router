@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import type { Server as HTTPServer } from "node:http";
 
-import { type Manifest } from "../manifest";
+import type { Manifest } from "../manifest";
 import type * as HMR from "./hmr";
 
 type Message =

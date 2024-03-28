@@ -4,10 +4,10 @@ import type * as esbuild from "esbuild";
 
 import type { RemixConfig } from "../config";
 import invariant from "../invariant";
-import { type Manifest } from "../manifest";
+import type { Manifest } from "../manifest";
 import { getRouteModuleExports } from "./utils/routeExports";
 import { getHash } from "./utils/crypto";
-import { type FileWatchCache } from "./fileWatchCache";
+import type { FileWatchCache } from "./fileWatchCache";
 
 type Route = RemixConfig["routes"][string];
 

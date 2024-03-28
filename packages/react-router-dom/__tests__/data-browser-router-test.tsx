@@ -59,10 +59,8 @@ function testDomRouter(
     search?: string
   ) {
     if (name === "<DataHashRouter>") {
-      // eslint-disable-next-line jest/no-conditional-expect
       expect(testWindow.location.hash).toEqual("#" + pathname + (search || ""));
     } else {
-      // eslint-disable-next-line jest/no-conditional-expect
       expect(testWindow.location.pathname).toEqual(pathname);
       if (search) {
         expect(testWindow.location.search).toEqual(search);

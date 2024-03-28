@@ -2,6 +2,7 @@ import type { SerializeFrom } from "../index";
 import { defer, json } from "../index";
 import { isEqual } from "./utils";
 
+// eslint-disable-next-line jest/expect-expect
 it("infers basic types", () => {
   isEqual<
     SerializeFrom<{
@@ -21,6 +22,7 @@ it("infers basic types", () => {
   >(true);
 });
 
+// eslint-disable-next-line jest/expect-expect
 it("infers deferred types", () => {
   let get = (): Promise<Date> | undefined => {
     if (Math.random() > 0.5) return Promise.resolve(new Date());
@@ -40,6 +42,7 @@ it("infers deferred types", () => {
   >(true);
 });
 
+// eslint-disable-next-line jest/expect-expect
 it("infers types from json", () => {
   let loader = () => json({ data: "remix" });
   isEqual<SerializeFrom<typeof loader>, { data: string }>(true);
@@ -48,6 +51,7 @@ it("infers types from json", () => {
   isEqual<SerializeFrom<typeof asyncLoader>, { data: string }>(true);
 });
 
+// eslint-disable-next-line jest/expect-expect
 it("infers type from defer", () => {
   let loader = async () => defer({ data: "remix" });
   isEqual<SerializeFrom<typeof loader>, { data: string }>(true);

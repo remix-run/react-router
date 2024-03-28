@@ -306,7 +306,6 @@ describe("useNavigate", () => {
       {
         path: "/*",
         Component() {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           let navigate = useNavigate();
           let location = useLocation();
           return (

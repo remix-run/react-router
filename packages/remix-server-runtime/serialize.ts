@@ -5,7 +5,7 @@ import type {
   ClientLoaderFunctionArgs,
 } from "./routeModules";
 import { expectType } from "./typecheck";
-import { type Expect, type Equal } from "./typecheck";
+import type { Expect, Equal } from "./typecheck";
 
 // prettier-ignore
 /**

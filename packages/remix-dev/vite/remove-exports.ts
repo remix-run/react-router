@@ -2,14 +2,8 @@
 // Which was originally adapted from https://github.com/vercel/next.js/blob/574fe0b582d5cc1b13663121fd47a3d82deaaa17/packages/next/build/babel/plugins/next-ssg-transform.ts
 import type { GeneratorOptions } from "@babel/generator";
 
-import {
-  type BabelTypes,
-  type NodePath,
-  parse,
-  traverse,
-  generate,
-  t,
-} from "./babel";
+import type { BabelTypes, NodePath } from "./babel";
+import { parse, traverse, generate, t } from "./babel";
 
 function getIdentifier(
   path: NodePath<

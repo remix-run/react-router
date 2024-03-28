@@ -116,7 +116,7 @@ describe("the init command", () => {
     expect(fse.existsSync(path.join(projectDir, "remix.init"))).toBeFalsy();
   });
 
-  it("It keeps the `remix.init` script when using the `--no-delete` flag", async () => {
+  it("keeps the `remix.init` script when using the `--no-delete` flag", async () => {
     let projectDir = await getProjectDir("remix-init-manual");
 
     fse.copySync(

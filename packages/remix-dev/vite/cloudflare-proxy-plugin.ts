@@ -1,10 +1,7 @@
 import { createRequestHandler } from "@remix-run/server-runtime";
-import {
-  type AppLoadContext,
-  type ServerBuild,
-} from "@remix-run/server-runtime";
-import { type Plugin } from "vite";
-import { type GetPlatformProxyOptions, type PlatformProxy } from "wrangler";
+import type { AppLoadContext, ServerBuild } from "@remix-run/server-runtime";
+import type { Plugin } from "vite";
+import type { GetPlatformProxyOptions, PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 

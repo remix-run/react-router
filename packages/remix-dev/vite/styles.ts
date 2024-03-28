@@ -1,9 +1,9 @@
 import * as path from "node:path";
-import { type ServerBuild } from "@remix-run/server-runtime";
+import type { ServerBuild } from "@remix-run/server-runtime";
 import { matchRoutes } from "@remix-run/router";
-import { type ModuleNode, type ViteDevServer } from "vite";
+import type { ModuleNode, ViteDevServer } from "vite";
 
-import { type RemixConfig as ResolvedRemixConfig } from "../config";
+import type { RemixConfig as ResolvedRemixConfig } from "../config";
 import { resolveFileUrl } from "./resolve-file-url";
 
 type ServerRouteManifest = ServerBuild["routes"];

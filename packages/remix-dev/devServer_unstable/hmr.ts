@@ -1,7 +1,7 @@
 import path from "node:path";
 
 import type { RemixConfig } from "../config";
-import { type Manifest } from "../manifest";
+import type { Manifest } from "../manifest";
 
 export type Update = {
   id: string;

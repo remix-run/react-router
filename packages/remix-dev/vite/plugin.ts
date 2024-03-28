@@ -1,13 +1,15 @@
 // We can only import types from Vite at the top level since we're in a CJS
 // context but want to use Vite's ESM build to avoid deprecation warnings
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- "Type import [...] is used by decorator metadata" error, no idea why
 import type * as Vite from "vite";
-import { type BinaryLike, createHash } from "node:crypto";
+import { createHash } from "node:crypto";
+import type { BinaryLike } from "node:crypto";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
 import babel from "@babel/core";
+import type { ServerBuild } from "@remix-run/server-runtime";
 import {
-  type ServerBuild,
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
 } from "@remix-run/server-runtime";
@@ -20,20 +22,21 @@ import pick from "lodash/pick";
 import omit from "lodash/omit";
 import colors from "picocolors";
 
-import { type ConfigRoute, type RouteManifest } from "../config/routes";
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- "Type import [...] is used by decorator metadata" error, no idea why
+import type { ConfigRoute, RouteManifest } from "../config/routes";
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- "Type import [...] is used by decorator metadata" error, no idea why
+import type {
+  AppConfig as RemixEsbuildUserConfig,
+  RemixConfig as ResolvedRemixEsbuildConfig,
+} from "../config";
 import {
-  type AppConfig as RemixEsbuildUserConfig,
-  type RemixConfig as ResolvedRemixEsbuildConfig,
   resolveConfig as resolveRemixEsbuildConfig,
   findConfig,
 } from "../config";
-import { type Manifest as RemixManifest } from "../manifest";
+import type { Manifest as RemixManifest } from "../manifest";
 import invariant from "../invariant";
-import {
-  type NodeRequestHandler,
-  fromNodeRequest,
-  toNodeRequest,
-} from "./node-adapter";
+import type { NodeRequestHandler } from "./node-adapter";
+import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
 import { resolveFileUrl } from "./resolve-file-url";
@@ -113,7 +116,7 @@ const supportedRemixEsbuildConfigKeys = [
 ] as const satisfies ReadonlyArray<keyof RemixEsbuildUserConfig>;
 type SupportedRemixEsbuildUserConfig = Pick<
   RemixEsbuildUserConfig,
-  typeof supportedRemixEsbuildConfigKeys[number]
+  (typeof supportedRemixEsbuildConfigKeys)[number]
 >;
 
 const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
@@ -141,7 +144,7 @@ const branchRouteProperties = [
   "file",
   "index",
 ] as const satisfies ReadonlyArray<keyof ConfigRoute>;
-type BranchRoute = Pick<ConfigRoute, typeof branchRouteProperties[number]>;
+type BranchRoute = Pick<ConfigRoute, (typeof branchRouteProperties)[number]>;
 
 export const configRouteToBranchRoute = (
   configRoute: ConfigRoute
@@ -177,7 +180,7 @@ const excludedRemixConfigPresetKeys = [
 ] as const satisfies ReadonlyArray<keyof VitePluginConfig>;
 
 type ExcludedRemixConfigPresetKey =
-  typeof excludedRemixConfigPresetKeys[number];
+  (typeof excludedRemixConfigPresetKeys)[number];
 
 type RemixConfigPreset = Omit<VitePluginConfig, ExcludedRemixConfigPresetKey>;
 

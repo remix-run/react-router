@@ -10,10 +10,10 @@ import pc from "picocolors";
 import exitHook from "exit-hook";
 
 import * as Channel from "../channel";
-import { type Manifest } from "../manifest";
+import type { Manifest } from "../manifest";
 import * as Compiler from "../compiler";
 import { createFileWatchCache } from "../compiler/fileWatchCache";
-import { type RemixConfig } from "../config";
+import type { RemixConfig } from "../config";
 import { loadEnv } from "./env";
 import * as Socket from "./socket";
 import * as HMR from "./hmr";
