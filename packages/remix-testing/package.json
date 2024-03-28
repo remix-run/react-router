@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@remix-run/node": "workspace:*",
-    "@remix-run/react": "workspace:*",
     "@remix-run/router": "1.16.0-pre.0",
     "react-router-dom": "6.23.0-pre.0"
   },

@@ -4,27 +4,29 @@ const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
 
 const {
-  copyToPlaygrounds,
-  createBanner,
-  getOutputDir,
   isBareModuleId,
+  createBanner,
+  getBuildDirectories,
+  remixBabelConfig,
 } = require("../../rollup.utils");
-const { name: packageName, version } = require("./package.json");
+const { name, version } = require("./package.json");
 
 /** @returns {import("rollup").RollupOptions[]} */
 module.exports = function rollup() {
-  let sourceDir = path.join("packages", "remix-testing");
-  let outputDir = getOutputDir(packageName);
-  let outputDist = path.join(outputDir, "dist");
+  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
+    name,
+    // We don't live in a folder matching our package name
+    "remix-testing"
+  );
 
   let sharedPlugins = [
     babel({
       babelHelpers: "bundled",
       exclude: /node_modules/,
       extensions: [".ts", ".tsx"],
+      ...remixBabelConfig,
     }),
     nodeResolve({ extensions: [".ts", ".tsx"] }),
-    copyToPlaygrounds(),
   ];
 
   /** @type {import("rollup").RollupOptions} */
@@ -32,10 +34,10 @@ module.exports = function rollup() {
     external(id) {
       return isBareModuleId(id);
     },
-    input: path.join(sourceDir, "index.ts"),
+    input: path.join(SOURCE_DIR, "index.ts"),
     output: {
-      banner: createBanner(packageName, version),
-      dir: outputDist,
+      banner: createBanner(name, version),
+      dir: OUTPUT_DIR,
       format: "cjs",
       preserveModules: true,
       exports: "auto",
@@ -43,11 +45,7 @@ module.exports = function rollup() {
     plugins: [
       ...sharedPlugins,
       copy({
-        targets: [
-          { src: "LICENSE.md", dest: [outputDir, sourceDir] },
-          { src: path.join(sourceDir, "package.json"), dest: outputDir },
-          { src: path.join(sourceDir, "README.md"), dest: outputDir },
-        ],
+        targets: [{ src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR }],
       }),
     ],
   };
@@ -58,10 +56,10 @@ module.exports = function rollup() {
     external(id) {
       return isBareModuleId(id);
     },
-    input: path.join(sourceDir, "index.ts"),
+    input: path.join(SOURCE_DIR, "index.ts"),
     output: {
-      banner: createBanner(packageName, version),
-      dir: path.join(outputDist, "esm"),
+      banner: createBanner(name, version),
+      dir: path.join(OUTPUT_DIR, "esm"),
       format: "esm",
       preserveModules: true,
     },

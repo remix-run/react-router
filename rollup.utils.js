@@ -51,8 +51,8 @@ function getBuildDirectories(packageName, folderName) {
   return { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR };
 }
 
-function createBanner(packageName, version) {
-  return `/**
+function createBanner(packageName, version, { executable = false } = {}) {
+  let banner = `/**
  * ${packageName} v${version}
  *
  * Copyright (c) Remix Software Inc.
@@ -62,6 +62,7 @@ function createBanner(packageName, version) {
  *
  * @license MIT
  */`;
+  return executable ? "#!/usr/bin/env node\n" + banner : banner;
 }
 
 // Babel plugin to replace `const REACT_ROUTER_VERSION = "0.0.0";` with the
@@ -141,11 +142,41 @@ function validateReplacedVersion() {
   };
 }
 
+/**
+ * @param {string} id
+ */
+function isBareModuleId(id) {
+  return !id.startsWith(".") && !path.isAbsolute(id);
+}
+
+const remixBabelConfig = {
+  presets: [
+    ["@babel/preset-env", { targets: { node: "18" } }],
+    "@babel/preset-react",
+    "@babel/preset-typescript",
+  ],
+  plugins: [
+    "@babel/plugin-proposal-export-namespace-from",
+    "@babel/plugin-proposal-optional-chaining",
+    // Strip console.debug calls unless RR_DEBUG=true
+    ...(process.env.RR_DEBUG === "true"
+      ? []
+      : [
+          [
+            "transform-remove-console",
+            { exclude: ["error", "warn", "log", "info"] },
+          ],
+        ]),
+  ],
+};
+
 // rollup.config.js
 module.exports = {
   getBuildDirectories,
   createBanner,
   babelPluginReplaceVersionPlaceholder,
   validateReplacedVersion,
+  isBareModuleId,
+  remixBabelConfig,
   PRETTY,
 };
