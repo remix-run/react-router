@@ -74,7 +74,7 @@ importers:
         version: 4.0.0(rollup@2.79.1)
       '@rollup/plugin-typescript':
         specifier: ^8.5.0
-        version: 8.5.0(rollup@2.79.1)(typescript@5.1.6)
+        version: 8.5.0(rollup@2.79.1)(tslib@2.6.2)(typescript@5.1.6)
       '@testing-library/jest-dom':
         specifier: 5.17.0
         version: 5.17.0
@@ -219,6 +219,9 @@ importers:
       semver:
         specifier: ^7.5.4
         version: 7.5.4
+      tslib:
+        specifier: ^2.6.2
+        version: 2.6.2
       type-fest:
         specifier: ^2.19.0
         version: 2.19.0
@@ -499,12 +502,18 @@ importers:
       '@types/express':
         specifier: ^4.17.9
         version: 4.17.21
+      '@types/fs-extra':
+        specifier: ^8.1.2
+        version: 8.1.2
       '@types/gunzip-maybe':
         specifier: ^1.4.0
         version: 1.4.2
       '@types/jsesc':
         specifier: ^3.0.1
         version: 3.0.3
+      '@types/lodash':
+        specifier: ^4.14.182
+        version: 4.17.0
       '@types/lodash.debounce':
         specifier: ^4.0.6
         version: 4.0.9
@@ -1016,7 +1025,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.24.0
-    dev: false
 
   /@babel/helper-module-imports@7.24.3:
     resolution: {integrity: sha512-viKb0F9f2s0BCS22QSF308z/+1YWKV/76mwt61NBzS5izMzDPwdq1pTrzf+Li3npBWX9KdQbkeCt1jSAM7lZqg==}
@@ -2744,7 +2752,7 @@ packages:
     dependencies:
       '@babel/core': 7.24.3
       '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-module-imports': 7.24.3
+      '@babel/helper-module-imports': 7.22.5
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-jsx': 7.22.5(@babel/core@7.24.3)
       '@babel/types': 7.24.0
@@ -5268,7 +5276,7 @@ packages:
       rollup: 2.79.1
     dev: false
 
-  /@rollup/plugin-typescript@8.5.0(rollup@2.79.1)(typescript@5.1.6):
+  /@rollup/plugin-typescript@8.5.0(rollup@2.79.1)(tslib@2.6.2)(typescript@5.1.6):
     resolution: {integrity: sha512-wMv1/scv0m/rXx21wD2IsBbJFba8wGF3ErJIr6IKRfRj49S85Lszbxb4DCo8iILpluTjk2GAAu9CoZt4G3ppgQ==}
     engines: {node: '>=8.0.0'}
     peerDependencies:
@@ -5282,6 +5290,7 @@ packages:
       '@rollup/pluginutils': 3.1.0(rollup@2.79.1)
       resolve: 1.22.3
       rollup: 2.79.1
+      tslib: 2.6.2
       typescript: 5.1.6
     dev: false
 
@@ -5593,7 +5602,6 @@ packages:
     resolution: {integrity: sha512-SvSrYXfWSc7R4eqnOzbQF4TZmfpNSM9FrSWLU3EUnWBuyZqNBOrv1B1JA3byUDPUl9z4Ab3jeZG2eDdySlgNMg==}
     dependencies:
       '@types/node': 18.19.26
-    dev: false
 
   /@types/glob@7.2.0:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
@@ -6705,7 +6713,7 @@ packages:
     resolution: {integrity: sha512-O0yuUDnZeQDL+ncNGlJ78BiO4jnYI3bvMsD5prT0/nsgijG/LpNBIr63gTjVTNsiGkgQhiyCShTgxt8oXOrklA==}
     engines: {node: '>=4'}
     dependencies:
-      tslib: 2.4.0
+      tslib: 2.6.2
     dev: true
 
   /astral-regex@1.0.0:
@@ -7347,7 +7355,7 @@ packages:
     resolution: {integrity: sha512-XKxXAC3HVPv7r674zP0VC3RTXz+/JKhfyw94ljvF80yynK6VkTnqE3jMuN8b3dUVmmc43TjyxjW4KTsmB3c86g==}
     dependencies:
       debug: 4.3.4
-      tslib: 2.4.0
+      tslib: 2.6.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -13817,7 +13825,7 @@ packages:
       ast-types: 0.14.2
       esprima: 4.0.1
       source-map: 0.6.1
-      tslib: 2.4.0
+      tslib: 2.6.2
     dev: true
 
   /redent@3.0.0:
@@ -14205,7 +14213,7 @@ packages:
   /rxjs@7.8.1:
     resolution: {integrity: sha512-AA3TVj+0A2iuIoQkWEK/tqFjBq2j+6PO6Y0zJcvzLAFhEFIO3HL0vls9hWLncZbAAbK0mar7oZ4V079I/qPMxg==}
     dependencies:
-      tslib: 2.4.0
+      tslib: 2.6.2
     dev: true
 
   /sade@1.8.1:
@@ -15156,9 +15164,8 @@ packages:
     resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
     dev: false
 
-  /tslib@2.4.0:
-    resolution: {integrity: sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==}
-    dev: true
+  /tslib@2.6.2:
+    resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
 
   /tsutils@3.21.0(typescript@5.1.6):
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}

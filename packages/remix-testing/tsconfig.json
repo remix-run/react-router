@@ -14,6 +14,6 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "rootDir": ".",
-    "outDir": "../../build/node_modules/@remix-run/testing/dist"
+    "outDir": "./dist"
   }
 }
