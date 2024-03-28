@@ -4,19 +4,20 @@ const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
 
 const {
-  copyToPlaygrounds,
   createBanner,
-  getCliConfig,
-  getOutputDir,
   isBareModuleId,
+  getBuildDirectories,
+  remixBabelConfig,
 } = require("../../rollup.utils");
-const { name: packageName, version } = require("./package.json");
+const { name, version } = require("./package.json");
 
 /** @returns {import("rollup").RollupOptions[]} */
 module.exports = function rollup() {
-  let sourceDir = "packages/remix-dev";
-  let outputDir = getOutputDir(packageName);
-  let outputDist = path.join(outputDir, "dist");
+  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
+    name,
+    // We don't live in a folder matching our package name
+    "remix-dev"
+  );
 
   return [
     {
@@ -24,14 +25,14 @@ module.exports = function rollup() {
         return isBareModuleId(id);
       },
       input: [
-        `${sourceDir}/index.ts`,
+        `${SOURCE_DIR}/index.ts`,
         // Since we're using a dynamic require for the Vite plugin, we
         // need to tell Rollup it's an entry point
-        `${sourceDir}/vite/plugin.ts`,
+        `${SOURCE_DIR}/vite/plugin.ts`,
       ],
       output: {
         banner: createBanner("@remix-run/dev", version),
-        dir: outputDist,
+        dir: OUTPUT_DIR,
         format: "cjs",
         preserveModules: true,
         exports: "named",
@@ -41,18 +42,14 @@ module.exports = function rollup() {
           babelHelpers: "bundled",
           exclude: /node_modules/,
           extensions: [".ts"],
+          ...remixBabelConfig,
         }),
         nodeResolve({ extensions: [".ts"] }),
         copy({
           targets: [
-            { src: `LICENSE.md`, dest: [outputDir, sourceDir] },
-            { src: `${sourceDir}/package.json`, dest: [outputDir, outputDist] },
-            { src: `${sourceDir}/README.md`, dest: outputDir },
-            { src: `${sourceDir}/vite/static`, dest: `${outputDist}/vite` },
-            {
-              src: `${sourceDir}/config/defaults`,
-              dest: [`${outputDir}/config`, `${outputDist}/config`],
-            },
+            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
+            { src: `${SOURCE_DIR}/vite/static`, dest: `${OUTPUT_DIR}/vite` },
+            { src: `${SOURCE_DIR}/config/defaults`, dest: OUTPUT_DIR },
           ],
         }),
         // Allow dynamic imports in CJS code to allow us to utilize
@@ -66,26 +63,53 @@ module.exports = function rollup() {
             };
           },
         },
-        copyToPlaygrounds(),
       ],
     },
-    getCliConfig({ packageName, version }),
     {
       external() {
         return true;
       },
-      input: `${sourceDir}/server-build.ts`,
+      input: `${SOURCE_DIR}/cli.ts`,
+      output: {
+        banner: createBanner(name, version, { executable: true }),
+        dir: OUTPUT_DIR,
+        format: "cjs",
+      },
+      plugins: [
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          extensions: [".ts"],
+          ...remixBabelConfig,
+        }),
+        nodeResolve({ extensions: [".ts"] }),
+        {
+          name: "dynamic-import-polyfill",
+          renderDynamicImport() {
+            return {
+              left: "import(",
+              right: ")",
+            };
+          },
+        },
+      ],
+    },
+    {
+      external() {
+        return true;
+      },
+      input: `${SOURCE_DIR}/server-build.ts`,
       output: [
         {
           // TODO: Remove deep import support or move to package.json
           // "exports" field in a future major release
-          banner: createBanner("@remix-run/dev", version, true),
-          dir: outputDir,
+          banner: createBanner("@remix-run/dev", version, { executable: true }),
+          dir: OUTPUT_DIR,
           format: "cjs",
         },
         {
-          banner: createBanner("@remix-run/dev", version, true),
-          dir: outputDist,
+          banner: createBanner("@remix-run/dev", version, { executable: true }),
+          dir: OUTPUT_DIR,
           format: "cjs",
         },
       ],
@@ -94,9 +118,9 @@ module.exports = function rollup() {
           babelHelpers: "bundled",
           exclude: /node_modules/,
           extensions: [".ts"],
+          ...remixBabelConfig,
         }),
         nodeResolve({ extensions: [".ts"] }),
-        copyToPlaygrounds(),
       ],
     },
   ];

@@ -49,6 +49,7 @@
     "@octokit/rest": "^18.12.0",
     "@remix-run/changelog-github": "^0.0.5",
     "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-node-resolve": "^11.0.1",
     "@rollup/plugin-replace": "^4.0.0",
     "@rollup/plugin-typescript": "^8.5.0",
     "@testing-library/jest-dom": "5.17.0",

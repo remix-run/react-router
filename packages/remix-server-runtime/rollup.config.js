@@ -5,28 +5,30 @@ const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
 
 const {
-  getOutputDir,
   isBareModuleId,
   createBanner,
-  copyToPlaygrounds,
+  getBuildDirectories,
+  remixBabelConfig,
 } = require("../../rollup.utils");
-const { name: packageName, version } = require("./package.json");
+const { name, version } = require("./package.json");
 
 /** @returns {import("rollup").RollupOptions[]} */
 module.exports = function rollup() {
-  let sourceDir = "packages/remix-server-runtime";
-  let outputDir = getOutputDir(packageName);
-  let outputDist = path.join(outputDir, "dist");
+  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
+    name,
+    // We don't live in a folder matching our package name
+    "remix-server-runtime"
+  );
 
   return [
     {
       external(id) {
         return isBareModuleId(id);
       },
-      input: `${sourceDir}/index.ts`,
+      input: `${SOURCE_DIR}/index.ts`,
       output: {
-        banner: createBanner(packageName, version),
-        dir: outputDist,
+        banner: createBanner(name, version),
+        dir: OUTPUT_DIR,
         format: "cjs",
         preserveModules: true,
         exports: "named",
@@ -36,26 +38,24 @@ module.exports = function rollup() {
           babelHelpers: "bundled",
           exclude: /node_modules/,
           extensions: [".ts", ".tsx"],
+          ...remixBabelConfig,
         }),
         nodeResolve({ extensions: [".ts", ".tsx"] }),
         copy({
           targets: [
-            { src: "LICENSE.md", dest: [outputDir, sourceDir] },
-            { src: `${sourceDir}/package.json`, dest: outputDir },
-            { src: `${sourceDir}/README.md`, dest: outputDir },
+            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
           ],
         }),
-        copyToPlaygrounds(),
       ],
     },
     {
       external(id) {
         return isBareModuleId(id);
       },
-      input: `${sourceDir}/index.ts`,
+      input: `${SOURCE_DIR}/index.ts`,
       output: {
-        banner: createBanner(packageName, version),
-        dir: `${outputDist}/esm`,
+        banner: createBanner(name, version),
+        dir: `${OUTPUT_DIR}/esm`,
         format: "esm",
         preserveModules: true,
       },
@@ -64,9 +64,9 @@ module.exports = function rollup() {
           babelHelpers: "bundled",
           exclude: /node_modules/,
           extensions: [".ts", ".tsx"],
+          ...remixBabelConfig,
         }),
         nodeResolve({ extensions: [".ts", ".tsx"] }),
-        copyToPlaygrounds(),
       ],
     },
   ];

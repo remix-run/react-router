@@ -32,7 +32,7 @@
     "@mdx-js/mdx": "^2.3.0",
     "@npmcli/package-json": "^4.0.1",
     "@remix-run/node": "workspace:*",
-    "@remix-run/router": "1.16.0-pre.0",
+    "@remix-run/router": "workspace:*",
     "@remix-run/server-runtime": "workspace:*",
     "@types/mdx": "^2.0.5",
     "@vanilla-extract/integration": "^6.2.0",
@@ -76,10 +76,7 @@
     "ws": "^7.4.5"
   },
   "devDependencies": {
-    "@remix-run/cloudflare": "workspace:*",
-    "@remix-run/deno": "workspace:*",
     "@remix-run/serve": "workspace:*",
-    "@remix-run/testing": "workspace:*",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.6.8",
     "@types/babel__traverse": "^7.20.5",
