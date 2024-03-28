@@ -2,7 +2,7 @@ import type { Plugin } from "esbuild";
 import jsesc from "jsesc";
 
 import type * as Channel from "../../../channel";
-import { type Manifest } from "../../../manifest";
+import type { Manifest } from "../../../manifest";
 import { assetsManifestVirtualModule } from "../virtualModules";
 import { Cancel } from "../../cancel";
 

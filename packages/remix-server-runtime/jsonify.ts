@@ -1,9 +1,5 @@
-import {
-  expectType,
-  type Equal,
-  type Expect,
-  type MutualExtends,
-} from "./typecheck";
+import type { Equal, Expect, MutualExtends } from "./typecheck";
+import { expectType } from "./typecheck";
 
 // prettier-ignore
 // `Jsonify` emulates `let y = JSON.parse(JSON.stringify(x))`, but for types

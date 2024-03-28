@@ -44,6 +44,7 @@ describe("json", () => {
     expect(result).toMatchObject({ hello: "remix" });
   });
 
+  // eslint-disable-next-line jest/expect-expect
   it("disallows unmatched typed responses", async () => {
     let response = json("hello");
     isEqual<TypedResponse<number>, typeof response>(false);

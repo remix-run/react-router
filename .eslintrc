@@ -9,6 +9,16 @@
       "files": ["**/__tests__/**"],
       "plugins": ["jest"],
       "extends": ["plugin:jest/recommended"]
+    },
+    {
+      "files": ["integration/**/*.*"],
+      "rules": {
+        "react-hooks/rules-of-hooks": "off"
+      },
+      "env": {
+        "jest/globals": false
+      }
     }
-  ]
+  ],
+  "reportUnusedDisableDirectives": true
 }

@@ -3,7 +3,7 @@ import { builtinModules as nodeBuiltins } from "node:module";
 import * as esbuild from "esbuild";
 
 import type { RemixConfig } from "../../config";
-import { type Manifest } from "../../manifest";
+import type { Manifest } from "../../manifest";
 import { getAppDependencies } from "../../dependencies";
 import { loaders } from "../utils/loaders";
 import { browserRouteModulesPlugin } from "./plugins/routes";

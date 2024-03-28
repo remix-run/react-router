@@ -3,11 +3,13 @@ import path from "node:path";
 import fse from "fs-extra";
 import colors from "picocolors";
 
+import type {
+  RemixPluginContext,
+  BuildManifest,
+  ServerBundleBuildConfig,
+  ServerBundlesBuildManifest,
+} from "./plugin";
 import {
-  type RemixPluginContext,
-  type BuildManifest,
-  type ServerBundleBuildConfig,
-  type ServerBundlesBuildManifest,
   resolveViteConfig,
   extractRemixPluginContext,
   configRouteToBranchRoute,
@@ -74,7 +76,6 @@ async function getServerBuilds(ctx: RemixPluginContext): Promise<{
   buildManifest: BuildManifest;
 }> {
   let { rootDirectory } = ctx;
-  // eslint-disable-next-line prefer-let/prefer-let -- Improve type narrowing
   const { routes, serverBuildFile, serverBundles, appDirectory } =
     ctx.remixConfig;
   let serverBuildDirectory = getServerBuildDirectory(ctx);
@@ -247,7 +248,6 @@ export async function build(
 
   let viteConfig = await resolveViteConfig({ configFile, mode, root });
 
-  // eslint-disable-next-line prefer-let/prefer-let -- Improve type narrowing
   const ctx = await extractRemixPluginContext(viteConfig);
 
   if (!ctx) {

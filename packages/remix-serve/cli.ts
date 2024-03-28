@@ -3,12 +3,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
-import {
-  type ServerBuild,
-  broadcastDevReady,
-  installGlobals,
-} from "@remix-run/node";
-import { type RequestHandler, createRequestHandler } from "@remix-run/express";
+import type { ServerBuild } from "@remix-run/node";
+import { broadcastDevReady, installGlobals } from "@remix-run/node";
+import type { RequestHandler } from "@remix-run/express";
+import { createRequestHandler } from "@remix-run/express";
 import chokidar from "chokidar";
 import compression from "compression";
 import express from "express";

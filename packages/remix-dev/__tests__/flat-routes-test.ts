@@ -634,7 +634,9 @@ describe("flatRoutes", () => {
     );
     let routes = Object.values(routeManifest);
 
-    expect(routes).toHaveLength(files.length);
+    test("route per file", () => {
+      expect(routes).toHaveLength(files.length);
+    });
 
     for (let [file, route] of files) {
       test(`hierarchy for ${file} - ${route.path}`, () => {

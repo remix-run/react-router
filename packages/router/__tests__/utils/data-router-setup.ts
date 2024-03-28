@@ -1,4 +1,3 @@
-/* eslint-disable jest/valid-title */
 import type {
   AgnosticDataRouteObject,
   AgnosticRouteMatch,
@@ -746,9 +745,7 @@ export function cleanup(_router?: Router) {
 
   // Cleanup any routers created using setup()
   if (router) {
-    // eslint-disable-next-line jest/no-standalone-expect
     expect(router._internalFetchControllers.size).toBe(0);
-    // eslint-disable-next-line jest/no-standalone-expect
     expect(router._internalActiveDeferreds.size).toBe(0);
   }
   router?.dispose();

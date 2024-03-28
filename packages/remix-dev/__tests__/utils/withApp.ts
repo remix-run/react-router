@@ -15,10 +15,10 @@ const retry = async (
   }
 };
 
-export default async <Result>(
+export default async function withApp<Result>(
   fixture: string,
   callback: (projectDir: string) => Promise<Result>
-): Promise<Result> => {
+): Promise<Result> {
   let TEMP_DIR = path.join(
     fse.realpathSync(os.tmpdir()),
     `remix-tests-${Math.random().toString(32).slice(2)}`
@@ -38,4 +38,4 @@ export default async <Result>(
     // See https://github.com/jprichardson/node-fs-extra/issues?q=EBUSY%3A+resource+busy+or+locked%2C+rmdir
     await retry(async () => await fse.remove(TEMP_DIR), 3, 200);
   }
-};
+}

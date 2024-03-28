@@ -1,10 +1,12 @@
+import type {
+  UNSAFE_DeferredData as DeferredData,
+  TrackedPromise,
+} from "@remix-run/router";
 import {
   defer as routerDefer,
   json as routerJson,
   redirect as routerRedirect,
   redirectDocument as routerRedirectDocument,
-  type UNSAFE_DeferredData as DeferredData,
-  type TrackedPromise,
 } from "@remix-run/router";
 
 import { serializeError } from "./errors";

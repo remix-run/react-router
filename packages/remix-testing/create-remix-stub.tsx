@@ -1,12 +1,12 @@
 import * as React from "react";
-import {
-  UNSAFE_convertRoutesToDataRoutes,
-  type HydrationState,
-  type InitialEntry,
-  type Router,
-  type ActionFunctionArgs as RRActionFunctionArgs,
-  type LoaderFunctionArgs as RRLoaderFunctionArgs,
+import type {
+  HydrationState,
+  InitialEntry,
+  Router,
+  ActionFunctionArgs as RRActionFunctionArgs,
+  LoaderFunctionArgs as RRLoaderFunctionArgs,
 } from "@remix-run/router";
+import { UNSAFE_convertRoutesToDataRoutes } from "@remix-run/router";
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
 import type {
   UNSAFE_FutureConfig as FutureConfig,

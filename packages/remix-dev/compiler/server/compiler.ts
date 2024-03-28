@@ -1,6 +1,6 @@
 import * as esbuild from "esbuild";
 
-import { type Manifest } from "../../manifest";
+import type { Manifest } from "../../manifest";
 import { loaders } from "../utils/loaders";
 import { cssModulesPlugin } from "../plugins/cssModuleImports";
 import { cssSideEffectImportsPlugin } from "../plugins/cssSideEffectImports";

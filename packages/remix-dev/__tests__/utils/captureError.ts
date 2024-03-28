@@ -1,8 +1,8 @@
 class NoErrorThrownError extends Error {}
 
-export default async (
+export default async function captureError(
   erroring: Promise<unknown> | (() => Promise<unknown>)
-) => {
+) {
   try {
     let promise = typeof erroring === "function" ? erroring() : erroring;
     await promise;
@@ -11,4 +11,4 @@ export default async (
     if (error instanceof NoErrorThrownError) throw error;
     return error;
   }
-};
+}
