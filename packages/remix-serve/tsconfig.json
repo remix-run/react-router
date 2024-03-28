@@ -13,6 +13,6 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "rootDir": ".",
-    "outDir": "../../build/node_modules/@remix-run/serve/dist"
+    "outDir": "./dist"
   }
 }

@@ -1,5 +1,6 @@
 const path = require("node:path");
 const babel = require("@rollup/plugin-babel").default;
+const typescript = require("@rollup/plugin-typescript");
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
 
@@ -44,6 +45,11 @@ module.exports = function rollup() {
     },
     plugins: [
       ...sharedPlugins,
+      typescript({
+        tsconfig: path.join(__dirname, "tsconfig.json"),
+        exclude: ["__tests__"],
+        noEmitOnError: true,
+      }),
       copy({
         targets: [{ src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR }],
       }),

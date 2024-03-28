@@ -100,6 +100,7 @@
     "rollup-plugin-prettier": "^2.3.0",
     "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.5.4",
+    "tslib": "^2.6.2",
     "type-fest": "^2.19.0",
     "typescript": "^5.1.6",
     "undici": "^6.10.1",

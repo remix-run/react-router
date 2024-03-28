@@ -1,5 +1,6 @@
 const path = require("node:path");
 const babel = require("@rollup/plugin-babel").default;
+const typescript = require("@rollup/plugin-typescript");
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
 
@@ -38,6 +39,11 @@ module.exports = function rollup() {
           exclude: /node_modules/,
           extensions: [".ts", ".tsx"],
           ...remixBabelConfig,
+        }),
+        typescript({
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
         }),
         nodeResolve({ extensions: [".ts", ".tsx"] }),
         copy({

@@ -7,6 +7,7 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
 } from "@remix-run/router";
 import { UNSAFE_convertRoutesToDataRoutes } from "@remix-run/router";
+// @ts-expect-error TODO: Update import
 import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
 import type {
   UNSAFE_FutureConfig as FutureConfig,
@@ -15,6 +16,7 @@ import type {
   UNSAFE_RouteModules as RouteModules,
   UNSAFE_RemixContextObject as RemixContextObject,
   MetaFunction,
+  // @ts-expect-error TODO: Update import
 } from "@remix-run/react";
 import type {
   DataRouteObject,

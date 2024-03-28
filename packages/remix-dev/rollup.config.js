@@ -1,5 +1,6 @@
 const path = require("node:path");
 const babel = require("@rollup/plugin-babel").default;
+const typescript = require("@rollup/plugin-typescript");
 const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
 
@@ -43,6 +44,11 @@ module.exports = function rollup() {
           exclude: /node_modules/,
           extensions: [".ts"],
           ...remixBabelConfig,
+        }),
+        typescript({
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: true,
         }),
         nodeResolve({ extensions: [".ts"] }),
         copy({
@@ -92,35 +98,6 @@ module.exports = function rollup() {
             };
           },
         },
-      ],
-    },
-    {
-      external() {
-        return true;
-      },
-      input: `${SOURCE_DIR}/server-build.ts`,
-      output: [
-        {
-          // TODO: Remove deep import support or move to package.json
-          // "exports" field in a future major release
-          banner: createBanner("@remix-run/dev", version, { executable: true }),
-          dir: OUTPUT_DIR,
-          format: "cjs",
-        },
-        {
-          banner: createBanner("@remix-run/dev", version, { executable: true }),
-          dir: OUTPUT_DIR,
-          format: "cjs",
-        },
-      ],
-      plugins: [
-        babel({
-          babelHelpers: "bundled",
-          exclude: /node_modules/,
-          extensions: [".ts"],
-          ...remixBabelConfig,
-        }),
-        nodeResolve({ extensions: [".ts"] }),
       ],
     },
   ];
