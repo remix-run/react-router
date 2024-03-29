@@ -3,7 +3,7 @@ import path from "node:path";
 import type { RemixConfig } from "../config";
 import { readConfig } from "../config";
 
-const remixRoot = path.join(__dirname, "fixtures", "stack");
+const remixRoot = path.join(__dirname, "fixtures", "node");
 
 describe("readConfig", () => {
   let config: RemixConfig;
@@ -33,7 +33,7 @@ describe("readConfig", () => {
         "dev": {},
         "entryClientFile": "entry.client.tsx",
         "entryClientFilePath": Any<String>,
-        "entryServerFile": "entry.server.tsx",
+        "entryServerFile": "entry.server.node.tsx",
         "entryServerFilePath": Any<String>,
         "future": {
           "unstable_singleFetch": false,
@@ -51,6 +51,13 @@ describe("readConfig", () => {
             "file": "root.tsx",
             "id": "root",
             "path": "",
+          },
+          "routes/_index": {
+            "file": "routes/_index.tsx",
+            "id": "routes/_index",
+            "index": true,
+            "parentId": "root",
+            "path": undefined,
           },
         },
         "serverBuildPath": Any<String>,
