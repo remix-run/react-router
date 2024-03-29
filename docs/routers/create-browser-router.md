@@ -184,9 +184,9 @@ const router = createBrowserRouter(
 
 ## `unstable_dataStrategy`
 
-<docs-warn>This is a low-level API intended for advanced use-cases. This overrides Remix's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warn>
+<docs-warning>This is a low-level API intended for advanced use-cases. This overrides Remix's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warning>
 
-<docs-warn>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warn>
+<docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
 
 By default, React Router is opinionated about how your data is loaded/submitted - and most notably, executes all of your loaders in parallel for optimal data fetching. While we think this is the right behavior for most use-cases, we realize that there is no "one size fits all" solution when it comes to data fetching for the wide landscape of application requirements.
 
@@ -232,17 +232,17 @@ interface HandlerResult {
 
 - **`match.resolve`** - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
   - You should call `match.resolve` for _all_ matches every time to ensure that all lazy routes are properly resolved
-  - This does not mean you're calling the loader/action (the "handler") - resolve will only call the handler internally if needed and if you don't pass your own `handlerOverride` function parameter
+  - This does not mean you're calling the loader/action (the "handler") - `resolve` will only call the `handler` internally if needed and if you don't pass your own `handlerOverride` function parameter
   - See the examples below for how to implement custom handler execution via `match.resolve`
 - **`match.shouldLoad`** - A boolean value indicating whether this route handler needs to be called in this pass
-  - This array always includes _all_ matched routes even when only _some_ route handlers need to be called so that things like middleware can be implemented
-  - This is usually only needed if you are skipping the route handler entirely and implementing custom handler logic - since it lets you determine if that custom logic should run for this route or not
+  - The `matches` array always includes _all_ matched routes even when only _some_ route handlers need to be called so that things like middleware can be implemented
+  - `shouldLoad` is usually only interesting if you are skipping the route handler entirely and implementing custom handler logic - since it lets you determine if that custom logic should run for this route or not
   - For example:
     - If you are on `/parent/child/a` and you navigate to `/parent/child/b` - you'll get an array of three matches (`[parent, child, b]`), but only `b` will have `shouldLoad=true` because the data for `parent` and `child` is already loaded
     - If you are on `/parent/child/a` and you submit to `a`'s `action`, then only `a` will have `shouldLoad=true` for the action execution of `dataStrategy`
       - After the `action`, `dataStrategy` will be called again for the `loader` revalidation, and all matches will have `shouldLoad=true` (assuming no custom `shouldRevalidate` implementations)
 
-The `dataStrategy` function should return a parallel array of `HandlerResult` instances, which is just an object of `{ type: 'data', result: unknown }` or `{ type: 'error', result: unknown }` depending on if the handler was successful or not. If the returned `handlerResult.result` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but preserve the status code, you can return the decoded value in `handlerResult.result` and send the status along via `handlerResult.status` (for example, when using the `future.unstable_skipActionRevalidation` flag). `match.resolve()` will return a `HandlerResult` if you are not passing it a handler override function. If you are, then you need to wrap the `handler` result in a `HandlerResult` (see examples below).
+The `dataStrategy` function should return a parallel array of `HandlerResult` instances, which indicates if the handler was successful or not. If the returned `handlerResult.result` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but preserve the status code, you can return the decoded value in `handlerResult.result` and send the status along via `handlerResult.status` (for example, when using the `future.unstable_skipActionRevalidation` flag). `match.resolve()` will return a `HandlerResult` if you are not passing it a handler override function. If you are, then you need to wrap the `handler` result in a `HandlerResult` (see examples below).
 
 ### Example Use Cases
 
@@ -310,6 +310,8 @@ let router = createBrowserRouter(routes, {
     return Promise.all(
       matches.map((match, i) =>
         match.resolve(async (handler) => {
+          // Whatever you pass to `handler` will be passed as the 2nd parameter
+          // to your loader/action
           let result = await handler(context);
           return { type: "data", result };
         })
