@@ -15,6 +15,9 @@ module.exports = {
     "^react-router-dom-v5-compat$":
       "<rootDir>/../react-router-dom-v5-compat/index.ts",
     "^react-router-native$": "<rootDir>/../react-router-native/index.tsx",
+    "^@web3-storage/multipart-parser$": require.resolve(
+      "@web3-storage/multipart-parser"
+    ),
   },
   modulePathIgnorePatterns: ignorePatterns,
   setupFiles: ["<rootDir>/__tests__/setup.ts"],
