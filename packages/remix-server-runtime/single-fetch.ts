@@ -36,9 +36,22 @@ export type SingleFetchResults = {
 };
 
 export function getSingleFetchDataStrategy(
-  responseStubs: ReturnType<typeof getResponseStubs>
+  responseStubs: ReturnType<typeof getResponseStubs>,
+  {
+    isActionDataRequest,
+    loadRouteIds,
+  }: { isActionDataRequest?: boolean; loadRouteIds?: string[] } = {}
 ) {
   return async ({ request, matches }: DataStrategyFunctionArgs) => {
+    // Don't call loaders on action data requests
+    if (isActionDataRequest && request.method === "GET") {
+      return await Promise.all(
+        matches.map((m) =>
+          m.resolve(async () => ({ type: "data", result: null }))
+        )
+      );
+    }
+
     let results = await Promise.all(
       matches.map(async (match) => {
         let responseStub: ResponseStub | undefined;
@@ -49,7 +62,11 @@ export function getSingleFetchDataStrategy(
         }
 
         let result = await match.resolve(async (handler) => {
-          let data = await handler({ response: responseStub });
+          // Only run opt-in loaders when fine-grained revalidation is enabled
+          let data =
+            loadRouteIds && !loadRouteIds.includes(match.route.id)
+              ? null
+              : await handler({ response: responseStub });
           return { type: "data", result: data };
         });
 
@@ -96,8 +113,9 @@ export async function singleFetchAction(
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      skipLoaders: true,
-      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),
+      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs, {
+        isActionDataRequest: true,
+      }),
     });
 
     // Unlike `handleDataRequest`, when singleFetch is enabled, queryRoute does
@@ -113,7 +131,9 @@ export async function singleFetchAction(
     let context = result;
 
     let singleFetchResult: SingleFetchResult;
-    let { statusCode, headers } = mergeResponseStubs(context, responseStubs);
+    let { statusCode, headers } = mergeResponseStubs(context, responseStubs, {
+      isActionDataRequest: true,
+    });
 
     if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
       return {
@@ -176,9 +196,10 @@ export async function singleFetchLoaders(
     let responseStubs = getResponseStubs();
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
-      loadRouteIds,
       skipLoaderErrorBubbling: true,
-      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),
+      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs, {
+        loadRouteIds,
+      }),
     });
 
     if (isResponse(result)) {
@@ -323,17 +344,20 @@ function proxyResponseToResponseStub(
 
 export function mergeResponseStubs(
   context: StaticHandlerContext,
-  responseStubs: ReturnType<typeof getResponseStubs>
+  responseStubs: ReturnType<typeof getResponseStubs>,
+  { isActionDataRequest }: { isActionDataRequest?: boolean } = {}
 ) {
   let statusCode: number | undefined = undefined;
   let headers = new Headers();
 
   // Action followed by top-down loaders
   let actionStub = responseStubs[ResponseStubActionSymbol];
-  let stubs = [
-    actionStub,
-    ...context.matches.map((m) => responseStubs[m.route.id]),
-  ];
+  let stubs = [actionStub];
+
+  // Nothing to merge at the route level on action data requests
+  if (!isActionDataRequest) {
+    stubs.push(...context.matches.map((m) => responseStubs[m.route.id]));
+  }
 
   for (let stub of stubs) {
     // Take the highest error/redirect, or the lowest success value - preferring
