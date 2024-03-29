@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.16.0-pre.1
+
+### Patch Changes
+
+- [REMOVE] Remove staticHandler.query flags that we can implement in dataStrategy ([#11384](https://github.com/remix-run/react-router/pull/11384))
+
 ## 1.16.0-pre.0
 
 ### Minor Changes
