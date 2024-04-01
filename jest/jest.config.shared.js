@@ -26,9 +26,4 @@ module.exports = {
     "\\.[jt]sx?$": require.resolve("./transform"),
   },
   watchPathIgnorePatterns: [...ignorePatterns, "\\/node_modules\\/"],
-  watchPlugins: [
-    require.resolve("jest-watch-select-projects"),
-    require.resolve("jest-watch-typeahead/filename"),
-    require.resolve("jest-watch-typeahead/testname"),
-  ],
 };
