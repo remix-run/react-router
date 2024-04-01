@@ -1,5 +1,14 @@
 # `@remix-run/dev`
 
+## 2.9.0-pre.2
+
+### Patch Changes
+
+- Update links printed to the console by the Remix CLI/Dev Server to point to updated docs locations ([#9176](https://github.com/remix-run/remix/pull/9176))
+- Updated dependencies:
+  - `@remix-run/node@2.9.0-pre.2`
+  - `@remix-run/server-runtime@2.9.0-pre.2`
+
 ## 2.9.0-pre.1
 
 ### Patch Changes

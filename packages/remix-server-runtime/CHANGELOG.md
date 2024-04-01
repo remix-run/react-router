@@ -1,5 +1,7 @@
 # `@remix-run/server-runtime`
 
+## 2.9.0-pre.2
+
 ## 2.9.0-pre.1
 
 ### Patch Changes
