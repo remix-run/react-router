@@ -1,3 +1,3 @@
-import { installGlobals } from "@remix-run/node";
+import { installGlobals } from "../../remix-node/globals";
 
 installGlobals();
