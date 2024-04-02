@@ -216,6 +216,25 @@ export {
   useRoutes,
 } from "react-router";
 
+export {
+  Meta,
+  Links,
+  Scripts,
+  PrefetchPageLinks,
+  LiveReload,
+} from "./ssr/components";
+
+export type { HtmlLinkDescriptor } from "./ssr/links";
+export type {
+  ClientActionFunction,
+  ClientActionFunctionArgs,
+  ClientLoaderFunction,
+  ClientLoaderFunctionArgs,
+  MetaArgs,
+  MetaDescriptor,
+  MetaFunction,
+} from "./ssr/routeModules";
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -238,6 +257,17 @@ export {
   UNSAFE_RouteContext,
   UNSAFE_useRouteId,
 } from "react-router";
+export { RemixContext as UNSAFE_RemixContext } from "./ssr/components";
+export type { RouteModules as UNSAFE_RouteModules } from "./ssr/routeModules";
+export type {
+  FutureConfig as UNSAFE_FutureConfig,
+  AssetsManifest as UNSAFE_AssetsManifest,
+  RemixContextObject as UNSAFE_RemixContextObject,
+} from "./ssr/entry";
+export type {
+  EntryRoute as UNSAFE_EntryRoute,
+  RouteManifest as UNSAFE_RouteManifest,
+} from "./ssr/routes";
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,7 +350,10 @@ type SSRInfo = {
 };
 
 let ssrInfo: SSRInfo | null =
-  window.__remixContext && window.__remixManifest && window.__remixRouteModules
+  typeof window !== "undefined" &&
+  window.__remixContext &&
+  window.__remixManifest &&
+  window.__remixRouteModules
     ? {
         context: window.__remixContext,
         routeModules: window.__remixRouteModules,

@@ -40,6 +40,9 @@ import {
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
 } from "./index";
 
+export type { RemixServerProps } from "./ssr/server";
+export { RemixServer } from "./ssr/server";
+
 export interface StaticRouterProps {
   basename?: string;
   children?: React.ReactNode;
