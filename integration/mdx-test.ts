@@ -16,6 +16,7 @@ test.describe("mdx", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";

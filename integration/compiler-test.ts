@@ -18,6 +18,7 @@ test.describe("compiler", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         // We need a custom config file here to test usage of `getDependenciesToBundle`
         // since this can't be serialized from the fixture object.

@@ -14,6 +14,7 @@ let appFixture: AppFixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    compiler: "remix",
     files: {
       "node_modules/has-side-effects/package.json": json({
         name: "has-side-effects",

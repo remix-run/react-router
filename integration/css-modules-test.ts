@@ -19,6 +19,7 @@ test.describe("CSS Modules", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         "app/root.tsx": js`
           import { Links, Outlet } from "@remix-run/react";

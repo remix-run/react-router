@@ -154,11 +154,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/routes/absolute.tsx": js`
             import * as React from 'react';

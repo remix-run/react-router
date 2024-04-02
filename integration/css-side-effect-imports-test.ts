@@ -18,6 +18,7 @@ test.describe("CSS side-effect imports", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       config: {
         serverDependenciesToBundle: ["react", /@test-package/],
       },

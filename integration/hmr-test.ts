@@ -272,6 +272,7 @@ async function dev(
   let options = getOptions(appPort);
 
   let fixture: FixtureInit = {
+    compiler: "remix",
     config: {
       dev: {
         port: devPort,

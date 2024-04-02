@@ -26,6 +26,7 @@ test("builds deterministically under different paths", async () => {
   //  * serverRouteModulesPlugin (implicitly tested by build)
   //  * vanillaExtractPlugin (via app/routes/foo.tsx' .css.ts file import)
   let init: FixtureInit = {
+    compiler: "remix",
     files: {
       "postcss.config.js": js`
         export default {

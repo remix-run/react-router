@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import type { Readable } from "node:stream";
-import { spawn } from "node:child_process";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import getPort from "get-port";
@@ -18,7 +18,6 @@ test.describe("Vite dev", () => {
   test.beforeAll(async () => {
     devPort = await getPort();
     projectDir = await createFixtureProject({
-      compiler: "vite",
       files: {
         "remix.config.js": js`
           throw new Error("Remix should not access remix.config.js when using Vite");

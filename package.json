@@ -104,7 +104,9 @@
     "typescript": "^5.1.6",
     "undici": "^6.10.1",
     "unified": "^10.1.2",
-    "unist-util-remove": "^3.1.0"
+    "unist-util-remove": "^3.1.0",
+    "vite-env-only": "^2.0.0",
+    "vite-tsconfig-paths": "^4.2.2"
   },
   "engines": {
     "node": ">=14.0.0"
