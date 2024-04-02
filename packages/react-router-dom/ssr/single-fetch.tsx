@@ -15,7 +15,7 @@ import { UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol } from "@
 import type {
   DataRouteObject,
   unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
-} from "react-router-dom";
+} from "react-router";
 import { decode } from "turbo-stream";
 
 import { createRequestInit } from "./data";

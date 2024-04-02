@@ -11,30 +11,27 @@ import type {
   TrackedPromise,
   UIMatch as UIMatchRR,
 } from "@remix-run/router";
-import type {
-  FetcherWithComponents,
-  LinkProps,
-  NavLinkProps,
-} from "react-router-dom";
 import {
   Await as AwaitRR,
-  Link as RouterLink,
-  NavLink as RouterNavLink,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   matchRoutes,
   useAsyncError,
   useActionData as useActionDataRR,
-  useFetcher as useFetcherRR,
   useLoaderData as useLoaderDataRR,
   useMatches as useMatchesRR,
   useRouteLoaderData as useRouteLoaderDataRR,
   useLocation,
   useNavigation,
   useHref,
-} from "react-router-dom";
-import type { SerializeFrom } from "@remix-run/server-runtime";
+} from "react-router";
 
+import type { FetcherWithComponents, LinkProps, NavLinkProps } from "../index";
+import {
+  Link as RouterLink,
+  NavLink as RouterNavLink,
+  useFetcher as useFetcherRR,
+} from "../index";
 import type { AppData } from "./data";
 import type { RemixContextObject } from "./entry";
 import invariant from "./invariant";
@@ -56,6 +53,9 @@ import type {
   RouteHandle,
 } from "./routeModules";
 import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
+
+// TODO: Temporary shim until we figure out the way to handle typings in v7
+export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
 
 function useDataRouterContext() {
   let context = React.useContext(DataRouterContext);

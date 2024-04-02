@@ -1,6 +1,6 @@
 import * as React from "react";
-import type { Location } from "@remix-run/router";
-import { isRouteErrorResponse } from "react-router-dom";
+import type { Location } from "react-router";
+import { isRouteErrorResponse } from "react-router";
 
 import { Scripts, useRemixContext } from "./components";
 

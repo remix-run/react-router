@@ -6,8 +6,8 @@ import type {
   LoaderFunctionArgs,
   DataRouteObject,
   ShouldRevalidateFunction,
-} from "react-router-dom";
-import { redirect, useRouteError } from "react-router-dom";
+} from "react-router";
+import { redirect, useRouteError } from "react-router";
 
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";

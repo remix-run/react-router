@@ -8,9 +8,10 @@ import type {
   Params,
   Location,
   ShouldRevalidateFunction,
-} from "react-router-dom";
-import type { LoaderFunction, SerializeFrom } from "@remix-run/server-runtime";
+} from "react-router";
+import type { LoaderFunction } from "@remix-run/server-runtime";
 
+import type { SerializeFrom } from "./components";
 import type { AppData } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { EntryRoute } from "./routes";
@@ -195,6 +196,7 @@ export async function loadRouteModule(
     // (should) get the new manifest--unless the developer purged the static
     // assets, the manifest path, but not the documents 😬
     if (
+      window.__remixContext &&
       window.__remixContext.isSpaMode &&
       // @ts-expect-error
       typeof import.meta.hot !== "undefined"

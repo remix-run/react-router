@@ -1,11 +1,8 @@
 import * as React from "react";
-import type { ScrollRestorationProps as ScrollRestorationPropsRR } from "react-router-dom";
-import {
-  useLocation,
-  useMatches,
-  UNSAFE_useScrollRestoration as useScrollRestoration,
-} from "react-router-dom";
+import { useLocation, useMatches } from "react-router";
 
+import type { ScrollRestorationProps as ScrollRestorationPropsRR } from "../index";
+import { UNSAFE_useScrollRestoration as useScrollRestoration } from "../index";
 import type { ScriptProps } from "./components";
 import { useRemixContext } from "./components";
 
