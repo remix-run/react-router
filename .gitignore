@@ -9,6 +9,7 @@ node_modules/
 /examples/*/pnpm-lock.yaml
 /examples/*/dist
 /tutorial/dist
+/integration/playwright-report
 
 # v5 build files
 /packages/*/cjs/
