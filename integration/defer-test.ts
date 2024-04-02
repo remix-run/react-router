@@ -23,7 +23,6 @@ const MANUAL_FALLBACK_ID = "MANUAL_FALLBACK_ID";
 const MANUAL_ERROR_ID = "MANUAL_ERROR_ID";
 
 declare global {
-  // eslint-disable-next-line prefer-let/prefer-let
   var __deferredManualResolveCache: {
     nextId: number;
     deferreds: Record<
