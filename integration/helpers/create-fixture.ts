@@ -17,6 +17,7 @@ import { createRequestHandler } from "../../build/node_modules/@remix-run/server
 import { createRequestHandler as createExpressHandler } from "../../build/node_modules/@remix-run/express/dist/index.js";
 import { installGlobals } from "../../build/node_modules/@remix-run/node/dist/index.js";
 import { decodeViaTurboStream } from "../../build/node_modules/@remix-run/react/dist/single-fetch.js";
+import { viteConfig } from "./vite.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.join(__dirname, "../..");
@@ -27,10 +28,13 @@ export interface FixtureInit {
   sourcemap?: boolean;
   files?: { [filename: string]: string };
   template?: "cf-template" | "deno-template" | "node-template";
+  // @deprecated The 'config' option isn't supported by the Vite compiler option
   config?: Partial<AppConfig>;
   useRemixServe?: boolean;
   compiler?: "remix" | "vite";
   spaMode?: boolean;
+  singleFetch?: boolean;
+  port?: number;
 }
 
 export type Fixture = Awaited<ReturnType<typeof createFixture>>;
@@ -45,7 +49,10 @@ export function json(value: JsonObject) {
 
 export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   installGlobals();
-  let compiler = init.compiler ?? "remix";
+
+  init.compiler ||= "vite";
+  let compiler = init.compiler;
+
   let projectDir = await createFixtureProject(init, mode);
   let buildPath = url.pathToFileURL(
     path.join(
@@ -189,7 +196,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           [
             "node_modules/@remix-run/serve/dist/cli.js",
             fixture.compiler === "vite"
-              ? "server/build/index.js"
+              ? "build/server/index.js"
               : "build/index.js",
           ],
           {
@@ -315,7 +322,8 @@ export async function createFixtureProject(
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `remix-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
-  let compiler = init.compiler ?? "remix";
+  let compiler = init.compiler;
+  let port = init.port ?? (await getPort());
 
   await fse.ensureDir(projectDir);
   await fse.copy(integrationTemplateDir, projectDir);
@@ -339,7 +347,27 @@ export async function createFixtureProject(
   //   path.join(projectDir, "node_modules/.bin/remix-serve")
   // );
 
-  await writeTestFiles(init, projectDir);
+  let hasViteConfig = Object.keys(init.files ?? {}).some((filename) =>
+    filename.startsWith("vite.config.")
+  );
+
+  let { singleFetch, spaMode } = init;
+
+  await writeTestFiles(
+    {
+      ...(hasViteConfig
+        ? {}
+        : {
+            "vite.config.js": await viteConfig.basic({
+              port,
+              singleFetch,
+              spaMode,
+            }),
+          }),
+      ...init.files,
+    },
+    projectDir
+  );
 
   // We update the config file *after* writing test files so that tests can provide a custom
   // `remix.config.js` file while still supporting the type-checked `config`
@@ -386,6 +414,7 @@ function build(
   // force the mode to be production for ESM configs when runtime mode is
   // tested.
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
+  compiler = compiler ?? "vite";
 
   let remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 
@@ -421,12 +450,15 @@ function build(
   }
 }
 
-async function writeTestFiles(init: FixtureInit, dir: string) {
+async function writeTestFiles(
+  files: Record<string, string> | undefined,
+  dir: string
+) {
   await Promise.all(
-    Object.keys(init.files ?? {}).map(async (filename) => {
+    Object.keys(files ?? {}).map(async (filename) => {
       let filePath = path.join(dir, filename);
       await fse.ensureDir(path.dirname(filePath));
-      let file = init.files![filename];
+      let file = files![filename];
 
       await fse.writeFile(filePath, stripIndent(file));
     })

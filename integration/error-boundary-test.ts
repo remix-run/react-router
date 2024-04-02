@@ -1371,11 +1371,7 @@ test.describe("single fetch", () => {
       console.error = () => {};
       fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             "app/root.tsx": js`
                 import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -1833,11 +1829,7 @@ test.describe("single fetch", () => {
 
       test.beforeAll(async () => {
         fixture = await createFixture({
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             "app/root.tsx": js`
                 import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -2014,11 +2006,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/root.tsx": js`
               import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
@@ -2377,11 +2365,7 @@ test.describe("single fetch", () => {
       test.beforeAll(async () => {
         fixture = await createFixture(
           {
-            config: {
-              future: {
-                unstable_singleFetch: true,
-              },
-            },
+            singleFetch: true,
             files: getFiles({ includeRootErrorBoundary: false }),
           },
           ServerMode.Development
@@ -2453,11 +2437,7 @@ test.describe("single fetch", () => {
       test.beforeAll(async () => {
         fixture = await createFixture(
           {
-            config: {
-              future: {
-                unstable_singleFetch: true,
-              },
-            },
+            singleFetch: true,
             files: getFiles({ includeRootErrorBoundary: true }),
           },
           ServerMode.Development
@@ -2523,11 +2503,7 @@ test.describe("single fetch", () => {
     test.describe("When the root route has a boundary but it also throws 😦", () => {
       test.beforeAll(async () => {
         fixture = await createFixture({
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: getFiles({
             includeRootErrorBoundary: true,
             rootErrorBoundaryThrows: true,
@@ -2612,11 +2588,7 @@ test.describe("single fetch", () => {
     console.error = () => {};
 
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         "app/root.tsx": js`
             import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";

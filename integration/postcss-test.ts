@@ -34,6 +34,7 @@ test.describe("PostCSS enabled", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         "package.json": json({
           name: "remix-template-remix",
@@ -378,6 +379,7 @@ test.describe("PostCSS disabled", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       config: {
         postcss: false,
       },

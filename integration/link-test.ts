@@ -89,8 +89,8 @@ test.describe("route module link export", () => {
             useRouteError,
             isRouteErrorResponse
           } from "@remix-run/react";
-          import resetHref from "./reset.css";
-          import stylesHref from "./app.css";
+          import resetHref from "./reset.css?url";
+          import stylesHref from "./app.css?url";
           import favicon from "./favicon.ico";
 
           export function links() {
@@ -227,8 +227,8 @@ test.describe("route module link export", () => {
 
         "app/routes/links.tsx": js`
           import { useLoaderData, Link } from "@remix-run/react";
-          import redTextHref from "~/redText.css";
-          import blueTextHref from "~/blueText.css";
+          import redTextHref from "~/redText.css?url";
+          import blueTextHref from "~/blueText.css?url";
           import guitar from "~/guitar.jpg";
           export async function loader() {
             return [
@@ -310,7 +310,7 @@ test.describe("route module link export", () => {
         "app/routes/gists.tsx": js`
           import { json } from "@remix-run/node";
           import { Link, Outlet, useLoaderData, useNavigation } from "@remix-run/react";
-          import stylesHref from "~/gists.css";
+          import stylesHref from "~/gists.css?url";
           export function links() {
             return [{ rel: "stylesheet", href: stylesHref }];
           }
@@ -604,7 +604,7 @@ test.describe("route module link export", () => {
       expect(await moduleScript.getAttribute("type")).toBe("module");
       let moduleScriptText = await moduleScript.innerText();
       expect(
-        Array.from(moduleScriptText.matchAll(/import "\/build\/manifest-/g)),
+        Array.from(moduleScriptText.matchAll(/import "\/assets\/manifest-/g)),
         "invalid build manifest"
       ).toHaveLength(1);
       expect(

@@ -23,6 +23,7 @@ const MANUAL_FALLBACK_ID = "MANUAL_FALLBACK_ID";
 const MANUAL_ERROR_ID = "MANUAL_ERROR_ID";
 
 declare global {
+  // eslint-disable-next-line prefer-let/prefer-let
   var __deferredManualResolveCache: {
     nextId: number;
     deferreds: Record<
@@ -1323,11 +1324,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/components/counter.tsx": js`
             import { useState } from "react";
@@ -2286,11 +2283,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/entry.server.tsx": js`
             import { PassThrough } from "node:stream";

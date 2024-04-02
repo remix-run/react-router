@@ -28,6 +28,7 @@ test.describe("cloudflare compiler", () => {
 
   test.beforeAll(async () => {
     projectDir = await createFixtureProject({
+      compiler: "remix",
       template: "cf-template",
       files: {
         "package.json": json({

@@ -1192,11 +1192,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/routes/get-submission.tsx": js`
             import { useLoaderData, Form } from "@remix-run/react";

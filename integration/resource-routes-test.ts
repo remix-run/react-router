@@ -168,14 +168,6 @@ test.describe("loader in an app", async () => {
       expect(await page.content()).toContain('{"hello":"world"}');
     });
 
-    test("writes imported asset to `assetDirectory`", async ({ page }) => {
-      new PlaywrightFixture(appFixture, page);
-      let data = await fixture.getBrowserAsset(
-        "build/_assets/icon-W7PJN5PS.svg"
-      );
-      expect(data).toBe(SVG_CONTENTS);
-    });
-
     test("should handle errors thrown from resource routes", async ({
       page,
     }) => {

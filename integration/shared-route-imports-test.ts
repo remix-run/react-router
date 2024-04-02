@@ -14,6 +14,7 @@ let appFixture: AppFixture;
 test.describe("v1 compiler", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         "app/routes/parent.tsx": js`
           import { createContext, useContext } from "react";
@@ -101,6 +102,7 @@ export function UseParentContext() {
 test.describe("v2 compiler", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         "app/routes/parent.tsx": js`
           import { createContext, useContext } from "react";

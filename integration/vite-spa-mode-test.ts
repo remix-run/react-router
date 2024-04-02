@@ -178,7 +178,6 @@ test.describe("SPA Mode", () => {
 
     test("prepends DOCTYPE to HTML in the default entry.server.tsx", async () => {
       let fixture = await createFixture({
-        compiler: "vite",
         spaMode: true,
         files: {
           "vite.config.ts": js`
@@ -224,7 +223,6 @@ test.describe("SPA Mode", () => {
 
     test("works when combined with a basename", async ({ page }) => {
       fixture = await createFixture({
-        compiler: "vite",
         spaMode: true,
         files: {
           "vite.config.ts": js`
@@ -303,7 +301,6 @@ test.describe("SPA Mode", () => {
 
     test("can be used to hydrate only a div", async ({ page }) => {
       fixture = await createFixture({
-        compiler: "vite",
         spaMode: true,
         files: {
           "vite.config.ts": js`
@@ -436,7 +433,6 @@ test.describe("SPA Mode", () => {
       page,
     }) => {
       fixture = await createFixture({
-        compiler: "vite",
         spaMode: true,
         files: {
           "vite.config.ts": js`
@@ -520,7 +516,6 @@ test.describe("SPA Mode", () => {
       page,
     }) => {
       fixture = await createFixture({
-        compiler: "vite",
         spaMode: true,
         files: {
           "vite.config.ts": js`
@@ -591,7 +586,6 @@ test.describe("SPA Mode", () => {
   test.describe("normal apps", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
-        compiler: "vite",
         spaMode: true,
         files: {
           "vite.config.ts": js`

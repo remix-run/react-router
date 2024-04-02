@@ -106,11 +106,7 @@ test.describe("single fetch", () => {
   test.describe("deferred loaders", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/routes/_index.tsx": js`
             import { useLoaderData, Link } from "@remix-run/react";

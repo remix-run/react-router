@@ -99,11 +99,7 @@ test.describe("single-fetch", () => {
   test("loads proper data on single fetch loader requests", async () => {
     let fixture = await createFixture(
       {
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files,
       },
       ServerMode.Development
@@ -141,11 +137,7 @@ test.describe("single-fetch", () => {
 
     let fixture = await createFixture(
       {
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files,
       },
       ServerMode.Development
@@ -169,11 +161,7 @@ test.describe("single-fetch", () => {
   test("loads proper data on single fetch action requests", async () => {
     let fixture = await createFixture(
       {
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files,
       },
       ServerMode.Development
@@ -193,11 +181,7 @@ test.describe("single-fetch", () => {
 
   test("loads proper data on document request", async ({ page }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files,
     });
     let appFixture = await createAppFixture(fixture);
@@ -210,11 +194,7 @@ test.describe("single-fetch", () => {
 
   test("loads proper data on client side navigation", async ({ page }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files,
     });
     let appFixture = await createAppFixture(fixture);
@@ -231,11 +211,7 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files,
     });
     let appFixture = await createAppFixture(fixture);
@@ -251,11 +227,7 @@ test.describe("single-fetch", () => {
 
   test("allows fine-grained revalidation", async ({ page }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/no-revalidate.tsx": js`
@@ -324,11 +296,7 @@ test.describe("single-fetch", () => {
 
   test("does not revalidate on 4xx/5xx action responses", async ({ page }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/action.tsx": js`
@@ -428,11 +396,7 @@ test.describe("single-fetch", () => {
 
   test("returns headers correctly for singular loader and action calls", async () => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/headers.tsx": js`
@@ -502,11 +466,7 @@ test.describe("single-fetch", () => {
 
   test("merges headers from nested routes", async () => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -661,11 +621,7 @@ test.describe("single-fetch", () => {
 
   test("merges status codes from nested routes", async () => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -763,11 +719,7 @@ test.describe("single-fetch", () => {
 
   test("merges headers from nested routes when raw Responses are returned", async () => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -869,11 +821,7 @@ test.describe("single-fetch", () => {
 
   test("merges status codes from nested routes when raw Responses are used", async () => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -969,11 +917,7 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -1014,11 +958,7 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -1055,11 +995,7 @@ test.describe("single-fetch", () => {
 
   test("processes thrown loader redirects via Response", async ({ page }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -1096,11 +1032,7 @@ test.describe("single-fetch", () => {
 
   test("processes returned loader redirects via Response", async ({ page }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -1137,11 +1069,7 @@ test.describe("single-fetch", () => {
   }) => {
     let fixture = await createFixture(
       {
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1188,11 +1116,7 @@ test.describe("single-fetch", () => {
   }) => {
     let fixture = await createFixture(
       {
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1235,11 +1159,7 @@ test.describe("single-fetch", () => {
   test("processes thrown action redirects via Response", async ({ page }) => {
     let fixture = await createFixture(
       {
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1282,11 +1202,7 @@ test.describe("single-fetch", () => {
   test("processes returned action redirects via Response", async ({ page }) => {
     let fixture = await createFixture(
       {
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1328,11 +1244,7 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/entry.server.tsx": js`
@@ -1416,11 +1328,7 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         ...files,
         "app/entry.server.tsx": js`
@@ -1504,11 +1412,7 @@ test.describe("single-fetch", () => {
     test("when no routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
@@ -1592,11 +1496,7 @@ test.describe("single-fetch", () => {
     test("when one route has a client loader", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
@@ -1692,11 +1592,7 @@ test.describe("single-fetch", () => {
     test("when multiple routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
@@ -1799,11 +1695,7 @@ test.describe("single-fetch", () => {
     test("when all routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
@@ -1914,11 +1806,7 @@ test.describe("single-fetch", () => {
     test("when no routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`
@@ -2004,11 +1892,7 @@ test.describe("single-fetch", () => {
     test("when one route has a client loader", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`
@@ -2100,11 +1984,7 @@ test.describe("single-fetch", () => {
     test("when multiple routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`
@@ -2201,11 +2081,7 @@ test.describe("single-fetch", () => {
     test("when all routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`

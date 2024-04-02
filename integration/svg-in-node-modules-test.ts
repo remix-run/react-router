@@ -20,6 +20,7 @@ test.beforeEach(async ({ context }) => {
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    compiler: "remix",
     files: {
       "app/routes/_index.tsx": js`
         import imgSrc from "getos/imgs/logo.svg";

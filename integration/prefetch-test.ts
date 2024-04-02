@@ -18,6 +18,7 @@ test.describe("multi fetch", () => {
   // Generate the test app using the given prefetch mode
   function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
     return {
+      compiler: "remix",
       files: {
         "app/root.tsx": js`
           import {
@@ -281,6 +282,7 @@ test.describe("multi fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
+        compiler: "remix",
         files: {
           "app/routes/_index.tsx": js`
             import { Link } from "@remix-run/react";
@@ -355,6 +357,7 @@ test.describe("multi fetch", () => {
       page,
     }) => {
       fixture = await createFixture({
+        compiler: "remix",
         files: {
           "app/root.tsx": js`
               import { Links, Meta, Scripts, useFetcher } from "@remix-run/react";
@@ -433,6 +436,7 @@ test.describe("multi fetch", () => {
 
     test("dedupes prefetch tags", async ({ page }) => {
       fixture = await createFixture({
+        compiler: "remix",
         files: {
           "app/root.tsx": js`
             import {
@@ -575,6 +579,7 @@ test.describe("single fetch", () => {
   // Generate the test app using the given prefetch mode
   function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
     return {
+      compiler: "remix",
       config: {
         future: {
           unstable_singleFetch: true,
@@ -843,6 +848,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
+        compiler: "remix",
         config: {
           future: {
             unstable_singleFetch: true,
@@ -922,6 +928,7 @@ test.describe("single fetch", () => {
       page,
     }) => {
       fixture = await createFixture({
+        compiler: "remix",
         config: {
           future: {
             unstable_singleFetch: true,
@@ -1005,6 +1012,7 @@ test.describe("single fetch", () => {
 
     test("dedupes prefetch tags", async ({ page }) => {
       fixture = await createFixture({
+        compiler: "remix",
         config: {
           future: {
             unstable_singleFetch: true,

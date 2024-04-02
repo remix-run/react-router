@@ -288,11 +288,7 @@ test.describe("multi fetch", () => {
 test.describe("single fetch", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         "app/routes/layout-action.tsx": js`
           import { json } from "@remix-run/node";
