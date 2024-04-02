@@ -24,7 +24,9 @@
   "types": "./dist/index.d.ts",
   "dependencies": {
     "@remix-run/router": "workspace:*",
-    "react-router": "workspace:*"
+    "@remix-run/server-runtime": "workspace:*",
+    "react-router": "workspace:*",
+    "turbo-stream": "^2.0.0"
   },
   "devDependencies": {
     "react": "^18.2.0",
