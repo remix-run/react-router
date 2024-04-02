@@ -253,9 +253,15 @@ importers:
       '@remix-run/router':
         specifier: workspace:*
         version: link:../router
+      '@remix-run/server-runtime':
+        specifier: workspace:*
+        version: link:../remix-server-runtime
       react-router:
         specifier: workspace:*
         version: link:../react-router
+      turbo-stream:
+        specifier: ^2.0.0
+        version: 2.0.0
     devDependencies:
       react:
         specifier: ^18.2.0
@@ -269,6 +275,9 @@ importers:
       '@remix-run/router':
         specifier: workspace:*
         version: link:../router
+      '@remix-run/server-runtime':
+        specifier: workspace:*
+        version: link:../remix-server-runtime
       history:
         specifier: ^5.3.0
         version: 5.3.0
@@ -284,6 +293,9 @@ importers:
       react-router-dom:
         specifier: 4 || 5
         version: 5.3.4(react@18.2.0)
+      turbo-stream:
+        specifier: ^2.0.0
+        version: 2.0.0
 
   packages/react-router-native:
     dependencies:
