@@ -232,10 +232,13 @@ export async function prefetchStyleLinks(
 ): Promise<void> {
   if ((!route.css && !routeModule.links) || !isPreloadSupported()) return;
 
-  let descriptors = [
-    route.css?.map((href) => ({ rel: "stylesheet", href })) ?? [],
-    routeModule.links?.() ?? [],
-  ].flat(1);
+  let descriptors = [];
+  if (route.css) {
+    descriptors.push(...route.css.map((href) => ({ rel: "stylesheet", href })));
+  }
+  if (routeModule.links) {
+    descriptors.push(...routeModule.links());
+  }
   if (descriptors.length === 0) return;
 
   let styleLinks: HtmlLinkDescriptor[] = [];
