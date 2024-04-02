@@ -1,0 +1,36 @@
+{
+  "name": "integration-vite-cloudflare-template",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js vite:dev",
+    "build": "node ./node_modules/@remix-run/dev/dist/cli.js vite:build",
+    "start": "wrangler pages dev ./build/client",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@remix-run/cloudflare": "*",
+    "@remix-run/cloudflare-pages": "*",
+    "@remix-run/react": "*",
+    "isbot": "^4.1.0",
+    "miniflare": "^3.20231030.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230518.0",
+    "@remix-run/dev": "workspace:*",
+    "@remix-run/eslint-config": "workspace:*",
+    "@types/react": "^18.2.20",
+    "@types/react-dom": "^18.2.7",
+    "typescript": "^5.1.6",
+    "vite": "5.1.3",
+    "vite-tsconfig-paths": "^4.2.1",
+    "wrangler": "^3.24.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -14,13 +14,20 @@ let fixture: Fixture;
 let appFixture: AppFixture;
 
 test.describe("flat routes", () => {
-  let IGNORED_ROUTE = "/ignore-me-pls";
+  let IGNORED_ROUTE = "ignore-me-pls";
   test.beforeAll(async () => {
     fixture = await createFixture({
-      config: {
-        ignoredRouteFiles: [IGNORED_ROUTE],
-      },
       files: {
+        "vite.config.js": `
+          import { defineConfig } from "vite";
+          import { vitePlugin as remix } from "@remix-run/dev";
+
+          export default defineConfig({
+            plugins: [remix({
+              ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
+            })],
+          });
+        `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
 
@@ -185,9 +192,9 @@ test.describe("flat routes", () => {
   }
 
   test("allows ignoredRouteFiles to be configured", async () => {
-    let routeIds = Object.keys(fixture.build!.routes);
+    let response = await fixture.requestDocument("/" + IGNORED_ROUTE);
 
-    expect(routeIds).not.toContain(IGNORED_ROUTE);
+    expect(response.status).toBe(404);
   });
 });
 

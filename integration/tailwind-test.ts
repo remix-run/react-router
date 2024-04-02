@@ -44,6 +44,7 @@ function runTests(ext: typeof extensions[number]) {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         "package.json": json({
           name: "remix-template-remix",
@@ -358,6 +359,7 @@ test.describe("Tailwind disabled", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       config: {
         tailwind: false,
       },

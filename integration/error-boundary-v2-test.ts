@@ -251,11 +251,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/root.tsx": js`
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";

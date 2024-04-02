@@ -17,13 +17,6 @@ const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    config: {
-      browserNodeBuiltinsPolyfill: {
-        modules: {
-          url: true,
-        },
-      },
-    },
     files: {
       "app/routes/file-upload-handler.tsx": js`
         import * as path from "node:path";

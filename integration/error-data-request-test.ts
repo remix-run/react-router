@@ -189,11 +189,7 @@ test.describe("single fetch", () => {
       console.error = (v) => errorLogs.push(v);
 
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/root.tsx": js`
             import { Links, Meta, Outlet, Scripts } from "@remix-run/react";

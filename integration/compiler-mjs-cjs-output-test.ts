@@ -11,6 +11,7 @@ test.describe("", () => {
   ]) {
     test(`can write .${serverModuleExt} server output module`, async () => {
       let projectDir = await createFixtureProject({
+        compiler: "remix",
         files: {
           // Ensure the config is valid ESM
           "remix.config.js": js`

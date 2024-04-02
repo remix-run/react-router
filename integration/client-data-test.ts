@@ -1422,11 +1422,7 @@ test.describe("single fetch", () => {
       return createFixture(
         {
           ...init,
-          config: {
-            future: {
-              unstable_singleFetch: true,
-            },
-          },
+          singleFetch: true,
         },
         serverMode
       );

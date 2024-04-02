@@ -9,6 +9,7 @@ let fixture: Fixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    compiler: "remix",
     sourcemap: true,
     files: {
       "app/routes/_index.tsx": js`

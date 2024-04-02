@@ -17,7 +17,6 @@ test.describe("Vite dev", () => {
   test.beforeAll(async () => {
     devPort = await getPort();
     projectDir = await createFixtureProject({
-      compiler: "vite",
       files: {
         "remix.config.js": js`
           throw new Error("Remix should not access remix.config.js when using Vite");

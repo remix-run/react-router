@@ -141,11 +141,7 @@ test.describe("single fetch", () => {
   test.describe("set-cookie revalidation", () => {
     test.beforeAll(async () => {
       fixture = await createFixture({
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/session.server.ts": js`
             import { createCookieSessionStorage } from "@remix-run/node";

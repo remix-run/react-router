@@ -17,6 +17,7 @@ test.describe("Vanilla Extract", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
+      compiler: "remix",
       files: {
         "package.json": json({
           name: "remix-template-remix",

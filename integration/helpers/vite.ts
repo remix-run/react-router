@@ -12,6 +12,7 @@ import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
+import type { VitePluginConfig } from "@remix-run/dev";
 
 const remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -32,14 +33,32 @@ export const viteConfig = {
     `;
     return text;
   },
-  basic: async (args: { port: number; fsAllow?: string[] }) => {
+  basic: async (args: {
+    port: number;
+    fsAllow?: string[];
+    singleFetch?: boolean;
+    spaMode?: boolean;
+  }) => {
+    let remixPluginOptions: VitePluginConfig = {
+      ssr: !args.spaMode,
+      future: {
+        unstable_singleFetch: args.singleFetch,
+      },
+    };
+
     return dedent`
       import { vitePlugin as remix } from "@remix-run/dev";
+      import envOnly from "vite-env-only";
+      import tsconfigPaths from "vite-tsconfig-paths";
 
       export default {
         ${await viteConfig.server(args)}
-        plugins: [remix()]
-      }
+        plugins: [
+          remix(${JSON.stringify(remixPluginOptions)}),
+          envOnly(),
+          tsconfigPaths()
+        ],
+      };
     `;
   },
 };

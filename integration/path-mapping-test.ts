@@ -7,6 +7,7 @@ let fixture: Fixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
+    compiler: "remix",
     files: {
       "app/components/my-lib/index.ts": js`
         export const pizza = "this is a pizza";
