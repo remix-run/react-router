@@ -59,7 +59,7 @@ describe("File session storage", () => {
 
     let session = await getSession();
 
-    await expect(destroySession(session)).resolves.not.toThrowError();
+    await expect(destroySession(session)).resolves.not.toThrow();
   });
 
   it("saves expires to file if expires provided to commitSession when creating new cookie", async () => {

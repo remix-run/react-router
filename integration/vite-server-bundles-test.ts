@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Page } from "@playwright/test";
-import { test, expect } from "@playwright/test";
+import { type Page, test, expect } from "@playwright/test";
 import getPort from "get-port";
 import dedent from "dedent";
 

@@ -880,7 +880,6 @@ export function RouterProvider({
   // Critical CSS can become stale after code changes, e.g. styles might be
   // removed from a component, but the styles will still be present in the
   // server HTML. This allows our HMR logic to clear the critical CSS state.
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
       ? window.__remixContext?.criticalCss

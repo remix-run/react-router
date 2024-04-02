@@ -172,8 +172,8 @@ describe("deferred data", () => {
     let data = t.router.state.loaderData.lazy;
     await expect(data.lazy1).rejects.toBeInstanceOf(AbortedDeferredError);
     await expect(data.lazy2).rejects.toBeInstanceOf(AbortedDeferredError);
-    await expect(data.lazy1).rejects.toThrowError("Deferred data aborted");
-    await expect(data.lazy2).rejects.toThrowError("Deferred data aborted");
+    await expect(data.lazy1).rejects.toThrow("Deferred data aborted");
+    await expect(data.lazy2).rejects.toThrow("Deferred data aborted");
 
     let B = await navPromise;
 
