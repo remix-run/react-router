@@ -3,13 +3,11 @@ import path from "node:path";
 import fse from "fs-extra";
 import colors from "picocolors";
 
-import type {
-  RemixPluginContext,
-  BuildManifest,
-  ServerBundleBuildConfig,
-  ServerBundlesBuildManifest,
-} from "./plugin";
 import {
+  type RemixPluginContext,
+  type BuildManifest,
+  type ServerBundleBuildConfig,
+  type ServerBundlesBuildManifest,
   resolveViteConfig,
   extractRemixPluginContext,
   configRouteToBranchRoute,

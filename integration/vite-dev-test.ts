@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import type { Readable } from "node:stream";
-import { spawn } from "node:child_process";
-import type { ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import getPort from "get-port";

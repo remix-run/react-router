@@ -1,15 +1,13 @@
 // We can only import types from Vite at the top level since we're in a CJS
 // context but want to use Vite's ESM build to avoid deprecation warnings
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- "Type import [...] is used by decorator metadata" error, no idea why
 import type * as Vite from "vite";
-import { createHash } from "node:crypto";
-import type { BinaryLike } from "node:crypto";
+import { type BinaryLike, createHash } from "node:crypto";
 import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
 import babel from "@babel/core";
-import type { ServerBuild } from "@remix-run/server-runtime";
 import {
+  type ServerBuild,
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
 } from "@remix-run/server-runtime";
@@ -22,9 +20,7 @@ import pick from "lodash/pick";
 import omit from "lodash/omit";
 import colors from "picocolors";
 
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- "Type import [...] is used by decorator metadata" error, no idea why
 import type { ConfigRoute, RouteManifest } from "../config/routes";
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- "Type import [...] is used by decorator metadata" error, no idea why
 import type {
   AppConfig as RemixEsbuildUserConfig,
   RemixConfig as ResolvedRemixEsbuildConfig,
