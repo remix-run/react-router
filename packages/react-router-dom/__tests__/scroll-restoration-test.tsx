@@ -230,7 +230,7 @@ describe(`ScrollRestoration`, () => {
       },
     };
 
-    it.only("should render a <script> tag", () => {
+    it("should render a <script> tag", () => {
       let router = createMemoryRouter([
         {
           id: "root",

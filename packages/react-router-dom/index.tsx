@@ -82,7 +82,7 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { ScriptProps } from "./ssr/components";
+import type { ScriptProps, UIMatch } from "./ssr/components";
 import { RemixContext } from "./ssr/components";
 import type {
   AssetsManifest,
@@ -1817,6 +1817,7 @@ export function ScrollRestoration({
   ...props
 }: ScrollRestorationProps) {
   let remixContext = React.useContext(RemixContext);
+  let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
   let matches = useMatches();
   useScrollRestoration({ getKey, storageKey });
@@ -1827,10 +1828,15 @@ export function ScrollRestoration({
   // the client!  So if the user's getKey implementation returns the SSR
   // location key, then let's ignore it and let our inline <script> below pick
   // up the client side history state key
-  let key = React.useMemo(
+  let ssrKey = React.useMemo(
     () => {
-      if (!getKey) return null;
-      let userKey = getKey(location, matches);
+      if (!remixContext || !getKey) return null;
+      let userKey = getScrollRestorationKey(
+        location,
+        matches,
+        basename,
+        getKey
+      );
       return userKey !== location.key ? userKey : null;
     },
     // Nah, we only need this the first time for the SSR render
@@ -1868,7 +1874,7 @@ export function ScrollRestoration({
       dangerouslySetInnerHTML={{
         __html: `(${restoreScroll})(${JSON.stringify(
           storageKey || SCROLL_RESTORATION_STORAGE_KEY
-        )}, ${JSON.stringify(key)})`,
+        )}, ${JSON.stringify(ssrKey)})`,
       }}
     />
   );
@@ -2304,6 +2310,33 @@ export function useFetchers(): (Fetcher & { key: string })[] {
 const SCROLL_RESTORATION_STORAGE_KEY = "react-router-scroll-positions";
 let savedScrollPositions: Record<string, number> = {};
 
+function getScrollRestorationKey(
+  location: Location,
+  matches: UIMatch[],
+  basename: string,
+  getKey?: GetScrollRestorationKeyFunction
+) {
+  let key: string | null = null;
+  if (getKey) {
+    if (basename !== "/") {
+      key = getKey(
+        {
+          ...location,
+          pathname:
+            stripBasename(location.pathname, basename) || location.pathname,
+        },
+        matches
+      );
+    } else {
+      key = getKey(location, matches);
+    }
+  }
+  if (key == null) {
+    key = location.key;
+  }
+  return key;
+}
+
 /**
  * When rendered inside a RouterProvider, will restore scroll positions on navigations
  */
@@ -2335,7 +2368,7 @@ function useScrollRestoration({
   usePageHide(
     React.useCallback(() => {
       if (navigation.state === "idle") {
-        let key = (getKey ? getKey(location, matches) : null) || location.key;
+        let key = getScrollRestorationKey(location, matches, basename, getKey);
         savedScrollPositions[key] = window.scrollY;
       }
       try {
@@ -2350,7 +2383,7 @@ function useScrollRestoration({
         );
       }
       window.history.scrollRestoration = "auto";
-    }, [storageKey, getKey, navigation.state, location, matches])
+    }, [navigation.state, getKey, basename, location, matches, storageKey])
   );
 
   // Read in any saved scroll locations
@@ -2372,24 +2405,13 @@ function useScrollRestoration({
     // Enable scroll restoration in the router
     // eslint-disable-next-line react-hooks/rules-of-hooks
     React.useLayoutEffect(() => {
-      let getKeyWithoutBasename: GetScrollRestorationKeyFunction | undefined =
-        getKey && basename !== "/"
-          ? (location, matches) =>
-              getKey(
-                // Strip the basename to match useLocation()
-                {
-                  ...location,
-                  pathname:
-                    stripBasename(location.pathname, basename) ||
-                    location.pathname,
-                },
-                matches
-              )
-          : getKey;
       let disableScrollRestoration = router?.enableScrollRestoration(
         savedScrollPositions,
         () => window.scrollY,
-        getKeyWithoutBasename
+        getKey
+          ? (location, matches) =>
+              getScrollRestorationKey(location, matches, basename, getKey)
+          : undefined
       );
       return () => disableScrollRestoration && disableScrollRestoration();
     }, [router, basename, getKey]);
