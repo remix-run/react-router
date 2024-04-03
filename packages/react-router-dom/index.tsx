@@ -82,8 +82,13 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { ScriptProps, UIMatch } from "./ssr/components";
-import { RemixContext } from "./ssr/components";
+import type { PrefetchBehavior, ScriptProps, UIMatch } from "./ssr/components";
+import {
+  PrefetchPageLinks,
+  RemixContext,
+  mergeRefs,
+  usePrefetchBehavior,
+} from "./ssr/components";
 import type {
   AssetsManifest,
   FutureConfig as RemixFutureConfig,
@@ -1401,6 +1406,7 @@ export { HistoryRouter as unstable_HistoryRouter };
 
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  prefetch?: PrefetchBehavior;
   reloadDocument?: boolean;
   replace?: boolean;
   state?: any;
@@ -1424,6 +1430,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
     {
       onClick,
+      prefetch = "none",
       relative,
       reloadDocument,
       replace,
@@ -1434,15 +1441,16 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       unstable_viewTransition,
       ...rest
     },
-    ref
+    forwardedRef
   ) {
     let { basename } = React.useContext(NavigationContext);
+    let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
 
     // Rendered into <a href> for absolute URLs
     let absoluteHref;
     let isExternal = false;
 
-    if (typeof to === "string" && ABSOLUTE_URL_REGEX.test(to)) {
+    if (typeof to === "string" && isAbsolute) {
       // Render the absolute href server- and client-side
       absoluteHref = to;
 
@@ -1474,6 +1482,10 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 
     // Rendered into <a href> for relative URLs
     let href = useHref(to, { relative });
+    let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
+      prefetch,
+      rest
+    );
 
     let internalOnClick = useLinkClickHandler(to, {
       replace,
@@ -1492,15 +1504,25 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }
 
-    return (
+    let link = (
       // eslint-disable-next-line jsx-a11y/anchor-has-content
       <a
         {...rest}
+        {...prefetchHandlers}
         href={absoluteHref || href}
         onClick={isExternal || reloadDocument ? onClick : handleClick}
-        ref={ref}
+        ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
       />
+    );
+
+    return shouldPrefetch && !isAbsolute ? (
+      <>
+        {link}
+        <PrefetchPageLinks page={href} />
+      </>
+    ) : (
+      link
     );
   }
 );

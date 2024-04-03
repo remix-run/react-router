@@ -4,12 +4,14 @@ import * as React from "react";
 
 import {
   createMemoryRouter,
+  Link,
+  NavLink,
   Outlet,
   RouterProvider,
   _setSsrInfoForTests,
 } from "../../index";
 import type { LiveReload as ActualLiveReload } from "../../ssr/components";
-import { Link, NavLink, RemixContext } from "../../ssr/components";
+import { RemixContext } from "../../ssr/components";
 import invariant from "../../ssr/invariant";
 import { RemixServer } from "../../ssr/server";
 import "@testing-library/jest-dom/extend-expect";
