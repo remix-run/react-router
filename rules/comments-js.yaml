@@ -1,0 +1,15 @@
+id: comments
+language: "js"
+rule:
+  kind: comment
+  pattern: $COMMENT
+  regex: "@remix-run\\/"
+  not:
+    regex: "@remix-run\/router"
+transform:
+  COMMENT:
+    replace:
+      by: "@react-router/"
+      replace: "@remix-run\\/"
+      source: $COMMENT
+fix: $COMMENT

@@ -1,0 +1,18 @@
+id: json
+language: "json"
+rule:
+  kind: string_content
+  pattern: $PKG
+  regex: "@remix-run\\/"
+  not:
+    any:
+      - regex: "@remix-run\\/router"
+      - regex: "@remix-run\\/changelog-github"
+      - regex: "@remix-run\\/react-router"
+transform:
+  PKG:
+    replace:
+      by: "@react-router/"
+      replace: "@remix-run\\/"
+      source: $PKG
+fix: $PKG

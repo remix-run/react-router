@@ -1,0 +1,15 @@
+id: strings
+language: "js"
+rule:
+  kind: string
+  pattern: $PKG
+  regex: "@remix-run\\/"
+  not:
+    regex: "@remix-run\/router"
+transform:
+  PKG:
+    replace:
+      by: "@react-router/"
+      replace: "@remix-run\\/"
+      source: $PKG
+fix: $PKG

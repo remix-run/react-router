@@ -1,0 +1,14 @@
+id: package-names
+language: "tsx"
+rule:
+  pattern: import $WHAT from "$IMPORT";
+  kind: import_statement
+  not:
+    regex: "(?:import\\s+type|@remix-run\/router|@remix-run\/react)"
+transform:
+  IMPORT:
+    replace:
+      by: "@react-router/"
+      replace: "@remix-run\\/"
+      source: $IMPORT
+fix: import $WHAT from "$IMPORT";

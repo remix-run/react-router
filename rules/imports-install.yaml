@@ -1,0 +1,5 @@
+id: package-names
+language: "ts"
+rule:
+  pattern: import "@remix-run/node/install";
+fix: import "@react-router/node/install"

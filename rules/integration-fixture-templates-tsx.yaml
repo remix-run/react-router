@@ -1,0 +1,13 @@
+id: integration-fixture-templates-tsx
+language: "tsx"
+rule:
+  kind: template_string
+  pattern: $TEMPLATE
+  regex: "@remix-run\\/"
+transform:
+  TEMPLATE:
+    replace:
+      by: "@react-router/"
+      replace: "@remix-run\\/"
+      source: $TEMPLATE
+fix: $TEMPLATE
