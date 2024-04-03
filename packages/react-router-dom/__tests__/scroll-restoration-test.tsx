@@ -2,15 +2,19 @@ import { JSDOM } from "jsdom";
 import * as React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
+
+import getHtml from "../../react-router/__tests__/utils/getHtml";
 import {
   Link,
   Outlet,
   RouterProvider,
   ScrollRestoration,
   createBrowserRouter,
-} from "react-router-dom";
-
-import getHtml from "../../react-router/__tests__/utils/getHtml";
+} from "../index";
+import type { RemixContextObject } from "../ssr/entry";
+import { createMemoryRouter, redirect } from "react-router";
+import { RemixContext, Scripts } from "../ssr/components";
+import "@testing-library/jest-dom/extend-expect";
 
 describe(`ScrollRestoration`, () => {
   it("restores the scroll position for a page when re-visited", () => {
@@ -186,6 +190,156 @@ describe(`ScrollRestoration`, () => {
     );
 
     consoleWarnMock.mockRestore();
+  });
+
+  describe("SSR", () => {
+    let scrollTo = window.scrollTo;
+    beforeAll(() => {
+      window.scrollTo = (options) => {
+        window.scrollY = options.left;
+      };
+    });
+
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+    afterAll(() => {
+      window.scrollTo = scrollTo;
+    });
+
+    let context: RemixContextObject = {
+      future: {
+        v3_fetcherPersist: false,
+        v3_relativeSplatPath: false,
+        unstable_singleFetch: false,
+      },
+      routeModules: { root: { default: () => null } },
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+          },
+        },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
+      },
+    };
+
+    it("should render a <script> tag", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration data-testid="scroll-script" />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+
+      render(
+        <RemixContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </RemixContext.Provider>
+      );
+      let script = screen.getByTestId("scroll-script");
+      expect(script instanceof HTMLScriptElement).toBe(true);
+    });
+
+    it("should pass props to <script>", () => {
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration
+                data-testid="scroll-script"
+                nonce="hello"
+                crossOrigin="anonymous"
+              />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      render(
+        <RemixContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </RemixContext.Provider>
+      );
+      let script = screen.getByTestId("scroll-script");
+      expect(script).toHaveAttribute("nonce", "hello");
+      expect(script).toHaveAttribute("crossorigin", "anonymous");
+    });
+
+    it("should restore scroll position", () => {
+      let scrollToMock = jest.spyOn(window, "scrollTo");
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      router.state.restoreScrollPosition = 20;
+      render(
+        <RemixContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </RemixContext.Provider>
+      );
+
+      expect(scrollToMock).toHaveBeenCalledWith(0, 20);
+    });
+
+    it("should restore scroll position on navigation", () => {
+      let scrollToMock = jest.spyOn(window, "scrollTo");
+      let router = createMemoryRouter([
+        {
+          id: "root",
+          path: "/",
+          element: (
+            <>
+              <Outlet />
+              <ScrollRestoration />
+              <Scripts />
+            </>
+          ),
+        },
+      ]);
+      render(
+        <RemixContext.Provider value={context}>
+          <RouterProvider router={router} />
+        </RemixContext.Provider>
+      );
+      // Always called when using <ScrollRestoration />
+      expect(scrollToMock).toHaveBeenCalledWith(0, 0);
+      // Mock user scroll
+      window.scrollTo(0, 20);
+      // Mock navigation
+      redirect("/otherplace");
+      // Mock return to original page where navigation had happened
+      expect(scrollToMock).toHaveBeenCalledWith(0, 0);
+      // Mock return to original page where navigation had happened
+      redirect("/");
+      // Ensure that scroll position is restored
+      expect(scrollToMock).toHaveBeenCalledWith(0, 20);
+    });
   });
 });
 
