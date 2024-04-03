@@ -94,26 +94,21 @@ export async function loadVitePluginContext({
       ".mjs",
     ]);
 
-  // V3 TODO: Vite config should not be optional
   if (!configFile) {
-    return;
+    console.error(colors.red("Vite config file not found"));
+    process.exit(1);
   }
 
   let viteConfig = await resolveViteConfig({ configFile, root });
-  return await extractRemixPluginContext(viteConfig);
-}
+  let ctx = await extractRemixPluginContext(viteConfig);
 
-const supportedRemixEsbuildConfigKeys = [
-  "appDirectory",
-  "future",
-  "ignoredRouteFiles",
-  "routes",
-  "serverModuleFormat",
-] as const satisfies ReadonlyArray<keyof RemixEsbuildUserConfig>;
-type SupportedRemixEsbuildUserConfig = Pick<
-  RemixEsbuildUserConfig,
-  (typeof supportedRemixEsbuildConfigKeys)[number]
->;
+  if (!ctx) {
+    console.error(colors.red("Remix Vite plugin not found in Vite config"));
+    process.exit(1);
+  }
+
+  return ctx;
+}
 
 const SERVER_ONLY_ROUTE_EXPORTS = ["loader", "action", "headers"];
 const CLIENT_ROUTE_EXPORTS = [
@@ -190,7 +185,7 @@ export type Preset = {
   }) => void | Promise<void>;
 };
 
-export type VitePluginConfig = SupportedRemixEsbuildUserConfig & {
+export type VitePluginConfig = RemixEsbuildUserConfig & {
   /**
    * The react router app basename.  Defaults to `"/"`.
    */
@@ -244,7 +239,7 @@ type BuildEndHook = (args: {
 export type ResolvedVitePluginConfig = Readonly<
   Pick<
     ResolvedRemixEsbuildConfig,
-    "appDirectory" | "future" | "publicPath" | "routes" | "serverModuleFormat"
+    "appDirectory" | "future" | "routes" | "serverModuleFormat"
   > & {
     basename: string;
     buildDirectory: string;
@@ -664,7 +659,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
     let { basename, buildEnd, manifest, ssr } = resolvedRemixUserConfig;
     let isSpaMode = !ssr;
 
-    // Only select the Remix esbuild config options that the Vite plugin uses
     let {
       appDirectory,
       entryClientFilePath,
@@ -672,10 +666,10 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
       future,
       routes,
       serverModuleFormat,
-    } = await resolveRemixEsbuildConfig(
-      pick(resolvedRemixUserConfig, supportedRemixEsbuildConfigKeys),
-      { rootDirectory, isSpaMode }
-    );
+    } = await resolveRemixEsbuildConfig(resolvedRemixUserConfig, {
+      rootDirectory,
+      isSpaMode,
+    });
 
     let buildDirectory = path.resolve(
       rootDirectory,
@@ -760,11 +754,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
   let getServerEntry = async () => {
     invariant(viteConfig, "viteconfig required to generate the server entry");
 
-    // v3 TODO:
-    // - Deprecate `ServerBuild.mode` once we officially stabilize vite and
-    //   mark the old compiler as deprecated
-    // - Remove `ServerBuild.mode` in v3
-
     let routes = ctx.serverBundleBuildConfig
       ? // For server bundle builds, the server build should only import the
         // routes for this bundle rather than importing all routes
@@ -787,11 +776,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
         )};`;
       })
       .join("\n")}
-      /**
-       * \`mode\` is only relevant for the old Remix compiler but
-       * is included here to satisfy the \`ServerBuild\` typings.
-       */
-      export const mode = ${JSON.stringify(viteConfig.mode)};
       export { default as assets } from ${JSON.stringify(serverManifestId)};
       export const assetsBuildDirectory = ${JSON.stringify(
         path.relative(
