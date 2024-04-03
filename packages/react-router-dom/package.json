@@ -29,6 +29,7 @@
     "turbo-stream": "^2.0.0"
   },
   "devDependencies": {
+    "@remix-run/testing": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
