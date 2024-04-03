@@ -304,9 +304,9 @@ declare global {
   // v7 SSR Info
   // TODO: v7 - Once this is all working, rename these global variables to __reactRouter*
   var __remixContext: WindowRemixContext | undefined;
-  var __remixRouter: RemixRouter | undefined;
-  var __remixRouteModules: RouteModules | undefined;
   var __remixManifest: AssetsManifest | undefined;
+  var __remixRouteModules: RouteModules | undefined;
+  var __remixRouter: RemixRouter | undefined;
   var __remixRevalidation: number | undefined;
   var __remixClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
@@ -332,7 +332,10 @@ try {
   // no-op
 }
 
-type SSRInfo = {
+/**
+ * @private
+ */
+export type SSRInfo = {
   context: WindowRemixContext;
   routeModules: RouteModules;
   manifest: AssetsManifest;
@@ -349,34 +352,57 @@ type SSRInfo = {
   hmrRouterReadyPromise: Promise<RemixRouter>;
 };
 
-let ssrInfo: SSRInfo | null =
-  typeof window !== "undefined" &&
-  window.__remixContext &&
-  window.__remixManifest &&
-  window.__remixRouteModules
-    ? {
-        context: window.__remixContext,
-        routeModules: window.__remixRouteModules,
-        manifest: window.__remixManifest,
-        stateDecodingPromise: undefined,
-        router: undefined,
-        routerInitialized: false,
-        hmrAbortController: undefined,
-        hmrRouterReadyResolve: undefined,
-        // There's a race condition with HMR where the remix:manifest is signaled before
-        // the router is assigned in the RemixBrowser component. This promise gates the
-        // HMR handler until the router is ready
-        hmrRouterReadyPromise: new Promise((resolve) => {
-          // body of a promise is executed immediately, so this can be resolved outside
-          // of the promise body
-          ssrInfo!.hmrRouterReadyResolve = resolve;
-        }).catch(() => {
-          // This is a noop catch handler to avoid unhandled promise rejection warnings
-          // in the console. The promise is never rejected.
-          return undefined;
-        }) as Promise<RemixRouter>,
-      }
-    : null;
+let ssrInfo = typeof window !== "undefined" ? getSsrInfo(window) : null;
+
+/**
+ * @private
+ * @param _window Window parameter to initialize from, otherwise will null out
+ *                ssrInfo if no window is passed
+ */
+function getSsrInfo({
+  __remixContext: context,
+  __remixManifest: manifest,
+  __remixRouteModules: routeModules,
+}: {
+  __remixContext?: WindowRemixContext | undefined;
+  __remixManifest?: AssetsManifest | undefined;
+  __remixRouteModules?: RouteModules | undefined;
+}): SSRInfo | null {
+  if (context && manifest && routeModules) {
+    return {
+      context,
+      manifest,
+      routeModules,
+      stateDecodingPromise: undefined,
+      router: undefined,
+      routerInitialized: false,
+      hmrAbortController: undefined,
+      hmrRouterReadyResolve: undefined,
+      // There's a race condition with HMR where the remix:manifest is signaled before
+      // the router is assigned in the RemixBrowser component. This promise gates the
+      // HMR handler until the router is ready
+      hmrRouterReadyPromise: new Promise((resolve) => {
+        // body of a promise is executed immediately, so this can be resolved outside
+        // of the promise body
+        ssrInfo!.hmrRouterReadyResolve = resolve;
+      }).catch(() => {
+        // This is a noop catch handler to avoid unhandled promise rejection warnings
+        // in the console. The promise is never rejected.
+        return undefined;
+      }) as Promise<RemixRouter>,
+    };
+  } else {
+    return null;
+  }
+}
+
+export function _setSsrInfoForTests(_window: {
+  __remixContext?: WindowRemixContext | undefined;
+  __remixManifest?: AssetsManifest | undefined;
+  __remixRouteModules?: RouteModules | undefined;
+}) {
+  ssrInfo = getSsrInfo(_window);
+}
 
 if (
   import.meta &&
@@ -763,7 +789,7 @@ export function RouterProvider({
         ssrInfo.context.stream = undefined;
         ssrInfo.stateDecodingPromise = decodeViaTurboStream(stream, window)
           .then((value) => {
-            window.__remixContext!.state =
+            ssrInfo!.context.state =
               value.value as typeof localSsrInfo.context.state;
             localSsrInfo.stateDecodingPromise!.value = true;
           })
@@ -882,7 +908,7 @@ export function RouterProvider({
   // server HTML. This allows our HMR logic to clear the critical CSS state.
   let [criticalCss, setCriticalCss] = React.useState(
     process.env.NODE_ENV === "development"
-      ? window.__remixContext?.criticalCss
+      ? ssrInfo?.context.criticalCss
       : undefined
   );
   if (process.env.NODE_ENV === "development") {
