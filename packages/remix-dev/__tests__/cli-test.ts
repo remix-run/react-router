@@ -83,11 +83,8 @@ describe("remix CLI", () => {
         "R E M I X
 
           Usage:
-            $ remix init [projectDir]
             $ remix vite:build [projectDir]
             $ remix vite:dev [projectDir]
-            $ remix build [projectDir]
-            $ remix dev [projectDir]
             $ remix routes [projectDir]
             $ remix watch [projectDir]
 
@@ -106,8 +103,6 @@ describe("remix CLI", () => {
             --profile           Start built-in Node.js inspector
             --sourcemapClient   Output source maps for client build (default: false) (boolean | "inline" | "hidden")
             --sourcemapServer   Output source maps for server build (default: false) (boolean | "inline" | "hidden")
-          \`build\` Options:
-            --sourcemap         Generate source maps for production
           \`vite:dev\` Options (Passed through to Vite):
             --clearScreen       Allow/disable clear screen when logging (boolean)
             --config, -c        Use specified config file (string)
@@ -120,14 +115,6 @@ describe("remix CLI", () => {
             --port              Specify port (number)
             --profile           Start built-in Node.js inspector
             --strictPort        Exit if specified port is already in use (boolean)
-          \`dev\` Options:
-            --command, -c       Command used to run your app server
-            --manual            Enable manual mode
-            --port              Port for the dev server. Default: any open port
-            --tls-key           Path to TLS key (key.pem)
-            --tls-cert          Path to TLS certificate (cert.pem)
-          \`init\` Options:
-            --no-delete         Skip deleting the \`remix.init\` script
           \`routes\` Options:
             --config, -c        Use specified Vite config file (string)
             --json              Print the routes as JSON
@@ -139,15 +126,6 @@ describe("remix CLI", () => {
             - projectDir        The Remix project directory
             - remixPlatform     \`node\` or \`cloudflare\`
 
-          Initialize a project::
-
-            Remix project templates may contain a \`remix.init\` directory
-            with a script that initializes the project. This script automatically
-            runs during \`remix create\`, but if you ever need to run it manually
-            (e.g. to test it out) you can:
-
-            $ remix init
-
           Build your project (Vite):
 
             $ remix vite:build
@@ -155,25 +133,6 @@ describe("remix CLI", () => {
           Run your project locally in development (Vite):
 
             $ remix vite:dev
-
-          Build your project (Classic compiler):
-
-            $ remix build
-            $ remix build --sourcemap
-            $ remix build my-app
-
-          Run your project locally in development (Classic compiler):
-
-            $ remix dev
-            $ remix dev -c "node ./server.js"
-
-          Start your server separately and watch for changes (Classic compiler):
-
-            # custom server start command, for example:
-            $ remix watch
-
-            # in a separate tab:
-            $ node --inspect --require ./node_modules/dotenv/config --require ./mocks ./build/server.js
 
           Show all routes in your app:
 
