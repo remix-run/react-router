@@ -4,12 +4,9 @@ import url from "node:url";
 import fse from "fs-extra";
 import express from "express";
 import getPort from "get-port";
-import dedent from "dedent";
 import stripIndent from "strip-indent";
-import serializeJavaScript from "serialize-javascript";
 import { sync as spawnSync, spawn } from "cross-spawn";
 import type { JsonObject } from "type-fest";
-import type { AppConfig } from "@remix-run/dev";
 
 import { ServerMode } from "../../build/node_modules/@remix-run/server-runtime/dist/mode.js";
 import type { ServerBuild } from "../../build/node_modules/@remix-run/server-runtime/dist/index.js";
@@ -25,13 +22,9 @@ const TMP_DIR = path.join(root, ".tmp", "integration");
 
 export interface FixtureInit {
   buildStdio?: Writable;
-  sourcemap?: boolean;
   files?: { [filename: string]: string };
   template?: "cf-template" | "deno-template" | "node-template";
-  // @deprecated The 'config' option isn't supported by the Vite compiler option
-  config?: Partial<AppConfig>;
   useRemixServe?: boolean;
-  compiler?: "remix" | "vite";
   spaMode?: boolean;
   singleFetch?: boolean;
   port?: number;
@@ -50,15 +43,9 @@ export function json(value: JsonObject) {
 export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   installGlobals();
 
-  init.compiler ||= "vite";
-  let compiler = init.compiler;
-
   let projectDir = await createFixtureProject(init, mode);
   let buildPath = url.pathToFileURL(
-    path.join(
-      projectDir,
-      compiler === "vite" ? "build/server/index.js" : "build/index.js"
-    )
+    path.join(projectDir, "build/server/index.js")
   ).href;
 
   let getBrowserAsset = async (asset: string) => {
@@ -68,7 +55,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     );
   };
 
-  let isSpaMode = compiler === "vite" && init.spaMode;
+  let isSpaMode = init.spaMode;
 
   if (isSpaMode) {
     let requestDocument = () => {
@@ -86,7 +73,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       projectDir,
       build: null,
       isSpaMode,
-      compiler,
       requestDocument,
       requestData: () => {
         throw new Error("Cannot requestData in SPA Mode tests");
@@ -170,7 +156,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     projectDir,
     build: app,
     isSpaMode,
-    compiler,
     requestDocument,
     requestData,
     requestResource,
@@ -195,9 +180,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           nodebin,
           [
             "node_modules/@remix-run/serve/dist/cli.js",
-            fixture.compiler === "vite"
-              ? "build/server/index.js"
-              : "build/index.js",
+            "build/server/index.js",
           ],
           {
             env: {
@@ -267,14 +250,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     return new Promise(async (accept) => {
       let port = await getPort();
       let app = express();
-      app.use(
-        express.static(
-          path.join(
-            fixture.projectDir,
-            fixture.compiler === "vite" ? "build/client" : "public"
-          )
-        )
-      );
+      app.use(express.static(path.join(fixture.projectDir, "build/client")));
 
       app.all(
         "*",
@@ -322,7 +298,6 @@ export async function createFixtureProject(
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `remix-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
-  let compiler = init.compiler;
   let port = init.port ?? (await getPort());
 
   await fse.ensureDir(projectDir);
@@ -369,59 +344,22 @@ export async function createFixtureProject(
     projectDir
   );
 
-  // We update the config file *after* writing test files so that tests can provide a custom
-  // `remix.config.js` file while still supporting the type-checked `config`
-  // property on the fixture object. This is useful for config values that can't
-  // be serialized, e.g. usage of imported functions within `remix.config.js`.
-  let contents = fse.readFileSync(
-    path.join(projectDir, "remix.config.js"),
-    "utf-8"
-  );
-  if (
-    init.config &&
-    !contents.includes("global.INJECTED_FIXTURE_REMIX_CONFIG")
-  ) {
-    throw new Error(dedent`
-      Cannot provide a \`config\` fixture option and a \`remix.config.js\` file
-      at the same time, unless the \`remix.config.js\` file contains a reference
-      to the \`global.INJECTED_FIXTURE_REMIX_CONFIG\` placeholder so it can
-      accept the injected config values. Either move all config values into
-      \`remix.config.js\` file, or spread the  injected config,
-      e.g. \`export default { ...global.INJECTED_FIXTURE_REMIX_CONFIG }\`.
-    `);
-  }
-  contents = contents.replace(
-    "global.INJECTED_FIXTURE_REMIX_CONFIG",
-    `${serializeJavaScript(init.config ?? {})}`
-  );
-  fse.writeFileSync(path.join(projectDir, "remix.config.js"), contents);
-
-  build(projectDir, init.buildStdio, init.sourcemap, mode, compiler);
+  build(projectDir, init.buildStdio, mode);
 
   return projectDir;
 }
 
-function build(
-  projectDir: string,
-  buildStdio?: Writable,
-  sourcemap?: boolean,
-  mode?: ServerMode,
-  compiler?: "remix" | "vite"
-) {
+function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
   // We have a "require" instead of a dynamic import in readConfig gated
   // behind mode === ServerMode.Test to make jest happy, but that doesn't
   // work for ESM configs, those MUST be dynamic imports. So we need to
   // force the mode to be production for ESM configs when runtime mode is
   // tested.
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
-  compiler = compiler ?? "vite";
 
   let remixBin = "node_modules/@remix-run/dev/dist/cli.js";
 
-  let buildArgs: string[] =
-    compiler === "vite"
-      ? [remixBin, "vite:build"]
-      : [remixBin, "build", ...(sourcemap ? ["--sourcemap"] : [])];
+  let buildArgs: string[] = [remixBin, "vite:build"];
 
   let buildSpawn = spawnSync("node", buildArgs, {
     cwd: projectDir,
