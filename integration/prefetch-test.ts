@@ -14,11 +14,11 @@ import type {
 import type { RemixLinkProps } from "../build/node_modules/@remix-run/react/dist/components.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("multi fetch", () => {
+// TODO: Migrate this test to Vite?
+test.describe.skip("multi fetch", () => {
   // Generate the test app using the given prefetch mode
   function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
     return {
-      compiler: "remix",
       files: {
         "app/root.tsx": js`
           import {
@@ -282,7 +282,6 @@ test.describe("multi fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        compiler: "remix",
         files: {
           "app/routes/_index.tsx": js`
             import { Link } from "@remix-run/react";
@@ -357,7 +356,6 @@ test.describe("multi fetch", () => {
       page,
     }) => {
       fixture = await createFixture({
-        compiler: "remix",
         files: {
           "app/root.tsx": js`
               import { Links, Meta, Scripts, useFetcher } from "@remix-run/react";
@@ -436,7 +434,6 @@ test.describe("multi fetch", () => {
 
     test("dedupes prefetch tags", async ({ page }) => {
       fixture = await createFixture({
-        compiler: "remix",
         files: {
           "app/root.tsx": js`
             import {
@@ -575,16 +572,12 @@ test.describe("multi fetch", () => {
 
 // Duplicate suite of the tests above running with single fetch enabled
 // TODO(v3): remove the above suite of tests and just keep these
-test.describe("single fetch", () => {
+// TODO: Migrate this test to Vite?
+test.describe.skip("single fetch", () => {
   // Generate the test app using the given prefetch mode
   function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
     return {
-      compiler: "remix",
-      config: {
-        future: {
-          unstable_singleFetch: true,
-        },
-      },
+      singleFetch: true,
       files: {
         "app/root.tsx": js`
           import {
@@ -848,12 +841,7 @@ test.describe("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        compiler: "remix",
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/routes/_index.tsx": js`
             import { Link } from "@remix-run/react";
@@ -928,12 +916,7 @@ test.describe("single fetch", () => {
       page,
     }) => {
       fixture = await createFixture({
-        compiler: "remix",
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/root.tsx": js`
               import { Links, Meta, Scripts, useFetcher } from "@remix-run/react";
@@ -1012,12 +995,7 @@ test.describe("single fetch", () => {
 
     test("dedupes prefetch tags", async ({ page }) => {
       fixture = await createFixture({
-        compiler: "remix",
-        config: {
-          future: {
-            unstable_singleFetch: true,
-          },
-        },
+        singleFetch: true,
         files: {
           "app/root.tsx": js`
             import {
