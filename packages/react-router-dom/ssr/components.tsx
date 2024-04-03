@@ -23,15 +23,10 @@ import {
   useRouteLoaderData as useRouteLoaderDataRR,
   useLocation,
   useNavigation,
-  useHref,
 } from "react-router";
 
-import type { FetcherWithComponents, LinkProps, NavLinkProps } from "../index";
-import {
-  Link as RouterLink,
-  NavLink as RouterNavLink,
-  useFetcher as useFetcherRR,
-} from "../index";
+import type { FetcherWithComponents } from "../index";
+import { useFetcher as useFetcherRR } from "../index";
 import type { AppData } from "./data";
 import type { RemixContextObject } from "./entry";
 import invariant from "./invariant";
@@ -100,15 +95,7 @@ export function useRemixContext(): RemixContextObject {
  * - "render": Fetched when the link is rendered
  * - "viewport": Fetched when the link is in the viewport
  */
-type PrefetchBehavior = "intent" | "render" | "none" | "viewport";
-
-export interface RemixLinkProps extends LinkProps {
-  prefetch?: PrefetchBehavior;
-}
-
-export interface RemixNavLinkProps extends NavLinkProps {
-  prefetch?: PrefetchBehavior;
-}
+export type PrefetchBehavior = "intent" | "render" | "none" | "viewport";
 
 interface PrefetchHandlers {
   onFocus?: FocusEventHandler;
@@ -118,10 +105,11 @@ interface PrefetchHandlers {
   onTouchStart?: TouchEventHandler;
 }
 
-function usePrefetchBehavior<T extends HTMLAnchorElement>(
+export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers
-): [boolean, React.RefObject<T>, Required<PrefetchHandlers>] {
+): [boolean, React.RefObject<T>, PrefetchHandlers] {
+  let remixContext = React.useContext(RemixContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
   let { onFocus, onBlur, onMouseEnter, onMouseLeave, onTouchStart } =
@@ -149,19 +137,6 @@ function usePrefetchBehavior<T extends HTMLAnchorElement>(
     }
   }, [prefetch]);
 
-  let setIntent = () => {
-    if (prefetch === "intent") {
-      setMaybePrefetch(true);
-    }
-  };
-
-  let cancelIntent = () => {
-    if (prefetch === "intent") {
-      setMaybePrefetch(false);
-      setShouldPrefetch(false);
-    }
-  };
-
   React.useEffect(() => {
     if (maybePrefetch) {
       let id = setTimeout(() => {
@@ -173,6 +148,25 @@ function usePrefetchBehavior<T extends HTMLAnchorElement>(
     }
   }, [maybePrefetch]);
 
+  let setIntent = () => {
+    setMaybePrefetch(true);
+  };
+
+  let cancelIntent = () => {
+    setMaybePrefetch(false);
+    setShouldPrefetch(false);
+  };
+
+  // No prefetching if not using Remix-style SSR
+  if (!remixContext) {
+    return [false, ref, {}];
+  }
+
+  if (prefetch !== "intent") {
+    return [shouldPrefetch, ref, {}];
+  }
+
+  // When using prefetch="intent" we need to attach focus/hover listeners
   return [
     shouldPrefetch,
     ref,
@@ -185,75 +179,6 @@ function usePrefetchBehavior<T extends HTMLAnchorElement>(
     },
   ];
 }
-
-const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
-
-/**
- * A special kind of `<Link>` that knows whether it is "active".
- *
- * @see https://remix.run/components/nav-link
- */
-let NavLink = React.forwardRef<HTMLAnchorElement, RemixNavLinkProps>(
-  ({ to, prefetch = "none", ...props }, forwardedRef) => {
-    let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
-
-    let href = useHref(to);
-    let [shouldPrefetch, ref, prefetchHandlers] = usePrefetchBehavior(
-      prefetch,
-      props
-    );
-
-    return (
-      <>
-        <RouterNavLink
-          {...props}
-          {...prefetchHandlers}
-          ref={mergeRefs(forwardedRef, ref)}
-          to={to}
-        />
-        {shouldPrefetch && !isAbsolute ? (
-          <PrefetchPageLinks page={href} />
-        ) : null}
-      </>
-    );
-  }
-);
-NavLink.displayName = "NavLink";
-export { NavLink };
-
-/**
- * This component renders an anchor tag and is the primary way the user will
- * navigate around your website.
- *
- * @see https://remix.run/components/link
- */
-let Link = React.forwardRef<HTMLAnchorElement, RemixLinkProps>(
-  ({ to, prefetch = "none", ...props }, forwardedRef) => {
-    let isAbsolute = typeof to === "string" && ABSOLUTE_URL_REGEX.test(to);
-
-    let href = useHref(to);
-    let [shouldPrefetch, ref, prefetchHandlers] = usePrefetchBehavior(
-      prefetch,
-      props
-    );
-
-    return (
-      <>
-        <RouterLink
-          {...props}
-          {...prefetchHandlers}
-          ref={mergeRefs(forwardedRef, ref)}
-          to={to}
-        />
-        {shouldPrefetch && !isAbsolute ? (
-          <PrefetchPageLinks page={href} />
-        ) : null}
-      </>
-    );
-  }
-);
-Link.displayName = "Link";
-export { Link };
 
 export function composeEventHandlers<
   EventType extends React.SyntheticEvent | Event
@@ -1257,7 +1182,7 @@ export const LiveReload =
         );
       };
 
-function mergeRefs<T = any>(
+export function mergeRefs<T = any>(
   ...refs: Array<React.MutableRefObject<T> | React.LegacyRef<T>>
 ): React.RefCallback<T> {
   return (value) => {
