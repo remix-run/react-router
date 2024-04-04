@@ -1,4 +1,7 @@
 packages:
+  - "integration"
+  - "integration/helpers/node-template"
+  - "integration/helpers/vite-template"
   - "packages/react-router"
   - "packages/react-router-dom"
   - "packages/react-router-dom-v5-compat"
