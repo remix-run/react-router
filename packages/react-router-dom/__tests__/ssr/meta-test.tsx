@@ -1,8 +1,9 @@
-import { Meta, Outlet } from "@remix-run/react";
 import { createRemixStub } from "@remix-run/testing";
 import { prettyDOM, render, screen } from "@testing-library/react";
 import user from "@testing-library/user-event";
 import * as React from "react";
+
+import { Meta, Outlet } from "../../index";
 
 const getHtml = (c: HTMLElement) =>
   prettyDOM(c, undefined, { highlight: false });
