@@ -19,7 +19,7 @@ test.describe("loader", () => {
       files: {
         "app/root.tsx": js`
         import { json } from "@remix-run/node";
-        import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+        import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
           export const loader = () => json("${ROOT_DATA}");
 
@@ -81,7 +81,7 @@ test.describe("loader in an app", () => {
       await createFixture({
         files: {
           "app/root.tsx": js`
-            import { Outlet } from '@remix-run/react'
+            import { Outlet } from 'react-router-dom'
 
             export default function Root() {
               return (
@@ -153,7 +153,7 @@ test.describe("single fetch", () => {
         files: {
           "app/root.tsx": js`
             import { json } from "@remix-run/node";
-            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export const loader = () => json("${ROOT_DATA}");
 
@@ -210,7 +210,7 @@ test.describe("single fetch", () => {
           singleFetch: true,
           files: {
             "app/root.tsx": js`
-            import { Outlet } from '@remix-run/react'
+            import { Outlet } from 'react-router-dom'
 
             export default function Root() {
               return (
