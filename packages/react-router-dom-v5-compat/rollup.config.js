@@ -41,14 +41,11 @@ module.exports = function rollup() {
         copy({
           targets: [
             {
-              src: path.join(RR_DOM_DIR, "(index|dom).ts*"),
+              src: path.join(RR_DOM_DIR, "(index|dom|server).ts*"),
               dest: path.join(SOURCE_DIR, "react-router-dom"),
             },
             {
-              src: [
-                path.join(RR_DOM_DIR, "ssr", "*.ts*"),
-                "!" + path.join(RR_DOM_DIR, "ssr", "server.tsx"),
-              ],
+              src: [path.join(RR_DOM_DIR, "ssr", "*.ts*")],
               dest: path.join(SOURCE_DIR, "react-router-dom", "ssr"),
             },
           ],
