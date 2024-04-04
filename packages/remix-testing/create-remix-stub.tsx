@@ -7,21 +7,17 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
 } from "@remix-run/router";
 import { UNSAFE_convertRoutesToDataRoutes } from "@remix-run/router";
-// @ts-expect-error TODO: Update import
-import { UNSAFE_RemixContext as RemixContext } from "@remix-run/react";
+import { UNSAFE_RemixContext as RemixContext } from "react-router-dom";
 import type {
+  DataRouteObject,
+  IndexRouteObject,
+  MetaFunction,
+  NonIndexRouteObject,
   UNSAFE_FutureConfig as FutureConfig,
   UNSAFE_AssetsManifest as AssetsManifest,
   UNSAFE_EntryRoute as EntryRoute,
   UNSAFE_RouteModules as RouteModules,
   UNSAFE_RemixContextObject as RemixContextObject,
-  MetaFunction,
-  // @ts-expect-error TODO: Update import
-} from "@remix-run/react";
-import type {
-  DataRouteObject,
-  IndexRouteObject,
-  NonIndexRouteObject,
 } from "react-router-dom";
 import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
 import type {

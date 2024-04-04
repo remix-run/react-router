@@ -260,7 +260,7 @@ importers:
         version: 2.2.1
       vite-tsconfig-paths:
         specifier: ^4.2.2
-        version: 4.3.2(typescript@5.1.6)(vite@5.1.3)
+        version: 4.3.2(typescript@5.1.6)(vite@5.1.0)
       wait-on:
         specifier: ^7.0.1
         version: 7.2.0
@@ -896,11 +896,11 @@ importers:
         specifier: workspace:*
         version: link:../remix-node
       '@remix-run/router':
-        specifier: 1.16.0-pre.0
-        version: 1.16.0-pre.0
+        specifier: workspace:*
+        version: link:../router
       react-router-dom:
-        specifier: 6.23.0-pre.0
-        version: 6.23.0-pre.0(react-dom@18.2.0)(react@18.2.0)
+        specifier: workspace:*
+        version: link:../react-router-dom
     devDependencies:
       '@remix-run/server-runtime':
         specifier: workspace:*
@@ -13579,19 +13579,6 @@ packages:
       tiny-warning: 1.0.3
     dev: false
 
-  /react-router-dom@6.23.0-pre.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-TDEljjV6XwOEb9gp6FFNquAB0yY490lhSZRo4YNDPI8+QEA0n3yJ2VfIZLmxR70ljnFBwYOnWmNl94EHom/JjQ==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      react: '>=16.8'
-      react-dom: '>=16.8'
-    dependencies:
-      '@remix-run/router': 1.16.0-pre.0
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-router: 6.23.0-pre.0(react@18.2.0)
-    dev: false
-
   /react-router@5.3.4(react@18.2.0):
     resolution: {integrity: sha512-Ys9K+ppnJah3QuaRiLxk+jDWOR1MekYQrlytiXxC1RyfbdsZkS5pvKAzCCr031xHixZwpnsYNT5xysdFHQaYsA==}
     peerDependencies:
@@ -13607,16 +13594,6 @@ packages:
       react-is: 16.13.1
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
-    dev: false
-
-  /react-router@6.23.0-pre.0(react@18.2.0):
-    resolution: {integrity: sha512-GawzByLrAoOr4Sc0ybAuYBTJmtysK8I7p3VuBQCzDCqXzu10uAP7tu0Iy+mv0SGkmzKpPXg4PUO26UQ9bBH7bg==}
-    engines: {node: '>=14.0.0'}
-    peerDependencies:
-      react: '>=16.8'
-    dependencies:
-      '@remix-run/router': 1.16.0-pre.0
-      react: 18.2.0
     dev: false
 
   /react-shallow-renderer@16.15.0(react@18.2.0):
@@ -15572,7 +15549,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - typescript
-    dev: true
 
   /vite-tsconfig-paths@4.3.2(typescript@5.1.6)(vite@5.1.3):
     resolution: {integrity: sha512-0Vd/a6po6Q+86rPlntHye7F31zA2URZMbH8M3saAZ/xR9QoGN/L21bxEGfXdWmFdNkqPpRdxFT7nmNe12e9/uA==}
