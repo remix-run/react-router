@@ -32,9 +32,7 @@ module.exports = function rollup() {
 
   /** @type {import("rollup").RollupOptions} */
   let remixTestingCJS = {
-    external(id) {
-      return isBareModuleId(id);
-    },
+    external: (id) => isBareModuleId(id),
     input: path.join(SOURCE_DIR, "index.ts"),
     output: {
       banner: createBanner(name, version),
@@ -59,9 +57,7 @@ module.exports = function rollup() {
   // The browser build of remix-testing is ESM so we can treeshake it.
   /** @type {import("rollup").RollupOptions} */
   let remixTestingESM = {
-    external(id) {
-      return isBareModuleId(id);
-    },
+    external: (id) => isBareModuleId(id),
     input: path.join(SOURCE_DIR, "index.ts"),
     output: {
       banner: createBanner(name, version),

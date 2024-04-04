@@ -8,7 +8,6 @@ import {
   NavLink,
   Outlet,
   RouterProvider,
-  _setSsrInfoForTests,
 } from "../../index";
 import type { LiveReload as ActualLiveReload } from "../../ssr/components";
 import { RemixContext } from "../../ssr/components";
@@ -342,7 +341,6 @@ describe("<RemixBrowser>", () => {
       url: "",
       version: "",
     };
-    _setSsrInfoForTests(window);
 
     jest.spyOn(console, "error");
 

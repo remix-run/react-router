@@ -8,12 +8,13 @@ import stripIndent from "strip-indent";
 import { sync as spawnSync, spawn } from "cross-spawn";
 import type { JsonObject } from "type-fest";
 
-import { ServerMode } from "../../build/node_modules/@remix-run/server-runtime/dist/mode.js";
-import type { ServerBuild } from "../../build/node_modules/@remix-run/server-runtime/dist/index.js";
-import { createRequestHandler } from "../../build/node_modules/@remix-run/server-runtime/dist/index.js";
-import { createRequestHandler as createExpressHandler } from "../../build/node_modules/@remix-run/express/dist/index.js";
-import { installGlobals } from "../../build/node_modules/@remix-run/node/dist/index.js";
-import { decodeViaTurboStream } from "../../build/node_modules/@remix-run/react/dist/single-fetch.js";
+import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
+import type { ServerBuild } from "@remix-run/server-runtime";
+import { createRequestHandler } from "@remix-run/server-runtime";
+import { createRequestHandler as createExpressHandler } from "@remix-run/express";
+import { installGlobals } from "@remix-run/node";
+import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router-dom";
+
 import { viteConfig } from "./vite.js";
 
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));

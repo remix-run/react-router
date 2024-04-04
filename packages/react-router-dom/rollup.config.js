@@ -11,6 +11,7 @@ const {
   createBanner,
   getBuildDirectories,
   validateReplacedVersion,
+  isBareModuleId,
   PRETTY,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
@@ -28,7 +29,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["react", "react-dom", "react-router", "@remix-run/router"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -73,7 +74,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["react", "react-router", "@remix-run/router"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -105,7 +106,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["react", "react-router", "@remix-run/router"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -160,7 +161,7 @@ module.exports = function rollup() {
         },
         name: "ReactRouterDOM",
       },
-      external: ["react", "react-router", "@remix-run/router"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -198,7 +199,7 @@ module.exports = function rollup() {
         },
         name: "ReactRouterDOM",
       },
-      external: ["react", "react-router", "@remix-run/router"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -250,13 +251,7 @@ module.exports = function rollup() {
           format: "cjs",
         },
       ],
-      external: [
-        "url",
-        "react",
-        "react-dom/server",
-        "react-router-dom",
-        "@remix-run/router",
-      ],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({
@@ -296,13 +291,7 @@ module.exports = function rollup() {
           format: "esm",
         },
       ],
-      external: [
-        "url",
-        "react",
-        "react-dom/server",
-        "react-router-dom",
-        "@remix-run/router",
-      ],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({

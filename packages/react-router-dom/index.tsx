@@ -241,6 +241,9 @@ export type {
   MetaFunction,
 } from "./ssr/routeModules";
 
+export type { RemixServerProps } from "./ssr/server";
+export { RemixServer } from "./ssr/server";
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -274,6 +277,7 @@ export type {
   EntryRoute as UNSAFE_EntryRoute,
   RouteManifest as UNSAFE_RouteManifest,
 } from "./ssr/routes";
+export { decodeViaTurboStream as UNSAFE_decodeViaTurboStream } from "./ssr/single-fetch";
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,10 +342,7 @@ try {
   // no-op
 }
 
-/**
- * @private
- */
-export type SSRInfo = {
+type SSRInfo = {
   context: WindowRemixContext;
   routeModules: RouteModules;
   manifest: AssetsManifest;
@@ -353,70 +354,59 @@ export type SSRInfo = {
     | undefined;
   router: RemixRouter | undefined;
   routerInitialized: boolean;
-  hmrAbortController: AbortController | undefined;
-  hmrRouterReadyResolve: ((router: RemixRouter) => void) | undefined;
-  hmrRouterReadyPromise: Promise<RemixRouter>;
 };
 
-let ssrInfo = typeof window !== "undefined" ? getSsrInfo(window) : null;
+let ssrInfo: SSRInfo | null = null;
 
-/**
- * @private
- * @param _window Window parameter to initialize from, otherwise will null out
- *                ssrInfo if no window is passed
- */
-function getSsrInfo({
-  __remixContext: context,
-  __remixManifest: manifest,
-  __remixRouteModules: routeModules,
-}: {
-  __remixContext?: WindowRemixContext | undefined;
-  __remixManifest?: AssetsManifest | undefined;
-  __remixRouteModules?: RouteModules | undefined;
-}): SSRInfo | null {
-  if (context && manifest && routeModules) {
-    return {
-      context,
-      manifest,
-      routeModules,
+function initSsrInfo(): void {
+  if (
+    !ssrInfo &&
+    window.__remixContext &&
+    window.__remixManifest &&
+    window.__remixRouteModules
+  ) {
+    ssrInfo = {
+      context: window.__remixContext,
+      manifest: window.__remixManifest,
+      routeModules: window.__remixRouteModules,
       stateDecodingPromise: undefined,
       router: undefined,
       routerInitialized: false,
-      hmrAbortController: undefined,
-      hmrRouterReadyResolve: undefined,
-      // There's a race condition with HMR where the remix:manifest is signaled before
-      // the router is assigned in the RemixBrowser component. This promise gates the
-      // HMR handler until the router is ready
-      hmrRouterReadyPromise: new Promise((resolve) => {
-        // body of a promise is executed immediately, so this can be resolved outside
-        // of the promise body
-        ssrInfo!.hmrRouterReadyResolve = resolve;
-      }).catch(() => {
-        // This is a noop catch handler to avoid unhandled promise rejection warnings
-        // in the console. The promise is never rejected.
-        return undefined;
-      }) as Promise<RemixRouter>,
     };
-  } else {
-    return null;
   }
 }
 
-export function _setSsrInfoForTests(_window: {
-  __remixContext?: WindowRemixContext | undefined;
-  __remixManifest?: AssetsManifest | undefined;
-  __remixRouteModules?: RouteModules | undefined;
-}) {
-  ssrInfo = getSsrInfo(_window);
-}
+export type HmrInfo = {
+  abortController: AbortController | undefined;
+  routerReadyResolve: (router: RemixRouter) => void;
+  routerReadyPromise: Promise<RemixRouter>;
+};
+
+let hmrInfo: HmrInfo | null = null;
 
 if (
   import.meta &&
   // @ts-expect-error
   import.meta.hot &&
-  ssrInfo
+  window.__remixManifest
 ) {
-  let localSsrInfo = ssrInfo;
+  let resolve: (router: RemixRouter) => void;
+  let routerReadyPromise = new Promise((r) => {
+    resolve = r;
+  }).catch(() => {
+    // This is a noop catch handler to avoid unhandled promise rejection warnings
+    // in the console. The promise is never rejected.
+    return undefined;
+  }) as Promise<RemixRouter>;
+
+  hmrInfo = {
+    abortController: undefined,
+    routerReadyResolve: resolve!,
+    // There's a race condition with HMR where the remix:manifest is signaled before
+    // the router is assigned in the RemixBrowser component. This promise gates the
+    // HMR handler until the router is ready
+    routerReadyPromise,
+  };
 
   // @ts-expect-error
   import.meta.hot.accept(
@@ -428,11 +418,11 @@ if (
       assetsManifest: AssetsManifest;
       needsRevalidation: Set<string>;
     }) => {
-      let router = await localSsrInfo.hmrRouterReadyPromise;
+      let router = await hmrInfo!.routerReadyPromise;
       // This should never happen, but just in case...
-      if (!router) {
+      if (!router || !ssrInfo || !hmrInfo) {
         console.error(
-          "Failed to accept HMR update because the router was not ready."
+          "Failed to accept HMR update because the router/ssrInfo was not ready."
         );
         return;
       }
@@ -441,20 +431,18 @@ if (
         ...new Set(
           router.state.matches
             .map((m) => m.route.id)
-            .concat(Object.keys(localSsrInfo.routeModules))
+            .concat(Object.keys(ssrInfo!.routeModules))
         ),
       ];
 
-      if (localSsrInfo.hmrAbortController) {
-        localSsrInfo.hmrAbortController.abort();
-      }
-      localSsrInfo.hmrAbortController = new AbortController();
-      let signal = localSsrInfo.hmrAbortController.signal;
+      hmrInfo.abortController?.abort();
+      hmrInfo.abortController = new AbortController();
+      let signal = hmrInfo.abortController.signal;
 
       // Load new route modules that we've seen.
       let newRouteModules = Object.assign(
         {},
-        localSsrInfo.routeModules,
+        ssrInfo.routeModules,
         Object.fromEntries(
           (
             await Promise.all(
@@ -466,6 +454,7 @@ if (
                   assetsManifest.routes[id].module +
                     `?t=${assetsManifest.hmr?.timestamp}`
                 );
+                invariant(ssrInfo, "ssrInfo unavailable for HMR update");
                 return [
                   id,
                   {
@@ -473,15 +462,14 @@ if (
                     // react-refresh takes care of updating these in-place,
                     // if we don't preserve existing values we'll loose state.
                     default: imported.default
-                      ? localSsrInfo.routeModules[id]?.default ||
-                        imported.default
+                      ? ssrInfo.routeModules[id]?.default || imported.default
                       : imported.default,
                     ErrorBoundary: imported.ErrorBoundary
-                      ? localSsrInfo.routeModules[id]?.ErrorBoundary ||
+                      ? ssrInfo.routeModules[id]?.ErrorBoundary ||
                         imported.ErrorBoundary
                       : imported.ErrorBoundary,
                     HydrateFallback: imported.HydrateFallback
-                      ? localSsrInfo.routeModules[id]?.HydrateFallback ||
+                      ? ssrInfo.routeModules[id]?.HydrateFallback ||
                         imported.HydrateFallback
                       : imported.HydrateFallback,
                   },
@@ -492,15 +480,15 @@ if (
         )
       );
 
-      Object.assign(localSsrInfo.routeModules, newRouteModules);
+      Object.assign(ssrInfo.routeModules, newRouteModules);
       // Create new routes
       let routes = createClientRoutesWithHMRRevalidationOptOut(
         needsRevalidation,
         assetsManifest.routes,
-        localSsrInfo.routeModules,
-        localSsrInfo.context.state,
-        localSsrInfo.context.future,
-        localSsrInfo.context.isSpaMode
+        ssrInfo.routeModules,
+        ssrInfo.context.state,
+        ssrInfo.context.future,
+        ssrInfo.context.isSpaMode
       );
 
       // This is temporary API and will be more granular before release
@@ -516,7 +504,7 @@ if (
           if (signal.aborted) return;
           // Ensure RouterProvider setState has flushed before re-rendering
           setTimeout(() => {
-            Object.assign(localSsrInfo.manifest, assetsManifest);
+            Object.assign(ssrInfo!.manifest, assetsManifest);
             window.$RefreshRuntime$!.performReactRefresh();
           }, 1);
         }
@@ -772,6 +760,8 @@ export function RouterProvider({
   let router = propRouter || ssrInfo?.router;
 
   if (!router) {
+    initSsrInfo();
+
     if (!ssrInfo) {
       throw new Error(
         "You must be using the SSR features of React Router in order to skip " +
@@ -902,9 +892,7 @@ export function RouterProvider({
     window.__remixRouter = router;
 
     // Notify that the router is ready for HMR
-    if (ssrInfo.hmrRouterReadyResolve) {
-      ssrInfo.hmrRouterReadyResolve(router);
-    }
+    hmrInfo?.routerReadyResolve(router);
   }
 
   // SSR State

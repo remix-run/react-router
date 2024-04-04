@@ -8,6 +8,6 @@ export default () => {
   import("react-dom");
   import("react-dom/client");
   import("react-refresh/runtime");
-  import("@remix-run/react");
+  import("react-router-dom");
   import("remix:hmr");
 };

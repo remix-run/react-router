@@ -75,8 +75,8 @@
     "wrangler": "^3.28.2"
   },
   "peerDependencies": {
-    "@remix-run/react": "^2.9.0-pre.0",
-    "@remix-run/serve": "^2.9.0-pre.0",
+    "react-router-dom": "workspace:^",
+    "@remix-run/serve": "workspace:^",
     "typescript": "^5.1.0",
     "vite": "^5.1.0",
     "wrangler": "^3.28.2"

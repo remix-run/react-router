@@ -1041,6 +1041,8 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
               // This is only necessary for development within the Remix repo
               // because these packages are symlinked and Vite treats them as
               // internal source code. For consumers this is a no-op.
+              "react-router",
+              "react-router-dom",
               "@remix-run/architect",
               "@remix-run/cloudflare-pages",
               "@remix-run/cloudflare-workers",
@@ -1051,7 +1053,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
               "@remix-run/express",
               "@remix-run/netlify",
               "@remix-run/node",
-              "@remix-run/react",
               "@remix-run/serve",
               "@remix-run/server-runtime",
             ],
@@ -1066,12 +1067,10 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
               "react/jsx-dev-runtime",
               "react-dom/client",
 
-              // Pre-bundle Remix dependencies to avoid Remix router duplicates.
-              // Our remix-remix-react-proxy plugin does not process default client and
-              // server entry files since those come from within `node_modules`.
-              // That means that before Vite pre-bundles dependencies (e.g. first time dev server is run)
-              // mismatching Remix routers cause `Error: You must render this element inside a <Remix> element`.
-              "@remix-run/react",
+              // Pre-bundle router dependencies to avoid router duplicates.
+              // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
+              "react-router",
+              "react-router-dom",
 
               // For some reason, the `vite-dotenv` integration test consistently fails on webkit
               // with `504 (Outdated Optimize Dep)` from Vite  unless `@remix-run/node` is included
@@ -1091,8 +1090,9 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
               "react",
               "react-dom",
 
-              // see description for `@remix-run/react` in `optimizeDeps.include`
-              "@remix-run/react",
+              // see description for `optimizeDeps.include`
+              "react-router",
+              "react-router-dom",
             ],
           },
           base: viteUserConfig.base,

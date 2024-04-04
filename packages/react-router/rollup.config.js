@@ -8,6 +8,7 @@ const { terser } = require("rollup-plugin-terser");
 const typescript = require("@rollup/plugin-typescript");
 const {
   createBanner,
+  isBareModuleId,
   getBuildDirectories,
   PRETTY,
 } = require("../../rollup.utils");
@@ -26,7 +27,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -60,7 +61,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -93,7 +94,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -144,7 +145,7 @@ module.exports = function rollup() {
         },
         name: "ReactRouter",
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({
@@ -177,7 +178,7 @@ module.exports = function rollup() {
         },
         name: "ReactRouter",
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
         extensions({ extensions: [".tsx", ".ts"] }),
         babel({

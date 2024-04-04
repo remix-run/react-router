@@ -5,6 +5,7 @@ const prettier = require("rollup-plugin-prettier");
 const typescript = require("@rollup/plugin-typescript");
 const {
   createBanner,
+  isBareModuleId,
   getBuildDirectories,
   PRETTY,
 } = require("../../rollup.utils");
@@ -22,16 +23,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router Native", version),
       },
-      external: [
-        "@babel/runtime/helpers/esm/extends",
-        "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose",
-        "@ungap/url-search-params",
-        "history",
-        "react",
-        "react-native",
-        "react-router",
-        "@remix-run/router",
-      ],
+      external: (id) => isBareModuleId(id),
       plugins: [
         babel({
           babelHelpers: "bundled",

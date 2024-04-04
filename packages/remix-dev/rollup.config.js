@@ -55,7 +55,10 @@ module.exports = function rollup() {
           targets: [
             { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
             { src: `${SOURCE_DIR}/vite/static`, dest: `${OUTPUT_DIR}/vite` },
-            { src: `${SOURCE_DIR}/config/defaults`, dest: OUTPUT_DIR },
+            {
+              src: `${SOURCE_DIR}/config/defaults`,
+              dest: `${OUTPUT_DIR}/config`,
+            },
           ],
         }),
         // Allow dynamic imports in CJS code to allow us to utilize

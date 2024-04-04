@@ -15,7 +15,7 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { Link } from "@remix-run/react";
+        import { Link } from "react-router-dom";
 
         export default function Index() {
           return (
