@@ -23,9 +23,7 @@ module.exports = function rollup() {
 
   return [
     {
-      external(id) {
-        return isBareModuleId(id);
-      },
+      external: (id) => isBareModuleId(id),
       input: `${SOURCE_DIR}/index.ts`,
       output: {
         banner: createBanner(name, version),
@@ -56,9 +54,7 @@ module.exports = function rollup() {
       ],
     },
     {
-      external(id) {
-        return isBareModuleId(id);
-      },
+      external: (id) => isBareModuleId(id),
       input: `${SOURCE_DIR}/index.ts`,
       output: {
         banner: createBanner(name, version),
