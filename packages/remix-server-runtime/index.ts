@@ -85,3 +85,6 @@ export type {
   UploadHandler,
   UploadHandlerPart,
 } from "./reexport";
+
+// Private exports for internal use
+export { ServerMode as UNSAFE_ServerMode } from "./mode";

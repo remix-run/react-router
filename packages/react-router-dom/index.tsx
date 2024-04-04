@@ -277,6 +277,7 @@ export type {
   EntryRoute as UNSAFE_EntryRoute,
   RouteManifest as UNSAFE_RouteManifest,
 } from "./ssr/routes";
+export { decodeViaTurboStream as UNSAFE_decodeViaTurboStream } from "./ssr/single-fetch";
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////

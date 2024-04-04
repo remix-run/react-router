@@ -1043,7 +1043,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
               // internal source code. For consumers this is a no-op.
               "react-router",
               "react-router-dom",
-              "react-router-dom/server",
               "@remix-run/architect",
               "@remix-run/cloudflare-pages",
               "@remix-run/cloudflare-workers",
@@ -1072,7 +1071,6 @@ export const remixVitePlugin: RemixVitePlugin = (remixUserConfig = {}) => {
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
               "react-router-dom",
-              "react-router-dom/server",
 
               // For some reason, the `vite-dotenv` integration test consistently fails on webkit
               // with `504 (Outdated Optimize Dep)` from Vite  unless `@remix-run/node` is included
