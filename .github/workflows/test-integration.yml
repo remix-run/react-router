@@ -48,5 +48,8 @@ jobs:
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
 
+      - name: 📥 Install Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: 🧪 Run tests
         run: pnpm test:integration
