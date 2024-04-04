@@ -62,7 +62,7 @@ test.describe("Forms", () => {
     fixture = await createFixture({
       files: {
         "app/routes/get-submission.tsx": js`
-          import { useLoaderData, Form } from "@remix-run/react";
+          import { useLoaderData, Form } from "react-router-dom";
 
           export function loader({ request }) {
             let url = new URL(request.url);
@@ -144,7 +144,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/inbox.tsx": js`
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
           export default function() {
             return (
               <>
@@ -169,7 +169,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/blog.tsx": js`
-          import { Form, Outlet } from "@remix-run/react";
+          import { Form, Outlet } from "react-router-dom";
           export default function() {
             return (
               <>
@@ -196,7 +196,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/blog._index.tsx": js`
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
           export function action() {
             return { ok: true };
           }
@@ -230,7 +230,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/blog.$postId.tsx": js`
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
           export default function() {
             return (
               <>
@@ -255,7 +255,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/projects.tsx": js`
-          import { Form, Outlet } from "@remix-run/react";
+          import { Form, Outlet } from "react-router-dom";
           export default function() {
             return (
               <>
@@ -273,7 +273,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/projects.$.tsx": js`
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
           export default function() {
             return (
               <>
@@ -299,7 +299,7 @@ test.describe("Forms", () => {
 
         "app/routes/stop-propagation.tsx": js`
           import { json } from "@remix-run/node";
-          import { Form, useActionData } from "@remix-run/react";
+          import { Form, useActionData } from "react-router-dom";
 
           export async function action({ request }) {
             let formData = await request.formData();
@@ -320,7 +320,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/form-method.tsx": js`
-          import { Form, useActionData, useLoaderData, useSearchParams } from "@remix-run/react";
+          import { Form, useActionData, useLoaderData, useSearchParams } from "react-router-dom";
           import { json } from "@remix-run/node";
 
           export function action({ request }) {
@@ -351,7 +351,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/submitter.tsx": js`
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
 
           export default function() {
             return (
@@ -374,7 +374,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/file-upload.tsx": js`
-          import { Form, useSearchParams } from "@remix-run/react";
+          import { Form, useSearchParams } from "react-router-dom";
 
           export default function() {
             const [params] = useSearchParams();
@@ -395,7 +395,7 @@ test.describe("Forms", () => {
 
         "app/routes/empty-file-upload.tsx": js`
           import { json } from "@remix-run/server-runtime";
-          import { Form, useActionData } from "@remix-run/react";
+          import { Form, useActionData } from "react-router-dom";
 
           export async function action({ request }) {
             let formData = await request.formData();
@@ -430,7 +430,7 @@ test.describe("Forms", () => {
         //
         // TODO: refactor other tests to use this
         "app/routes/outputFormData.tsx": js`
-          import { useActionData, useSearchParams } from "@remix-run/react";
+          import { useActionData, useSearchParams } from "react-router-dom";
 
           export async function action({ request }) {
             const formData = await request.formData();
@@ -455,7 +455,7 @@ test.describe("Forms", () => {
 
         "app/routes/pathless-layout-parent.tsx": js`
           import { json } from '@remix-run/server-runtime'
-          import { Form, Outlet, useActionData } from '@remix-run/react'
+          import { Form, Outlet, useActionData } from 'react-router-dom'
 
           export async function action({ request }) {
             return json({ submitted: true });
@@ -476,7 +476,7 @@ test.describe("Forms", () => {
         `,
 
         "app/routes/pathless-layout-parent._pathless.nested.tsx": js`
-          import { Outlet } from '@remix-run/react';
+          import { Outlet } from 'react-router-dom';
 
           export default function () {
             return (
@@ -1195,7 +1195,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/routes/get-submission.tsx": js`
-            import { useLoaderData, Form } from "@remix-run/react";
+            import { useLoaderData, Form } from "react-router-dom";
 
             export function loader({ request }) {
               let url = new URL(request.url);
@@ -1277,7 +1277,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/inbox.tsx": js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
             export default function() {
               return (
                 <>
@@ -1302,7 +1302,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/blog.tsx": js`
-            import { Form, Outlet } from "@remix-run/react";
+            import { Form, Outlet } from "react-router-dom";
             export default function() {
               return (
                 <>
@@ -1329,7 +1329,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/blog._index.tsx": js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
             export function action() {
               return { ok: true };
             }
@@ -1363,7 +1363,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/blog.$postId.tsx": js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
             export default function() {
               return (
                 <>
@@ -1388,7 +1388,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/projects.tsx": js`
-            import { Form, Outlet } from "@remix-run/react";
+            import { Form, Outlet } from "react-router-dom";
             export default function() {
               return (
                 <>
@@ -1406,7 +1406,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/projects.$.tsx": js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
             export default function() {
               return (
                 <>
@@ -1432,7 +1432,7 @@ test.describe("single fetch", () => {
 
           "app/routes/stop-propagation.tsx": js`
             import { json } from "@remix-run/node";
-            import { Form, useActionData } from "@remix-run/react";
+            import { Form, useActionData } from "react-router-dom";
 
             export async function action({ request }) {
               let formData = await request.formData();
@@ -1453,7 +1453,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/form-method.tsx": js`
-            import { Form, useActionData, useLoaderData, useSearchParams } from "@remix-run/react";
+            import { Form, useActionData, useLoaderData, useSearchParams } from "react-router-dom";
             import { json } from "@remix-run/node";
 
             export function action({ request }) {
@@ -1484,7 +1484,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/submitter.tsx": js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
 
             export default function() {
               return (
@@ -1507,7 +1507,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/file-upload.tsx": js`
-            import { Form, useSearchParams } from "@remix-run/react";
+            import { Form, useSearchParams } from "react-router-dom";
 
             export default function() {
               const [params] = useSearchParams();
@@ -1528,7 +1528,7 @@ test.describe("single fetch", () => {
 
           "app/routes/empty-file-upload.tsx": js`
             import { json } from "@remix-run/server-runtime";
-            import { Form, useActionData } from "@remix-run/react";
+            import { Form, useActionData } from "react-router-dom";
 
             export async function action({ request }) {
               let formData = await request.formData();
@@ -1563,7 +1563,7 @@ test.describe("single fetch", () => {
           //
           // TODO: refactor other tests to use this
           "app/routes/outputFormData.tsx": js`
-            import { useActionData, useSearchParams } from "@remix-run/react";
+            import { useActionData, useSearchParams } from "react-router-dom";
 
             export async function action({ request }) {
               const formData = await request.formData();
@@ -1588,7 +1588,7 @@ test.describe("single fetch", () => {
 
           "app/routes/pathless-layout-parent.tsx": js`
             import { json } from '@remix-run/server-runtime'
-            import { Form, Outlet, useActionData } from '@remix-run/react'
+            import { Form, Outlet, useActionData } from 'react-router-dom'
 
             export async function action({ request }) {
               return json({ submitted: true });
@@ -1609,7 +1609,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/pathless-layout-parent._pathless.nested.tsx": js`
-            import { Outlet } from '@remix-run/react';
+            import { Outlet } from 'react-router-dom';
 
             export default function () {
               return (
