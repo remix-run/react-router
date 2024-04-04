@@ -27,7 +27,7 @@ jobs:
       matrix:
         node:
           - 18
-          - 20
+          - 20.5.1
 
     runs-on: ubuntu-latest
 
