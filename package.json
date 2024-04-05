@@ -16,7 +16,7 @@
     "pretest:integration": "pnpm build",
     "test:integration": "pnpm playwright:integration",
     "posttest:integration": "pnpm clean:integration",
-    "playwright:integration": "playwright test --config ./integration/playwright.config.ts integration/browser-entry-test.ts integration/form-test.ts integration/loader-test.ts --project chromium",
+    "playwright:integration": "playwright test --config ./integration/playwright.config.ts",
     "changeset": "changeset",
     "version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
