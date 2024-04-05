@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 
-import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
 import {
   createAppFixture,
   createFixture,

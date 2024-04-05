@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 

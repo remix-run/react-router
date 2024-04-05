@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "@remix-run/router";
 
-import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
 import type { Fixture } from "./helpers/create-fixture.js";
 import {
   createAppFixture,
