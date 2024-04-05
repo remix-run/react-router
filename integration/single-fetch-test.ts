@@ -12,7 +12,7 @@ const ISO_DATE = "2024-03-12T12:00:00.000Z";
 
 const files = {
   "app/root.tsx": js`
-    import { Form, Link, Links, Meta, Outlet, Scripts } from "@remix-run/react";
+    import { Form, Link, Links, Meta, Outlet, Scripts } from "react-router-dom";
 
     export function loader() {
       return {
@@ -51,7 +51,7 @@ const files = {
   `,
 
   "app/routes/data.tsx": js`
-    import { useActionData, useLoaderData } from "@remix-run/react";
+    import { useActionData, useLoaderData } from "react-router-dom";
 
     export async function action({ request }) {
       let formData = await request.formData();
@@ -231,7 +231,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/no-revalidate.tsx": js`
-          import { Form, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+          import { Form, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 
           export async function action({ request }) {
             let fd = await request.formData();
@@ -300,7 +300,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/action.tsx": js`
-          import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react';
+          import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router-dom";
 
           export async function action({ request, response }) {
             let fd = await request.formData();
@@ -1252,7 +1252,7 @@ test.describe("single-fetch", () => {
 
           import type { EntryContext } from "@remix-run/node";
           import { createReadableStreamFromReadable } from "@remix-run/node";
-          import { RemixServer } from "@remix-run/react";
+          import { RemixServer } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";
 
           export default function handleRequest(
@@ -1336,7 +1336,7 @@ test.describe("single-fetch", () => {
 
           import type { EntryContext } from "@remix-run/node";
           import { createReadableStreamFromReadable } from "@remix-run/node";
-          import { RemixServer } from "@remix-run/react";
+          import { RemixServer } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";
 
           export default function handleRequest(
@@ -1416,7 +1416,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1434,7 +1434,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1452,7 +1452,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1500,7 +1500,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1518,7 +1518,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1536,7 +1536,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1596,7 +1596,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1614,7 +1614,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1637,7 +1637,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1699,7 +1699,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1722,7 +1722,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1745,7 +1745,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1810,7 +1810,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "@remix-run/react";
+              import {  Link } from "react-router-dom";
 
               export default function Index() {
                 return (
@@ -1821,7 +1821,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1839,7 +1839,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1857,7 +1857,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1896,7 +1896,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "@remix-run/react";
+              import {  Link } from "react-router-dom";
 
               export default function Index() {
                 return (
@@ -1907,7 +1907,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1925,7 +1925,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1943,7 +1943,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1988,7 +1988,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "@remix-run/react";
+              import {  Link } from "react-router-dom";
 
               export default function Index() {
                 return (
@@ -1999,7 +1999,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -2017,7 +2017,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -2040,7 +2040,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -2085,7 +2085,7 @@ test.describe("single-fetch", () => {
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "@remix-run/react";
+              import {  Link } from "react-router-dom";
 
               export default function Index() {
                 return (
@@ -2096,7 +2096,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -2119,7 +2119,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from '@remix-run/react';
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -2142,7 +2142,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from '@remix-run/react';
+              import { useLoaderData } from "react-router-dom";
 
               export function  loader() {
                 return { message: "C server loader" };

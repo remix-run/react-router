@@ -19,7 +19,7 @@ test.describe("ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
           export default function Root() {
             return (
@@ -46,7 +46,7 @@ test.describe("ErrorBoundary", () => {
             isRouteErrorResponse,
             useLoaderData,
             useRouteError,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export function loader() {
             return "PARENT LOADER";
@@ -86,7 +86,7 @@ test.describe("ErrorBoundary", () => {
             useLoaderData,
             useLocation,
             useRouteError,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export function loader({ request }) {
             let errorType = new URL(request.url).searchParams.get('type');
@@ -115,7 +115,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         "app/routes/parent.child-without-boundary.tsx": js`
-          import { useLoaderData, useLocation } from "@remix-run/react";
+          import { useLoaderData, useLocation } from "react-router-dom";
 
           export function loader({ request }) {
             let errorType = new URL(request.url).searchParams.get('type');
@@ -254,7 +254,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -281,7 +281,7 @@ test.describe("single fetch", () => {
               isRouteErrorResponse,
               useLoaderData,
               useRouteError,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export function loader() {
               return "PARENT LOADER";
@@ -321,7 +321,7 @@ test.describe("single fetch", () => {
               useLoaderData,
               useLocation,
               useRouteError,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export function loader({ request }) {
               let errorType = new URL(request.url).searchParams.get('type');
@@ -350,7 +350,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/parent.child-without-boundary.tsx": js`
-            import { useLoaderData, useLocation } from "@remix-run/react";
+            import { useLoaderData, useLocation } from "react-router-dom";
 
             export function loader({ request }) {
               let errorType = new URL(request.url).searchParams.get('type');

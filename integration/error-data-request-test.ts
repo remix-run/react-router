@@ -21,7 +21,7 @@ test.describe("ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
         export default function Root() {
           return (
@@ -40,7 +40,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link, Form } from "@remix-run/react";
+          import { Link, Form } from "react-router-dom";
 
           export default function () {
             return <h1>Index</h1>
@@ -192,7 +192,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -211,7 +211,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { Link, Form } from "@remix-run/react";
+            import { Link, Form } from "react-router-dom";
 
             export default function () {
               return <h1>Index</h1>

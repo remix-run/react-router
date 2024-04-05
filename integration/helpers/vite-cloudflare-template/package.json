@@ -13,11 +13,12 @@
   "dependencies": {
     "@remix-run/cloudflare": "*",
     "@remix-run/cloudflare-pages": "*",
-    "@remix-run/react": "*",
     "isbot": "^4.1.0",
     "miniflare": "^3.20231030.4",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router": "workspace:*",
+    "react-router-dom": "workspace:*"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230518.0",

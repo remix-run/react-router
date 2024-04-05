@@ -79,7 +79,7 @@ test.describe("root route", () => {
       {
         files: {
           "app/root.tsx": js`
-          import { useRouteError } from '@remix-run/react';
+          import { useRouteError } from "react-router-dom";
           export function Layout({ children }) {
             return (
               <html>

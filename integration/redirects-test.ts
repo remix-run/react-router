@@ -17,7 +17,7 @@ test.describe("redirects", () => {
       files: {
         "app/routes/absolute.tsx": js`
           import * as React from 'react';
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export default function Component() {
             let [count, setCount] = React.useState(0);
@@ -36,7 +36,7 @@ test.describe("redirects", () => {
 
         "app/routes/absolute._index.tsx": js`
           import { redirect } from "@remix-run/node";
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
 
           export async function action({ request }) {
             return redirect(new URL(request.url).origin + "/absolute/landing");
@@ -66,7 +66,7 @@ test.describe("redirects", () => {
 
         "app/routes/redirect-document.tsx": js`
           import * as React from "react";
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export default function Component() {
             let [count, setCount] = React.useState(0);
@@ -81,7 +81,7 @@ test.describe("redirects", () => {
         `,
 
         "app/routes/redirect-document._index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
 
           export default function Component() {
             return <Link to="/redirect-document/a">Link</Link>
@@ -158,7 +158,7 @@ test.describe("single fetch", () => {
         files: {
           "app/routes/absolute.tsx": js`
             import * as React from 'react';
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
 
             export default function Component() {
               let [count, setCount] = React.useState(0);
@@ -177,7 +177,7 @@ test.describe("single fetch", () => {
 
           "app/routes/absolute._index.tsx": js`
             import { redirect } from "@remix-run/node";
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
 
             export async function action({ request }) {
               return redirect(new URL(request.url).origin + "/absolute/landing");
@@ -207,7 +207,7 @@ test.describe("single fetch", () => {
 
           "app/routes/redirect-document.tsx": js`
             import * as React from "react";
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
 
             export default function Component() {
               let [count, setCount] = React.useState(0);
@@ -222,7 +222,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/redirect-document._index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
 
             export default function Component() {
               return <Link to="/redirect-document/a">Link</Link>

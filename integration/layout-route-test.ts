@@ -16,7 +16,7 @@ test.describe("pathless layout routes", () => {
       await createFixture({
         files: {
           "app/routes/_layout.tsx": js`
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
 
             export default () => <div data-testid="layout-route"><Outlet /></div>;
           `,
@@ -27,7 +27,7 @@ test.describe("pathless layout routes", () => {
             export default () => <div data-testid="layout-subroute">Layout subroute</div>;
           `,
           "app/routes/sandwiches._pathless.tsx": js`
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
 
             export default () => <div data-testid="sandwiches-pathless-route"><Outlet /></div>;
           `,

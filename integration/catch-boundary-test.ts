@@ -31,7 +31,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
       files: {
         "app/root.tsx": js`
             import { json } from "@remix-run/node";
-            import { Links, Meta, Outlet, Scripts, useMatches } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts, useMatches } from "react-router-dom";
 
             export function loader() {
               return json({ data: "ROOT LOADER" });
@@ -68,7 +68,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         "app/routes/_index.tsx": js`
-            import { Link, Form } from "@remix-run/react";
+            import { Link, Form } from "react-router-dom";
             export default function() {
               return (
                 <div>
@@ -94,7 +94,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         [`app/routes${HAS_BOUNDARY_ACTION_FILE}.jsx`]: js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
             export async function action() {
               throw new Response("", { status: 401 })
             }
@@ -113,7 +113,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         [`app/routes${NO_BOUNDARY_ACTION_FILE}.jsx`]: js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
             export function action() {
               throw new Response("", { status: 401 })
             }
@@ -129,7 +129,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         [`app/routes${HAS_BOUNDARY_LOADER_FILE}.jsx`]: js`
-            import { useRouteError } from '@remix-run/react';
+            import { useRouteError } from "react-router-dom";
             export function loader() {
               throw new Response("", { status: 401 })
             }
@@ -166,7 +166,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         "app/routes/action.tsx": js`
-            import { Outlet, useLoaderData } from "@remix-run/react";
+            import { Outlet, useLoaderData } from "react-router-dom";
 
             export function loader() {
               return "PARENT";
@@ -183,7 +183,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         "app/routes/action.child-catch.tsx": js`
-            import { Form, useLoaderData, useRouteError } from "@remix-run/react";
+            import { Form, useLoaderData, useRouteError } from "react-router-dom";
 
             export function loader() {
               return "CHILD";
@@ -393,7 +393,7 @@ test.describe("single fetch", () => {
         files: {
           "app/root.tsx": js`
               import { json } from "@remix-run/node";
-              import { Links, Meta, Outlet, Scripts, useMatches } from "@remix-run/react";
+              import { Links, Meta, Outlet, Scripts, useMatches } from "react-router-dom";
 
               export function loader() {
                 return json({ data: "ROOT LOADER" });
@@ -430,7 +430,7 @@ test.describe("single fetch", () => {
             `,
 
           "app/routes/_index.tsx": js`
-              import { Link, Form } from "@remix-run/react";
+              import { Link, Form } from "react-router-dom";
               export default function() {
                 return (
                   <div>
@@ -456,7 +456,7 @@ test.describe("single fetch", () => {
             `,
 
           [`app/routes${HAS_BOUNDARY_ACTION_FILE}.jsx`]: js`
-              import { Form } from "@remix-run/react";
+              import { Form } from "react-router-dom";
               export async function action() {
                 throw new Response("", { status: 401 })
               }
@@ -475,7 +475,7 @@ test.describe("single fetch", () => {
             `,
 
           [`app/routes${NO_BOUNDARY_ACTION_FILE}.jsx`]: js`
-              import { Form } from "@remix-run/react";
+              import { Form } from "react-router-dom";
               export function action() {
                 throw new Response("", { status: 401 })
               }
@@ -491,7 +491,7 @@ test.describe("single fetch", () => {
             `,
 
           [`app/routes${HAS_BOUNDARY_LOADER_FILE}.jsx`]: js`
-              import { useRouteError } from '@remix-run/react';
+              import { useRouteError } from "react-router-dom";
               export function loader() {
                 throw new Response("", { status: 401 })
               }
@@ -528,7 +528,7 @@ test.describe("single fetch", () => {
             `,
 
           "app/routes/action.tsx": js`
-              import { Outlet, useLoaderData } from "@remix-run/react";
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return "PARENT";
@@ -545,7 +545,7 @@ test.describe("single fetch", () => {
             `,
 
           "app/routes/action.child-catch.tsx": js`
-              import { Form, useLoaderData, useRouteError } from "@remix-run/react";
+              import { Form, useLoaderData, useRouteError } from "react-router-dom";
 
               export function loader() {
                 return "CHILD";

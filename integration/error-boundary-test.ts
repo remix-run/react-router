@@ -48,7 +48,7 @@ test.describe("ErrorBoundary", () => {
       {
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+              import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
               export default function Root() {
                 return (
@@ -83,7 +83,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/_index.tsx": js`
-              import { Link, Form } from "@remix-run/react";
+              import { Link, Form } from "react-router-dom";
               export default function () {
                 return (
                   <div>
@@ -122,7 +122,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${HAS_BOUNDARY_ACTION_FILE}.jsx`]: js`
-              import { Form } from "@remix-run/react";
+              import { Form } from "react-router-dom";
               export async function action() {
                 throw new Error("Kaboom!")
               }
@@ -141,7 +141,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${NO_BOUNDARY_ACTION_FILE}.jsx`]: js`
-              import { Form } from "@remix-run/react";
+              import { Form } from "react-router-dom";
               export function action() {
                 throw new Error("Kaboom!")
               }
@@ -211,7 +211,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/fetcher-boundary.tsx": js`
-              import { useFetcher } from "@remix-run/react";
+              import { useFetcher } from "react-router-dom";
               export function ErrorBoundary() {
                 return <p id="fetcher-boundary">${OWN_BOUNDARY_TEXT}</p>
               }
@@ -229,7 +229,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/fetcher-no-boundary.tsx": js`
-              import { useFetcher } from "@remix-run/react";
+              import { useFetcher } from "react-router-dom";
               export default function() {
                 let fetcher = useFetcher();
 
@@ -246,7 +246,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/action.tsx": js`
-              import { Outlet, useLoaderData } from "@remix-run/react";
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return "PARENT";
@@ -263,7 +263,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/action.child-error.tsx": js`
-              import { Form, useLoaderData, useRouteError } from "@remix-run/react";
+              import { Form, useLoaderData, useRouteError } from "react-router-dom";
 
               export function loader() {
                 return "CHILD";
@@ -500,7 +500,7 @@ test.describe("ErrorBoundary", () => {
       fixture = await createFixture({
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+              import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
               export default function Root() {
                 return (
@@ -519,7 +519,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/_index.tsx": js`
-              import { Link, Form } from "@remix-run/react";
+              import { Link, Form } from "react-router-dom";
 
               export default function () {
                 return (
@@ -568,7 +568,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${NO_ROOT_BOUNDARY_LOADER_RETURN}.jsx`]: js`
-              import { useLoaderData } from "@remix-run/react";
+              import { useLoaderData } from "react-router-dom";
 
               export async function loader() {}
 
@@ -583,7 +583,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${NO_ROOT_BOUNDARY_ACTION_RETURN}.jsx`]: js`
-              import { useActionData } from "@remix-run/react";
+              import { useActionData } from "react-router-dom";
 
               export async function action() {}
 
@@ -665,7 +665,7 @@ test.describe("loaderData in ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -686,7 +686,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           `,
 
         "app/routes/parent.tsx": js`
-            import { Outlet, useLoaderData, useMatches, useRouteError } from "@remix-run/react";
+            import { Outlet, useLoaderData, useMatches, useRouteError } from "react-router-dom";
 
             export function loader() {
               return "PARENT";
@@ -716,7 +716,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           `,
 
         "app/routes/parent.child-with-boundary.tsx": js`
-            import { Form, useLoaderData, useRouteError } from "@remix-run/react";
+            import { Form, useLoaderData, useRouteError } from "react-router-dom";
 
             export function loader() {
               return "CHILD";
@@ -751,7 +751,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           `,
 
         "app/routes/parent.child-without-boundary.tsx": js`
-            import { Form, useLoaderData } from "@remix-run/react";
+            import { Form, useLoaderData } from "react-router-dom";
 
             export function loader() {
               return "CHILD";
@@ -945,7 +945,7 @@ test.describe("Default ErrorBoundary", () => {
 
     return {
       "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router-dom";
 
           export default function Root() {
             return (
@@ -968,7 +968,7 @@ test.describe("Default ErrorBoundary", () => {
         `,
 
       "app/routes/_index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
           export default function () {
             return (
               <div>
@@ -1233,7 +1233,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
   let fixture = await createFixture({
     files: {
       "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router-dom";
 
           export default function App() {
             return (
@@ -1268,7 +1268,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
           }
         `,
       "app/routes/_index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
 
           export default function Index() {
             return (
@@ -1374,7 +1374,7 @@ test.describe("single fetch", () => {
           singleFetch: true,
           files: {
             "app/root.tsx": js`
-                import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+                import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
                 export default function Root() {
                   return (
@@ -1409,7 +1409,7 @@ test.describe("single fetch", () => {
               `,
 
             "app/routes/_index.tsx": js`
-                import { Link, Form } from "@remix-run/react";
+                import { Link, Form } from "react-router-dom";
                 export default function () {
                   return (
                     <div>
@@ -1448,7 +1448,7 @@ test.describe("single fetch", () => {
               `,
 
             [`app/routes${HAS_BOUNDARY_ACTION_FILE}.jsx`]: js`
-                import { Form } from "@remix-run/react";
+                import { Form } from "react-router-dom";
                 export async function action() {
                   throw new Error("Kaboom!")
                 }
@@ -1467,7 +1467,7 @@ test.describe("single fetch", () => {
               `,
 
             [`app/routes${NO_BOUNDARY_ACTION_FILE}.jsx`]: js`
-                import { Form } from "@remix-run/react";
+                import { Form } from "react-router-dom";
                 export function action() {
                   throw new Error("Kaboom!")
                 }
@@ -1537,7 +1537,7 @@ test.describe("single fetch", () => {
               `,
 
             "app/routes/fetcher-boundary.tsx": js`
-                import { useFetcher } from "@remix-run/react";
+                import { useFetcher } from "react-router-dom";
                 export function ErrorBoundary() {
                   return <p id="fetcher-boundary">${OWN_BOUNDARY_TEXT}</p>
                 }
@@ -1555,7 +1555,7 @@ test.describe("single fetch", () => {
               `,
 
             "app/routes/fetcher-no-boundary.tsx": js`
-                import { useFetcher } from "@remix-run/react";
+                import { useFetcher } from "react-router-dom";
                 export default function() {
                   let fetcher = useFetcher();
 
@@ -1572,7 +1572,7 @@ test.describe("single fetch", () => {
               `,
 
             "app/routes/action.tsx": js`
-                import { Outlet, useLoaderData } from "@remix-run/react";
+                import { Outlet, useLoaderData } from "react-router-dom";
 
                 export function loader() {
                   return "PARENT";
@@ -1589,7 +1589,7 @@ test.describe("single fetch", () => {
               `,
 
             "app/routes/action.child-error.tsx": js`
-                import { Form, useLoaderData, useRouteError } from "@remix-run/react";
+                import { Form, useLoaderData, useRouteError } from "react-router-dom";
 
                 export function loader() {
                   return "CHILD";
@@ -1832,7 +1832,7 @@ test.describe("single fetch", () => {
           singleFetch: true,
           files: {
             "app/root.tsx": js`
-                import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+                import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
                 export default function Root() {
                   return (
@@ -1851,7 +1851,7 @@ test.describe("single fetch", () => {
               `,
 
             "app/routes/_index.tsx": js`
-                import { Link, Form } from "@remix-run/react";
+                import { Link, Form } from "react-router-dom";
 
                 export default function () {
                   return (
@@ -1900,7 +1900,7 @@ test.describe("single fetch", () => {
               `,
 
             [`app/routes${NO_ROOT_BOUNDARY_LOADER_RETURN}.jsx`]: js`
-                import { useLoaderData } from "@remix-run/react";
+                import { useLoaderData } from "react-router-dom";
 
                 export async function loader() {}
 
@@ -1915,7 +1915,7 @@ test.describe("single fetch", () => {
               `,
 
             [`app/routes${NO_ROOT_BOUNDARY_ACTION_RETURN}.jsx`]: js`
-                import { useActionData } from "@remix-run/react";
+                import { useActionData } from "react-router-dom";
 
                 export async function action() {}
 
@@ -2009,7 +2009,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+              import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
               export default function Root() {
                 return (
@@ -2030,7 +2030,7 @@ test.describe("single fetch", () => {
             `,
 
           "app/routes/parent.tsx": js`
-              import { Outlet, useLoaderData, useMatches, useRouteError } from "@remix-run/react";
+              import { Outlet, useLoaderData, useMatches, useRouteError } from "react-router-dom";
 
               export function loader() {
                 return "PARENT";
@@ -2060,7 +2060,7 @@ test.describe("single fetch", () => {
             `,
 
           "app/routes/parent.child-with-boundary.tsx": js`
-              import { Form, useLoaderData, useRouteError } from "@remix-run/react";
+              import { Form, useLoaderData, useRouteError } from "react-router-dom";
 
               export function loader() {
                 return "CHILD";
@@ -2095,7 +2095,7 @@ test.describe("single fetch", () => {
             `,
 
           "app/routes/parent.child-without-boundary.tsx": js`
-              import { Form, useLoaderData } from "@remix-run/react";
+              import { Form, useLoaderData } from "react-router-dom";
 
               export function loader() {
                 return "CHILD";
@@ -2299,7 +2299,7 @@ test.describe("single fetch", () => {
 
       return {
         "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -2322,7 +2322,7 @@ test.describe("single fetch", () => {
           `,
 
         "app/routes/_index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
             export default function () {
               return (
                 <div>
@@ -2591,7 +2591,7 @@ test.describe("single fetch", () => {
       singleFetch: true,
       files: {
         "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts, useRouteError } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router-dom";
 
             export default function App() {
               return (
@@ -2626,7 +2626,7 @@ test.describe("single fetch", () => {
             }
           `,
         "app/routes/_index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
 
             export default function Index() {
               return (

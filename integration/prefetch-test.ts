@@ -11,13 +11,14 @@ import type {
   FixtureInit,
   AppFixture,
 } from "./helpers/create-fixture.js";
-import type { RemixLinkProps } from "../build/node_modules/@remix-run/react/dist/components.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
+
+type PrefetchType = "intent" | "render" | "none" | "viewport";
 
 // TODO: Migrate this test to Vite?
 test.describe.skip("multi fetch", () => {
   // Generate the test app using the given prefetch mode
-  function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
+  function fixtureFactory(mode: PrefetchType): FixtureInit {
     return {
       files: {
         "app/root.tsx": js`
@@ -28,7 +29,7 @@ test.describe.skip("multi fetch", () => {
             Outlet,
             Scripts,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export default function Root() {
             const styles =
@@ -284,7 +285,7 @@ test.describe.skip("multi fetch", () => {
       fixture = await createFixture({
         files: {
           "app/routes/_index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
 
             export default function Component() {
               return (
@@ -358,7 +359,7 @@ test.describe.skip("multi fetch", () => {
       fixture = await createFixture({
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Scripts, useFetcher } from "@remix-run/react";
+              import { Links, Meta, Scripts, useFetcher } from "react-router-dom";
               import globalCss from "./global.css";
 
               export function links() {
@@ -443,7 +444,7 @@ test.describe.skip("multi fetch", () => {
               Outlet,
               Scripts,
               useLoaderData,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export default function Root() {
               const styles =
@@ -493,7 +494,7 @@ test.describe.skip("multi fetch", () => {
           `,
 
           "app/routes/with-nested-links.tsx": js`
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
             import globalCss from "../global.css";
 
             export function links() {
@@ -575,7 +576,7 @@ test.describe.skip("multi fetch", () => {
 // TODO: Migrate this test to Vite?
 test.describe.skip("single fetch", () => {
   // Generate the test app using the given prefetch mode
-  function fixtureFactory(mode: RemixLinkProps["prefetch"]): FixtureInit {
+  function fixtureFactory(mode: PrefetchType): FixtureInit {
     return {
       singleFetch: true,
       files: {
@@ -587,7 +588,7 @@ test.describe.skip("single fetch", () => {
             Outlet,
             Scripts,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export default function Root() {
             const styles =
@@ -844,7 +845,7 @@ test.describe.skip("single fetch", () => {
         singleFetch: true,
         files: {
           "app/routes/_index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
 
             export default function Component() {
               return (
@@ -919,7 +920,7 @@ test.describe.skip("single fetch", () => {
         singleFetch: true,
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Scripts, useFetcher } from "@remix-run/react";
+              import { Links, Meta, Scripts, useFetcher } from "react-router-dom";
               import globalCss from "./global.css";
 
               export function links() {
@@ -1005,7 +1006,7 @@ test.describe.skip("single fetch", () => {
               Outlet,
               Scripts,
               useLoaderData,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export default function Root() {
               const styles =
@@ -1055,7 +1056,7 @@ test.describe.skip("single fetch", () => {
           `,
 
           "app/routes/with-nested-links.tsx": js`
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
             import globalCss from "../global.css";
 
             export function links() {

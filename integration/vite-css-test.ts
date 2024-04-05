@@ -44,8 +44,8 @@ const files = {
   `,
   "app/entry.client.tsx": js`
     import "./entry.client.css";
-  
-    import { RemixBrowser } from "@remix-run/react";
+
+    import { RouterProvider } from "react-router-dom";
     import { startTransition, StrictMode } from "react";
     import { hydrateRoot } from "react-dom/client";
 
@@ -53,13 +53,13 @@ const files = {
       hydrateRoot(
         document,
         <StrictMode>
-          <RemixBrowser />
+          <RouterProvider />
         </StrictMode>
       );
     });
   `,
   "app/root.tsx": js`
-    import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+    import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
     export default function Root() {
       return (

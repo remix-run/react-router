@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/entry.server.tsx": js`
         import * as React from "react";
-        import { RemixServer } from "@remix-run/react";
+        import { RemixServer } from "react-router-dom";
         import { renderToString } from "react-dom/server";
 
         export default function handleRequest(

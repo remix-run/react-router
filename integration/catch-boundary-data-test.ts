@@ -48,7 +48,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
             Scripts,
             useLoaderData,
             useMatches,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export const loader = () => json("${ROOT_DATA}");
 
@@ -88,7 +88,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
           export default function Index() {
             return (
               <div>
@@ -110,7 +110,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         `,
 
         [`app/routes${HAS_BOUNDARY_LAYOUT_NESTED_LOADER_FILE}.jsx`]: js`
-          import { useMatches } from "@remix-run/react";
+          import { useMatches } from "react-router-dom";
           export function loader() {
             return "${LAYOUT_DATA}";
           }
@@ -140,7 +140,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         `,
 
         [`app/routes${HAS_BOUNDARY_NESTED_LOADER_FILE}.jsx`]: js`
-          import { Outlet, useLoaderData } from "@remix-run/react";
+          import { Outlet, useLoaderData } from "react-router-dom";
           export function loader() {
             return "${LAYOUT_DATA}";
           }
@@ -267,7 +267,7 @@ test.describe("single fetch", () => {
               Scripts,
               useLoaderData,
               useMatches,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export const loader = () => json("${ROOT_DATA}");
 
@@ -307,7 +307,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
             export default function Index() {
               return (
                 <div>
@@ -329,7 +329,7 @@ test.describe("single fetch", () => {
           `,
 
           [`app/routes${HAS_BOUNDARY_LAYOUT_NESTED_LOADER_FILE}.jsx`]: js`
-            import { useMatches } from "@remix-run/react";
+            import { useMatches } from "react-router-dom";
             export function loader() {
               return "${LAYOUT_DATA}";
             }
@@ -359,7 +359,7 @@ test.describe("single fetch", () => {
           `,
 
           [`app/routes${HAS_BOUNDARY_NESTED_LOADER_FILE}.jsx`]: js`
-            import { Outlet, useLoaderData } from "@remix-run/react";
+            import { Outlet, useLoaderData } from "react-router-dom";
             export function loader() {
               return "${LAYOUT_DATA}";
             }

@@ -14,10 +14,11 @@
   "dependencies": {
     "@remix-run/css-bundle": "workspace:*",
     "@remix-run/deno": "workspace:*",
-    "@remix-run/react": "workspace:*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router": "workspace:*",
+    "react-router-dom": "workspace:*"
   },
   "devDependencies": {
     "@remix-run/dev": "workspace:*"

@@ -23,7 +23,7 @@ test.describe("actions", () => {
     fixture = await createFixture({
       files: {
         "app/routes/urlencoded.tsx": js`
-          import { Form, useActionData } from "@remix-run/react";
+          import { Form, useActionData } from "react-router-dom";
 
           export let action = async ({ request }) => {
             let formData = await request.formData();
@@ -48,7 +48,7 @@ test.describe("actions", () => {
         `,
 
         "app/routes/request-text.tsx": js`
-          import { Form, useActionData } from "@remix-run/react";
+          import { Form, useActionData } from "react-router-dom";
 
           export let action = async ({ request }) => {
             let text = await request.text();
@@ -75,7 +75,7 @@ test.describe("actions", () => {
 
         [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
           import { redirect } from "@remix-run/node";
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
 
           export function action() {
             throw redirect("/${REDIRECT_TARGET}")
@@ -97,7 +97,7 @@ test.describe("actions", () => {
         `,
 
         "app/routes/no-action.tsx": js`
-          import { Form } from "@remix-run/react";
+          import { Form } from "react-router-dom";
 
           export default function Component() {
             return (
@@ -231,7 +231,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/routes/urlencoded.tsx": js`
-            import { Form, useActionData } from "@remix-run/react";
+            import { Form, useActionData } from "react-router-dom";
 
             export let action = async ({ request }) => {
               let formData = await request.formData();
@@ -256,7 +256,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/request-text.tsx": js`
-            import { Form, useActionData } from "@remix-run/react";
+            import { Form, useActionData } from "react-router-dom";
 
             export let action = async ({ request }) => {
               let text = await request.text();
@@ -283,7 +283,7 @@ test.describe("single fetch", () => {
 
           [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
             import { redirect } from "@remix-run/node";
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
 
             export function action() {
               throw redirect("/${REDIRECT_TARGET}")
@@ -305,7 +305,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/no-action.tsx": js`
-            import { Form } from "@remix-run/react";
+            import { Form } from "react-router-dom";
 
             export default function Component() {
               return (

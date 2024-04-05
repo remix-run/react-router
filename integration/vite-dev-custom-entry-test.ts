@@ -35,7 +35,7 @@ test.describe("Vite custom entry dev", () => {
 
           import type { EntryContext } from "@remix-run/node";
           import { createReadableStreamFromReadable } from "@remix-run/node";
-          import { RemixServer } from "@remix-run/react";
+          import { RemixServer } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";
 
           const ABORT_DELAY = 5_000;
@@ -94,7 +94,7 @@ test.describe("Vite custom entry dev", () => {
           }
         `,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts, LiveReload } from "react-router-dom";
 
           export default function Root() {
             return (

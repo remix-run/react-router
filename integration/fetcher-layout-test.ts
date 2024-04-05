@@ -17,7 +17,7 @@ test.describe("multi fetch", () => {
       files: {
         "app/routes/layout-action.tsx": js`
           import { json } from "@remix-run/node";
-          import { Outlet, useFetcher, useFormAction } from "@remix-run/react";
+          import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let action = ({ params }) => json("layout action data");
 
@@ -46,7 +46,7 @@ test.describe("multi fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json("index data");
 
@@ -77,7 +77,7 @@ test.describe("multi fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json(params.param);
 
@@ -104,7 +104,7 @@ test.describe("multi fetch", () => {
 
         "app/routes/layout-loader.tsx": js`
           import { json } from "@remix-run/node";
-          import { Outlet, useFetcher, useFormAction } from "@remix-run/react";
+          import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let loader = () => json("layout loader data");
 
@@ -133,7 +133,7 @@ test.describe("multi fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json("index data");
 
@@ -160,7 +160,7 @@ test.describe("multi fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json(params.param);
 
@@ -292,7 +292,7 @@ test.describe("single fetch", () => {
       files: {
         "app/routes/layout-action.tsx": js`
           import { json } from "@remix-run/node";
-          import { Outlet, useFetcher, useFormAction } from "@remix-run/react";
+          import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let action = ({ params }) => json("layout action data");
 
@@ -321,7 +321,7 @@ test.describe("single fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json("index data");
 
@@ -352,7 +352,7 @@ test.describe("single fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json(params.param);
 
@@ -379,7 +379,7 @@ test.describe("single fetch", () => {
 
         "app/routes/layout-loader.tsx": js`
           import { json } from "@remix-run/node";
-          import { Outlet, useFetcher, useFormAction } from "@remix-run/react";
+          import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let loader = () => json("layout loader data");
 
@@ -408,7 +408,7 @@ test.describe("single fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json("index data");
 
@@ -435,7 +435,7 @@ test.describe("single fetch", () => {
             useFetcher,
             useFormAction,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export let loader = ({ params }) => json(params.param);
 

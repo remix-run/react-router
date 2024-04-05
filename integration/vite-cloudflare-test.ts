@@ -74,7 +74,7 @@ const files: Files = async ({ port }) => ({
       type LoaderFunctionArgs,
       type ActionFunctionArgs,
     } from "@remix-run/cloudflare";
-    import { Form, useLoaderData } from "@remix-run/react";
+    import { Form, useLoaderData } from "react-router-dom";
 
     const key = "__my-key__";
 

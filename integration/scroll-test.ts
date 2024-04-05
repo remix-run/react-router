@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/routes/_index.tsx": js`
         import { redirect } from "@remix-run/node";
-        import { Form } from "@remix-run/react";
+        import { Form } from "react-router-dom";
 
         export function action() {
           return redirect("/test");
@@ -46,7 +46,7 @@ test.beforeAll(async () => {
       `,
 
       "app/routes/hash.tsx": js`
-        import { Link } from "@remix-run/react";
+        import { Link } from "react-router-dom";
 
         export default function Component() {
           return (

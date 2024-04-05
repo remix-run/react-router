@@ -25,7 +25,7 @@ test.describe("rendering", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
           export default function Root() {
             return (
@@ -46,7 +46,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
           export default function() {
             return (
               <div>
@@ -60,7 +60,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${PAGE}.jsx`]: js`
-          import { Outlet, useLoaderData } from "@remix-run/react";
+          import { Outlet, useLoaderData } from "react-router-dom";
 
           export function loader() {
             return "${PAGE_TEXT}"
@@ -78,7 +78,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${PAGE}._index.jsx`]: js`
-          import { useLoaderData, Link } from "@remix-run/react";
+          import { useLoaderData, Link } from "react-router-dom";
 
           export function loader() {
             return "${PAGE_INDEX_TEXT}"
@@ -96,7 +96,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${PAGE}.${CHILD}.jsx`]: js`
-          import { useLoaderData } from "@remix-run/react";
+          import { useLoaderData } from "react-router-dom";
 
           export function loader() {
             return "${CHILD_TEXT}"
@@ -130,7 +130,7 @@ test.describe("rendering", () => {
 
         "app/routes/gh-1691.tsx": js`
           import { json, redirect } from "@remix-run/node";
-          import { useFetcher} from "@remix-run/react";
+          import { useFetcher} from "react-router-dom";
 
           export const action = async ( ) => {
             return redirect("/gh-1691");
@@ -158,7 +158,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/parent.tsx": js`
-          import { Outlet, useLoaderData } from "@remix-run/react";
+          import { Outlet, useLoaderData } from "react-router-dom";
 
           if (!global.counts) {
             global.count = 0;
@@ -186,7 +186,7 @@ test.describe("rendering", () => {
 
         "app/routes/parent.child.tsx": js`
           import { redirect } from "@remix-run/node";
-          import { useFetcher} from "@remix-run/react";
+          import { useFetcher} from "react-router-dom";
 
           export const action = async ({ request }) => {
             return redirect("/parent");
