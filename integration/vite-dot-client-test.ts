@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import { test, expect } from "@playwright/test";
 
-import { createProject, grep, viteBuild } from "./helpers/vite.js";
+import { createProject, grep, build } from "./helpers/vite.js";
 
 let files = {
   "app/utils.client.ts": String.raw`
@@ -37,7 +37,7 @@ test("Vite / client code excluded from server bundle", async () => {
       }
     `,
   });
-  let { status } = viteBuild({ cwd });
+  let { status } = build({ cwd });
   expect(status).toBe(0);
   let lines = grep(
     path.join(cwd, "build/server"),

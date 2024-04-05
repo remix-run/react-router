@@ -8,38 +8,40 @@ import type { ViteDevOptions } from "../vite/dev";
 import type { ViteBuildOptions } from "../vite/build";
 import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
-import { loadVitePluginContext } from "../vite/plugin";
+import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import { logger } from "../tux";
 import * as profiler from "../vite/profiler";
 
 export async function routes(
-  remixRoot?: string,
+  reactRouterRoot?: string,
   flags: {
     config?: string;
     json?: boolean;
   } = {}
 ): Promise<void> {
-  let ctx = await loadVitePluginContext({
-    root: remixRoot,
+  let ctx = await loadPluginContext({
+    root: reactRouterRoot,
     configFile: flags.config,
   });
 
   if (!ctx) {
-    console.error(colors.red("Remix Vite plugin not found in Vite config"));
+    console.error(
+      colors.red("React Router Vite plugin not found in Vite config")
+    );
     process.exit(1);
   }
 
   let format: RoutesFormat = flags.json ? "json" : "jsx";
-  console.log(formatRoutes(ctx.remixConfig.routes, format));
+  console.log(formatRoutes(ctx.reactRouterConfig.routes, format));
 }
 
-export async function viteBuild(
+export async function build(
   root?: string,
   options: ViteBuildOptions = {}
 ): Promise<void> {
   if (!root) {
-    root = process.env.REMIX_ROOT || process.cwd();
+    root = process.env.REACT_ROUTER_ROOT || process.cwd();
   }
 
   let { build } = await import("../vite/build");
@@ -53,7 +55,7 @@ export async function viteBuild(
   }
 }
 
-export async function viteDev(root: string, options: ViteDevOptions = {}) {
+export async function dev(root: string, options: ViteDevOptions = {}) {
   let { dev } = await import("../vite/dev");
   if (options.profile) {
     await profiler.start();
@@ -61,7 +63,7 @@ export async function viteDev(root: string, options: ViteDevOptions = {}) {
   exitHook(() => profiler.stop(console.info));
   await dev(root, options);
 
-  // keep `remix vite-dev` alive by waiting indefinitely
+  // keep `react-router dev` alive by waiting indefinitely
   await new Promise(() => {});
 }
 
@@ -81,24 +83,24 @@ let disjunctionListFormat = new Intl.ListFormat("en", {
 
 export async function generateEntry(
   entry: string,
-  remixRoot: string,
+  reactRouterRoot: string,
   flags: {
     typescript?: boolean;
     config?: string;
   } = {}
 ) {
-  let ctx = await loadVitePluginContext({
-    root: remixRoot,
+  let ctx = await loadPluginContext({
+    root: reactRouterRoot,
     configFile: flags.config,
   });
 
   let rootDirectory = ctx.rootDirectory;
-  let appDirectory = ctx.remixConfig.appDirectory;
+  let appDirectory = ctx.reactRouterConfig.appDirectory;
 
   // if no entry passed, attempt to create both
   if (!entry) {
-    await generateEntry("entry.client", remixRoot, flags);
-    await generateEntry("entry.server", remixRoot, flags);
+    await generateEntry("entry.client", reactRouterRoot, flags);
+    await generateEntry("entry.server", reactRouterRoot, flags);
     return;
   }
 
@@ -142,8 +144,8 @@ export async function generateEntry(
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    ctx?.remixConfig.ssr === false &&
-      ctx?.remixConfig.future.unstable_singleFetch !== true
+    ctx?.reactRouterConfig.ssr === false &&
+      ctx?.reactRouterConfig.future.unstable_singleFetch !== true
       ? `entry.server.spa.tsx`
       : `entry.server.${serverRuntime}.tsx`
   );

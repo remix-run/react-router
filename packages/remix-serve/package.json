@@ -12,7 +12,7 @@
   },
   "license": "MIT",
   "bin": {
-    "remix-serve": "dist/cli.js"
+    "react-router-serve": "dist/cli.js"
   },
   "scripts": {
     "tsc": "tsc"

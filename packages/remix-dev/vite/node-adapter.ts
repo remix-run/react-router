@@ -38,7 +38,7 @@ export function fromNodeRequest(
     nodeReq.headers.origin && "null" !== nodeReq.headers.origin
       ? nodeReq.headers.origin
       : `http://${nodeReq.headers.host}`;
-  // Use `req.originalUrl` so Remix is aware of the full path
+  // Use `req.originalUrl` so React Router is aware of the full path
   invariant(
     nodeReq.originalUrl,
     "Expected `nodeReq.originalUrl` to be defined"

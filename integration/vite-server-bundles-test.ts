@@ -6,9 +6,9 @@ import dedent from "dedent";
 
 import {
   createProject,
-  viteDev,
-  viteBuild,
-  viteRemixServe,
+  dev,
+  build,
+  reactRouterServe,
   viteConfig,
 } from "./helpers/vite.js";
 
@@ -18,7 +18,7 @@ const withBundleServer = async (
   callback: (port: number) => Promise<void>
 ): Promise<void> => {
   let port = await getPort();
-  let stop = await viteRemixServe({ cwd, port, serverBundle });
+  let stop = await reactRouterServe({ cwd, port, serverBundle });
   await callback(port);
   stop();
 };
@@ -119,12 +119,12 @@ test.describe(() => {
     port = await getPort();
     cwd = await createProject({
       "vite.config.ts": dedent`
-        import { vitePlugin as remix } from "@remix-run/dev";
+        import { vitePlugin as reactRouter } from "@remix-run/dev";
 
         export default {
           ${await viteConfig.server({ port })}
           build: { manifest: true },
-          plugins: [remix({
+          plugins: [reactRouter({
             manifest: true,
             serverBundles: async ({ branch }) => {
               // Smoke test to ensure we can read the route files via 'route.file'
@@ -166,7 +166,7 @@ test.describe(() => {
   test.describe(() => {
     let stop: () => void;
     test.beforeAll(async () => {
-      stop = await viteDev({ cwd, port });
+      stop = await dev({ cwd, port });
     });
 
     test.afterAll(() => stop());
@@ -197,7 +197,7 @@ test.describe(() => {
   });
 
   test.describe(() => {
-    test.beforeAll(() => viteBuild({ cwd }));
+    test.beforeAll(() => build({ cwd }));
 
     test("Vite / server bundles / build / server", async ({ page }) => {
       let pageErrors: Error[] = [];
@@ -294,7 +294,7 @@ test.describe(() => {
       expect(pageErrors).toEqual([]);
     });
 
-    test("Vite / server bundles / build / Remix browser manifest", () => {
+    test("Vite / server bundles / build / React Router browser manifest", () => {
       let clientAssetFiles = fs.readdirSync(
         path.join(cwd, "build", "client", "assets")
       );
@@ -317,8 +317,13 @@ test.describe(() => {
       ]);
     });
 
-    test("Vite / server bundles / build / Remix manifest", () => {
-      let manifestPath = path.join(cwd, "build", ".remix", "manifest.json");
+    test("Vite / server bundles / build / React Router build manifest", () => {
+      let manifestPath = path.join(
+        cwd,
+        "build",
+        ".react-router",
+        "manifest.json"
+      );
       expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
         serverBundles: {
           "bundle-c": {

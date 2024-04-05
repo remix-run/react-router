@@ -17,7 +17,7 @@ test.describe("file-uploads", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      useRemixServe: true, // To support usage of process.cwd() in fileUploadHandler.ts
+      useReactRouterServe: true, // To support usage of process.cwd() in fileUploadHandler.ts
       files: {
         "app/fileUploadHandler.ts": js`
           import * as path from "node:path";

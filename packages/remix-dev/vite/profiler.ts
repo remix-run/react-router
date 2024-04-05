@@ -8,14 +8,15 @@ import path from "node:path";
 import colors from "picocolors";
 
 declare namespace global {
-  let __remix_profile_session: Session | undefined;
+  let __reactRouter_profile_session: Session | undefined;
 }
 
-export const getSession = () => global.__remix_profile_session;
+export const getSession = () => global.__reactRouter_profile_session;
 
 export const start = async (callback?: () => void | Promise<void>) => {
   let inspector = await import("node:inspector").then((r) => r.default);
-  let session = (global.__remix_profile_session = new inspector.Session());
+  let session = (global.__reactRouter_profile_session =
+    new inspector.Session());
   session.connect();
   session.post("Profiler.enable", () => {
     session.post("Profiler.start", callback);
@@ -30,14 +31,14 @@ export const stop = (log: (message: string) => void): void | Promise<void> => {
   return new Promise((res, rej) => {
     session!.post("Profiler.stop", (err, { profile }) => {
       if (err) return rej(err);
-      let outPath = path.resolve(`./remix-${profileCount++}.cpuprofile`);
+      let outPath = path.resolve(`./react-router-${profileCount++}.cpuprofile`);
       fs.writeFileSync(outPath, JSON.stringify(profile));
       log(
         colors.yellow(
           `CPU profile written to ${colors.white(colors.dim(outPath))}`
         )
       );
-      global.__remix_profile_session = undefined;
+      global.__reactRouter_profile_session = undefined;
       res();
     });
   });

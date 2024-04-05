@@ -17,9 +17,11 @@ const enqueueUpdate = debounce(async () => {
 
     for (let route of routeUpdates.values()) {
       manifest.routes[route.id] = route;
-      let imported = window.__remixRouteModuleUpdates.get(route.id);
+      let imported = window.__reactRouterRouteModuleUpdates.get(route.id);
       if (!imported) {
-        throw Error(`[remix:hmr] No module update found for route ${route.id}`);
+        throw Error(
+          `[react-router:hmr] No module update found for route ${route.id}`
+        );
       }
       let routeModule = {
         ...imported,
@@ -55,7 +57,7 @@ const enqueueUpdate = debounce(async () => {
     );
     __remixRouter._internalSetRoutes(routes);
     routeUpdates.clear();
-    window.__remixRouteModuleUpdates.clear();
+    window.__reactRouterRouteModuleUpdates.clear();
   }
 
   await revalidate();
@@ -141,7 +143,7 @@ function __hmr_import(module) {
 }
 
 const routeUpdates = new Map();
-window.__remixRouteModuleUpdates = new Map();
+window.__reactRouterRouteModuleUpdates = new Map();
 
 async function revalidate() {
   let { promise, resolve } = channel();
@@ -168,7 +170,7 @@ function channel() {
   return { promise, resolve, reject };
 }
 
-import.meta.hot.on("remix:hmr", async ({ route }) => {
+import.meta.hot.on("react-router:hmr", async ({ route }) => {
   window.__remixClearCriticalCss();
 
   if (route) {

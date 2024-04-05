@@ -20,10 +20,10 @@ test.describe("flat routes", () => {
       files: {
         "vite.config.js": `
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({
+            plugins: [reactRouter({
               ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
             })],
           });

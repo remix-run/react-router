@@ -20,7 +20,7 @@ test.beforeEach(async ({ context }) => {
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    useRemixServe: true,
+    useReactRouterServe: true,
     files: {
       "app/routes/_index.tsx": js`
         import { json } from "@remix-run/node";

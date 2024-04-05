@@ -5,13 +5,13 @@ import { expect } from "@playwright/test";
 import { normalizePath } from "vite";
 import dedent from "dedent";
 
-import { viteBuild, test, createProject } from "./helpers/vite.js";
+import { build, test, createProject } from "./helpers/vite.js";
 
 const js = String.raw;
 
 const files = {
   "vite.config.ts": dedent(js`
-    import { vitePlugin as remix } from "@remix-run/dev";
+    import { vitePlugin as reactRouter } from "@remix-run/dev";
     import fs from "node:fs/promises";
     import serializeJs from "serialize-javascript";
 
@@ -25,14 +25,14 @@ const files = {
       build: {
         assetsDir: "custom-assets-dir",
       },
-      plugins: [remix({
+      plugins: [reactRouter({
         presets: [
-          // Ensure user config is passed to remixConfig hook
+          // Ensure user config is passed to reactRouterConfig hook
           {
             name: "test-preset",
-            remixConfig: async ({ remixUserConfig: { presets, ...restUserConfig } }) => {
+            reactRouterConfig: async ({ reactRouterUserConfig: { presets, ...restUserConfig } }) => {
               if (!Array.isArray(presets)) {
-                throw new Error("Remix user config doesn't have presets array.");
+                throw new Error("React Router user config doesn't have presets array.");
               }
 
               let expected = JSON.stringify({ appDirectory: "app"});
@@ -40,7 +40,7 @@ const files = {
 
               if (actual !== expected) {
                 throw new Error([
-                  "Remix user config wasn't passed to remixConfig hook.",
+                  "React Router user config wasn't passed to reactRouterConfig hook.",
                   "Expected: " + expected,
                   "Actual: " + actual,
                 ].join(" "));
@@ -53,15 +53,15 @@ const files = {
           // Ensure preset config takes lower precedence than user config
           {
             name: "test-preset",
-            remixConfig: async () => ({
+            reactRouterConfig: async () => ({
               appDirectory: "INCORRECT_APP_DIR", // This is overridden by the user config further down this file
             }),
           },
           {
             name: "test-preset",
-            remixConfigResolved: async ({ remixConfig }) => {
-              if (remixConfig.appDirectory.includes("INCORRECT_APP_DIR")) {
-                throw new Error("Remix preset config wasn't overridden with user config");
+            reactRouterConfigResolved: async ({ reactRouterConfig }) => {
+              if (reactRouterConfig.appDirectory.includes("INCORRECT_APP_DIR")) {
+                throw new Error("React Router preset config wasn't overridden with user config");
               }
             }
           },
@@ -69,33 +69,33 @@ const files = {
           // Ensure config presets are merged in the correct order
           {
             name: "test-preset",
-            remixConfig: async () => ({
+            reactRouterConfig: async () => ({
               buildDirectory: "INCORRECT_BUILD_DIR",
             }),
           },
           {
             name: "test-preset",
-            remixConfig: async () => ({
+            reactRouterConfig: async () => ({
               buildDirectory: "build",
             }),
           },
 
-          // Ensure remixConfig is called with a frozen Remix user config
+          // Ensure reactRouterConfig is called with a frozen user config
           {
             name: "test-preset",
-            remixConfig: async ({ remixUserConfig }) => {
-              await fs.writeFile("PRESET_REMIX_CONFIG_META.json", JSON.stringify({
-                remixUserConfigFrozen: isDeepFrozen(remixUserConfig),
+            reactRouterConfig: async ({ reactRouterUserConfig }) => {
+              await fs.writeFile("PRESET_REACT_ROUTER_CONFIG_META.json", JSON.stringify({
+                reactRouterUserConfigFrozen: isDeepFrozen(reactRouterUserConfig),
               }), "utf-8");
             }
           },
 
-          // Ensure remixConfigResolved is called with a frozen Remix config
+          // Ensure reactRouterConfigResolved is called with a frozen config
           {
             name: "test-preset",
-            remixConfigResolved: async ({ remixConfig }) => {
-              await fs.writeFile("PRESET_REMIX_CONFIG_RESOLVED_META.json", JSON.stringify({
-                remixConfigFrozen: isDeepFrozen(remixConfig),
+            reactRouterConfigResolved: async ({ reactRouterConfig }) => {
+              await fs.writeFile("PRESET_REACT_ROUTER_CONFIG_RESOLVED_META.json", JSON.stringify({
+                reactRouterUserConfigFrozen: isDeepFrozen(reactRouterConfig),
               }), "utf-8");
             }
           },
@@ -103,7 +103,7 @@ const files = {
           // Ensure presets can set serverBundles option (this is critical for Vercel support)
           {
             name: "test-preset",
-            remixConfig: async () => ({
+            reactRouterConfig: async () => ({
               serverBundles() {
                 return "preset-server-bundle-id";
               },
@@ -113,16 +113,16 @@ const files = {
           // Ensure presets can set buildEnd option (this is critical for Vercel support)
           {
             name: "test-preset",
-            remixConfig: async () => ({
+            reactRouterConfig: async () => ({
               async buildEnd(buildEndArgs) {
-                let { viteConfig, buildManifest, remixConfig } = buildEndArgs;
+                let { viteConfig, buildManifest, reactRouterConfig } = buildEndArgs;
 
                 await fs.writeFile(
                   "BUILD_END_META.js",
                   [
                     "export const keys = " + JSON.stringify(Object.keys(buildEndArgs)) + ";",
                     "export const buildManifest = " + serializeJs(buildManifest, { space: 2, unsafe: true }) + ";",
-                    "export const remixConfig = " + serializeJs(remixConfig, { space: 2, unsafe: true }) + ";",
+                    "export const reactRouterConfig = " + serializeJs(reactRouterConfig, { space: 2, unsafe: true }) + ";",
                     "export const assetsDir = " + JSON.stringify(viteConfig.build.assetsDir) + ";",
                   ].join("\\n"),
                   "utf-8"
@@ -140,7 +140,7 @@ const files = {
 
 test("Vite / presets", async () => {
   let cwd = await createProject(files);
-  let { status, stderr } = viteBuild({ cwd });
+  let { status, stderr } = build({ cwd });
   expect(stderr.toString()).toBeFalsy();
   expect(status).toBe(0);
 
@@ -156,56 +156,58 @@ test("Vite / presets", async () => {
     URL.pathToFileURL(path.join(cwd, "BUILD_END_META.js")).href
   );
 
-  let { remixConfig } = buildEndArgsMeta;
+  let { reactRouterConfig } = buildEndArgsMeta;
 
   // Smoke test Vite config
   expect(buildEndArgsMeta.assetsDir).toBe("custom-assets-dir");
 
   // Before rewriting to relative paths, assert that paths are absolute within cwd
-  expect(pathStartsWithCwd(remixConfig.buildDirectory)).toBe(true);
+  expect(pathStartsWithCwd(reactRouterConfig.buildDirectory)).toBe(true);
 
   // Rewrite path args to be relative and normalized for snapshot test
-  remixConfig.buildDirectory = relativeToCwd(remixConfig.buildDirectory);
+  reactRouterConfig.buildDirectory = relativeToCwd(
+    reactRouterConfig.buildDirectory
+  );
 
   // Ensure preset configs are merged in correct order, resulting in the correct build directory
-  expect(remixConfig.buildDirectory).toBe("build");
+  expect(reactRouterConfig.buildDirectory).toBe("build");
 
   // Ensure preset config takes lower precedence than user config
-  expect(remixConfig.serverModuleFormat).toBe("esm");
+  expect(reactRouterConfig.serverModuleFormat).toBe("esm");
 
-  // Ensure `remixConfig` is called with a frozen Remix user config
+  // Ensure `reactRouterConfig` is called with a frozen user config
   expect(
     JSON.parse(
       await fs.readFile(
-        path.join(cwd, "PRESET_REMIX_CONFIG_META.json"),
+        path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_META.json"),
         "utf-8"
       )
     )
   ).toEqual({
-    remixUserConfigFrozen: true,
+    reactRouterUserConfigFrozen: true,
   });
 
-  // Ensure `remixConfigResolved` is called with a frozen Remix config
+  // Ensure `reactRouterConfigResolved` is called with a frozen config
   expect(
     JSON.parse(
       await fs.readFile(
-        path.join(cwd, "PRESET_REMIX_CONFIG_RESOLVED_META.json"),
+        path.join(cwd, "PRESET_REACT_ROUTER_CONFIG_RESOLVED_META.json"),
         "utf-8"
       )
     )
   ).toEqual({
-    remixConfigFrozen: true,
+    reactRouterUserConfigFrozen: true,
   });
 
   // Snapshot the buildEnd args keys
   expect(buildEndArgsMeta.keys).toEqual([
     "buildManifest",
-    "remixConfig",
+    "reactRouterConfig",
     "viteConfig",
   ]);
 
   // Smoke test the resolved config
-  expect(Object.keys(remixConfig)).toEqual([
+  expect(Object.keys(reactRouterConfig)).toEqual([
     "appDirectory",
     "basename",
     "buildDirectory",
