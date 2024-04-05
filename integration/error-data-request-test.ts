@@ -329,14 +329,14 @@ test.describe("single fetch", () => {
       try {
         await fixture.requestSingleFetchData("/loader-return-json.data", {
           method: "TRACE",
-        })
+        });
         expect(false).toBe(true);
       } catch (e) {
         expect((e as Error).message).toMatch(
           "'TRACE' HTTP method is unsupported."
         );
       }
-=    });
+    });
 
     test("returns a 404 on a data fetch to a path with no matches", async () => {
       let { status, headers, data } = await fixture.requestSingleFetchData(
