@@ -4,12 +4,12 @@ import fse from "fs-extra";
 import colors from "picocolors";
 
 import {
-  type RemixPluginContext,
+  type ReactRouterPluginContext,
   type BuildManifest,
   type ServerBundleBuildConfig,
   type ServerBundlesBuildManifest,
   resolveViteConfig,
-  extractRemixPluginContext,
+  extractPluginContext,
   configRouteToBranchRoute,
   getServerBuildDirectory,
 } from "./plugin";
@@ -57,25 +57,27 @@ function getRouteBranch(routes: RouteManifest, routeId: string) {
   return branch.reverse();
 }
 
-type RemixViteClientBuildArgs = {
+type ReactRouterClientBuildArgs = {
   ssr: false;
   serverBundleBuildConfig?: never;
 };
 
-type RemixViteServerBuildArgs = {
+type ReactRouterServerBuildArgs = {
   ssr: true;
   serverBundleBuildConfig?: ServerBundleBuildConfig;
 };
 
-type RemixViteBuildArgs = RemixViteClientBuildArgs | RemixViteServerBuildArgs;
+type ReactRouterBuildArgs =
+  | ReactRouterClientBuildArgs
+  | ReactRouterServerBuildArgs;
 
-async function getServerBuilds(ctx: RemixPluginContext): Promise<{
-  serverBuilds: RemixViteServerBuildArgs[];
+async function getServerBuilds(ctx: ReactRouterPluginContext): Promise<{
+  serverBuilds: ReactRouterServerBuildArgs[];
   buildManifest: BuildManifest;
 }> {
   let { rootDirectory } = ctx;
   const { routes, serverBuildFile, serverBundles, appDirectory } =
-    ctx.remixConfig;
+    ctx.reactRouterConfig;
   let serverBuildDirectory = getServerBuildDirectory(ctx);
   if (!serverBundles) {
     return {
@@ -152,8 +154,8 @@ async function getServerBuilds(ctx: RemixPluginContext): Promise<{
   );
 
   let serverBuilds = Array.from(serverBundleBuildConfigById.values()).map(
-    (serverBundleBuildConfig): RemixViteServerBuildArgs => {
-      let serverBuild: RemixViteServerBuildArgs = {
+    (serverBundleBuildConfig): ReactRouterServerBuildArgs => {
+      let serverBuild: ReactRouterServerBuildArgs = {
         ssr: true,
         serverBundleBuildConfig,
       };
@@ -169,9 +171,9 @@ async function getServerBuilds(ctx: RemixPluginContext): Promise<{
 
 async function cleanBuildDirectory(
   viteConfig: Vite.ResolvedConfig,
-  ctx: RemixPluginContext
+  ctx: ReactRouterPluginContext
 ) {
-  let buildDirectory = ctx.remixConfig.buildDirectory;
+  let buildDirectory = ctx.reactRouterConfig.buildDirectory;
   let isWithinRoot = () => {
     let relativePath = path.relative(ctx.rootDirectory, buildDirectory);
     return !relativePath.startsWith("..") && !path.isAbsolute(relativePath);
@@ -183,11 +185,11 @@ async function cleanBuildDirectory(
 }
 
 function getViteManifestPaths(
-  ctx: RemixPluginContext,
-  serverBuilds: Array<RemixViteServerBuildArgs>
+  ctx: ReactRouterPluginContext,
+  serverBuilds: Array<ReactRouterServerBuildArgs>
 ) {
   let buildRelative = (pathname: string) =>
-    path.resolve(ctx.remixConfig.buildDirectory, pathname);
+    path.resolve(ctx.reactRouterConfig.buildDirectory, pathname);
 
   let viteManifestPaths: Array<{ srcPath: string; destPath: string }> = [
     {
@@ -246,21 +248,23 @@ export async function build(
 
   let viteConfig = await resolveViteConfig({ configFile, mode, root });
 
-  const ctx = await extractRemixPluginContext(viteConfig);
+  const ctx = await extractPluginContext(viteConfig);
 
   if (!ctx) {
-    console.error(colors.red("Remix Vite plugin not found in Vite config"));
+    console.error(
+      colors.red("React Router Vite plugin not found in Vite config")
+    );
     process.exit(1);
   }
 
-  let { remixConfig } = ctx;
+  let { reactRouterConfig } = ctx;
 
   let vite = await import("vite");
 
   async function viteBuild({
     ssr,
     serverBundleBuildConfig,
-  }: RemixViteBuildArgs) {
+  }: ReactRouterBuildArgs) {
     await vite.build({
       root,
       mode,
@@ -276,7 +280,7 @@ export async function build(
       clearScreen,
       logLevel,
       ...(serverBundleBuildConfig
-        ? { __remixServerBundleBuildConfig: serverBundleBuildConfig }
+        ? { __reactRouterServerBundleBuildConfig: serverBundleBuildConfig }
         : {}),
     });
   }
@@ -313,18 +317,24 @@ export async function build(
     })
   );
 
-  if (ctx.remixConfig.manifest) {
-    await fse.ensureDir(path.join(ctx.remixConfig.buildDirectory, ".remix"));
+  if (ctx.reactRouterConfig.manifest) {
+    await fse.ensureDir(
+      path.join(ctx.reactRouterConfig.buildDirectory, ".react-router")
+    );
     await fse.writeFile(
-      path.join(ctx.remixConfig.buildDirectory, ".remix", "manifest.json"),
+      path.join(
+        ctx.reactRouterConfig.buildDirectory,
+        ".react-router",
+        "manifest.json"
+      ),
       JSON.stringify(buildManifest, null, 2),
       "utf-8"
     );
   }
 
-  await remixConfig.buildEnd?.({
+  await reactRouterConfig.buildEnd?.({
     buildManifest,
-    remixConfig,
+    reactRouterConfig,
     viteConfig,
   });
 }

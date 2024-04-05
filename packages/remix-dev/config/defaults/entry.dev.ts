@@ -9,5 +9,5 @@ export default () => {
   import("react-dom/client");
   import("react-refresh/runtime");
   import("react-router-dom");
-  import("remix:hmr");
+  import("react-router:hmr");
 };

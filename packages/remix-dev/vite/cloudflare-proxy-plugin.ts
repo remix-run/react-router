@@ -5,7 +5,7 @@ import type { GetPlatformProxyOptions, PlatformProxy } from "wrangler";
 
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 
-let serverBuildId = "virtual:remix/server-build";
+let serverBuildId = "virtual:react-router/server-build";
 
 type CfProperties = Record<string, unknown>;
 
@@ -26,7 +26,7 @@ function importWrangler() {
   }
 }
 
-const NAME = "vite-plugin-remix-cloudflare-proxy";
+const NAME = "vite-plugin-react-router-cloudflare-proxy";
 
 export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>({
   getLoadContext,
@@ -46,10 +46,13 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>({
     configResolved: (viteConfig) => {
       let pluginIndex = (name: string) =>
         viteConfig.plugins.findIndex((plugin) => plugin.name === name);
-      let remixIndex = pluginIndex("remix");
-      if (remixIndex >= 0 && remixIndex < pluginIndex(NAME)) {
+      let reactRouterPluginIndex = pluginIndex("react-router");
+      if (
+        reactRouterPluginIndex >= 0 &&
+        reactRouterPluginIndex < pluginIndex(NAME)
+      ) {
         throw new Error(
-          `The "${NAME}" plugin should be placed before the Remix plugin in your Vite config file`
+          `The "${NAME}" plugin should be placed before the React Router plugin in your Vite config file`
         );
       }
     },

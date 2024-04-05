@@ -6,11 +6,11 @@ import {
   createEditor,
   createProject,
   customDev,
-  viteBuild,
+  build,
   viteConfig,
-  viteDev,
+  dev,
   viteDevCmd,
-  viteRemixServe,
+  reactRouterServe,
 } from "./helpers/vite.js";
 import { js } from "./helpers/create-fixture.js";
 
@@ -65,7 +65,7 @@ async function viteConfigFile({
   basename?: string;
 }) {
   return js`
-    import { vitePlugin as remix } from "@remix-run/dev";
+    import { vitePlugin as reactRouter } from "@remix-run/dev";
 
     export default {
       ${base !== "/" ? 'base: "' + base + '",' : ""}
@@ -73,8 +73,8 @@ async function viteConfigFile({
       plugins: [
         ${
           basename !== "/"
-            ? 'remix({ basename: "' + basename + '" }),'
-            : "remix(),"
+            ? 'reactRouter({ basename: "' + basename + '" }),'
+            : "reactRouter(),"
         }
       ]
     }
@@ -116,7 +116,7 @@ const customServerFile = ({
       "${basename}*",
       createRequestHandler({
         build: viteDevServer
-          ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+          ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
           : await import("./build/server/index.js"),
       })
     );
@@ -150,7 +150,7 @@ test.describe("Vite base / Remix basename / Vite dev", () => {
       ...files,
     });
     if (startServer !== false) {
-      stop = await viteDev({ cwd, port, basename });
+      stop = await dev({ cwd, port, basename });
     }
   }
 
@@ -325,9 +325,9 @@ test.describe("Vite base / Remix basename / vite build", () => {
       "vite.config.js": await viteConfigFile({ port, base, basename }),
       ...files,
     });
-    viteBuild({ cwd });
+    build({ cwd });
     if (startServer !== false) {
-      stop = await viteRemixServe({ cwd, port, basename });
+      stop = await reactRouterServe({ cwd, port, basename });
     }
   }
 
@@ -372,7 +372,7 @@ test.describe("Vite base / Remix basename / express build", async () => {
       "server.mjs": customServerFile({ port, base, basename }),
       ...files,
     });
-    viteBuild({ cwd });
+    build({ cwd });
     if (startServer !== false) {
       stop = await customDev({
         cwd,
@@ -430,7 +430,7 @@ test.describe("Vite base / Remix basename / express build", async () => {
       ...files,
     });
 
-    viteBuild({ cwd });
+    build({ cwd });
     stop = await customDev({
       cwd,
       port,

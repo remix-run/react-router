@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 import dedent from "dedent";
 
-import { createProject, viteBuild, viteConfig } from "./helpers/vite.js";
+import { createProject, build, viteConfig } from "./helpers/vite.js";
 
 function createRoute(path: string) {
   return {
@@ -51,17 +51,17 @@ test.describe(() => {
   test.beforeAll(async () => {
     cwd = await createProject({
       "vite.config.ts": dedent`
-        import { vitePlugin as remix } from "@remix-run/dev";
+        import { vitePlugin as reactRouter } from "@remix-run/dev";
 
         export default {
           build: { manifest: true },
-          plugins: [remix({ manifest: true })],
+          plugins: [reactRouter({ manifest: true })],
         }
       `,
       ...files,
     });
 
-    viteBuild({ cwd });
+    build({ cwd });
   });
 
   test("Vite / manifests enabled / Vite manifests", () => {
@@ -73,8 +73,13 @@ test.describe(() => {
     ]);
   });
 
-  test("Vite / manifests enabled / Remix manifest", async () => {
-    let manifestPath = path.join(cwd, "build", ".remix", "manifest.json");
+  test("Vite / manifests enabled / React Router build manifest", async () => {
+    let manifestPath = path.join(
+      cwd,
+      "build",
+      ".react-router",
+      "manifest.json"
+    );
     expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
       routes: {
         root: {
@@ -114,7 +119,7 @@ test.describe(() => {
       ...files,
     });
 
-    viteBuild({ cwd });
+    build({ cwd });
   });
 
   test("Vite / manifest disabled / Vite manifests", () => {
@@ -122,8 +127,8 @@ test.describe(() => {
     expect(fs.existsSync(manifestDir)).toBe(false);
   });
 
-  test("Vite / manifest disabled / Remix manifest doesn't exist", async () => {
-    let manifestDir = path.join(cwd, "build", ".remix");
+  test("Vite / manifest disabled / React Router build manifest doesn't exist", async () => {
+    let manifestDir = path.join(cwd, "build", ".react-router");
     expect(fs.existsSync(manifestDir)).toBe(false);
   });
 });

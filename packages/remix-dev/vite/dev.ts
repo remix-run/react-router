@@ -48,8 +48,10 @@ export async function dev(
     logLevel,
   });
 
-  if (!server.config.plugins.find((plugin) => plugin.name === "remix")) {
-    console.error(colors.red("Remix Vite plugin not found in Vite config"));
+  if (!server.config.plugins.find((plugin) => plugin.name === "react-router")) {
+    console.error(
+      colors.red("React Router Vite plugin not found in Vite config")
+    );
     process.exit(1);
   }
 

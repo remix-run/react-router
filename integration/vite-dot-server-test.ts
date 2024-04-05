@@ -8,7 +8,7 @@ import {
   test,
   createProject,
   grep,
-  viteBuild,
+  build,
   viteConfig,
 } from "./helpers/vite.js";
 
@@ -68,7 +68,7 @@ test("Vite / dead-code elimination for server exports", async () => {
       }
     `,
   });
-  let { status } = viteBuild({ cwd });
+  let { status } = build({ cwd });
   expect(status).toBe(0);
 
   let lines = grep(
@@ -136,7 +136,7 @@ test.describe("Vite / route / server-only module referenced by client", () => {
         [path]: serverOnlyModule,
         "app/routes/_index.tsx": route,
       });
-      let result = viteBuild({ cwd });
+      let result = build({ cwd });
       let stderr = result.stderr.toString("utf8");
       [
         "Server-only module referenced by client",
@@ -200,7 +200,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
           export default () => <h1>{serverOnly}</h1>;
         `,
       });
-      let result = viteBuild({ cwd });
+      let result = build({ cwd });
       let stderr = stripAnsi(result.stderr.toString("utf8"));
 
       [
@@ -217,13 +217,13 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 test.describe("Vite / server-only escape hatch", async () => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": dedent`
-      import { vitePlugin as remix } from "@remix-run/dev";
+      import { vitePlugin as reactRouter } from "@remix-run/dev";
       import envOnly from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
       export default {
         ${await viteConfig.server({ port })}
-        plugins: [remix(), envOnly(), tsconfigPaths()],
+        plugins: [reactRouter(), envOnly(), tsconfigPaths()],
       }
     `,
     "app/utils.server.ts": serverOnlyModule,
@@ -244,8 +244,8 @@ test.describe("Vite / server-only escape hatch", async () => {
     `,
   });
 
-  test("vite dev", async ({ page, viteDev }) => {
-    let { port } = await viteDev(files);
+  test("vite dev", async ({ page, dev }) => {
+    let { port } = await dev(files);
 
     await page.goto(`http://localhost:${port}/`, {
       waitUntil: "networkidle",
@@ -254,8 +254,11 @@ test.describe("Vite / server-only escape hatch", async () => {
     expect(page.errors).toEqual([]);
   });
 
-  test("vite build + remix-serve", async ({ page, viteRemixServe }) => {
-    let { port, cwd } = await viteRemixServe(files);
+  test("vite build + react-router-serve", async ({
+    page,
+    reactRouterServe,
+  }) => {
+    let { port, cwd } = await reactRouterServe(files);
 
     let lines = grep(path.join(cwd, "build/client"), /SERVER_ONLY/);
     expect(lines).toHaveLength(0);

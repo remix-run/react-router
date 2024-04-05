@@ -5,8 +5,8 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js vite:dev",
-    "build": "node ./node_modules/@remix-run/dev/dist/cli.js vite:build",
+    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js dev",
+    "build": "node ./node_modules/@remix-run/dev/dist/cli.js build",
     "start": "node ./node_modules/@remix-run/serve/dist/cli.js ./build/server/index.js",
     "typecheck": "tsc"
   },

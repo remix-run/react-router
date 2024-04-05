@@ -4,7 +4,7 @@ import getPort from "get-port";
 import {
   createProject,
   createEditor,
-  viteDev,
+  dev,
   viteConfig,
 } from "./helpers/vite.js";
 
@@ -52,7 +52,7 @@ test.describe(async () => {
       "vite.config.js": await viteConfig.basic({ port }),
       ...files,
     });
-    stop = await viteDev({ cwd, port });
+    stop = await dev({ cwd, port });
   });
   test.afterAll(() => stop());
 

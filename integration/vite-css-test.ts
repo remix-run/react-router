@@ -6,9 +6,9 @@ import dedent from "dedent";
 import {
   createProject,
   createEditor,
-  viteDev,
-  viteBuild,
-  viteRemixServe,
+  dev,
+  build,
+  reactRouterServe,
   customDev,
   EXPRESS_SERVER,
   viteConfig,
@@ -151,12 +151,12 @@ const files = {
 };
 
 const VITE_CONFIG = async (port: number) => dedent`
-  import { vitePlugin as remix } from "@remix-run/dev";
+  import { vitePlugin as reactRouter } from "@remix-run/dev";
   import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
   export default {
     ${await viteConfig.server({ port })}
-    plugins: [remix(), vanillaExtractPlugin()],
+    plugins: [reactRouter(), vanillaExtractPlugin()],
   }
 `;
 
@@ -172,7 +172,7 @@ test.describe(() => {
         "vite.config.ts": await VITE_CONFIG(port),
         ...files,
       });
-      stop = await viteDev({ cwd, port });
+      stop = await dev({ cwd, port });
     });
     test.afterAll(() => stop());
 
@@ -241,7 +241,7 @@ test.describe(() => {
         contents.replace('"sideEffects": false', '"sideEffects": ["*.css.ts"]')
       );
 
-      let { stderr, status } = viteBuild({
+      let { stderr, status } = build({
         cwd,
         env: {
           // Vanilla Extract uses Vite's CJS build which emits a warning to stderr
@@ -250,7 +250,7 @@ test.describe(() => {
       });
       expect(stderr.toString()).toBeFalsy();
       expect(status).toBe(0);
-      stop = await viteRemixServe({ cwd, port });
+      stop = await reactRouterServe({ cwd, port });
     });
     test.afterAll(() => stop());
 

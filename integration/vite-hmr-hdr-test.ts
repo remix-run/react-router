@@ -38,12 +38,12 @@ const indexRoute = `
   }
 `;
 
-test("Vite / HMR & HDR / vite dev", async ({ page, browserName, viteDev }) => {
+test("Vite / HMR & HDR / vite dev", async ({ page, browserName, dev }) => {
   let files: Files = async ({ port }) => ({
     "vite.config.js": await viteConfig.basic({ port }),
     "app/routes/_index.tsx": indexRoute,
   });
-  let { cwd, port } = await viteDev(files);
+  let { cwd, port } = await dev(files);
   await workflow({ page, browserName, cwd, port });
 });
 
@@ -57,18 +57,18 @@ test("Vite / HMR & HDR / express", async ({ page, browserName, customDev }) => {
   await workflow({ page, browserName, cwd, port });
 });
 
-test("Vite / HMR & HDR / mdx", async ({ page, viteDev }) => {
+test("Vite / HMR & HDR / mdx", async ({ page, dev }) => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": `
       import { defineConfig } from "vite";
-      import { vitePlugin as remix } from "@remix-run/dev";
+      import { vitePlugin as reactRouter } from "@remix-run/dev";
       import mdx from "@mdx-js/rollup";
 
       export default defineConfig({
         ${await viteConfig.server({ port })}
         plugins: [
           mdx(),
-          remix(),
+          reactRouter(),
         ],
       });
     `,
@@ -89,7 +89,7 @@ test("Vite / HMR & HDR / mdx", async ({ page, viteDev }) => {
     `,
   });
 
-  let { port, cwd } = await viteDev(files);
+  let { port, cwd } = await dev(files);
   let edit = createEditor(cwd);
   await page.goto(`http://localhost:${port}/mdx`, {
     waitUntil: "networkidle",

@@ -18,13 +18,9 @@ test.describe("Vite dev", () => {
     devPort = await getPort();
     projectDir = await createFixtureProject({
       files: {
-        "remix.config.js": js`
-          throw new Error("Remix should not access remix.config.js when using Vite");
-          export default {};
-        `,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@remix-run/dev";
           import mdx from "@mdx-js/rollup";
 
           export default defineConfig({
@@ -34,7 +30,7 @@ test.describe("Vite dev", () => {
             },
             plugins: [
               mdx(),
-              remix(),
+              reactRouter(),
             ],
           });
         `,
@@ -261,8 +257,8 @@ test.describe("Vite dev", () => {
     });
 
     let nodeBin = process.argv[0];
-    let remixBin = "node_modules/@remix-run/dev/dist/cli.js";
-    devProc = spawn(nodeBin, [remixBin, "vite:dev"], {
+    let reactRouterBin = "node_modules/@remix-run/dev/dist/cli.js";
+    devProc = spawn(nodeBin, [reactRouterBin, "dev"], {
       cwd: projectDir,
       env: process.env,
       stdio: "pipe",

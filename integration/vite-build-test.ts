@@ -5,8 +5,8 @@ import glob from "glob";
 
 import {
   createProject,
-  viteBuild,
-  viteRemixServe,
+  build,
+  reactRouterServe,
   viteConfig,
   grep,
 } from "./helpers/vite.js";
@@ -20,16 +20,12 @@ const js = String.raw;
 test.beforeAll(async () => {
   port = await getPort();
   cwd = await createProject({
-    "remix.config.js": js`
-      throw new Error("Remix should not access remix.config.js when using Vite");
-      export default {};
-    `,
     ".env": `
       ENV_VAR_FROM_DOTENV_FILE=true
     `,
     "vite.config.ts": js`
       import { defineConfig } from "vite";
-      import { vitePlugin as remix } from "@remix-run/dev";
+      import { vitePlugin as reactRouter } from "@remix-run/dev";
       import mdx from "@mdx-js/rollup";
 
       export default defineConfig({
@@ -40,7 +36,7 @@ test.beforeAll(async () => {
         },
         plugins: [
           mdx(),
-          remix(),
+          reactRouter(),
         ],
       });
     `,
@@ -251,7 +247,7 @@ test.beforeAll(async () => {
     `,
   });
 
-  let { stderr, status } = viteBuild({ cwd });
+  let { stderr, status } = build({ cwd });
   expect(
     stderr
       .toString()
@@ -260,7 +256,7 @@ test.beforeAll(async () => {
       .trim()
   ).toBeFalsy();
   expect(status).toBe(0);
-  stop = await viteRemixServe({ cwd, port });
+  stop = await reactRouterServe({ cwd, port });
 });
 test.afterAll(() => stop());
 

@@ -25,7 +25,7 @@ export interface FixtureInit {
   buildStdio?: Writable;
   files?: { [filename: string]: string };
   template?: "cf-template" | "deno-template" | "node-template";
-  useRemixServe?: boolean;
+  useReactRouterServe?: boolean;
   spaMode?: boolean;
   singleFetch?: boolean;
   port?: number;
@@ -88,7 +88,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
         throw new Error("Cannot postDocument in SPA Mode tests");
       },
       getBrowserAsset,
-      useRemixServe: init.useRemixServe,
+      useReactRouterServe: init.useReactRouterServe,
     };
   }
 
@@ -163,7 +163,7 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     requestSingleFetchData,
     postDocument,
     getBrowserAsset,
-    useRemixServe: init.useRemixServe,
+    useReactRouterServe: init.useReactRouterServe,
   };
 }
 
@@ -172,7 +172,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
     port: number;
     stop: VoidFunction;
   }> => {
-    if (fixture.useRemixServe) {
+    if (fixture.useReactRouterServe) {
       return new Promise(async (accept, reject) => {
         let port = await getPort();
 
@@ -197,7 +197,9 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         let started = false;
         let stdout = "";
         let rejectTimeout = setTimeout(() => {
-          reject(new Error("Timed out waiting for remix-serve to start"));
+          reject(
+            new Error("Timed out waiting for react-router-serve to start")
+          );
         }, 20000);
         serveProcess.stderr.pipe(process.stderr);
         serveProcess.stdout.on("data", (chunk) => {
@@ -205,7 +207,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
           let newChunk = chunk.toString();
           stdout += newChunk;
           let match: RegExpMatchArray | null = stdout.match(
-            /\[remix-serve\] http:\/\/localhost:(\d+)\s/
+            /\[react-router-serve\] http:\/\/localhost:(\d+)\s/
           );
           if (match) {
             clearTimeout(rejectTimeout);
@@ -215,7 +217,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
             if (port !== parsedPort) {
               reject(
                 new Error(
-                  `Expected remix-serve to start on port ${port}, but it started on port ${parsedPort}`
+                  `Expected react-router-serve to start on port ${port}, but it started on port ${parsedPort}`
                 )
               );
               return;
@@ -297,30 +299,30 @@ export async function createFixtureProject(
 ): Promise<string> {
   let template = init.template ?? "node-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
-  let projectName = `remix-${template}-${Math.random().toString(32).slice(2)}`;
+  let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
   let port = init.port ?? (await getPort());
 
   await fse.ensureDir(projectDir);
   await fse.copy(integrationTemplateDir, projectDir);
-  // let remixDev = path.join(
+  // let reactRouterDev = path.join(
   //   projectDir,
   //   "node_modules/@remix-run/dev/dist/cli.js"
   // );
-  // await fse.chmod(remixDev, 0o755);
+  // await fse.chmod(reactRouterDev, 0o755);
   // await fse.ensureSymlink(
-  //   remixDev,
-  //   path.join(projectDir, "node_modules/.bin/remix")
+  //   reactRouterDev,
+  //   path.join(projectDir, "node_modules/.bin/rr")
   // );
   //
-  // let remixServe = path.join(
+  // let reactRouterServe = path.join(
   //   projectDir,
   //   "node_modules/@remix-run/serve/dist/cli.js"
   // );
-  // await fse.chmod(remixServe, 0o755);
+  // await fse.chmod(reactRouterServe, 0o755);
   // await fse.ensureSymlink(
-  //   remixServe,
-  //   path.join(projectDir, "node_modules/.bin/remix-serve")
+  //   reactRouterServe,
+  //   path.join(projectDir, "node_modules/.bin/react-router-serve")
   // );
 
   let hasViteConfig = Object.keys(init.files ?? {}).some((filename) =>
@@ -358,9 +360,9 @@ function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
   // tested.
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
 
-  let remixBin = "node_modules/@remix-run/dev/dist/cli.js";
+  let reactRouterBin = "node_modules/@remix-run/dev/dist/cli.js";
 
-  let buildArgs: string[] = [remixBin, "vite:build"];
+  let buildArgs: string[] = [reactRouterBin, "build"];
 
   let buildSpawn = spawnSync("node", buildArgs, {
     cwd: projectDir,

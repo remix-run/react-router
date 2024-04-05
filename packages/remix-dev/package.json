@@ -15,7 +15,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "bin": {
-    "remix": "dist/cli.js"
+    "react-router": "dist/cli.js"
   },
   "scripts": {
     "tsc": "tsc"

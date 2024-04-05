@@ -5,21 +5,18 @@ import * as colors from "../colors";
 import * as commands from "./commands";
 
 const helpText = `
-${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
-  "M"
-)} ${colors.logoPink("I")} ${colors.logoRed("X")}
+${colors.logoBlue("react-router")}
 
   ${colors.heading("Usage")}:
-    $ remix vite:build [${colors.arg("projectDir")}]
-    $ remix vite:dev [${colors.arg("projectDir")}]
-    $ remix routes [${colors.arg("projectDir")}]
-    $ remix watch [${colors.arg("projectDir")}]
+    $ react-router build [${colors.arg("projectDir")}]
+    $ react-router dev [${colors.arg("projectDir")}]
+    $ react-router routes [${colors.arg("projectDir")}]
 
   ${colors.heading("Options")}:
     --help, -h          Print this help message and exit
     --version, -v       Print the CLI version and exit
     --no-color          Disable ANSI colors in console output
-  \`vite:build\` Options (Passed through to Vite):
+  \`build\` Options:
     --assetsInlineLimit Static asset base64 inline threshold in bytes (default: 4096) (number)
     --clearScreen       Allow/disable clear screen when logging (boolean)
     --config, -c        Use specified config file (string)
@@ -30,7 +27,7 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     --profile           Start built-in Node.js inspector
     --sourcemapClient   Output source maps for client build (default: false) (boolean | "inline" | "hidden")
     --sourcemapServer   Output source maps for server build (default: false) (boolean | "inline" | "hidden")
-  \`vite:dev\` Options (Passed through to Vite):
+  \`dev\` Options:
     --clearScreen       Allow/disable clear screen when logging (boolean)
     --config, -c        Use specified config file (string)
     --cors              Enable CORS (boolean)
@@ -49,36 +46,32 @@ ${colors.logoBlue("R")} ${colors.logoGreen("E")} ${colors.logoYellow(
     --config, -c        Use specified Vite config file (string)
     --no-typescript     Generate plain JavaScript files
 
-  ${colors.heading("Values")}:
-    - ${colors.arg("projectDir")}        The Remix project directory
-    - ${colors.arg("remixPlatform")}     \`node\` or \`cloudflare\`
+  ${colors.heading("Build your project")}:
 
-  ${colors.heading("Build your project (Vite)")}:
+    $ react-router build
 
-    $ remix vite:build
+  ${colors.heading("Run your project locally in development")}:
 
-  ${colors.heading("Run your project locally in development (Vite)")}:
-
-    $ remix vite:dev
+    $ react-router dev
 
   ${colors.heading("Show all routes in your app")}:
 
-    $ remix routes
-    $ remix routes my-app
-    $ remix routes --json
-    $ remix routes --config vite.remix.config.ts
+    $ react-router routes
+    $ react-router routes my-app
+    $ react-router routes --json
+    $ react-router routes --config vite.react-router.config.ts
 
   ${colors.heading("Reveal the used entry point")}:
 
-    $ remix reveal entry.client
-    $ remix reveal entry.server
-    $ remix reveal entry.client --no-typescript
-    $ remix reveal entry.server --no-typescript
-    $ remix reveal entry.server --config vite.remix.config.ts
+    $ react-router reveal entry.client
+    $ react-router reveal entry.server
+    $ react-router reveal entry.client --no-typescript
+    $ react-router reveal entry.server --no-typescript
+    $ react-router reveal entry.server --config vite.react-router.config.ts
 `;
 
 /**
- * Programmatic interface for running the Remix CLI with the given command line
+ * Programmatic interface for running the react-router CLI with the given command line
  * arguments.
  */
 export async function run(argv: string[] = process.argv.slice(2)) {
@@ -86,7 +79,7 @@ export async function run(argv: string[] = process.argv.slice(2)) {
   let versions = process.versions;
   if (versions && versions.node && semver.major(versions.node) < 18) {
     throw new Error(
-      `️🚨 Oops, Node v${versions.node} detected. Remix requires a Node version greater than 18.`
+      `️🚨 Oops, Node v${versions.node} detected. react-router requires a Node version greater than 18.`
     );
   }
 
@@ -166,19 +159,19 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     case "routes":
       await commands.routes(input[1], flags);
       break;
-    case "vite:build":
-      await commands.viteBuild(input[1], flags);
+    case "build":
+      await commands.build(input[1], flags);
       break;
     case "reveal": {
       // TODO: simplify getting started guide
       await commands.generateEntry(input[1], input[2], flags);
       break;
     }
-    case "vite:dev":
-      await commands.viteDev(input[1], flags);
+    case "dev":
+      await commands.dev(input[1], flags);
       break;
     default:
-      // `remix ./my-project` is shorthand for `remix vite:dev ./my-project`
-      await commands.viteDev(input[0], flags);
+      // `react-router ./my-project` is shorthand for `react-router dev ./my-project`
+      await commands.dev(input[0], flags);
   }
 }

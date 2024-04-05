@@ -80,19 +80,18 @@ describe("remix CLI", () => {
     it("prints help info", async () => {
       let { stdout } = await execRemix(["--help"]);
       expect(stdout.trim()).toMatchInlineSnapshot(`
-        "R E M I X
+        "react-router
 
           Usage:
-            $ remix vite:build [projectDir]
-            $ remix vite:dev [projectDir]
-            $ remix routes [projectDir]
-            $ remix watch [projectDir]
+            $ react-router build [projectDir]
+            $ react-router dev [projectDir]
+            $ react-router routes [projectDir]
 
           Options:
             --help, -h          Print this help message and exit
             --version, -v       Print the CLI version and exit
             --no-color          Disable ANSI colors in console output
-          \`vite:build\` Options (Passed through to Vite):
+          \`build\` Options:
             --assetsInlineLimit Static asset base64 inline threshold in bytes (default: 4096) (number)
             --clearScreen       Allow/disable clear screen when logging (boolean)
             --config, -c        Use specified config file (string)
@@ -103,7 +102,7 @@ describe("remix CLI", () => {
             --profile           Start built-in Node.js inspector
             --sourcemapClient   Output source maps for client build (default: false) (boolean | "inline" | "hidden")
             --sourcemapServer   Output source maps for server build (default: false) (boolean | "inline" | "hidden")
-          \`vite:dev\` Options (Passed through to Vite):
+          \`dev\` Options:
             --clearScreen       Allow/disable clear screen when logging (boolean)
             --config, -c        Use specified config file (string)
             --cors              Enable CORS (boolean)
@@ -122,32 +121,28 @@ describe("remix CLI", () => {
             --config, -c        Use specified Vite config file (string)
             --no-typescript     Generate plain JavaScript files
 
-          Values:
-            - projectDir        The Remix project directory
-            - remixPlatform     \`node\` or \`cloudflare\`
+          Build your project:
 
-          Build your project (Vite):
+            $ react-router build
 
-            $ remix vite:build
+          Run your project locally in development:
 
-          Run your project locally in development (Vite):
-
-            $ remix vite:dev
+            $ react-router dev
 
           Show all routes in your app:
 
-            $ remix routes
-            $ remix routes my-app
-            $ remix routes --json
-            $ remix routes --config vite.remix.config.ts
+            $ react-router routes
+            $ react-router routes my-app
+            $ react-router routes --json
+            $ react-router routes --config vite.react-router.config.ts
 
           Reveal the used entry point:
 
-            $ remix reveal entry.client
-            $ remix reveal entry.server
-            $ remix reveal entry.client --no-typescript
-            $ remix reveal entry.server --no-typescript
-            $ remix reveal entry.server --config vite.remix.config.ts"
+            $ react-router reveal entry.client
+            $ react-router reveal entry.server
+            $ react-router reveal entry.client --no-typescript
+            $ react-router reveal entry.server --no-typescript
+            $ react-router reveal entry.server --config vite.react-router.config.ts"
       `);
     });
   });

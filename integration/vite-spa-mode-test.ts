@@ -10,7 +10,7 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { createProject, viteBuild } from "./helpers/vite.js";
+import { createProject, build } from "./helpers/vite.js";
 
 test.describe("SPA Mode", () => {
   let fixture: Fixture;
@@ -22,10 +22,10 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ ssr: false })],
+            plugins: [reactRouter({ ssr: false })],
           });
         `,
           "app/routes/invalid-exports.tsx": String.raw`
@@ -40,7 +40,7 @@ test.describe("SPA Mode", () => {
           export default function Component() {}
         `,
         });
-        let result = viteBuild({ cwd });
+        let result = build({ cwd });
         let stderr = result.stderr.toString("utf8");
         expect(stderr).toMatch(
           "SPA Mode: 3 invalid route export(s) in `routes/invalid-exports.tsx`: " +
@@ -53,10 +53,10 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ ssr: false })],
+            plugins: [reactRouter({ ssr: false })],
           });
         `,
           "app/routes/invalid-exports.tsx": String.raw`
@@ -69,7 +69,7 @@ test.describe("SPA Mode", () => {
           export default function Component() {}
         `,
         });
-        let result = viteBuild({ cwd });
+        let result = build({ cwd });
         let stderr = result.stderr.toString("utf8");
         expect(stderr).toMatch(
           "SPA Mode: Invalid `HydrateFallback` export found in `routes/invalid-exports.tsx`. " +
@@ -82,10 +82,10 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ ssr: false })],
+            plugins: [reactRouter({ ssr: false })],
           });
         `,
           "app/entry.server.tsx": js`
@@ -141,7 +141,7 @@ test.describe("SPA Mode", () => {
           }
         `,
         });
-        let result = viteBuild({ cwd });
+        let result = build({ cwd });
         let stderr = result.stderr.toString("utf8");
         expect(stderr).toMatch(
           "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
@@ -154,10 +154,10 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@remix-run/dev";
 
           export default defineConfig({
-            plugins: [remix({ ssr: false })],
+            plugins: [reactRouter({ ssr: false })],
           });
         `,
           "app/root.tsx": String.raw`
@@ -166,7 +166,7 @@ test.describe("SPA Mode", () => {
           }
         `,
         });
-        let result = viteBuild({ cwd });
+        let result = build({ cwd });
         let stderr = result.stderr.toString("utf8");
         expect(stderr).toMatch(
           "SPA Mode: Did you forget to include <Scripts/> in your `root.tsx` " +
@@ -182,10 +182,10 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as remix } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@remix-run/dev";
 
             export default defineConfig({
-              plugins: [remix({ ssr: false })],
+              plugins: [reactRouter({ ssr: false })],
             });
           `,
           "app/root.tsx": js`
@@ -227,10 +227,10 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as remix } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@remix-run/dev";
 
             export default defineConfig({
-              plugins: [remix({
+              plugins: [reactRouter({
                 basename: "/base/",
                 ssr: false
               })],
@@ -305,10 +305,10 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as remix } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@remix-run/dev";
 
             export default defineConfig({
-              plugins: [remix({ ssr: false })],
+              plugins: [reactRouter({ ssr: false })],
             });
           `,
           "app/index.html": String.raw`
@@ -437,10 +437,10 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as remix } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@remix-run/dev";
 
             export default defineConfig({
-              plugins: [remix({
+              plugins: [reactRouter({
                 // We don't want to pick up the app/routes/_index.tsx file from
                 // the template and instead want to use only the src/root.tsx
                 // file below
@@ -520,10 +520,10 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as remix } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@remix-run/dev";
 
             export default defineConfig({
-              plugins: [remix({
+              plugins: [reactRouter({
                 // We don't want to pick up the app/routes/_index.tsx file from
                 // the template and instead want to use only the src/root.tsx
                 // file below
@@ -590,11 +590,11 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as remix } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@remix-run/dev";
 
             export default defineConfig({
               build: { manifest: true },
-              plugins: [remix({ ssr: false })],
+              plugins: [reactRouter({ ssr: false })],
             });
           `,
           "public/styles-root.css": css`

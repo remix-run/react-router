@@ -14,7 +14,7 @@ import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 import type { VitePluginConfig } from "@remix-run/dev";
 
-const remixBin = "node_modules/@remix-run/dev/dist/cli.js";
+const reactRouterBin = "node_modules/@remix-run/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -39,7 +39,7 @@ export const viteConfig = {
     singleFetch?: boolean;
     spaMode?: boolean;
   }) => {
-    let remixPluginOptions: VitePluginConfig = {
+    let pluginOptions: VitePluginConfig = {
       ssr: !args.spaMode,
       future: {
         unstable_singleFetch: args.singleFetch,
@@ -47,14 +47,14 @@ export const viteConfig = {
     };
 
     return dedent`
-      import { vitePlugin as remix } from "@remix-run/dev";
+      import { vitePlugin as reactRouter } from "@remix-run/dev";
       import envOnly from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
       export default {
         ${await viteConfig.server(args)}
         plugins: [
-          remix(${JSON.stringify(remixPluginOptions)}),
+          reactRouter(${JSON.stringify(pluginOptions)}),
           envOnly(),
           tsconfigPaths()
         ],
@@ -99,7 +99,7 @@ export const EXPRESS_SERVER = (args: {
       "*",
       createRequestHandler({
         build: viteDevServer
-          ? () => viteDevServer.ssrLoadModule("virtual:remix/server-build")
+          ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
           : await import("./build/index.js"),
         getLoadContext: () => (${JSON.stringify(args.loadContext ?? {})}),
       })
@@ -115,7 +115,7 @@ export async function createProject(
   files: Record<string, string> = {},
   templateName: TemplateName = "vite-template"
 ) {
-  let projectName = `remix-${Math.random().toString(32).slice(2)}`;
+  let projectName = `rr-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
   await fse.ensureDir(projectDir);
 
@@ -143,7 +143,7 @@ const colorEnv = {
   NO_COLOR: "1",
 } as const;
 
-export const viteBuild = ({
+export const build = ({
   cwd,
   env = {},
 }: {
@@ -152,7 +152,7 @@ export const viteBuild = ({
 }) => {
   let nodeBin = process.argv[0];
 
-  return spawnSync(nodeBin, [remixBin, "vite:build"], {
+  return spawnSync(nodeBin, [reactRouterBin, "build"], {
     cwd,
     env: {
       ...process.env,
@@ -162,7 +162,7 @@ export const viteBuild = ({
   });
 };
 
-export const viteRemixServe = async ({
+export const reactRouterServe = async ({
   cwd,
   port,
   serverBundle,
@@ -230,14 +230,14 @@ const createDev =
     return () => proc.kill();
   };
 
-export const viteDev = createDev([remixBin, "vite:dev"]);
+export const dev = createDev([reactRouterBin, "dev"]);
 export const customDev = createDev(["./server.mjs"]);
 
 // Used for testing errors thrown on build when we don't want to start and
 // wait for the server
 export const viteDevCmd = ({ cwd }: { cwd: string }) => {
   let nodeBin = process.argv[0];
-  return spawnSync(nodeBin, [remixBin, "vite:dev"], {
+  return spawnSync(nodeBin, [reactRouterBin, "dev"], {
     cwd,
     env: { ...process.env },
   });
@@ -252,7 +252,7 @@ declare module "@playwright/test" {
 export type Files = (args: { port: number }) => Promise<Record<string, string>>;
 type Fixtures = {
   page: Page;
-  viteDev: (
+  dev: (
     files: Files,
     templateName?: TemplateName
   ) => Promise<{
@@ -263,7 +263,7 @@ type Fixtures = {
     port: number;
     cwd: string;
   }>;
-  viteRemixServe: (files: Files) => Promise<{
+  reactRouterServe: (files: Files) => Promise<{
     port: number;
     cwd: string;
   }>;
@@ -280,12 +280,12 @@ export const test = base.extend<Fixtures>({
     await use(page);
   },
   // eslint-disable-next-line no-empty-pattern
-  viteDev: async ({}, use) => {
+  dev: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files, template) => {
       let port = await getPort();
       let cwd = await createProject(await files({ port }), template);
-      stop = await viteDev({ cwd, port });
+      stop = await dev({ cwd, port });
       return { port, cwd };
     });
     stop?.();
@@ -302,14 +302,14 @@ export const test = base.extend<Fixtures>({
     stop?.();
   },
   // eslint-disable-next-line no-empty-pattern
-  viteRemixServe: async ({}, use) => {
+  reactRouterServe: async ({}, use) => {
     let stop: (() => unknown) | undefined;
     await use(async (files) => {
       let port = await getPort();
       let cwd = await createProject(await files({ port }));
-      let { status } = viteBuild({ cwd });
+      let { status } = build({ cwd });
       expect(status).toBe(0);
-      stop = await viteRemixServe({ cwd, port });
+      stop = await reactRouterServe({ cwd, port });
       return { port, cwd };
     });
     stop?.();
@@ -323,7 +323,7 @@ export const test = base.extend<Fixtures>({
         await files({ port }),
         "vite-cloudflare-template"
       );
-      let { status } = viteBuild({ cwd });
+      let { status } = build({ cwd });
       expect(status).toBe(0);
       stop = await wranglerPagesDev({ cwd, port });
       return { port, cwd };

@@ -3,9 +3,9 @@ import getPort from "get-port";
 
 import {
   createProject,
-  viteDev,
-  viteBuild,
-  viteRemixServe,
+  dev,
+  build,
+  reactRouterServe,
   viteConfig,
 } from "./helpers/vite.js";
 
@@ -32,7 +32,7 @@ test.describe(async () => {
 
   test.describe(() => {
     test.beforeAll(async () => {
-      stop = await viteDev({ cwd, port });
+      stop = await dev({ cwd, port });
     });
     test.afterAll(() => stop());
 
@@ -55,9 +55,9 @@ test.describe(async () => {
   test.describe(() => {
     let buildPort: number;
     test.beforeAll(async () => {
-      viteBuild({ cwd });
+      build({ cwd });
       buildPort = await getPort();
-      stop = await viteRemixServe({ cwd, port: buildPort });
+      stop = await reactRouterServe({ cwd, port: buildPort });
     });
     test.afterAll(() => stop());
 

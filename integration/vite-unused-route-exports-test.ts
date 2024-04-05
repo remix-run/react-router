@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import { test, expect } from "@playwright/test";
 
-import { createProject, grep, viteBuild } from "./helpers/vite.js";
+import { createProject, grep, build } from "./helpers/vite.js";
 
 test("Vite / dead-code elimination for unused route exports", async () => {
   let cwd = await createProject({
@@ -24,7 +24,7 @@ test("Vite / dead-code elimination for unused route exports", async () => {
       }
     `,
   });
-  let { status } = viteBuild({ cwd });
+  let { status } = build({ cwd });
   expect(status).toBe(0);
 
   expect(

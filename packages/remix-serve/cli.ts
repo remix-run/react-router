@@ -50,7 +50,7 @@ async function run() {
 
   if (!buildPathArg) {
     console.error(`
-  Usage: remix-serve <server-build-path> - e.g. remix-serve build/index.js`);
+  Usage: react-router-serve <server-build-path> - e.g. react-router-serve build/server/index.js`);
     process.exit(1);
   }
 
@@ -108,10 +108,10 @@ async function run() {
         ?.address;
 
     if (!address) {
-      console.log(`[remix-serve] http://localhost:${port}`);
+      console.log(`[react-router-serve] http://localhost:${port}`);
     } else {
       console.log(
-        `[remix-serve] http://localhost:${port} (http://${address}:${port})`
+        `[react-router-serve] http://localhost:${port} (http://${address}:${port})`
       );
     }
     if (process.env.NODE_ENV === "development") {

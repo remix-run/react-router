@@ -176,7 +176,7 @@ const createRoutes = (
 export const getStylesForUrl = async ({
   viteDevServer,
   rootDirectory,
-  remixConfig,
+  reactRouterConfig,
   entryClientFilePath,
   cssModulesManifest,
   build,
@@ -184,7 +184,7 @@ export const getStylesForUrl = async ({
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
-  remixConfig: Pick<ResolvedRemixConfig, "appDirectory" | "routes">;
+  reactRouterConfig: Pick<ResolvedRemixConfig, "appDirectory" | "routes">;
   entryClientFilePath: string;
   cssModulesManifest: Record<string, string>;
   build: ServerBuild;
@@ -195,10 +195,10 @@ export const getStylesForUrl = async ({
   }
 
   let routes = createRoutes(build.routes);
-  let appPath = path.relative(process.cwd(), remixConfig.appDirectory);
+  let appPath = path.relative(process.cwd(), reactRouterConfig.appDirectory);
   let documentRouteFiles =
     matchRoutes(routes, url, build.basename)?.map((match) =>
-      path.join(appPath, remixConfig.routes[match.route.id].file)
+      path.join(appPath, reactRouterConfig.routes[match.route.id].file)
     ) ?? [];
 
   let styles = await getStylesForFiles({

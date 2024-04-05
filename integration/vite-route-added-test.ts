@@ -3,7 +3,7 @@ import path from "node:path";
 import { test, expect } from "@playwright/test";
 import getPort from "get-port";
 
-import { createProject, viteDev, viteConfig } from "./helpers/vite.js";
+import { createProject, dev, viteConfig } from "./helpers/vite.js";
 
 const files = {
   "app/routes/_index.tsx": String.raw`
@@ -34,7 +34,7 @@ test.describe(async () => {
       "vite.config.js": await viteConfig.basic({ port }),
       ...files,
     });
-    stop = await viteDev({ cwd, port });
+    stop = await dev({ cwd, port });
   });
   test.afterAll(() => stop());
 

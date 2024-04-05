@@ -3,9 +3,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "remix build",
-    "dev": "remix dev",
-    "start": "remix-serve build/index.js",
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "start": "react-router-serve build/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
