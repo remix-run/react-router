@@ -634,9 +634,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (
           }
 
           let configPreset: VitePluginConfig = omit(
-            await preset.reactRouterConfig({
-              reactRouterUserConfig,
-            }),
+            await preset.reactRouterConfig({ reactRouterUserConfig }),
             excludedConfigPresetKeys
           );
 
