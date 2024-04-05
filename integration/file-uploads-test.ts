@@ -45,7 +45,7 @@ test.describe("file-uploads", () => {
           import {
             unstable_parseMultipartFormData as parseMultipartFormData,
           } from "@remix-run/node";
-          import { Form, useActionData } from "@remix-run/react";
+          import { Form, useActionData } from "react-router-dom";
           import { uploadHandler } from "~/fileUploadHandler";
 
           export let action = async ({ request }) => {
@@ -181,7 +181,7 @@ test.describe("single fetch", () => {
             import {
               unstable_parseMultipartFormData as parseMultipartFormData,
             } from "@remix-run/node";
-            import { Form, useActionData } from "@remix-run/react";
+            import { Form, useActionData } from "react-router-dom";
             import { uploadHandler } from "~/fileUploadHandler";
 
             export let action = async ({ request }) => {

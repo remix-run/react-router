@@ -46,7 +46,7 @@ test("Vite / dead-code elimination for server exports", async () => {
     "app/routes/remove-server-exports-and-dce.tsx": `
       import fs from "node:fs";
       import { json } from "@remix-run/node";
-      import { useLoaderData } from "@remix-run/react";
+      import { useLoaderData } from "react-router-dom";
 
       import { serverOnly as serverOnlyFile } from "../utils.server";
       import { serverOnly as serverOnlyDir } from "../.server/utils";

@@ -41,7 +41,7 @@ test.beforeAll(async () => {
       });
     `,
     "app/root.tsx": js`
-      import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+      import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
       export default function Root() {
         return (
@@ -111,7 +111,7 @@ test.beforeAll(async () => {
     "app/routes/mdx.mdx": js`
       import { useEffect, useState } from "react";
       import { json } from "@remix-run/node";
-      import { useLoaderData } from "@remix-run/react";
+      import { useLoaderData } from "react-router-dom";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
@@ -171,7 +171,7 @@ test.beforeAll(async () => {
     `,
     "app/routes/dotenv.tsx": js`
       import { json } from "@remix-run/node";
-      import { useLoaderData } from "@remix-run/react";
+      import { useLoaderData } from "react-router-dom";
 
       export const loader = () => {
         return json({
@@ -189,7 +189,7 @@ test.beforeAll(async () => {
     "app/assets/test.txt": "test",
     "app/routes/ssr-only-assets.tsx": js`
       import txtUrl from "../assets/test.txt?url";
-      import { useLoaderData } from "@remix-run/react"
+      import { useLoaderData } from "react-router-dom"
 
       export const loader: LoaderFunction = () => {
         return { txtUrl };
@@ -208,7 +208,7 @@ test.beforeAll(async () => {
     "app/assets/test.css": ".test{color:red}",
     "app/routes/ssr-only-css-url-files.tsx": js`
       import cssUrl from "../assets/test.css?url";
-      import { useLoaderData } from "@remix-run/react"
+      import { useLoaderData } from "react-router-dom"
 
       export const loader: LoaderFunction = () => {
         return { cssUrl };
@@ -225,7 +225,7 @@ test.beforeAll(async () => {
     `,
 
     "app/routes/ssr-code-split.tsx": js`
-      import { useLoaderData } from "@remix-run/react"
+      import { useLoaderData } from "react-router-dom"
 
       export const loader: LoaderFunction = async () => {
         const lib = await import("../ssr-code-split-lib");

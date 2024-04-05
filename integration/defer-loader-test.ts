@@ -16,7 +16,7 @@ test.describe("deferred loaders", () => {
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
-        import { useLoaderData, Link } from "@remix-run/react";
+        import { useLoaderData, Link } from "react-router-dom";
         export default function Index() {
           return (
             <div>
@@ -38,7 +38,7 @@ test.describe("deferred loaders", () => {
         "app/routes/direct-promise-access.tsx": js`
         import * as React from "react";
         import { defer } from "@remix-run/node";
-        import { useLoaderData, Link, Await } from "@remix-run/react";
+        import { useLoaderData, Link, Await } from "react-router-dom";
         export function loader() {
           return defer({
             bar: new Promise(async (resolve, reject) => {
@@ -109,7 +109,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/routes/_index.tsx": js`
-            import { useLoaderData, Link } from "@remix-run/react";
+            import { useLoaderData, Link } from "react-router-dom";
             export default function Index() {
               return (
                 <div>
@@ -131,7 +131,7 @@ test.describe("single fetch", () => {
           "app/routes/direct-promise-access.tsx": js`
             import * as React from "react";
             import { defer } from "@remix-run/node";
-            import { useLoaderData, Link, Await } from "@remix-run/react";
+            import { useLoaderData, Link, Await } from "react-router-dom";
             export function loader() {
               return defer({
                 bar: new Promise(async (resolve, reject) => {

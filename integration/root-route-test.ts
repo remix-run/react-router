@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
 import {
   createAppFixture,
   createFixture,
@@ -79,7 +79,7 @@ test.describe("root route", () => {
       {
         files: {
           "app/root.tsx": js`
-          import { useRouteError } from '@remix-run/react';
+          import { useRouteError } from "react-router-dom";
           export function Layout({ children }) {
             return (
               <html>

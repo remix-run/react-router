@@ -29,7 +29,7 @@ function createRoute(path: string) {
   return {
     [`app/routes/${path}`]: `
       ${ROUTE_FILE_COMMENT}
-      import { Outlet } from "@remix-run/react";
+      import { Outlet } from "react-router-dom";
       import { useState, useEffect } from "react";
 
       export default function Route() {
@@ -75,7 +75,7 @@ const TEST_ROUTES = [
 const files = {
   "app/root.tsx": `
     ${ROUTE_FILE_COMMENT}
-    import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+    import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
     export default function Root() {
       return (

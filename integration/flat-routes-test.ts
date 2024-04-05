@@ -29,7 +29,7 @@ test.describe("flat routes", () => {
           });
         `,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
           export default function Root() {
             return (
@@ -89,7 +89,7 @@ test.describe("flat routes", () => {
         `,
 
         "app/routes/dashboard/route.tsx": js`
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export default function () {
             return (
@@ -299,7 +299,7 @@ test.describe("pathless routes and route collisions", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Link, Outlet, Scripts, useMatches } from "@remix-run/react";
+          import { Link, Outlet, Scripts, useMatches } from "react-router-dom";
 
           export default function App() {
             let matches = 'Number of matches: ' + useMatches().length;
@@ -326,7 +326,7 @@ test.describe("pathless routes and route collisions", () => {
           }
         `,
         "app/routes/nested._pathless.tsx": js`
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export default function Layout() {
             return (
@@ -343,7 +343,7 @@ test.describe("pathless routes and route collisions", () => {
           }
         `,
         "app/routes/nested._pathless2.tsx": js`
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export default function Layout() {
             return (

@@ -17,7 +17,7 @@ import { js } from "./helpers/create-fixture.js";
 const files = {
   "app/routes/_index.tsx": String.raw`
     import { useState, useEffect } from "react";
-    import { Link } from "@remix-run/react"
+    import { Link } from "react-router-dom"
 
     export default function IndexRoute() {
       const [mounted, setMounted] = useState(false);
@@ -37,7 +37,7 @@ const files = {
     }
   `,
   "app/routes/other.tsx": String.raw`
-    import { useLoaderData } from "@remix-run/react";
+    import { useLoaderData } from "react-router-dom";
 
     export const loader = () => {
       return "other-loader";

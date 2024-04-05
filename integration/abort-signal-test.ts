@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/routes/_index.tsx": js`
         import { json } from "@remix-run/node";
-        import { useActionData, useLoaderData, Form } from "@remix-run/react";
+        import { useActionData, useLoaderData, Form } from "react-router-dom";
 
         export async function action ({ request }) {
           // New event loop causes express request to close

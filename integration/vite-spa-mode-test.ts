@@ -89,7 +89,7 @@ test.describe("SPA Mode", () => {
           });
         `,
           "app/entry.server.tsx": js`
-          import { RemixServer } from "@remix-run/react";
+          import { RemixServer } from "react-router-dom";
           import { renderToString } from "react-dom/server";
 
           export default function handleRequest(
@@ -108,7 +108,7 @@ test.describe("SPA Mode", () => {
           }
         `,
           "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
           export default function Root() {
             return (
@@ -189,7 +189,7 @@ test.describe("SPA Mode", () => {
             });
           `,
           "app/root.tsx": js`
-            import { Outlet, Scripts } from "@remix-run/react";
+            import { Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -237,7 +237,7 @@ test.describe("SPA Mode", () => {
             });
           `,
           "app/root.tsx": js`
-            import { Outlet, Scripts } from "@remix-run/react";
+            import { Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -266,7 +266,7 @@ test.describe("SPA Mode", () => {
           `,
           "app/routes/_index.tsx": js`
             import * as React  from "react";
-            import { useLoaderData } from "@remix-run/react";
+            import { useLoaderData } from "react-router-dom";
 
             export async function clientLoader({ request }) {
               return "Index Loader Data";
@@ -323,7 +323,7 @@ test.describe("SPA Mode", () => {
             </html>
           `,
           "app/entry.client.tsx": js`
-            import { RemixBrowser } from "@remix-run/react";
+            import { RouterProvider } from "react-router-dom";
             import { startTransition, StrictMode } from "react";
             import { hydrateRoot } from "react-dom/client";
 
@@ -331,7 +331,7 @@ test.describe("SPA Mode", () => {
               hydrateRoot(
                 document.querySelector("#app"),
                 <StrictMode>
-                  <RemixBrowser />
+                  <RouterProvider />
                 </StrictMode>
               );
             });
@@ -341,7 +341,7 @@ test.describe("SPA Mode", () => {
             import path from "node:path";
 
             import type { EntryContext } from "@remix-run/node";
-            import { RemixServer } from "@remix-run/react";
+            import { RemixServer } from "react-router-dom";
             import { renderToString } from "react-dom/server";
 
             export default function handleRequest(
@@ -372,7 +372,7 @@ test.describe("SPA Mode", () => {
             }
           `,
           "app/root.tsx": js`
-            import { Outlet, Scripts } from "@remix-run/react";
+            import { Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -395,7 +395,7 @@ test.describe("SPA Mode", () => {
           `,
           "app/routes/_index.tsx": js`
             import * as React  from "react";
-            import { useLoaderData } from "@remix-run/react";
+            import { useLoaderData } from "react-router-dom";
 
             export async function clientLoader({ request }) {
               return "Index Loader Data";
@@ -458,7 +458,7 @@ test.describe("SPA Mode", () => {
               Route,
               Scripts,
               ScrollRestoration,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export function Layout({ children }: { children: React.ReactNode }) {
               return (
@@ -541,7 +541,7 @@ test.describe("SPA Mode", () => {
               Route,
               Scripts,
               ScrollRestoration,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export function Layout({ children }: { children: React.ReactNode }) {
               return (
@@ -609,7 +609,7 @@ test.describe("SPA Mode", () => {
           `,
           "app/root.tsx": js`
             import * as React from "react";
-            import { Form, Link, Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Form, Link, Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export function meta({ data }) {
               return [{
@@ -686,7 +686,7 @@ test.describe("SPA Mode", () => {
           `,
           "app/routes/_index.tsx": js`
             import * as React  from "react";
-            import { useLoaderData } from "@remix-run/react";
+            import { useLoaderData } from "react-router-dom";
 
             export function meta({ data }) {
               return [{
@@ -723,7 +723,7 @@ test.describe("SPA Mode", () => {
             }
           `,
           "app/routes/about.tsx": js`
-            import { useActionData, useLoaderData } from "@remix-run/react";
+            import { useActionData, useLoaderData } from "react-router-dom";
 
             export function meta({ data }) {
               return [{
@@ -753,7 +753,7 @@ test.describe("SPA Mode", () => {
             }
           `,
           "app/routes/error.tsx": js`
-            import { useRouteError } from "@remix-run/react";
+            import { useRouteError } from "react-router-dom";
 
             export async function clientLoader({ serverLoader }) {
               await serverLoader();

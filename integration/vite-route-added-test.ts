@@ -8,7 +8,7 @@ import { createProject, dev, viteConfig } from "./helpers/vite.js";
 const files = {
   "app/routes/_index.tsx": String.raw`
     import { useState, useEffect } from "react";
-    import { Link } from "@remix-run/react";
+    import { Link } from "react-router-dom";
 
     export default function IndexRoute() {
       const [mounted, setMounted] = useState(false);

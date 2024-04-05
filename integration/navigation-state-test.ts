@@ -38,7 +38,7 @@ test.describe("navigation states", () => {
       files: {
         "app/root.tsx": js`
           import { useMemo, useRef } from "react";
-          import { Outlet, Scripts, useNavigation } from "@remix-run/react";
+          import { Outlet, Scripts, useNavigation } from "react-router-dom";
           export default function() {
             const navigation = useNavigation();
             const navigationsRef = useRef();
@@ -68,7 +68,7 @@ test.describe("navigation states", () => {
           }
         `,
         "app/routes/_index.tsx": js`
-          import { Form, Link, useFetcher } from "@remix-run/react";
+          import { Form, Link, useFetcher } from "react-router-dom";
           export function loader() { return null; }
           export default function() {
             const fetcher = useFetcher();
@@ -486,7 +486,7 @@ test.describe("single fetch", () => {
         files: {
           "app/root.tsx": js`
             import { useMemo, useRef } from "react";
-            import { Outlet, Scripts, useNavigation } from "@remix-run/react";
+            import { Outlet, Scripts, useNavigation } from "react-router-dom";
             export default function() {
               const navigation = useNavigation();
               const navigationsRef = useRef();
@@ -516,7 +516,7 @@ test.describe("single fetch", () => {
             }
           `,
           "app/routes/_index.tsx": js`
-            import { Form, Link, useFetcher } from "@remix-run/react";
+            import { Form, Link, useFetcher } from "react-router-dom";
             export function loader() { return null; }
             export default function() {
               const fetcher = useFetcher();

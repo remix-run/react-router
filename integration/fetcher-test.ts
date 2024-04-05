@@ -30,7 +30,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/fetcher-action-only-call.tsx": js`
-          import { useFetcher } from "@remix-run/react";
+          import { useFetcher } from "react-router-dom";
 
           export default function FetcherActionOnlyCall() {
             let fetcher = useFetcher();
@@ -61,7 +61,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { useFetcher } from "@remix-run/react";
+          import { useFetcher } from "react-router-dom";
           export default function Index() {
             let fetcher = useFetcher();
             return (
@@ -90,7 +90,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/parent.tsx": js`
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export function action() {
             return "${PARENT_LAYOUT_ACTION}";
@@ -106,7 +106,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/parent._index.tsx": js`
-          import { useFetcher } from "@remix-run/react";
+          import { useFetcher } from "react-router-dom";
 
           export function action() {
             return "${PARENT_INDEX_ACTION}";
@@ -150,7 +150,7 @@ test.describe("useFetcher", () => {
 
         "app/routes/fetcher-echo.tsx": js`
           import { json } from "@remix-run/node";
-          import { useFetcher } from "@remix-run/react";
+          import { useFetcher } from "react-router-dom";
 
           export async function action({ request }) {
             await new Promise(r => setTimeout(r, 1000));
@@ -441,7 +441,7 @@ test.describe("fetcher aborts and adjacent forms", () => {
             useFetcher,
             useLoaderData,
             useNavigation
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           export async function loader({ request }) {
             // 1 second timeout on data
@@ -554,7 +554,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/fetcher-action-only-call.tsx": js`
-            import { useFetcher } from "@remix-run/react";
+            import { useFetcher } from "react-router-dom";
 
             export default function FetcherActionOnlyCall() {
               let fetcher = useFetcher();
@@ -585,7 +585,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { useFetcher } from "@remix-run/react";
+            import { useFetcher } from "react-router-dom";
             export default function Index() {
               let fetcher = useFetcher();
               return (
@@ -614,7 +614,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/parent.tsx": js`
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
 
             export function action() {
               return new Response("${PARENT_LAYOUT_ACTION}");
@@ -630,7 +630,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/parent._index.tsx": js`
-            import { useFetcher } from "@remix-run/react";
+            import { useFetcher } from "react-router-dom";
 
             export function action() {
               return new Response("${PARENT_INDEX_ACTION}");
@@ -674,7 +674,7 @@ test.describe("single fetch", () => {
 
           "app/routes/fetcher-echo.tsx": js`
             import { json } from "@remix-run/node";
-            import { useFetcher } from "@remix-run/react";
+            import { useFetcher } from "react-router-dom";
 
             export async function action({ request }) {
               await new Promise(r => setTimeout(r, 1000));
@@ -968,7 +968,7 @@ test.describe("single fetch", () => {
               useFetcher,
               useLoaderData,
               useNavigation
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             export async function loader({ request }) {
               // 1 second timeout on data

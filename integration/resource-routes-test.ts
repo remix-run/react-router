@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
 import {
   createAppFixture,
   createFixture,
@@ -22,7 +22,7 @@ test.describe("loader in an app", async () => {
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
-          import { Form, Link } from "@remix-run/react";
+          import { Form, Link } from "react-router-dom";
 
           export default () => (
             <>
@@ -117,7 +117,7 @@ test.describe("loader in an app", async () => {
         `,
         "app/routes/$.tsx": js`
           import { json } from "@remix-run/node";
-          import { useRouteError } from "@remix-run/react";
+          import { useRouteError } from "react-router-dom";
           export function loader({ request }) {
             throw json({ message: new URL(request.url).pathname + ' not found' }, {
               status: 404
@@ -276,11 +276,11 @@ test.describe("Development server", async () => {
       {
         files: {
           "app/routes/_index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
             export default () => <Link to="/child">Child</Link>;
           `,
           "app/routes/_main.tsx": js`
-            import { useRouteError } from "@remix-run/react";
+            import { useRouteError } from "react-router-dom";
             export function ErrorBoundary() {
               return <pre>{useRouteError().message}</pre>;
             }

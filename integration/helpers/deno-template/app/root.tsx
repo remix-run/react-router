@@ -7,7 +7,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "@remix-run/react";
+} from "react-router-dom";
 import * as React from "react";
 
 export const links: LinksFunction = () => [

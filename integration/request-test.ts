@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/routes/_index.tsx": js`
         import { json } from "@remix-run/node";
-        import { Form, useLoaderData, useActionData } from "@remix-run/react";
+        import { Form, useLoaderData, useActionData } from "react-router-dom";
 
         async function requestToJson(request) {
           let body = null;

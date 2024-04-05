@@ -162,7 +162,7 @@ async function workflow({
     contents
       .replace(
         "// imports",
-        `// imports\nimport { json } from "@remix-run/node";\nimport { useLoaderData } from "@remix-run/react"`
+        `// imports\nimport { json } from "@remix-run/node";\nimport { useLoaderData } from "react-router-dom"`
       )
       .replace(
         "// loader",

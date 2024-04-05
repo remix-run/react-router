@@ -24,7 +24,7 @@ const TEST_ROUTES = [
 
 const files = {
   "app/root.tsx": `
-    import { Links, Meta, Outlet, Scripts, LiveReload } from "@remix-run/react";
+    import { Links, Meta, Outlet, Scripts, LiveReload } from "react-router-dom";
 
     export default function Root() {
       return (

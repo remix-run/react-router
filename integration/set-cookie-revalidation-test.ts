@@ -40,7 +40,7 @@ test.describe("set-cookie revalidation", () => {
             Outlet,
             Scripts,
             useLoaderData,
-          } from "@remix-run/react";
+          } from "react-router-dom";
 
           import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 
@@ -75,7 +75,7 @@ test.describe("set-cookie revalidation", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
 
           export default function Index() {
             return (
@@ -166,7 +166,7 @@ test.describe("single fetch", () => {
               Outlet,
               Scripts,
               useLoaderData,
-            } from "@remix-run/react";
+            } from "react-router-dom";
 
             import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 
@@ -201,7 +201,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { Link } from "@remix-run/react";
+            import { Link } from "react-router-dom";
 
             export default function Index() {
               return (

@@ -16,7 +16,7 @@ test.describe("Revalidation", () => {
       await createFixture({
         files: {
           "app/root.tsx": js`
-            import { Link, Outlet, Scripts, useNavigation } from "@remix-run/react";
+            import { Link, Outlet, Scripts, useNavigation } from "react-router-dom";
 
             export default function Component() {
               let navigation = useNavigation();
@@ -47,7 +47,7 @@ test.describe("Revalidation", () => {
 
           "app/routes/parent.tsx": js`
             import { json } from "@remix-run/node";
-            import { Outlet, useLoaderData } from "@remix-run/react";
+            import { Outlet, useLoaderData } from "react-router-dom";
 
             export async function loader({ request }) {
               let header = request.headers.get('Cookie') || '';
@@ -87,7 +87,7 @@ test.describe("Revalidation", () => {
 
           "app/routes/parent.child.tsx": js`
             import { json } from "@remix-run/node";
-            import { Form, useLoaderData, useRevalidator } from "@remix-run/react";
+            import { Form, useLoaderData, useRevalidator } from "react-router-dom";
 
             export async function action() {
               return json({ action: 'data' })
@@ -306,7 +306,7 @@ test.describe("single fetch", () => {
           singleFetch: true,
           files: {
             "app/root.tsx": js`
-              import { Link, Outlet, Scripts, useNavigation } from "@remix-run/react";
+              import { Link, Outlet, Scripts, useNavigation } from "react-router-dom";
 
               export default function Component() {
                 let navigation = useNavigation();
@@ -337,7 +337,7 @@ test.describe("single fetch", () => {
 
             "app/routes/parent.tsx": js`
               import { json } from "@remix-run/node";
-              import { Outlet, useLoaderData } from "@remix-run/react";
+              import { Outlet, useLoaderData } from "react-router-dom";
 
               export async function loader({ request }) {
                 let header = request.headers.get('Cookie') || '';
@@ -377,7 +377,7 @@ test.describe("single fetch", () => {
 
             "app/routes/parent.child.tsx": js`
               import { json } from "@remix-run/node";
-              import { Form, useLoaderData, useRevalidator } from "@remix-run/react";
+              import { Form, useLoaderData, useRevalidator } from "react-router-dom";
 
               export async function action() {
                 return json({ action: 'data' })

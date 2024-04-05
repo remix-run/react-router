@@ -19,7 +19,7 @@ test.beforeAll(async () => {
     "server.mjs": EXPRESS_SERVER({ port, loadContext: { value: "value" } }),
     "app/routes/_index.tsx": String.raw`
       import { json } from "@remix-run/node";
-      import { useLoaderData } from "@remix-run/react";
+      import { useLoaderData } from "react-router-dom";
 
       export const loader = ({ context }) => {
         return json({ context })

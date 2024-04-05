@@ -21,7 +21,7 @@ test.describe("ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
         export default function Root() {
           return (
@@ -40,7 +40,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link, Form } from "@remix-run/react";
+          import { Link, Form } from "react-router-dom";
 
           export default function () {
             return <h1>Index</h1>
@@ -134,13 +134,20 @@ test.describe("ErrorBoundary", () => {
   });
 
   test("returns a 405 x-remix-error on a data fetch with a bad method", async () => {
-    expect(() =>
-      fixture.requestData("/loader-return-json", "routes/loader-return-json", {
-        method: "TRACE",
-      })
-    ).rejects.toThrowError(
-      `Failed to construct 'Request': 'TRACE' HTTP method is unsupported.`
-    );
+    try {
+      await fixture.requestData(
+        "/loader-return-json",
+        "routes/loader-return-json",
+        {
+          method: "TRACE",
+        }
+      );
+      expect(false).toBe(true);
+    } catch (e) {
+      expect((e as Error).message).toMatch(
+        "'TRACE' HTTP method is unsupported."
+      );
+    }
   });
 
   test("returns a 403 x-remix-error on a data fetch GET to a bad path", async () => {
@@ -192,7 +199,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (
@@ -211,7 +218,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { Link, Form } from "@remix-run/react";
+            import { Link, Form } from "react-router-dom";
 
             export default function () {
               return <h1>Index</h1>
@@ -319,13 +326,16 @@ test.describe("single fetch", () => {
     });
 
     test("returns a 405 on a data fetch with a bad method", async () => {
-      expect(() =>
-        fixture.requestSingleFetchData("/loader-return-json.data", {
+      try {
+        await fixture.requestSingleFetchData("/loader-return-json.data", {
           method: "TRACE",
-        })
-      ).rejects.toThrowError(
-        `Failed to construct 'Request': 'TRACE' HTTP method is unsupported.`
-      );
+        });
+        expect(false).toBe(true);
+      } catch (e) {
+        expect((e as Error).message).toMatch(
+          "'TRACE' HTTP method is unsupported."
+        );
+      }
     });
 
     test("returns a 404 on a data fetch to a path with no matches", async () => {

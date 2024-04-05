@@ -88,7 +88,7 @@ test.describe("route module link export", () => {
             Scripts,
             useRouteError,
             isRouteErrorResponse
-          } from "@remix-run/react";
+          } from "react-router-dom";
           import resetHref from "./reset.css?url";
           import stylesHref from "./app.css?url";
           import favicon from "./favicon.ico";
@@ -193,7 +193,7 @@ test.describe("route module link export", () => {
 
         "app/routes/_index.tsx": js`
           import { useEffect } from "react";
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
 
           export default function Index() {
             return (
@@ -226,7 +226,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/links.tsx": js`
-          import { useLoaderData, Link } from "@remix-run/react";
+          import { useLoaderData, Link } from "react-router-dom";
           import redTextHref from "~/redText.css?url";
           import blueTextHref from "~/blueText.css?url";
           import guitar from "~/guitar.jpg";
@@ -275,7 +275,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/responsive-image-preload.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router-dom";
           import guitar600 from "~/guitar-600.jpg";
           import guitar900 from "~/guitar-900.jpg";
 
@@ -309,7 +309,7 @@ test.describe("route module link export", () => {
 
         "app/routes/gists.tsx": js`
           import { json } from "@remix-run/node";
-          import { Link, Outlet, useLoaderData, useNavigation } from "@remix-run/react";
+          import { Link, Outlet, useLoaderData, useNavigation } from "react-router-dom";
           import stylesHref from "~/gists.css?url";
           export function links() {
             return [{ rel: "stylesheet", href: stylesHref }];
@@ -360,7 +360,7 @@ test.describe("route module link export", () => {
 
         "app/routes/gists.$username.tsx": js`
           import { json, redirect } from "@remix-run/node";
-          import { Link, useLoaderData, useParams } from "@remix-run/react";
+          import { Link, useLoaderData, useParams } from "react-router-dom";
           export async function loader({ params }) {
             let { username } = params;
             if (username === "mjijackson") {
@@ -417,7 +417,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists._index.tsx": js`
-          import { useLoaderData } from "@remix-run/react";
+          import { useLoaderData } from "react-router-dom";
           export async function loader() {
             return ${JSON.stringify(fakeGists)};
           }
@@ -473,7 +473,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/parent.tsx": js`
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export function links() {
             return [
@@ -491,7 +491,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/parent.child.tsx": js`
-          import { Outlet } from "@remix-run/react";
+          import { Outlet } from "react-router-dom";
 
           export function loader() {
             throw new Response(null, { status: 404 });

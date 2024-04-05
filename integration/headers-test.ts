@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { ServerMode } from "../build/node_modules/@remix-run/server-runtime/dist/mode.js";
+import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 
@@ -18,7 +18,7 @@ test.describe("headers export", () => {
         files: {
           "app/root.tsx": js`
             import { json } from "@remix-run/node";
-            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export const loader = () => json({});
 
@@ -160,7 +160,7 @@ test.describe("headers export", () => {
 
           "app/routes/cookie.tsx": js`
             import { json } from "@remix-run/server-runtime";
-            import { Outlet } from "@remix-run/react";
+            import { Outlet } from "react-router-dom";
 
             export function loader({ request }) {
               if (new URL(request.url).searchParams.has("parent-throw")) {
@@ -221,7 +221,7 @@ test.describe("headers export", () => {
       {
         files: {
           "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export default function Root() {
               return (

@@ -24,7 +24,7 @@ test.beforeAll(async () => {
     files: {
       "app/routes/_index.tsx": js`
         import { json } from "@remix-run/node";
-        import { useLoaderData, Link } from "@remix-run/react";
+        import { useLoaderData, Link } from "react-router-dom";
 
         export function loader() {
           return json("pizza");

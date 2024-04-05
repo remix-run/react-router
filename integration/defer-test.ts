@@ -76,7 +76,7 @@ test.describe("non-aborted", () => {
         `,
         "app/root.tsx": js`
           import { defer } from "@remix-run/node";
-          import { Links, Meta, Outlet, Scripts, useLoaderData } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
           import Interactive from "~/components/interactive";
 
@@ -117,7 +117,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/_index.tsx": js`
           import { defer } from "@remix-run/node";
-          import { Link, useLoaderData } from "@remix-run/react";
+          import { Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -149,7 +149,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-noscript-resolved.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -184,7 +184,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-noscript-unresolved.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -223,7 +223,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-script-resolved.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -259,7 +259,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-script-unresolved.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -303,7 +303,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-script-rejected.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -344,7 +344,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-script-unrejected.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -410,7 +410,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-script-rejected-no-error-element.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -454,7 +454,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-script-unrejected-no-error-element.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -502,7 +502,7 @@ test.describe("non-aborted", () => {
         "app/routes/deferred-manual-resolve.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -990,7 +990,7 @@ test.describe("aborted", () => {
           import { PassThrough } from "node:stream";
           import type { AppLoadContext, EntryContext } from "@remix-run/node";
           import { createReadableStreamFromReadable } from "@remix-run/node";
-          import { RemixServer } from "@remix-run/react";
+          import { RemixServer } from "react-router-dom";
           import { isbot } from "isbot";
           import { renderToPipeableStream } from "react-dom/server";
 
@@ -1140,7 +1140,7 @@ test.describe("aborted", () => {
         `,
         "app/root.tsx": js`
           import { defer } from "@remix-run/node";
-          import { Links, Meta, Outlet, Scripts, useLoaderData } from "@remix-run/react";
+          import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
           import Interactive from "~/components/interactive";
 
@@ -1182,7 +1182,7 @@ test.describe("aborted", () => {
         "app/routes/deferred-server-aborted.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -1227,7 +1227,7 @@ test.describe("aborted", () => {
         "app/routes/deferred-server-aborted-no-error-element.tsx": js`
           import { Suspense } from "react";
           import { defer } from "@remix-run/node";
-          import { Await, Link, useLoaderData } from "@remix-run/react";
+          import { Await, Link, useLoaderData } from "react-router-dom";
           import Counter from "~/components/counter";
 
           export function loader() {
@@ -1355,7 +1355,7 @@ test.describe("single fetch", () => {
           `,
           "app/root.tsx": js`
             import { defer } from "@remix-run/node";
-            import { Links, Meta, Outlet, Scripts, useLoaderData } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
             import Interactive from "~/components/interactive";
 
@@ -1396,7 +1396,7 @@ test.describe("single fetch", () => {
 
           "app/routes/_index.tsx": js`
             import { defer } from "@remix-run/node";
-            import { Link, useLoaderData } from "@remix-run/react";
+            import { Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1428,7 +1428,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-noscript-resolved.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1463,7 +1463,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-noscript-unresolved.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1502,7 +1502,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-script-resolved.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1538,7 +1538,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-script-unresolved.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1582,7 +1582,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-script-rejected.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1623,7 +1623,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-script-unrejected.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1689,7 +1689,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-script-rejected-no-error-element.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1733,7 +1733,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-script-unrejected-no-error-element.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -1781,7 +1781,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-manual-resolve.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -2288,7 +2288,7 @@ test.describe("single fetch", () => {
             import { PassThrough } from "node:stream";
             import type { AppLoadContext, EntryContext } from "@remix-run/node";
             import { createReadableStreamFromReadable } from "@remix-run/node";
-            import { RemixServer } from "@remix-run/react";
+            import { RemixServer } from "react-router-dom";
             import { isbot } from "isbot";
             import { renderToPipeableStream } from "react-dom/server";
 
@@ -2433,7 +2433,7 @@ test.describe("single fetch", () => {
           `,
           "app/root.tsx": js`
             import { defer } from "@remix-run/node";
-            import { Links, Meta, Outlet, Scripts, useLoaderData } from "@remix-run/react";
+            import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
             import Interactive from "~/components/interactive";
 
@@ -2475,7 +2475,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-server-aborted.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {
@@ -2520,7 +2520,7 @@ test.describe("single fetch", () => {
           "app/routes/deferred-server-aborted-no-error-element.tsx": js`
             import { Suspense } from "react";
             import { defer } from "@remix-run/node";
-            import { Await, Link, useLoaderData } from "@remix-run/react";
+            import { Await, Link, useLoaderData } from "react-router-dom";
             import Counter from "~/components/counter";
 
             export function loader() {

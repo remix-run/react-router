@@ -18,7 +18,7 @@ test.describe("useMatches", () => {
         "app/root.tsx": js`
           import * as React from 'react';
           import { json } from "@remix-run/node";
-          import { Link, Links, Meta, Outlet, Scripts, useMatches } from "@remix-run/react";
+          import { Link, Links, Meta, Outlet, Scripts, useMatches } from "react-router-dom";
           export const handle = { stuff: "root handle"};
           export const loader = () => json("ROOT");
           export default function Root() {
@@ -69,7 +69,7 @@ test.describe("useMatches", () => {
 
         "app/routes/count.tsx": js`
           import * as React from 'react';
-          import { useMatches } from "@remix-run/react";
+          import { useMatches } from "react-router-dom";
           export default function Count() {
             let matches = useMatches();
             let [count, setCount] = React.useState(0);
