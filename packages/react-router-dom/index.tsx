@@ -222,13 +222,7 @@ export {
   useRoutes,
 } from "react-router";
 
-export {
-  Meta,
-  Links,
-  Scripts,
-  PrefetchPageLinks,
-  LiveReload,
-} from "./ssr/components";
+export { Meta, Links, Scripts, PrefetchPageLinks } from "./ssr/components";
 
 export type { HtmlLinkDescriptor } from "./ssr/links";
 export type {
