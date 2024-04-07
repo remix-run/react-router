@@ -94,7 +94,7 @@ test.describe("Vite custom entry dev", () => {
           }
         `,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, LiveReload } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
           export default function Root() {
             return (
@@ -109,7 +109,6 @@ test.describe("Vite custom entry dev", () => {
                     <Outlet />
                   </div>
                   <Scripts />
-                  <LiveReload />
                 </body>
               </html>
             );

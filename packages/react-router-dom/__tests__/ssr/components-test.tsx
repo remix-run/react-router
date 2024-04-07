@@ -9,91 +9,10 @@ import {
   Outlet,
   RouterProvider,
 } from "../../index";
-import type { LiveReload as ActualLiveReload } from "../../ssr/components";
 import { RemixContext } from "../../ssr/components";
 import invariant from "../../ssr/invariant";
 import { RemixServer } from "../../ssr/server";
 import "@testing-library/jest-dom/extend-expect";
-
-// TODO: Every time we touch LiveReload (without changing the API) these tests
-// fail, which tells me they're testing implementation details and not actual
-// behavior. Not sure how valuable they are. Disabling them until we can come up
-// with a better strategy for testing "developer workflow" things. An ideal
-// solution will let us fire up a development server, save a file, and observe
-// the browser reloads with the new UI. At the moment we could completely break
-// LiveReload's real features and these tests wouldn't know it.
-
-describe("<LiveReload />", () => {
-  let originalNodeEnv = process.env.NODE_ENV;
-  afterEach(() => {
-    process.env.NODE_ENV = originalNodeEnv;
-  });
-
-  describe("non-development environment", () => {
-    let LiveReload: typeof ActualLiveReload;
-    beforeEach(() => {
-      process.env.NODE_ENV = "not-development";
-      jest.resetModules();
-      LiveReload = require("../../ssr/components").LiveReload;
-    });
-
-    it("does nothing if the NODE_ENV is not development", () => {
-      let { container } = render(<LiveReload />);
-      expect(container).toBeEmptyDOMElement();
-    });
-  });
-
-  describe("development environment", () => {
-    let oldEnv = process.env;
-    let LiveReload: typeof ActualLiveReload;
-    beforeEach(() => {
-      process.env = { ...oldEnv, NODE_ENV: "development" };
-      jest.resetModules();
-    });
-
-    it("defaults the origin to REMIX_DEV_ORIGIN env variable", () => {
-      let origin = "http://test-origin";
-      LiveReload = require("../../ssr/components").LiveReload;
-      process.env = { ...oldEnv, REMIX_DEV_ORIGIN: origin };
-      let { container } = render(<LiveReload />);
-      expect(container.querySelector("script")).toHaveTextContent(
-        `let LIVE_RELOAD_ORIGIN = ${JSON.stringify(origin)};`
-      );
-    });
-
-    it("can set the origin explicitly", () => {
-      let origin = "http://test-origin";
-      LiveReload = require("../../ssr/components").LiveReload;
-      let { container } = render(<LiveReload origin={origin} />);
-      expect(container.querySelector("script")).toHaveTextContent(
-        `let LIVE_RELOAD_ORIGIN = ${JSON.stringify(origin)};`
-      );
-    });
-
-    it("defaults the port to 8002", () => {
-      LiveReload = require("../../ssr/components").LiveReload;
-      let { container } = render(<LiveReload />);
-      expect(container.querySelector("script")).toHaveTextContent(
-        "url.port = undefined || (LIVE_RELOAD_ORIGIN ? new URL(LIVE_RELOAD_ORIGIN).port : 8002);"
-      );
-    });
-
-    it("can set the port explicitly", () => {
-      let { container } = render(<LiveReload port={4321} />);
-      expect(container.querySelector("script")).toHaveTextContent(
-        "url.port = 4321 || (LIVE_RELOAD_ORIGIN ? new URL(LIVE_RELOAD_ORIGIN).port : 8002);"
-      );
-    });
-
-    it("timeout of reload is set to 200ms", () => {
-      LiveReload = require("../../ssr/components").LiveReload;
-      let { container } = render(<LiveReload timeoutMs={200} />);
-      expect(container.querySelector("script")).toHaveTextContent(
-        "setTimeout( () => remixLiveReloadConnect({ onOpen: () => window.location.reload(), }), 200 );"
-      );
-    });
-  });
-});
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
 type PrefetchEventHandlerProps = {

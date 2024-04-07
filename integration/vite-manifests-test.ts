@@ -24,7 +24,7 @@ const TEST_ROUTES = [
 
 const files = {
   "app/root.tsx": `
-    import { Links, Meta, Outlet, Scripts, LiveReload } from "react-router-dom";
+    import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
     export default function Root() {
       return (
@@ -36,7 +36,6 @@ const files = {
           <body>
             <Outlet />
             <Scripts />
-            <LiveReload />
           </body>
         </html>
       );
