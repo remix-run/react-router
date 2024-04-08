@@ -6,7 +6,6 @@ const config: PlaywrightTestConfig = {
   testMatch: ["**/*-test.ts"],
   // TODO: Temporary!  Remove from this list as we get each suite passing
   testIgnore: [
-    "**/error-sanitization-test.ts",
     "**/file-uploads-test.ts",
     "**/vite-basename-test.ts",
     "**/vite-build-test.ts",

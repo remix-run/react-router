@@ -595,9 +595,7 @@ function deserializeErrors(
           try {
             // @ts-expect-error
             let error = new ErrorConstructor(val.message);
-            // Wipe away the client-side stack trace.  Nothing to fill it in with
-            // because we don't serialize SSR stack traces for security reasons
-            error.stack = "";
+            error.stack = val.stack;
             serialized[key] = error;
           } catch (e) {
             // no-op - fall through and create a normal Error
@@ -607,9 +605,7 @@ function deserializeErrors(
 
       if (serialized[key] == null) {
         let error = new Error(val.message);
-        // Wipe away the client-side stack trace.  Nothing to fill it in with
-        // because we don't serialize SSR stack traces for security reasons
-        error.stack = "";
+        error.stack = val.stack;
         serialized[key] = error;
       }
     } else {
