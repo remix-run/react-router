@@ -7,7 +7,6 @@ const config: PlaywrightTestConfig = {
   // TODO: Temporary!  Remove from this list as we get each suite passing
   testIgnore: [
     "**/error-sanitization-test.ts",
-    "**/vite-basename-test.ts",
     "**/vite-build-test.ts",
     "**/vite-cloudflare-test.ts",
     "**/vite-css-test.ts",
