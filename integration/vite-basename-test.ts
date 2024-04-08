@@ -122,7 +122,7 @@ const customServerFile = ({
     );
     app.get("*", (_req, res) => {
       res.setHeader("content-type", "text/html")
-      res.end('Remix app is at <a href="${basename}">${basename}</a>');
+      res.end('React Router app is at <a href="${basename}">${basename}</a>');
     });
 
     const port = ${port};
@@ -130,7 +130,7 @@ const customServerFile = ({
   `;
 };
 
-test.describe("Vite base / Remix basename / Vite dev", () => {
+test.describe("Vite base / React Router basename / Vite dev", () => {
   let port: number;
   let cwd: string;
   let stop: () => unknown;
@@ -174,13 +174,13 @@ test.describe("Vite base / Remix basename / Vite dev", () => {
     });
     let proc = await viteDevCmd({ cwd });
     expect(proc.stderr.toString()).toMatch(
-      "Error: When using the Remix `basename` and the Vite `base` config, the " +
+      "Error: When using the React Router `basename` and the Vite `base` config, the " +
         "`basename` config must begin with `base` for the default Vite dev server."
     );
   });
 });
 
-test.describe("Vite base / Remix basename / express dev", async () => {
+test.describe("Vite base / React Router basename / express dev", async () => {
   let port: number;
   let cwd: string;
   let stop: () => void;
@@ -306,7 +306,7 @@ async function workflowDev({
   ).toBe(true);
 }
 
-test.describe("Vite base / Remix basename / vite build", () => {
+test.describe("Vite base / React Router basename / vite build", () => {
   let port: number;
   let cwd: string;
   let stop: () => unknown;
@@ -352,7 +352,7 @@ test.describe("Vite base / Remix basename / vite build", () => {
   });
 });
 
-test.describe("Vite base / Remix basename / express build", async () => {
+test.describe("Vite base / React Router basename / express build", async () => {
   let port: number;
   let cwd: string;
   let stop: () => void;
@@ -411,7 +411,7 @@ test.describe("Vite base / Remix basename / express build", async () => {
         base: "https://cdn.example.com/assets/",
         basename: "/app/",
       }),
-      // Slim server that only serves basename (route) requests from the remix handler
+      // Slim server that only serves basename (route) requests from the React Router handler
       "server.mjs": String.raw`
         import { createRequestHandler } from "@remix-run/express";
         import { installGlobals } from "@remix-run/node";
