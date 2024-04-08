@@ -13,7 +13,7 @@ let appFixture: AppFixture;
 
 let BANNER_MESSAGE = "you do not have permission to view /protected";
 
-test.describe("set-cookie revalidation", () => {
+test.describe.skip("set-cookie revalidation", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {

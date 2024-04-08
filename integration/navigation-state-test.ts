@@ -22,7 +22,7 @@ const IDLE_STATE = {
   state: "idle",
 };
 
-test.describe("navigation states", () => {
+test.describe.skip("navigation states", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

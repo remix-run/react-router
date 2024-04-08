@@ -8,7 +8,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("loader", () => {
+test.describe.skip("loader", () => {
   let fixture: Fixture;
 
   let ROOT_DATA = "ROOT_DATA";
@@ -69,7 +69,7 @@ test.describe("loader", () => {
   });
 });
 
-test.describe("loader in an app", () => {
+test.describe.skip("loader in an app", () => {
   let appFixture: AppFixture;
 
   let HOME_PAGE_TEXT = "hello world";

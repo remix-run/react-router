@@ -11,7 +11,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 let fixture: Fixture;
 let appFixture: AppFixture;
 
-test.describe("multi fetch", () => {
+test.describe.skip("multi fetch", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {

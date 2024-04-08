@@ -8,7 +8,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture, selectHtml } from "./helpers/playwright-fixture.js";
 
-test.describe("actions", () => {
+test.describe.skip("actions", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

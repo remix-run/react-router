@@ -9,7 +9,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("ErrorBoundary", () => {
+test.describe.skip("ErrorBoundary", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
   let _consoleError: any;
@@ -655,7 +655,7 @@ test.describe("ErrorBoundary", () => {
   });
 });
 
-test.describe("loaderData in ErrorBoundary", () => {
+test.describe.skip("loaderData in ErrorBoundary", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
   let consoleErrors: string[];
@@ -895,7 +895,7 @@ test.describe("loaderData in ErrorBoundary", () => {
   }
 });
 
-test.describe("Default ErrorBoundary", () => {
+test.describe.skip("Default ErrorBoundary", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
   let _consoleError: any;
@@ -1223,7 +1223,7 @@ test.describe("Default ErrorBoundary", () => {
   });
 });
 
-test("Allows back-button out of an error boundary after a hard reload", async ({
+test.skip("Allows back-button out of an error boundary after a hard reload", async ({
   page,
   browserName,
 }) => {

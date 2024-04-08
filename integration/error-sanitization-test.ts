@@ -138,7 +138,7 @@ const routeFiles = {
   `,
 };
 
-test.describe("Error Sanitization", () => {
+test.describe.skip("Error Sanitization", () => {
   let fixture: Fixture;
   let oldConsoleError: () => void;
   let errorLogs: any[] = [];

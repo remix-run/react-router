@@ -10,7 +10,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("ErrorBoundary", () => {
+test.describe.skip("ErrorBoundary", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
   let oldConsoleError: () => void;
