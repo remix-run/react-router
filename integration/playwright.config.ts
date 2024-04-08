@@ -7,13 +7,9 @@ const config: PlaywrightTestConfig = {
   // TODO: Temporary!  Remove from this list as we get each suite passing
   testIgnore: [
     "**/error-sanitization-test.ts",
-    "**/vite-build-test.ts",
     "**/vite-cloudflare-test.ts",
     "**/vite-css-test.ts",
-    "**/vite-dev-test.ts",
     "**/vite-dot-server-test.ts",
-    "**/vite-hmr-hdr-test.ts",
-    "**/vite-plugin-order-validation-test.ts",
   ],
   /* Maximum time one test can run for. */
   timeout: process.platform === "win32" ? 60_000 : 30_000,
