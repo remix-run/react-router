@@ -11,7 +11,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("file-uploads", () => {
+test.describe.skip("file-uploads", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

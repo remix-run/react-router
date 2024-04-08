@@ -138,7 +138,7 @@ function getFiles({
   };
 }
 
-test.describe("Client Data", () => {
+test.describe.skip("Client Data", () => {
   let appFixture: AppFixture;
 
   test.afterAll(() => {

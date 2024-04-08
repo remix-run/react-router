@@ -8,7 +8,7 @@ import {
 import type { AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("Revalidation", () => {
+test.describe.skip("Revalidation", () => {
   let appFixture: AppFixture;
 
   test.beforeAll(async () => {

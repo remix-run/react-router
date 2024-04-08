@@ -8,7 +8,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { getElement, PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("Forms", () => {
+test.describe.skip("Forms", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

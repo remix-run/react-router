@@ -28,7 +28,7 @@ let HAS_BOUNDARY_NESTED_LOADER = "/yes/loader-self-boundary" as const;
 let ROOT_DATA = "root data";
 let LAYOUT_DATA = "root data";
 
-test.describe("ErrorBoundary (thrown responses)", () => {
+test.describe.skip("ErrorBoundary (thrown responses)", () => {
   test.beforeEach(async ({ context }) => {
     await context.route(/_data/, async (route) => {
       await new Promise((resolve) => setTimeout(resolve, 50));

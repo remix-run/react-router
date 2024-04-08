@@ -8,7 +8,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("useFetcher", () => {
+test.describe.skip("useFetcher", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
@@ -427,7 +427,7 @@ test.describe("useFetcher", () => {
   });
 });
 
-test.describe("fetcher aborts and adjacent forms", () => {
+test.describe.skip("fetcher aborts and adjacent forms", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

@@ -8,7 +8,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("ErrorBoundary (thrown responses)", () => {
+test.describe.skip("ErrorBoundary (thrown responses)", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

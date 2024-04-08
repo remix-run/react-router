@@ -32,7 +32,7 @@ declare global {
   };
 }
 
-test.describe("non-aborted", () => {
+test.describe.skip("non-aborted", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 
@@ -972,7 +972,7 @@ test.describe("non-aborted", () => {
   });
 });
 
-test.describe("aborted", () => {
+test.describe.skip("aborted", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

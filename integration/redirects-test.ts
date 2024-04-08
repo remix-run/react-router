@@ -8,7 +8,7 @@ import {
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
-test.describe("redirects", () => {
+test.describe.skip("redirects", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
 

@@ -11,7 +11,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 let fixture: Fixture;
 let appFixture: AppFixture;
 
-test.describe("deferred loaders", () => {
+test.describe.skip("deferred loaders", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {

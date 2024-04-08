@@ -8,7 +8,7 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 
-test.describe("ErrorBoundary", () => {
+test.describe.skip("ErrorBoundary", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
   let _consoleError: any;

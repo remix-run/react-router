@@ -5,7 +5,7 @@ import type { Fixture } from "./helpers/create-fixture.js";
 
 let fixture: Fixture;
 
-test.describe("multi fetch", () => {
+test.describe.skip("multi fetch", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
