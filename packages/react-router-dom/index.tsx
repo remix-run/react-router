@@ -595,7 +595,8 @@ function deserializeErrors(
           try {
             // @ts-expect-error
             let error = new ErrorConstructor(val.message);
-            error.stack = val.stack;
+            error.stack =
+              process.env.NODE_ENV === "development" ? val.stack : "";
             serialized[key] = error;
           } catch (e) {
             // no-op - fall through and create a normal Error
@@ -605,7 +606,7 @@ function deserializeErrors(
 
       if (serialized[key] == null) {
         let error = new Error(val.message);
-        error.stack = val.stack;
+        error.stack = process.env.NODE_ENV === "development" ? val.stack : "";
         serialized[key] = error;
       }
     } else {
