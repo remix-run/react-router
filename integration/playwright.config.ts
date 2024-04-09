@@ -5,11 +5,7 @@ const config: PlaywrightTestConfig = {
   testDir: ".",
   testMatch: ["**/*-test.ts"],
   // TODO: Temporary!  Remove from this list as we get each suite passing
-  testIgnore: [
-    "**/vite-cloudflare-test.ts",
-    "**/vite-css-test.ts",
-    "**/vite-dot-server-test.ts",
-  ],
+  testIgnore: ["**/vite-cloudflare-test.ts", "**/vite-dot-server-test.ts"],
   /* Maximum time one test can run for. */
   timeout: process.platform === "win32" ? 60_000 : 30_000,
   fullyParallel: true,
