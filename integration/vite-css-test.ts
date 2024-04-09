@@ -156,7 +156,12 @@ const VITE_CONFIG = async (port: number) => dedent`
 
   export default {
     ${await viteConfig.server({ port })}
-    plugins: [reactRouter(), vanillaExtractPlugin()],
+    plugins: [
+      reactRouter(),
+      vanillaExtractPlugin({
+        emitCssInSsr: true,
+      }),
+    ],
   }
 `;
 
