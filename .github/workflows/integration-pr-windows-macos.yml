@@ -1,0 +1,41 @@
+name: PR (Full)
+
+# PRs touching remix-dev will also run on Windows and OSX
+
+on:
+  pull_request:
+    paths:
+      - "packages/remix-dev/**"
+      - "!**/*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-firefox:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "ubuntu-latest"
+      node_version: '["20.5.1"]'
+      browser: '["firefox"]'
+
+  integration-msedge:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "windows-latest"
+      node_version: '["20.5.1"]'
+      browser: '["msedge"]'
+
+  integration-webkit:
+    name: "👀 Integration Test"
+    if: github.repository == 'remix-run/react-router'
+    uses: ./.github/workflows/shared-integration.yml
+    with:
+      os: "macos-latest"
+      node_version: '["20.5.1"]'
+      browser: '["webkit"]'
