@@ -25,7 +25,7 @@ test.describe.skip("file-uploads", () => {
             unstable_composeUploadHandlers as composeUploadHandlers,
             unstable_createFileUploadHandler as createFileUploadHandler,
             unstable_createMemoryUploadHandler as createMemoryUploadHandler,
-          } from "@remix-run/node";
+          } from "@react-router/node";
 
           const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
           export let uploadHandler = composeUploadHandlers(
@@ -44,7 +44,7 @@ test.describe.skip("file-uploads", () => {
         "app/routes/file-upload.tsx": js`
           import {
             unstable_parseMultipartFormData as parseMultipartFormData,
-          } from "@remix-run/node";
+          } from "@react-router/node";
           import { Form, useActionData } from "react-router-dom";
           import { uploadHandler } from "~/fileUploadHandler";
 
@@ -164,7 +164,7 @@ test.describe("single fetch", () => {
               unstable_composeUploadHandlers as composeUploadHandlers,
               unstable_createFileUploadHandler as createFileUploadHandler,
               unstable_createMemoryUploadHandler as createMemoryUploadHandler,
-            } from "@remix-run/node";
+            } from "@react-router/node";
 
             const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
             export let uploadHandler = composeUploadHandlers(
@@ -183,7 +183,7 @@ test.describe("single fetch", () => {
           "app/routes/file-upload.tsx": js`
             import {
               unstable_parseMultipartFormData as parseMultipartFormData,
-            } from "@remix-run/node";
+            } from "@react-router/node";
             import { Form, useActionData } from "react-router-dom";
             import { uploadHandler } from "~/fileUploadHandler";
 

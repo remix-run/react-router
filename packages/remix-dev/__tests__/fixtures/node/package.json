@@ -9,16 +9,16 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@remix-run/css-bundle": "*",
-    "@remix-run/node": "*",
-    "@remix-run/react": "*",
-    "@remix-run/serve": "*",
+    "@react-router/css-bundle": "*",
+    "@react-router/node": "*",
+    "@react-router/react": "*",
+    "@react-router/serve": "*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "*",
+    "@react-router/dev": "*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "eslint": "^8.38.0",

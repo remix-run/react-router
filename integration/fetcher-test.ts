@@ -23,7 +23,7 @@ test.describe.skip("useFetcher", () => {
     fixture = await createFixture({
       files: {
         "app/routes/resource-route-action-only.ts": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           export function action() {
             return json("${CHEESESTEAK}");
           }
@@ -149,7 +149,7 @@ test.describe.skip("useFetcher", () => {
         `,
 
         "app/routes/fetcher-echo.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { useFetcher } from "react-router-dom";
 
           export async function action({ request }) {
@@ -547,7 +547,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/routes/resource-route-action-only.ts": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             export function action() {
               return new Response("${CHEESESTEAK}");
             }
@@ -673,7 +673,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/fetcher-echo.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import { useFetcher } from "react-router-dom";
 
             export async function action({ request }) {

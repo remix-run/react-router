@@ -28,7 +28,7 @@ test.beforeAll(async () => {
           unstable_createMemoryUploadHandler as createMemoryUploadHandler,
           unstable_parseMultipartFormData as parseMultipartFormData,
           MaxPartSizeExceededError,
-        } from "@remix-run/node";
+        } from "@react-router/node";
         import { Form, useActionData } from "react-router-dom";
 
         const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -90,7 +90,7 @@ test.beforeAll(async () => {
           unstable_createMemoryUploadHandler as createMemoryUploadHandler,
           unstable_parseMultipartFormData as parseMultipartFormData,
           MaxPartSizeExceededError,
-        } from "@remix-run/node";
+        } from "@react-router/node";
         import { Form, useActionData } from "react-router-dom";
 
         export let action = async ({ request }) => {
@@ -143,7 +143,7 @@ test.beforeAll(async () => {
         import {
           json,
           unstable_parseMultipartFormData as parseMultipartFormData,
-        } from "@remix-run/node";
+        } from "@react-router/node";
         import { Form, useActionData } from "react-router-dom";
 
         export let action = async ({ request }) => {

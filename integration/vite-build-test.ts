@@ -25,7 +25,7 @@ test.beforeAll(async () => {
     `,
     "vite.config.ts": js`
       import { defineConfig } from "vite";
-      import { vitePlugin as reactRouter } from "@remix-run/dev";
+      import { vitePlugin as reactRouter } from "@react-router/dev";
       import mdx from "@mdx-js/rollup";
 
       export default defineConfig({
@@ -63,7 +63,7 @@ test.beforeAll(async () => {
     `,
     "app/routes/_index.tsx": js`
       import { useState, useEffect } from "react";
-      import { json } from "@remix-run/node";
+      import { json } from "@react-router/node";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
@@ -95,7 +95,7 @@ test.beforeAll(async () => {
       export const serverOnly2 = "SERVER_ONLY_2"
     `,
     "app/routes/resource.ts": js`
-      import { json } from "@remix-run/node";
+      import { json } from "@react-router/node";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
@@ -110,7 +110,7 @@ test.beforeAll(async () => {
     `,
     "app/routes/mdx.mdx": js`
       import { useEffect, useState } from "react";
-      import { json } from "@remix-run/node";
+      import { json } from "@react-router/node";
       import { useLoaderData } from "react-router-dom";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
@@ -170,7 +170,7 @@ test.beforeAll(async () => {
       }
     `,
     "app/routes/dotenv.tsx": js`
-      import { json } from "@remix-run/node";
+      import { json } from "@react-router/node";
       import { useLoaderData } from "react-router-dom";
 
       export const loader = () => {

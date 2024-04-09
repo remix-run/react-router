@@ -1,2 +1,2 @@
-import { installGlobals } from "@remix-run/node";
+import { installGlobals } from "@react-router/node";
 installGlobals();

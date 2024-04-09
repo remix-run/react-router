@@ -25,7 +25,7 @@ import type {
   AppLoadContext,
   LinksFunction,
   LoaderFunction,
-} from "@remix-run/server-runtime";
+} from "@react-router/server-runtime";
 
 interface StubIndexRouteObject
   extends Omit<

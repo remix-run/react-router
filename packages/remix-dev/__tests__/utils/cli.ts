@@ -64,7 +64,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
 
   let buildDir = path.resolve(
     __dirname,
-    "../../../../build/node_modules/@remix-run/dev"
+    "../../../../build/node_modules/@react-router/dev"
   );
   let builtJS = path.resolve(buildDir, "dist/cli.js");
   let buildModified = await mtimeDir(buildDir);

@@ -5,7 +5,7 @@ import type {
   SessionStorage,
   SessionIdStorageStrategy,
   SessionData,
-} from "@remix-run/server-runtime";
+} from "@react-router/server-runtime";
 
 import { createSessionStorage } from "../implementations";
 

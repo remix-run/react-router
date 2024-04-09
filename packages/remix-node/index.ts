@@ -36,7 +36,7 @@ export {
   unstable_composeUploadHandlers,
   unstable_createMemoryUploadHandler,
   unstable_parseMultipartFormData,
-} from "@remix-run/server-runtime";
+} from "@react-router/server-runtime";
 
 export type {
   ActionFunction,
@@ -81,4 +81,4 @@ export type {
   UnsignFunction,
   UploadHandler,
   UploadHandlerPart,
-} from "@remix-run/server-runtime";
+} from "@react-router/server-runtime";

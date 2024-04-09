@@ -5,14 +5,14 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "node ./node_modules/@remix-run/dev/dist/cli.js build",
-    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js dev --manual -c \"npm start\"",
+    "build": "node ./node_modules/@react-router/dev/dist/cli.js build",
+    "dev": "node ./node_modules/@react-router/dev/dist/cli.js dev --manual -c \"npm start\"",
     "start": "wrangler dev ./build/index.js"
   },
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.3.0",
-    "@remix-run/cloudflare": "workspace:*",
-    "@remix-run/css-bundle": "workspace:*",
+    "@react-router/cloudflare": "workspace:*",
+    "@react-router/css-bundle": "workspace:*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230518.0",
-    "@remix-run/dev": "workspace:*",
+    "@react-router/dev": "workspace:*",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "typescript": "^5.1.0",

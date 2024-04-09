@@ -11,7 +11,7 @@ const js = String.raw;
 
 const files = {
   "vite.config.ts": dedent(js`
-    import { vitePlugin as reactRouter } from "@remix-run/dev";
+    import { vitePlugin as reactRouter } from "@react-router/dev";
     import fs from "node:fs/promises";
     import serializeJs from "serialize-javascript";
 

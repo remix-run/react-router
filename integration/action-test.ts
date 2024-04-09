@@ -74,7 +74,7 @@ test.describe.skip("actions", () => {
         `,
 
         [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           import { Form } from "react-router-dom";
 
           export function action() {
@@ -282,7 +282,7 @@ test.describe("single fetch", () => {
           `,
 
           [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             import { Form } from "react-router-dom";
 
             export function action() {

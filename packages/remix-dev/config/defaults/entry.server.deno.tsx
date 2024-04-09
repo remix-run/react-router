@@ -1,4 +1,4 @@
-import type { AppLoadContext, EntryContext } from "@remix-run/deno";
+import type { AppLoadContext, EntryContext } from "@react-router/deno";
 import { RemixServer } from "@remix-run/react";
 import * as isbotModule from "isbot";
 import { renderToReadableStream } from "react-dom/server";
@@ -35,7 +35,7 @@ export default async function handleRequest(
 
 // We have some Remix apps in the wild already running with isbot@3 so we need
 // to maintain backwards compatibility even though we want new apps to use
-// isbot@4.  That way, we can ship this as a minor Semver update to @remix-run/dev.
+// isbot@4.  That way, we can ship this as a minor Semver update to @react-router/dev.
 function isBotRequest(userAgent: string | null) {
   if (!userAgent) {
     return false;

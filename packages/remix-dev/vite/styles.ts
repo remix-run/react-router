@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import type { ServerBuild } from "@remix-run/server-runtime";
+import type { ServerBuild } from "@react-router/server-runtime";
 import { matchRoutes } from "@remix-run/router";
 import type { ModuleNode, ViteDevServer } from "vite";
 

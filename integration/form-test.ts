@@ -298,7 +298,7 @@ test.describe.skip("Forms", () => {
         `,
 
         "app/routes/stop-propagation.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { Form, useActionData } from "react-router-dom";
 
           export async function action({ request }) {
@@ -321,7 +321,7 @@ test.describe.skip("Forms", () => {
 
         "app/routes/form-method.tsx": js`
           import { Form, useActionData, useLoaderData, useSearchParams } from "react-router-dom";
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
 
           export function action({ request }) {
             return json(request.method)
@@ -394,7 +394,7 @@ test.describe.skip("Forms", () => {
         `,
 
         "app/routes/empty-file-upload.tsx": js`
-          import { json } from "@remix-run/server-runtime";
+          import { json } from "@react-router/server-runtime";
           import { Form, useActionData } from "react-router-dom";
 
           export async function action({ request }) {
@@ -454,7 +454,7 @@ test.describe.skip("Forms", () => {
         "myfile.txt": "stuff",
 
         "app/routes/pathless-layout-parent.tsx": js`
-          import { json } from '@remix-run/server-runtime'
+          import { json } from '@react-router/server-runtime'
           import { Form, Outlet, useActionData } from 'react-router-dom'
 
           export async function action({ request }) {
@@ -1431,7 +1431,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/stop-propagation.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import { Form, useActionData } from "react-router-dom";
 
             export async function action({ request }) {
@@ -1454,7 +1454,7 @@ test.describe("single fetch", () => {
 
           "app/routes/form-method.tsx": js`
             import { Form, useActionData, useLoaderData, useSearchParams } from "react-router-dom";
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function action({ request }) {
               return json(request.method)
@@ -1527,7 +1527,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/empty-file-upload.tsx": js`
-            import { json } from "@remix-run/server-runtime";
+            import { json } from "@react-router/server-runtime";
             import { Form, useActionData } from "react-router-dom";
 
             export async function action({ request }) {
@@ -1587,7 +1587,7 @@ test.describe("single fetch", () => {
           "myfile.txt": "stuff",
 
           "app/routes/pathless-layout-parent.tsx": js`
-            import { json } from '@remix-run/server-runtime'
+            import { json } from '@react-router/server-runtime'
             import { Form, Outlet, useActionData } from 'react-router-dom'
 
             export async function action({ request }) {

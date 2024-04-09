@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 
@@ -17,7 +17,7 @@ test.describe("headers export", () => {
       {
         files: {
           "app/root.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export const loader = () => json({});
@@ -39,7 +39,7 @@ test.describe("headers export", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function loader() {
               return json(null, {
@@ -61,7 +61,7 @@ test.describe("headers export", () => {
           `,
 
           "app/routes/action.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function action() {
               return json(null, {
@@ -159,7 +159,7 @@ test.describe("headers export", () => {
           `,
 
           "app/routes/cookie.tsx": js`
-            import { json } from "@remix-run/server-runtime";
+            import { json } from "@react-router/server-runtime";
             import { Outlet } from "react-router-dom";
 
             export function loader({ request }) {
@@ -179,7 +179,7 @@ test.describe("headers export", () => {
           `,
 
           "app/routes/cookie.child.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function loader({ request }) {
               if (new URL(request.url).searchParams.has("throw")) {
@@ -240,7 +240,7 @@ test.describe("headers export", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function loader() {
               return json(null, {

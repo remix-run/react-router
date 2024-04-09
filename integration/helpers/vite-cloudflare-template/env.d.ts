@@ -1,2 +1,2 @@
-/// <reference types="@remix-run/cloudflare" />
+/// <reference types="@react-router/cloudflare" />
 /// <reference types="vite/client" />

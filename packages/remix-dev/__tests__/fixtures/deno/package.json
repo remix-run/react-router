@@ -13,15 +13,15 @@
     "typecheck": "deno check"
   },
   "dependencies": {
-    "@remix-run/css-bundle": "*",
-    "@remix-run/deno": "*",
-    "@remix-run/react": "*",
+    "@react-router/css-bundle": "*",
+    "@react-router/deno": "*",
+    "@react-router/react": "*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "*",
+    "@react-router/dev": "*",
     "npm-run-all": "^4.1.5"
   },
   "engines": {

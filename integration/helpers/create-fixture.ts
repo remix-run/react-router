@@ -8,11 +8,11 @@ import stripIndent from "strip-indent";
 import { sync as spawnSync, spawn } from "cross-spawn";
 import type { JsonObject } from "type-fest";
 
-import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
-import type { ServerBuild } from "@remix-run/server-runtime";
-import { createRequestHandler } from "@remix-run/server-runtime";
-import { createRequestHandler as createExpressHandler } from "@remix-run/express";
-import { installGlobals } from "@remix-run/node";
+import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
+import type { ServerBuild } from "@react-router/server-runtime";
+import { createRequestHandler } from "@react-router/server-runtime";
+import { createRequestHandler as createExpressHandler } from "@react-router/express";
+import { installGlobals } from "@react-router/node";
 import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router-dom";
 
 import { viteConfig } from "./vite.js";
@@ -180,7 +180,7 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         let serveProcess = spawn(
           nodebin,
           [
-            "node_modules/@remix-run/serve/dist/cli.js",
+            "node_modules/@react-router/serve/dist/cli.js",
             "build/server/index.js",
           ],
           {
@@ -307,7 +307,7 @@ export async function createFixtureProject(
   await fse.copy(integrationTemplateDir, projectDir);
   // let reactRouterDev = path.join(
   //   projectDir,
-  //   "node_modules/@remix-run/dev/dist/cli.js"
+  //   "node_modules/@react-router/dev/dist/cli.js"
   // );
   // await fse.chmod(reactRouterDev, 0o755);
   // await fse.ensureSymlink(
@@ -317,7 +317,7 @@ export async function createFixtureProject(
   //
   // let reactRouterServe = path.join(
   //   projectDir,
-  //   "node_modules/@remix-run/serve/dist/cli.js"
+  //   "node_modules/@react-router/serve/dist/cli.js"
   // );
   // await fse.chmod(reactRouterServe, 0o755);
   // await fse.ensureSymlink(
@@ -360,7 +360,7 @@ function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
   // tested.
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
 
-  let reactRouterBin = "node_modules/@remix-run/dev/dist/cli.js";
+  let reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
 
   let buildArgs: string[] = [reactRouterBin, "build"];
 

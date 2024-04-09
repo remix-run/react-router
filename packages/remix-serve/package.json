@@ -1,5 +1,5 @@
 {
-  "name": "@remix-run/serve",
+  "name": "@react-router/serve",
   "version": "2.9.0-pre.0",
   "description": "Production application server for Remix",
   "bugs": {
@@ -18,8 +18,8 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@remix-run/express": "workspace:*",
-    "@remix-run/node": "workspace:*",
+    "@react-router/express": "workspace:*",
+    "@react-router/node": "workspace:*",
     "chokidar": "^3.5.3",
     "compression": "^1.7.4",
     "express": "^4.17.1",

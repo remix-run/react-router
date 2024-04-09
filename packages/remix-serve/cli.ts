@@ -1,12 +1,12 @@
-import "@remix-run/node/install";
+import "@react-router/node/install";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import url from "node:url";
-import type { ServerBuild } from "@remix-run/node";
-import { broadcastDevReady, installGlobals } from "@remix-run/node";
-import type { RequestHandler } from "@remix-run/express";
-import { createRequestHandler } from "@remix-run/express";
+import type { ServerBuild } from "@react-router/node";
+import { broadcastDevReady, installGlobals } from "@react-router/node";
+import type { RequestHandler } from "@react-router/express";
+import { createRequestHandler } from "@react-router/express";
 import chokidar from "chokidar";
 import compression from "compression";
 import express from "express";

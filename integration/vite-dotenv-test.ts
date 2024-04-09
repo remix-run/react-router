@@ -14,7 +14,7 @@ let files = {
   `,
   "app/routes/dotenv.tsx": String.raw`
     import { useState, useEffect } from "react";
-    import { json } from "@remix-run/node";
+    import { json } from "@react-router/node";
     import { useLoaderData } from "react-router-dom";
 
     export const loader = () => {

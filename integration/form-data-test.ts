@@ -10,7 +10,7 @@ test.describe.skip("multi fetch", () => {
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
 
           export async function action({ request }) {
             try {
@@ -69,7 +69,7 @@ test.describe("single fetch", () => {
       singleFetch: true,
       files: {
         "app/routes/_index.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
 
           export async function action({ request }) {
             try {

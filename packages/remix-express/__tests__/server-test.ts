@@ -2,7 +2,7 @@ import { Readable } from "node:stream";
 import {
   createReadableStreamFromReadable,
   createRequestHandler as createRemixRequestHandler,
-} from "@remix-run/node";
+} from "@react-router/node";
 import express from "express";
 import { createRequest, createResponse } from "node-mocks-http";
 import supertest from "supertest";
@@ -15,8 +15,8 @@ import {
 
 // We don't want to test that the remix server works here (that's what the
 // playwright tests do), we just want to test the express adapter
-jest.mock("@remix-run/node", () => {
-  let original = jest.requireActual("@remix-run/node");
+jest.mock("@react-router/node", () => {
+  let original = jest.requireActual("@react-router/node");
   return {
     ...original,
     createRequestHandler: jest.fn(),

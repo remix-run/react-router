@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.128.0/http/server.ts";
-import { createRequestHandlerWithStaticFiles } from "@remix-run/deno";
+import { createRequestHandlerWithStaticFiles } from "@react-router/deno";
 // Import path interpreted by the Remix compiler
-import * as build from "@remix-run/dev/server-build";
+import * as build from "@react-router/dev/server-build";
 
 const remixHandler = createRequestHandlerWithStaticFiles({
   build,

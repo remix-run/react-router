@@ -2,7 +2,7 @@ import type { IncomingHttpHeaders, ServerResponse } from "node:http";
 import { once } from "node:events";
 import { Readable } from "node:stream";
 import { splitCookiesString } from "set-cookie-parser";
-import { createReadableStreamFromReadable } from "@remix-run/node";
+import { createReadableStreamFromReadable } from "@react-router/node";
 import type * as Vite from "vite";
 
 import invariant from "../invariant";

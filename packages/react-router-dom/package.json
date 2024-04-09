@@ -24,12 +24,12 @@
   "types": "./dist/index.d.ts",
   "dependencies": {
     "@remix-run/router": "workspace:*",
-    "@remix-run/server-runtime": "workspace:*",
+    "@react-router/server-runtime": "workspace:*",
     "react-router": "workspace:*",
     "turbo-stream": "^2.0.0"
   },
   "devDependencies": {
-    "@remix-run/testing": "workspace:*",
+    "@react-router/testing": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

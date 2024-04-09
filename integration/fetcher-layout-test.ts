@@ -16,7 +16,7 @@ test.describe.skip("multi fetch", () => {
     fixture = await createFixture({
       files: {
         "app/routes/layout-action.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let action = ({ params }) => json("layout action data");
@@ -41,7 +41,7 @@ test.describe.skip("multi fetch", () => {
         `,
 
         "app/routes/layout-action._index.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,
@@ -72,7 +72,7 @@ test.describe.skip("multi fetch", () => {
         `,
 
         "app/routes/layout-action.$param.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,
@@ -103,7 +103,7 @@ test.describe.skip("multi fetch", () => {
         `,
 
         "app/routes/layout-loader.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let loader = () => json("layout loader data");
@@ -128,7 +128,7 @@ test.describe.skip("multi fetch", () => {
         `,
 
         "app/routes/layout-loader._index.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,
@@ -155,7 +155,7 @@ test.describe.skip("multi fetch", () => {
         `,
 
         "app/routes/layout-loader.$param.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,
@@ -291,7 +291,7 @@ test.describe("single fetch", () => {
       singleFetch: true,
       files: {
         "app/routes/layout-action.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let action = ({ params }) => json("layout action data");
@@ -316,7 +316,7 @@ test.describe("single fetch", () => {
         `,
 
         "app/routes/layout-action._index.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,
@@ -347,7 +347,7 @@ test.describe("single fetch", () => {
         `,
 
         "app/routes/layout-action.$param.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,
@@ -378,7 +378,7 @@ test.describe("single fetch", () => {
         `,
 
         "app/routes/layout-loader.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { Outlet, useFetcher, useFormAction } from "react-router-dom";
 
           export let loader = () => json("layout loader data");
@@ -403,7 +403,7 @@ test.describe("single fetch", () => {
         `,
 
         "app/routes/layout-loader._index.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,
@@ -430,7 +430,7 @@ test.describe("single fetch", () => {
         `,
 
         "app/routes/layout-loader.$param.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             useFetcher,
             useFormAction,

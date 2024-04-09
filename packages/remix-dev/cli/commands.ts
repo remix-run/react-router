@@ -117,19 +117,19 @@ export async function generateEntry(
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  let serverRuntime = deps["@remix-run/deno"]
+  let serverRuntime = deps["@react-router/deno"]
     ? "deno"
-    : deps["@remix-run/cloudflare"]
+    : deps["@react-router/cloudflare"]
     ? "cloudflare"
-    : deps["@remix-run/node"]
+    : deps["@react-router/node"]
     ? "node"
     : undefined;
 
   if (!serverRuntime) {
     let serverRuntimes = [
-      "@remix-run/deno",
-      "@remix-run/cloudflare",
-      "@remix-run/node",
+      "@react-router/deno",
+      "@react-router/cloudflare",
+      "@react-router/node",
     ];
     let formattedList = disjunctionListFormat.format(serverRuntimes);
     console.error(

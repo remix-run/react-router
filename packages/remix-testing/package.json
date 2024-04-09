@@ -1,5 +1,5 @@
 {
-  "name": "@remix-run/testing",
+  "name": "@react-router/testing",
   "version": "2.9.0-pre.0",
   "description": "Testing utilities for Remix apps",
   "homepage": "https://remix.run",
@@ -19,13 +19,13 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@remix-run/node": "workspace:*",
+    "@react-router/node": "workspace:*",
     "@remix-run/router": "workspace:*",
     "react-router-dom": "workspace:*"
   },
   "devDependencies": {
-    "@remix-run/server-runtime": "workspace:*",
-    "@remix-run/testing": "workspace:*",
+    "@react-router/server-runtime": "workspace:*",
+    "@react-router/testing": "workspace:*",
     "@types/node": "^18.17.1",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",

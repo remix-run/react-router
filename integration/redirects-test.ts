@@ -35,7 +35,7 @@ test.describe.skip("redirects", () => {
         `,
 
         "app/routes/absolute._index.tsx": js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           import { Form } from "react-router-dom";
 
           export async function action({ request }) {
@@ -58,7 +58,7 @@ test.describe.skip("redirects", () => {
         `,
 
         "app/routes/loader.external.ts": js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           export const loader = () => {
             return redirect("https://remix.run/");
           }
@@ -89,7 +89,7 @@ test.describe.skip("redirects", () => {
         `,
 
         "app/routes/redirect-document.a.tsx": js`
-          import { redirectDocument } from "@remix-run/node";
+          import { redirectDocument } from "@react-router/node";
           export const loader = () =>  redirectDocument("/redirect-document/b");
         `,
 
@@ -176,7 +176,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/absolute._index.tsx": js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             import { Form } from "react-router-dom";
 
             export async function action({ request }) {
@@ -199,7 +199,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/loader.external.ts": js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             export const loader = () => {
               return redirect("https://remix.run/");
             }
@@ -230,7 +230,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/redirect-document.a.tsx": js`
-            import { redirectDocument } from "@remix-run/node";
+            import { redirectDocument } from "@react-router/node";
             export const loader = () =>  redirectDocument("/redirect-document/b");
           `,
 

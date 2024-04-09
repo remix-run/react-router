@@ -62,7 +62,7 @@ export type ActionFunctionArgs = RRActionFunctionArgs<AppLoadContext> & {
 
 /**
  * A function that handles data mutations for a route on the client
- * @private Public API is exported from @remix-run/react
+ * @private Public API is exported from @react-router/react
  */
 type ClientActionFunction = (
   args: ClientActionFunctionArgs
@@ -70,7 +70,7 @@ type ClientActionFunction = (
 
 /**
  * Arguments passed to a route `clientAction` function
- * @private Public API is exported from @remix-run/react
+ * @private Public API is exported from @react-router/react
  */
 export type ClientActionFunctionArgs = RRActionFunctionArgs<undefined> & {
   serverAction: <T = AppData>() => Promise<SerializeFrom<T>>;
@@ -95,7 +95,7 @@ export type LoaderFunctionArgs = RRLoaderFunctionArgs<AppLoadContext> & {
 
 /**
  * A function that loads data for a route on the client
- * @private Public API is exported from @remix-run/react
+ * @private Public API is exported from @react-router/react
  */
 type ClientLoaderFunction = ((
   args: ClientLoaderFunctionArgs
@@ -105,7 +105,7 @@ type ClientLoaderFunction = ((
 
 /**
  * Arguments passed to a route `clientLoader` function
- * @private Public API is exported from @remix-run/react
+ * @private Public API is exported from @react-router/react
  */
 export type ClientLoaderFunctionArgs = RRLoaderFunctionArgs<undefined> & {
   serverLoader: <T = AppData>() => Promise<SerializeFrom<T>>;

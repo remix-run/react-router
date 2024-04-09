@@ -308,7 +308,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { Link, Outlet, useLoaderData, useNavigation } from "react-router-dom";
           import stylesHref from "~/gists.css?url";
           export function links() {
@@ -359,7 +359,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.$username.tsx": js`
-          import { json, redirect } from "@remix-run/node";
+          import { json, redirect } from "@react-router/node";
           import { Link, useLoaderData, useParams } from "react-router-dom";
           export async function loader({ params }) {
             let { username } = params;
@@ -458,7 +458,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/resources.theme-css.tsx": js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           export async function loader({ request }) {
             return new Response(":root { --nc-tx-1: #ffffff; --nc-tx-2: #eeeeee; }",
               {

@@ -9,17 +9,17 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@remix-run/cloudflare": "*",
-    "@remix-run/cloudflare-pages": "*",
-    "@remix-run/css-bundle": "*",
-    "@remix-run/react": "*",
+    "@react-router/cloudflare": "*",
+    "@react-router/cloudflare-pages": "*",
+    "@react-router/css-bundle": "*",
+    "@react-router/react": "*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230518.0",
-    "@remix-run/dev": "*",
+    "@react-router/dev": "*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "eslint": "^8.38.0",

@@ -18,7 +18,7 @@ test.describe.skip("set-cookie revalidation", () => {
     fixture = await createFixture({
       files: {
         "app/session.server.ts": js`
-          import { createCookieSessionStorage } from "@remix-run/node";
+          import { createCookieSessionStorage } from "@react-router/node";
 
           export let MESSAGE_KEY = "message";
 
@@ -33,7 +33,7 @@ test.describe.skip("set-cookie revalidation", () => {
         `,
 
         "app/root.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import {
             Links,
             Meta,
@@ -93,7 +93,7 @@ test.describe.skip("set-cookie revalidation", () => {
         `,
 
         "app/routes/protected.tsx": js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
 
           import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 
@@ -144,7 +144,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/session.server.ts": js`
-            import { createCookieSessionStorage } from "@remix-run/node";
+            import { createCookieSessionStorage } from "@react-router/node";
 
             export let MESSAGE_KEY = "message";
 
@@ -159,7 +159,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/root.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import {
               Links,
               Meta,
@@ -219,7 +219,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/protected.tsx": js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
 
             import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 
