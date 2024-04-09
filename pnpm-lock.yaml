@@ -282,21 +282,21 @@ importers:
       '@playwright/test':
         specifier: ^1.33.0
         version: 1.42.1
-      '@remix-run/dev':
+      '@react-router/dev':
         specifier: workspace:*
         version: link:../packages/remix-dev
-      '@remix-run/express':
+      '@react-router/express':
         specifier: workspace:*
         version: link:../packages/remix-express
-      '@remix-run/node':
+      '@react-router/node':
         specifier: workspace:*
         version: link:../packages/remix-node
+      '@react-router/server-runtime':
+        specifier: workspace:*
+        version: link:../packages/remix-server-runtime
       '@remix-run/router':
         specifier: 1.16.0-pre.0
         version: 1.16.0-pre.0
-      '@remix-run/server-runtime':
-        specifier: workspace:*
-        version: link:../packages/remix-server-runtime
       '@types/express':
         specifier: ^4.17.9
         version: 4.17.21
@@ -387,16 +387,16 @@ importers:
 
   integration/helpers/node-template:
     dependencies:
-      '@remix-run/express':
+      '@react-router/express':
         specifier: workspace:*
         version: link:../../../packages/remix-express
-      '@remix-run/node':
+      '@react-router/node':
         specifier: workspace:*
         version: link:../../../packages/remix-node
-      '@remix-run/serve':
+      '@react-router/serve':
         specifier: workspace:*
         version: link:../../../packages/remix-serve
-      '@remix-run/server-runtime':
+      '@react-router/server-runtime':
         specifier: workspace:*
         version: link:../../../packages/remix-server-runtime
       express:
@@ -418,7 +418,7 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/react-router-dom
     devDependencies:
-      '@remix-run/dev':
+      '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/remix-dev
       '@types/react':
@@ -448,13 +448,13 @@ importers:
 
   integration/helpers/vite-template:
     dependencies:
-      '@remix-run/express':
+      '@react-router/express':
         specifier: workspace:*
         version: link:../../../packages/remix-express
-      '@remix-run/node':
+      '@react-router/node':
         specifier: workspace:*
         version: link:../../../packages/remix-node
-      '@remix-run/serve':
+      '@react-router/serve':
         specifier: workspace:*
         version: link:../../../packages/remix-serve
       '@vanilla-extract/css':
@@ -485,7 +485,7 @@ importers:
         specifier: ^6.0.1
         version: 6.0.2
     devDependencies:
-      '@remix-run/dev':
+      '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/remix-dev
       '@types/react':
@@ -531,12 +531,12 @@ importers:
 
   packages/react-router-dom:
     dependencies:
+      '@react-router/server-runtime':
+        specifier: workspace:*
+        version: link:../remix-server-runtime
       '@remix-run/router':
         specifier: workspace:*
         version: link:../router
-      '@remix-run/server-runtime':
-        specifier: workspace:*
-        version: link:../remix-server-runtime
       react-router:
         specifier: workspace:*
         version: link:../react-router
@@ -544,7 +544,7 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
     devDependencies:
-      '@remix-run/testing':
+      '@react-router/testing':
         specifier: workspace:*
         version: link:../remix-testing
       react:
@@ -556,12 +556,12 @@ importers:
 
   packages/react-router-dom-v5-compat:
     dependencies:
+      '@react-router/server-runtime':
+        specifier: workspace:*
+        version: link:../remix-server-runtime
       '@remix-run/router':
         specifier: workspace:*
         version: link:../router
-      '@remix-run/server-runtime':
-        specifier: workspace:*
-        version: link:../remix-server-runtime
       history:
         specifier: ^5.3.0
         version: 5.3.0
@@ -635,15 +635,15 @@ importers:
       '@npmcli/package-json':
         specifier: ^4.0.1
         version: 4.0.1
-      '@remix-run/node':
+      '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
+      '@react-router/server-runtime':
+        specifier: workspace:*
+        version: link:../remix-server-runtime
       '@remix-run/router':
         specifier: workspace:*
         version: link:../router
-      '@remix-run/server-runtime':
-        specifier: workspace:*
-        version: link:../remix-server-runtime
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -696,7 +696,7 @@ importers:
         specifier: ^5.1.0
         version: 5.1.6
     devDependencies:
-      '@remix-run/serve':
+      '@react-router/serve':
         specifier: workspace:*
         version: link:../remix-serve
       '@types/babel__core':
@@ -768,7 +768,7 @@ importers:
 
   packages/remix-express:
     dependencies:
-      '@remix-run/node':
+      '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
     devDependencies:
@@ -796,7 +796,7 @@ importers:
 
   packages/remix-node:
     dependencies:
-      '@remix-run/server-runtime':
+      '@react-router/server-runtime':
         specifier: workspace:*
         version: link:../remix-server-runtime
       '@web3-storage/multipart-parser':
@@ -827,10 +827,10 @@ importers:
 
   packages/remix-serve:
     dependencies:
-      '@remix-run/express':
+      '@react-router/express':
         specifier: workspace:*
         version: link:../remix-express
-      '@remix-run/node':
+      '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
       chokidar:
@@ -898,7 +898,7 @@ importers:
 
   packages/remix-testing:
     dependencies:
-      '@remix-run/node':
+      '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
       '@remix-run/router':
@@ -908,10 +908,10 @@ importers:
         specifier: workspace:*
         version: link:../react-router-dom
     devDependencies:
-      '@remix-run/server-runtime':
+      '@react-router/server-runtime':
         specifier: workspace:*
         version: link:../remix-server-runtime
-      '@remix-run/testing':
+      '@react-router/testing':
         specifier: workspace:*
         version: 'link:'
       '@types/node':
