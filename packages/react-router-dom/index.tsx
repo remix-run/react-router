@@ -595,8 +595,9 @@ function deserializeErrors(
           try {
             // @ts-expect-error
             let error = new ErrorConstructor(val.message);
-            error.stack =
-              process.env.NODE_ENV === "development" ? val.stack : "";
+            // Wipe away the client-side stack trace.  Nothing to fill it in with
+            // because we don't serialize SSR stack traces for security reasons
+            error.stack = "";
             serialized[key] = error;
           } catch (e) {
             // no-op - fall through and create a normal Error
@@ -606,7 +607,9 @@ function deserializeErrors(
 
       if (serialized[key] == null) {
         let error = new Error(val.message);
-        error.stack = process.env.NODE_ENV === "development" ? val.stack : "";
+        // Wipe away the client-side stack trace.  Nothing to fill it in with
+        // because we don't serialize SSR stack traces for security reasons
+        error.stack = "";
         serialized[key] = error;
       }
     } else {
