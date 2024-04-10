@@ -28,7 +28,7 @@ test.describe.skip("deferred loaders", () => {
       `,
 
         "app/routes/redirect.tsx": js`
-        import { defer } from "@remix-run/node";
+        import { defer } from "@react-router/node";
         export function loader() {
           return defer({food: "pizza"}, { status: 301, headers: { Location: "/?redirected" } });
         }
@@ -37,7 +37,7 @@ test.describe.skip("deferred loaders", () => {
 
         "app/routes/direct-promise-access.tsx": js`
         import * as React from "react";
-        import { defer } from "@remix-run/node";
+        import { defer } from "@react-router/node";
         import { useLoaderData, Link, Await } from "react-router-dom";
         export function loader() {
           return defer({
@@ -121,7 +121,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/redirect.tsx": js`
-            import { defer } from "@remix-run/node";
+            import { defer } from "@react-router/node";
             export function loader() {
               return defer({food: "pizza"}, { status: 301, headers: { Location: "/?redirected" } });
             }
@@ -130,7 +130,7 @@ test.describe("single fetch", () => {
 
           "app/routes/direct-promise-access.tsx": js`
             import * as React from "react";
-            import { defer } from "@remix-run/node";
+            import { defer } from "@react-router/node";
             import { useLoaderData, Link, Await } from "react-router-dom";
             export function loader() {
               return defer({

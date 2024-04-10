@@ -10,8 +10,8 @@ import {
 import type {
   UNSAFE_SingleFetchResult as SingleFetchResult,
   UNSAFE_SingleFetchResults as SingleFetchResults,
-} from "@remix-run/server-runtime";
-import { UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol } from "@remix-run/server-runtime";
+} from "@react-router/server-runtime";
+import { UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol } from "@react-router/server-runtime";
 import type {
   DataRouteObject,
   unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,

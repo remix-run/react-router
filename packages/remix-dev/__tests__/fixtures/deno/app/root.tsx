@@ -1,5 +1,5 @@
-import { cssBundleHref } from "@remix-run/css-bundle";
-import type { LinksFunction } from "@remix-run/deno";
+import { cssBundleHref } from "@react-router/css-bundle";
+import type { LinksFunction } from "@react-router/deno";
 import {
   Links,
   Meta,

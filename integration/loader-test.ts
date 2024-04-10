@@ -18,7 +18,7 @@ test.describe.skip("loader", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-        import { json } from "@remix-run/node";
+        import { json } from "@react-router/node";
         import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
           export const loader = () => json("${ROOT_DATA}");
@@ -40,7 +40,7 @@ test.describe.skip("loader", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
 
           export function loader() {
             return "${INDEX_DATA}"
@@ -95,7 +95,7 @@ test.describe.skip("loader in an app", () => {
             }
           `,
           "app/routes/redirect.tsx": js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             export const loader = () => redirect("/redirect-target");
             export default () => <div>Yo</div>
           `,
@@ -109,7 +109,7 @@ test.describe.skip("loader in an app", () => {
           `,
 
           "app/routes/fetch-target.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function loader() {
               return json({ message: "${FETCH_TARGET_TEXT}" })
@@ -152,7 +152,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/root.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
             export const loader = () => json("${ROOT_DATA}");
@@ -174,7 +174,7 @@ test.describe("single fetch", () => {
           `,
 
           "app/routes/_index.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function loader() {
               return "${INDEX_DATA}"
@@ -224,7 +224,7 @@ test.describe("single fetch", () => {
             }
           `,
             "app/routes/redirect.tsx": js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             export const loader = () => redirect("/redirect-target");
             export default () => <div>Yo</div>
           `,
@@ -238,7 +238,7 @@ test.describe("single fetch", () => {
           `,
 
             "app/routes/fetch-target.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
 
             export function loader() {
               return json({ message: "${FETCH_TARGET_TEXT}" })

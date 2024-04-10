@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "@remix-run/router";
 
-import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
 import type { Fixture } from "./helpers/create-fixture.js";
 import {
   createAppFixture,
@@ -77,7 +77,7 @@ const routeFiles = {
 
   "app/routes/defer.tsx": js`
     import * as React from 'react';
-    import { defer } from "@remix-run/server-runtime";
+    import { defer } from "@react-router/server-runtime";
     import { Await, useAsyncError, useLoaderData, useRouteError  } from "react-router-dom";
 
     export function loader({ request }) {
@@ -470,7 +470,7 @@ test.describe.skip("Error Sanitization", () => {
         {
           files: {
             "app/entry.server.tsx": js`
-              import type { EntryContext } from "@remix-run/node";
+              import type { EntryContext } from "@react-router/node";
               import { RemixServer, isRouteErrorResponse } from "react-router-dom";
               import { renderToString } from "react-dom/server";
 
@@ -1033,7 +1033,7 @@ test.describe("single fetch", () => {
               "app/entry.server.tsx": js`
                 import { PassThrough } from "node:stream";
 
-                import { createReadableStreamFromReadable } from "@remix-run/node";
+                import { createReadableStreamFromReadable } from "@react-router/node";
                 import { RemixServer, isRouteErrorResponse } from "react-router-dom";
                 import { renderToPipeableStream } from "react-dom/server";
 

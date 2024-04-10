@@ -133,7 +133,7 @@ test.describe.skip("navigation states", () => {
           }
         `,
         [`app/routes/${STATES.LOADING_REDIRECT}.jsx`]: js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           export function loader() {
             return redirect("/?redirected");
           }
@@ -155,7 +155,7 @@ test.describe.skip("navigation states", () => {
           }
         `,
         [`app/routes/${STATES.SUBMITTING_LOADER_REDIRECT}.jsx`]: js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           export function loader() {
             return redirect("/?redirected");
           }
@@ -179,7 +179,7 @@ test.describe.skip("navigation states", () => {
           }
         `,
         [`app/routes/${STATES.SUBMITTING_ACTION_REDIRECT}.jsx`]: js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           export function action() {
             return redirect("/?redirected");
           }
@@ -192,7 +192,7 @@ test.describe.skip("navigation states", () => {
           }
         `,
         [`app/routes/${STATES.FETCHER_REDIRECT}.jsx`]: js`
-          import { redirect } from "@remix-run/node";
+          import { redirect } from "@react-router/node";
           export function action() {
             return redirect("/?redirected");
           }
@@ -581,7 +581,7 @@ test.describe("single fetch", () => {
             }
           `,
           [`app/routes/${STATES.LOADING_REDIRECT}.jsx`]: js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             export function loader() {
               return redirect("/?redirected");
             }
@@ -603,7 +603,7 @@ test.describe("single fetch", () => {
             }
           `,
           [`app/routes/${STATES.SUBMITTING_LOADER_REDIRECT}.jsx`]: js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             export function loader() {
               return redirect("/?redirected");
             }
@@ -627,7 +627,7 @@ test.describe("single fetch", () => {
             }
           `,
           [`app/routes/${STATES.SUBMITTING_ACTION_REDIRECT}.jsx`]: js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             export function action() {
               return redirect("/?redirected");
             }
@@ -640,7 +640,7 @@ test.describe("single fetch", () => {
             }
           `,
           [`app/routes/${STATES.FETCHER_REDIRECT}.jsx`]: js`
-            import { redirect } from "@remix-run/node";
+            import { redirect } from "@react-router/node";
             export function action() {
               return redirect("/?redirected");
             }

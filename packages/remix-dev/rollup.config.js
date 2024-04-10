@@ -32,7 +32,7 @@ module.exports = function rollup() {
         `${SOURCE_DIR}/vite/plugin.ts`,
       ],
       output: {
-        banner: createBanner("@remix-run/dev", version),
+        banner: createBanner("@react-router/dev", version),
         dir: OUTPUT_DIR,
         format: "cjs",
         preserveModules: true,

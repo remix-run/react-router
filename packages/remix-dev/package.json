@@ -1,5 +1,5 @@
 {
-  "name": "@remix-run/dev",
+  "name": "@react-router/dev",
   "version": "2.9.0-pre.0",
   "description": "Dev tools and CLI for Remix",
   "homepage": "https://remix.run",
@@ -30,9 +30,9 @@
     "@babel/traverse": "^7.23.2",
     "@babel/types": "^7.22.5",
     "@npmcli/package-json": "^4.0.1",
-    "@remix-run/node": "workspace:*",
+    "@react-router/node": "workspace:*",
     "@remix-run/router": "workspace:*",
-    "@remix-run/server-runtime": "workspace:*",
+    "@react-router/server-runtime": "workspace:*",
     "arg": "^5.0.1",
     "chalk": "^4.1.2",
     "es-module-lexer": "^1.3.1",
@@ -50,7 +50,7 @@
     "set-cookie-parser": "^2.6.0"
   },
   "devDependencies": {
-    "@remix-run/serve": "workspace:*",
+    "@react-router/serve": "workspace:*",
     "@types/babel__core": "^7.20.5",
     "@types/babel__generator": "^7.6.8",
     "@types/babel__traverse": "^7.20.5",
@@ -76,13 +76,13 @@
   },
   "peerDependencies": {
     "react-router-dom": "workspace:^",
-    "@remix-run/serve": "workspace:^",
+    "@react-router/serve": "workspace:^",
     "typescript": "^5.1.0",
     "vite": "^5.1.0",
     "wrangler": "^3.28.2"
   },
   "peerDependenciesMeta": {
-    "@remix-run/serve": {
+    "@react-router/serve": {
       "optional": true
     },
     "typescript": {

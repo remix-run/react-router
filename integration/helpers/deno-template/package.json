@@ -5,15 +5,15 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "node ./node_modules/@remix-run/dev/dist/cli.js build",
+    "build": "node ./node_modules/@react-router/dev/dist/cli.js build",
     "dev": "pnpm run \"/^dev:.*/\"",
     "dev:deno": "NODE_ENV=development deno run --unstable --watch --allow-net --allow-read --allow-env ./build/index.js",
-    "dev:remix": "node ./node_modules/@remix-run/dev/dist/cli.js watch",
+    "dev:remix": "node ./node_modules/@react-router/dev/dist/cli.js watch",
     "start": "NODE_ENV=production deno run --unstable --allow-net --allow-read --allow-env ./build/index.js"
   },
   "dependencies": {
-    "@remix-run/css-bundle": "workspace:*",
-    "@remix-run/deno": "workspace:*",
+    "@react-router/css-bundle": "workspace:*",
+    "@react-router/deno": "workspace:*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -21,7 +21,7 @@
     "react-router-dom": "workspace:*"
   },
   "devDependencies": {
-    "@remix-run/dev": "workspace:*"
+    "@react-router/dev": "workspace:*"
   },
   "engines": {
     "node": ">=18.0.0"

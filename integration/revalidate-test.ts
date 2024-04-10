@@ -46,7 +46,7 @@ test.describe.skip("Revalidation", () => {
           `,
 
           "app/routes/parent.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import { Outlet, useLoaderData } from "react-router-dom";
 
             export async function loader({ request }) {
@@ -86,7 +86,7 @@ test.describe.skip("Revalidation", () => {
           `,
 
           "app/routes/parent.child.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import { Form, useLoaderData, useRevalidator } from "react-router-dom";
 
             export async function action() {
@@ -336,7 +336,7 @@ test.describe("single fetch", () => {
             `,
 
             "app/routes/parent.tsx": js`
-              import { json } from "@remix-run/node";
+              import { json } from "@react-router/node";
               import { Outlet, useLoaderData } from "react-router-dom";
 
               export async function loader({ request }) {
@@ -376,7 +376,7 @@ test.describe("single fetch", () => {
             `,
 
             "app/routes/parent.child.tsx": js`
-              import { json } from "@remix-run/node";
+              import { json } from "@react-router/node";
               import { Form, useLoaderData, useRevalidator } from "react-router-dom";
 
               export async function action() {

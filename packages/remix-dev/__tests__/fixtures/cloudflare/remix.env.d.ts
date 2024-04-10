@@ -1,3 +1,3 @@
 /// <reference types="vite/client" />
-/// <reference types="@remix-run/cloudflare" />
+/// <reference types="@react-router/cloudflare" />
 /// <reference types="@cloudflare/workers-types" />

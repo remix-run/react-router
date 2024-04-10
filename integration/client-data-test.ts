@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
 import {
   createAppFixture,
   createFixture,
@@ -49,7 +49,7 @@ function getFiles({
       }
     `,
     "app/routes/parent.tsx": js`
-      import { json } from '@remix-run/node'
+      import { json } from '@react-router/node'
       import { Outlet, useLoaderData } from "react-router-dom"
       export function loader() {
         return json({ message: 'Parent Server Loader'});
@@ -89,7 +89,7 @@ function getFiles({
       }
     `,
     "app/routes/parent.child.tsx": js`
-      import { json } from '@remix-run/node'
+      import { json } from '@react-router/node'
       import { Form, Outlet, useActionData, useLoaderData } from "react-router-dom"
       export function loader() {
         return json({ message: 'Child Server Loader'});
@@ -322,7 +322,7 @@ test.describe.skip("Client Data", () => {
           }),
           "app/routes/parent.child.tsx": js`
             import * as React from 'react';
-            import { defer, json } from '@remix-run/node'
+            import { defer, json } from '@react-router/node'
             import { Await, useLoaderData } from "react-router-dom"
             export function loader() {
               return defer({
@@ -421,7 +421,7 @@ test.describe.skip("Client Data", () => {
           }),
           "app/routes/parent.child.tsx": js`
             import * as React from 'react';
-            import { json } from '@remix-run/node';
+            import { json } from '@react-router/node';
             import { useLoaderData } from "react-router-dom";
             export function loader() {
               return json({
@@ -604,7 +604,7 @@ test.describe.skip("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { json } from '@remix-run/node';
+              import { json } from '@react-router/node';
               import { useLoaderData, useRevalidator } from "react-router-dom";
               let isFirstCall = true;
               export async function loader({ serverLoader }) {
@@ -669,7 +669,7 @@ test.describe.skip("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { json } from '@remix-run/node';
+              import { json } from '@react-router/node';
               import { useLoaderData, useRevalidator } from "react-router-dom";
               let isFirstCall = true;
               export async function loader({ serverLoader }) {
@@ -805,7 +805,7 @@ test.describe.skip("Client Data", () => {
                 childClientLoaderHydrate: false,
               }),
               "app/routes/parent.child.tsx": js`
-                import { json } from '@remix-run/node'
+                import { json } from '@react-router/node'
                 import { useRouteError } from "react-router-dom"
                 export function loader() {
                   throw json({ message: 'Child Server Error'});
@@ -1156,7 +1156,7 @@ test.describe.skip("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { json } from '@remix-run/node';
+              import { json } from '@react-router/node';
               import { Form, useRouteError } from "react-router-dom";
               export async function clientAction({ serverAction }) {
                 return await serverAction();
@@ -1373,7 +1373,7 @@ test.describe.skip("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { json } from '@remix-run/node';
+              import { json } from '@react-router/node';
               import { Form, useRouteError } from "react-router-dom";
               export async function clientAction({ serverAction }) {
                 return await serverAction();
@@ -1605,7 +1605,7 @@ test.describe("single fetch", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { defer, json } from '@remix-run/node'
+              import { defer, json } from '@react-router/node'
               import { Await, useLoaderData } from "react-router-dom"
               export function loader() {
                 return defer({
@@ -1704,7 +1704,7 @@ test.describe("single fetch", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { json } from '@remix-run/node';
+              import { json } from '@react-router/node';
               import { useLoaderData } from "react-router-dom";
               export function loader() {
                 return json({
@@ -1887,7 +1887,7 @@ test.describe("single fetch", () => {
               }),
               "app/routes/parent.child.tsx": js`
                 import * as React from 'react';
-                import { json } from '@remix-run/node';
+                import { json } from '@react-router/node';
                 import { useLoaderData, useRevalidator } from "react-router-dom";
                 let isFirstCall = true;
                 export async function loader({ serverLoader }) {
@@ -1958,7 +1958,7 @@ test.describe("single fetch", () => {
               }),
               "app/routes/parent.child.tsx": js`
                 import * as React from 'react';
-                import { json } from '@remix-run/node';
+                import { json } from '@react-router/node';
                 import { useLoaderData, useRevalidator } from "react-router-dom";
                 let isFirstCall = true;
                 export async function loader({ serverLoader }) {
@@ -2391,7 +2391,7 @@ test.describe("single fetch", () => {
               }),
               "app/routes/parent.child.tsx": js`
                 import * as React from 'react';
-                import { json } from '@remix-run/node';
+                import { json } from '@react-router/node';
                 import { Form, useRouteError } from "react-router-dom";
                 export async function clientAction({ serverAction }) {
                   return await serverAction();
@@ -2608,7 +2608,7 @@ test.describe("single fetch", () => {
               }),
               "app/routes/parent.child.tsx": js`
                 import * as React from 'react';
-                import { json } from '@remix-run/node';
+                import { json } from '@react-router/node';
                 import { Form, useRouteError } from "react-router-dom";
                 export async function clientAction({ serverAction }) {
                   return await serverAction();

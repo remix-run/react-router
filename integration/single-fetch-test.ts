@@ -6,7 +6,7 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
 
 const ISO_DATE = "2024-03-12T12:00:00.000Z";
 
@@ -921,7 +921,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@remix-run/node';
+          import { redirect } from '@react-router/node';
           export function loader({ request, response }) {
             response.status = 302;
             response.headers.set('Location', '/target');
@@ -962,7 +962,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@remix-run/node';
+          import { redirect } from '@react-router/node';
           export function loader({ request, response }) {
             response.status = 302;
             response.headers.set('Location', '/target');
@@ -999,7 +999,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@remix-run/node';
+          import { redirect } from '@react-router/node';
           export function loader() {
             throw redirect('/target');
           }
@@ -1036,7 +1036,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@remix-run/node';
+          import { redirect } from '@react-router/node';
           export function loader() {
             return redirect('/target');
           }
@@ -1073,7 +1073,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@remix-run/node';
+            import { redirect } from '@react-router/node';
             export function action({ response }) {
               response.status = 302;
               response.headers.set('Location', '/target');
@@ -1120,7 +1120,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@remix-run/node';
+            import { redirect } from '@react-router/node';
             export function action({ response }) {
               response.status = 302;
               response.headers.set('Location', '/target');
@@ -1163,7 +1163,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@remix-run/node';
+            import { redirect } from '@react-router/node';
             export function action() {
               throw redirect('/target');
             }
@@ -1206,7 +1206,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@remix-run/node';
+            import { redirect } from '@react-router/node';
             export function action() {
               return redirect('/target');
             }
@@ -1250,8 +1250,8 @@ test.describe("single-fetch", () => {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
 
-          import type { EntryContext } from "@remix-run/node";
-          import { createReadableStreamFromReadable } from "@remix-run/node";
+          import type { EntryContext } from "@react-router/node";
+          import { createReadableStreamFromReadable } from "@react-router/node";
           import { RemixServer } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";
 
@@ -1301,7 +1301,7 @@ test.describe("single-fetch", () => {
           }
         `,
         "app/routes/data.tsx": js`
-          import { redirect } from '@remix-run/node';
+          import { redirect } from '@react-router/node';
           export function loader() {
             return redirect('/target');
           }
@@ -1334,8 +1334,8 @@ test.describe("single-fetch", () => {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
 
-          import type { EntryContext } from "@remix-run/node";
-          import { createReadableStreamFromReadable } from "@remix-run/node";
+          import type { EntryContext } from "@react-router/node";
+          import { createReadableStreamFromReadable } from "@react-router/node";
           import { RemixServer } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";
 
@@ -1385,7 +1385,7 @@ test.describe("single-fetch", () => {
           }
         `,
         "app/routes/data.tsx": js`
-          import { redirect } from '@remix-run/node';
+          import { redirect } from '@react-router/node';
           export function action() {
             return redirect('/target');
           }

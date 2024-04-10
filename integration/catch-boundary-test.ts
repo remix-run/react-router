@@ -30,7 +30,7 @@ test.describe.skip("ErrorBoundary (thrown responses)", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             import { Links, Meta, Outlet, Scripts, useMatches } from "react-router-dom";
 
             export function loader() {
@@ -392,7 +392,7 @@ test.describe("single fetch", () => {
         singleFetch: true,
         files: {
           "app/root.tsx": js`
-              import { json } from "@remix-run/node";
+              import { json } from "@react-router/node";
               import { Links, Meta, Outlet, Scripts, useMatches } from "react-router-dom";
 
               export function loader() {

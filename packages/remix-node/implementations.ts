@@ -3,7 +3,7 @@ import {
   createCookieSessionStorageFactory,
   createMemorySessionStorageFactory,
   createSessionStorageFactory,
-} from "@remix-run/server-runtime";
+} from "@react-router/server-runtime";
 
 import { sign, unsign } from "./crypto";
 

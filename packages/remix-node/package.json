@@ -1,5 +1,5 @@
 {
-  "name": "@remix-run/node",
+  "name": "@react-router/node",
   "version": "2.9.0-pre.0",
   "description": "Node.js platform abstractions for Remix",
   "bugs": {
@@ -20,7 +20,7 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@remix-run/server-runtime": "workspace:*",
+    "@react-router/server-runtime": "workspace:*",
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie-signature": "^1.1.0",
     "source-map-support": "^0.5.21",

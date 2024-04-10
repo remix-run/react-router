@@ -5,15 +5,15 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/@remix-run/dev/dist/cli.js dev",
-    "build": "node ./node_modules/@remix-run/dev/dist/cli.js build",
-    "start": "node ./node_modules/@remix-run/serve/dist/cli.js ./build/server/index.js",
+    "dev": "node ./node_modules/@react-router/dev/dist/cli.js dev",
+    "build": "node ./node_modules/@react-router/dev/dist/cli.js build",
+    "start": "node ./node_modules/@react-router/serve/dist/cli.js ./build/server/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@remix-run/express": "workspace:*",
-    "@remix-run/node": "workspace:*",
-    "@remix-run/serve": "workspace:*",
+    "@react-router/express": "workspace:*",
+    "@react-router/node": "workspace:*",
+    "@react-router/serve": "workspace:*",
     "@vanilla-extract/css": "^1.10.0",
     "@vanilla-extract/vite-plugin": "^3.9.2",
     "express": "^4.17.1",
@@ -25,7 +25,7 @@
     "serialize-javascript": "^6.0.1"
   },
   "devDependencies": {
-    "@remix-run/dev": "workspace:*",
+    "@react-router/dev": "workspace:*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "eslint": "^8.38.0",

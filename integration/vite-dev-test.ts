@@ -20,7 +20,7 @@ test.describe("Vite dev", () => {
       files: {
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@react-router/dev";
           import mdx from "@mdx-js/rollup";
 
           export default defineConfig({
@@ -57,7 +57,7 @@ test.describe("Vite dev", () => {
         `,
         "app/routes/_index.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@remix-run/node";
+          import { defer } from "@react-router/node";
           import { Await, useLoaderData } from "react-router-dom";
 
           export function loader() {
@@ -83,7 +83,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/set-cookies.tsx": js`
-          import { LoaderFunction } from "@remix-run/node";
+          import { LoaderFunction } from "@react-router/node";
 
           export const loader: LoaderFunction = () => {
             const headers = new Headers();
@@ -114,7 +114,7 @@ test.describe("Vite dev", () => {
           };
         `,
         "app/routes/get-cookies.tsx": js`
-          import { json, LoaderFunctionArgs } from "@remix-run/node";
+          import { json, LoaderFunctionArgs } from "@react-router/node";
           import { useLoaderData } from "react-router-dom"
 
           export const loader = ({ request }: LoaderFunctionArgs) => json({cookies: request.headers.get("Cookie")});
@@ -140,7 +140,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/mdx.mdx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { useLoaderData } from "react-router-dom";
 
           export const loader = () => {
@@ -163,7 +163,7 @@ test.describe("Vite dev", () => {
         `,
         "app/routes/dotenv.tsx": js`
           import { useState, useEffect } from "react";
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           import { useLoaderData } from "react-router-dom";
 
           export const loader = () => {
@@ -191,7 +191,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/error-stacktrace.tsx": js`
-          import type { LoaderFunction, MetaFunction } from "@remix-run/node";
+          import type { LoaderFunction, MetaFunction } from "@react-router/node";
           import { Link, useLocation } from "react-router-dom";
 
           export const loader: LoaderFunction = ({ request }) => {
@@ -257,7 +257,7 @@ test.describe("Vite dev", () => {
     });
 
     let nodeBin = process.argv[0];
-    let reactRouterBin = "node_modules/@remix-run/dev/dist/cli.js";
+    let reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
     devProc = spawn(nodeBin, [reactRouterBin, "dev"], {
       cwd: projectDir,
       env: process.env,

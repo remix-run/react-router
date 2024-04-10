@@ -9,7 +9,7 @@ import type {
   Location,
   ShouldRevalidateFunction,
 } from "react-router";
-import type { LoaderFunction } from "@remix-run/server-runtime";
+import type { LoaderFunction } from "@react-router/server-runtime";
 
 import type { SerializeFrom } from "./components";
 import type { AppData } from "./data";

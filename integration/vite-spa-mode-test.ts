@@ -22,7 +22,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@react-router/dev";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -53,7 +53,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@react-router/dev";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -82,7 +82,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@react-router/dev";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -154,7 +154,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@react-router/dev";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -182,7 +182,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@react-router/dev";
 
             export default defineConfig({
               plugins: [reactRouter({ ssr: false })],
@@ -227,7 +227,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@react-router/dev";
 
             export default defineConfig({
               plugins: [reactRouter({
@@ -305,7 +305,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@react-router/dev";
 
             export default defineConfig({
               plugins: [reactRouter({ ssr: false })],
@@ -340,7 +340,7 @@ test.describe("SPA Mode", () => {
             import fs from "node:fs";
             import path from "node:path";
 
-            import type { EntryContext } from "@remix-run/node";
+            import type { EntryContext } from "@react-router/node";
             import { RemixServer } from "react-router-dom";
             import { renderToString } from "react-dom/server";
 
@@ -437,7 +437,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@react-router/dev";
 
             export default defineConfig({
               plugins: [reactRouter({
@@ -520,7 +520,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@react-router/dev";
 
             export default defineConfig({
               plugins: [reactRouter({
@@ -590,7 +590,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@remix-run/dev";
+            import { vitePlugin as reactRouter } from "@react-router/dev";
 
             export default defineConfig({
               build: { manifest: true },

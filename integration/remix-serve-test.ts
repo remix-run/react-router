@@ -23,7 +23,7 @@ test.beforeAll(async () => {
     useReactRouterServe: true,
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "@remix-run/node";
+        import { json } from "@react-router/node";
         import { useLoaderData, Link } from "react-router-dom";
 
         export function loader() {

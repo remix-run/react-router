@@ -12,9 +12,9 @@ import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
-import type { VitePluginConfig } from "@remix-run/dev";
+import type { VitePluginConfig } from "@react-router/dev";
 
-const reactRouterBin = "node_modules/@remix-run/dev/dist/cli.js";
+const reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -47,7 +47,7 @@ export const viteConfig = {
     };
 
     return dedent`
-      import { vitePlugin as reactRouter } from "@remix-run/dev";
+      import { vitePlugin as reactRouter } from "@react-router/dev";
       import envOnly from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -68,8 +68,8 @@ export const EXPRESS_SERVER = (args: {
   loadContext?: Record<string, unknown>;
 }) =>
   String.raw`
-    import { createRequestHandler } from "@remix-run/express";
-    import { installGlobals } from "@remix-run/node";
+    import { createRequestHandler } from "@react-router/express";
+    import { installGlobals } from "@react-router/node";
     import express from "express";
 
     installGlobals();
@@ -177,7 +177,7 @@ export const reactRouterServe = async ({
   let serveProc = spawn(
     nodeBin,
     [
-      "node_modules/@remix-run/serve/dist/cli.js",
+      "node_modules/@react-router/serve/dist/cli.js",
       `build/server/${serverBundle ? serverBundle + "/" : ""}index.js`,
     ],
     {

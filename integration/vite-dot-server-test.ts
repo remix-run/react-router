@@ -45,7 +45,7 @@ test("Vite / dead-code elimination for server exports", async () => {
     "app/.server/utils.ts": serverOnlyModule,
     "app/routes/remove-server-exports-and-dce.tsx": `
       import fs from "node:fs";
-      import { json } from "@remix-run/node";
+      import { json } from "@react-router/node";
       import { useLoaderData } from "react-router-dom";
 
       import { serverOnly as serverOnlyFile } from "../utils.server";
@@ -217,7 +217,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 test.describe("Vite / server-only escape hatch", async () => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": dedent`
-      import { vitePlugin as reactRouter } from "@remix-run/dev";
+      import { vitePlugin as reactRouter } from "@react-router/dev";
       import envOnly from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 

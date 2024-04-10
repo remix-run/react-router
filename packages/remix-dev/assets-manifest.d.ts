@@ -1,4 +1,4 @@
-import type { AssetsManifest } from "@remix-run/dev";
+import type { AssetsManifest } from "@react-router/dev";
 
 declare const manifest: AssetsManifest;
 

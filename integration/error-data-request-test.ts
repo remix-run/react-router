@@ -58,7 +58,7 @@ test.describe.skip("ErrorBoundary", () => {
         `,
 
         [`app/routes/loader-return-json.jsx`]: js`
-          import { json } from "@remix-run/server-runtime";
+          import { json } from "@react-router/server-runtime";
 
           export async function loader() {
             return json({ ok: true });
@@ -80,7 +80,7 @@ test.describe.skip("ErrorBoundary", () => {
         `,
 
         [`app/routes/action-return-json.jsx`]: js`
-          import { json } from "@remix-run/server-runtime";
+          import { json } from "@react-router/server-runtime";
 
           export async function action() {
             return json({ ok: true });
@@ -236,7 +236,7 @@ test.describe("single fetch", () => {
           `,
 
           [`app/routes/loader-return-json.jsx`]: js`
-            import { json } from "@remix-run/server-runtime";
+            import { json } from "@react-router/server-runtime";
 
             export async function loader() {
               return json({ ok: true });
@@ -258,7 +258,7 @@ test.describe("single fetch", () => {
           `,
 
           [`app/routes/action-return-json.jsx`]: js`
-            import { json } from "@remix-run/server-runtime";
+            import { json } from "@react-router/server-runtime";
 
             export async function action() {
               return json({ ok: true });

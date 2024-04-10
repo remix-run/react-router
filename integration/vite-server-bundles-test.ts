@@ -119,7 +119,7 @@ test.describe(() => {
     port = await getPort();
     cwd = await createProject({
       "vite.config.ts": dedent`
-        import { vitePlugin as reactRouter } from "@remix-run/dev";
+        import { vitePlugin as reactRouter } from "@react-router/dev";
 
         export default {
           ${await viteConfig.server({ port })}

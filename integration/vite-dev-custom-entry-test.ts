@@ -18,7 +18,7 @@ test.describe("Vite custom entry dev", () => {
       files: {
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@remix-run/dev";
+          import { vitePlugin as reactRouter } from "@react-router/dev";
 
           export default defineConfig({
             server: {
@@ -33,8 +33,8 @@ test.describe("Vite custom entry dev", () => {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
 
-          import type { EntryContext } from "@remix-run/node";
-          import { createReadableStreamFromReadable } from "@remix-run/node";
+          import type { EntryContext } from "@react-router/node";
+          import { createReadableStreamFromReadable } from "@react-router/node";
           import { RemixServer } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";
 
@@ -123,7 +123,7 @@ test.describe("Vite custom entry dev", () => {
     });
 
     let nodeBin = process.argv[0];
-    let reactRouterBin = "node_modules/@remix-run/dev/dist/cli.js";
+    let reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
     devProc = spawn(nodeBin, [reactRouterBin, "dev"], {
       cwd: projectDir,
       env: process.env,

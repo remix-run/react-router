@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { UNSAFE_ServerMode as ServerMode } from "@remix-run/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
 import {
   createAppFixture,
   createFixture,
@@ -1281,7 +1281,7 @@ test.skip("Allows back-button out of an error boundary after a hard reload", asy
         `,
 
       "app/routes/boom.tsx": js`
-          import { json } from "@remix-run/node";
+          import { json } from "@react-router/node";
           export function loader() { return boom(); }
           export default function() { return <b>my page</b>; }
         `,
@@ -2639,7 +2639,7 @@ test.describe("single fetch", () => {
           `,
 
         "app/routes/boom.tsx": js`
-            import { json } from "@remix-run/node";
+            import { json } from "@react-router/node";
             export function loader() { return boom(); }
             export default function() { return <b>my page</b>; }
           `,

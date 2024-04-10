@@ -1,5 +1,5 @@
 {
-  "name": "@remix-run/server-runtime",
+  "name": "@react-router/server-runtime",
   "version": "2.9.0-pre.0",
   "description": "Server runtime for Remix",
   "bugs": {

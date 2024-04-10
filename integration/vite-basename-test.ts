@@ -65,7 +65,7 @@ async function viteConfigFile({
   basename?: string;
 }) {
   return js`
-    import { vitePlugin as reactRouter } from "@remix-run/dev";
+    import { vitePlugin as reactRouter } from "@react-router/dev";
 
     export default {
       ${base !== "/" ? 'base: "' + base + '",' : ""}
@@ -94,8 +94,8 @@ const customServerFile = ({
   basename = basename ?? base;
 
   return String.raw`
-    import { createRequestHandler } from "@remix-run/express";
-    import { installGlobals } from "@remix-run/node";
+    import { createRequestHandler } from "@react-router/express";
+    import { installGlobals } from "@react-router/node";
     import express from "express";
     installGlobals();
 
@@ -413,8 +413,8 @@ test.describe("Vite base / React Router basename / express build", async () => {
       }),
       // Slim server that only serves basename (route) requests from the React Router handler
       "server.mjs": String.raw`
-        import { createRequestHandler } from "@remix-run/express";
-        import { installGlobals } from "@remix-run/node";
+        import { createRequestHandler } from "@react-router/express";
+        import { installGlobals } from "@react-router/node";
         import express from "express";
         installGlobals();
 

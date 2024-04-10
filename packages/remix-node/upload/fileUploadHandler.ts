@@ -6,8 +6,8 @@ import { basename, dirname, extname, resolve as resolvePath } from "node:path";
 import type { Readable } from "node:stream";
 import { finished } from "node:stream";
 import { promisify } from "node:util";
-import { MaxPartSizeExceededError } from "@remix-run/server-runtime";
-import type { UploadHandler } from "@remix-run/server-runtime";
+import { MaxPartSizeExceededError } from "@react-router/server-runtime";
+import type { UploadHandler } from "@react-router/server-runtime";
 // @ts-expect-error
 import * as streamSlice from "stream-slice";
 

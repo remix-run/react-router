@@ -1,5 +1,5 @@
-import { createRequestHandler } from "@remix-run/server-runtime";
-import type { AppLoadContext, ServerBuild } from "@remix-run/server-runtime";
+import { createRequestHandler } from "@react-router/server-runtime";
+import type { AppLoadContext, ServerBuild } from "@react-router/server-runtime";
 import type { Plugin } from "vite";
 import type { GetPlatformProxyOptions, PlatformProxy } from "wrangler";
 

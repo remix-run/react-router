@@ -14,7 +14,7 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "@remix-run/node";
+        import { json } from "@react-router/node";
         import { useLoaderData } from "react-router-dom";
         export async function loader() {
           const resp = await fetch('https://reqres.in/api/users?page=2');
