@@ -93,6 +93,7 @@ import type {
   AssetsManifest,
   FutureConfig as RemixFutureConfig,
 } from "./ssr/entry";
+import { deserializeErrors as deserializeErrorsRemix } from "./ssr/errors";
 import { RemixErrorBoundary } from "./ssr/errorBoundaries";
 import type { RouteModules } from "./ssr/routeModules";
 import {
@@ -847,7 +848,9 @@ export function RouterProvider({
       }
 
       if (hydrationData && hydrationData.errors) {
-        hydrationData.errors = deserializeErrors(hydrationData.errors);
+        // TODO: De-dup this or remove entirely in v7 where single fetch is the
+        // only approach and we have already serialized or deserialized on the server
+        hydrationData.errors = deserializeErrorsRemix(hydrationData.errors);
       }
     }
 
