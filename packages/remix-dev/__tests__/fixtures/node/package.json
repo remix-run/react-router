@@ -9,7 +9,6 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@react-router/css-bundle": "*",
     "@react-router/node": "*",
     "@react-router/react": "*",
     "@react-router/serve": "*",

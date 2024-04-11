@@ -1,5 +1,3 @@
-import type { LinksFunction } from "@react-router/cloudflare";
-import { cssBundleHref } from "@react-router/css-bundle";
 import {
   Links,
   Meta,
@@ -7,10 +5,6 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router-dom";
-
-export const links: LinksFunction = () => [
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
 
 export default function App() {
   return (

@@ -12,7 +12,6 @@
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.3.0",
     "@react-router/cloudflare": "workspace:*",
-    "@react-router/css-bundle": "workspace:*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

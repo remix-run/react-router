@@ -13,7 +13,6 @@
     "typecheck": "deno check"
   },
   "dependencies": {
-    "@react-router/css-bundle": "*",
     "@react-router/deno": "*",
     "@react-router/react": "*",
     "isbot": "^4.1.0",

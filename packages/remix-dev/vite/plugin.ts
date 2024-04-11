@@ -1058,7 +1058,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (
               "@react-router/cloudflare-pages",
               "@react-router/cloudflare-workers",
               "@react-router/cloudflare",
-              "@react-router/css-bundle",
               "@react-router/deno",
               "@react-router/dev",
               "@react-router/express",

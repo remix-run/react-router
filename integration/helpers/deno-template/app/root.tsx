@@ -1,5 +1,3 @@
-import { cssBundleHref } from "@react-router/css-bundle";
-import type { LinksFunction } from "@react-router/deno";
 import {
   Links,
   Meta,
@@ -8,10 +6,6 @@ import {
   ScrollRestoration,
 } from "react-router-dom";
 import * as React from "react";
-
-export const links: LinksFunction = () => [
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
-];
 
 export default function App() {
   return (

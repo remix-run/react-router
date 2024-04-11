@@ -7,7 +7,6 @@
     "Deno-only dependencies may be imported via URL imports (without using import maps)."
   ],
   "imports": {
-    "@react-router/css-bundle": "https://esm.sh/@react-router/css-bundle@1.16.0",
     "// `@react-router/deno` code is already a Deno module, so just get types for it directly from `node_modules/`": "",
     "@react-router/deno": "../node_modules/@react-router/deno/index.ts",
     "@react-router/dev/server-build": "https://esm.sh/@react-router/dev@1.16.0/server-build",
