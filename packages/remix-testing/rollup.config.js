@@ -14,7 +14,7 @@ const { name, version } = require("./package.json");
 
 /** @returns {import("rollup").RollupOptions[]} */
 module.exports = function rollup() {
-  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
+  const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
     // We don't live in a folder matching our package name
     "remix-testing"
@@ -33,7 +33,7 @@ module.exports = function rollup() {
   /** @type {import("rollup").RollupOptions} */
   let remixTestingCJS = {
     external: (id) => isBareModuleId(id),
-    input: path.join(SOURCE_DIR, "index.ts"),
+    input: `${SOURCE_DIR}/index.ts`,
     output: {
       banner: createBanner(name, version),
       dir: OUTPUT_DIR,
@@ -49,7 +49,7 @@ module.exports = function rollup() {
         noEmitOnError: true,
       }),
       copy({
-        targets: [{ src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR }],
+        targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
       }),
     ],
   };
@@ -58,10 +58,10 @@ module.exports = function rollup() {
   /** @type {import("rollup").RollupOptions} */
   let remixTestingESM = {
     external: (id) => isBareModuleId(id),
-    input: path.join(SOURCE_DIR, "index.ts"),
+    input: `${SOURCE_DIR}/index.ts`,
     output: {
       banner: createBanner(name, version),
-      dir: path.join(OUTPUT_DIR, "esm"),
+      dir: `${OUTPUT_DIR}/esm`,
       format: "esm",
       preserveModules: true,
     },

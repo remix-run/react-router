@@ -1,7 +1,7 @@
 const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const copy = require("rollup-plugin-copy");
-const extensions = require("rollup-plugin-extensions");
+const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const prettier = require("rollup-plugin-prettier");
 const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
@@ -17,8 +17,8 @@ const {
 const { name, version } = require("./package.json");
 
 module.exports = function rollup() {
-  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
-  const RR_DOM_DIR = path.join(ROOT_DIR, "packages", "react-router-dom");
+  const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
+  const RR_DOM_DIR = "packages/react-router-dom";
 
   // JS modules for bundlers
   let modules = [
@@ -35,19 +35,19 @@ module.exports = function rollup() {
         copy({
           targets: [
             {
-              src: path.join(RR_DOM_DIR, "(index|dom|server).ts*"),
-              dest: path.join(SOURCE_DIR, "react-router-dom"),
+              src: `${RR_DOM_DIR}/(index|dom|server).ts*`,
+              dest: `${SOURCE_DIR}/react-router-dom`,
             },
             {
-              src: [path.join(RR_DOM_DIR, "ssr", "*.ts*")],
-              dest: path.join(SOURCE_DIR, "react-router-dom", "ssr"),
+              src: `${RR_DOM_DIR}/ssr/*.ts*`,
+              dest: `${SOURCE_DIR}/react-router-dom/ssr`,
             },
           ],
           // buildStart is not soon enough to run before the typescript plugin :/
           hook: "options",
           verbose: true,
         }),
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -68,9 +68,7 @@ module.exports = function rollup() {
           noEmitOnError: true,
         }),
         copy({
-          targets: [
-            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
         validateReplacedVersion(),
@@ -98,7 +96,7 @@ module.exports = function rollup() {
       },
       external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -138,7 +136,7 @@ module.exports = function rollup() {
       },
       external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,

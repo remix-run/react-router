@@ -3,7 +3,7 @@ const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const typescript = require("@rollup/plugin-typescript");
 const copy = require("rollup-plugin-copy");
-const extensions = require("rollup-plugin-extensions");
+const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const prettier = require("rollup-plugin-prettier");
 const { terser } = require("rollup-plugin-terser");
 
@@ -19,7 +19,7 @@ function getRollupConfig(
   filename,
   { includeTypesAndCopy, minify } = {}
 ) {
-  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
+  const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
     // We don't live in a folder matching our package name
     "router"
@@ -35,7 +35,7 @@ function getRollupConfig(
       ...(format === "umd" ? { name: "RemixRouter" } : {}),
     },
     plugins: [
-      extensions({ extensions: [".ts"] }),
+      nodeResolve({ extensions: [".ts"] }),
       babel({
         babelHelpers: "bundled",
         exclude: /node_modules/,
@@ -53,9 +53,7 @@ function getRollupConfig(
               noEmitOnError: true,
             }),
             copy({
-              targets: [
-                { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
-              ],
+              targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
               verbose: true,
             }),
           ]
