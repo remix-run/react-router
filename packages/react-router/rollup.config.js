@@ -1,7 +1,7 @@
 const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const copy = require("rollup-plugin-copy");
-const extensions = require("rollup-plugin-extensions");
+const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const prettier = require("rollup-plugin-prettier");
 const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
@@ -15,7 +15,7 @@ const {
 const { name, version } = require("./package.json");
 
 module.exports = function rollup() {
-  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
+  const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
 
   // JS modules for bundlers
   const modules = [
@@ -29,7 +29,7 @@ module.exports = function rollup() {
       },
       external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -42,9 +42,7 @@ module.exports = function rollup() {
           extensions: [".ts", ".tsx"],
         }),
         copy({
-          targets: [
-            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
@@ -63,7 +61,7 @@ module.exports = function rollup() {
       },
       external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -96,7 +94,7 @@ module.exports = function rollup() {
       },
       external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -147,7 +145,7 @@ module.exports = function rollup() {
       },
       external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -180,7 +178,7 @@ module.exports = function rollup() {
       },
       external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,

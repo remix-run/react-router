@@ -15,7 +15,7 @@ const { name, version } = require("./package.json");
 
 /** @returns {import("rollup").RollupOptions[]} */
 module.exports = function rollup() {
-  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
+  const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
     // We don't live in a folder matching our package name
     "remix-server-runtime"
@@ -47,9 +47,7 @@ module.exports = function rollup() {
           noEmitOnError: true,
         }),
         copy({
-          targets: [
-            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
         }),
       ],
     },

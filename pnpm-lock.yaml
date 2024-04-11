@@ -228,9 +228,6 @@ importers:
       rollup-plugin-copy:
         specifier: ^3.4.0
         version: 3.4.0
-      rollup-plugin-extensions:
-        specifier: ^0.1.0
-        version: 0.1.0(rollup@2.79.1)
       rollup-plugin-prettier:
         specifier: ^2.3.0
         version: 2.3.0(prettier@2.8.8)(rollup@2.79.1)
@@ -14686,14 +14683,6 @@ packages:
       fs-extra: 8.1.0
       globby: 10.0.1
       is-plain-object: 3.0.1
-    dev: false
-
-  /rollup-plugin-extensions@0.1.0(rollup@2.79.1):
-    resolution: {integrity: sha512-d7RzW7iiiHNYRsqe3W2GTz9bClIVm9J3mbHQqetsCZHpPPgDfo/OpXmwiziyMhm3bgiJTswxqw4QNr6qX4NfHA==}
-    peerDependencies:
-      rollup: ^1.4.1
-    dependencies:
-      rollup: 2.79.1
     dev: false
 
   /rollup-plugin-inject@3.0.2:
