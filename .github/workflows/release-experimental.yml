@@ -1,8 +1,10 @@
-name: 🚀 Release (experimental)
+name: 🧪 Experimental Release
+
 on:
-  push:
-    tags:
-      - "v0.0.0-experimental*"
+  workflow_dispatch:
+    inputs:
+      branch:
+        required: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -10,16 +12,17 @@ env:
   CI: true
 
 jobs:
-  release:
-    name: 🧑‍🔬 Experimental Release
-    if: |
-      github.repository == 'remix-run/react-router' &&
-      contains(github.ref, 'experimental')
+  experimental:
+    name: 🧪 Experimental Release
+    if: github.repository == 'remix-run/react-router'
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.branch }}
+          # checkout using a custom token so that we can push later on
+          token: ${{ secrets.NIGHTLY_PAT }}
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
@@ -33,6 +36,16 @@ jobs:
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
+
+      - name: ⤴️ Update version
+        run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          NEXT_VERSION=0.0.0-experimental-${SHORT_SHA}
+          git checkout -b experimental/${NEXT_VERSION}
+          pnpm run version ${NEXT_VERSION} --skip-prompt
+          git push origin --tags
 
       - name: 🏗 Build
         run: pnpm build
