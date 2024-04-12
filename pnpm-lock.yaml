@@ -292,8 +292,8 @@ importers:
         specifier: workspace:*
         version: link:../packages/remix-server-runtime
       '@remix-run/router':
-        specifier: 1.16.0-pre.0
-        version: 1.16.0-pre.0
+        specifier: workspace:*
+        version: link:../packages/router
       '@types/express':
         specifier: ^4.17.9
         version: 4.17.21
@@ -5248,11 +5248,6 @@ packages:
       dotenv: 8.6.0
     transitivePeerDependencies:
       - encoding
-    dev: false
-
-  /@remix-run/router@1.16.0-pre.0:
-    resolution: {integrity: sha512-4KYbcmBcjX1HO/sLPZIcY87YWTF3e5qs9KTTieXE0HNukV2m199yTkMIjcmzTNL6w0wDj5YYc2YiXxm4W9qsTw==}
-    engines: {node: '>=14.0.0'}
     dev: false
 
   /@rollup/plugin-babel@5.3.1(@babel/core@7.22.9)(rollup@2.79.1):
