@@ -830,9 +830,6 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
-      chokidar:
-        specifier: ^3.5.3
-        version: 3.6.0
       compression:
         specifier: ^1.7.4
         version: 1.7.4
