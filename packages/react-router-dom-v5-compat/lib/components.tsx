@@ -1,15 +1,15 @@
-import * as React from "react";
 import type { Location, To } from "history";
 import { Action, createPath, parsePath } from "history";
+import * as React from "react";
 
 // Get useHistory from react-router-dom v5 (peer dep).
 // @ts-expect-error
-import { useHistory, Route as RouteV5 } from "react-router-dom";
+import { Route as RouteV5, useHistory } from "react-router-dom";
 
 // We are a wrapper around react-router-dom v6, so bring it in
 // and bundle it because an app can't have two versions of
 // react-router-dom in its package.json.
-import { Router, Routes, Route } from "../react-router-dom";
+import { Route, Router, Routes } from "../react-router-dom";
 
 // v5 isn't in TypeScript, they'll also lose the @types/react-router with this
 // but not worried about that for now.
@@ -86,7 +86,7 @@ export function StaticRouter({
     pathname: locationProp.pathname || "/",
     search: locationProp.search || "",
     hash: locationProp.hash || "",
-    state: locationProp.state || null,
+    state: locationProp.state ? locationProp.state === 0 ? 0 : locationProp.state : null,
     key: locationProp.key || "default",
   };
 
