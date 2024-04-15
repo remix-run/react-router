@@ -1,24 +1,24 @@
-import * as React from "react";
 import type {
   Path,
-  RevalidationState,
   Router as RemixRouter,
-  StaticHandlerContext,
-  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
+  RevalidationState,
   UNSAFE_RouteManifest as RouteManifest,
-  RouterState,
+  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   FutureConfig as RouterFutureConfig,
+  RouterState,
+  StaticHandlerContext,
 } from "@remix-run/router";
 import {
+  Action,
   IDLE_BLOCKER,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-  Action,
+  UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   createStaticHandler as routerCreateStaticHandler,
-  UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
+import * as React from "react";
 import {
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRoutesImpl as useRoutesImpl,
@@ -31,13 +31,13 @@ import type {
   To,
 } from "./index";
 import {
-  createPath,
-  parsePath,
-  Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_FetchersContext as FetchersContext,
+  Router,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
+  createPath,
+  parsePath,
 } from "./index";
 
 export interface StaticRouterProps {
@@ -66,7 +66,7 @@ export function StaticRouter({
     pathname: locationProp.pathname || "/",
     search: locationProp.search || "",
     hash: locationProp.hash || "",
-    state: locationProp.state || null,
+    state: locationProp.state ? locationProp.state === 0 ? 0 : locationProp.state : null,
     key: locationProp.key || "default",
   };
 
