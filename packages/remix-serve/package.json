@@ -20,7 +20,6 @@
   "dependencies": {
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
-    "chokidar": "^3.5.3",
     "compression": "^1.7.4",
     "express": "^4.17.1",
     "get-port": "5.1.1",
