@@ -6,6 +6,11 @@ const config: PlaywrightTestConfig = {
   testMatch: ["**/*-test.ts"],
   // TODO: Temporary!  Remove from this list as we get each suite passing
   testIgnore: ["**/vite-cloudflare-test.ts"],
+  // Playwright treats our workspace packages as internal by default. If we
+  // don't mark them as external, tests hang in Node 20.5.2+
+  build: {
+    external: ["**/packages/**/*"],
+  },
   /* Maximum time one test can run for. */
   timeout: process.platform === "win32" ? 60_000 : 30_000,
   fullyParallel: true,

@@ -599,9 +599,9 @@ let deepFreeze = (o: any) => {
 export type ReactRouterVitePlugin = (
   config?: VitePluginConfig
 ) => Vite.Plugin[];
-export const reactRouterVitePlugin: ReactRouterVitePlugin = (
-  reactRouterUserConfig = {}
-) => {
+export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
+  let reactRouterUserConfig = _config ?? {};
+
   // Prevent mutations to the user config
   reactRouterUserConfig = deepFreeze(reactRouterUserConfig);
 
@@ -1706,6 +1706,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (
         }
 
         let result = await babel.transformAsync(code, {
+          babelrc: false,
+          configFile: false,
           filename: id,
           sourceFileName: filepath,
           parserOpts: {
