@@ -626,6 +626,17 @@ function getUrlBasedHistory(
   }
 
   function handlePop() {
+    let { key, idx } = globalHistory.state || {};
+    if (key == null && idx == null) {
+      // If we `popstate` to a location we don't know about, don't handle it.
+      // It's an <a href="#hash"> click so we'll just let the browser do the
+      // hash scrolling as it normally would.
+      // - If we pop to our initial location, we won't have a key, but will have idx=0
+      // - If we pop to any subsequent location, we'll have both a key and an idx
+      // - if we pop out of our app it won't be a popstate since we'll load a new document
+      return;
+    }
+
     action = Action.Pop;
     let nextIndex = getIndex();
     let delta = nextIndex == null ? null : nextIndex - index;
