@@ -11,6 +11,7 @@ const {
   createBanner,
   getBuildDirectories,
   PRETTY,
+  WATCH,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
 
@@ -50,7 +51,7 @@ function getRollupConfig(
             typescript({
               tsconfig: path.join(__dirname, "tsconfig.json"),
               exclude: ["__tests__"],
-              noEmitOnError: true,
+              noEmitOnError: !WATCH,
             }),
             copy({
               targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],

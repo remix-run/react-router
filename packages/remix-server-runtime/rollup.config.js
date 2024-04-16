@@ -10,6 +10,7 @@ const {
   createBanner,
   getBuildDirectories,
   remixBabelConfig,
+  WATCH,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
 
@@ -44,7 +45,7 @@ module.exports = function rollup() {
           // eslint-disable-next-line no-restricted-globals
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],
-          noEmitOnError: true,
+          noEmitOnError: !WATCH,
         }),
         copy({
           targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],

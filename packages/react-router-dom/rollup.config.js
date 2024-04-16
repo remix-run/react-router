@@ -13,6 +13,7 @@ const {
   validateReplacedVersion,
   isBareModuleId,
   PRETTY,
+  WATCH,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
 
@@ -49,7 +50,7 @@ module.exports = function rollup() {
         typescript({
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],
-          noEmitOnError: true,
+          noEmitOnError: !WATCH,
         }),
         copy({
           targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
@@ -270,7 +271,7 @@ module.exports = function rollup() {
           tsconfig: path.join(__dirname, "tsconfig.json"),
           include: ["server.tsx"],
           exclude: ["__tests__"],
-          noEmitOnError: true,
+          noEmitOnError: !WATCH,
         }),
         validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
