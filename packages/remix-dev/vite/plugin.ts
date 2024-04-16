@@ -1706,6 +1706,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         }
 
         let result = await babel.transformAsync(code, {
+          babelrc: false,
+          configFile: false,
           filename: id,
           sourceFileName: filepath,
           parserOpts: {
