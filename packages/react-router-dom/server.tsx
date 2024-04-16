@@ -1,24 +1,24 @@
+import * as React from "react";
 import type {
   Path,
-  Router as RemixRouter,
   RevalidationState,
-  UNSAFE_RouteManifest as RouteManifest,
-  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
-  FutureConfig as RouterFutureConfig,
-  RouterState,
+  Router as RemixRouter,
   StaticHandlerContext,
+  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
+  UNSAFE_RouteManifest as RouteManifest,
+  RouterState,
+  FutureConfig as RouterFutureConfig,
 } from "@remix-run/router";
 import {
-  Action,
   IDLE_BLOCKER,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-  UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
+  Action,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   createStaticHandler as routerCreateStaticHandler,
+  UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import * as React from "react";
 import {
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRoutesImpl as useRoutesImpl,
@@ -29,16 +29,16 @@ import type {
   Location,
   RouteObject,
   To,
-} from "./index";
+} from "react-router-dom";
 import {
+  createPath,
+  parsePath,
+  Router,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_FetchersContext as FetchersContext,
-  Router,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
-  createPath,
-  parsePath,
-} from "./index";
+} from "react-router-dom";
 
 export interface StaticRouterProps {
   basename?: string;
@@ -315,7 +315,6 @@ export function createStaticRouter(
         v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
         v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
-        unstable_skipActionErrorRevalidation: false,
       };
     },
     get state() {
