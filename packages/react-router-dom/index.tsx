@@ -740,7 +740,7 @@ class Deferred<T> {
 
 // When using a DOM RouterProvider with SSR you don't have to specify a router
 // and it can be constructed via `__remixManifest`/`__remixContext` etc.
-export type RouterProviderProps = MemoryRouterProviderProps & {
+export type RouterProviderProps = Omit<MemoryRouterProviderProps, "router"> & {
   router?: RemixRouter;
 };
 
