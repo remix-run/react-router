@@ -46,6 +46,7 @@ import {
   RouteContext,
   RouteErrorContext,
 } from "./context";
+import type { Action, Data, Loader } from "./serialize";
 
 /**
  * Returns the full href for the given "to" value. This is useful for building
@@ -925,7 +926,7 @@ export function useMatches(): UIMatch[] {
 /**
  * Returns the loader data for the nearest ancestor Route loader
  */
-export function useLoaderData(): unknown {
+export function useLoaderData<T extends Loader>(): Data<T> {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
 
@@ -933,7 +934,7 @@ export function useLoaderData(): unknown {
     console.error(
       `You cannot \`useLoaderData\` in an errorElement (routeId: ${routeId})`
     );
-    return undefined;
+    return undefined as any;
   }
   return state.loaderData[routeId];
 }
@@ -949,7 +950,7 @@ export function useRouteLoaderData(routeId: string): unknown {
 /**
  * Returns the action data for the nearest ancestor Route action
  */
-export function useActionData(): unknown {
+export function useActionData<T extends Action>(): Data<T> {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
   return state.actionData ? state.actionData[routeId] : undefined;
