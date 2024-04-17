@@ -17,6 +17,7 @@ const { EXAMPLES_DIR } = require("./constants");
 async function run() {
   try {
     let args = process.argv.slice(2);
+    let skipGit = args.includes("--skip-git");
 
     let givenVersion = args[0];
     invariant(
@@ -27,7 +28,9 @@ async function run() {
     let isSnapshotVersion = givenVersion.startsWith("0.0.0-");
 
     // 0. Make sure the working directory is clean
-    ensureCleanWorkingDirectory();
+    if (!skipGit) {
+      ensureCleanWorkingDirectory();
+    }
 
     // 1. Get the next version number
     let currentRouterVersion = await getPackageVersion("router");
@@ -84,9 +87,11 @@ async function run() {
     }
 
     // 4. Commit and tag
-    execSync(`git commit --all --message="Version ${version}"`);
-    execSync(`git tag -a -m "Version ${version}" v${version}`);
-    console.log(chalk.green(`  Committed and tagged version ${version}`));
+    if (!skipGit) {
+      execSync(`git commit --all --message="Version ${version}"`);
+      execSync(`git tag -a -m "Version ${version}" v${version}`);
+      console.log(chalk.green(`  Committed and tagged version ${version}`));
+    }
 
     if (!isSnapshotVersion) {
       console.log(
