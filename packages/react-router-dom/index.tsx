@@ -81,8 +81,6 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { SSRInfo } from "./ssr/browser";
-import { HydratedRouter } from "./ssr/browser";
 import type { PrefetchBehavior, ScriptProps, UIMatch } from "./ssr/components";
 import {
   PrefetchPageLinks,
@@ -265,14 +263,13 @@ export { decodeViaTurboStream as UNSAFE_decodeViaTurboStream } from "./ssr/singl
 ////////////////////////////////////////////////////////////////////////////////
 
 declare global {
+  // TODO: v7 - Can this go away in favor of "just use remix"?
+  var __staticRouterHydrationData: HydrationState | undefined;
+  // v6 SPA info
+  var __reactRouterVersion: string;
   interface Document {
     startViewTransition(cb: () => Promise<void> | void): ViewTransition;
   }
-
-  // v6 SPA info
-  var __reactRouterVersion: string;
-  // TODO: v7 - Can this go away in favor of "just use remix"?
-  var __staticRouterHydrationData: HydrationState | undefined;
 }
 
 // HEY YOU! DON'T TOUCH THIS VARIABLE!
@@ -407,7 +404,7 @@ function deserializeErrors(
 //#region Contexts
 ////////////////////////////////////////////////////////////////////////////////
 
-export type ViewTransitionContextObject =
+type ViewTransitionContextObject =
   | {
       isTransitioning: false;
     }

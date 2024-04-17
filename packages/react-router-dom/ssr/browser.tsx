@@ -65,7 +65,7 @@ declare global {
     | undefined;
 }
 
-export type SSRInfo = {
+type SSRInfo = {
   context: WindowRemixContext;
   routeModules: RouteModules;
   manifest: AssetsManifest;
@@ -100,7 +100,7 @@ function initSsrInfo(): void {
   }
 }
 
-export type HmrInfo = {
+type HmrInfo = {
   abortController: AbortController | undefined;
   routerReadyResolve: (router: RemixRouter) => void;
   routerReadyPromise: Promise<RemixRouter>;
