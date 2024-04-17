@@ -99,7 +99,6 @@
     "jest-environment-jsdom": "^29.6.2",
     "jsonfile": "^6.1.0",
     "prettier": "^2.8.8",
-    "prompt-confirm": "^2.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-test-renderer": "^18.2.0",

@@ -9,42 +9,21 @@ const {
   ensureCleanWorkingDirectory,
   getPackageVersion,
   invariant,
-  prompt,
   updateExamplesPackageConfig,
   updatePackageConfig,
 } = require("./utils");
 const { EXAMPLES_DIR } = require("./constants");
 
-/**
- * @param {string} currentVersion
- * @param {string} givenVersion
- * @param {string} [prereleaseId]
- * @returns {string}
- */
-function getNextVersion(currentVersion, givenVersion, prereleaseId) {
-  invariant(
-    givenVersion != null,
-    `Missing next version. Usage: node version.js [nextVersion]`
-  );
-
-  if (/^pre/.test(givenVersion)) {
-    invariant(
-      prereleaseId != null,
-      `Missing prerelease id. Usage: node version.js ${givenVersion} [prereleaseId]`
-    );
-  }
-
-  let nextVersion = semver.inc(currentVersion, givenVersion, prereleaseId);
-  invariant(nextVersion != null, `Invalid version specifier: ${givenVersion}`);
-
-  return nextVersion;
-}
-
 async function run() {
   try {
     let args = process.argv.slice(2);
+
     let givenVersion = args[0];
-    let prereleaseId = args[1];
+    invariant(
+      givenVersion != null,
+      `Missing next version. Usage: node version.js [nextVersion]`
+    );
+
     let isSnapshotVersion = givenVersion.startsWith("0.0.0-");
 
     // 0. Make sure the working directory is clean
@@ -52,23 +31,13 @@ async function run() {
 
     // 1. Get the next version number
     let currentRouterVersion = await getPackageVersion("router");
-    let currentVersion = await getPackageVersion("react-router");
     let version = semver.valid(givenVersion);
-    if (version == null) {
-      version = getNextVersion(currentVersion, givenVersion, prereleaseId);
-    }
+    invariant(version != null, `Invalid version specifier: ${givenVersion}`);
 
     // We will only bump the router version if this is an experimental
     let routerVersion = currentRouterVersion;
 
-    // 2. Confirm the next version number
-    let answer = await prompt(
-      `Are you sure you want to bump version ${currentVersion} to ${version}? [Yn] `
-    );
-
-    if (answer === false) return 0;
-
-    // 3. Bump package versions
+    // 2. Bump package versions
     let packageDirNamesToBump = [
       // We only handle @remix-run/router for snapshot versions since in normal/pre
       // releases it's versioned independently from the rest of the packages
@@ -95,7 +64,7 @@ async function run() {
       );
     }
 
-    // 4. Update react-router and react-router-dom versions in the examples
+    // 3. Update react-router and react-router-dom versions in the examples
     let examples = await fsp.readdir(EXAMPLES_DIR);
     for (const example of examples) {
       let stat = await fsp.stat(path.join(EXAMPLES_DIR, example));
@@ -114,7 +83,7 @@ async function run() {
       });
     }
 
-    // 5. Commit and tag
+    // 4. Commit and tag
     execSync(`git commit --all --message="Version ${version}"`);
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));

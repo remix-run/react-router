@@ -133,7 +133,7 @@ git checkout -b release/v6.1.0
 
 # Create a new tag and update version references throughout the
 # codebase.
-pnpm run version minor # | "patch" | "major"
+pnpm run version [version]
 
 # Push the release branch along with the new release tag.
 git push origin release/v6.1.0 --follow-tags
@@ -164,7 +164,7 @@ pnpm install && pnpm build && pnpm test
 
 # Assuming the tests pass, create the release tag and update
 # version references throughout the codebase.
-pnpm run version patch
+pnpm run version [version]
 
 # Push changes along with the new release tag.
 git push origin main --follow-tags
