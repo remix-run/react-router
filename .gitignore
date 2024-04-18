@@ -10,6 +10,7 @@ node_modules/
 /examples/*/dist
 /tutorial/dist
 /integration/playwright-report
+/playgrounds/
 
 # v5 build files
 /packages/*/cjs/

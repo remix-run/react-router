@@ -75,7 +75,7 @@ export function StreamTransfer({
   let scriptTag = value ? (
     <script
       dangerouslySetInnerHTML={{
-        __html: `window.__remixContext.streamController.enqueue(${escapeHtml(
+        __html: `window.__remixContext.streamControllers[${identifier}].enqueue(${escapeHtml(
           JSON.stringify(value)
         )});`,
       }}
@@ -88,7 +88,7 @@ export function StreamTransfer({
         {scriptTag}
         <script
           dangerouslySetInnerHTML={{
-            __html: `window.__remixContext.streamController.close();`,
+            __html: `window.__remixContext.streamControllers[${identifier}].close();`,
           }}
         />
       </>
