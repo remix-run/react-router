@@ -12,7 +12,11 @@ import { encode } from "turbo-stream";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
-import type { ResponseStub, ResponseStubOperation } from "./routeModules";
+import type {
+  ResponseStub,
+  ResponseStubImpl,
+  ResponseStubOperation,
+} from "./routeModules";
 import { ResponseStubOperationsSymbol } from "./routeModules";
 import { isDeferredData, isRedirectStatusCode, isResponse } from "./responses";
 
@@ -35,6 +39,10 @@ export type SingleFetchResults = {
   [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult;
 };
 
+export type DataStrategyCtx = {
+  response: ResponseStub;
+};
+
 export function getSingleFetchDataStrategy(
   responseStubs: ReturnType<typeof getResponseStubs>,
   {
@@ -54,7 +62,7 @@ export function getSingleFetchDataStrategy(
 
     let results = await Promise.all(
       matches.map(async (match) => {
-        let responseStub: ResponseStub | undefined;
+        let responseStub: ResponseStubImpl | undefined;
         if (request.method !== "GET") {
           responseStub = responseStubs[ResponseStubActionSymbol];
         } else {
@@ -62,11 +70,13 @@ export function getSingleFetchDataStrategy(
         }
 
         let result = await match.resolve(async (handler) => {
+          // Cast `ResponseStubImpl -> ResponseStub` to hide the symbol in userland
+          let ctx: DataStrategyCtx = { response: responseStub as ResponseStub };
           // Only run opt-in loaders when fine-grained revalidation is enabled
           let data =
             loadRouteIds && !loadRouteIds.includes(match.route.id)
               ? null
-              : await handler({ response: responseStub });
+              : await handler(ctx);
           return { type: "data", result: data };
         });
 
@@ -282,7 +292,7 @@ export async function singleFetchLoaders(
   }
 }
 
-export function isResponseStub(value: any): value is ResponseStub {
+export function isResponseStub(value: any): value is ResponseStubImpl {
   return (
     value && typeof value === "object" && ResponseStubOperationsSymbol in value
   );
@@ -310,7 +320,7 @@ function getResponseStub(status?: number) {
 }
 
 export function getResponseStubs() {
-  return new Proxy({} as Record<string | symbol, ResponseStub>, {
+  return new Proxy({} as Record<string | symbol, ResponseStubImpl>, {
     get(responseStubCache, prop) {
       let cached = responseStubCache[prop];
       if (!cached) {
@@ -324,7 +334,7 @@ export function getResponseStubs() {
 function proxyResponseToResponseStub(
   status: number | undefined,
   headers: Headers,
-  responseStub: ResponseStub
+  responseStub: ResponseStubImpl
 ) {
   if (status != null && responseStub.status == null) {
     responseStub.status = status;

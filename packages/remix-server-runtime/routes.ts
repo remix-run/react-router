@@ -6,7 +6,8 @@ import type {
 
 import { callRouteAction, callRouteLoader } from "./data";
 import type { FutureConfig } from "./entry";
-import type { ResponseStub, ServerRouteModule } from "./routeModules";
+import type { ServerRouteModule } from "./routeModules";
+import type { DataStrategyCtx } from "./single-fetch";
 
 export interface RouteManifest<Route> {
   [routeId: string]: Route;
@@ -100,9 +101,8 @@ export function createStaticHandlerDataRoutes(
               loader: route.module.loader!,
               routeId: route.id,
               singleFetch: future.unstable_singleFetch === true,
-              response: (
-                dataStrategyCtx as unknown as { response: ResponseStub }
-              )?.response,
+              response: (dataStrategyCtx as DataStrategyCtx | undefined)
+                ?.response,
             })
         : undefined,
       action: route.module.action
@@ -114,9 +114,8 @@ export function createStaticHandlerDataRoutes(
               action: route.module.action!,
               routeId: route.id,
               singleFetch: future.unstable_singleFetch === true,
-              response: (
-                dataStrategyCtx as unknown as { response: ResponseStub }
-              )?.response,
+              response: (dataStrategyCtx as DataStrategyCtx | undefined)
+                ?.response,
             })
         : undefined,
       handle: route.module.handle,
