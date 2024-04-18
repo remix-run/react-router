@@ -7,11 +7,9 @@ import {
 } from "@remix-run/router";
 import { UNSAFE_mapRouteProperties as mapRouteProperties } from "react-router";
 
-import { RouterProvider } from "../index";
-import type {
-  AssetsManifest,
-  FutureConfig as RemixFutureConfig,
-} from "./entry";
+import "../global";
+import { RouterProvider } from "../lib";
+import type { AssetsManifest } from "./entry";
 import { deserializeErrors } from "./errors";
 import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
@@ -27,40 +25,8 @@ import {
 import { RemixContext } from "./components";
 import { RemixErrorBoundary } from "./errorBoundaries";
 
-type WindowRemixContext = {
-  url: string;
-  basename?: string;
-  state: HydrationState;
-  criticalCss?: string;
-  future: RemixFutureConfig;
-  isSpaMode: boolean;
-  stream: ReadableStream<Uint8Array> | undefined;
-  streamController: ReadableStreamDefaultController<Uint8Array>;
-  // The number of active deferred keys rendered on the server
-  a?: number;
-  dev?: {
-    port?: number;
-    hmrRuntime?: string;
-  };
-};
-
-declare global {
-  // TODO: v7 - Once this is all working, rename these global variables to __reactRouter*
-  var __remixContext: WindowRemixContext | undefined;
-  var __remixManifest: AssetsManifest | undefined;
-  var __remixRouteModules: RouteModules | undefined;
-  var __remixRouter: RemixRouter | undefined;
-  var __remixRevalidation: number | undefined;
-  var __remixClearCriticalCss: (() => void) | undefined;
-  var $RefreshRuntime$:
-    | {
-        performReactRefresh: () => void;
-      }
-    | undefined;
-}
-
 type SSRInfo = {
-  context: WindowRemixContext;
+  context: NonNullable<(typeof window)["__remixContext"]>;
   routeModules: RouteModules;
   manifest: AssetsManifest;
   stateDecodingPromise:

@@ -36,7 +36,7 @@ module.exports = function rollup() {
         copy({
           targets: [
             {
-              src: `${RR_DOM_DIR}/(index|dom|server).ts*`,
+              src: `${RR_DOM_DIR}/(index|global|lib|dom|server).ts*`,
               dest: `${SOURCE_DIR}/react-router-dom`,
             },
             {

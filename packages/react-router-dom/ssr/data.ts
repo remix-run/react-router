@@ -3,6 +3,8 @@ import {
   UNSAFE_DeferredData as DeferredData,
 } from "@remix-run/router";
 
+import "../global";
+
 /**
  * Data for a route that was returned from a `loader()`.
  */

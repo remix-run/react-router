@@ -25,8 +25,6 @@ import {
   useNavigation,
 } from "react-router";
 
-import type { FetcherWithComponents } from "../index";
-import { useFetcher as useFetcherRR } from "../index";
 import type { AppData } from "./data";
 import type { RemixContextObject } from "./entry";
 import invariant from "./invariant";
@@ -1032,18 +1030,6 @@ export function useRouteLoaderData<T = AppData>(
  */
 export function useActionData<T = AppData>(): SerializeFrom<T> | undefined {
   return useActionDataRR() as SerializeFrom<T> | undefined;
-}
-
-/**
- * Interacts with route loaders and actions without causing a navigation. Great
- * for any interaction that stays on the same page.
- *
- * @see https://remix.run/hooks/use-fetcher
- */
-export function useFetcher<TData = AppData>(
-  opts: Parameters<typeof useFetcherRR>[0] = {}
-): FetcherWithComponents<SerializeFrom<TData>> {
-  return useFetcherRR(opts);
 }
 
 export function mergeRefs<T = any>(
