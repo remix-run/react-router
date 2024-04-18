@@ -71,4 +71,5 @@ export interface ReactServerBuild {
   routes: ServerRouteManifest;
   future: FutureConfig;
   mode?: string;
+  basename?: string;
 }

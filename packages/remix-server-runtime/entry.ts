@@ -10,6 +10,8 @@ export interface EntryContext {
   criticalCss?: string;
   serverHandoffString?: string;
   serverHandoffStream?: ReadableStream<Uint8Array>;
+  serverHandoffActionId?: string;
+  serverHandoffStreamAction?: ReadableStream<Uint8Array>;
   renderMeta?: {
     didRenderScripts?: boolean;
     streamCache?: Record<

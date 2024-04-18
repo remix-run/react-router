@@ -190,16 +190,19 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
             "`callReactServer` is required as an export from entry.server for unstable_serverComponents."
           );
         }
-        throw new Error("TODO: Client nav not yet implemented");
-        // response = await handleServerComponentsRequest(
-        //   serverMode,
-        //   _build,
-        //   staticHandler,
-        //   request,
-        //   callReactServer,
-        //   loadContext,
-        //   handleError
-        // );
+        let init: RequestInit & { duplex?: "half" } = {
+          headers: request.headers,
+          method: request.method,
+        };
+        if (
+          request.method !== "GET" &&
+          request.method !== "HEAD" &&
+          request.body
+        ) {
+          init.body = request.body;
+          init.duplex = "half";
+        }
+        return callReactServer(request.url, init);
       } else {
         response = await handleSingleFetchRequest(
           serverMode,
@@ -476,7 +479,15 @@ async function handleDocumentRequest(
 ) {
   let context;
   let responseStubs = getResponseStubs();
-  let rscStream = undefined as ReadableStream<Uint8Array> | null | undefined;
+  let rscLoaderStream = undefined as
+    | ReadableStream<Uint8Array>
+    | null
+    | undefined;
+  let rscActionId: string | null = null;
+  let rscActionStream = undefined as
+    | ReadableStream<Uint8Array>
+    | null
+    | undefined;
   // TODO: Move this somewhere in the init path to surface the error
   // before a request comes into the server?
   const serverComponents = build.future.unstable_serverComponents;
@@ -494,7 +505,11 @@ async function handleDocumentRequest(
             build.entry.module.createFromReadableStream!,
             callReactServer!,
             (resultStream) => {
-              rscStream = resultStream;
+              rscLoaderStream = resultStream;
+            },
+            (actionId, resultStream) => {
+              rscActionId = actionId;
+              rscActionStream = resultStream;
             }
           )
         : build.future.unstable_singleFetch
@@ -551,14 +566,19 @@ async function handleDocumentRequest(
 
   let streamHandoff: Pick<
     EntryContext,
-    "serverHandoffStream" | "renderMeta"
+    | "serverHandoffStream"
+    | "serverHandoffActionId"
+    | "serverHandoffStreamAction"
+    | "renderMeta"
   > | null = null;
   if (build.future.unstable_serverComponents) {
-    if (!rscStream) {
+    if (!rscLoaderStream) {
       throw new Error("No RSC stream");
     }
     streamHandoff = {
-      serverHandoffStream: rscStream,
+      serverHandoffStream: rscLoaderStream,
+      serverHandoffActionId: rscActionId ?? undefined,
+      serverHandoffStreamAction: rscActionStream ?? undefined,
       renderMeta: {},
     };
   } else if (build.future.unstable_singleFetch) {
@@ -584,6 +604,7 @@ async function handleDocumentRequest(
       criticalCss,
       future: build.future,
       isSpaMode: build.isSpaMode,
+      serverHandoffActionId: streamHandoff?.serverHandoffActionId,
       ...(!build.future.unstable_singleFetch ? { state } : null),
     }),
     ...streamHandoff,

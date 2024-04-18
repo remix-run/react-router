@@ -49,7 +49,11 @@ export function getServerComponentsDataStrategy(
   createFromReadableStream: CreateFromReadableStreamFunction,
   callReactServer: CallReactServer,
   // TODO: This make me want to puke
-  onBody: (body: ReadableStream<Uint8Array> | null) => void
+  onBody: (body: ReadableStream<Uint8Array> | null) => void,
+  onActionBody: (
+    routeId: string,
+    body: ReadableStream<Uint8Array> | null
+  ) => void
 ): DataStrategyFunction {
   return async ({ request, matches }) => {
     let headers = new Headers(request.headers);
@@ -61,18 +65,24 @@ export function getServerComponentsDataStrategy(
       signal: request.signal,
     };
 
-    if (request.method !== "GET" && request.method !== "HEAD" && request.body) {
+    let isActionRequest = request.method !== "GET" && request.method !== "HEAD";
+    if (isActionRequest && request.body) {
       requestInit.body = request.body;
       requestInit.duplex = "half";
     }
 
+    let bodyB: ReadableStream<Uint8Array> | null = null;
     const payloadPromise = callReactServer(request.url, requestInit).then(
       async (response) => {
         if (!response.body) {
           throw new Error("Response body is missing");
         }
-        const [bodyA, bodyB] = response.body.tee();
-        onBody(bodyB);
+        const [bodyA, _bodyB] = response.body.tee();
+        if (!isActionRequest) {
+          onBody(_bodyB);
+        } else {
+          bodyB = _bodyB;
+        }
         const payload = (await createFromReadableStream(
           bodyA
         )) as SingleFetchResults;
@@ -80,15 +90,21 @@ export function getServerComponentsDataStrategy(
       }
     );
 
+    console.log(request.method, await payloadPromise);
+
     return Promise.all(
       matches.map(async (m) =>
         m.resolve(async (): Promise<HandlerResult> => {
           const [status, headers, results] = await payloadPromise;
-          console.log(results)
           // TODO: merge status and headers?
           responseStubs[m.route.id].status = status;
-          let result = unwrapSingleFetchResults(results, m.route.id);
 
+          if (isActionRequest) {
+            onActionBody(m.route.id, bodyB);
+            return { type: "data", result: results.data };
+          }
+
+          let result = unwrapSingleFetchResults(results, m.route.id);
           return { type: "data", result };
         })
       )
