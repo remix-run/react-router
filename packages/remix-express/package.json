@@ -1,6 +1,6 @@
 {
   "name": "@react-router/express",
-  "version": "2.9.0-pre.0",
+  "version": "6.22.3",
   "description": "Express server request handler for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"
