@@ -10,7 +10,6 @@ import { formatRoutes } from "../config/format";
 import type { RoutesFormat } from "../config/format";
 import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
-import { logger } from "../tux";
 import * as profiler from "../vite/profiler";
 
 export async function routes(
@@ -51,7 +50,7 @@ export async function build(
   try {
     await build(root, options);
   } finally {
-    await profiler.stop(logger.info);
+    await profiler.stop(console.info);
   }
 }
 

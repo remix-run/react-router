@@ -4,6 +4,7 @@ const { version } = require("./packages/react-router/package.json");
 const majorVersion = version.split(".").shift();
 
 const PRETTY = !!process.env.PRETTY;
+const WATCH = !!process.env.ROLLUP_WATCH;
 
 /**
  * Determine the relevant directories for a rollup build, relative to the
@@ -171,4 +172,5 @@ module.exports = {
   isBareModuleId,
   remixBabelConfig,
   PRETTY,
+  WATCH,
 };

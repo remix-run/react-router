@@ -9,6 +9,7 @@ node_modules/
 /examples/*/pnpm-lock.yaml
 /examples/*/dist
 /tutorial/dist
+/playground-local/
 /integration/playwright-report
 /playgrounds/
 

@@ -10,7 +10,13 @@
       "react-router",
       "react-router-dom",
       "react-router-dom-v5-compat",
-      "react-router-native"
+      "react-router-native",
+      "@react-router/dev",
+      "@react-router/express",
+      "@react-router/node",
+      "@react-router/serve",
+      "@react-router/server-runtime",
+      "@react-router/testing"
     ]
   ],
   "linked": [],
@@ -18,5 +24,8 @@
   "baseBranch": "dev",
   "updateInternalDependencies": "patch",
   "bumpVersionsWithWorkspaceProtocolOnly": true,
-  "ignore": []
+  "ignore": ["integration", "integration-*"],
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  }
 }

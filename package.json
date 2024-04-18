@@ -8,19 +8,21 @@
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
     "lint": "eslint --cache .",
+    "playground": "node ./scripts/playground.js",
     "prerelease": "pnpm build",
     "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
+    "typecheck": "pnpm run --recursive --parallel typecheck",
     "pretest:integration": "pnpm build",
     "test:integration": "pnpm playwright:integration",
     "posttest:integration": "pnpm clean:integration",
     "playwright:integration": "playwright test --config ./integration/playwright.config.ts",
     "changeset": "changeset",
-    "version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
+    "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
-    "version:experimental": "node ./scripts/version experimental",
+    "version": "node ./scripts/version",
     "watch": "rollup -c -w"
   },
   "jest": {
@@ -99,7 +101,7 @@
     "jest-environment-jsdom": "^29.6.2",
     "jsonfile": "^6.1.0",
     "prettier": "^2.8.8",
-    "prompt-confirm": "^2.0.4",
+    "prompts": "^2.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-test-renderer": "^18.2.0",
@@ -113,11 +115,11 @@
     "semver": "^7.5.4",
     "tslib": "^2.6.2",
     "type-fest": "^2.19.0",
-    "typescript": "^5.1.6",
+    "typescript": "^5.4.5",
     "undici": "^6.10.1",
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",
-    "vite": "5.1.3",
+    "vite": "^5.1.0",
     "vite-env-only": "^2.0.0",
     "vite-tsconfig-paths": "^4.2.2",
     "wait-on": "^7.0.1"
@@ -144,7 +146,8 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch"
+      "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch",
+      "@changesets/assemble-release-plan@5.2.4": "patches/@changesets__assemble-release-plan@5.2.4.patch"
     },
     "overrides": {
       "react": "0.0.0-experimental-96c584661-20240412",
