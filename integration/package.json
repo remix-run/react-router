@@ -5,7 +5,7 @@
   "description": "deps needed for integration tests",
   "type": "module",
   "scripts": {
-    "tsc": "tsc"
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.3.0",

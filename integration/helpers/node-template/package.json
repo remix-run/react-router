@@ -7,7 +7,8 @@
   "scripts": {
     "build": "node ./node_modules/@react-router/dev/dist/cli.js build",
     "dev": "node ./node_modules/@react-router/dev/dist/cli.js dev",
-    "start": "node ./node_modules/@react-router/serve/dist/cli.js ./build/index.js"
+    "start": "node ./node_modules/@react-router/serve/dist/cli.js ./build/index.js",
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@react-router/express": "workspace:*",
