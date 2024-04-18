@@ -259,7 +259,7 @@ importers:
         specifier: ^3.1.0
         version: 3.1.1
       vite:
-        specifier: 5.1.3
+        specifier: ^5.1.0
         version: 5.1.3(@types/node@18.19.26)
       vite-env-only:
         specifier: ^2.0.0
@@ -462,7 +462,7 @@ importers:
         version: 1.14.2
       '@vanilla-extract/vite-plugin':
         specifier: ^3.9.2
-        version: 3.9.5(vite@5.1.0)
+        version: 3.9.5(vite@5.1.3)
       express:
         specifier: ^4.17.1
         version: 4.19.2
@@ -504,14 +504,14 @@ importers:
         specifier: ^5.1.6
         version: 5.1.6
       vite:
-        specifier: 5.1.0
-        version: 5.1.0
+        specifier: ^5.1.0
+        version: 5.1.3(@types/node@18.19.26)
       vite-env-only:
         specifier: ^2.0.0
         version: 2.2.1
       vite-tsconfig-paths:
         specifier: ^4.2.1
-        version: 4.3.2(typescript@5.1.6)(vite@5.1.0)
+        version: 4.3.2(typescript@5.1.6)(vite@5.1.3)
       wrangler:
         specifier: ^3.24.0
         version: 3.39.0(@cloudflare/workers-types@4.20240403.0)
@@ -760,7 +760,7 @@ importers:
         specifier: ^1.2.0
         version: 1.3.3
       vite:
-        specifier: 5.1.3
+        specifier: ^5.1.0
         version: 5.1.3(@types/node@18.19.26)
       wrangler:
         specifier: ^3.28.2
@@ -6438,28 +6438,6 @@ packages:
 
   /@vanilla-extract/private@1.0.4:
     resolution: {integrity: sha512-8FGD6AejeC/nXcblgNCM5rnZb9KXa4WNkR03HCWtdJBpANjTgjHEglNLFnhuvdQ78tC6afaxBPI+g7F2NX3tgg==}
-
-  /@vanilla-extract/vite-plugin@3.9.5(vite@5.1.0):
-    resolution: {integrity: sha512-CWI/CtrVW6i3HKccI6T7uGQkTJ8bd8Xl2UMBg3Pkr7dwWMmavXTeucV0I9KSbmXaYXSbEj+Q8c9y0xAZwtmTig==}
-    peerDependencies:
-      vite: ^2.2.3 || ^3.0.0 || ^4.0.3 || ^5.0.0
-    dependencies:
-      '@vanilla-extract/integration': 6.5.0
-      outdent: 0.8.0
-      postcss: 8.4.38
-      postcss-load-config: 4.0.2(postcss@8.4.38)
-      vite: 5.1.0
-    transitivePeerDependencies:
-      - '@types/node'
-      - less
-      - lightningcss
-      - sass
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - ts-node
-    dev: false
 
   /@vanilla-extract/vite-plugin@3.9.5(vite@5.1.3):
     resolution: {integrity: sha512-CWI/CtrVW6i3HKccI6T7uGQkTJ8bd8Xl2UMBg3Pkr7dwWMmavXTeucV0I9KSbmXaYXSbEj+Q8c9y0xAZwtmTig==}
@@ -15979,23 +15957,6 @@ packages:
       - supports-color
       - terser
 
-  /vite-tsconfig-paths@4.3.2(typescript@5.1.6)(vite@5.1.0):
-    resolution: {integrity: sha512-0Vd/a6po6Q+86rPlntHye7F31zA2URZMbH8M3saAZ/xR9QoGN/L21bxEGfXdWmFdNkqPpRdxFT7nmNe12e9/uA==}
-    peerDependencies:
-      vite: '*'
-    peerDependenciesMeta:
-      vite:
-        optional: true
-    dependencies:
-      debug: 4.3.4
-      globrex: 0.1.2
-      tsconfck: 3.0.3(typescript@5.1.6)
-      vite: 5.1.0
-    transitivePeerDependencies:
-      - supports-color
-      - typescript
-    dev: true
-
   /vite-tsconfig-paths@4.3.2(typescript@5.1.6)(vite@5.1.3):
     resolution: {integrity: sha512-0Vd/a6po6Q+86rPlntHye7F31zA2URZMbH8M3saAZ/xR9QoGN/L21bxEGfXdWmFdNkqPpRdxFT7nmNe12e9/uA==}
     peerDependencies:
@@ -16011,7 +15972,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - typescript
-    dev: false
 
   /vite-tsconfig-paths@4.3.2(typescript@5.4.5)(vite@5.1.3):
     resolution: {integrity: sha512-0Vd/a6po6Q+86rPlntHye7F31zA2URZMbH8M3saAZ/xR9QoGN/L21bxEGfXdWmFdNkqPpRdxFT7nmNe12e9/uA==}
@@ -16028,40 +15988,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - typescript
-
-  /vite@5.1.0:
-    resolution: {integrity: sha512-STmSFzhY4ljuhz14bg9LkMTk3d98IO6DIArnTY6MeBwiD1Za2StcQtz7fzOUnRCqrHSD5+OS2reg4HOz1eoLnw==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': ^18.0.0 || >=20.0.0
-      less: '*'
-      lightningcss: ^1.21.0
-      sass: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      esbuild: 0.19.12
-      postcss: 8.4.38
-      rollup: 4.13.1
-    optionalDependencies:
-      fsevents: 2.3.3
 
   /vite@5.1.3(@types/node@18.19.26):
     resolution: {integrity: sha512-UfmUD36DKkqhi/F75RrxvPpry+9+tTkrXfMNZD+SboZqBCMsxKtO52XeGzzuh7ioz+Eo/SYDBbdb0Z7vgcDJew==}
