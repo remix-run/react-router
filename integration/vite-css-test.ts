@@ -45,7 +45,7 @@ const files = {
   "app/entry.client.tsx": js`
     import "./entry.client.css";
 
-    import { RouterProvider } from "react-router-dom";
+    import { HydratedRouter } from "react-router-dom";
     import { startTransition, StrictMode } from "react";
     import { hydrateRoot } from "react-dom/client";
 
@@ -53,7 +53,7 @@ const files = {
       hydrateRoot(
         document,
         <StrictMode>
-          <RouterProvider />
+          <HydratedRouter />
         </StrictMode>
       );
     });

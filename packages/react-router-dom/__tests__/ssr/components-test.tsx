@@ -9,6 +9,7 @@ import {
   Outlet,
   RouterProvider,
 } from "../../index";
+import { HydratedRouter } from "../../ssr/browser";
 import { RemixContext } from "../../ssr/components";
 import invariant from "../../ssr/invariant";
 import { RemixServer } from "../../ssr/server";
@@ -214,7 +215,7 @@ describe("<RemixServer>", () => {
   });
 });
 
-describe("<RemixBrowser>", () => {
+describe("<HydratedRouter>", () => {
   it("handles empty default export objects from the compiler", () => {
     window.__remixContext = {
       url: "/",
@@ -263,7 +264,7 @@ describe("<RemixBrowser>", () => {
 
     jest.spyOn(console, "error");
 
-    let { container } = render(<RouterProvider />);
+    let { container } = render(<HydratedRouter />);
 
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");
