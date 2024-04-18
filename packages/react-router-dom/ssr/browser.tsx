@@ -1,19 +1,13 @@
 import * as React from "react";
-import type {
-  HydrationState,
-  Location,
-  Router as RemixRouter,
-} from "@remix-run/router";
+import type { HydrationState, Router as RemixRouter } from "@remix-run/router";
 import {
   createBrowserHistory,
   createRouter,
   matchRoutes,
 } from "@remix-run/router";
-import {
-  RouterProvider,
-  UNSAFE_mapRouteProperties as mapRouteProperties,
-} from "react-router";
+import { UNSAFE_mapRouteProperties as mapRouteProperties } from "react-router";
 
+import { RouterProvider } from "../index";
 import type {
   AssetsManifest,
   FutureConfig as RemixFutureConfig,
