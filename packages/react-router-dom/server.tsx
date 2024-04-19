@@ -15,30 +15,31 @@ import {
   IDLE_NAVIGATION,
   Action,
   UNSAFE_invariant as invariant,
+  createPath,
+  parsePath,
   isRouteErrorResponse,
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import {
-  UNSAFE_mapRouteProperties as mapRouteProperties,
-  UNSAFE_useRoutesImpl as useRoutesImpl,
-} from "react-router";
 import type {
   DataRouteObject,
   FutureConfig,
   Location,
   RouteObject,
   To,
-} from "./index";
+} from "react-router";
 import {
-  createPath,
-  parsePath,
   Router,
+  UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_useRoutesImpl as useRoutesImpl,
   UNSAFE_DataRouterContext as DataRouterContext,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
+} from "react-router";
+
+import {
   UNSAFE_FetchersContext as FetchersContext,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
-} from "./index";
+} from "./lib";
 
 export interface StaticRouterProps {
   basename?: string;
