@@ -22,9 +22,6 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 
-# compat module copies
-/packages/react-router-dom-v5-compat/react-router-dom
-
 .eslintcache
 .tmp
 /.env

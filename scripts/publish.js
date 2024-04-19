@@ -92,15 +92,11 @@ async function run() {
     }
     await ensureBuildVersion("react-router", version);
     await ensureBuildVersion("react-router-dom", version);
-    await ensureBuildVersion("react-router-dom-v5-compat", version);
-    await ensureBuildVersion("react-router-native", version);
 
     // 4. Publish to npm
     publishBuild("router", tag);
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
-    publishBuild("react-router-dom-v5-compat", tag);
-    publishBuild("react-router-native", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);

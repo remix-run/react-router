@@ -2,7 +2,7 @@
 
 The `@remix-run/router` package is a framework-agnostic routing package (sometimes referred to as a browser-emulator) that serves as the heart of [React Router][react-router] and [Remix][remix] and provides all the core functionality for routing coupled with data loading and data mutations. It comes with built-in handling of errors, race-conditions, interruptions, cancellations, lazy-loading data, and much, much more.
 
-If you're using React Router, you should never `import` anything directly from the `@remix-run/router` - you should have everything you need in `react-router-dom` (or `react-router`/`react-router-native` if you're not rendering in the browser). All of those packages should re-export everything you would otherwise need from `@remix-run/router`.
+If you're using React Router, you should never `import` anything directly from the `@remix-run/router` - you should have everything you need in `react-router`. All of those packages should re-export everything you would otherwise need from `@remix-run/router`.
 
 > [!WARNING]
 >

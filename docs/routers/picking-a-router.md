@@ -22,10 +22,9 @@ The following routers do not support the data APIs:
 - [`<BrowserRouter>`][browserrouter]
 - [`<MemoryRouter>`][memoryrouter]
 - [`<HashRouter>`][hashrouter]
-- [`<NativeRouter>`][nativerouter]
 - [`<StaticRouter>`][staticrouter]
 
-We recommend updating your app to use one of the new routers from 6.4. The data APIs are currently not supported in React Native, but should be eventually.
+We recommend updating your app to use one of the new routers from 6.4+.
 
 The easiest way to quickly update to a v6.4 is to get the help from [`createRoutesFromElements`][createroutesfromelements] so you don't need to convert your `<Route>` elements to route objects.
 
@@ -78,12 +77,6 @@ module.exports = {
 };
 ```
 
-## React Native
-
-You will use [`<NativeRouter>`][nativerouter] from React Native projects.
-
-The data APIs from v6.4 are currently not supported in React Native, but should be eventually.
-
 ## Data APIs
 
 The following APIs are introduced in React Router 6.4 and will only work when using a data router:
@@ -119,7 +112,6 @@ The following APIs are introduced in React Router 6.4 and will only work when us
 [browserrouter]: ../router-components/browser-router
 [memoryrouter]: ../router-components/memory-router
 [hashrouter]: ../router-components/hash-router
-[nativerouter]: ../router-components/native-router
 [staticrouter]: ../router-components/static-router
 [data-apis]: #data-apis
 [action]: ../route/action

@@ -76,7 +76,7 @@ We use [pnpm workspaces](https://pnpm.io/workspaces/) to manage installation of 
 
 ### Building
 
-Calling `pnpm build` from the root directory will run the build, which should take only a few seconds. It's important to build all the packages together because `react-router-dom` and `react-router-native` both use `react-router` as a dependency.
+Calling `pnpm build` from the root directory will run the build, which should take only a few seconds. It's important to build all the packages together because the individual packages have dependencies on one another.
 
 ### Testing
 

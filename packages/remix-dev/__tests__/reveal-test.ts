@@ -34,16 +34,6 @@ afterEach(() => {
   console.error = originalError;
 });
 
-// keep the console clear
-jest.mock("ora", () => {
-  return jest.fn(() => ({
-    start: jest.fn(() => ({
-      stop: jest.fn(),
-      clear: jest.fn(),
-    })),
-  }));
-});
-
 // TODO: Migrate this to an integration test now that it relies on Vite to resolve config
 describe.skip("the reveal command", () => {
   let tempDirs = new Set<string>();
