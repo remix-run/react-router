@@ -10,7 +10,7 @@ hidden: true
 
 [Check out the completed version of the app here][stackblitz-app].
 
-React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, and on React Native.
+React Router is a fully-featured client and server-side routing library for React, a JavaScript library for building user interfaces. React Router runs anywhere React runs; on the web, on the server with node.js, or on any other Javascript platform that supports the [Web Fetch API][fetch-api].
 
 If you're just getting started with React generally, we recommend you follow [the excellent Getting Started guide][reactjs-getting-started] in the official docs. There is plenty of information there to get you up and running. React Router is compatible with React >= 16.8.
 
@@ -862,3 +862,4 @@ If you're having trouble, check out the [Resources](/resources) page to get help
 [cra]: https://create-react-app.dev/
 [vite]: https://vitejs.dev/guide/#scaffolding-your-first-vite-project
 [remix]: https://remix.run
+[fetch-api]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API

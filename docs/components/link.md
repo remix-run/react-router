@@ -4,8 +4,6 @@ title: Link
 
 # `<Link>`
 
-<docs-info>This is the web version of `<Link>`. For the React Native version, [go here][link-native].</docs-info>
-
 <details>
   <summary>Type declaration</summary>
 
@@ -216,7 +214,6 @@ function ImageLink(to) {
 
 <docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
 
-[link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration
 [history-replace-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/replaceState
 [history-push-state]: https://developer.mozilla.org/en-US/docs/Web/API/History/pushState

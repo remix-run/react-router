@@ -4,8 +4,6 @@ title: useSearchParams
 
 # `useSearchParams`
 
-<docs-info>This is the web version of `useSearchParams`. For the React Native version, [go here][usesearchparams-native].</docs-info>
-
 <details>
   <summary>Type declaration</summary>
 
@@ -68,6 +66,5 @@ function App() {
 
 [functional-updates]: https://reactjs.org/docs/hooks-reference.html#functional-updates
 [searchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams
-[usesearchparams-native]: ./use-search-params-rn
 [usestate]: https://react.dev/reference/react/useState
 [usenavigate]: ./use-navigate

@@ -10,7 +10,6 @@
       "react-router",
       "react-router-dom",
       "react-router-dom-v5-compat",
-      "react-router-native",
       "@react-router/dev",
       "@react-router/express",
       "@react-router/node",

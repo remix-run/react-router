@@ -7,7 +7,6 @@ module.exports = function rollup(options) {
     "react-router",
     "react-router-dom",
     "react-router-dom-v5-compat",
-    "react-router-native",
     "remix-dev",
     "remix-express",
     "remix-node",
