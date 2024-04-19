@@ -4,7 +4,6 @@ packages:
   - "integration/helpers/vite-template"
   - "packages/react-router"
   - "packages/react-router-dom"
-  - "packages/react-router-dom-v5-compat"
   - "packages/remix-dev"
   - "packages/remix-express"
   - "packages/remix-node"

@@ -1,7 +1,3 @@
-/**
- * NOTE: If you refactor this to split up the modules into separate files,
- * you'll need to update the rollup config for react-router-dom-v5-compat.
- */
 export type {
   unstable_DataStrategyFunction,
   unstable_DataStrategyFunctionArgs,
