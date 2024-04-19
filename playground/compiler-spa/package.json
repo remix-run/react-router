@@ -12,8 +12,7 @@
     "@react-router/node": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router": "workspace:*",
-    "react-router-dom": "workspace:*"
+    "react-router": "workspace:*"
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",

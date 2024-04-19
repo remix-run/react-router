@@ -5,9 +5,9 @@ import {
   createRouter,
   matchRoutes,
 } from "@remix-run/router";
-import { UNSAFE_mapRouteProperties as mapRouteProperties } from "react-router";
 
 import "../global";
+import { mapRouteProperties } from "../../components";
 import { RouterProvider } from "../lib";
 import type { AssetsManifest } from "./entry";
 import { deserializeErrors } from "./errors";

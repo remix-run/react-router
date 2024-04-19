@@ -75,7 +75,7 @@
     "wrangler": "^3.28.2"
   },
   "peerDependencies": {
-    "react-router-dom": "workspace:^",
+    "react-router": "workspace:^",
     "@react-router/serve": "workspace:^",
     "typescript": "^5.1.0",
     "vite": "^5.1.0",

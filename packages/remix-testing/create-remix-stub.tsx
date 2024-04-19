@@ -7,7 +7,6 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
 } from "@remix-run/router";
 import { UNSAFE_convertRoutesToDataRoutes } from "@remix-run/router";
-import { UNSAFE_RemixContext as RemixContext } from "react-router-dom";
 import type {
   DataRouteObject,
   IndexRouteObject,
@@ -18,8 +17,13 @@ import type {
   UNSAFE_EntryRoute as EntryRoute,
   UNSAFE_RouteModules as RouteModules,
   UNSAFE_RemixContextObject as RemixContextObject,
-} from "react-router-dom";
-import { createMemoryRouter, Outlet, RouterProvider } from "react-router-dom";
+} from "react-router";
+import {
+  createMemoryRouter,
+  Outlet,
+  RouterProvider,
+  UNSAFE_RemixContext as RemixContext,
+} from "react-router";
 import type {
   ActionFunction,
   AppLoadContext,

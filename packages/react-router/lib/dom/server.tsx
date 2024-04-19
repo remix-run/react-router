@@ -1,5 +1,6 @@
 import * as React from "react";
 import type {
+  Location,
   Path,
   RevalidationState,
   Router as RemixRouter,
@@ -8,6 +9,7 @@ import type {
   UNSAFE_RouteManifest as RouteManifest,
   RouterState,
   FutureConfig as RouterFutureConfig,
+  To,
 } from "@remix-run/router";
 import {
   IDLE_BLOCKER,
@@ -21,25 +23,15 @@ import {
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
 } from "@remix-run/router";
-import type {
-  DataRouteObject,
-  FutureConfig,
-  Location,
-  RouteObject,
-  To,
-} from "react-router";
-import {
-  Router,
-  UNSAFE_mapRouteProperties as mapRouteProperties,
-  UNSAFE_useRoutesImpl as useRoutesImpl,
-  UNSAFE_DataRouterContext as DataRouterContext,
-  UNSAFE_DataRouterStateContext as DataRouterStateContext,
-} from "react-router";
 
 import {
   UNSAFE_FetchersContext as FetchersContext,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
 } from "./lib";
+import { Router, mapRouteProperties, type FutureConfig } from "../components";
+import type { DataRouteObject, RouteObject } from "../context";
+import { DataRouterContext, DataRouterStateContext } from "../context";
+import { useRoutesImpl } from "../hooks";
 
 export interface StaticRouterProps {
   basename?: string;
@@ -84,8 +76,6 @@ export function StaticRouter({
     />
   );
 }
-
-export { StaticHandlerContext };
 
 export interface StaticRouterProviderProps {
   context: StaticHandlerContext;

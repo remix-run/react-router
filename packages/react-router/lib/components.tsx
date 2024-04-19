@@ -1,4 +1,6 @@
 import type {
+  FutureConfig as RouterFutureConfig,
+  HydrationState,
   InitialEntry,
   LazyRouteFunction,
   Location,
@@ -9,11 +11,13 @@ import type {
   RouterSubscriber,
   To,
   TrackedPromise,
+  unstable_DataStrategyFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
   createMemoryHistory,
+  createRouter,
   UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   parsePath,
@@ -53,6 +57,92 @@ import {
 export interface FutureConfig {
   v7_relativeSplatPath: boolean;
   v7_startTransition: boolean;
+}
+
+export function mapRouteProperties(route: RouteObject) {
+  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
+    // Note: this check also occurs in createRoutesFromChildren so update
+    // there if you change this -- please and thank you!
+    hasErrorBoundary: route.ErrorBoundary != null || route.errorElement != null,
+  };
+
+  if (route.Component) {
+    if (__DEV__) {
+      if (route.element) {
+        warning(
+          false,
+          "You should not include both `Component` and `element` on your route - " +
+            "`Component` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      element: React.createElement(route.Component),
+      Component: undefined,
+    });
+  }
+
+  if (route.HydrateFallback) {
+    if (__DEV__) {
+      if (route.hydrateFallbackElement) {
+        warning(
+          false,
+          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
+            "`HydrateFallback` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      hydrateFallbackElement: React.createElement(route.HydrateFallback),
+      HydrateFallback: undefined,
+    });
+  }
+
+  if (route.ErrorBoundary) {
+    if (__DEV__) {
+      if (route.errorElement) {
+        warning(
+          false,
+          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
+            "`ErrorBoundary` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      errorElement: React.createElement(route.ErrorBoundary),
+      ErrorBoundary: undefined,
+    });
+  }
+
+  return updates;
+}
+
+export function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
+    hydrationData?: HydrationState;
+    initialEntries?: InitialEntry[];
+    initialIndex?: number;
+    unstable_dataStrategy?: unstable_DataStrategyFunction;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    future: {
+      ...opts?.future,
+      v7_prependBasename: true,
+    },
+    history: createMemoryHistory({
+      initialEntries: opts?.initialEntries,
+      initialIndex: opts?.initialIndex,
+    }),
+    hydrationData: opts?.hydrationData,
+    routes,
+    mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
+  }).initialize();
 }
 
 export interface RouterProviderProps {

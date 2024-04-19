@@ -4,26 +4,13 @@ import type {
   TouchEventHandler,
 } from "react";
 import * as React from "react";
-import type {
-  AgnosticDataRouteMatch,
-  UNSAFE_DeferredData as DeferredData,
-  RouterState,
-  TrackedPromise,
-  UIMatch as UIMatchRR,
-} from "@remix-run/router";
 import {
-  Await as AwaitRR,
-  UNSAFE_DataRouterContext as DataRouterContext,
-  UNSAFE_DataRouterStateContext as DataRouterStateContext,
   matchRoutes,
-  useAsyncError,
-  useActionData as useActionDataRR,
-  useLoaderData as useLoaderDataRR,
-  useMatches as useMatchesRR,
-  useRouteLoaderData as useRouteLoaderDataRR,
-  useLocation,
-  useNavigation,
-} from "react-router";
+  type AgnosticDataRouteMatch,
+  type UNSAFE_DeferredData as DeferredData,
+  type RouterState,
+  type TrackedPromise,
+} from "@remix-run/router";
 
 import type { AppData } from "./data";
 import type { RemixContextObject } from "./entry";
@@ -43,9 +30,11 @@ import type {
   MetaDescriptor,
   MetaMatch,
   MetaMatches,
-  RouteHandle,
 } from "./routeModules";
 import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
+import { DataRouterContext, DataRouterStateContext } from "../../context";
+import { useAsyncError, useLocation, useNavigation } from "../../hooks";
+import { Await } from "../../components";
 
 // TODO: Temporary shim until we figure out the way to handle typings in v7
 export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
@@ -537,16 +526,6 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
   return typeof tagName === "string" && /^(meta|link)$/.test(tagName);
 }
 
-export interface AwaitProps<Resolve> {
-  children: React.ReactNode | ((value: Awaited<Resolve>) => React.ReactNode);
-  errorElement?: React.ReactNode;
-  resolve: Resolve;
-}
-
-export function Await<Resolve>(props: AwaitProps<Resolve>) {
-  return <AwaitRR {...props} />;
-}
-
 /**
  * Tracks whether Remix has finished hydrating or not, so scripts can be skipped
  * during client-side updates.
@@ -986,50 +965,6 @@ function ErrorDeferredHydrationScript({
 
 function dedupe(array: any[]) {
   return [...new Set(array)];
-}
-
-export type UIMatch<D = AppData, H = RouteHandle> = UIMatchRR<
-  SerializeFrom<D>,
-  H
->;
-
-/**
- * Returns the active route matches, useful for accessing loaderData for
- * parent/child routes or the route "handle" property
- *
- * @see https://remix.run/hooks/use-matches
- */
-export function useMatches(): UIMatch[] {
-  return useMatchesRR() as UIMatch[];
-}
-
-/**
- * Returns the JSON parsed data from the current route's `loader`.
- *
- * @see https://remix.run/hooks/use-loader-data
- */
-export function useLoaderData<T = AppData>(): SerializeFrom<T> {
-  return useLoaderDataRR() as SerializeFrom<T>;
-}
-
-/**
- * Returns the loaderData for the given routeId.
- *
- * @see https://remix.run/hooks/use-route-loader-data
- */
-export function useRouteLoaderData<T = AppData>(
-  routeId: string
-): SerializeFrom<T> | undefined {
-  return useRouteLoaderDataRR(routeId) as SerializeFrom<T> | undefined;
-}
-
-/**
- * Returns the JSON parsed data from the current route's `action`.
- *
- * @see https://remix.run/hooks/use-action-data
- */
-export function useActionData<T = AppData>(): SerializeFrom<T> | undefined {
-  return useActionDataRR() as SerializeFrom<T> | undefined;
 }
 
 export function mergeRefs<T = any>(

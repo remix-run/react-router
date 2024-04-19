@@ -1,4 +1,3 @@
-import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
@@ -9,8 +8,6 @@ import type {
   unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
-  HydrationState,
-  InitialEntry,
   JsonFunction,
   LazyRouteFunction,
   LoaderFunction,
@@ -25,8 +22,6 @@ import type {
   PathPattern,
   RedirectFunction,
   RelativeRoutingType,
-  Router as RemixRouter,
-  FutureConfig as RouterFutureConfig,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   To,
@@ -36,9 +31,7 @@ import type {
 import {
   AbortedDeferredError,
   Action as NavigationType,
-  createMemoryHistory,
   createPath,
-  createRouter,
   defer,
   generatePath,
   isRouteErrorResponse,
@@ -49,7 +42,7 @@ import {
   redirect,
   redirectDocument,
   resolvePath,
-  UNSAFE_warning as warning,
+  UNSAFE_ErrorResponseImpl,
 } from "@remix-run/router";
 
 import type {
@@ -77,6 +70,8 @@ import {
   Routes,
   createRoutesFromChildren,
   renderMatches,
+  createMemoryRouter,
+  mapRouteProperties,
 } from "./lib/components";
 import type {
   DataRouteMatch,
@@ -125,6 +120,8 @@ import {
 declare global {
   const __DEV__: boolean;
 }
+
+export {};
 
 // Exported for backwards compatibility, but not being used internally anymore
 type Hash = string;
@@ -197,6 +194,7 @@ export {
   Router,
   RouterProvider,
   Routes,
+  createMemoryRouter,
   createPath,
   createRoutesFromChildren,
   createRoutesFromChildren as createRoutesFromElements,
@@ -234,91 +232,89 @@ export {
   useRoutes,
 };
 
-function mapRouteProperties(route: RouteObject) {
-  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
-    // Note: this check also occurs in createRoutesFromChildren so update
-    // there if you change this -- please and thank you!
-    hasErrorBoundary: route.ErrorBoundary != null || route.errorElement != null,
-  };
+// Expose old RR DOM API
+export type {
+  FormEncType,
+  FormMethod,
+  GetScrollRestorationKeyFunction,
+  StaticHandlerContext,
+  V7_FormMethod,
+} from "@remix-run/router";
 
-  if (route.Component) {
-    if (__DEV__) {
-      if (route.element) {
-        warning(
-          false,
-          "You should not include both `Component` and `element` on your route - " +
-            "`Component` will be used."
-        );
-      }
-    }
-    Object.assign(updates, {
-      element: React.createElement(route.Component),
-      Component: undefined,
-    });
-  }
-
-  if (route.HydrateFallback) {
-    if (__DEV__) {
-      if (route.hydrateFallbackElement) {
-        warning(
-          false,
-          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
-            "`HydrateFallback` will be used."
-        );
-      }
-    }
-    Object.assign(updates, {
-      hydrateFallbackElement: React.createElement(route.HydrateFallback),
-      HydrateFallback: undefined,
-    });
-  }
-
-  if (route.ErrorBoundary) {
-    if (__DEV__) {
-      if (route.errorElement) {
-        warning(
-          false,
-          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
-            "`ErrorBoundary` will be used."
-        );
-      }
-    }
-    Object.assign(updates, {
-      errorElement: React.createElement(route.ErrorBoundary),
-      ErrorBoundary: undefined,
-    });
-  }
-
-  return updates;
-}
-
-export function createMemoryRouter(
-  routes: RouteObject[],
-  opts?: {
-    basename?: string;
-    future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
-    hydrationData?: HydrationState;
-    initialEntries?: InitialEntry[];
-    initialIndex?: number;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
-  }
-): RemixRouter {
-  return createRouter({
-    basename: opts?.basename,
-    future: {
-      ...opts?.future,
-      v7_prependBasename: true,
-    },
-    history: createMemoryHistory({
-      initialEntries: opts?.initialEntries,
-      initialIndex: opts?.initialIndex,
-    }),
-    hydrationData: opts?.hydrationData,
-    routes,
-    mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
-  }).initialize();
-}
+export type {
+  BrowserRouterProps,
+  HashRouterProps,
+  HistoryRouterProps,
+  LinkProps,
+  NavLinkProps,
+  FetcherFormProps,
+  FormProps,
+  ScrollRestorationProps,
+  SetURLSearchParams,
+  SubmitFunction,
+  FetcherSubmitFunction,
+  FetcherWithComponents,
+} from "./lib/dom/lib";
+export {
+  createBrowserRouter,
+  createHashRouter,
+  BrowserRouter,
+  HashRouter,
+  Link,
+  // TODO: Collapse RouterProvider implementations
+  // RouterProvider,
+  UNSAFE_ViewTransitionContext,
+  UNSAFE_FetchersContext,
+  unstable_HistoryRouter,
+  NavLink,
+  Form,
+  ScrollRestoration,
+  useLinkClickHandler,
+  useSearchParams,
+  useSubmit,
+  useFormAction,
+  useFetcher,
+  useFetchers,
+  UNSAFE_useScrollRestoration,
+  useBeforeUnload,
+  unstable_usePrompt,
+  unstable_useViewTransitionState,
+} from "./lib/dom/lib";
+export type {
+  ParamKeyValuePair,
+  SubmitOptions,
+  URLSearchParamsInit,
+} from "./lib/dom/dom";
+export { createSearchParams } from "./lib/dom/dom";
+export type {
+  StaticRouterProps,
+  StaticRouterProviderProps,
+} from "./lib/dom/server";
+export {
+  createStaticHandler,
+  createStaticRouter,
+  StaticRouter,
+  StaticRouterProvider,
+} from "./lib/dom/server";
+export { HydratedRouter } from "./lib/dom/ssr/browser";
+export {
+  Meta,
+  Links,
+  Scripts,
+  PrefetchPageLinks,
+} from "./lib/dom/ssr/components";
+export type { HtmlLinkDescriptor } from "./lib/dom/ssr/links";
+export type {
+  ClientActionFunction,
+  ClientActionFunctionArgs,
+  ClientLoaderFunction,
+  ClientLoaderFunctionArgs,
+  MetaArgs,
+  MetaDescriptor,
+  MetaFunction,
+} from "./lib/dom/ssr/routeModules";
+export type { RemixServerProps } from "./lib/dom/ssr/server";
+export { RemixServer } from "./lib/dom/ssr/server";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
@@ -343,4 +339,27 @@ export {
   mapRouteProperties as UNSAFE_mapRouteProperties,
   useRouteId as UNSAFE_useRouteId,
   useRoutesImpl as UNSAFE_useRoutesImpl,
+  UNSAFE_ErrorResponseImpl,
 };
+
+/** @internal */
+export { RemixContext as UNSAFE_RemixContext } from "./lib/dom/ssr/components";
+
+/** @internal */
+export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
+
+/** @internal */
+export type {
+  FutureConfig as UNSAFE_FutureConfig,
+  AssetsManifest as UNSAFE_AssetsManifest,
+  RemixContextObject as UNSAFE_RemixContextObject,
+} from "./lib/dom/ssr/entry";
+
+/** @internal */
+export type {
+  EntryRoute as UNSAFE_EntryRoute,
+  RouteManifest as UNSAFE_RouteManifest,
+} from "./lib/dom/ssr/routes";
+
+/** @internal */
+export { decodeViaTurboStream as UNSAFE_decodeViaTurboStream } from "./lib/dom/ssr/single-fetch";

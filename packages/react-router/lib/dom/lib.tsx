@@ -1,36 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import type {
-  DataRouteObject,
-  FutureConfig as RenderFutureConfig,
-  Location,
-  NavigateOptions,
-  NavigationType,
-  Navigator,
-  RelativeRoutingType,
-  RouteObject,
-  RouterProviderProps,
-  To,
-} from "react-router";
-import {
-  Router,
-  createPath,
-  useHref,
-  useLocation,
-  useMatches,
-  useNavigate,
-  useNavigation,
-  useResolvedPath,
-  useBlocker,
-  UNSAFE_DataRouterContext as DataRouterContext,
-  UNSAFE_DataRouterStateContext as DataRouterStateContext,
-  UNSAFE_NavigationContext as NavigationContext,
-  UNSAFE_RouteContext as RouteContext,
-  UNSAFE_mapRouteProperties as mapRouteProperties,
-  UNSAFE_useRouteId as useRouteId,
-  UNSAFE_useRoutesImpl as useRoutesImpl,
-} from "react-router";
-import type {
   BrowserHistory,
   unstable_DataStrategyFunction,
   Fetcher,
@@ -45,6 +15,11 @@ import type {
   RouterState,
   RouterSubscriber,
   BlockerFunction,
+  Location,
+  Action as NavigationType,
+  RelativeRoutingType,
+  To,
+  UIMatch,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -57,6 +32,7 @@ import {
   UNSAFE_warning as warning,
   matchPath,
   IDLE_FETCHER,
+  createPath,
 } from "@remix-run/router";
 
 import "./global";
@@ -69,17 +45,50 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { PrefetchBehavior, ScriptProps, UIMatch } from "./ssr/components";
+import type { PrefetchBehavior, ScriptProps } from "./ssr/components";
 import {
   PrefetchPageLinks,
   RemixContext,
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
+import type {
+  RouterProviderProps,
+  FutureConfig as RenderFutureConfig,
+} from "../components";
+import { Router, mapRouteProperties } from "../components";
+import type {
+  Navigator,
+  RouteObject,
+  DataRouteObject,
+  NavigateOptions,
+} from "../context";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  NavigationContext,
+  RouteContext,
+} from "../context";
+import {
+  useBlocker,
+  useHref,
+  useLocation,
+  useMatches,
+  useNavigate,
+  useNavigation,
+  useResolvedPath,
+  useRouteId,
+  useRoutesImpl,
+} from "../hooks";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Global Stuff
 ////////////////////////////////////////////////////////////////////////////////
+
+const isBrowser =
+  typeof window !== "undefined" &&
+  typeof window.document !== "undefined" &&
+  typeof window.document.createElement !== "undefined";
 
 // HEY YOU! DON'T TOUCH THIS VARIABLE!
 //
@@ -92,7 +101,9 @@ import {
 // https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
 const REACT_ROUTER_VERSION = "0";
 try {
-  window.__reactRouterVersion = REACT_ROUTER_VERSION;
+  if (isBrowser) {
+    window.__reactRouterVersion = REACT_ROUTER_VERSION;
+  }
 } catch (e) {
   // no-op
 }
@@ -769,11 +780,6 @@ export interface LinkProps
   to: To;
   unstable_viewTransition?: boolean;
 }
-
-const isBrowser =
-  typeof window !== "undefined" &&
-  typeof window.document !== "undefined" &&
-  typeof window.document.createElement !== "undefined";
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
