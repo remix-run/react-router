@@ -1,5 +1,11 @@
 # `@remix-run/server-runtime`
 
+## 2.9.0-pre.4
+
+### Patch Changes
+
+- [REMOVE] Fix typings for response in LoaderFunctonArgs/ActionFunctionArgs ([#9254](https://github.com/remix-run/remix/pull/9254))
+
 ## 2.9.0-pre.3
 
 ## 2.9.0-pre.2
