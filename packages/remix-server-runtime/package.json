@@ -1,6 +1,6 @@
 {
   "name": "@react-router/server-runtime",
-  "version": "2.9.0-pre.0",
+  "version": "6.22.3",
   "description": "Server runtime for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"

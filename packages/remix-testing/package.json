@@ -1,6 +1,6 @@
 {
   "name": "@react-router/testing",
-  "version": "2.9.0-pre.0",
+  "version": "6.22.3",
   "description": "Testing utilities for Remix apps",
   "homepage": "https://remix.run",
   "bugs": {
