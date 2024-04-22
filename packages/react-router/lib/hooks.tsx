@@ -295,6 +295,13 @@ export function useParams<
 >(): Readonly<
   [ParamsOrKey] extends [string] ? Params<ParamsOrKey> : Partial<ParamsOrKey>
 > {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
+    `useParams() may be used only in the context of a <Router> component.`
+  );
+  
   let { matches } = React.useContext(RouteContext);
   let routeMatch = matches[matches.length - 1];
   return routeMatch ? (routeMatch.params as any) : {};
