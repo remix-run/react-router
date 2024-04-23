@@ -1,7 +1,7 @@
 import {
   AbortedDeferredError,
   UNSAFE_DeferredData as DeferredData,
-} from "@remix-run/router";
+} from "../../router";
 
 import "../global";
 

@@ -19,10 +19,10 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@remix-run/router": "workspace:*",
     "@types/cookie": "^0.6.0",
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie": "^0.6.0",
+    "react-router": "workspace:*",
     "set-cookie-parser": "^2.4.8",
     "source-map": "^0.7.3",
     "turbo-stream": "^2.0.0"

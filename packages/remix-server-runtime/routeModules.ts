@@ -6,7 +6,7 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   Location,
   Params,
-} from "@remix-run/router";
+} from "react-router";
 
 import type { AppData, AppLoadContext } from "./data";
 import type { LinkDescriptor } from "./links";

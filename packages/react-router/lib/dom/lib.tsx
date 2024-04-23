@@ -20,7 +20,7 @@ import type {
   RelativeRoutingType,
   To,
   UIMatch,
-} from "@remix-run/router";
+} from "../router";
 import {
   createRouter,
   createBrowserHistory,
@@ -33,7 +33,7 @@ import {
   matchPath,
   IDLE_FETCHER,
   createPath,
-} from "@remix-run/router";
+} from "../router";
 
 import "./global";
 import type { SubmitOptions, URLSearchParamsInit, SubmitTarget } from "./dom";

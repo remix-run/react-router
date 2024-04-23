@@ -1,6 +1,6 @@
 import * as React from "react";
-import type { HydrationState } from "@remix-run/router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponse } from "@remix-run/router";
+import type { HydrationState } from "../../router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponse } from "../../router";
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,

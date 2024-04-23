@@ -10,7 +10,7 @@ import type {
   RouterState,
   FutureConfig as RouterFutureConfig,
   To,
-} from "@remix-run/router";
+} from "../router";
 import {
   IDLE_BLOCKER,
   IDLE_FETCHER,
@@ -22,7 +22,7 @@ import {
   isRouteErrorResponse,
   createStaticHandler as routerCreateStaticHandler,
   UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
-} from "@remix-run/router";
+} from "../router";
 
 import {
   UNSAFE_FetchersContext as FetchersContext,

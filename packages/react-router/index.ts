@@ -27,7 +27,7 @@ import type {
   To,
   UIMatch,
   unstable_HandlerResult,
-} from "@remix-run/router";
+} from "./lib/router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
@@ -43,7 +43,7 @@ import {
   redirectDocument,
   resolvePath,
   UNSAFE_ErrorResponseImpl,
-} from "@remix-run/router";
+} from "./lib/router";
 
 import type {
   AwaitProps,
@@ -232,6 +232,29 @@ export {
   useRoutes,
 };
 
+// Expose old @remix-run/router API
+export type {
+  // TODO: Stop exporting agnostic stuff in v7?
+  AgnosticDataIndexRouteObject,
+  AgnosticDataNonIndexRouteObject,
+  AgnosticDataRouteMatch,
+  AgnosticDataRouteObject,
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticRouteMatch,
+  AgnosticRouteObject,
+  HydrationState,
+  InitialEntry,
+  StaticHandler,
+  TrackedPromise,
+  UNSAFE_DeferredData,
+} from "./lib/router";
+export {
+  getStaticContextFromError,
+  stripBasename,
+  UNSAFE_DEFERRED_SYMBOL,
+} from "./lib/router";
+
 // Expose old RR DOM API
 export type {
   FormEncType,
@@ -239,7 +262,7 @@ export type {
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
   V7_FormMethod,
-} from "@remix-run/router";
+} from "./lib/router";
 
 export type {
   BrowserRouterProps,

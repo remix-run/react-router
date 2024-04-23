@@ -1,4 +1,4 @@
-import type { StaticHandlerContext } from "@remix-run/router";
+import type { StaticHandlerContext } from "react-router";
 
 import type { SerializedError } from "./errors";
 import type { RouteManifest, ServerRouteManifest, EntryRoute } from "./routes";

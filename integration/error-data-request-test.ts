@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "@remix-run/router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "react-router";
 
 import {
   createAppFixture,

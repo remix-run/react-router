@@ -1,4 +1,4 @@
-import type { HydrationState, Router as RemixRouter } from "@remix-run/router";
+import type { HydrationState, Router as RemixRouter } from "../router";
 
 import type { ViewTransition } from "./lib";
 import type {

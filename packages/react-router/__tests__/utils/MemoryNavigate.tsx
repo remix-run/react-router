@@ -1,5 +1,5 @@
-import type { FormMethod } from "@remix-run/router";
-import { joinPaths } from "@remix-run/router";
+import type { FormMethod } from "react-router";
+import { joinPaths } from "react-router";
 import * as React from "react";
 import { UNSAFE_DataRouterContext } from "react-router";
 

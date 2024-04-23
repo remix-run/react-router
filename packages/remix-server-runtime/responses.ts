@@ -1,13 +1,13 @@
 import type {
   UNSAFE_DeferredData as DeferredData,
   TrackedPromise,
-} from "@remix-run/router";
+} from "react-router";
 import {
   defer as routerDefer,
   json as routerJson,
   redirect as routerRedirect,
   redirectDocument as routerRedirectDocument,
-} from "@remix-run/router";
+} from "react-router";
 
 import { serializeError } from "./errors";
 import type { ServerMode } from "./mode";

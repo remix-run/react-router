@@ -5,8 +5,8 @@ import type {
   Router,
   ActionFunctionArgs as RRActionFunctionArgs,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
-} from "@remix-run/router";
-import { UNSAFE_convertRoutesToDataRoutes } from "@remix-run/router";
+} from "react-router";
+import { UNSAFE_convertRoutesToDataRoutes } from "react-router";
 import type {
   DataRouteObject,
   IndexRouteObject,

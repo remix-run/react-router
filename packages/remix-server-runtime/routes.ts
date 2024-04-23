@@ -2,7 +2,7 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
-} from "@remix-run/router";
+} from "react-router";
 
 import { callRouteAction, callRouteLoader } from "./data";
 import type { FutureConfig } from "./entry";

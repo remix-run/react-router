@@ -1,4 +1,4 @@
-import type { ErrorResponse } from "@remix-run/router";
+import type { ErrorResponse } from "react-router";
 import "@testing-library/jest-dom";
 import {
   fireEvent,

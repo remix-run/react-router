@@ -1,4 +1,4 @@
-import type { AgnosticDataRouteMatch } from "@remix-run/router";
+import type { AgnosticDataRouteMatch } from "../../router";
 import type { Location } from "react-router";
 import { parsePath } from "react-router";
 

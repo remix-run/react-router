@@ -2,11 +2,11 @@ import * as React from "react";
 import type {
   unstable_DataStrategyFunction as DataStrategyFunction,
   unstable_HandlerResult as HandlerResult,
-} from "@remix-run/router";
+} from "../../router";
 import {
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   redirect,
-} from "@remix-run/router";
+} from "../../router";
 import type {
   UNSAFE_SingleFetchResult as SingleFetchResult,
   UNSAFE_SingleFetchResults as SingleFetchResults,

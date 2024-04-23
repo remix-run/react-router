@@ -10,9 +10,8 @@ import {
   type UNSAFE_DeferredData as DeferredData,
   type RouterState,
   type TrackedPromise,
-} from "@remix-run/router";
+} from "../../router";
 
-import type { AppData } from "./data";
 import type { RemixContextObject } from "./entry";
 import invariant from "./invariant";
 import {

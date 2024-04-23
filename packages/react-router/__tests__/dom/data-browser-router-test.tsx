@@ -1,4 +1,4 @@
-import type { ErrorResponse, Fetcher } from "@remix-run/router";
+import type { ErrorResponse, Fetcher } from "react-router";
 import "@testing-library/jest-dom";
 import {
   act,

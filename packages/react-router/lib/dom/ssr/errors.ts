@@ -1,5 +1,5 @@
-import type { Router as RemixRouter } from "@remix-run/router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "@remix-run/router";
+import type { Router as RemixRouter } from "../../router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../router";
 
 export function deserializeErrors(
   errors: RemixRouter["state"]["errors"]

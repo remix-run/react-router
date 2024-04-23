@@ -152,7 +152,6 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: {
-          "@remix-run/router": "RemixRouter",
           react: "React",
         },
         name: "ReactRouter",
@@ -189,7 +188,6 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: {
-          "@remix-run/router": "RemixRouter",
           react: "React",
         },
         name: "ReactRouter",

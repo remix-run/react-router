@@ -291,9 +291,6 @@ importers:
       '@react-router/server-runtime':
         specifier: workspace:*
         version: link:../packages/remix-server-runtime
-      '@remix-run/router':
-        specifier: workspace:*
-        version: link:../packages/router
       '@types/express':
         specifier: ^4.17.9
         version: 4.17.21
@@ -512,9 +509,6 @@ importers:
       '@react-router/server-runtime':
         specifier: workspace:*
         version: link:../remix-server-runtime
-      '@remix-run/router':
-        specifier: workspace:*
-        version: link:../router
       react-router:
         specifier: workspace:*
         version: 'link:'
@@ -567,9 +561,6 @@ importers:
       '@react-router/server-runtime':
         specifier: workspace:*
         version: link:../remix-server-runtime
-      '@remix-run/router':
-        specifier: workspace:*
-        version: link:../router
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -610,7 +601,7 @@ importers:
         specifier: ^0.14.0
         version: 0.14.0
       react-router:
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../react-router
       semver:
         specifier: ^7.3.7
@@ -790,9 +781,6 @@ importers:
 
   packages/remix-server-runtime:
     dependencies:
-      '@remix-run/router':
-        specifier: workspace:*
-        version: link:../router
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
@@ -802,6 +790,9 @@ importers:
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
       set-cookie-parser:
         specifier: ^2.4.8
         version: 2.6.0
@@ -824,9 +815,6 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
-      '@remix-run/router':
-        specifier: workspace:*
-        version: link:../router
       react-router:
         specifier: workspace:*
         version: link:../react-router
@@ -858,8 +846,6 @@ importers:
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
-
-  packages/router: {}
 
   playground/compiler:
     dependencies:

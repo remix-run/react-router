@@ -2,11 +2,11 @@ import type {
   StaticHandler,
   unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
   StaticHandlerContext,
-} from "@remix-run/router";
+} from "react-router";
 import {
   isRouteErrorResponse,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "@remix-run/router";
+} from "react-router";
 import { encode } from "turbo-stream";
 
 import type { AppLoadContext } from "./data";
