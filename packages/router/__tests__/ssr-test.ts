@@ -1090,56 +1090,6 @@ describe("ssr", () => {
       expect(arg(childStub).context.sessionId).toBe("12345");
     });
 
-    it("should support a loadRouteIds parameter for granular loads", async () => {
-      let rootStub = jest.fn(() => "ROOT");
-      let childStub = jest.fn(() => "CHILD");
-      let actionStub = jest.fn(() => "CHILD ACTION");
-      let { query } = createStaticHandler([
-        {
-          id: "root",
-          path: "/",
-          loader: rootStub,
-          children: [
-            {
-              id: "child",
-              path: "child",
-              action: actionStub,
-              loader: childStub,
-            },
-          ],
-        },
-      ]);
-
-      let ctx = await query(createRequest("/child"), {
-        loadRouteIds: ["child"],
-      });
-      expect(rootStub).not.toHaveBeenCalled();
-      expect(childStub).toHaveBeenCalled();
-      expect(ctx).toMatchObject({
-        loaderData: {
-          child: "CHILD",
-        },
-      });
-
-      actionStub.mockClear();
-      rootStub.mockClear();
-      childStub.mockClear();
-
-      ctx = await query(createSubmitRequest("/child"), {
-        loadRouteIds: ["child"],
-      });
-      expect(rootStub).not.toHaveBeenCalled();
-      expect(childStub).toHaveBeenCalled();
-      expect(ctx).toMatchObject({
-        actionData: {
-          child: "CHILD ACTION",
-        },
-        loaderData: {
-          child: "CHILD",
-        },
-      });
-    });
-
     describe("deferred", () => {
       let { query } = createStaticHandler(SSR_ROUTES);
 

@@ -405,9 +405,7 @@ export interface StaticHandler {
   query(
     request: Request,
     opts?: {
-      loadRouteIds?: string[];
       requestContext?: unknown;
-      skipLoaders?: boolean;
       skipLoaderErrorBubbling?: boolean;
       unstable_dataStrategy?: DataStrategyFunction;
     }
@@ -2988,30 +2986,22 @@ export function createStaticHandler(
    * propagate that out and return the raw Response so the HTTP server can
    * return it directly.
    *
-   * - `opts.loadRouteIds` is an optional array of routeIds to run only a subset of
-   *   loaders during a query() call
    * - `opts.requestContext` is an optional server context that will be passed
    *   to actions/loaders in the `context` parameter
    * - `opts.skipLoaderErrorBubbling` is an optional parameter that will prevent
    *   the bubbling of errors which allows single-fetch-type implementations
    *   where the client will handle the bubbling and we may need to return data
    *   for the handling route
-   * - `opts.skipLoaders` is an optional parameter that will prevent loaders
-   *   from running after an action
    */
   async function query(
     request: Request,
     {
-      loadRouteIds,
       requestContext,
       skipLoaderErrorBubbling,
-      skipLoaders,
       unstable_dataStrategy,
     }: {
-      loadRouteIds?: string[];
       requestContext?: unknown;
       skipLoaderErrorBubbling?: boolean;
-      skipLoaders?: boolean;
       unstable_dataStrategy?: DataStrategyFunction;
     } = {}
   ): Promise<StaticHandlerContext | Response> {
@@ -3065,9 +3055,7 @@ export function createStaticHandler(
       matches,
       requestContext,
       unstable_dataStrategy || null,
-      loadRouteIds || null,
       skipLoaderErrorBubbling === true,
-      skipLoaders === true,
       null
     );
     if (isResponse(result)) {
@@ -3145,11 +3133,10 @@ export function createStaticHandler(
       matches,
       requestContext,
       null,
-      null,
-      false,
       false,
       match
     );
+
     if (isResponse(result)) {
       return result;
     }
@@ -3185,9 +3172,7 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     unstable_dataStrategy: DataStrategyFunction | null,
-    loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
-    skipLoaders: boolean,
     routeMatch: AgnosticDataRouteMatch | null
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     invariant(
@@ -3203,9 +3188,7 @@ export function createStaticHandler(
           routeMatch || getTargetMatch(matches, location),
           requestContext,
           unstable_dataStrategy,
-          loadRouteIds,
           skipLoaderErrorBubbling,
-          skipLoaders,
           routeMatch != null
         );
         return result;
@@ -3216,7 +3199,6 @@ export function createStaticHandler(
         matches,
         requestContext,
         unstable_dataStrategy,
-        loadRouteIds,
         skipLoaderErrorBubbling,
         routeMatch
       );
@@ -3252,9 +3234,7 @@ export function createStaticHandler(
     actionMatch: AgnosticDataRouteMatch,
     requestContext: unknown,
     unstable_dataStrategy: DataStrategyFunction | null,
-    loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
-    skipLoaders: boolean,
     isRouteRequest: boolean
   ): Promise<Omit<StaticHandlerContext, "location" | "basename"> | Response> {
     let result: DataResult;
@@ -3347,36 +3327,12 @@ export function createStaticHandler(
       let boundaryMatch = skipLoaderErrorBubbling
         ? actionMatch
         : findNearestBoundary(matches, actionMatch.route.id);
-      let statusCode = isRouteErrorResponse(result.error)
-        ? result.error.status
-        : result.statusCode != null
-        ? result.statusCode
-        : 500;
-      let actionHeaders = {
-        ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
-      };
-
-      if (skipLoaders) {
-        return {
-          matches,
-          loaderData: {},
-          actionData: {},
-          errors: {
-            [boundaryMatch.route.id]: result.error,
-          },
-          statusCode,
-          loaderHeaders: {},
-          actionHeaders,
-          activeDeferreds: null,
-        };
-      }
 
       let context = await loadRouteData(
         loaderRequest,
         matches,
         requestContext,
         unstable_dataStrategy,
-        loadRouteIds,
         skipLoaderErrorBubbling,
         null,
         [boundaryMatch.route.id, result]
@@ -3385,28 +3341,15 @@ export function createStaticHandler(
       // action status codes take precedence over loader status codes
       return {
         ...context,
-        statusCode,
+        statusCode: isRouteErrorResponse(result.error)
+          ? result.error.status
+          : result.statusCode != null
+          ? result.statusCode
+          : 500,
         actionData: null,
-        actionHeaders,
-      };
-    }
-
-    let actionHeaders = result.headers
-      ? { [actionMatch.route.id]: result.headers }
-      : {};
-
-    if (skipLoaders) {
-      return {
-        matches,
-        loaderData: {},
-        actionData: {
-          [actionMatch.route.id]: result.data,
+        actionHeaders: {
+          ...(result.headers ? { [actionMatch.route.id]: result.headers } : {}),
         },
-        errors: null,
-        statusCode: result.statusCode || 200,
-        loaderHeaders: {},
-        actionHeaders,
-        activeDeferreds: null,
       };
     }
 
@@ -3415,7 +3358,6 @@ export function createStaticHandler(
       matches,
       requestContext,
       unstable_dataStrategy,
-      loadRouteIds,
       skipLoaderErrorBubbling,
       null
     );
@@ -3438,7 +3380,6 @@ export function createStaticHandler(
     matches: AgnosticDataRouteMatch[],
     requestContext: unknown,
     unstable_dataStrategy: DataStrategyFunction | null,
-    loadRouteIds: string[] | null,
     skipLoaderErrorBubbling: boolean,
     routeMatch: AgnosticDataRouteMatch | null,
     pendingActionResult?: PendingActionResult
@@ -3472,12 +3413,6 @@ export function createStaticHandler(
     let matchesToLoad = requestMatches.filter(
       (m) => m.route.loader || m.route.lazy
     );
-
-    if (loadRouteIds) {
-      matchesToLoad = matchesToLoad.filter((m) =>
-        loadRouteIds.includes(m.route.id)
-      );
-    }
 
     // Short circuit if we have no loaders to run (query())
     if (matchesToLoad.length === 0) {
