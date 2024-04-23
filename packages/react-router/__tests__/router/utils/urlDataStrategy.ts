@@ -1,7 +1,7 @@
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-} from "react-router";
+} from "../../lib/router";
 import { invariant } from "./utils";
 
 export default async function urlDataStrategy({

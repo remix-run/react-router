@@ -8,11 +8,11 @@ import {
   NavLink,
   Outlet,
   RouterProvider,
-} from "../../index";
-import { HydratedRouter } from "../../ssr/browser";
-import { RemixContext } from "../../ssr/components";
-import invariant from "../../ssr/invariant";
-import { RemixServer } from "../../ssr/server";
+} from "../../../index";
+import { HydratedRouter } from "../../../lib/dom/ssr/browser";
+import { RemixContext } from "../../../lib/dom/ssr/components";
+import invariant from "../../../lib/dom/ssr/invariant";
+import { RemixServer } from "../../../lib/dom/ssr/server";
 import "@testing-library/jest-dom/extend-expect";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;

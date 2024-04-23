@@ -9,7 +9,7 @@ import {
   waitFor,
   screen,
 } from "@testing-library/react";
-import type { Location, Params } from "react-router-dom";
+import type { Location, Params } from "../../index";
 import {
   BrowserRouter,
   HashRouter,
@@ -25,8 +25,8 @@ import {
   useLocation,
   useNavigate,
   useParams,
-} from "react-router-dom";
-import getHtml from "../../react-router/__tests__/utils/getHtml";
+} from "../../index";
+import getHtml from "../utils/getHtml";
 
 /**
  * Here's all the special characters we want to test against.  This list was

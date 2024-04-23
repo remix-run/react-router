@@ -1,4 +1,4 @@
-import { IDLE_NAVIGATION } from "../index";
+import { IDLE_NAVIGATION } from "../../lib/router";
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";

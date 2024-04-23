@@ -1,4 +1,4 @@
-import type { History } from "../../history";
+import type { History } from "../../../lib/router/history";
 
 export default function ReplaceState(history: History) {
   expect(history.location).toMatchObject({

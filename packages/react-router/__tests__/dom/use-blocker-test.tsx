@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
-import type { Blocker, RouteObject } from "../index";
+import type { Blocker, RouteObject } from "../../index";
 import {
   createMemoryRouter,
   json,
@@ -11,7 +11,7 @@ import {
   RouterProvider,
   useBlocker,
   useNavigate,
-} from "../index";
+} from "../../index";
 
 type Router = ReturnType<typeof createMemoryRouter>;
 

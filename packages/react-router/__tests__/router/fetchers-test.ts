@@ -1,14 +1,12 @@
 /* eslint-disable jest/valid-title */
-import type { FutureConfig, HydrationState } from "../index";
+import type { FutureConfig, HydrationState } from "../../lib/router";
 import {
   createMemoryHistory,
   createRouter,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-} from "../index";
-
-// Private API
-import { ErrorResponseImpl } from "../utils";
+  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
+} from "../../lib/router";
 
 import {
   cleanup,

@@ -2,8 +2,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { BrowserHistory } from "react-router";
-import { createBrowserHistory } from "react-router";
+import type { BrowserHistory } from "../../lib/router";
+import { createBrowserHistory } from "../../lib/router";
 
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import Listen from "./TestSequences/Listen";

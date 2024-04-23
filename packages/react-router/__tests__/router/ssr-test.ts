@@ -3,19 +3,19 @@
  */
 
 import urlDataStrategy from "./utils/urlDataStrategy";
-import type { StaticHandler, StaticHandlerContext } from "../router";
+import type { StaticHandler, StaticHandlerContext } from "../../lib/router";
 import {
   UNSAFE_DEFERRED_SYMBOL,
   createStaticHandler,
   getStaticContextFromError,
-} from "../router";
+} from "../../lib/router";
 import {
-  ErrorResponseImpl,
+  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   defer,
   isRouteErrorResponse,
   json,
   redirect,
-} from "../utils";
+} from "../../lib/router";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";
 import {

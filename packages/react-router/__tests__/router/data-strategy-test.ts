@@ -1,5 +1,5 @@
-import type { DataStrategyFunction, DataStrategyMatch } from "../utils";
-import { json } from "../utils";
+import type { DataStrategyFunction, DataStrategyMatch } from "../../lib/router";
+import { json } from "../../lib/router";
 import { createDeferred, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 

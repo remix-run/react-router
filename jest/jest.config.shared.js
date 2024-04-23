@@ -9,9 +9,7 @@ const ignorePatterns = [
 /** @type {import('jest').Config} */
 module.exports = {
   moduleNameMapper: {
-    "^@remix-run/router$": "<rootDir>/../router/index.ts",
     "^react-router$": "<rootDir>/../react-router/index.ts",
-    "^react-router-dom$": "<rootDir>/../react-router-dom/index.tsx",
     "^@web3-storage/multipart-parser$": require.resolve(
       "@web3-storage/multipart-parser"
     ),

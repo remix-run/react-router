@@ -1,7 +1,14 @@
-import type { HydrationState } from "../index";
-import { createMemoryHistory, createRouter, IDLE_NAVIGATION } from "../index";
-import type { AgnosticDataRouteObject, AgnosticRouteObject } from "../utils";
-import { ErrorResponseImpl } from "../utils";
+import type { HydrationState } from "../../lib/router";
+import {
+  createMemoryHistory,
+  createRouter,
+  IDLE_NAVIGATION,
+} from "../../lib/router";
+import type {
+  AgnosticDataRouteObject,
+  AgnosticRouteObject,
+} from "../../lib/router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
 
 import {
   deferredData,

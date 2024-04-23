@@ -6,7 +6,7 @@ import {
   Route,
   Link,
   useNavigationType,
-} from "react-router-dom";
+} from "../../index";
 
 function ShowNavigationType() {
   return <p>{useNavigationType()}</p>;

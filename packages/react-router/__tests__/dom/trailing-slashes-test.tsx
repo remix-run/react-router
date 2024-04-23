@@ -3,7 +3,7 @@ import * as React from "react";
 import * as ReactDOM from "react-dom/client";
 import { act } from "react-dom/test-utils";
 
-import type { To } from "react-router-dom";
+import type { To } from "../../index";
 import {
   BrowserRouter,
   Routes,
@@ -12,7 +12,7 @@ import {
   Outlet,
   useSearchParams,
   useNavigate,
-} from "react-router-dom";
+} from "../../index";
 
 describe("trailing slashes", () => {
   let node: HTMLDivElement;

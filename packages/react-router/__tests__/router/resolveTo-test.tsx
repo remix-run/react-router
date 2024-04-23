@@ -1,4 +1,4 @@
-import { resolveTo } from "react-router";
+import { resolveTo } from "../../lib/router";
 
 describe("resolveTo", () => {
   it('resolve path without mutating the "to" argument', () => {

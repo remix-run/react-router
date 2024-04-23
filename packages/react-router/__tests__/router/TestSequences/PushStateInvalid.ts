@@ -1,5 +1,5 @@
 import type { DOMWindow } from "jsdom";
-import type { History } from "../../history";
+import type { History } from "../../../lib/router/history";
 
 export default function PushState(history: History, window: DOMWindow) {
   let err = new DOMException("ERROR", "DataCloneError");

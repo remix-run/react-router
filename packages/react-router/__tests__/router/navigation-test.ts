@@ -1,5 +1,5 @@
-import type { HydrationState } from "../index";
-import { json } from "../index";
+import type { HydrationState } from "../../lib/router";
+import { json } from "../../lib/router";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 

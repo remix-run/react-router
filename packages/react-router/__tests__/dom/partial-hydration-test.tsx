@@ -11,10 +11,10 @@ import {
   createMemoryRouter,
   useLoaderData,
   useRouteError,
-} from "react-router-dom";
+} from "../../index";
 
-import getHtml from "../../react-router/__tests__/utils/getHtml";
-import { createDeferred, tick } from "../../router/__tests__/utils/utils";
+import getHtml from "../utils/getHtml";
+import { createDeferred, tick } from "../router/utils/utils";
 
 let didAssertMissingHydrateFallback = false;
 

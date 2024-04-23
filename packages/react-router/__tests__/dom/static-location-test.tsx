@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
-import { Routes, Route, useLocation } from "react-router-dom";
-import { StaticRouter } from "react-router-dom/server";
+import { Routes, Route, StaticRouter, useLocation } from "../../index";
 
 describe("A <StaticRouter>", () => {
   describe("with a string location prop", () => {

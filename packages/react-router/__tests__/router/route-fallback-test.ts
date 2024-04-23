@@ -1,5 +1,9 @@
-import type { LoaderFunction, Router } from "../index";
-import { IDLE_NAVIGATION, createMemoryHistory, createRouter } from "../index";
+import type { LoaderFunction, Router } from "../../lib/router";
+import {
+  IDLE_NAVIGATION,
+  createMemoryHistory,
+  createRouter,
+} from "../../lib/router";
 
 import {
   deferredData,

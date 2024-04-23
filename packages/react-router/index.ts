@@ -253,6 +253,7 @@ export {
   getStaticContextFromError,
   stripBasename,
   UNSAFE_DEFERRED_SYMBOL,
+  UNSAFE_convertRoutesToDataRoutes,
 } from "./lib/router";
 
 // Expose old RR DOM API

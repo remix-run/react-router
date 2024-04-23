@@ -1,4 +1,4 @@
-import { createPath } from "react-router";
+import { createPath } from "../../lib/router";
 
 describe("createPath", () => {
   describe("given only a pathname", () => {

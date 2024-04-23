@@ -9,7 +9,7 @@ import {
   createMemoryRouter,
   createRoutesFromElements,
   RouterProvider,
-} from "react-router-dom";
+} from "../../index";
 import {
   act,
   fireEvent,
@@ -18,8 +18,8 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
-import { createDeferred } from "../../router/__tests__/utils/utils";
-import getHtml from "react-router/__tests__/utils/getHtml";
+import { createDeferred } from "../router/utils/utils";
+import getHtml from "../utils/getHtml";
 
 describe("Handles concurrent mode features during navigations", () => {
   function getComponents() {

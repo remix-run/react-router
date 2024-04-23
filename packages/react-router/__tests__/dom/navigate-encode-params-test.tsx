@@ -7,7 +7,7 @@ import {
   Route,
   useNavigate,
   useParams,
-} from "react-router-dom";
+} from "../../index";
 
 describe("navigate with params", () => {
   let node: HTMLDivElement;

@@ -124,7 +124,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":"-react-fundamentals","splat":"-react-fundamentals"}
                 </p>
               </div>
@@ -150,7 +150,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":".react-fundamentals","splat":".react-fundamentals"}
                 </p>
               </div>
@@ -176,7 +176,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":"~react-fundamentals","splat":"~react-fundamentals"}
                 </p>
               </div>
@@ -202,7 +202,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":"@react-fundamentals","splat":"@react-fundamentals"}
                 </p>
               </div>
@@ -228,7 +228,7 @@ describe("Descendant <Routes> splat matching", () => {
                   React Fundamentals
                 </h1>
                 <p>
-                  The params are
+                  The params are 
                   {"*":" react-fundamentals","splat":" react-fundamentals"}
                 </p>
               </div>

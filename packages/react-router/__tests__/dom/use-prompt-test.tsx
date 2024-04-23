@@ -5,7 +5,7 @@ import {
   RouterProvider,
   createBrowserRouter,
   unstable_usePrompt as usePrompt,
-} from "../index";
+} from "../../index";
 import "@testing-library/jest-dom";
 import { JSDOM } from "jsdom";
 

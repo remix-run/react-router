@@ -1,6 +1,6 @@
-import { createMemoryHistory, createRouter, redirect } from "../index";
-import type { ShouldRevalidateFunctionArgs } from "../utils";
-import { ErrorResponseImpl } from "../utils";
+import { createMemoryHistory, createRouter, redirect } from "../../lib/router";
+import type { ShouldRevalidateFunctionArgs } from "../../lib/router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
 import { urlMatch } from "./utils/custom-matchers";
 import { cleanup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";

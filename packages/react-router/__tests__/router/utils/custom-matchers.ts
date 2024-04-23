@@ -1,5 +1,5 @@
-import type { DeferredData, TrackedPromise } from "../../utils";
-import { AbortedDeferredError } from "../../utils";
+import type { DeferredData, TrackedPromise } from "../../../lib/router/utils";
+import { AbortedDeferredError } from "../../../lib/router/utils";
 
 interface CustomMatchers<R = jest.Expect> {
   URL(url: string);

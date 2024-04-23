@@ -3,7 +3,7 @@ import {
   createRouter,
   createStaticHandler,
   json,
-} from "../index";
+} from "../../lib/router";
 
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, createDeferred, setup } from "./utils/data-router-setup";

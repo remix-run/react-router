@@ -9,14 +9,13 @@ import {
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import type { RouteObject } from "react-router-dom";
+import type { RouteObject } from "../../index";
 import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   Form,
   Link,
   Outlet,
   Route,
-  RouterProvider,
   createBrowserRouter,
   createHashRouter,
   createRoutesFromElements,
@@ -34,10 +33,13 @@ import {
   useRouteError,
   useSearchParams,
   useSubmit,
-} from "react-router-dom";
+} from "../../index";
 
-import getHtml from "../../react-router/__tests__/utils/getHtml";
-import { createDeferred } from "../../router/__tests__/utils/utils";
+// TODO: Figure this out!
+import { RouterProvider } from "../../lib/dom/lib";
+
+import getHtml from "../utils/getHtml";
+import { createDeferred } from "../router/utils/utils";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)

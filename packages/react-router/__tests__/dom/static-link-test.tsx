@@ -1,7 +1,6 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
-import { Link } from "react-router-dom";
-import { StaticRouter } from "react-router-dom/server";
+import { Link, StaticRouter } from "../../index";
 
 describe("A <Link> in a <StaticRouter>", () => {
   describe("with a string", () => {

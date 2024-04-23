@@ -1,13 +1,15 @@
 import * as React from "react";
 import {
-  RouterProvider,
   createBrowserRouter,
   useNavigate,
   useSubmit,
   useFetcher,
-} from "react-router-dom";
+} from "../../index";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { JSDOM } from "jsdom";
+
+// TODO: figure this out
+import { RouterProvider } from "../../lib/dom/lib";
 
 describe("flushSync", () => {
   it("wraps useNavigate updates in flushSync when specified", async () => {

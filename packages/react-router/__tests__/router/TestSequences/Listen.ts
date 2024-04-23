@@ -1,4 +1,4 @@
-import type { History } from "../../history";
+import type { History } from "../../../lib/router/history";
 
 export default function Listen(history: History) {
   let spy = jest.fn();

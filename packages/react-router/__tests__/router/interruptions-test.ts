@@ -1,6 +1,6 @@
 /* eslint-disable jest/valid-title */
-import type { HydrationState } from "../index";
-import { IDLE_NAVIGATION } from "../index";
+import type { HydrationState } from "../../lib/router";
+import { IDLE_NAVIGATION } from "../../lib/router";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 

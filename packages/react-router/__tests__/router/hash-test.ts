@@ -2,8 +2,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { HashHistory } from "react-router";
-import { createHashHistory } from "react-router";
+import type { HashHistory } from "../../lib/router";
+import { createHashHistory } from "../../lib/router";
 
 import Listen from "./TestSequences/Listen";
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";

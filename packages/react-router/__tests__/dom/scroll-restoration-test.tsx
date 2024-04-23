@@ -3,17 +3,17 @@ import * as React from "react";
 import { render, fireEvent, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-import getHtml from "../../react-router/__tests__/utils/getHtml";
+import getHtml from "../utils/getHtml";
 import {
   Link,
   Outlet,
   RouterProvider,
   ScrollRestoration,
   createBrowserRouter,
-} from "../index";
-import type { RemixContextObject } from "../ssr/entry";
+} from "../../index";
+import type { RemixContextObject } from "../../lib/dom/ssr/entry";
 import { createMemoryRouter, redirect } from "react-router";
-import { RemixContext, Scripts } from "../ssr/components";
+import { RemixContext, Scripts } from "../../lib/dom/ssr/components";
 import "@testing-library/jest-dom/extend-expect";
 
 describe(`ScrollRestoration`, () => {

@@ -1,4 +1,3 @@
-import type { ErrorResponse } from "react-router";
 import "@testing-library/jest-dom";
 import {
   fireEvent,
@@ -30,8 +29,9 @@ import {
   useRouteLoaderData,
 } from "react-router";
 
-import urlDataStrategy from "../../router/__tests__/utils/urlDataStrategy";
-import { createDeferred } from "../../router/__tests__/utils/utils";
+import type { ErrorResponse } from "../index";
+import urlDataStrategy from "./router/utils/urlDataStrategy";
+import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
 

@@ -1,4 +1,4 @@
-import type { History } from "../../history";
+import type { History } from "../../../lib/router/history";
 
 export default async function GoForward(history: History) {
   let spy: jest.SpyInstance = jest.fn();

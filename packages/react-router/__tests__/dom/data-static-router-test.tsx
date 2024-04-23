@@ -5,6 +5,7 @@
 import * as React from "react";
 import * as ReactDOMServer from "react-dom/server";
 import { json } from "react-router";
+import type { StaticHandlerContext } from "../../index";
 import {
   Form,
   Link,
@@ -12,13 +13,10 @@ import {
   useLoaderData,
   useLocation,
   useMatches,
-} from "react-router-dom";
-import type { StaticHandlerContext } from "react-router-dom/server";
-import {
   createStaticHandler,
   createStaticRouter,
   StaticRouterProvider,
-} from "react-router-dom/server";
+} from "../../index";
 
 beforeEach(() => {
   jest.spyOn(console, "warn").mockImplementation(() => {});

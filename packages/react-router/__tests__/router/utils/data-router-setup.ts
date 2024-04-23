@@ -8,23 +8,23 @@ import type {
   Router,
   RouterNavigateOptions,
   FutureConfig,
-} from "../../index";
+} from "../../../lib/router";
 import {
   createMemoryHistory,
   createRouter,
   matchRoutes,
   redirect,
   parsePath,
-} from "../../index";
+} from "../../../lib/router";
 
 // Private API
-import { invariant } from "../../history";
+import { invariant } from "../../../lib/router/history";
 import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   DataStrategyFunction,
-} from "../../utils";
-import { stripBasename } from "../../utils";
+} from "../../../lib/router/utils";
+import { stripBasename } from "../../../lib/router/utils";
 
 import { isRedirect, tick } from "./utils";
 

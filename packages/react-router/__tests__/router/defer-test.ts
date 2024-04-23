@@ -1,6 +1,10 @@
-import { createMemoryHistory } from "../history";
-import { createRouter } from "../router";
-import { AbortedDeferredError, ErrorResponseImpl, defer } from "../utils";
+import { createMemoryHistory } from "../../lib/router";
+import { createRouter } from "../../lib/router";
+import {
+  AbortedDeferredError,
+  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
+  defer,
+} from "../../lib/router";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
 import { cleanup, createDeferred, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
