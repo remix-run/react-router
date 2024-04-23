@@ -1,47 +1,17 @@
 # `@remix-run/server-runtime`
 
-## 2.9.0-pre.8
-
-## 2.9.0-pre.7
-
-## 2.9.0-pre.6
-
-## 2.9.0-pre.5
-
-## 2.9.0-pre.4
-
-### Patch Changes
-
-- [REMOVE] Fix typings for response in LoaderFunctonArgs/ActionFunctionArgs ([#9254](https://github.com/remix-run/remix/pull/9254))
-
-## 2.9.0-pre.3
-
-## 2.9.0-pre.2
-
-## 2.9.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Remove RR flags and implement via dataStrategy ([#9157](https://github.com/remix-run/remix/pull/9157))
-
-## 2.9.0-pre.0
+## 2.9.0
 
 ### Minor Changes
 
 - New `future.unstable_singleFetch` flag ([#8773](https://github.com/remix-run/remix/pull/8773))
-
   - Naked objects returned from loaders/actions are no longer automatically converted to JSON responses. They'll be streamed as-is via `turbo-stream` so `Date`'s will become `Date` through `useLoaderData()`
   - You can return naked objects with `Promise`'s without needing to use `defer()` - including nested `Promise`'s
     - If you need to return a custom status code or custom response headers, you can still use the `defer` utility
   - `<RemixServer abortDelay>` is no longer used. Instead, you should `export const streamTimeout` from `entry.server.tsx` and the remix server runtime will use that as the delay to abort the streamed response
     - If you export your own streamTimeout, you should decouple that from aborting the react `renderToPipeableStream`. You should always ensure that react is aborted _afer_ the stream is aborted so that abort rejections can be flushed down
   - Actions no longer automatically revalidate on 4xx/5xx responses (via RR `future.unstable_skipActionErrorRevalidation` flag) - you can return a 2xx to opt-into revalidation or use `shouldRevalidate`
-
-### Patch Changes
-
-- handle net new redirects created by handleDataRequest ([#9104](https://github.com/remix-run/remix/pull/9104))
 - Add `ResponseStub` header interface for single fetch and deprecate the `headers` export ([#9142](https://github.com/remix-run/remix/pull/9142))
-
   - The `headers` export is no longer used when single fetch is enabled
   - `loader`/`action` functions now receive a mutable `response` parameter
     - `type ResponseStub = { status: numbers | undefined, headers: Headers }`
@@ -61,6 +31,10 @@
   - Because single fetch supports naked object returns, and you no longer need to return a `Response` instance to set status/headers, the `json`/`redirect`/`redirectDocument`/`defer` utilities are considered deprecated when using Single Fetch
   - You may still continue returning normal `Response` instances and they'll apply status codes in the same way, and will apply all headers via `headers.set` - overwriting any same-named header values from parents
     - If you need to append, you will need to switch from returning a `Response` instance to using the new `response` parameter
+
+### Patch Changes
+
+- Handle net new redirects created by handleDataRequest ([#9104](https://github.com/remix-run/remix/pull/9104))
 
 ## 2.8.1
 

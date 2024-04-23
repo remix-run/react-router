@@ -1,71 +1,6 @@
 # `@remix-run/dev`
 
-## 2.9.0-pre.8
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.8`
-  - `@remix-run/server-runtime@2.9.0-pre.8`
-
-## 2.9.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.7`
-  - `@remix-run/server-runtime@2.9.0-pre.7`
-
-## 2.9.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.6`
-  - `@remix-run/server-runtime@2.9.0-pre.6`
-
-## 2.9.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.5`
-  - `@remix-run/server-runtime@2.9.0-pre.5`
-
-## 2.9.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@2.9.0-pre.4`
-  - `@remix-run/node@2.9.0-pre.4`
-
-## 2.9.0-pre.3
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.3`
-  - `@remix-run/server-runtime@2.9.0-pre.3`
-
-## 2.9.0-pre.2
-
-### Patch Changes
-
-- Update links printed to the console by the Remix CLI/Dev Server to point to updated docs locations ([#9176](https://github.com/remix-run/remix/pull/9176))
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.2`
-  - `@remix-run/server-runtime@2.9.0-pre.2`
-
-## 2.9.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/server-runtime@2.9.0-pre.1`
-  - `@remix-run/node@2.9.0-pre.1`
-
-## 2.9.0-pre.0
+## 2.9.0
 
 ### Minor Changes
 
@@ -83,11 +18,10 @@
 - Improve `getDependenciesToBundle` resolution in monorepos ([#8848](https://github.com/remix-run/remix/pull/8848))
 - Fix SPA mode when single fetch is enabled by using streaming entry.server ([#9063](https://github.com/remix-run/remix/pull/9063))
 - Vite: added sourcemap support for transformed routes ([#8970](https://github.com/remix-run/remix/pull/8970))
+- Update links printed to the console by the Remix CLI/Dev Server to point to updated docs locations ([#9176](https://github.com/remix-run/remix/pull/9176))
 - Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.0`
-  - `@remix-run/server-runtime@2.9.0-pre.0`
-  - `@remix-run/react@2.9.0-pre.0`
-  - `@remix-run/serve@2.9.0-pre.0`
+  - `@remix-run/node@2.9.0`
+  - `@remix-run/server-runtime@2.9.0`
 
 ## 2.8.1
 

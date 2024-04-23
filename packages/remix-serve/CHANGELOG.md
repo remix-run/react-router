@@ -1,79 +1,18 @@
 # `@remix-run/serve`
 
-## 2.9.0-pre.8
+## 2.9.0
+
+### Minor Changes
+
+- Put `undici` fetch polyfill behind a new `installGlobals({ nativeFetch: true })` parameter ([#9198](https://github.com/remix-run/remix/pull/9198))
+  - `remix-serve` will default to using `undici` for the fetch polyfill if `future.unstable_singleFetch` is enabled because the single fetch implementation relies on the `undici` polyfill
+  - Any users opting into Single Fetch and managing their own polyfill will need to pass the flag to `installGlobals` on their own to avoid runtime errors with Single Fetch
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@remix-run/express@2.9.0-pre.8`
-  - `@remix-run/node@2.9.0-pre.8`
-
-## 2.9.0-pre.7
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.9.0-pre.7`
-  - `@remix-run/node@2.9.0-pre.7`
-
-## 2.9.0-pre.6
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.9.0-pre.6`
-  - `@remix-run/node@2.9.0-pre.6`
-
-## 2.9.0-pre.5
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.9.0-pre.5`
-  - `@remix-run/node@2.9.0-pre.5`
-
-## 2.9.0-pre.4
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.4`
-  - `@remix-run/express@2.9.0-pre.4`
-
-## 2.9.0-pre.3
-
-### Patch Changes
-
-- - Put `undici` fetch polyfill behind a new `installGlobals({ nativeFetch: true })` parameter ([#9198](https://github.com/remix-run/remix/pull/9198))
-  - `remix-serve` will default to using `undici` for the fetch polyfill if `future._unstable_singleFetch` is enabled because the single fetch implementation relies on the `undici` polyfill
-    - Any users opting into Single Fetch and managing their own polfill will need to pass the flag to `installGlobals` on their own to avoid runtime errors with Single Fetch
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.3`
-  - `@remix-run/express@2.9.0-pre.3`
-
-## 2.9.0-pre.2
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/express@2.9.0-pre.2`
-  - `@remix-run/node@2.9.0-pre.2`
-
-## 2.9.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.1`
-  - `@remix-run/express@2.9.0-pre.1`
-
-## 2.9.0-pre.0
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/node@2.9.0-pre.0`
-  - `@remix-run/express@2.9.0-pre.0`
+  - `@remix-run/node@2.9.0`
+  - `@remix-run/express@2.9.0`
 
 ## 2.8.1
 
