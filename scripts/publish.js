@@ -42,10 +42,16 @@ async function ensureBuildVersion(packageName, version) {
  */
 function publishBuild(packageName, tag) {
   let buildDir = path.join(rootDir, "packages", packageName);
+  let args = ["--access public", `--tag ${tag}`];
+  if (tag === "experimental") {
+    args.push(`--no-git-checks`);
+  } else {
+    args.push("--publish-branch release-next");
+  }
   console.log();
-  console.log(`  npm publish ${buildDir} --tag ${tag} --access public`);
+  console.log(`  pnpm publish ${buildDir} --tag ${tag} --access public`);
   console.log();
-  execSync(`npm publish ${buildDir} --tag ${tag} --access public`, {
+  execSync(`pnpm publish ${buildDir} ${args.join(" ")}`, {
     stdio: "inherit",
   });
 }

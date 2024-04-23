@@ -4,6 +4,9 @@ import type {
   ActionFunctionArgs,
   Blocker,
   BlockerFunction,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
   HydrationState,
@@ -28,6 +31,7 @@ import type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
+  unstable_HandlerResult,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -130,6 +134,9 @@ export type {
   AwaitProps,
   DataRouteMatch,
   DataRouteObject,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -173,6 +180,7 @@ export type {
   UIMatch,
   Blocker,
   BlockerFunction,
+  unstable_HandlerResult,
 };
 export {
   AbortedDeferredError,
@@ -288,6 +296,7 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
+    unstable_dataStrategy?: unstable_DataStrategyFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -303,6 +312,7 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
   }).initialize();
 }
 

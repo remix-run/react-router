@@ -25,6 +25,7 @@ interface ShouldRevalidateFunctionArgs {
   formData?: Submission["formData"];
   json?: Submission["json"];
   actionResult?: any;
+  unstable_actionStatus?: number;
   defaultShouldRevalidate: boolean;
 }
 ```
@@ -37,10 +38,10 @@ This function allows you opt-out of revalidation for a route's [loader][loader] 
 
 There are several instances where data is revalidated, keeping your UI in sync with your data automatically:
 
-- After an [`action`][action] is called from a [`<Form>`][form].
-- After an [`action`][action] is called from a [`<fetcher.Form>`][fetcher]
-- After an [`action`][action] is called from [`useSubmit`][usesubmit]
-- After an [`action`][action] is called from a [`fetcher.submit`][fetcher]
+- After an [`action`][action] is called via:
+  - [`<Form>`][form], [`<fetcher.Form>`][fetcher], [`useSubmit`][usesubmit], or [`fetcher.submit`][fetcher]
+  - When the `future.unstable_skipActionErrorRevalidation` flag is enabled, `loaders` will not revalidate by default if the `action` returns or throws a 4xx/5xx `Response`
+  - You can opt-into revalidation for these scenarios via `shouldRevalidate` and the `unstable_actionStatus` parameter
 - When an explicit revalidation is triggered via [`useRevalidator`][userevalidator]
 - When the [URL params][params] change for an already rendered route
 - When the URL Search params change

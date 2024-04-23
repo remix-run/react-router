@@ -36,6 +36,9 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -83,6 +86,9 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -91,7 +97,7 @@ export type {
   URLSearchParamsInit,
   V7_FormMethod,
 };
-export { createSearchParams };
+export { createSearchParams, ErrorResponseImpl as UNSAFE_ErrorResponseImpl };
 
 // Note: Keep in sync with react-router exports!
 export type {
@@ -143,6 +149,7 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
+  unstable_HandlerResult,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -248,6 +255,7 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
+  unstable_dataStrategy?: unstable_DataStrategyFunction;
   window?: Window;
 }
 
@@ -265,6 +273,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
     window: opts?.window,
   }).initialize();
 }
@@ -283,6 +292,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
     window: opts?.window,
   }).initialize();
 }

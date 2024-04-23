@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 
+import urlDataStrategy from "./utils/urlDataStrategy";
 import type { StaticHandler, StaticHandlerContext } from "../router";
 import {
   UNSAFE_DEFERRED_SYMBOL,
@@ -134,6 +135,14 @@ describe("ssr", () => {
       id: "redirect",
       path: "/redirect",
       loader: () => redirect("/"),
+    },
+    {
+      id: "custom",
+      path: "/custom",
+      loader: () =>
+        new Response(new URLSearchParams([["foo", "bar"]]).toString(), {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }),
     },
   ];
 
@@ -679,6 +688,33 @@ describe("ssr", () => {
       });
     });
 
+    it("should skip bubbling loader errors when skipLoaderErrorBubbling is passed", async () => {
+      let routes = [
+        {
+          id: "root",
+          path: "/",
+          hasErrorBoundary: true,
+          children: [
+            {
+              id: "child",
+              path: "child",
+              loader: () => Promise.reject("CHILD"),
+            },
+          ],
+        },
+      ];
+
+      let { query } = createStaticHandler(routes);
+      let context;
+
+      context = await query(createRequest("/child"), {
+        skipLoaderErrorBubbling: true,
+      });
+      expect(context.errors).toEqual({
+        child: "CHILD",
+      });
+    });
+
     it("should handle aborted load requests", async () => {
       let dfd = createDeferred();
       let controller = new AbortController();
@@ -970,6 +1006,52 @@ describe("ssr", () => {
       expect(childLoaderRequest.url).toBe("http://localhost/child");
       expect(childLoaderRequest.headers.get("test")).toBe("value");
       // Can't re-read body here since it's the same request as the root
+    });
+
+    it("should send proper arguments to loaders after an action errors", async () => {
+      let actionStub = jest.fn(() => Promise.reject("ACTION ERROR"));
+      let rootLoaderStub = jest.fn(() => "ROOT");
+      let childLoaderStub = jest.fn(() => "CHILD");
+      let { query } = createStaticHandler([
+        {
+          id: "root",
+          path: "/",
+          loader: rootLoaderStub,
+          children: [
+            {
+              id: "child",
+              path: "child",
+              action: actionStub,
+              loader: childLoaderStub,
+              hasErrorBoundary: true,
+            },
+          ],
+        },
+      ]);
+      await query(
+        createSubmitRequest("/child", {
+          headers: {
+            test: "value",
+          },
+        })
+      );
+
+      // @ts-expect-error
+      let actionRequest = actionStub.mock.calls[0][0]?.request;
+      expect(actionRequest.method).toBe("POST");
+      expect(actionRequest.url).toBe("http://localhost/child");
+      expect(actionRequest.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+      expect((await actionRequest.formData()).get("key")).toBe("value");
+
+      // @ts-expect-error
+      let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
+      expect(rootLoaderRequest.method).toBe("GET");
+      expect(rootLoaderRequest.url).toBe("http://localhost/child");
+      expect(rootLoaderRequest.headers.get("test")).toBe("value");
+      expect(await rootLoaderRequest.text()).toBe("");
+      expect(childLoaderStub).not.toHaveBeenCalled();
     });
 
     it("should support a requestContext passed to loaders and actions", async () => {
@@ -1512,6 +1594,28 @@ describe("ssr", () => {
           },
           statusCode: 400,
         });
+      });
+    });
+
+    describe("router dataStrategy", () => {
+      it("should support document load navigations with custom dataStrategy", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+
+        let context = await query(createRequest("/custom"), {
+          unstable_dataStrategy: urlDataStrategy,
+        });
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {
+            custom: expect.any(URLSearchParams),
+          },
+          errors: null,
+          location: { pathname: "/custom" },
+          matches: [{ route: { id: "custom" } }],
+        });
+        expect(
+          (context as StaticHandlerContext).loaderData.custom.get("foo")
+        ).toEqual("bar");
       });
     });
   });

@@ -30,6 +30,7 @@ import {
   useRouteLoaderData,
 } from "react-router";
 
+import urlDataStrategy from "../../router/__tests__/utils/urlDataStrategy";
 import { createDeferred } from "../../router/__tests__/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
@@ -2019,6 +2020,7 @@ describe("createMemoryRouter", () => {
         {
           path: "/",
           Component() {
+            // eslint-disable-next-line no-throw-literal
             throw null;
           },
           ErrorBoundary() {
@@ -3161,6 +3163,112 @@ describe("createMemoryRouter", () => {
           <p>
             VALUE
           </p>
+        </div>"
+      `);
+    });
+  });
+
+  describe("router dataStrategy", () => {
+    it("executes route loaders on navigation", async () => {
+      let barDefer = createDeferred();
+      let router = createMemoryRouter(
+        createRoutesFromElements(
+          <Route path="/" element={<Layout />}>
+            <Route path="foo" element={<Foo />} />
+            <Route
+              path="bar"
+              loader={() => barDefer.promise}
+              element={<Bar />}
+            />
+          </Route>
+        ),
+        { initialEntries: ["/foo"], unstable_dataStrategy: urlDataStrategy }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      function Layout() {
+        let navigation = useNavigation();
+        return (
+          <div>
+            <MemoryNavigate to="/bar">Link to Bar</MemoryNavigate>
+            <p>{navigation.state}</p>
+            <Outlet />
+          </div>
+        );
+      }
+
+      function Foo() {
+        return <h1>Foo</h1>;
+      }
+      function Bar() {
+        let data = useLoaderData() as URLSearchParams;
+        return <h1>{data?.get("message")}</h1>;
+      }
+
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      fireEvent.click(screen.getByText("Link to Bar"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              loading
+            </p>
+            <h1>
+              Foo
+            </h1>
+          </div>
+        </div>"
+      `);
+
+      // barDefer.resolve({ message: "Bar Loader" });
+      barDefer.resolve(
+        new Response(
+          new URLSearchParams([["message", "Bar Loader"]]).toString(),
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        )
+      );
+      await waitFor(() => screen.getByText("idle"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <div>
+            <a
+              href="/bar"
+            >
+              Link to Bar
+            </a>
+            <p>
+              idle
+            </p>
+            <h1>
+              Bar Loader
+            </h1>
+          </div>
         </div>"
       `);
     });

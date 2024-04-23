@@ -20,7 +20,7 @@ export enum ResultType {
  */
 export interface SuccessResult {
   type: ResultType.data;
-  data: any;
+  data: unknown;
   statusCode?: number;
   headers?: Headers;
 }
@@ -40,10 +40,8 @@ export interface DeferredResult {
  */
 export interface RedirectResult {
   type: ResultType.redirect;
-  status: number;
-  location: string;
-  revalidate: boolean;
-  reloadDocument?: boolean;
+  // We keep the raw Response for redirects so we can return it verbatim
+  response: Response;
 }
 
 /**
@@ -51,7 +49,8 @@ export interface RedirectResult {
  */
 export interface ErrorResult {
   type: ResultType.error;
-  error: any;
+  error: unknown;
+  statusCode?: number;
   headers?: Headers;
 }
 
@@ -63,6 +62,15 @@ export type DataResult =
   | DeferredResult
   | RedirectResult
   | ErrorResult;
+
+/**
+ * Result from a loader or action called via dataStrategy
+ */
+export interface HandlerResult {
+  type: "data" | "error";
+  result: unknown; // data, Error, Response, DeferredData
+  status?: number;
+}
 
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
@@ -166,22 +174,26 @@ export interface ActionFunctionArgs<Context = any>
  */
 type DataFunctionValue = Response | NonNullable<unknown> | null;
 
+type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+
 /**
  * Route loader function signature
  */
 export type LoaderFunction<Context = any> = {
-  (args: LoaderFunctionArgs<Context>):
-    | Promise<DataFunctionValue>
-    | DataFunctionValue;
+  (
+    args: LoaderFunctionArgs<Context>,
+    handlerCtx?: unknown
+  ): DataFunctionReturnValue;
 } & { hydrate?: boolean };
 
 /**
  * Route action function signature
  */
 export interface ActionFunction<Context = any> {
-  (args: ActionFunctionArgs<Context>):
-    | Promise<DataFunctionValue>
-    | DataFunctionValue;
+  (
+    args: ActionFunctionArgs<Context>,
+    handlerCtx?: unknown
+  ): DataFunctionReturnValue;
 }
 
 /**
@@ -198,6 +210,7 @@ export interface ShouldRevalidateFunctionArgs {
   text?: Submission["text"];
   formData?: Submission["formData"];
   json?: Submission["json"];
+  unstable_actionStatus?: number;
   actionResult?: any;
   defaultShouldRevalidate: boolean;
 }
@@ -221,6 +234,25 @@ export interface ShouldRevalidateFunction {
  */
 export interface DetectErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
+}
+
+export interface DataStrategyMatch
+  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
+  shouldLoad: boolean;
+  resolve: (
+    handlerOverride?: (
+      handler: (ctx?: unknown) => DataFunctionReturnValue
+    ) => Promise<HandlerResult>
+  ) => Promise<HandlerResult>;
+}
+
+export interface DataStrategyFunctionArgs<Context = any>
+  extends DataFunctionArgs<Context> {
+  matches: DataStrategyMatch[];
+}
+
+export interface DataStrategyFunction {
+  (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
 }
 
 /**
@@ -277,8 +309,8 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  loader?: LoaderFunction;
-  action?: ActionFunction;
+  loader?: LoaderFunction | boolean;
+  action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
