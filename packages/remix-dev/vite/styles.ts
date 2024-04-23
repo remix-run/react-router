@@ -198,7 +198,7 @@ export const getStylesForUrl = async ({
   let appPath = path.relative(process.cwd(), reactRouterConfig.appDirectory);
   let documentRouteFiles =
     matchRoutes(routes, url, build.basename)?.map((match) =>
-      path.join(appPath, reactRouterConfig.routes[match.route.id].file)
+      path.resolve(appPath, reactRouterConfig.routes[match.route.id].file)
     ) ?? [];
 
   let styles = await getStylesForFiles({

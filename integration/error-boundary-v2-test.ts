@@ -409,7 +409,7 @@ test.describe("single fetch", () => {
         let app = new PlaywrightFixture(appFixture, page);
         await app.goto("/parent");
         await app.clickLink("/parent/child-with-boundary");
-        await waitForAndAssert(page, app, "#child-error", "CDN Error!");
+        await waitForAndAssert(page, app, "#child-error", "CDN Error");
       });
     });
 
