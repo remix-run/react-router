@@ -1,4 +1,3 @@
-// FIXME: @remix-run/router isn't being automatically versioned
 const path = require("path");
 const { execSync } = require("child_process");
 const fsp = require("fs/promises");
@@ -42,11 +41,7 @@ async function run() {
 
     // 2. Bump package versions
     let packageDirNamesToBump = [
-      // We only handle @remix-run/router for snapshot versions since in normal/pre
-      // releases it's versioned independently from the rest of the packages
-      ...(isSnapshotVersion ? ["router"] : []),
       "react-router",
-      "react-router-dom",
       "remix-dev",
       "remix-express",
       "remix-node",
@@ -72,14 +67,8 @@ async function run() {
       if (!stat.isDirectory()) continue;
 
       await updateExamplesPackageConfig(example, (config) => {
-        if (config.dependencies["@remix-run/router"]) {
-          config.dependencies["@remix-run/router"] = routerVersion;
-        }
         if (config.dependencies["react-router"]) {
           config.dependencies["react-router"] = version;
-        }
-        if (config.dependencies["react-router-dom"]) {
-          config.dependencies["react-router-dom"] = version;
         }
       });
     }
@@ -89,14 +78,6 @@ async function run() {
       execSync(`git commit --all --message="Version ${version}"`);
       execSync(`git tag -a -m "Version ${version}" v${version}`);
       console.log(chalk.green(`  Committed and tagged version ${version}`));
-    }
-
-    if (!isSnapshotVersion) {
-      console.log(
-        chalk.red(
-          `  🚨 @remix-run/router isn't handled by this script, do it manually!`
-        )
-      );
     }
   } catch (error) {
     console.log();
