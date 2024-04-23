@@ -40,6 +40,9 @@ export type ResponseStubOperation = [
 export type ResponseStub = {
   status: number | undefined;
   headers: Headers;
+};
+
+export type ResponseStubImpl = ResponseStub & {
   [ResponseStubOperationsSymbol]: ResponseStubOperation[];
 };
 

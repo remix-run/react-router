@@ -1,15 +1,18 @@
 # `@remix-run/node`
 
-## 2.9.0-pre.0
+## 2.9.0
 
 ### Minor Changes
 
-- Use undici as our fetch polyfill going forward. #9106 ([#9111](https://github.com/remix-run/remix/pull/9111))
+- Use undici as our fetch polyfill going forward ([#9106](https://github.com/remix-run/remix/pull/9106), [#9111](https://github.com/remix-run/remix/pull/9111))
+- Put `undici` fetch polyfill behind a new `installGlobals({ nativeFetch: true })` parameter ([#9198](https://github.com/remix-run/remix/pull/9198))
+  - `remix-serve` will default to using `undici` for the fetch polyfill if `future._unstable_singleFetch` is enabled because the single fetch implementation relies on the `undici` polyfill
+    - Any users opting into Single Fetch and managing their own polfill will need to pass the flag to `installGlobals` on their own to avoid runtime errors with Single Fetch
 
 ### Patch Changes
 
 - Updated dependencies:
-  - `@remix-run/server-runtime@2.9.0-pre.0`
+  - `@remix-run/server-runtime@2.9.0`
 
 ## 2.8.1
 
