@@ -1,5 +1,19 @@
 # `react-router-dom`
 
+## 6.23.0
+
+### Minor Changes
+
+- Add a new `unstable_dataStrategy` configuration option ([#11098](https://github.com/remix-run/react-router/pull/11098))
+  - This option allows Data Router applications to take control over the approach for executing route loaders and actions
+  - The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix single-fetch, middleware/context APIs, automatic loader caching, and more
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.16.0`
+  - `react-router@6.23.0`
+
 ## 6.22.3
 
 ### Patch Changes
