@@ -184,13 +184,15 @@ Date: YYYY-MM-DD
 
 ## v6.23.0
 
-Date: 2024-04-03
+Date: 2024-04-23
 
 ### What's Changed
 
 #### Data Strategy (unstable)
 
-The new `unstable_dataStrategy` API is a low-level API designed for advanced use-cases where you need to take control over the data strategy for your `loader`/`action` functions. The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix ["Single Fetch"](https://remix.run/docs/en/main/guides/single-fetch), user-land middleware/context APIs, automatic loader caching, and more. Please see the [docs](https://reactrouter.com/en/main/routers/create-browser-router#unstable_datastrategy) for more information.
+The new `unstable_dataStrategy` API is a low-level API designed for advanced use-cases where you need to take control over the data strategy for your `loader`/`action` functions. The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix ["Single Fetch"](https://remix.run/docs/guides/single-fetch), user-land middleware/context APIs, automatic loader caching, and more. Please see the [docs](https://reactrouter.com/routers/create-browser-router#unstable_datastrategy) for more information.
+
+**Note:** This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.
 
 #### Skip Action Error Revalidation (unstable)
 
