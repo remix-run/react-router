@@ -1,12 +1,6 @@
 # `@remix-run/router`
 
-## 1.16.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Remove staticHandler.query flags that we can implement in dataStrategy ([#11384](https://github.com/remix-run/react-router/pull/11384))
-
-## 1.16.0-pre.0
+## 1.16.0
 
 ### Minor Changes
 
@@ -24,11 +18,12 @@
   - `shouldRevalidate` now also receives a new `unstable_actionStatus` argument alongside `actionResult` so you can make decision based on the status of the `action` response without having to encode it into the action data
 
 - - Move `unstable_dataStrategy` from `createStaticHandler` to `staticHandler.query` so it can be request-specific for use with the `ResponseStub` approach in Remix. It's not really applicable to `queryRoute` for now since that's a singular handler call anyway so any pre-processing/post/processing could be done there manually. ([#11377](https://github.com/remix-run/react-router/pull/11377))
-  - Added a new `skipLoaders` flag to `staticHandler.query` for calling only the action in Remix Single Fetch
-- Added 2 new options to the `staticHandler.query` method for use in Remix's Single Fetch implementation: ([#11098](https://github.com/remix-run/react-router/pull/11098))
 
-  - `loadRouteIds`: An optional array of route IDs to load if you wish to load a subset of the matched routes (useful for fine-grained revalidation)
-  - `skipLoaderErrorBubbling`: Disable error bubbling on loader executions for single-fetch scenarios where the client-side router will handle the bubbling
+- Added a `skipLoaderErrorBubbling` flag to `staticHandler.query` to disable error bubbling on loader executions for single-fetch scenarios where the client-side router will handle the bubbling ([#11098](https://github.com/remix-run/react-router/pull/11098))
+
+### Patch Changes
+
+- \[REMOVE] Remove staticHandler.query flags that we can implement in dataStrategy ([#11384](https://github.com/remix-run/react-router/pull/11384))
 
 ## 1.15.3
 
