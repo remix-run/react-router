@@ -1782,9 +1782,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 };
 
 function isInReactRouterMonorepo() {
-  let devPath = path.dirname(require.resolve("@react-router/dev/package.json"));
-  let devParentDir = path.basename(path.resolve(devPath, ".."));
-  return devParentDir === "packages";
+  // We use '@react-router/server-runtime' for this check since it's a
+  // dependency of this package and guaranteed to be in node_modules
+  let serverRuntimePath = path.dirname(
+    require.resolve("@react-router/server-runtime/package.json")
+  );
+  let serverRuntimeParentDir = path.basename(
+    path.resolve(serverRuntimePath, "..")
+  );
+  return serverRuntimeParentDir === "packages";
 }
 
 function isEqualJson(v1: unknown, v2: unknown) {
