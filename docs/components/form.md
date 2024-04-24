@@ -298,7 +298,7 @@ A common use case for GET submissions is filtering a large list, like ecommerce 
 ```tsx
 function FilterForm() {
   return (
-    <Form method="get" action="/slc/hotels">
+    <Form method="get" action="/city/hotels">
       <select name="sort">
         <option value="price">Price</option>
         <option value="stars">Stars</option>
@@ -353,14 +353,14 @@ function FilterForm() {
 When the user submits this form, the form will be serialized to the URL with something like this, depending on the user's selections:
 
 ```
-/slc/hotels?sort=price&stars=4&amenities=pool&amenities=exercise
+/city/hotels?sort=price&stars=4&amenities=pool&amenities=exercise
 ```
 
 You can access those values from the `request.url`
 
 ```tsx
 <Route
-  path="/:city/hotels"
+  path="/city/hotels"
   loader={async ({ request }) => {
     let url = new URL(request.url);
     let sort = url.searchParams.get("sort");
@@ -368,7 +368,28 @@ You can access those values from the `request.url`
     let amenities = url.searchParams.getAll("amenities");
     return fakeGetHotels({ sort, stars, amenities });
   }}
+  element={<HotelsLists />}
 />
+```
+
+You can get the data i.e returned from the loader into the HotelsList Component by using useLoaderData
+
+```jsx
+import { useLoaderData } from "react-router-dom";
+const HotelsLists = () => {
+  const data = useLoaderData();
+  return (
+    <div>
+      Hotels
+      <p>
+        Sorted By: {data.sort}-{data.stars}
+      </p>
+    </div>
+  );
+};
+
+export default Hotels;
+
 ```
 
 **See also:**
