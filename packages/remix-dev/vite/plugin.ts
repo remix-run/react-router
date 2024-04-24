@@ -1048,24 +1048,26 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               : "custom",
 
           ssr: {
-            external: [
-              // This is only necessary for development within this repo
-              // because these packages are symlinked and Vite treats them as
-              // internal source code. For consumers this is a no-op.
-              "react-router",
-              "react-router-dom",
-              "@react-router/architect",
-              "@react-router/cloudflare-pages",
-              "@react-router/cloudflare-workers",
-              "@react-router/cloudflare",
-              "@react-router/deno",
-              "@react-router/dev",
-              "@react-router/express",
-              "@react-router/netlify",
-              "@react-router/node",
-              "@react-router/serve",
-              "@react-router/server-runtime",
-            ],
+            external: isInReactRouterMonorepo()
+              ? [
+                  // This is only needed within this repo because these packages
+                  // are linked to a directory outside of node_modules so Vite
+                  // treats them as internal code by default.
+                  "react-router",
+                  "react-router-dom",
+                  "@react-router/architect",
+                  "@react-router/cloudflare-pages",
+                  "@react-router/cloudflare-workers",
+                  "@react-router/cloudflare",
+                  "@react-router/deno",
+                  "@react-router/dev",
+                  "@react-router/express",
+                  "@react-router/netlify",
+                  "@react-router/node",
+                  "@react-router/serve",
+                  "@react-router/server-runtime",
+                ]
+              : undefined,
           },
           optimizeDeps: {
             include: [
@@ -1778,6 +1780,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     },
   ];
 };
+
+function isInReactRouterMonorepo() {
+  let devPath = path.dirname(require.resolve("@react-router/dev/package.json"));
+  let devParentDir = path.basename(path.resolve(devPath, ".."));
+  return devParentDir === "packages";
+}
 
 function isEqualJson(v1: unknown, v2: unknown) {
   return JSON.stringify(v1) === JSON.stringify(v2);
