@@ -1083,13 +1083,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
               "react-router-dom",
-
-              // For some reason, the `vite-dotenv` integration test consistently fails on webkit
-              // with `504 (Outdated Optimize Dep)` from Vite  unless `@react-router/node` is included
-              // in `optimizeDeps.include`. 🤷
-              // This could be caused by how we copy `node_modules/` into integration test fixtures,
-              // so maybe this will be unnecessary once we switch to pnpm
-              "@react-router/node",
             ],
           },
           esbuild: {
