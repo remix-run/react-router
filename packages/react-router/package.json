@@ -23,8 +23,6 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@react-router/server-runtime": "workspace:*",
-    "react-router": "workspace:*",
     "turbo-stream": "^2.0.0"
   },
   "devDependencies": {

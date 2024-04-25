@@ -2,7 +2,6 @@ import * as React from "react";
 import type {
   HydrationState,
   InitialEntry,
-  Router,
   ActionFunctionArgs as RRActionFunctionArgs,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
 } from "react-router";
@@ -100,7 +99,7 @@ export function createRemixStub(
     hydrationData,
     future,
   }: RemixStubProps) {
-    let routerRef = React.useRef<Router>();
+    let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
     let remixContextRef = React.useRef<RemixContextObject>();
 
     if (routerRef.current == null) {

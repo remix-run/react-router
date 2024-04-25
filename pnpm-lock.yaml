@@ -506,12 +506,6 @@ importers:
 
   packages/react-router:
     dependencies:
-      '@react-router/server-runtime':
-        specifier: workspace:*
-        version: link:../remix-server-runtime
-      react-router:
-        specifier: workspace:*
-        version: 'link:'
       turbo-stream:
         specifier: ^2.0.0
         version: 2.0.0

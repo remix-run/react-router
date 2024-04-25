@@ -4,6 +4,7 @@
   "scripts": {
     "build": "rollup -c",
     "clean": "git clean -fdX .",
+    "clean:build": "git clean -fdx -e node_modules .",
     "clean:integration": "node ./integration/helpers/cleanup.mjs",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
