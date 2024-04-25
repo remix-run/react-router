@@ -339,6 +339,8 @@ export type {
 } from "./lib/dom/ssr/routeModules";
 export type { RemixServerProps } from "./lib/dom/ssr/server";
 export { RemixServer } from "./lib/dom/ssr/server";
+export type { RemixStubProps } from "./lib/dom/ssr/create-remix-stub";
+export { createRemixStub } from "./lib/dom/ssr/create-remix-stub";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

@@ -1,34 +1,24 @@
 import * as React from "react";
 import type {
-  HydrationState,
-  InitialEntry,
-  ActionFunctionArgs as RRActionFunctionArgs,
-  LoaderFunctionArgs as RRLoaderFunctionArgs,
-} from "react-router";
-import { UNSAFE_convertRoutesToDataRoutes } from "react-router";
+  ActionFunction,
+  ActionFunctionArgs,
+  LoaderFunction,
+  LoaderFunctionArgs,
+} from "../../router/utils";
 import type {
   DataRouteObject,
   IndexRouteObject,
-  MetaFunction,
   NonIndexRouteObject,
-  UNSAFE_FutureConfig as FutureConfig,
-  UNSAFE_AssetsManifest as AssetsManifest,
-  UNSAFE_EntryRoute as EntryRoute,
-  UNSAFE_RouteModules as RouteModules,
-  UNSAFE_RemixContextObject as RemixContextObject,
-} from "react-router";
-import {
-  createMemoryRouter,
-  Outlet,
-  RouterProvider,
-  UNSAFE_RemixContext as RemixContext,
-} from "react-router";
-import type {
-  ActionFunction,
-  AppLoadContext,
-  LinksFunction,
-  LoaderFunction,
-} from "@react-router/server-runtime";
+} from "../../context";
+import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
+import type { InitialEntry } from "../../router/history";
+import type { HydrationState } from "../../router/router";
+import { convertRoutesToDataRoutes } from "../../router/utils";
+import type { AssetsManifest, FutureConfig, RemixContextObject } from "./entry";
+import { Outlet, createMemoryRouter } from "../../components";
+import type { EntryRoute } from "./routes";
+import { RemixContext } from "./components";
+import { RouterProvider } from "../lib";
 
 interface StubIndexRouteObject
   extends Omit<
@@ -55,6 +45,10 @@ interface StubNonIndexRouteObject
 }
 
 type StubRouteObject = StubIndexRouteObject | StubNonIndexRouteObject;
+
+interface AppLoadContext {
+  [key: string]: unknown;
+}
 
 export interface RemixStubProps {
   /**
@@ -123,7 +117,7 @@ export function createRemixStub(
       // the manifest and routeModules during the walk
       let patched = processRoutes(
         // @ts-expect-error loader/action context types don't match :/
-        UNSAFE_convertRoutesToDataRoutes(routes, (r) => r),
+        convertRoutesToDataRoutes(routes, (r) => r),
         context,
         remixContextRef.current.manifest,
         remixContextRef.current.routeModules
@@ -166,10 +160,10 @@ function processRoutes(
       Component: route.Component,
       ErrorBoundary: route.ErrorBoundary,
       action: action
-        ? (args: RRActionFunctionArgs) => action!({ ...args, context })
+        ? (args: ActionFunctionArgs) => action!({ ...args, context })
         : undefined,
       loader: loader
-        ? (args: RRLoaderFunctionArgs) => loader!({ ...args, context })
+        ? (args: LoaderFunctionArgs) => loader!({ ...args, context })
         : undefined,
       handle: route.handle,
       shouldRevalidate: route.shouldRevalidate,

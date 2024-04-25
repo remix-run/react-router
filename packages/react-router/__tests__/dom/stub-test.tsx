@@ -1,7 +1,6 @@
 import * as React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import user from "@testing-library/user-event";
-import { createRemixStub } from "@react-router/testing";
 import {
   Form,
   Outlet,
@@ -9,9 +8,9 @@ import {
   useFetcher,
   useLoaderData,
   useMatches,
-} from "react-router-dom";
-import type { LoaderFunctionArgs } from "@react-router/node";
-import { json } from "@react-router/node";
+  json,
+  createRemixStub,
+} from "../../index";
 
 test("renders a route", () => {
   let RemixStub = createRemixStub([

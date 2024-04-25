@@ -26,7 +26,6 @@
     "turbo-stream": "^2.0.0"
   },
   "devDependencies": {
-    "@react-router/testing": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
