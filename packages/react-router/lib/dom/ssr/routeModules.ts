@@ -1,20 +1,20 @@
 import type { ComponentType, ReactElement } from "react";
+import type { Location } from "../../router/history";
 import type {
   ActionFunction as RRActionFunction,
   ActionFunctionArgs as RRActionFunctionArgs,
   LoaderFunction as RRLoaderFunction,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
-  DataRouteMatch,
   Params,
-  Location,
   ShouldRevalidateFunction,
-} from "react-router";
-import type { LoaderFunction } from "@react-router/server-runtime";
+  LoaderFunctionArgs,
+} from "../../router/utils";
 
 import type { SerializeFrom } from "./components";
 import type { AppData } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { EntryRoute } from "./routes";
+import type { DataRouteMatch } from "../../context";
 
 export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
@@ -95,6 +95,19 @@ export type LayoutComponent = ComponentType<{
 export interface LinksFunction {
   (): LinkDescriptor[];
 }
+
+// Loose copy from @react-router/server-runtime to avoid circular imports
+type LoaderFunction = (
+  args: LoaderFunctionArgs & {
+    // Context is always provided in Remix, and typed for module augmentation support.
+    context: unknown;
+    // TODO: (v7) Make this non-optional once single-fetch is the default
+    response?: {
+      status: number | undefined;
+      headers: Headers;
+    };
+  }
+) => ReturnType<RRLoaderFunction>;
 
 export interface MetaMatch<
   RouteId extends string = string,

@@ -1,8 +1,8 @@
 import * as React from "react";
-import type { Location } from "react-router";
-import { isRouteErrorResponse } from "react-router";
 
 import { Scripts, useRemixContext } from "./components";
+import type { Location } from "../../router/history";
+import { isRouteErrorResponse } from "../../router/utils";
 
 type RemixErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;

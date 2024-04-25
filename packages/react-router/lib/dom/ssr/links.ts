@@ -1,6 +1,5 @@
-import type { AgnosticDataRouteMatch } from "../../router";
-import type { Location } from "react-router";
-import { parsePath } from "react-router";
+import type { AgnosticDataRouteMatch, Location } from "../../router";
+import { parsePath } from "../../router";
 
 import type { AssetsManifest } from "./entry";
 import type { RouteModules, RouteModule } from "./routeModules";

@@ -1,13 +1,14 @@
 import * as React from "react";
-import type { HydrationState } from "../../router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponse } from "../../router";
 import type {
   ActionFunctionArgs,
+  HydrationState,
   LoaderFunctionArgs,
-  DataRouteObject,
   ShouldRevalidateFunction,
-} from "react-router";
-import { redirect, useRouteError } from "react-router";
+} from "../../router";
+import {
+  UNSAFE_ErrorResponseImpl as ErrorResponse,
+  redirect,
+} from "../../router";
 
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";
@@ -25,6 +26,8 @@ import { prefetchStyleLinks } from "./links";
 import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
 import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
+import { useRouteError } from "../../hooks";
+import type { DataRouteObject } from "../../context";
 
 export interface RouteManifest<Route> {
   [routeId: string]: Route;
