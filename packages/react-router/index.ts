@@ -386,4 +386,12 @@ export type {
 } from "./lib/dom/ssr/routes";
 
 /** @internal */
-export { decodeViaTurboStream as UNSAFE_decodeViaTurboStream } from "./lib/dom/ssr/single-fetch";
+export type {
+  SingleFetchRedirectResult as UNSAFE_SingleFetchRedirectResult,
+  SingleFetchResult as UNSAFE_SingleFetchResult,
+  SingleFetchResults as UNSAFE_SingleFetchResults,
+} from "./lib/dom/ssr/single-fetch";
+export {
+  decodeViaTurboStream as UNSAFE_decodeViaTurboStream,
+  SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
+} from "./lib/dom/ssr/single-fetch";

@@ -7,15 +7,6 @@ import {
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
   redirect,
 } from "../../router";
-import type {
-  UNSAFE_SingleFetchResult as SingleFetchResult,
-  UNSAFE_SingleFetchResults as SingleFetchResults,
-} from "@react-router/server-runtime";
-import { UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol } from "@react-router/server-runtime";
-import type {
-  DataRouteObject,
-  unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
-} from "react-router";
 import { decode } from "turbo-stream";
 
 import { createRequestInit } from "./data";
@@ -23,6 +14,27 @@ import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
+import type { DataStrategyFunctionArgs } from "../../router/utils";
+import type { DataRouteObject } from "../../context";
+
+export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
+
+export type SingleFetchRedirectResult = {
+  redirect: string;
+  status: number;
+  revalidate: boolean;
+  reload: boolean;
+};
+
+export type SingleFetchResult =
+  | { data: unknown }
+  | { error: unknown }
+  | SingleFetchRedirectResult;
+
+export type SingleFetchResults = {
+  [key: string]: SingleFetchResult;
+  [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult;
+};
 
 interface StreamTransferProps {
   context: EntryContext;
