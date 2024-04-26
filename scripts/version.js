@@ -35,12 +35,12 @@ async function run() {
     // 2. Bump package versions
     let packageDirNamesToBump = [
       "react-router",
+      "react-router-dom",
       "remix-dev",
       "remix-express",
       "remix-node",
       "remix-serve",
       "remix-server-runtime",
-      "remix-testing",
     ];
     for (let packageDirName of packageDirNamesToBump) {
       let packageName;
