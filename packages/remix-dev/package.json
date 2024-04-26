@@ -1,14 +1,14 @@
 {
   "name": "@react-router/dev",
   "version": "2.9.0-pre.0",
-  "description": "Dev tools and CLI for Remix",
-  "homepage": "https://remix.run",
+  "description": "Dev tools and CLI for React Router",
+  "homepage": "https://reactrouter.com",
   "bugs": {
-    "url": "https://github.com/remix-run/remix/issues"
+    "url": "https://github.com/remix-run/react-router/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/remix-run/remix",
+    "url": "https://github.com/remix-run/react-router",
     "directory": "packages/remix-dev"
   },
   "license": "MIT",
