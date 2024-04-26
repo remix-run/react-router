@@ -1,16 +1,13 @@
-const path = require("path");
+const fs = require("node:fs");
 const { execSync } = require("child_process");
-const fsp = require("fs/promises");
 const chalk = require("chalk");
 const semver = require("semver");
 
 const {
   ensureCleanWorkingDirectory,
   invariant,
-  updateExamplesPackageConfig,
   updatePackageConfig,
 } = require("./utils");
-const { EXAMPLES_DIR } = require("./constants");
 
 async function run() {
   try {
@@ -33,15 +30,10 @@ async function run() {
     invariant(version != null, `Invalid version specifier: ${givenVersion}`);
 
     // 2. Bump package versions
-    let packageDirNamesToBump = [
-      "react-router",
-      "react-router-dom",
-      "remix-dev",
-      "remix-express",
-      "remix-node",
-      "remix-serve",
-      "remix-server-runtime",
-    ];
+    let packageDirNamesToBump = fs
+      .readdirSync("packages")
+      .filter((name) => fs.statSync(`packages/${name}`).isDirectory());
+
     for (let packageDirName of packageDirNamesToBump) {
       let packageName;
       await updatePackageConfig(packageDirName, (pkg) => {
@@ -53,20 +45,7 @@ async function run() {
       );
     }
 
-    // 3. Update react-router and react-router-dom versions in the examples
-    let examples = await fsp.readdir(EXAMPLES_DIR);
-    for (const example of examples) {
-      let stat = await fsp.stat(path.join(EXAMPLES_DIR, example));
-      if (!stat.isDirectory()) continue;
-
-      await updateExamplesPackageConfig(example, (config) => {
-        if (config.dependencies["react-router"]) {
-          config.dependencies["react-router"] = version;
-        }
-      });
-    }
-
-    // 4. Commit and tag
+    // 3. Commit and tag
     if (!skipGit) {
       execSync(`git commit --all --message="Version ${version}"`);
       execSync(`git tag -a -m "Version ${version}" v${version}`);
