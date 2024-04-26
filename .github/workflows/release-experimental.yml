@@ -22,7 +22,7 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch }}
           # checkout using a custom token so that we can push later on
-          token: ${{ secrets.NIGHTLY_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: 📦 Setup pnpm
@@ -32,7 +32,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: pnpm
+          cache: "pnpm"
 
       - name: 📥 Install deps
         run: pnpm install --frozen-lockfile
