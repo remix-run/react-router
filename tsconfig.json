@@ -2,6 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/react-router" },
+    { "path": "packages/react-router-dom" },
     { "path": "packages/remix-dev" },
     { "path": "packages/remix-express" },
     { "path": "packages/remix-node" },
