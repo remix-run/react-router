@@ -1,5 +1,5 @@
 import type { EntryContext } from "@react-router/node";
-import { RemixServer } from "react-router-dom";
+import { RemixServer } from "react-router";
 import { renderToString } from "react-dom/server";
 
 export default function handleRequest(

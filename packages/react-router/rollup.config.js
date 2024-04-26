@@ -49,7 +49,7 @@ module.exports = function rollup() {
         }),
         typescript({
           tsconfig: path.join(__dirname, "tsconfig.json"),
-          exclude: ["__tests__", "dist/**/*"],
+          exclude: ["__tests__"],
           noEmitOnError: !WATCH,
         }),
         copy({

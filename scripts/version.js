@@ -6,7 +6,6 @@ const semver = require("semver");
 
 const {
   ensureCleanWorkingDirectory,
-  getPackageVersion,
   invariant,
   updateExamplesPackageConfig,
   updatePackageConfig,
@@ -24,20 +23,14 @@ async function run() {
       `Missing next version. Usage: node version.js [nextVersion]`
     );
 
-    let isSnapshotVersion = givenVersion.startsWith("0.0.0-");
-
     // 0. Make sure the working directory is clean
     if (!skipGit) {
       ensureCleanWorkingDirectory();
     }
 
     // 1. Get the next version number
-    let currentRouterVersion = await getPackageVersion("router");
     let version = semver.valid(givenVersion);
     invariant(version != null, `Invalid version specifier: ${givenVersion}`);
-
-    // We will only bump the router version if this is an experimental
-    let routerVersion = currentRouterVersion;
 
     // 2. Bump package versions
     let packageDirNamesToBump = [
