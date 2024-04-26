@@ -63,7 +63,10 @@ export function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
     // Note: this check also occurs in createRoutesFromChildren so update
     // there if you change this -- please and thank you!
-    hasErrorBoundary: route.ErrorBoundary != null || route.errorElement != null,
+    hasErrorBoundary:
+      route.hasErrorBoundary ||
+      route.ErrorBoundary != null ||
+      route.errorElement != null,
   };
 
   if (route.Component) {
@@ -798,6 +801,7 @@ export function createRoutesFromChildren(
       errorElement: element.props.errorElement,
       ErrorBoundary: element.props.ErrorBoundary,
       hasErrorBoundary:
+        element.props.hasErrorBoundary === true ||
         element.props.ErrorBoundary != null ||
         element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,

@@ -13,7 +13,7 @@ import type { ServerBuild } from "@react-router/server-runtime";
 import { createRequestHandler } from "@react-router/server-runtime";
 import { createRequestHandler as createExpressHandler } from "@react-router/express";
 import { installGlobals } from "@react-router/node";
-import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router-dom";
+import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router";
 
 import { viteConfig } from "./vite.js";
 
