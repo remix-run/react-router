@@ -1,6 +1,6 @@
 {
   "name": "@react-router/serve",
-  "version": "2.9.0-pre.0",
+  "version": "0.0.0-experimental-348eecfa8",
   "description": "Production application server for Remix",
   "bugs": {
     "url": "https://github.com/remix-run/remix/issues"
