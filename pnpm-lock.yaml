@@ -408,6 +408,9 @@ importers:
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
+      react-router-dom:
+        specifier: workspace:*
+        version: link:../../../packages/react-router-dom
     devDependencies:
       '@react-router/dev':
         specifier: workspace:*
@@ -469,6 +472,9 @@ importers:
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
+      react-router-dom:
+        specifier: workspace:*
+        version: link:../../../packages/react-router-dom
       serialize-javascript:
         specifier: ^6.0.1
         version: 6.0.2
@@ -509,6 +515,19 @@ importers:
       turbo-stream:
         specifier: ^2.0.0
         version: 2.0.0
+    devDependencies:
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+
+  packages/react-router-dom:
+    dependencies:
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
     devDependencies:
       react:
         specifier: ^18.2.0

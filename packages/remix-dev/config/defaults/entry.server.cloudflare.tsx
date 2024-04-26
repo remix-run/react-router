@@ -1,5 +1,5 @@
 import type { AppLoadContext, EntryContext } from "@react-router/cloudflare";
-import { RemixServer } from "react-router-dom";
+import { RemixServer } from "react-router";
 import * as isbotModule from "isbot";
 import { renderToReadableStream } from "react-dom/server";
 

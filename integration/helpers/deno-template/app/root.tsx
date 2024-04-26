@@ -1,10 +1,4 @@
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "react-router-dom";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import * as React from "react";
 
 export default function App() {

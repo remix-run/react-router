@@ -9,8 +9,6 @@ packages:
   - "packages/remix-node"
   - "packages/remix-serve"
   - "packages/remix-server-runtime"
-  - "packages/remix-testing"
-  - "packages/router"
   - "playground/compiler"
   - "playground/compiler-express"
   - "playground/compiler-spa"
