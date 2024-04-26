@@ -55,5 +55,8 @@ jobs:
           echo "registry=https://registry.npmjs.org" >> ~/.npmrc
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
 
-      - name: 🚀 Publish
-        run: pnpm run publish
+      - name: DEBUG
+        run: find packages -iname "package.json" -maxdepth 2 | xargs cat
+
+      # - name: 🚀 Publish
+      #   run: pnpm run publish
