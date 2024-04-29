@@ -16,6 +16,12 @@
     "skipLibCheck": true,
 
     "outDir": ".",
-    "rootDir": "."
+    "rootDir": ".",
+
+    // Needed for the more-strict pnpm setup, can be removed in v7 since we'll
+    // be collapsing the lifted server file into the main package export
+    "paths": {
+      "react-router-dom": ["./index.tsx"]
+    }
   }
 }
