@@ -3089,6 +3089,35 @@ describe("createMemoryRouter", () => {
       `);
     });
 
+    it("can render raw resolved to undefined promises with <Await>", async () => {
+      let dfd = createDeferred();
+
+      let { container } = render(
+        <React.Suspense fallback={<p>Loading...</p>}>
+          <Await resolve={dfd.promise}>{(data) => <p>{String(data)}</p>}</Await>
+        </React.Suspense>
+      );
+
+      console.log(getHtml(container));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            Loading...
+          </p>
+        </div>"
+      `);
+
+      dfd.resolve(undefined);
+      await waitFor(() => screen.getByText("undefined"));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+        "<div>
+          <p>
+            undefined
+          </p>
+        </div>"
+      `);
+    });
+
     it("can render raw resolved promises with <Await>", async () => {
       let dfd = createDeferred();
 
