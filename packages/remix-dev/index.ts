@@ -6,5 +6,5 @@ export type {
   Preset,
   ServerBundlesFunction,
   VitePluginConfig,
-} from "./vite";
+} from "./config";
 export { vitePlugin, cloudflareDevProxyVitePlugin } from "./vite";

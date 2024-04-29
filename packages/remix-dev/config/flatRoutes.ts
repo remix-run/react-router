@@ -4,7 +4,7 @@ import { makeRe } from "minimatch";
 
 import type { ConfigRoute, RouteManifest } from "./routes";
 import { normalizeSlashes } from "./routes";
-import { findConfig } from "../config";
+import { findConfig } from "./findConfig";
 
 export const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
 
