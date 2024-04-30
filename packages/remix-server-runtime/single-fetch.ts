@@ -2,11 +2,15 @@ import type {
   StaticHandler,
   unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
   StaticHandlerContext,
-} from "@remix-run/router";
+  UNSAFE_SingleFetchRedirectResult as SingleFetchRedirectResult,
+  UNSAFE_SingleFetchResult as SingleFetchResult,
+  UNSAFE_SingleFetchResults as SingleFetchResults,
+} from "react-router";
 import {
   isRouteErrorResponse,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "@remix-run/router";
+  UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol,
+} from "react-router";
 import { encode } from "turbo-stream";
 
 import type { AppLoadContext } from "./data";
@@ -20,24 +24,10 @@ import type {
 import { ResponseStubOperationsSymbol } from "./routeModules";
 import { isDeferredData, isRedirectStatusCode, isResponse } from "./responses";
 
-export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 const ResponseStubActionSymbol = Symbol("ResponseStubAction");
 
-type SingleFetchRedirectResult = {
-  redirect: string;
-  status: number;
-  revalidate: boolean;
-  reload: boolean;
-};
-export type SingleFetchResult =
-  | { data: unknown }
-  | { error: unknown }
-  | SingleFetchRedirectResult;
-
-export type SingleFetchResults = {
-  [key: string]: SingleFetchResult;
-  [SingleFetchRedirectSymbol]?: SingleFetchRedirectResult;
-};
+export type { SingleFetchResult, SingleFetchResults };
+export { SingleFetchRedirectSymbol };
 
 export type DataStrategyCtx = {
   response: ResponseStub;

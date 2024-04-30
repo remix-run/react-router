@@ -85,18 +85,22 @@ async function run() {
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
 
     // 3. Ensure build versions match the release version
-    if (version.includes("experimental")) {
-      // FIXME: @remix-run/router is versioned differently and is only handled
-      // for experimental releases here
-      await ensureBuildVersion("router", version);
-    }
     await ensureBuildVersion("react-router", version);
     await ensureBuildVersion("react-router-dom", version);
+    await ensureBuildVersion("remix-dev", version);
+    await ensureBuildVersion("remix-express", version);
+    await ensureBuildVersion("remix-node", version);
+    await ensureBuildVersion("remix-serve", version);
+    await ensureBuildVersion("remix-server-runtime", version);
 
     // 4. Publish to npm
-    publishBuild("router", tag);
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
+    publishBuild("remix-dev", tag);
+    publishBuild("remix-express", tag);
+    publishBuild("remix-node", tag);
+    publishBuild("remix-serve", tag);
+    publishBuild("remix-server-runtime", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);

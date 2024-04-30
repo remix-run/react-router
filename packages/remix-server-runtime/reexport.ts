@@ -1,4 +1,4 @@
-export type { ErrorResponse } from "@remix-run/router";
+export type { ErrorResponse } from "react-router";
 
 export type {
   HandleDataRequestFunction,

@@ -1,4 +1,4 @@
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "@remix-run/router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "react-router";
 
 import type { ServerBuild } from "../build";
 import { createRequestHandler } from "../server";

@@ -1,4 +1,4 @@
-import type { HydrationState } from "@remix-run/router";
+import type { HydrationState } from "react-router";
 
 import type { FutureConfig } from "./entry";
 import { escapeHtml } from "./markup";

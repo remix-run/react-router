@@ -23,14 +23,20 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@remix-run/router": "workspace:*"
+    "turbo-stream": "^2.0.0"
   },
   "devDependencies": {
     "react": "^18.2.0",
-    "react-router-dom": "workspace:*"
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
-    "react": ">=16.8"
+    "react": ">=16.8",
+    "react-dom": ">=16.8"
+  },
+  "peerDependenciesMeta": {
+    "react-dom": {
+      "optional": true
+    }
   },
   "files": [
     "dist/",

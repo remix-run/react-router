@@ -117,7 +117,7 @@ function validateReplacedVersion() {
         }
 
         let requiredStrs = filename.endsWith(".min.js")
-          ? [`{window.__reactRouterVersion="${majorVersion}"}`]
+          ? [`(window.__reactRouterVersion="${majorVersion}")`]
           : [
               `const REACT_ROUTER_VERSION = "${majorVersion}";`,
               `window.__reactRouterVersion = REACT_ROUTER_VERSION;`,
