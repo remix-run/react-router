@@ -1,4 +1,4 @@
-import type { StaticHandlerContext } from "@remix-run/router";
+import type { StaticHandlerContext } from "react-router";
 
 import { createRequestHandler } from "..";
 import { ServerMode } from "../mode";

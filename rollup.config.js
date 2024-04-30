@@ -3,7 +3,6 @@ const path = require("path");
 
 module.exports = function rollup(options) {
   return [
-    "router",
     "react-router",
     "react-router-dom",
     "remix-dev",
@@ -11,14 +10,16 @@ module.exports = function rollup(options) {
     "remix-node",
     "remix-serve",
     "remix-server-runtime",
-    "remix-testing",
   ]
     .flatMap((dir) => {
-      // if (dir !== "router") return null;
       let configPath = path.join("packages", dir, "rollup.config.js");
       try {
         fs.readFileSync(configPath);
       } catch (e) {
+        console.error(
+          "⚠️ Skipping build for package directory without rollup.config.js:",
+          dir
+        );
         return null;
       }
       let packageBuild = require(`.${path.sep}${configPath}`);

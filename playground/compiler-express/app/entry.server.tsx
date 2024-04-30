@@ -2,7 +2,7 @@ import { PassThrough } from "node:stream";
 
 import type { AppLoadContext, EntryContext } from "@react-router/node";
 import { createReadableStreamFromReadable } from "@react-router/node";
-import { RemixServer } from "react-router-dom";
+import { RemixServer } from "react-router";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 

@@ -1,4 +1,4 @@
-import type { StaticHandlerContext } from "@remix-run/router";
+import type { StaticHandlerContext } from "react-router";
 import { splitCookiesString } from "set-cookie-parser";
 
 import type { ServerBuild } from "./build";

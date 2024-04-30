@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "jsx": "react",
     "skipLibCheck": true,
     "declaration": true,
     "emitDeclarationOnly": true,

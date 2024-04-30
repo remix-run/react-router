@@ -1,14 +1,14 @@
 {
   "name": "@react-router/dev",
   "version": "2.9.0-pre.0",
-  "description": "Dev tools and CLI for Remix",
-  "homepage": "https://remix.run",
+  "description": "Dev tools and CLI for React Router",
+  "homepage": "https://reactrouter.com",
   "bugs": {
-    "url": "https://github.com/remix-run/remix/issues"
+    "url": "https://github.com/remix-run/react-router/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/remix-run/remix",
+    "url": "https://github.com/remix-run/react-router",
     "directory": "packages/remix-dev"
   },
   "license": "MIT",
@@ -31,7 +31,6 @@
     "@babel/types": "^7.22.5",
     "@npmcli/package-json": "^4.0.1",
     "@react-router/node": "workspace:*",
-    "@remix-run/router": "workspace:*",
     "@react-router/server-runtime": "workspace:*",
     "arg": "^5.0.1",
     "chalk": "^4.1.2",
@@ -46,6 +45,7 @@
     "picomatch": "^2.3.1",
     "prettier": "^2.7.1",
     "react-refresh": "^0.14.0",
+    "react-router": "workspace:*",
     "semver": "^7.3.7",
     "set-cookie-parser": "^2.6.0"
   },
@@ -75,7 +75,7 @@
     "wrangler": "^3.28.2"
   },
   "peerDependencies": {
-    "react-router-dom": "workspace:^",
+    "react-router": "workspace:^",
     "@react-router/serve": "workspace:^",
     "typescript": "^5.1.0",
     "vite": "^5.1.0",

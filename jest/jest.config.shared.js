@@ -9,9 +9,13 @@ const ignorePatterns = [
 /** @type {import('jest').Config} */
 module.exports = {
   moduleNameMapper: {
-    "^@remix-run/router$": "<rootDir>/../router/index.ts",
+    "@react-router/dev$": "<rootDir>/../remix-dev/index.ts",
+    "@react-router/express$": "<rootDir>/../remix-express/index.ts",
+    "@react-router/node$": "<rootDir>/../remix-node/index.ts",
+    "@react-router/serve$": "<rootDir>/../remix-serve/index.ts",
+    "@react-router/server-runtime$":
+      "<rootDir>/../remix-server-runtime/index.ts",
     "^react-router$": "<rootDir>/../react-router/index.ts",
-    "^react-router-dom$": "<rootDir>/../react-router-dom/index.tsx",
     "^@web3-storage/multipart-parser$": require.resolve(
       "@web3-storage/multipart-parser"
     ),
@@ -23,4 +27,7 @@ module.exports = {
     "\\.[jt]sx?$": require.resolve("./transform"),
   },
   watchPathIgnorePatterns: [...ignorePatterns, "\\/node_modules\\/"],
+  globals: {
+    __DEV__: true,
+  },
 };

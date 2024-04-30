@@ -23,13 +23,9 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@remix-run/router": "workspace:*",
-    "@react-router/server-runtime": "workspace:*",
-    "react-router": "workspace:*",
-    "turbo-stream": "^2.0.0"
+    "react-router": "workspace:*"
   },
   "devDependencies": {
-    "@react-router/testing": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -39,12 +35,8 @@
   },
   "files": [
     "dist/",
-    "CHANGELOG.md",
     "LICENSE.md",
-    "README.md",
-    "server.d.ts",
-    "server.js",
-    "server.mjs"
+    "README.md"
   ],
   "engines": {
     "node": ">=14.0.0"

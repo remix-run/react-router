@@ -8,6 +8,7 @@
     "moduleResolution": "Bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "jsx": "react",
     "declaration": true,
     "emitDeclarationOnly": true,
     "rootDir": ".",

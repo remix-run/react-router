@@ -3,12 +3,12 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 if (!globalThis.fetch) {
   const { TextDecoder, TextEncoder } = require("node:util");
-  global.TextDecoder = TextDecoder;
-  global.TextEncoder = TextEncoder;
+  globalThis.TextDecoder = TextDecoder;
+  globalThis.TextEncoder = TextEncoder;
 
   const { ReadableStream, WritableStream } = require("node:stream/web");
-  global.ReadableStream = ReadableStream;
-  global.WritableStream = WritableStream;
+  globalThis.ReadableStream = ReadableStream;
+  globalThis.WritableStream = WritableStream;
 
   const { fetch, FormData, Request, Response, Headers } = require("undici");
 
@@ -17,5 +17,16 @@ if (!globalThis.fetch) {
   globalThis.Response = Response;
   globalThis.Headers = Headers;
 
-  global.FormData = global.FormData || FormData;
+  globalThis.FormData = globalThis.FormData || FormData;
+}
+
+if (!globalThis.AbortController) {
+  const { AbortController } = require("abort-controller");
+  globalThis.AbortController = AbortController;
+}
+
+if (!globalThis.TextEncoder || !globalThis.TextDecoder) {
+  const { TextDecoder, TextEncoder } = require("node:util");
+  globalThis.TextEncoder = TextEncoder;
+  globalThis.TextDecoder = TextDecoder;
 }

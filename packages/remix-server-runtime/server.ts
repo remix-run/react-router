@@ -2,7 +2,7 @@ import type {
   UNSAFE_DeferredData as DeferredData,
   ErrorResponse,
   StaticHandler,
-} from "@remix-run/router";
+} from "react-router";
 import {
   UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
   getStaticContextFromError,
@@ -11,7 +11,7 @@ import {
   json as routerJson,
   stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "@remix-run/router";
+} from "react-router";
 
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";

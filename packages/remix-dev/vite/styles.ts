@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import type { ServerBuild } from "@react-router/server-runtime";
-import { matchRoutes } from "@remix-run/router";
+import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
 import type { ResolvedVitePluginConfig } from "../config";
