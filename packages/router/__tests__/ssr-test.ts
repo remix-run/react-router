@@ -2628,5 +2628,18 @@ describe("ssr", () => {
 
       /* eslint-enable jest/no-conditional-expect */
     });
+
+    describe("router dataStrategy", () => {
+      it("should apply a custom data strategy", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data;
+
+        data = await queryRoute(createRequest("/custom"), {
+          unstable_dataStrategy: urlDataStrategy,
+        });
+        expect(data).toBeInstanceOf(URLSearchParams);
+        expect((data as URLSearchParams).get("foo")).toBe("bar");
+      });
+    });
   });
 });
