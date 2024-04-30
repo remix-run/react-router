@@ -1,5 +1,14 @@
 # `react-router-dom`
 
+## 6.23.1-pre.0
+
+### Patch Changes
+
+- Change the `react-router-dom/server` import back to `react-router-dom` instead of `index.ts` ([#11514](https://github.com/remix-run/react-router/pull/11514))
+- Updated dependencies:
+  - `@remix-run/router@1.16.1-pre.0`
+  - `react-router@6.23.1-pre.0`
+
 ## 6.23.0
 
 ### Minor Changes

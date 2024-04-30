@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.16.1-pre.0
+
+### Patch Changes
+
+- Support `unstable_dataStrategy` on `staticHandler.queryRoute` ([#11515](https://github.com/remix-run/react-router/pull/11515))
+
 ## 1.16.0
 
 ### Minor Changes
