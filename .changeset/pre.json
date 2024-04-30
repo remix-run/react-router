@@ -8,5 +8,9 @@
     "react-router-native": "6.23.0",
     "@remix-run/router": "1.16.0"
   },
-  "changesets": []
+  "changesets": [
+    "clever-pumas-arrive",
+    "heavy-lies-ring",
+    "little-ghosts-give"
+  ]
 }
