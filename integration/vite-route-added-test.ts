@@ -38,7 +38,12 @@ test.describe(async () => {
   });
   test.afterAll(() => stop());
 
-  test("Vite / dev / route added", async ({ page }) => {
+  test("Vite / dev / route added", async ({ page, browserName }) => {
+    test.skip(
+      browserName === "webkit",
+      "Safari caches too aggressively, browser manifest is cached with old routes"
+    );
+
     let pageErrors: Error[] = [];
     page.on("pageerror", (error) => pageErrors.push(error));
 

@@ -821,6 +821,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     return JSON.parse(manifestContents) as Vite.Manifest;
   };
 
+  let getViteManifestFilePaths = (viteManifest: Vite.Manifest): Set<string> => {
+    let filePaths = Object.values(viteManifest).map((chunk) => chunk.file);
+    return new Set(filePaths);
+  };
+
   let getViteManifestAssetPaths = (
     viteManifest: Vite.Manifest
   ): Set<string> => {
@@ -1048,24 +1053,26 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               : "custom",
 
           ssr: {
-            external: [
-              // This is only necessary for development within this repo
-              // because these packages are symlinked and Vite treats them as
-              // internal source code. For consumers this is a no-op.
-              "react-router",
-              "react-router-dom",
-              "@react-router/architect",
-              "@react-router/cloudflare-pages",
-              "@react-router/cloudflare-workers",
-              "@react-router/cloudflare",
-              "@react-router/deno",
-              "@react-router/dev",
-              "@react-router/express",
-              "@react-router/netlify",
-              "@react-router/node",
-              "@react-router/serve",
-              "@react-router/server-runtime",
-            ],
+            external: isInReactRouterMonorepo()
+              ? [
+                  // This is only needed within this repo because these packages
+                  // are linked to a directory outside of node_modules so Vite
+                  // treats them as internal code by default.
+                  "react-router",
+                  "react-router-dom",
+                  "@react-router/architect",
+                  "@react-router/cloudflare-pages",
+                  "@react-router/cloudflare-workers",
+                  "@react-router/cloudflare",
+                  "@react-router/deno",
+                  "@react-router/dev",
+                  "@react-router/express",
+                  "@react-router/netlify",
+                  "@react-router/node",
+                  "@react-router/serve",
+                  "@react-router/server-runtime",
+                ]
+              : undefined,
           },
           optimizeDeps: {
             include: [
@@ -1081,13 +1088,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
               "react-router-dom",
-
-              // For some reason, the `vite-dotenv` integration test consistently fails on webkit
-              // with `504 (Outdated Optimize Dep)` from Vite  unless `@react-router/node` is included
-              // in `optimizeDeps.include`. 🤷
-              // This could be caused by how we copy `node_modules/` into integration test fixtures,
-              // so maybe this will be unnecessary once we switch to pnpm
-              "@react-router/node",
             ],
           },
           esbuild: {
@@ -1410,7 +1410,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           let ssrViteManifest = await loadViteManifest(serverBuildDirectory);
           let clientViteManifest = await loadViteManifest(clientBuildDirectory);
 
-          let clientAssetPaths = getViteManifestAssetPaths(clientViteManifest);
+          let clientFilePaths = getViteManifestFilePaths(clientViteManifest);
           let ssrAssetPaths = getViteManifestAssetPaths(ssrViteManifest);
 
           // We only move assets that aren't in the client build, otherwise we
@@ -1422,7 +1422,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           let movedAssetPaths: string[] = [];
           for (let ssrAssetPath of ssrAssetPaths) {
             let src = path.join(serverBuildDirectory, ssrAssetPath);
-            if (!clientAssetPaths.has(ssrAssetPath)) {
+            if (!clientFilePaths.has(ssrAssetPath)) {
               let dest = path.join(clientBuildDirectory, ssrAssetPath);
               await fse.move(src, dest);
               movedAssetPaths.push(dest);
@@ -1778,6 +1778,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     },
   ];
 };
+
+function isInReactRouterMonorepo() {
+  // We use '@react-router/server-runtime' for this check since it's a
+  // dependency of this package and guaranteed to be in node_modules
+  let serverRuntimePath = path.dirname(
+    require.resolve("@react-router/server-runtime/package.json")
+  );
+  let serverRuntimeParentDir = path.basename(
+    path.resolve(serverRuntimePath, "..")
+  );
+  return serverRuntimeParentDir === "packages";
+}
 
 function isEqualJson(v1: unknown, v2: unknown) {
   return JSON.stringify(v1) === JSON.stringify(v2);
