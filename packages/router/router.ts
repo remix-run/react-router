@@ -412,7 +412,11 @@ export interface StaticHandler {
   ): Promise<StaticHandlerContext | Response>;
   queryRoute(
     request: Request,
-    opts?: { routeId?: string; requestContext?: unknown }
+    opts?: {
+      routeId?: string;
+      requestContext?: unknown;
+      unstable_dataStrategy?: DataStrategyFunction;
+    }
   ): Promise<any>;
 }
 
@@ -3099,7 +3103,12 @@ export function createStaticHandler(
     {
       routeId,
       requestContext,
-    }: { requestContext?: unknown; routeId?: string } = {}
+      unstable_dataStrategy,
+    }: {
+      requestContext?: unknown;
+      routeId?: string;
+      unstable_dataStrategy?: DataStrategyFunction;
+    } = {}
   ): Promise<any> {
     let url = new URL(request.url);
     let method = request.method;
@@ -3132,7 +3141,7 @@ export function createStaticHandler(
       location,
       matches,
       requestContext,
-      null,
+      unstable_dataStrategy || null,
       false,
       match
     );
