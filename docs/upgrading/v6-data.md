@@ -97,7 +97,7 @@ import {
 
 // 3️⃣ Router singleton created
 const router = createBrowserRouter([
-  { path: "*", Component: Root },
+  { path: "*", element: <Root /> },
 ]);
 
 // 4️⃣ RouterProvider added
@@ -133,12 +133,12 @@ function UserApp() {
 
 ### Start lifting routes and leveraging the data APIs
 
-Let's start with the `/` route for the `<Home>` component. All we need to do is lift the `<Route>` definition up to the data router:
+Let's start with the `/` route for the `<Home>` element. All we need to do is lift the `<Route>` definition up to the data router:
 
 ```tsx lines=[2,13]
 const router = createBrowserRouter([
-  { path: "/", Component: Home }, // 🆕
-  { path: "*", Component: Root },
+  { path: "/", element: <Home /> }, // 🆕
+  { path: "*", element: <Root /> },
 ]);
 
 export default function App() {
@@ -162,18 +162,18 @@ Now let's look at lifting the Blog App upwards, but still doing it one leaf rout
 
 ```tsx lines=[3-12,23,32]
 const router = createBrowserRouter([
-  { path: "/", Component: Home },
+  { path: "/", element: <Home /> },
   {
     // Lifted blog splat route
     path: "/blog/*",
     children: [
       // New blog index route
-      { index: true, Component: () => <h1>Blog Index</h1> },
+      { index: true, element: <h1>Blog Index</h1> },
       // Blog subapp splat route added for /blog/posts matching
-      { path: "*", Component: BlogApp },
+      { path: "*", element: <BlogApp /> },
     ],
   },
-  { path: "*", Component: Root },
+  { path: "*", element: <Root /> },
 ]);
 
 export default function App() {

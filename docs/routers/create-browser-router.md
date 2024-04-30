@@ -297,14 +297,14 @@ const routes [
 ];
 
 let router = createBrowserRouter(routes, {
-  unstable_dataStrategy({ request, params, matches }) {
+  async unstable_dataStrategy({ request, params, matches }) {
     // Run middleware sequentially and let them add data to `context`
     let context = {};
-    for (match of matches) {
+    for (const match of matches) {
       if (match.route.handle?.middleware) {
         await match.route.handle.middleware({ request, params }, context);
       }
-    });
+    }
 
     // Run loaders in parallel with the `context` value
     return Promise.all(
