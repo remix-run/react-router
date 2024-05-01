@@ -5,7 +5,7 @@ import {
   getRoutePathConflictErrorMessage,
   getRouteIdConflictErrorMessage,
   getRouteSegments,
-} from "../config/flat-routes";
+} from "../config/flatRoutes";
 import type { ConfigRoute } from "../config/routes";
 import { normalizeSlashes } from "../config/routes";
 
