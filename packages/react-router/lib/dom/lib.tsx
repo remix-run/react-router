@@ -238,9 +238,7 @@ type ViewTransitionContextObject =
 const ViewTransitionContext = React.createContext<ViewTransitionContextObject>({
   isTransitioning: false,
 });
-if (__DEV__) {
-  ViewTransitionContext.displayName = "ViewTransition";
-}
+ViewTransitionContext.displayName = "ViewTransition";
 
 export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 
@@ -248,9 +246,7 @@ export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 type FetchersContextObject = Map<string, any>;
 
 const FetchersContext = React.createContext<FetchersContextObject>(new Map());
-if (__DEV__) {
-  FetchersContext.displayName = "Fetchers";
-}
+FetchersContext.displayName = "Fetchers";
 
 export { FetchersContext as UNSAFE_FetchersContext };
 
@@ -762,10 +758,7 @@ function HistoryRouter({
     />
   );
 }
-
-if (__DEV__) {
-  HistoryRouter.displayName = "unstable_HistoryRouter";
-}
+HistoryRouter.displayName = "unstable_HistoryRouter";
 
 export { HistoryRouter as unstable_HistoryRouter };
 
@@ -886,10 +879,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     );
   }
 );
-
-if (__DEV__) {
-  Link.displayName = "Link";
-}
+Link.displayName = "Link";
 
 type NavLinkRenderProps = {
   isActive: boolean;
@@ -1026,10 +1016,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     );
   }
 );
-
-if (__DEV__) {
-  NavLink.displayName = "NavLink";
-}
+NavLink.displayName = "NavLink";
 
 export interface FetcherFormProps
   extends React.FormHTMLAttributes<HTMLFormElement> {
@@ -1179,10 +1166,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     );
   }
 );
-
-if (__DEV__) {
-  Form.displayName = "Form";
-}
+Form.displayName = "Form";
 
 export type ScrollRestorationProps = ScriptProps & {
   getKey?: GetScrollRestorationKeyFunction;
@@ -1261,10 +1245,7 @@ export function ScrollRestoration({
     />
   );
 }
-
-if (__DEV__) {
-  ScrollRestoration.displayName = "ScrollRestoration";
-}
+ScrollRestoration.displayName = "ScrollRestoration";
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1654,9 +1635,7 @@ export function useFetcher<TData = any>({
         );
       }
     );
-    if (__DEV__) {
-      FetcherForm.displayName = "fetcher.Form";
-    }
+    FetcherForm.displayName = "fetcher.Form";
     return FetcherForm;
   }, [fetcherKey]);
 
