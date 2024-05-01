@@ -5,14 +5,16 @@ import colors from "picocolors";
 
 import {
   type ReactRouterPluginContext,
-  type BuildManifest,
   type ServerBundleBuildConfig,
-  type ServerBundlesBuildManifest,
   resolveViteConfig,
   extractPluginContext,
-  configRouteToBranchRoute,
   getServerBuildDirectory,
 } from "./plugin";
+import {
+  type BuildManifest,
+  type ServerBundlesBuildManifest,
+  configRouteToBranchRoute,
+} from "../config";
 import type { ConfigRoute, RouteManifest } from "../config/routes";
 import invariant from "../invariant";
 import { preloadViteEsm } from "./import-vite-esm-sync";

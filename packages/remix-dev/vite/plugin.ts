@@ -16,19 +16,10 @@ import {
   parse as esModuleLexer,
 } from "es-module-lexer";
 import jsesc from "jsesc";
-import pick from "lodash/pick";
-import omit from "lodash/omit";
 import colors from "picocolors";
 
-import type { ConfigRoute, RouteManifest } from "../config/routes";
-import type {
-  AppConfig as RemixEsbuildUserConfig,
-  RemixConfig as ResolvedRemixEsbuildConfig,
-} from "../config";
-import {
-  resolveConfig as resolveRemixEsbuildConfig,
-  findConfig,
-} from "../config";
+import { type ConfigRoute, type RouteManifest } from "../config/routes";
+import { findConfig } from "../config/findConfig";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
 import type { NodeRequestHandler } from "./node-adapter";
@@ -38,6 +29,12 @@ import * as VirtualModule from "./vmod";
 import { resolveFileUrl } from "./resolve-file-url";
 import { removeExports } from "./remove-exports";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
+import {
+  type VitePluginConfig,
+  type ResolvedVitePluginConfig,
+  resolveReactRouterConfig,
+  resolveEntryFiles,
+} from "../config";
 
 export async function resolveViteConfig({
   configFile,
@@ -127,129 +124,6 @@ const CLIENT_ROUTE_EXPORTS = [
 // The "=1" suffix ensures client route requests can be processed before hitting
 // the Vite plugin since "?client-route" can be serialized as "?client-route="
 const CLIENT_ROUTE_QUERY_STRING = "?client-route=1";
-
-// Only expose a subset of route properties to the "serverBundles" function
-const branchRouteProperties = [
-  "id",
-  "path",
-  "file",
-  "index",
-] as const satisfies ReadonlyArray<keyof ConfigRoute>;
-type BranchRoute = Pick<ConfigRoute, (typeof branchRouteProperties)[number]>;
-
-export const configRouteToBranchRoute = (
-  configRoute: ConfigRoute
-): BranchRoute => pick(configRoute, branchRouteProperties);
-
-export type ServerBundlesFunction = (args: {
-  branch: BranchRoute[];
-}) => string | Promise<string>;
-
-type BaseBuildManifest = {
-  routes: RouteManifest;
-};
-
-type DefaultBuildManifest = BaseBuildManifest & {
-  serverBundles?: never;
-  routeIdToServerBundleId?: never;
-};
-
-export type ServerBundlesBuildManifest = BaseBuildManifest & {
-  serverBundles: {
-    [serverBundleId: string]: {
-      id: string;
-      file: string;
-    };
-  };
-  routeIdToServerBundleId: Record<string, string>;
-};
-
-export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
-
-const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
-  keyof VitePluginConfig
->;
-
-type ExcludedConfigPresetKey = (typeof excludedConfigPresetKeys)[number];
-
-type ConfigPreset = Omit<VitePluginConfig, ExcludedConfigPresetKey>;
-
-export type Preset = {
-  name: string;
-  reactRouterConfig?: (args: {
-    reactRouterUserConfig: VitePluginConfig;
-  }) => ConfigPreset | Promise<ConfigPreset>;
-  reactRouterConfigResolved?: (args: {
-    reactRouterConfig: ResolvedVitePluginConfig;
-  }) => void | Promise<void>;
-};
-
-export type VitePluginConfig = RemixEsbuildUserConfig & {
-  /**
-   * The react router app basename.  Defaults to `"/"`.
-   */
-  basename?: string;
-  /**
-   * The path to the build directory, relative to the project. Defaults to
-   * `"build"`.
-   */
-  buildDirectory?: string;
-  /**
-   * A function that is called after the full React Router build is complete.
-   */
-  buildEnd?: BuildEndHook;
-  /**
-   * Whether to write a `"manifest.json"` file to the build directory.`
-   * Defaults to `false`.
-   */
-  manifest?: boolean;
-  /**
-   * An array of React Router plugin config presets to ease integration with
-   * other platforms and tools.
-   */
-  presets?: Array<Preset>;
-  /**
-   * The file name of the server build output. This file
-   * should end in a `.js` extension and should be deployed to your server.
-   * Defaults to `"index.js"`.
-   */
-  serverBuildFile?: string;
-  /**
-   * A function for assigning routes to different server bundles. This
-   * function should return a server bundle ID which will be used as the
-   * bundle's directory name within the server build directory.
-   */
-  serverBundles?: ServerBundlesFunction;
-  /**
-   * Enable server-side rendering for your application. Disable to use "SPA
-   * Mode", which will request the `/` path at build-time and save it as an
-   * `index.html` file with your assets so your application can be deployed as a
-   * SPA without server-rendering. Default's to `true`.
-   */
-  ssr?: boolean;
-};
-
-type BuildEndHook = (args: {
-  buildManifest: BuildManifest | undefined;
-  reactRouterConfig: ResolvedVitePluginConfig;
-  viteConfig: Vite.ResolvedConfig;
-}) => void | Promise<void>;
-
-export type ResolvedVitePluginConfig = Readonly<
-  Pick<
-    ResolvedRemixEsbuildConfig,
-    "appDirectory" | "future" | "routes" | "serverModuleFormat"
-  > & {
-    basename: string;
-    buildDirectory: string;
-    buildEnd?: BuildEndHook;
-    manifest: boolean;
-    publicPath: string; // derived from Vite's `base` config
-    serverBuildFile: string;
-    serverBundles?: ServerBundlesFunction;
-    ssr: boolean;
-  }
->;
 
 export type ServerBundleBuildConfig = {
   routes: RouteManifest;
@@ -496,73 +370,6 @@ let defaultEntries = fse
   .map((filename) => path.join(defaultEntriesDir, filename));
 invariant(defaultEntries.length > 0, "No default entries found");
 
-let mergeReactRouterConfig = (
-  ...configs: VitePluginConfig[]
-): VitePluginConfig => {
-  let reducer = (
-    configA: VitePluginConfig,
-    configB: VitePluginConfig
-  ): VitePluginConfig => {
-    let mergeRequired = (key: keyof VitePluginConfig) =>
-      configA[key] !== undefined && configB[key] !== undefined;
-
-    return {
-      ...configA,
-      ...configB,
-      ...(mergeRequired("buildEnd")
-        ? {
-            buildEnd: async (...args) => {
-              await Promise.all([
-                configA.buildEnd?.(...args),
-                configB.buildEnd?.(...args),
-              ]);
-            },
-          }
-        : {}),
-      ...(mergeRequired("future")
-        ? {
-            future: {
-              ...configA.future,
-              ...configB.future,
-            },
-          }
-        : {}),
-      ...(mergeRequired("ignoredRouteFiles")
-        ? {
-            ignoredRouteFiles: Array.from(
-              new Set([
-                ...(configA.ignoredRouteFiles ?? []),
-                ...(configB.ignoredRouteFiles ?? []),
-              ])
-            ),
-          }
-        : {}),
-      ...(mergeRequired("presets")
-        ? {
-            presets: [...(configA.presets ?? []), ...(configB.presets ?? [])],
-          }
-        : {}),
-      ...(mergeRequired("routes")
-        ? {
-            routes: async (...args) => {
-              let [routesA, routesB] = await Promise.all([
-                configA.routes?.(...args),
-                configB.routes?.(...args),
-              ]);
-
-              return {
-                ...routesA,
-                ...routesB,
-              };
-            },
-          }
-        : {}),
-    };
-  };
-
-  return configs.reduce(reducer, {});
-};
-
 type MaybePromise<T> = T | Promise<T>;
 
 let reactRouterDevLoadContext: (
@@ -620,114 +427,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
   /** Mutates `ctx` as a side-effect */
   let updatePluginContext = async (): Promise<void> => {
-    let presets: VitePluginConfig[] = (
-      await Promise.all(
-        (reactRouterUserConfig.presets ?? []).map(async (preset) => {
-          if (!preset.name) {
-            throw new Error(
-              "React Router presets must have a `name` property defined."
-            );
-          }
-
-          if (!preset.reactRouterConfig) {
-            return null;
-          }
-
-          let configPreset: VitePluginConfig = omit(
-            await preset.reactRouterConfig({ reactRouterUserConfig }),
-            excludedConfigPresetKeys
-          );
-
-          return configPreset;
-        })
-      )
-    ).filter(function isNotNull<T>(value: T | null): value is T {
-      return value !== null;
-    });
-
-    let defaults = {
-      basename: "/",
-      buildDirectory: "build",
-      manifest: false,
-      serverBuildFile: "index.js",
-      ssr: true,
-    } as const satisfies Partial<VitePluginConfig>;
-
-    let resolvedReactRouterUserConfig = {
-      ...defaults, // Default values should be completely overridden by user/preset config, not merged
-      ...mergeReactRouterConfig(...presets, reactRouterUserConfig),
-    };
-
     let rootDirectory =
       viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
-    let { basename, buildEnd, manifest, ssr } = resolvedReactRouterUserConfig;
-    let isSpaMode = !ssr;
-
-    let {
-      appDirectory,
-      entryClientFilePath,
-      entryServerFilePath,
-      future,
-      routes,
-      serverModuleFormat,
-    } = await resolveRemixEsbuildConfig(resolvedReactRouterUserConfig, {
+    let reactRouterConfig = await resolveReactRouterConfig({
       rootDirectory,
-      isSpaMode,
+      reactRouterUserConfig,
+      viteUserConfig,
+      viteCommand,
     });
 
-    let buildDirectory = path.resolve(
+    let { entryClientFilePath, entryServerFilePath } = await resolveEntryFiles({
       rootDirectory,
-      resolvedReactRouterUserConfig.buildDirectory
-    );
-
-    let { serverBuildFile, serverBundles } = resolvedReactRouterUserConfig;
-
-    let publicPath = viteUserConfig.base ?? "/";
-
-    if (
-      basename !== "/" &&
-      viteCommand === "serve" &&
-      !viteUserConfig.server?.middlewareMode &&
-      !basename.startsWith(publicPath)
-    ) {
-      throw new Error(
-        "When using the React Router `basename` and the Vite `base` config, " +
-          "the `basename` config must begin with `base` for the default " +
-          "Vite dev server."
-      );
-    }
-
-    // Log warning for incompatible vite config flags
-    if (isSpaMode && serverBundles) {
-      console.warn(
-        colors.yellow(
-          colors.bold("⚠️  SPA Mode: ") +
-            "the `serverBundles` config is invalid with " +
-            "`ssr:false` and will be ignored`"
-        )
-      );
-      serverBundles = undefined;
-    }
-
-    let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
-      appDirectory,
-      basename,
-      buildDirectory,
-      buildEnd,
-      future,
-      manifest,
-      publicPath,
-      routes,
-      serverBuildFile,
-      serverBundles,
-      serverModuleFormat,
-      ssr,
+      reactRouterConfig,
     });
-
-    for (let preset of reactRouterUserConfig.presets ?? []) {
-      await preset.reactRouterConfigResolved?.({ reactRouterConfig });
-    }
 
     let viteManifestEnabled = viteUserConfig.build?.manifest === true;
 
