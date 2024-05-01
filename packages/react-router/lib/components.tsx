@@ -54,6 +54,10 @@ import {
   useRoutesImpl,
 } from "./hooks";
 
+// TODO: Let's get this back to using an import map and development/production
+// condition once we get the rollup build replaced
+const ENABLE_DEV_WARNINGS = true;
+
 export interface FutureConfig {
   v7_relativeSplatPath: boolean;
   v7_startTransition: boolean;
@@ -70,7 +74,7 @@ export function mapRouteProperties(route: RouteObject) {
   };
 
   if (route.Component) {
-    if (__DEV__) {
+    if (ENABLE_DEV_WARNINGS) {
       if (route.element) {
         warning(
           false,
@@ -86,7 +90,7 @@ export function mapRouteProperties(route: RouteObject) {
   }
 
   if (route.HydrateFallback) {
-    if (__DEV__) {
+    if (ENABLE_DEV_WARNINGS) {
       if (route.hydrateFallbackElement) {
         warning(
           false,
@@ -102,7 +106,7 @@ export function mapRouteProperties(route: RouteObject) {
   }
 
   if (route.ErrorBoundary) {
-    if (__DEV__) {
+    if (ENABLE_DEV_WARNINGS) {
       if (route.errorElement) {
         warning(
           false,
