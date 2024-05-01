@@ -47,6 +47,10 @@ import {
   RouteErrorContext,
 } from "./context";
 
+// TODO: Let's get this back to using an import map and development/production
+// condition once we get the rollup build replaced
+const ENABLE_DEV_WARNINGS = true;
+
 /**
  * Returns the full href for the given "to" value. This is useful for building
  * custom links that are also accessible and preserve right-click behavior.
@@ -365,7 +369,7 @@ export function useRoutesImpl(
   let parentPathnameBase = routeMatch ? routeMatch.pathnameBase : "/";
   let parentRoute = routeMatch && routeMatch.route;
 
-  if (__DEV__) {
+  if (ENABLE_DEV_WARNINGS) {
     // You won't get a warning about 2 different <Routes> under a <Route>
     // without a trailing *, but this is a best-effort warning anyway since we
     // cannot even give the warning unless they land at the parent route.
@@ -446,7 +450,7 @@ export function useRoutesImpl(
 
   let matches = matchRoutes(routes, { pathname: remainingPathname });
 
-  if (__DEV__) {
+  if (ENABLE_DEV_WARNINGS) {
     warning(
       parentRoute || matches != null,
       `No routes matched location "${location.pathname}${location.search}${location.hash}" `
@@ -531,7 +535,7 @@ function DefaultErrorComponent() {
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
 
   let devInfo = null;
-  if (__DEV__) {
+  if (ENABLE_DEV_WARNINGS) {
     console.error(
       "Error handled by React Router default ErrorBoundary:",
       error
