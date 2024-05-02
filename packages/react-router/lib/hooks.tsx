@@ -154,8 +154,8 @@ export function useMatch<
  * The interface for the navigate() function returned from useNavigate().
  */
 export interface NavigateFunction {
-  (to: To, options?: NavigateOptions): void;
-  (delta: number): void;
+  (to: To, options?: NavigateOptions): void | Promise<void>;
+  (delta: number): void | Promise<void>;
 }
 
 const navigateEffectWarning =
@@ -905,10 +905,12 @@ export function useRevalidator() {
   let state = useDataRouterState(DataRouterStateHook.UseRevalidator);
   return React.useMemo(
     () => ({
-      revalidate: dataRouterContext.router.revalidate,
+      async revalidate() {
+        await dataRouterContext.router.revalidate();
+      },
       state: state.revalidation,
     }),
-    [dataRouterContext.router.revalidate, state.revalidation]
+    [dataRouterContext.router, state.revalidation]
   );
 }
 
@@ -1079,7 +1081,7 @@ function useNavigateStable(): NavigateFunction {
   });
 
   let navigate: NavigateFunction = React.useCallback(
-    (to: To | number, options: NavigateOptions = {}) => {
+    async (to: To | number, options: NavigateOptions = {}) => {
       warning(activeRef.current, navigateEffectWarning);
 
       // Short circuit here since if this happens on first render the navigate
@@ -1089,7 +1091,7 @@ function useNavigateStable(): NavigateFunction {
       if (typeof to === "number") {
         router.navigate(to);
       } else {
-        router.navigate(to, { fromRouteId: id, ...options });
+        await router.navigate(to, { fromRouteId: id, ...options });
       }
     },
     [router, id]

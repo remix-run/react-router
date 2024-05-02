@@ -1428,7 +1428,7 @@ export interface SubmitFunction {
      * submitting arbitrary data without a backing `<form>`.
      */
     options?: SubmitOptions
-  ): void;
+  ): Promise<void>;
 }
 
 /**
@@ -1439,7 +1439,7 @@ export interface FetcherSubmitFunction {
     target: SubmitTarget,
     // Fetchers cannot replace or set state because they are not navigation events
     options?: Omit<SubmitOptions, "replace" | "state">
-  ): void;
+  ): Promise<void>;
 }
 
 function validateClientSideSubmission() {
@@ -1464,7 +1464,7 @@ export function useSubmit(): SubmitFunction {
   let currentRouteId = useRouteId();
 
   return React.useCallback<SubmitFunction>(
-    (target, options = {}) => {
+    async (target, options = {}) => {
       validateClientSideSubmission();
 
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
@@ -1474,7 +1474,7 @@ export function useSubmit(): SubmitFunction {
 
       if (options.navigate === false) {
         let key = options.fetcherKey || getUniqueFetcherId();
-        router.fetch(key, currentRouteId, options.action || action, {
+        await router.fetch(key, currentRouteId, options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -1483,7 +1483,7 @@ export function useSubmit(): SubmitFunction {
           unstable_flushSync: options.unstable_flushSync,
         });
       } else {
-        router.navigate(options.action || action, {
+        await router.navigate(options.action || action, {
           preventScrollReset: options.preventScrollReset,
           formData,
           body,
@@ -1558,7 +1558,10 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
     FetcherFormProps & React.RefAttributes<HTMLFormElement>
   >;
   submit: FetcherSubmitFunction;
-  load: (href: string, opts?: { unstable_flushSync?: boolean }) => void;
+  load: (
+    href: string,
+    opts?: { unstable_flushSync?: boolean }
+  ) => Promise<void>;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
@@ -1608,17 +1611,17 @@ export function useFetcher<TData = any>({
 
   // Fetcher additions
   let load = React.useCallback(
-    (href: string, opts?: { unstable_flushSync?: boolean }) => {
+    async (href: string, opts?: { unstable_flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
-      router.fetch(fetcherKey, routeId, href, opts);
+      await router.fetch(fetcherKey, routeId, href, opts);
     },
     [fetcherKey, routeId, router]
   );
 
   let submitImpl = useSubmit();
   let submit = React.useCallback<FetcherSubmitFunction>(
-    (target, opts) => {
-      submitImpl(target, {
+    async (target, opts) => {
+      await submitImpl(target, {
         ...opts,
         navigate: false,
         fetcherKey,
