@@ -250,13 +250,17 @@ export function Links() {
 }
 
 /**
- * This component renders all the `<link rel="prefetch">` and
- * `<link rel="modulepreload"/>` tags for all the assets (data, modules, css) of
- * a given page.
- *
- * @param props
- * @param props.page
- * @see https://remix.run/components/prefetch-page-links
+  Renders `<link rel=prefetch|modulepreload>` tags for modules and data of another page to enable an instant navigation to that page. {@link LinkProps.prefetch | `<Link prefetch>`} uses this internally, but you can render it to prefetch a page for any other reason.
+
+  ```tsx
+  import { PrefetchPageLinks } from "react-router"
+
+  <PrefetchPageLinks page="/absolute/path" />
+  ```
+
+  For example, you may render one of this as the user types into a search field to prefetch search results before they click through to their selection.
+
+  @category Components
  */
 export function PrefetchPageLinks({
   page,

@@ -322,7 +322,11 @@ export {
   Scripts,
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
-export type { HtmlLinkDescriptor, LinkDescriptor } from "./lib/dom/ssr/links";
+export type {
+  HtmlLinkDescriptor,
+  LinkDescriptor,
+  PrefetchPageDescriptor,
+} from "./lib/dom/ssr/links";
 export type {
   ClientActionFunction,
   ClientActionFunctionArgs,

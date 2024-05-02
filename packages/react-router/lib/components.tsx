@@ -373,11 +373,11 @@ export interface NavigateProps {
 }
 
 /**
- * Changes the current location.
+ * A component-based version of {@link useNavigate} to use in a [`React.Component
+ * Class`](https://reactjs.org/docs/react-component.html) where hooks are not
+ * able to be used.
  *
- * Note: This API is mostly useful in React.Component subclasses that are not
- * able to use hooks. In functional components, we recommend you use the
- * `useNavigate` hook instead.
+ * It's recommended to avoid using this component in favor of {@link useNavigate}
  *
  * @category Components
  */
@@ -426,13 +426,35 @@ export function Navigate({
 }
 
 export interface OutletProps {
+  /**
+    Provides a context value to the element tree below the outlet. Use when the parent route needs to provide values to child routes.
+
+    ```tsx
+    <Outlet context={myContextValue} />
+    ```
+
+    Access the context with {@link useOutletContext}.
+   */
   context?: unknown;
 }
 
 /**
- * Renders the child route's element, if there is one.
- *
- * @category Components
+  Renders the matching child route of a parent route or nothing if no child route matches.
+
+  ```tsx
+  import { Outlet } from "react-router"
+
+  export default function SomeParent() {
+    return (
+      <div>
+        <h1>Parent Content</h1>
+        <Outlet />
+      </div>
+    );
+  }
+  ```
+ 
+  @category Components
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
