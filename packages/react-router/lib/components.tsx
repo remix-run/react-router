@@ -63,6 +63,9 @@ export interface FutureConfig {
   v7_startTransition: boolean;
 }
 
+/**
+ * @private
+ */
 export function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
     // Note: this check also occurs in createRoutesFromChildren so update
@@ -124,6 +127,9 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
+/**
+ * @category Routers
+ */
 export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
@@ -186,6 +192,8 @@ const startTransitionImpl = React[START_TRANSITION];
 
 /**
  * Given a Remix Router instance, render the appropriate UI
+ *
+ * @category Components
  */
 export function RouterProvider({
   fallbackElement,
@@ -310,7 +318,7 @@ export interface MemoryRouterProps {
 /**
  * A `<Router>` that stores all entries in memory.
  *
- * @see https://reactrouter.com/router-components/memory-router
+ * @category Components
  */
 export function MemoryRouter({
   basename,
@@ -371,7 +379,7 @@ export interface NavigateProps {
  * able to use hooks. In functional components, we recommend you use the
  * `useNavigate` hook instead.
  *
- * @see https://reactrouter.com/components/navigate
+ * @category Components
  */
 export function Navigate({
   to,
@@ -424,7 +432,7 @@ export interface OutletProps {
 /**
  * Renders the child route's element, if there is one.
  *
- * @see https://reactrouter.com/components/outlet
+ * @category Components
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
@@ -477,7 +485,7 @@ export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 /**
  * Declares an element that should be rendered at a certain URL path.
  *
- * @see https://reactrouter.com/components/route
+ * @category Components
  */
 export function Route(_props: RouteProps): React.ReactElement | null {
   invariant(
@@ -504,7 +512,7 @@ export interface RouterProps {
  * router that is more specific to your environment such as a `<BrowserRouter>`
  * in web browsers or a `<StaticRouter>` for server rendering.
  *
- * @see https://reactrouter.com/router-components/router
+ * @category Components
  */
 export function Router({
   basename: basenameProp = "/",
@@ -595,7 +603,7 @@ export interface RoutesProps {
  * A container for a nested tree of `<Route>` elements that renders the branch
  * that best matches the current location.
  *
- * @see https://reactrouter.com/components/routes
+ * @category Components
  */
 export function Routes({
   children,
@@ -609,15 +617,148 @@ export interface AwaitResolveRenderFunction {
 }
 
 export interface AwaitProps {
+  /**
+  When using a function, the resolved value is provided as the parameter.
+
+  ```tsx [2]
+  <Await resolve={reviewsPromise}>
+    {(resolvedReviews) => <Reviews items={resolvedReviews} />}
+  </Await>
+  ```
+
+  When using React elements, {@link useAsyncValue} will provide the
+  resolved value:
+
+  ```tsx [2]
+  <Await resolve={reviewsPromise}>
+    <Reviews />
+  </Await>
+
+  function Reviews() {
+    const resolvedReviews = useAsyncValue()
+    return <div>...</div>
+  }
+  ```
+  */
   children: React.ReactNode | AwaitResolveRenderFunction;
+
+  /**
+  The error element renders instead of the children when the promise rejects.
+
+  ```tsx
+  <Await
+    errorElement={<div>Oops</div>}
+    resolve={reviewsPromise}
+  >
+    <Reviews />
+  </Await>
+  ```
+
+  To provide a more contextual error, you can use the {@link useAsyncError} in a
+  child component
+
+  ```tsx
+  <Await
+    errorElement={<ReviewsError />}
+    resolve={reviewsPromise}
+  >
+    <Reviews />
+  </Await>
+
+  function ReviewsError() {
+    const error = useAsyncError()
+    return <div>Error loading reviews: {error.message}</div>
+  }
+  ```
+
+  If you do not provide an errorElement, the rejected value will bubble up to
+  the nearest route-level {@link NonIndexRouteObject#ErrorBoundary | ErrorBoundary} and be accessible
+  via {@link useRouteError} hook.
+  */
   errorElement?: React.ReactNode;
+
+  /**
+  Takes a promise returned from a {@link LoaderFunction | loader} value to be resolved and rendered.
+
+  ```jsx
+  import { useLoaderData, Await } from "react-router"
+
+  export async function loader() {
+    let reviews = getReviews() // not awaited
+    let book = await getBook()
+    return {
+      book,
+      reviews, // this is a promise
+    }
+  }
+
+  export default function Book() {
+    const {
+      book,
+      reviews, // this is the same promise
+    } = useLoaderData()
+
+    return (
+      <div>
+        <h1>{book.title}</h1>
+        <p>{book.description}</p>
+        <React.Suspense fallback={<ReviewsSkeleton />}>
+          <Await
+            // and is the promise we pass to Await
+            resolve={reviews}
+          >
+            <Reviews />
+          </Await>
+        </React.Suspense>
+      </div>
+    );
+  }
+  ```
+   */
   resolve: TrackedPromise | any;
 }
 
 /**
- * Component to use for rendering lazily loaded data from returning defer()
- * in a loader function
- */
+Used to render promise values with automatic error handling.
+
+```tsx
+import { Await, useLoaderData } from "react-router";
+
+export function loader() {
+  // not awaited
+  const reviews = getReviews()
+  // awaited (blocks the transition)
+  const book = await fetch("/api/book").then((res) => res.json())
+  return { book, reviews }
+}
+
+function Book() {
+  const { book, reviews } = useLoaderData();
+  return (
+    <div>
+      <h1>{book.title}</h1>
+      <p>{book.description}</p>
+      <React.Suspense fallback={<ReviewsSkeleton />}>
+        <Await
+          resolve={reviews}
+          errorElement={
+            <div>Could not load reviews 😬</div>
+          }
+          children={(resolvedReviews) => (
+            <Reviews items={resolvedReviews} />
+          )}
+        />
+      </React.Suspense>
+    </div>
+  );
+}
+```
+
+**Note:** `<Await>` expects to be rendered inside of a `<React.Suspense>`
+
+@category Components
+
+*/
 export function Await({ children, errorElement, resolve }: AwaitProps) {
   return (
     <AwaitErrorBoundary resolve={resolve} errorElement={errorElement}>
@@ -754,8 +895,6 @@ function ResolveAwait({
  * Creates a route config from a React "children" object, which is usually
  * either a `<Route>` element or an array of them. Used internally by
  * `<Routes>` to create a route config from its children.
- *
- * @see https://reactrouter.com/utils/create-routes-from-children
  */
 export function createRoutesFromChildren(
   children: React.ReactNode,
