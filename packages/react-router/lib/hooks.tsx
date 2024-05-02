@@ -55,7 +55,7 @@ const ENABLE_DEV_WARNINGS = true;
  * Returns the full href for the given "to" value. This is useful for building
  * custom links that are also accessible and preserve right-click behavior.
  *
- * @see https://reactrouter.com/hooks/use-href
+ * @category Hooks
  */
 export function useHref(
   to: To,
@@ -88,7 +88,7 @@ export function useHref(
 /**
  * Returns true if this component is a descendant of a `<Router>`.
  *
- * @see https://reactrouter.com/hooks/use-in-router-context
+ * @category Hooks
  */
 export function useInRouterContext(): boolean {
   return React.useContext(LocationContext) != null;
@@ -102,7 +102,7 @@ export function useInRouterContext(): boolean {
  * "routing" in your app, and we'd like to know what your use case is. We may
  * be able to provide something higher-level to better suit your needs.
  *
- * @see https://reactrouter.com/hooks/use-location
+ * @category Hooks
  */
 export function useLocation(): Location {
   invariant(
@@ -119,7 +119,7 @@ export function useLocation(): Location {
  * Returns the current navigation action which describes how the router came to
  * the current location, either by a pop, push, or replace on the history stack.
  *
- * @see https://reactrouter.com/hooks/use-navigation-type
+ * @category Hooks
  */
 export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
@@ -130,7 +130,7 @@ export function useNavigationType(): NavigationType {
  * This is useful for components that need to know "active" state, e.g.
  * `<NavLink>`.
  *
- * @see https://reactrouter.com/hooks/use-match
+ * @category Hooks
  */
 export function useMatch<
   ParamKey extends ParamParseKey<Path>,
@@ -152,6 +152,8 @@ export function useMatch<
 
 /**
  * The interface for the navigate() function returned from useNavigate().
+ *
+ * @category Types
  */
 export interface NavigateFunction {
   (to: To, options?: NavigateOptions): void;
@@ -179,7 +181,7 @@ function useIsomorphicLayoutEffect(
  * Returns an imperative method for changing the location. Used by `<Link>`s, but
  * may also be used by other elements to change the location.
  *
- * @see https://reactrouter.com/hooks/use-navigate
+ * @category Hooks
  */
 export function useNavigate(): NavigateFunction {
   let { isDataRoute } = React.useContext(RouteContext);
@@ -266,7 +268,8 @@ const OutletContext = React.createContext<unknown>(null);
 /**
  * Returns the context (if provided) for the child route at this level of the route
  * hierarchy.
- * @see https://reactrouter.com/hooks/use-outlet-context
+ *
+ * @category Hooks
  */
 export function useOutletContext<Context = unknown>(): Context {
   return React.useContext(OutletContext) as Context;
@@ -276,7 +279,7 @@ export function useOutletContext<Context = unknown>(): Context {
  * Returns the element for the child route at this level of the route
  * hierarchy. Used internally by `<Outlet>` to render child routes.
  *
- * @see https://reactrouter.com/hooks/use-outlet
+ * @category Hooks
  */
 export function useOutlet(context?: unknown): React.ReactElement | null {
   let outlet = React.useContext(RouteContext).outlet;
@@ -292,7 +295,7 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
  * Returns an object of key/value pairs of the dynamic params from the current
  * URL that were matched by the route path.
  *
- * @see https://reactrouter.com/hooks/use-params
+ * @category Hooks
  */
 export function useParams<
   ParamsOrKey extends string | Record<string, string | undefined> = string
@@ -307,7 +310,7 @@ export function useParams<
 /**
  * Resolves the pathname of the given `to` value against the current location.
  *
- * @see https://reactrouter.com/hooks/use-resolved-path
+ * @category Hooks
  */
 export function useResolvedPath(
   to: To,
@@ -338,7 +341,7 @@ export function useResolvedPath(
  * elements in the tree must render an `<Outlet>` to render their child route's
  * element.
  *
- * @see https://reactrouter.com/hooks/use-routes
+ * @category Hooks
  */
 export function useRoutes(
   routes: RouteObject[],
@@ -347,7 +350,12 @@ export function useRoutes(
   return useRoutesImpl(routes, locationArg);
 }
 
-// Internal implementation with accept optional param for RouterProvider usage
+/**
+ * Internal implementation with accept optional param for RouterProvider usage
+ *
+ * @private
+ * @category Hooks
+ */
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
@@ -890,6 +898,8 @@ export function useRouteId() {
 /**
  * Returns the current navigation, defaulting to an "idle" navigation when
  * no navigation is in progress
+ *
+ * @category Hooks
  */
 export function useNavigation() {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
@@ -899,6 +909,8 @@ export function useNavigation() {
 /**
  * Returns a revalidate function for manually triggering revalidation, as well
  * as the current state of any manual revalidations
+ *
+ * @category Hooks
  */
 export function useRevalidator() {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
@@ -915,6 +927,8 @@ export function useRevalidator() {
 /**
  * Returns the active route matches, useful for accessing loaderData for
  * parent/child routes or the route "handle" property
+ *
+ * @category Hooks
  */
 export function useMatches(): UIMatch[] {
   let { matches, loaderData } = useDataRouterState(
@@ -928,6 +942,8 @@ export function useMatches(): UIMatch[] {
 
 /**
  * Returns the loader data for the nearest ancestor Route loader
+ *
+ * @category Hooks
  */
 export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
@@ -944,6 +960,8 @@ export function useLoaderData(): unknown {
 
 /**
  * Returns the loaderData for the given routeId
+ *
+ * @category Hooks
  */
 export function useRouteLoaderData(routeId: string): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);
@@ -952,6 +970,8 @@ export function useRouteLoaderData(routeId: string): unknown {
 
 /**
  * Returns the action data for the nearest ancestor Route action
+ *
+ * @category Hooks
  */
 export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
@@ -963,6 +983,8 @@ export function useActionData(): unknown {
  * Returns the nearest ancestor Route error, which could be a loader/action
  * error or a render error.  This is intended to be called from your
  * ErrorBoundary/errorElement to display a proper error message.
+ *
+ * @category Hooks
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
@@ -981,6 +1003,8 @@ export function useRouteError(): unknown {
 
 /**
  * Returns the happy-path data from the nearest ancestor `<Await />` value
+ *
+ * @category Hooks
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
@@ -989,6 +1013,8 @@ export function useAsyncValue(): unknown {
 
 /**
  * Returns the error from the nearest ancestor `<Await />` value
+ *
+ * @category Hooks
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1002,6 +1028,8 @@ let blockerId = 0;
  * user a confirmation dialog to confirm the navigation.  Mostly used to avoid
  * using half-filled form data.  This does not handle hard-reloads or
  * cross-origin navigations.
+ *
+ * @category Hooks
  */
 export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
   let { router, basename } = useDataRouterContext(DataRouterHook.UseBlocker);
@@ -1068,6 +1096,8 @@ export function useBlocker(shouldBlock: boolean | BlockerFunction): Blocker {
 /**
  * Stable version of useNavigate that is used when we are in the context of
  * a RouterProvider.
+ *
+ * @private
  */
 function useNavigateStable(): NavigateFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseNavigateStable);
