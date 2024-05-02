@@ -45,7 +45,7 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { PrefetchBehavior, ScriptProps } from "./ssr/components";
+import type { PrefetchBehavior, ScriptsProps } from "./ssr/components";
 import {
   PrefetchPageLinks,
   RemixContext,
@@ -121,6 +121,9 @@ interface DOMRouterOpts {
   window?: Window;
 }
 
+/**
+ * @category Routers
+ */
 export function createBrowserRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
@@ -140,6 +143,9 @@ export function createBrowserRouter(
   }).initialize();
 }
 
+/**
+ * @category Routers
+ */
 export function createHashRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
@@ -612,6 +618,9 @@ function DataRoutes({
   return useRoutesImpl(routes, undefined, state, future);
 }
 
+/**
+ * @category Types
+ */
 export interface BrowserRouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -621,6 +630,8 @@ export interface BrowserRouterProps {
 
 /**
  * A `<Router>` for use in web browsers. Provides the cleanest URLs.
+ *
+ * @category Router Components
  */
 export function BrowserRouter({
   basename,
@@ -662,6 +673,9 @@ export function BrowserRouter({
   );
 }
 
+/**
+ * @category Types
+ */
 export interface HashRouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -672,6 +686,8 @@ export interface HashRouterProps {
 /**
  * A `<Router>` for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
+ *
+ * @category Router Components
  */
 export function HashRouter({
   basename,
@@ -713,6 +729,9 @@ export function HashRouter({
   );
 }
 
+/**
+ * @category Types
+ */
 export interface HistoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -725,6 +744,8 @@ export interface HistoryRouterProps {
  * to note that using your own history object is highly discouraged and may add
  * two versions of the history library to your bundles unless you use the same
  * version of the history library that React Router uses internally.
+ *
+ * @category Router Components
  */
 function HistoryRouter({
   basename,
@@ -763,6 +784,9 @@ HistoryRouter.displayName = "unstable_HistoryRouter";
 
 export { HistoryRouter as unstable_HistoryRouter };
 
+/**
+ * @category Types
+ */
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   /**
@@ -1072,6 +1096,9 @@ export type NavLinkRenderProps = {
   isTransitioning: boolean;
 };
 
+/**
+ * @category Types
+ */
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
   /**
@@ -1111,7 +1138,7 @@ export interface NavLinkProps
   className?: string | ((props: NavLinkRenderProps) => string | undefined);
 
   /**
-    Changes the matching logic for the `active` and `pending` states to only match to the "end" of the {@link NavLink#to}. If the URL is longer, it will no longer be considered active.
+    Changes the matching logic for the `active` and `pending` states to only match to the "end" of the {@link NavLinkProps.to}. If the URL is longer, it will no longer be considered active.
 
     | Link                          | URL          | isActive |
     | ----------------------------- | ------------ | -------- |
@@ -1316,6 +1343,9 @@ export interface FetcherFormProps
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
 }
 
+/**
+ * @category Types
+ */
 export interface FormProps extends FetcherFormProps {
   /**
    * Indicates a specific fetcherKey to use when using `navigate={false}` so you
@@ -1450,14 +1480,49 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
 );
 Form.displayName = "Form";
 
-export type ScrollRestorationProps = ScriptProps & {
+export type ScrollRestorationProps = ScriptsProps & {
+  /**
+    Defines the key used to restore scroll positions.
+
+    ```tsx
+    <ScrollRestoration
+      getKey={(location, matches) => {
+        // default behavior
+        return location.key
+      }}
+    />
+    ```
+   */
   getKey?: GetScrollRestorationKeyFunction;
+
   storageKey?: string;
 };
 
 /**
- * This component will emulate the browser's scroll restoration on location
- * changes.
+  Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the {@link Scripts} component.
+
+  ```tsx
+  import { ScrollRestoration } from "react-router";
+
+  export default function Root() {
+    return (
+      <html>
+        <body>
+          <ScrollRestoration />
+          <Scripts />
+        </body>
+      </html>
+    );
+  }
+  ```
+
+  This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+
+  ```tsx
+  <ScrollRestoration nonce={cspNonce} />
+  ```
+
+  @category Components
  */
 export function ScrollRestoration({
   getKey,
@@ -1574,6 +1639,8 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * Handles the click behavior for router `<Link>` components. This is useful if
  * you need to create custom `<Link>` components with the same click behavior we
  * use in our exported `<Link>`.
+ *
+ * @category Hooks
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
@@ -1634,8 +1701,18 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
 }
 
 /**
- * A convenient wrapper for reading and writing search parameters via the
- * URLSearchParams interface.
+  Returns a tuple of the current URL's {@link URLSearchParams} and a function to update them. Setting the search params causes a navigation.
+
+  ```tsx
+  import { useSearchParams } from "react-router";
+
+  export function SomeComponent() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    // ...
+  }
+  ```
+
+ @category Hooks
  */
 export function useSearchParams(
   defaultInit?: URLSearchParamsInit
@@ -1683,6 +1760,34 @@ export function useSearchParams(
   return [searchParams, setSearchParams];
 }
 
+/**
+  Sets new search params and causes a navigation when called.
+
+  ```tsx
+  <button
+    onClick={() => {
+      const params = new URLSearchParams();
+      params.set("someKey", "someValue");
+      setSearchParams(params, {
+        preventScrollReset: true,
+      });
+    }}
+  />
+  ```
+
+  It also supports a function for setting new search params.
+
+  ```tsx
+  <button
+    onClick={() => {
+      setSearchParams((prev) => {
+        prev.set("someKey", "someValue");
+        return prev;
+      });
+    }}
+  />
+  ```
+ */
 export type SetURLSearchParams = (
   nextInit?:
     | URLSearchParamsInit
@@ -1696,12 +1801,40 @@ export type SetURLSearchParams = (
 export interface SubmitFunction {
   (
     /**
-     * Specifies the `<form>` to be submitted to the server, a specific
-     * `<button>` or `<input type="submit">` to use to submit the form, or some
-     * arbitrary data to submit.
-     *
-     * Note: When using a `<button>` its `name` and `value` will also be
-     * included in the form data that is submitted.
+      Can be multiple types of elements and objects
+
+      **`HTMLFormElement`**
+
+      ```tsx
+      <Form
+        onSubmit={(event) => {
+          submit(event.currentTarget);
+        }}
+      />
+      ```
+
+      **`FormData`**
+
+      ```tsx
+      const formData = new FormData();
+      formData.append("myKey", "myValue");
+      submit(formData, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as `FormData`**
+
+      ```tsx
+      submit({ myKey: "myValue" }, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as JSON**
+
+      ```tsx
+      submit(
+        { myKey: "myValue" },
+        { method: "post", encType: "application/json" }
+      );
+      ```
      */
     target: SubmitTarget,
 
@@ -1718,7 +1851,45 @@ export interface SubmitFunction {
  */
 export interface FetcherSubmitFunction {
   (
+    /**
+      Can be multiple types of elements and objects
+
+      **`HTMLFormElement`**
+
+      ```tsx
+      <fetcher.Form
+        onSubmit={(event) => {
+          fetcher.submit(event.currentTarget);
+        }}
+      />
+      ```
+
+      **`FormData`**
+
+      ```tsx
+      const formData = new FormData();
+      formData.append("myKey", "myValue");
+      fetcher.submit(formData, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as `FormData`**
+
+      ```tsx
+      fetcher.submit({ myKey: "myValue" }, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as JSON**
+
+      ```tsx
+      fetcher.submit(
+        { myKey: "myValue" },
+        { method: "post", encType: "application/json" }
+      );
+      ```
+
+     */
     target: SubmitTarget,
+
     // Fetchers cannot replace or set state because they are not navigation events
     options?: Omit<SubmitOptions, "replace" | "state">
   ): Promise<void>;
@@ -1737,8 +1908,24 @@ let fetcherId = 0;
 let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 
 /**
- * Returns a function that may be used to programmatically submit a form (or
- * some arbitrary data) to the server.
+  The imperative version of {@link Form | `<Form>`} that lets you submit a form from code instead of a user interaction.
+
+  ```tsx
+  import { useSubmit } from "react-router";
+
+  function SomeComponent() {
+    const submit = useSubmit();
+    return (
+      <Form
+        onChange={(event) => {
+          submit(event.currentTarget);
+        }}
+      />
+    );
+  }
+  ```
+
+  @category Hooks
  */
 export function useSubmit(): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
@@ -1785,7 +1972,29 @@ export function useSubmit(): SubmitFunction {
 
 // v7: Eventually we should deprecate this entirely in favor of using the
 // router method directly?
+/**
+  Resolves the URL to the closest route in the component hierarchy instead of the current URL of the app.
+
+  This is used internally by {@link Form} resolve the action to the closest route, but can be used generically as well.
+
+  ```tsx
+  import { useFormAction } from "react-router";
+
+  function SomeComponent() {
+    // closest route URL
+    let action = useFormAction();
+
+    // closest route URL + "destroy"
+    let destroyAction = useFormAction("destroy");
+  }
+  ```
+
+  @category Hooks
+ */
 export function useFormAction(
+  /**
+   * The action to append to the closest route URL.
+   */
   action?: string,
   { relative }: { relative?: RelativeRoutingType } = {}
 ): string {
@@ -1835,26 +2044,158 @@ export function useFormAction(
   return createPath(path);
 }
 
+/**
+The return value of `useFetcher` that keeps track of the state of a fetcher.
+
+```tsx
+let fetcher = useFetcher();
+```
+ */
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
+  /**
+    Just like {@link Form} except it doesn't cause a navigation.
+
+    ```tsx
+    function SomeComponent() {
+      const fetcher = useFetcher()
+      return (
+        <fetcher.Form method="post" action="/some/route">
+          <input type="text" />
+        </fetcher.Form>
+      )
+    }
+    ```
+   */
   Form: React.ForwardRefExoticComponent<
     FetcherFormProps & React.RefAttributes<HTMLFormElement>
   >;
+
+  /**
+    Submits form data to a route. While multiple nested routes can match a URL, only the leaf route will be called.
+
+    The `formData` can be multiple types:
+
+    - [`FormData`][form_data] - A `FormData` instance.
+    - [`HTMLFormElement`][html_form_element] - A [`<form>`][form_element] DOM element.
+    - `Object` - An object of key/value pairs that will be converted to a `FormData` instance by default. You can pass a more complex object and serialize it as JSON by specifying `encType: "application/json"`. See [`useSubmit`][use-submit] for more details.
+
+    If the method is `GET`, then the route [`loader`][loader] is being called and with the `formData` serialized to the url as [`URLSearchParams`][url_search_params]. If `DELETE`, `PATCH`, `POST`, or `PUT`, then the route [`action`][action] is being called with `formData` as the body.
+
+    ```tsx
+    // Submit a FormData instance (GET request)
+    const formData = new FormData();
+    fetcher.submit(formData);
+
+    // Submit the HTML form element
+    fetcher.submit(event.currentTarget.form, {
+      method: "POST",
+    });
+
+    // Submit key/value JSON as a FormData instance
+    fetcher.submit(
+      { serialized: "values" },
+      { method: "POST" }
+    );
+
+    // Submit raw JSON
+    fetcher.submit(
+      {
+        deeply: {
+          nested: {
+            json: "values",
+          },
+        },
+      },
+      {
+        method: "POST",
+        encType: "application/json",
+      }
+    );
+    ```
+   */
   submit: FetcherSubmitFunction;
+
+  /**
+    Loads data from a route. Useful for loading data imperatively inside of user events outside of a normal button or form, like a combobox or search input.
+      
+    ```tsx
+    let fetcher = useFetcher()
+
+    <input onChange={e => {
+      fetcher.load(`/search?q=${e.target.value}`)
+    }} />
+    ```
+   */
   load: (
     href: string,
-    opts?: { unstable_flushSync?: boolean }
+    opts?: {
+      /**
+       * Wraps the initial state update for this `fetcher.load` in a
+       * `ReactDOM.flushSync` call instead of the default `React.startTransition`.
+       * This allows you to perform synchronous DOM actions immediately after the
+       * update is flushed to the DOM.
+       */
+      unstable_flushSync?: boolean;
+    }
   ) => Promise<void>;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
 
 /**
- * Interacts with route loaders and actions without causing a navigation. Great
- * for any interaction that stays on the same page.
+  Useful for creating complex, dynamic user interfaces that require multiple, concurrent data interactions without causing a navigation.
+  
+  Fetchers track their own, independent state and can be used to load data, submit forms, and generally interact with loaders and actions.
+
+  ```tsx
+  import { useFetcher } from "react-router"
+
+  function SomeComponent() {
+    let fetcher = useFetcher()
+
+    // states are available on the fetcher
+    fetcher.state // "idle" | "loading" | "submitting"
+    fetcher.data // the data returned from the action or loader
+
+    // render a form
+    <fetcher.Form method="post" />
+
+    // load data
+    fetcher.load("/some/route")
+
+    // submit data
+    fetcher.submit(someFormRef, { method: "post" })
+    fetcher.submit(someData, {
+      method: "post",
+      encType: "application/json"
+    })
+  }
+  ```
+
+  @category Hooks
  */
 export function useFetcher<TData = any>({
   key,
-}: { key?: string } = {}): FetcherWithComponents<TData> {
+}: {
+  /**
+    By default, `useFetcher` generate a unique fetcher scoped to that component. If you want to identify a fetcher with your own key such that you can access it from elsewhere in your app, you can do that with the `key` option:
+
+    ```tsx
+    function SomeComp() {
+      let fetcher = useFetcher({ key: "my-key" })
+      // ...
+    }
+
+    // Somewhere else
+    function AnotherComp() {
+      // this will be the same fetcher, sharing the state across the app
+      let fetcher = useFetcher({ key: "my-key" });
+      // ...
+    }
+    ```
+   */
+  key?: string;
+} = {}): FetcherWithComponents<TData> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let state = useDataRouterState(DataRouterStateHook.UseFetcher);
   let fetcherData = React.useContext(FetchersContext);
@@ -1942,8 +2283,20 @@ export function useFetcher<TData = any>({
 }
 
 /**
- * Provides all fetchers currently on the page. Useful for layouts and parent
- * routes that need to provide pending/optimistic UI regarding the fetch.
+  Returns an array of all in-flight fetchers. This is useful for components throughout the app that didn't create the fetchers but want to use their submissions to participate in optimistic UI.
+
+  ```tsx
+  import { useFetchers } from "react-router";
+
+  function SomeComponent() {
+    const fetchers = useFetchers();
+    fetchers[0].formData; // FormData
+    fetchers[0].state; // etc.
+    // ...
+  }
+  ```
+
+  @category Hooks
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);
@@ -2101,12 +2454,9 @@ function useScrollRestoration({
 export { useScrollRestoration as UNSAFE_useScrollRestoration };
 
 /**
- * Setup a callback to be fired on the window's `beforeunload` event. This is
- * useful for saving some data to `window.localStorage` just before the page
- * refreshes.
+ * Setup a callback to be fired on the window's `beforeunload` event.
  *
- * Note: The `callback` argument should be a function created with
- * `React.useCallback()`.
+ * @category Hooks
  */
 export function useBeforeUnload(
   callback: (event: BeforeUnloadEvent) => any,
@@ -2145,12 +2495,39 @@ function usePageHide(
 }
 
 /**
- * Wrapper around useBlocker to show a window.confirm prompt to users instead
- * of building a custom UI with useBlocker.
- *
- * Warning: This has *a lot of rough edges* and behaves very differently (and
- * very incorrectly in some cases) across browsers if user click addition
- * back/forward navigations while the confirm is open.  Use at your own risk.
+  Wrapper around useBlocker to show a window.confirm prompt to users instead of building a custom UI with {@link useBlocker}.
+
+  The `unstable_` flag will not be removed because this technique has a lot of rough edges and behaves very differently (and incorrectly sometimes) across browsers if users click addition back/forward navigations while the confirmation is open.  Use at your own risk.
+
+  ```tsx
+  function ImportantForm() {
+    let [value, setValue] = React.useState("");
+
+    // Block navigating elsewhere when data has been entered into the input
+    unstable_usePrompt({
+      message: "Are you sure?",
+      when: ({ currentLocation, nextLocation }) =>
+        value !== "" &&
+        currentLocation.pathname !== nextLocation.pathname,
+    });
+
+    return (
+      <Form method="post">
+        <label>
+          Enter some important data:
+          <input
+            name="data"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        </label>
+        <button type="submit">Save</button>
+      </Form>
+    );
+  }
+  ```
+
+  @category Hooks
  */
 function usePrompt({
   when,
@@ -2185,12 +2562,9 @@ function usePrompt({
 export { usePrompt as unstable_usePrompt };
 
 /**
- * Return a boolean indicating if there is an active view transition to the
- * given href.  You can use this value to render CSS classes or viewTransitionName
- * styles onto your elements
- *
- * @param href The destination href
- * @param [opts.relative] Relative routing type ("route" | "path")
+  This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via {@link LinkProps.unstable_viewTransition} (or the `Form`, `submit`, or `navigate` call)
+
+  @category Hooks
  */
 function useViewTransitionState(
   to: To,

@@ -43,6 +43,8 @@ export interface StaticRouterProps {
 /**
  * A `<Router>` that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
+ *
+ * @category Router Components
  */
 export function StaticRouter({
   basename,
@@ -87,6 +89,8 @@ export interface StaticRouterProviderProps {
 /**
  * A Data Router that may not navigate to any other location. This is useful
  * on the server where there is no stateful UI.
+ *
+ * @category Router Components
  */
 export function StaticRouterProvider({
   context,
@@ -253,6 +257,9 @@ type CreateStaticHandlerOptions = Omit<
   "detectErrorBoundary" | "mapRouteProperties"
 >;
 
+/**
+ * @category Utils
+ */
 export function createStaticHandler(
   routes: RouteObject[],
   opts?: CreateStaticHandlerOptions
@@ -263,6 +270,9 @@ export function createStaticHandler(
   });
 }
 
+/**
+ * @category Routers
+ */
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,

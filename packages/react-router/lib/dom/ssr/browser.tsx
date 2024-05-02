@@ -335,6 +335,9 @@ function createHydratedRouter(): RemixRouter {
   return router;
 }
 
+/**
+ * @category Router Components
+ */
 export function HydratedRouter() {
   if (!router) {
     router = createHydratedRouter();
