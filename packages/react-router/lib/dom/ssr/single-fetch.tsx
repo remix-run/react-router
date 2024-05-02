@@ -286,7 +286,14 @@ export function addRevalidationParam(
 export function singleFetchUrl(reqUrl: URL | string) {
   let url =
     typeof reqUrl === "string"
-      ? new URL(reqUrl, window.location.origin)
+      ? new URL(
+          reqUrl,
+          typeof window === "undefined"
+            ? // TODO: Trace usage of singleFetchUrl and make sure we don't use it anywhere
+              // this will make it to a network call.
+              "server://singlefetch/"
+            : window.location.origin
+        )
       : reqUrl;
   url.pathname = `${url.pathname === "/" ? "_root" : url.pathname}.data`;
   return url;

@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 
+import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router";
+
 import {
   createAppFixture,
   createFixture,
@@ -26,6 +28,10 @@ test.describe("rendering", () => {
       files: {
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+
+          export function shouldRevalidate() {
+            return false;
+          }
 
           export default function Root() {
             return (
@@ -64,6 +70,10 @@ test.describe("rendering", () => {
 
           export function loader() {
             return "${PAGE_TEXT}"
+          }
+
+          export function shouldRevalidate() {
+            return false;
           }
 
           export default function() {
@@ -215,15 +225,14 @@ test.describe("rendering", () => {
   test("calls all loaders for new routes", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
-    let responses = app.collectDataResponses();
+    let responses = app.collectSingleFetchResponses();
+
     await app.clickLink(`/${PAGE}`);
     await page.waitForLoadState("networkidle");
 
-    expect(
-      responses
-        .map((res) => new URL(res.url()).searchParams.get("_data"))
-        .sort()
-    ).toEqual([`routes/${PAGE}`, `routes/${PAGE}._index`].sort());
+    expect(responses.map((res) => new URL(res.url()).pathname)).toEqual([
+      `/${PAGE}.data`,
+    ]);
 
     await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
     await page.waitForSelector(`h3:has-text("${PAGE_INDEX_TEXT}")`);
@@ -232,13 +241,25 @@ test.describe("rendering", () => {
   test("calls only loaders for changing routes", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto(`/${PAGE}`);
-    let responses = app.collectDataResponses();
+    let responses = app.collectSingleFetchResponses();
     await app.clickLink(`/${PAGE}/${CHILD}`);
     await page.waitForLoadState("networkidle");
 
-    expect(
-      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
-    ).toEqual([`routes/${PAGE}.${CHILD}`]);
+    expect(responses.map((res) => new URL(res.url()).pathname)).toEqual([
+      `/${PAGE}/${CHILD}.data`,
+    ]);
+
+    let body = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        let buffer = await responses[0].body();
+        controller.enqueue(new Uint8Array(buffer));
+      },
+    });
+    const decoded = await decodeViaTurboStream(body, global);
+
+    expect(Object.keys(decoded.value as Record<string, unknown>)).toEqual([
+      "routes/page.child",
+    ]);
 
     await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
     await page.waitForSelector(`h3:has-text("${CHILD_TEXT}")`);
@@ -248,19 +269,16 @@ test.describe("rendering", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
 
-    let responses = app.collectDataResponses();
+    let responses = app.collectSingleFetchResponses();
 
     await app.clickLink(`/${REDIRECT}`);
     await page.waitForURL(/\/page/);
     await page.waitForLoadState("networkidle");
 
-    expect(
-      responses
-        .map((res) => new URL(res.url()).searchParams.get("_data"))
-        .sort()
-    ).toEqual(
-      [`routes/${REDIRECT}`, `routes/${PAGE}`, `routes/${PAGE}._index`].sort()
-    );
+    expect(responses.map((res) => new URL(res.url()).pathname)).toEqual([
+      `/${REDIRECT}.data`,
+      `/${PAGE}.data`,
+    ]);
 
     await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
     await page.waitForSelector(`h3:has-text("${PAGE_INDEX_TEXT}")`);
@@ -283,13 +301,16 @@ test.describe("rendering", () => {
     await app.goto(`/${PAGE}`);
     await app.clickLink(`/${PAGE}/${CHILD}`);
 
-    let responses = app.collectDataResponses();
+    let responses = app.collectSingleFetchResponses();
     await app.goBack();
     await page.waitForLoadState("networkidle");
 
-    expect(
-      responses.map((res) => new URL(res.url()).searchParams.get("_data"))
-    ).toEqual([`routes/${PAGE}._index`]);
+    expect(responses.map((res) => new URL(res.url()).pathname)).toEqual([
+      `/${PAGE}.data`,
+    ]);
+    // expect(
+    //   responses.map((res) => new URL(res.url()).searchParams.get("_data"))
+    // ).toEqual([`routes/${PAGE}._index`]);
 
     await page.waitForSelector(`h2:has-text("${PAGE_TEXT}")`);
     await page.waitForSelector(`h3:has-text("${PAGE_INDEX_TEXT}")`);

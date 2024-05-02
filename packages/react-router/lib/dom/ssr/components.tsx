@@ -7,15 +7,12 @@ import * as React from "react";
 import {
   matchRoutes,
   type AgnosticDataRouteMatch,
-  type UNSAFE_DeferredData as DeferredData,
   type RouterState,
-  type TrackedPromise,
 } from "../../router";
 
 import type { RemixContextObject } from "./entry";
 import invariant from "./invariant";
 import {
-  getDataLinkHrefs,
   getKeyedLinksForMatches,
   getKeyedPrefetchLinks,
   getModuleLinkHrefs,
@@ -23,7 +20,7 @@ import {
   isPageLinkDescriptor,
 } from "./links";
 import type { KeyedHtmlLinkDescriptor, PrefetchPageDescriptor } from "./links";
-import { createHtml, escapeHtml } from "./markup";
+import { createHtml } from "./markup";
 import type {
   MetaFunction,
   MetaDescriptor,
@@ -32,8 +29,7 @@ import type {
 } from "./routeModules";
 import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
-import { useAsyncError, useLocation, useNavigation } from "../../hooks";
-import { Await } from "../../components";
+import { useLocation, useNavigation } from "../../hooks";
 
 // TODO: Temporary shim until we figure out the way to handle typings in v7
 export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
@@ -316,7 +312,7 @@ function PrefetchPageLinksImpl({
   matches: AgnosticDataRouteMatch[];
 }) {
   let location = useLocation();
-  let { future, manifest, routeModules } = useRemixContext();
+  let { manifest, routeModules } = useRemixContext();
   let { matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -345,11 +341,6 @@ function PrefetchPageLinksImpl({
     [page, nextMatches, matches, manifest, location]
   );
 
-  let dataHrefs = React.useMemo(
-    () => getDataLinkHrefs(page, newMatchesForData, manifest),
-    [newMatchesForData, page, manifest]
-  );
-
   let moduleHrefs = React.useMemo(
     () => getModuleLinkHrefs(newMatchesForAssets, manifest),
     [newMatchesForAssets, manifest]
@@ -360,12 +351,7 @@ function PrefetchPageLinksImpl({
   let keyedPrefetchLinks = useKeyedPrefetchLinks(newMatchesForAssets);
 
   let linksToRender: React.ReactNode | React.ReactNode[] | null = null;
-  if (!future.unstable_singleFetch) {
-    // Non-single-fetch prefetching
-    linksToRender = dataHrefs.map((href) => (
-      <link key={href} rel="prefetch" as="fetch" href={href} {...linkProps} />
-    ));
-  } else if (newMatchesForData.length > 0) {
+  if (newMatchesForData.length > 0) {
     // Single-fetch with routes that require data
     let url = addRevalidationParam(
       manifest,
@@ -587,15 +573,8 @@ export type ScriptProps = Omit<
  * @see https://remix.run/components/scripts
  */
 export function Scripts(props: ScriptProps) {
-  let {
-    manifest,
-    serverHandoffString,
-    abortDelay,
-    serializeError,
-    isSpaMode,
-    future,
-    renderMeta,
-  } = useRemixContext();
+  let { manifest, serverHandoffString, isSpaMode, renderMeta } =
+    useRemixContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
   let navigation = useNavigation();
@@ -612,173 +591,17 @@ export function Scripts(props: ScriptProps) {
     isHydrated = true;
   }, []);
 
-  let serializePreResolvedErrorImp = (key: string, error: unknown) => {
-    let toSerialize: unknown;
-    if (serializeError && error instanceof Error) {
-      toSerialize = serializeError(error);
-    } else {
-      toSerialize = error;
-    }
-    return `${JSON.stringify(key)}:__remixContext.p(!1, ${escapeHtml(
-      JSON.stringify(toSerialize)
-    )})`;
-  };
-
-  let serializePreresolvedDataImp = (
-    routeId: string,
-    key: string,
-    data: unknown
-  ) => {
-    let serializedData;
-    try {
-      serializedData = JSON.stringify(data);
-    } catch (error) {
-      return serializePreResolvedErrorImp(key, error);
-    }
-    return `${JSON.stringify(key)}:__remixContext.p(${escapeHtml(
-      serializedData
-    )})`;
-  };
-
-  let serializeErrorImp = (routeId: string, key: string, error: unknown) => {
-    let toSerialize: unknown;
-    if (serializeError && error instanceof Error) {
-      toSerialize = serializeError(error);
-    } else {
-      toSerialize = error;
-    }
-    return `__remixContext.r(${JSON.stringify(routeId)}, ${JSON.stringify(
-      key
-    )}, !1, ${escapeHtml(JSON.stringify(toSerialize))})`;
-  };
-
-  let serializeDataImp = (routeId: string, key: string, data: unknown) => {
-    let serializedData;
-    try {
-      serializedData = JSON.stringify(data);
-    } catch (error) {
-      return serializeErrorImp(routeId, key, error);
-    }
-    return `__remixContext.r(${JSON.stringify(routeId)}, ${JSON.stringify(
-      key
-    )}, ${escapeHtml(serializedData)})`;
-  };
-
-  let deferredScripts: any[] = [];
   let initialScripts = React.useMemo(() => {
-    let streamScript = future.unstable_singleFetch
-      ? // prettier-ignore
-        "window.__remixContext.stream = new ReadableStream({" +
-          "start(controller){" +
-            "window.__remixContext.streamController = controller;" +
-          "}" +
-        "}).pipeThrough(new TextEncoderStream());"
-      : "";
+    let streamScript =
+      "window.__remixContext.stream = new ReadableStream({" +
+      "start(controller){" +
+      "window.__remixContext.streamController = controller;" +
+      "}" +
+      "}).pipeThrough(new TextEncoderStream());";
 
     let contextScript = staticContext
       ? `window.__remixContext = ${serverHandoffString};${streamScript}`
       : " ";
-
-    // When single fetch is enabled, deferred is handled by turbo-stream
-    let activeDeferreds = future.unstable_singleFetch
-      ? undefined
-      : staticContext?.activeDeferreds;
-
-    // This sets up the __remixContext with utility functions used by the
-    // deferred scripts.
-    // - __remixContext.p is a function that takes a resolved value or error and returns a promise.
-    //   This is used for transmitting pre-resolved promises from the server to the client.
-    // - __remixContext.n is a function that takes a routeID and key to returns a promise for later
-    //   resolution by the subsequently streamed chunks.
-    // - __remixContext.r is a function that takes a routeID, key and value or error and resolves
-    //   the promise created by __remixContext.n.
-    // - __remixContext.t is a map or routeId to keys to an object containing `e` and `r` methods
-    //   to resolve or reject the promise created by __remixContext.n.
-    // - __remixContext.a is the active number of deferred scripts that should be rendered to match
-    //   the SSR tree for hydration on the client.
-    contextScript += !activeDeferreds
-      ? ""
-      : [
-          "__remixContext.p = function(v,e,p,x) {",
-          "  if (typeof e !== 'undefined') {",
-          process.env.NODE_ENV === "development"
-            ? "    x=new Error(e.message);\n    x.stack=e.stack;"
-            : '    x=new Error("Unexpected Server Error");\n    x.stack=undefined;',
-          "    p=Promise.reject(x);",
-          "  } else {",
-          "    p=Promise.resolve(v);",
-          "  }",
-          "  return p;",
-          "};",
-          "__remixContext.n = function(i,k) {",
-          "  __remixContext.t = __remixContext.t || {};",
-          "  __remixContext.t[i] = __remixContext.t[i] || {};",
-          "  let p = new Promise((r, e) => {__remixContext.t[i][k] = {r:(v)=>{r(v);},e:(v)=>{e(v);}};});",
-          typeof abortDelay === "number"
-            ? `setTimeout(() => {if(typeof p._error !== "undefined" || typeof p._data !== "undefined"){return;} __remixContext.t[i][k].e(new Error("Server timeout."))}, ${abortDelay});`
-            : "",
-          "  return p;",
-          "};",
-          "__remixContext.r = function(i,k,v,e,p,x) {",
-          "  p = __remixContext.t[i][k];",
-          "  if (typeof e !== 'undefined') {",
-          process.env.NODE_ENV === "development"
-            ? "    x=new Error(e.message);\n    x.stack=e.stack;"
-            : '    x=new Error("Unexpected Server Error");\n    x.stack=undefined;',
-          "    p.e(x);",
-          "  } else {",
-          "    p.r(v);",
-          "  }",
-          "};",
-        ].join("\n") +
-        Object.entries(activeDeferreds)
-          .map(([routeId, deferredData]) => {
-            let pendingKeys = new Set(deferredData.pendingKeys);
-            let promiseKeyValues = deferredData.deferredKeys
-              .map((key) => {
-                if (pendingKeys.has(key)) {
-                  deferredScripts.push(
-                    <DeferredHydrationScript
-                      key={`${routeId} | ${key}`}
-                      deferredData={deferredData}
-                      routeId={routeId}
-                      dataKey={key}
-                      scriptProps={props}
-                      serializeData={serializeDataImp}
-                      serializeError={serializeErrorImp}
-                    />
-                  );
-
-                  return `${JSON.stringify(
-                    key
-                  )}:__remixContext.n(${JSON.stringify(
-                    routeId
-                  )}, ${JSON.stringify(key)})`;
-                } else {
-                  let trackedPromise = deferredData.data[key] as TrackedPromise;
-                  if (typeof trackedPromise._error !== "undefined") {
-                    return serializePreResolvedErrorImp(
-                      key,
-                      trackedPromise._error
-                    );
-                  } else {
-                    return serializePreresolvedDataImp(
-                      routeId,
-                      key,
-                      trackedPromise._data
-                    );
-                  }
-                }
-              })
-              .join(",\n");
-            return `Object.assign(__remixContext.state.loaderData[${JSON.stringify(
-              routeId
-            )}], {${promiseKeyValues}});`;
-          })
-          .join("\n") +
-        (deferredScripts.length > 0
-          ? `__remixContext.a=${deferredScripts.length};`
-          : "");
 
     let routeModulesScript = !isStatic
       ? " "
@@ -825,19 +648,6 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // scripts as they were when the page first loaded
     // eslint-disable-next-line
   }, []);
-
-  if (!isStatic && typeof __remixContext === "object" && __remixContext.a) {
-    for (let i = 0; i < __remixContext.a; i++) {
-      deferredScripts.push(
-        <DeferredHydrationScript
-          key={i}
-          scriptProps={props}
-          serializeData={serializeDataImp}
-          serializeError={serializeErrorImp}
-        />
-      );
-    }
-  }
 
   // avoid waterfall when importing the next route module
   let nextMatches = React.useMemo(() => {
@@ -889,109 +699,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
         />
       ))}
       {initialScripts}
-      {deferredScripts}
     </>
-  );
-}
-
-function DeferredHydrationScript({
-  dataKey,
-  deferredData,
-  routeId,
-  scriptProps,
-  serializeData,
-  serializeError,
-}: {
-  dataKey?: string;
-  deferredData?: DeferredData;
-  routeId?: string;
-  scriptProps?: ScriptProps;
-  serializeData: (routeId: string, key: string, data: unknown) => string;
-  serializeError: (routeId: string, key: string, error: unknown) => string;
-}) {
-  if (typeof document === "undefined" && deferredData && dataKey && routeId) {
-    invariant(
-      deferredData.pendingKeys.includes(dataKey),
-      `Deferred data for route ${routeId} with key ${dataKey} was not pending but tried to render a script for it.`
-    );
-  }
-
-  return (
-    <React.Suspense
-      fallback={
-        // This makes absolutely no sense. The server renders null as a fallback,
-        // but when hydrating, we need to render a script tag to avoid a hydration issue.
-        // To reproduce a hydration mismatch, just render null as a fallback.
-        typeof document === "undefined" &&
-        deferredData &&
-        dataKey &&
-        routeId ? null : (
-          <script
-            {...scriptProps}
-            async
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={{ __html: " " }}
-          />
-        )
-      }
-    >
-      {typeof document === "undefined" && deferredData && dataKey && routeId ? (
-        <Await
-          resolve={deferredData.data[dataKey]}
-          errorElement={
-            <ErrorDeferredHydrationScript
-              dataKey={dataKey}
-              routeId={routeId}
-              scriptProps={scriptProps}
-              serializeError={serializeError}
-            />
-          }
-          children={(data) => {
-            return (
-              <script
-                {...scriptProps}
-                async
-                suppressHydrationWarning
-                dangerouslySetInnerHTML={{
-                  __html: serializeData(routeId, dataKey, data),
-                }}
-              />
-            );
-          }}
-        />
-      ) : (
-        <script
-          {...scriptProps}
-          async
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: " " }}
-        />
-      )}
-    </React.Suspense>
-  );
-}
-
-function ErrorDeferredHydrationScript({
-  dataKey,
-  routeId,
-  scriptProps,
-  serializeError,
-}: {
-  dataKey: string;
-  routeId: string;
-  scriptProps?: ScriptProps;
-  serializeError: (routeId: string, key: string, error: unknown) => string;
-}) {
-  let error = useAsyncError() as Error;
-
-  return (
-    <script
-      {...scriptProps}
-      suppressHydrationWarning
-      dangerouslySetInnerHTML={{
-        __html: serializeError(routeId, dataKey, error),
-      }}
-    />
   );
 }
 

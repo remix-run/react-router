@@ -76,7 +76,6 @@ interface FutureConfig {
   v3_fetcherPersist: boolean;
   v3_relativeSplatPath: boolean;
   v3_throwAbortReason: boolean;
-  unstable_singleFetch: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -435,7 +434,6 @@ export async function resolveReactRouterConfig({
     v3_fetcherPersist: userFuture?.v3_fetcherPersist === true,
     v3_relativeSplatPath: userFuture?.v3_relativeSplatPath === true,
     v3_throwAbortReason: userFuture?.v3_throwAbortReason === true,
-    unstable_singleFetch: userFuture?.unstable_singleFetch === true,
   };
 
   let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
@@ -481,17 +479,7 @@ export async function resolveEntryFiles({
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  if (isSpaMode && future?.unstable_singleFetch != true) {
-    // This is a super-simple default since we don't need streaming in SPA Mode.
-    // We can include this in a remix-spa template, but right now `npx remix reveal`
-    // will still expose the streaming template since that command doesn't have
-    // access to the `ssr:false` flag in the vite config (the streaming template
-    // works just fine so maybe instead of having this we _only have this version
-    // in the template...).  We let users manage an entry.server file in SPA Mode
-    // so they can de ide if they want to hydrate the full document or just an
-    // embedded `<div id="app">` or whatever.
-    entryServerFile = "entry.server.spa.tsx";
-  } else if (userEntryServerFile) {
+  if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
     let serverRuntime = deps["@react-router/deno"]

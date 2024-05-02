@@ -598,7 +598,7 @@ test.describe("route module link export", () => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       let scripts = await page.$$("script");
-      expect(scripts.length).toEqual(2);
+      expect(scripts.length).toEqual(6);
       expect(await scripts[0].innerText()).toContain("__remixContext");
       let moduleScript = scripts[1];
       expect(await moduleScript.getAttribute("type")).toBe("module");

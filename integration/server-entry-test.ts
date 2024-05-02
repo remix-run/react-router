@@ -37,7 +37,7 @@ test.describe("Custom Server Entry", () => {
   });
 
   test("can manipulate a data response", async () => {
-    let response = await fixture.requestData("/", "routes/_index");
+    let response = await fixture.requestSingleFetchData("/.data")
     expect(response.headers.get(DATA_HEADER_NAME)).toBe(DATA_HEADER_VALUE);
   });
 });
