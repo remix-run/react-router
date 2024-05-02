@@ -450,6 +450,10 @@ export interface GetScrollPositionFunction {
   (): number;
 }
 
+/**
+ * - "route": relative to the route hierarchy
+ * - "path": relative to the pathname
+ */
 export type RelativeRoutingType = "route" | "path";
 
 // Allowed for any navigation or fetch
