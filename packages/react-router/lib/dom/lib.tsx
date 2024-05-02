@@ -1020,25 +1020,139 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 );
 Link.displayName = "Link";
 
-type NavLinkRenderProps = {
+/**
+  The object passed to {@link NavLink} `children`, `className`, and `style` prop callbacks to render and style the link based on its state.
+
+  ```
+  // className
+  <NavLink
+    to="/messages"
+    className={({ isActive, isPending }) =>
+      isPending ? "pending" : isActive ? "active" : ""
+    }
+  >
+    Messages
+  </NavLink>
+
+  // style
+  <NavLink
+    to="/messages"
+    style={({ isActive, isPending }) => {
+      return {
+        fontWeight: isActive ? "bold" : "",
+        color: isPending ? "red" : "black",
+      }
+    )}
+  />
+
+  // children
+  <NavLink to="/tasks">
+    {({ isActive, isPending }) => (
+      <span className={isActive ? "active" : ""}>Tasks</span>
+    )}
+  </NavLink>
+  ```
+
+ */
+export type NavLinkRenderProps = {
+  /**
+   * Indicates if the link's URL matches the current location.
+   */
   isActive: boolean;
+
+  /**
+   * Indicates if the pending location matches the link's URL.
+   */
   isPending: boolean;
+
+  /**
+   * Indicates if a view transition to the link's URL is in progress. See {@link useViewTransitionState}
+   */
   isTransitioning: boolean;
 };
 
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
+  /**
+    Can be regular React children or a function that receives an object with the active and pending states of the link.
+
+    ```tsx
+    <NavLink to="/tasks">
+      {({ isActive }) => (
+        <span className={isActive ? "active" : ""}>Tasks</span>
+      )}
+    </NavLink>
+    ```
+   */
   children?: React.ReactNode | ((props: NavLinkRenderProps) => React.ReactNode);
+
+  /**
+    Changes the matching logic to make it case-sensitive:
+
+    | Link                                         | URL           | isActive |
+    | -------------------------------------------- | ------------- | -------- |
+    | `<NavLink to="/SpOnGe-bOB" />`               | `/sponge-bob` | true     |
+    | `<NavLink to="/SpOnGe-bOB" caseSensitive />` | `/sponge-bob` | false    |
+   */
   caseSensitive?: boolean;
+
+  /**
+    Classes are automatically applied to NavLink that correspond to {@link NavLinkRenderProps}.
+
+    ```css
+    a.active { color: red; }
+    a.pending { color: blue; }
+    a.transitioning {
+      view-transition-name: my-transition;
+    }
+    ```
+   */
   className?: string | ((props: NavLinkRenderProps) => string | undefined);
+
+  /**
+    Changes the matching logic for the `active` and `pending` states to only match to the "end" of the {@link NavLink#to}. If the URL is longer, it will no longer be considered active.
+
+    | Link                          | URL          | isActive |
+    | ----------------------------- | ------------ | -------- |
+    | `<NavLink to="/tasks" />`     | `/tasks`     | true     |
+    | `<NavLink to="/tasks" />`     | `/tasks/123` | true     |
+    | `<NavLink to="/tasks" end />` | `/tasks`     | true     |
+    | `<NavLink to="/tasks" end />` | `/tasks/123` | false    |
+
+    `<NavLink to="/">` is an exceptional case because _every_ URL matches `/`. To avoid this matching every single route by default, it effectively ignores the `end` prop and only matches when you're at the root route.
+   */
   end?: boolean;
+
   style?:
     | React.CSSProperties
     | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
 }
 
 /**
- * A `<Link>` wrapper that knows if it's "active" or not.
+  Wraps {@link Link | `<Link>`} with additional props for styling active and pending states.
+  
+  - Automatically applies classes to the link based on its active and pending states, see {@link NavLinkProps.className}.
+  - Automatically applies `aria-current="page"` to the link when the link is active. See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current) on MDN.
+
+  ```tsx
+  import { NavLink } from "react-router"
+  <NavLink to="/message" />
+  ```
+
+  States are available through the className, style, and children render props. See {@link NavLinkRenderProps}.
+
+  ```tsx
+  <NavLink
+    to="/messages"
+    className={({ isActive, isPending }) =>
+      isPending ? "pending" : isActive ? "active" : ""
+    }
+  >
+    Messages
+  </NavLink>
+  ```
+
+  @category Components
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(

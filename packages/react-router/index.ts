@@ -265,6 +265,7 @@ export type {
   HistoryRouterProps,
   LinkProps,
   NavLinkProps,
+  NavLinkRenderProps,
   FetcherFormProps,
   FormProps,
   ScrollRestorationProps,
