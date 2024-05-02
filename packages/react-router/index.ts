@@ -321,7 +321,7 @@ export {
   Scripts,
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
-export type { HtmlLinkDescriptor } from "./lib/dom/ssr/links";
+export type { HtmlLinkDescriptor, LinkDescriptor } from "./lib/dom/ssr/links";
 export type {
   ClientActionFunction,
   ClientActionFunctionArgs,
@@ -330,6 +330,7 @@ export type {
   MetaArgs,
   MetaDescriptor,
   MetaFunction,
+  LinksFunction,
 } from "./lib/dom/ssr/routeModules";
 export type { RemixServerProps } from "./lib/dom/ssr/server";
 export { RemixServer } from "./lib/dom/ssr/server";

@@ -203,9 +203,24 @@ function getActiveMatches(
 }
 
 /**
- * Renders the `<link>` tags for the current routes.
- *
- * @see https://remix.run/components/links
+  Renders all of the `<link>` tags created by route module {@link LinksFunction} export. You should render it inside the `<head>` of your document.
+
+  ```tsx
+  import { Links } from "react-router";
+
+  export default function Root() {
+    return (
+      <html>
+        <head>
+          <Links />
+        </head>
+        <body></body>
+      </html>
+    );
+  }
+  ```
+
+  @category Components
  */
 export function Links() {
   let { isSpaMode, manifest, routeModules, criticalCss } = useRemixContext();
@@ -388,9 +403,23 @@ function PrefetchPageLinksImpl({
 }
 
 /**
- * Renders HTML tags related to metadata for the current route.
- *
- * @see https://remix.run/components/meta
+  Renders all the `<meta>` tags created by route module {@link MetaFunction} exports. You should render it inside the `<head>` of your HTML.
+
+  ```tsx
+  import { Meta } from "react-router";
+
+  export default function Root() {
+    return (
+      <html>
+        <head>
+          <Meta />
+        </head>
+      </html>
+    );
+  }
+  ```
+
+  @category Components
  */
 export function Meta() {
   let { isSpaMode, routeModules } = useRemixContext();
