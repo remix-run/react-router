@@ -29,11 +29,18 @@ import {
   useRouteLoaderData,
 } from "react-router";
 
-import type { ErrorResponse } from "../index";
+import {
+  useFetcher,
+  useNavigate,
+  useRevalidator,
+  useSubmit,
+  type ErrorResponse,
+} from "../index";
 import urlDataStrategy from "./router/utils/urlDataStrategy";
 import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
+import { RouterProvider as DomRouterProvider } from "../lib/dom/lib";
 
 describe("createMemoryRouter", () => {
   let consoleWarn: jest.SpyInstance;
@@ -1000,6 +1007,272 @@ describe("createMemoryRouter", () => {
         </h1>
       </div>"
     `);
+  });
+
+  it("exposes promise from useNavigate", async () => {
+    let sequence: string[] = [];
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component() {
+          let navigate = useNavigate();
+          return (
+            <>
+              <h1>Home</h1>
+              <button
+                onClick={async () => {
+                  sequence.push("call navigate");
+                  await navigate("/page");
+                  sequence.push("navigate resolved");
+                }}
+              >
+                Navigate
+              </button>
+            </>
+          );
+        },
+      },
+      {
+        path: "/page",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return null;
+        },
+        Component: () => {
+          sequence.push("render");
+          return <h1>Page</h1>;
+        },
+      },
+    ]);
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toContain("Home");
+    fireEvent.click(screen.getByText("Navigate"));
+    await waitFor(() => screen.getByText("Page"));
+
+    expect(sequence).toEqual([
+      "call navigate",
+      "loader start",
+      "loader end",
+      "navigate resolved",
+      "render",
+    ]);
+  });
+
+  it("exposes promise from useSubmit", async () => {
+    let sequence: string[] = [];
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component() {
+          let submit = useSubmit();
+          return (
+            <>
+              <h1>Home</h1>
+              <button
+                onClick={async () => {
+                  sequence.push("call submit");
+                  await submit({}, { action: "/page" });
+                  sequence.push("submit resolved");
+                }}
+              >
+                Submit
+              </button>
+            </>
+          );
+        },
+      },
+      {
+        path: "/page",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return null;
+        },
+        Component: () => {
+          sequence.push("render");
+          return <h1>Page</h1>;
+        },
+      },
+    ]);
+    let { container } = render(<RouterProvider router={router} />);
+
+    expect(getHtml(container)).toContain("Home");
+    fireEvent.click(screen.getByText("Submit"));
+    await waitFor(() => screen.getByText("Page"));
+
+    expect(sequence).toEqual([
+      "call submit",
+      "loader start",
+      "loader end",
+      "submit resolved",
+      "render",
+    ]);
+  });
+
+  it("exposes promise from useRevalidator", async () => {
+    let sequence: string[] = [];
+    let count = 0;
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return ++count;
+        },
+        Component() {
+          let loaderCount = useLoaderData();
+          let revalidator = useRevalidator();
+          sequence.push(`render ${loaderCount}`);
+          return (
+            <button
+              onClick={async () => {
+                sequence.push("call revalidate");
+                await revalidator.revalidate();
+                sequence.push("revalidate resolved");
+              }}
+            >
+              Revalidate ({loaderCount})
+            </button>
+          );
+        },
+      },
+    ]);
+    render(<RouterProvider router={router} />);
+
+    await waitFor(() => screen.getByText("Revalidate (1)"));
+    fireEvent.click(screen.getByText("Revalidate (1)"));
+    await waitFor(() => screen.getByText("Revalidate (2)"));
+
+    expect(sequence).toEqual([
+      "loader start",
+      "loader end",
+      "render 1",
+      "call revalidate",
+      "loader start",
+      "render 1", // revalidator.state === 'loading'
+      "loader end",
+      "revalidate resolved",
+      "render 2",
+    ]);
+  });
+
+  it("exposes promise from useFetcher.load", async () => {
+    let sequence: string[] = [];
+    let count = 0;
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return ++count;
+        },
+        Component() {
+          let loaderCount = useLoaderData();
+          let fetcher = useFetcher();
+          sequence.push(`render ${loaderCount} ${fetcher.data || "empty"}`);
+          return (
+            <button
+              onClick={async () => {
+                sequence.push("call fetcher.load");
+                await fetcher.load("/");
+                sequence.push("fetcher.load resolved");
+              }}
+            >
+              Fetch ({`${loaderCount}, ${fetcher.data || "empty"}`})
+            </button>
+          );
+        },
+      },
+    ]);
+
+    // TODO: Fetchers only supported in DomRouterProvider at the moment, but
+    // that should be fixed once we align the two
+    render(<DomRouterProvider router={router} />);
+
+    await waitFor(() => screen.getByText("Fetch (1, empty)"));
+    fireEvent.click(screen.getByText("Fetch (1, empty)"));
+    await waitFor(() => screen.getByText("Fetch (1, 2)"));
+
+    expect(sequence).toEqual([
+      "loader start",
+      "loader end",
+      "render 1 empty",
+      "call fetcher.load",
+      "loader start",
+      "render 1 empty", // fetcher.state === 'loading'
+      "loader end",
+      "fetcher.load resolved",
+      "render 1 2",
+    ]);
+  });
+
+  it("exposes promise from useFetcher.submit", async () => {
+    let sequence: string[] = [];
+    let count = 0;
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        async action() {
+          sequence.push("action start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("action end");
+          return ++count;
+        },
+        async loader() {
+          sequence.push("loader start");
+          await new Promise((r) => setTimeout(r, 100));
+          sequence.push("loader end");
+          return ++count;
+        },
+        Component() {
+          let loaderCount = useLoaderData();
+          let fetcher = useFetcher();
+          sequence.push(`render ${loaderCount} ${fetcher.data || "empty"}`);
+          return (
+            <button
+              onClick={async () => {
+                sequence.push("call fetcher.submit");
+                await fetcher.submit({}, { method: "post", action: "/" });
+                sequence.push("fetcher.submit resolved");
+              }}
+            >
+              Fetch ({`${loaderCount}, ${fetcher.data || "empty"}`})
+            </button>
+          );
+        },
+      },
+    ]);
+
+    // TODO: Fetchers only supported in DomRouterProvider at the moment, but
+    // that should be fixed once we align the two
+    render(<DomRouterProvider router={router} />);
+
+    await waitFor(() => screen.getByText("Fetch (1, empty)"));
+    fireEvent.click(screen.getByText("Fetch (1, empty)"));
+    await waitFor(() => screen.getByText("Fetch (3, 2)"));
+
+    expect(sequence).toEqual([
+      "loader start",
+      "loader end",
+      "render 1 empty",
+      "call fetcher.submit",
+      "action start",
+      "render 1 empty", // fetcher.state === 'submitting'
+      "action end",
+      "loader start",
+      "render 1 2", // fetcher.state === 'loading'
+      "loader end",
+      "fetcher.submit resolved",
+      "render 3 2",
+    ]);
   });
 
   describe("errors", () => {
