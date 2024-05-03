@@ -72,8 +72,8 @@ export interface HandlerResult {
   status?: number;
 }
 
-type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
-type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
+export type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
+export type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 
 /**
  * Users can specify either lowercase or uppercase form methods on `<Form>`,

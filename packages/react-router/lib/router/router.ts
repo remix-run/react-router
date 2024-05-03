@@ -455,8 +455,8 @@ export interface GetScrollPositionFunction {
 }
 
 /**
- * - "route": relative to the route hierarchy
- * - "path": relative to the pathname
+  - "route": relative to the route hierarchy so `..` means remove all segments of the current route even if it has many. For example, a `route("posts/:id")` would have both `:id` and `posts` removed from the url.
+  - "path": relative to the pathname so `..` means remove one segment of the pathname. For example, a `route("posts/:id")` would have only `:id` removed from the url.
  */
 export type RelativeRoutingType = "route" | "path";
 
@@ -559,7 +559,14 @@ export type RevalidationState = "idle" | "loading";
 /**
  * Potential states for fetchers
  */
-type FetcherStates<TData = any> = {
+export type FetcherStates<TData = any> = {
+  /**
+   * The fetcher is not calling a loader or action
+   *
+   * ```tsx
+   * fetcher.state === "idle"
+   * ```
+   */
   Idle: {
     state: "idle";
     formMethod: undefined;
@@ -568,8 +575,24 @@ type FetcherStates<TData = any> = {
     text: undefined;
     formData: undefined;
     json: undefined;
+    /**
+     * If the fetcher has never been called, this will be undefined.
+     */
     data: TData | undefined;
   };
+
+  /**
+   * The fetcher is loading data from a {@link LoaderFunction | loader} from a
+   * call to {@link FetcherWithComponents.load | `fetcher.load`}.
+   *
+   * ```tsx
+   * // somewhere
+   * <button onClick={() => fetcher.load("/some/route") }>Load</button>
+   *
+   * // the state will update
+   * fetcher.state === "loading"
+   * ```
+   */
   Loading: {
     state: "loading";
     formMethod: Submission["formMethod"] | undefined;
@@ -580,6 +603,25 @@ type FetcherStates<TData = any> = {
     json: Submission["json"] | undefined;
     data: TData | undefined;
   };
+
+  /**
+    The fetcher is submitting to a {@link LoaderFunction} (GET) or {@link ActionFunction} (POST) from a {@link FetcherWithComponents.Form | `fetcher.Form`} or {@link FetcherWithComponents.submit | `fetcher.submit`}.
+
+    ```tsx
+    // somewhere
+    <input
+      onChange={e => {
+        fetcher.submit(event.currentTarget.form, { method: "post" });
+      }}
+    />
+
+    // the state will update
+    fetcher.state === "submitting"
+
+    // and formData will be available
+    fetcher.formData
+    ```
+   */
   Submitting: {
     state: "submitting";
     formMethod: Submission["formMethod"];

@@ -1609,6 +1609,8 @@ function useDataRouterState(hookName: DataRouterStateHook) {
  * Handles the click behavior for router `<Link>` components. This is useful if
  * you need to create custom `<Link>` components with the same click behavior we
  * use in our exported `<Link>`.
+ *
+ * @category Hooks
  */
 export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
   to: To,
@@ -1820,7 +1822,29 @@ export function useSubmit(): SubmitFunction {
 
 // v7: Eventually we should deprecate this entirely in favor of using the
 // router method directly?
+/**
+  Resolves the URL to the closest route in the component hierarchy instead of the current URL of the app.
+
+  This is used internally by {@link Form} resolve the action to the closest route, but can be used generically as well.
+
+  ```tsx
+  import { useFormAction } from "react-router";
+
+  function SomeComponent() {
+    // closest route URL
+    let action = useFormAction();
+
+    // closest route URL + "destroy"
+    let destroyAction = useFormAction("destroy");
+  }
+  ```
+
+  @category Hooks
+ */
 export function useFormAction(
+  /**
+   * The action to append to the closest route URL.
+   */
   action?: string,
   { relative }: { relative?: RelativeRoutingType } = {}
 ): string {
@@ -1870,26 +1894,158 @@ export function useFormAction(
   return createPath(path);
 }
 
+/**
+The return value of `useFetcher` that keeps track of the state of a fetcher.
+
+```tsx
+let fetcher = useFetcher();
+```
+ */
 export type FetcherWithComponents<TData> = Fetcher<TData> & {
+  /**
+    Just like {@link Form} except it doesn't cause a navigation.
+
+    ```tsx
+    function SomeComponent() {
+      const fetcher = useFetcher()
+      return (
+        <fetcher.Form method="post" action="/some/route">
+          <input type="text" />
+        </fetcher.Form>
+      )
+    }
+    ```
+   */
   Form: React.ForwardRefExoticComponent<
     FetcherFormProps & React.RefAttributes<HTMLFormElement>
   >;
+
+  /**
+    Submits form data to a route. While multiple nested routes can match a URL, only the leaf route will be called.
+
+    The `formData` can be multiple types:
+
+    - [`FormData`][form_data] - A `FormData` instance.
+    - [`HTMLFormElement`][html_form_element] - A [`<form>`][form_element] DOM element.
+    - `Object` - An object of key/value pairs that will be converted to a `FormData` instance by default. You can pass a more complex object and serialize it as JSON by specifying `encType: "application/json"`. See [`useSubmit`][use-submit] for more details.
+
+    If the method is `GET`, then the route [`loader`][loader] is being called and with the `formData` serialized to the url as [`URLSearchParams`][url_search_params]. If `DELETE`, `PATCH`, `POST`, or `PUT`, then the route [`action`][action] is being called with `formData` as the body.
+
+    ```tsx
+    // Submit a FormData instance (GET request)
+    const formData = new FormData();
+    fetcher.submit(formData);
+
+    // Submit the HTML form element
+    fetcher.submit(event.currentTarget.form, {
+      method: "POST",
+    });
+
+    // Submit key/value JSON as a FormData instance
+    fetcher.submit(
+      { serialized: "values" },
+      { method: "POST" }
+    );
+
+    // Submit raw JSON
+    fetcher.submit(
+      {
+        deeply: {
+          nested: {
+            json: "values",
+          },
+        },
+      },
+      {
+        method: "POST",
+        encType: "application/json",
+      }
+    );
+    ```
+   */
   submit: FetcherSubmitFunction;
+
+  /**
+    Loads data from a route. Useful for loading data imperatively inside of user events outside of a normal button or form, like a combobox or search input.
+      
+    ```tsx
+    let fetcher = useFetcher()
+
+    <input onChange={e => {
+      fetcher.load(`/search?q=${e.target.value}`)
+    }} />
+    ```
+   */
   load: (
     href: string,
-    opts?: { unstable_flushSync?: boolean }
+    opts?: {
+      /**
+       * Wraps the initial state update for this `fetcher.load` in a
+       * `ReactDOM.flushSync` call instead of the default `React.startTransition`.
+       * This allows you to perform synchronous DOM actions immediately after the
+       * update is flushed to the DOM.
+       */
+      unstable_flushSync?: boolean;
+    }
   ) => Promise<void>;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
 
 /**
- * Interacts with route loaders and actions without causing a navigation. Great
- * for any interaction that stays on the same page.
+  Useful for creating complex, dynamic user interfaces that require multiple, concurrent data interactions without causing a navigation.
+  
+  Fetchers track their own, independent state and can be used to load data, submit forms, and generally interact with loaders and actions.
+
+  ```tsx
+  import { useFetcher } from "react-router"
+
+  function SomeComponent() {
+    let fetcher = useFetcher()
+
+    // states are available on the fetcher
+    fetcher.state // "idle" | "loading" | "submitting"
+    fetcher.data // the data returned from the action or loader
+
+    // render a form
+    <fetcher.Form method="post" />
+
+    // load data
+    fetcher.load("/some/route")
+
+    // submit data
+    fetcher.submit(someFormRef, { method: "post" })
+    fetcher.submit(someData, {
+      method: "post",
+      encType: "application/json"
+    })
+  }
+  ```
+
+  @category Hooks
  */
 export function useFetcher<TData = any>({
   key,
-}: { key?: string } = {}): FetcherWithComponents<TData> {
+}: {
+  /**
+    By default, `useFetcher` generate a unique fetcher scoped to that component. If you want to identify a fetcher with your own key such that you can access it from elsewhere in your app, you can do that with the `key` option:
+
+    ```tsx
+    function SomeComp() {
+      let fetcher = useFetcher({ key: "my-key" })
+      // ...
+    }
+
+    // Somewhere else
+    function AnotherComp() {
+      // this will be the same fetcher, sharing the state across the app
+      let fetcher = useFetcher({ key: "my-key" });
+      // ...
+    }
+    ```
+   */
+  key?: string;
+} = {}): FetcherWithComponents<TData> {
   let { router } = useDataRouterContext(DataRouterHook.UseFetcher);
   let state = useDataRouterState(DataRouterStateHook.UseFetcher);
   let fetcherData = React.useContext(FetchersContext);
@@ -1977,8 +2133,20 @@ export function useFetcher<TData = any>({
 }
 
 /**
- * Provides all fetchers currently on the page. Useful for layouts and parent
- * routes that need to provide pending/optimistic UI regarding the fetch.
+  Returns an array of all in-flight fetchers. This is useful for components throughout the app that didn't create the fetchers but want to use their submissions to participate in optimistic UI.
+
+  ```tsx
+  import { useFetchers } from "react-router";
+
+  function SomeComponent() {
+    const fetchers = useFetchers();
+    fetchers[0].formData; // FormData
+    fetchers[0].state; // etc.
+    // ...
+  }
+  ```
+
+  @category Hooks
  */
 export function useFetchers(): (Fetcher & { key: string })[] {
   let state = useDataRouterState(DataRouterStateHook.UseFetchers);

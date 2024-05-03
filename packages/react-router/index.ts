@@ -239,8 +239,11 @@ export type {
   AgnosticRouteObject,
   HydrationState,
   InitialEntry,
+  LowerCaseFormMethod,
   StaticHandler,
   TrackedPromise,
+  FetcherStates,
+  UpperCaseFormMethod,
   UNSAFE_DeferredData,
 } from "./lib/router";
 export {
@@ -256,6 +259,7 @@ export type {
   FormMethod,
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
+  Submission,
   V7_FormMethod,
 } from "./lib/router";
 

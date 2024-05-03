@@ -52,10 +52,18 @@ import {
 const ENABLE_DEV_WARNINGS = true;
 
 /**
- * Returns the full href for the given "to" value. This is useful for building
- * custom links that are also accessible and preserve right-click behavior.
- *
- * @category Hooks
+  Resolves a URL against the current location.
+
+  ```tsx
+  import { useHref } from "react-router"
+
+  function SomeComponent() {
+    let href = useHref("some/where");
+    // "/resolved/some/where"
+  }
+  ```
+
+  @category Hooks
  */
 export function useHref(
   to: To,
@@ -86,7 +94,8 @@ export function useHref(
 }
 
 /**
- * Returns true if this component is a descendant of a `<Router>`.
+ * Returns true if this component is a descendant of a Router, useful to ensure
+ * a component is used within a Router.
  *
  * @category Hooks
  */
@@ -95,14 +104,27 @@ export function useInRouterContext(): boolean {
 }
 
 /**
- * Returns the current location object, which represents the current URL in web
- * browsers.
- *
- * Note: If you're using this it may mean you're doing some of your own
- * "routing" in your app, and we'd like to know what your use case is. We may
- * be able to provide something higher-level to better suit your needs.
- *
- * @category Hooks
+  Returns the current {@link Location}. This can be useful if you'd like to perform some side effect whenever it changes.
+
+  ```tsx
+  import * as React from 'react'
+  import { useLocation } from 'react-router'
+
+  function SomeComponent() {
+    let location = useLocation()
+
+    React.useEffect(() => {
+      // Google Analytics
+      ga('send', 'pageview')
+    }, [location]);
+
+    return (
+      // ...
+    );
+  }
+  ```
+
+  @category Hooks
  */
 export function useLocation(): Location {
   invariant(
@@ -178,10 +200,26 @@ function useIsomorphicLayoutEffect(
 }
 
 /**
- * Returns an imperative method for changing the location. Used by `<Link>`s, but
- * may also be used by other elements to change the location.
- *
- * @category Hooks
+  Returns a function that lets you navigate programmatically in the browser in response to user interactions or effects.
+
+  ```tsx
+  import { useNavigate } from "react-router";
+
+  function SomeComponent() {
+    let navigate = useNavigate();
+    return (
+      <button
+        onClick={() => {
+          navigate(-1);
+        }}
+      />
+    );
+  }
+  ```
+
+  It's often better to use {@link redirect} in {@link ActionFunction | actions} and {@link LoaderFunction | loaders} than this hook.
+
+  @category Hooks
  */
 export function useNavigate(): NavigateFunction {
   let { isDataRoute } = React.useContext(RouteContext);
@@ -943,9 +981,22 @@ export function useMatches(): UIMatch[] {
 }
 
 /**
- * Returns the loader data for the nearest ancestor Route loader
- *
- * @category Hooks
+  Returns the data from the closest route {@link LoaderFunction | loader} or {@link ClientLoaderFunction | client loader}.
+
+  ```tsx
+  import { useLoaderData } from "react-router"
+
+  export async function loader() {
+    return await fakeDb.invoices.findAll();
+  }
+
+  export default function Invoices() {
+    let invoices = useLoaderData<typeof loader>();
+    // ...
+  }
+  ```
+
+  @category Hooks
  */
 export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
@@ -971,9 +1022,29 @@ export function useRouteLoaderData(routeId: string): unknown {
 }
 
 /**
- * Returns the action data for the nearest ancestor Route action
- *
- * @category Hooks
+  Returns the action data from the most recent POST navigation form submission or `undefined` if there hasn't been one.
+
+  ```tsx
+  import { Form, useActionData } from "react-router"
+
+  export async function action({ request }) {
+    const body = await request.formData()
+    const name = body.get("visitorsName")
+    return { message: `Hello, ${name}` }
+  }
+
+  export default function Invoices() {
+    const data = useActionData()
+    return (
+      <Form method="post">
+        <input type="text" name="visitorsName" />
+        {data ? data.message : "Waiting..."}
+      </Form>
+    )
+  }
+  ```
+
+  @category Hooks
  */
 export function useActionData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseActionData);
@@ -1004,9 +1075,21 @@ export function useRouteError(): unknown {
 }
 
 /**
- * Returns the happy-path data from the nearest ancestor `<Await />` value
- *
- * @category Hooks
+  Returns the resolved promise value from the closest {@link Await | `<Await>`}.
+
+  ```tsx
+  function SomeDescendant() {
+    const value = useAsyncValue();
+    // ...
+  }
+
+  // somewhere in your app
+  <Await resolve={somePromise}>
+    <SomeDescendant />
+  </Await>
+  ```
+  
+  @category Hooks
  */
 export function useAsyncValue(): unknown {
   let value = React.useContext(AwaitContext);
@@ -1014,9 +1097,26 @@ export function useAsyncValue(): unknown {
 }
 
 /**
- * Returns the error from the nearest ancestor `<Await />` value
- *
- * @category Hooks
+  Returns the rejection value from the closest {@link Await | `<Await>`}.
+
+  ```tsx
+  import { Await, useAsyncError } from "react-router"
+  
+  function ErrorElement() {
+    const error = useAsyncError();
+    return (
+      <p>Uh Oh, something went wrong! {error.message}</p>
+    );
+  }
+
+  // somewhere in your app
+  <Await
+    resolve={promiseThatRejects}
+    errorElement={<ErrorElement />}
+  />
+  ```
+
+  @category Hooks
  */
 export function useAsyncError(): unknown {
   let value = React.useContext(AwaitContext);
