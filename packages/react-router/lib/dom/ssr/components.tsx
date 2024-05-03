@@ -203,9 +203,24 @@ function getActiveMatches(
 }
 
 /**
- * Renders the `<link>` tags for the current routes.
- *
- * @see https://remix.run/components/links
+  Renders all of the `<link>` tags created by route module {@link LinksFunction} export. You should render it inside the `<head>` of your document.
+
+  ```tsx
+  import { Links } from "react-router";
+
+  export default function Root() {
+    return (
+      <html>
+        <head>
+          <Links />
+        </head>
+        <body></body>
+      </html>
+    );
+  }
+  ```
+
+  @category Components
  */
 export function Links() {
   let { isSpaMode, manifest, routeModules, criticalCss } = useRemixContext();
@@ -235,13 +250,17 @@ export function Links() {
 }
 
 /**
- * This component renders all the `<link rel="prefetch">` and
- * `<link rel="modulepreload"/>` tags for all the assets (data, modules, css) of
- * a given page.
- *
- * @param props
- * @param props.page
- * @see https://remix.run/components/prefetch-page-links
+  Renders `<link rel=prefetch|modulepreload>` tags for modules and data of another page to enable an instant navigation to that page. {@link LinkProps.prefetch | `<Link prefetch>`} uses this internally, but you can render it to prefetch a page for any other reason.
+
+  ```tsx
+  import { PrefetchPageLinks } from "react-router"
+
+  <PrefetchPageLinks page="/absolute/path" />
+  ```
+
+  For example, you may render one of this as the user types into a search field to prefetch search results before they click through to their selection.
+
+  @category Components
  */
 export function PrefetchPageLinks({
   page,
@@ -388,9 +407,23 @@ function PrefetchPageLinksImpl({
 }
 
 /**
- * Renders HTML tags related to metadata for the current route.
- *
- * @see https://remix.run/components/meta
+  Renders all the `<meta>` tags created by route module {@link MetaFunction} exports. You should render it inside the `<head>` of your HTML.
+
+  ```tsx
+  import { Meta } from "react-router";
+
+  export default function Root() {
+    return (
+      <html>
+        <head>
+          <Meta />
+        </head>
+      </html>
+    );
+  }
+  ```
+
+  @category Components
  */
 export function Meta() {
   let { isSpaMode, routeModules } = useRemixContext();
