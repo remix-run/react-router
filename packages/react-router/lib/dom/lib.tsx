@@ -1451,13 +1451,48 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
 Form.displayName = "Form";
 
 export type ScrollRestorationProps = ScriptsProps & {
+  /**
+    Defines the key used to restore scroll positions.
+
+    ```tsx
+    <ScrollRestoration
+      getKey={(location, matches) => {
+        // default behavior
+        return location.key
+      }}
+    />
+    ```
+   */
   getKey?: GetScrollRestorationKeyFunction;
+
   storageKey?: string;
 };
 
 /**
- * This component will emulate the browser's scroll restoration on location
- * changes.
+  Emulates the browser's scroll restoration on location changes. Apps should only render one of these, right before the {@link Scripts} component.
+
+  ```tsx
+  import { ScrollRestoration } from "react-router";
+
+  export default function Root() {
+    return (
+      <html>
+        <body>
+          <ScrollRestoration />
+          <Scripts />
+        </body>
+      </html>
+    );
+  }
+  ```
+
+  This component renders an inline `<script>` to prevent scroll flashing. The `nonce` prop will be passed down to the script tag to allow CSP nonce usage.
+
+  ```tsx
+  <ScrollRestoration nonce={cspNonce} />
+  ```
+
+  @category Components
  */
 export function ScrollRestoration({
   getKey,
