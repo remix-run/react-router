@@ -504,7 +504,10 @@ export interface IndexRouteProps {
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
- * Declares an element that should be rendered at a certain URL path.
+ * Configures an element to render when a pattern matches the current location.
+ * It must be rendered within a {@link Routes} element. Note that these routes
+ * do not participate in data loading, actions, code splitting, or any other
+ * route module features.
  *
  * @category Components
  */
@@ -616,13 +619,21 @@ export function Router({
 }
 
 export interface RoutesProps {
+  /**
+   * Nested {@link Route} elements
+   */
   children?: React.ReactNode;
+
+  /**
+   * The location to match against. Defaults to the current location.
+   */
   location?: Partial<Location> | string;
 }
 
 /**
- * A container for a nested tree of `<Route>` elements that renders the branch
- * that best matches the current location.
+ * Renders a branch of {@link Route | Routes} that best matches the current
+ * location. Note that these routes do not participate in data loading, actions,
+ * code splitting, or any other route module features.
  *
  * @category Components
  */
