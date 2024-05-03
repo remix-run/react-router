@@ -1,8 +1,4 @@
-import type {
-  UNSAFE_DeferredData as DeferredData,
-  ErrorResponse,
-  StaticHandler,
-} from "react-router";
+import type { ErrorResponse, StaticHandler } from "react-router";
 import {
   UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
   getStaticContextFromError,
@@ -18,14 +14,12 @@ import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
 import { createEntryRouteModules } from "./entry";
 import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
-import { getDocumentHeaders } from "./headers";
 import invariant from "./invariant";
 import { ServerMode, isServerMode } from "./mode";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
 import {
-  createDeferredReadableStream,
   isRedirectResponse,
   isRedirectStatusCode,
   isResponse,
@@ -224,71 +218,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     return response;
   };
 };
-
-async function handleDataRequest(
-  serverMode: ServerMode,
-  build: ServerBuild,
-  staticHandler: StaticHandler,
-  routeId: string,
-  request: Request,
-  loadContext: AppLoadContext,
-  handleError: (err: unknown) => void
-) {
-  try {
-    let response = await staticHandler.queryRoute(request, {
-      routeId,
-      requestContext: loadContext,
-    });
-
-    if (isRedirectResponse(response)) {
-      return createRemixRedirectResponse(response, build.basename);
-    }
-
-    if (DEFERRED_SYMBOL in response) {
-      let deferredData = response[DEFERRED_SYMBOL] as DeferredData;
-      let body = createDeferredReadableStream(
-        deferredData,
-        request.signal,
-        serverMode
-      );
-      let init = deferredData.init || {};
-      let headers = new Headers(init.headers);
-      headers.set("Content-Type", "text/remix-deferred");
-      // Mark successful responses with a header so we can identify in-flight
-      // network errors that are missing this header
-      headers.set("X-Remix-Response", "yes");
-      init.headers = headers;
-      return new Response(body, init);
-    }
-
-    // Mark all successful responses with a header so we can identify in-flight
-    // network errors that are missing this header
-    response.headers.set("X-Remix-Response", "yes");
-    return response;
-  } catch (error: unknown) {
-    if (isResponse(error)) {
-      error.headers.set("X-Remix-Catch", "yes");
-      return error;
-    }
-
-    if (isRouteErrorResponse(error)) {
-      handleError(error);
-      return errorResponseToJson(error, serverMode);
-    }
-
-    let errorInstance =
-      error instanceof Error || error instanceof DOMException
-        ? error
-        : new Error("Unexpected Server Error");
-    handleError(errorInstance);
-    return routerJson(serializeError(errorInstance, serverMode), {
-      status: 500,
-      headers: {
-        "X-Remix-Error": "yes",
-      },
-    });
-  }
-}
 
 async function handleSingleFetchRequest(
   serverMode: ServerMode,
