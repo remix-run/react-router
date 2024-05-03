@@ -304,8 +304,7 @@ function useNavigateUnstable(): NavigateFunction {
 const OutletContext = React.createContext<unknown>(null);
 
 /**
- * Returns the context (if provided) for the child route at this level of the route
- * hierarchy.
+ * Returns the parent route {@link OutletProps.context | `<Outlet context>`}.
  *
  * @category Hooks
  */
@@ -330,10 +329,20 @@ export function useOutlet(context?: unknown): React.ReactElement | null {
 }
 
 /**
- * Returns an object of key/value pairs of the dynamic params from the current
- * URL that were matched by the route path.
- *
- * @category Hooks
+  Returns an object of key/value pairs of the dynamic params from the current URL that were matched by the routes. Child routes inherit all params from their parent routes.
+
+  ```tsx
+  import { useParams } from "react-router"
+
+  function SomeComponent() {
+    let params = useParams()
+    params.postId
+  }
+  ```
+
+  Assuming a route pattern like `/posts/:postId` is matched by `/posts/123` then `params.postId` will be `"123"`.
+
+  @category Hooks
  */
 export function useParams<
   ParamsOrKey extends string | Record<string, string | undefined> = string
@@ -346,9 +355,21 @@ export function useParams<
 }
 
 /**
- * Resolves the pathname of the given `to` value against the current location.
- *
- * @category Hooks
+  Resolves the pathname of the given `to` value against the current location. Similar to {@link useHref}, but returns a {@link Path} instead of a string.
+
+  ```tsx
+  import { useResolvedPath } from "react-router"
+
+  function SomeComponent() {
+    // if the user is at /dashboard/profile
+    let path = useResolvedPath("../accounts")
+    path.pathname // "/dashboard/accounts"
+    path.search // ""
+    path.hash // ""
+  }
+  ```
+
+  @category Hooks
  */
 export function useResolvedPath(
   to: To,
@@ -934,10 +955,20 @@ export function useRouteId() {
 }
 
 /**
- * Returns the current navigation, defaulting to an "idle" navigation when
- * no navigation is in progress
- *
- * @category Hooks
+  Returns the current navigation, defaulting to an "idle" navigation when no navigation is in progress. You can use this to render pending UI (like a global spinner) or read FormData from a form navigation.
+
+  ```tsx
+  import { useNavigation } from "react-router"
+
+  function SomeComponent() {
+    let navigation = useNavigation();
+    navigation.state
+    navigation.formData
+    // etc.
+  }
+  ```
+ 
+  @category Hooks
  */
 export function useNavigation() {
   let state = useDataRouterState(DataRouterStateHook.UseNavigation);
@@ -945,10 +976,29 @@ export function useNavigation() {
 }
 
 /**
- * Returns a revalidate function for manually triggering revalidation, as well
- * as the current state of any manual revalidations
- *
- * @category Hooks
+  Revalidate the data on the page for reasons outside of normal data mutations like window focus or polling on an interval.
+
+  ```tsx
+  import { useRevalidator } from "react-router";
+
+  function WindowFocusRevalidator() {
+    const revalidator = useRevalidator();
+
+    useFakeWindowFocus(() => {
+      revalidator.revalidate();
+    });
+
+    return (
+      <div hidden={revalidator.state === "idle"}>
+        Revalidating...
+      </div>
+    );
+  }
+  ```
+
+  Note that page data is already revalidated automatically after actions. If you find yourself using this for normal CRUD operations on your data in response to user interactions, you're probably not taking advantage of the other APIs like {@link useFetcher}, {@link Form}, {@link useSubmit} that do this automatically.
+
+  @category Hooks
  */
 export function useRevalidator() {
   let dataRouterContext = useDataRouterContext(DataRouterHook.UseRevalidator);
@@ -1053,11 +1103,16 @@ export function useActionData(): unknown {
 }
 
 /**
- * Returns the nearest ancestor Route error, which could be a loader/action
- * error or a render error.  This is intended to be called from your
- * ErrorBoundary/errorElement to display a proper error message.
- *
- * @category Hooks
+  Accesses the error thrown during an {@link ActionFunction | action}, {@link LoaderFunction | loader}, or component render to be used in a route module Error Boundary.
+
+  ```tsx
+  export function ErrorBoundary() {
+    const error = useRouteError();
+    return <div>{error.message}</div>;
+  }
+  ```
+
+  @category Hooks
  */
 export function useRouteError(): unknown {
   let error = React.useContext(RouteErrorContext);
