@@ -320,6 +320,7 @@ export {
   Meta,
   Links,
   Scripts,
+  ScriptsProps,
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
 export type {

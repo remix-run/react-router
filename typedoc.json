@@ -1,6 +1,13 @@
 {
   "name": "React Router API Reference",
-  "entryPoints": ["packages/*"],
+  "entryPoints": [
+    "packages/react-router",
+    "packages/react-router-dom",
+    "packages/remix-dev",
+    "packages/remix-express",
+    "packages/remix-node",
+    "packages/remix-serve"
+  ],
   "entryPointStrategy": "packages",
   "includeVersion": false,
   "json": "./public/api.json",

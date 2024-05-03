@@ -631,11 +631,21 @@ export interface RoutesProps {
 }
 
 /**
- * Renders a branch of {@link Route | Routes} that best matches the current
- * location. Note that these routes do not participate in data loading, actions,
- * code splitting, or any other route module features.
- *
- * @category Components
+ Renders a branch of {@link Route | `<Routes>`} that best matches the current
+ location. Note that these routes do not participate in data loading, actions,
+ code splitting, or any other route module features.
+
+ ```tsx
+ import { Routes, Route } from "react-router"
+
+<Routes>
+  <Route index element={<StepOne />} />
+  <Route path="step-2" element={<StepTwo />} />
+  <Route path="step-3" element={<StepThree />}>
+</Routes>
+ ```
+
+ @category Components
  */
 export function Routes({
   children,
