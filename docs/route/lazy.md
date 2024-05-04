@@ -1,5 +1,5 @@
 ---
-title: lazy
+title: Lazy Loading Routes in React
 new: true
 ---
 
@@ -16,7 +16,10 @@ Each `lazy` function will typically return the result of a dynamic import.
 ```jsx
 let routes = createRoutesFromElements(
   <Route path="/" element={<Layout />}>
+  {/* Lazy loading route 'a' */}
     <Route path="a" lazy={() => import("./a")} />
+        {/* Lazy loading route 'b' */}
+
     <Route path="b" lazy={() => import("./b")} />
   </Route>
 );
@@ -25,11 +28,12 @@ let routes = createRoutesFromElements(
 Then in your lazy route modules, export the properties you want defined for the route (`loader`, `Component`, `ErrorBoundary`):
 
 ```jsx
+// Loader function for fetching data
 export async function loader({ request }) {
   let data = await fetchData(request);
   return json(data);
 }
-
+// Component function for rendering UI
 export function Component() {
   let data = useLoaderData();
 
@@ -41,9 +45,9 @@ export function Component() {
   );
 }
 
-// If you want to customize the component display name in React dev tools:
+// Customizing the component display name in React dev tools
 Component.displayName = "SampleLazyRoute";
-
+// ErrorBoundary function for handling errors
 export function ErrorBoundary() {
   let error = useRouteError();
   return isRouteErrorResponse(error) ? (
@@ -55,7 +59,7 @@ export function ErrorBoundary() {
   );
 }
 
-// If you want to customize the component display name in React dev tools:
+// Customizing the component display name in React dev tools
 ErrorBoundary.displayName = "SampleErrorBoundary";
 ```
 
@@ -72,7 +76,9 @@ Additionally, as an optimization, if you statically define a `loader`/`action` t
 ```js
 let route = {
   path: "projects",
+    // Statically defined loader
   loader: ({ request }) => fetchDataForUrl(request.url),
+    // Lazy loading the component
   lazy: () => import("./projects"),
 };
 ```
@@ -86,6 +92,7 @@ let route = {
     let { loader } = await import("./projects-loader");
     return loader({ request, params });
   },
+    // Lazy loading the component
   lazy: () => import("./projects-component"),
 };
 ```
