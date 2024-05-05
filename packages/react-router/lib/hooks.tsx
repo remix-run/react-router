@@ -174,8 +174,6 @@ export function useMatch<
 
 /**
  * The interface for the navigate() function returned from useNavigate().
- *
- * @category Types
  */
 export interface NavigateFunction {
   (to: To, options?: NavigateOptions): void | Promise<void>;

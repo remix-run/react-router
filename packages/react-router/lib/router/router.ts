@@ -60,7 +60,7 @@ import {
  */
 export interface Router {
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Return the basename for the router
@@ -68,7 +68,7 @@ export interface Router {
   get basename(): RouterInit["basename"];
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Return the future config for the router
@@ -76,7 +76,7 @@ export interface Router {
   get future(): FutureConfig;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Return the current state of the router
@@ -84,7 +84,7 @@ export interface Router {
   get state(): RouterState;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Return the routes for this router instance
@@ -92,7 +92,7 @@ export interface Router {
   get routes(): AgnosticDataRouteObject[];
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Return the window associated with the router
@@ -100,7 +100,7 @@ export interface Router {
   get window(): RouterInit["window"];
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Initialize the router, including adding history listeners and kicking off
@@ -110,7 +110,7 @@ export interface Router {
   initialize(): Router;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Subscribe to router.state updates
@@ -120,7 +120,7 @@ export interface Router {
   subscribe(fn: RouterSubscriber): () => void;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Enable scroll restoration behavior in the router
@@ -137,7 +137,7 @@ export interface Router {
   ): () => void;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Navigate forward/backward in the history stack
@@ -153,7 +153,7 @@ export interface Router {
   navigate(to: To | null, opts?: RouterNavigateOptions): Promise<void>;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Trigger a fetcher load/submission
@@ -171,7 +171,7 @@ export interface Router {
   ): Promise<void>;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Trigger a revalidation of all current route loaders and fetcher loads
@@ -179,7 +179,7 @@ export interface Router {
   revalidate(): Promise<void>;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Utility function to create an href for the given location
@@ -188,7 +188,7 @@ export interface Router {
   createHref(location: Location | URL): string;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Utility function to URL encode a destination path according to the internal
@@ -198,7 +198,7 @@ export interface Router {
   encodeLocation(to: To): Path;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Get/create a fetcher for the given key
@@ -207,7 +207,7 @@ export interface Router {
   getFetcher<TData = any>(key: string): Fetcher<TData>;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Delete the fetcher for a given key
@@ -216,7 +216,7 @@ export interface Router {
   deleteFetcher(key: string): void;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Cleanup listeners and abort any in-progress loads
@@ -224,7 +224,7 @@ export interface Router {
   dispose(): void;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Get a navigation blocker
@@ -234,7 +234,7 @@ export interface Router {
   getBlocker(key: string, fn: BlockerFunction): Blocker;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Delete a navigation blocker
@@ -243,7 +243,7 @@ export interface Router {
   deleteBlocker(key: string): void;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * HMR needs to pass in-flight route updates to React Router
@@ -252,7 +252,7 @@ export interface Router {
   _internalSetRoutes(routes: AgnosticRouteObject[]): void;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Internal fetch AbortControllers accessed by unit tests
@@ -260,7 +260,7 @@ export interface Router {
   _internalFetchControllers: Map<string, AbortController>;
 
   /**
-   * @internal
+   * @private
    * PRIVATE - DO NOT USE
    *
    * Internal pending DeferredData instances accessed by unit tests
@@ -3621,6 +3621,8 @@ export function createStaticHandler(
 /**
  * Given an existing StaticHandlerContext and an error thrown at render time,
  * provide an updated StaticHandlerContext suitable for a second SSR render
+ *
+ * @category Utils
  */
 export function getStaticContextFromError(
   routes: AgnosticDataRouteObject[],

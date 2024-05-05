@@ -11,6 +11,5 @@
   "entryPointStrategy": "packages",
   "includeVersion": false,
   "json": "./public/api.json",
-  "out": "./public",
-  "categoryOrder": ["Components", "Hooks"]
+  "out": "./public"
 }

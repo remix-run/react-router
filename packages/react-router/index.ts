@@ -253,6 +253,7 @@ export {
   stripBasename,
   UNSAFE_DEFERRED_SYMBOL,
   UNSAFE_convertRoutesToDataRoutes,
+  Router as RemixRouter,
 } from "./lib/router";
 
 // Expose old RR DOM API

@@ -551,12 +551,14 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
 let isHydrated = false;
 
 /**
-A couple common attributes:
+  A couple common attributes:
 
-- `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
-- `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
+  - `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
+  - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
 
-You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
+  You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
+
+  @category Types
  */
 export type ScriptsProps = Omit<
   React.HTMLProps<HTMLScriptElement>,

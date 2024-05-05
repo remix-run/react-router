@@ -83,6 +83,9 @@ export interface RemixStubProps {
   future?: Partial<FutureConfig>;
 }
 
+/**
+ * @category Utils
+ */
 export function createRemixStub(
   routes: StubRouteObject[],
   context: AppLoadContext = {}

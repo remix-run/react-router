@@ -494,7 +494,7 @@ export function convertRoutesToDataRoutes(
 /**
  * Matches the given routes to a location and returns the match data.
  *
- * @see https://reactrouter.com/utils/match-routes
+ * @category Utils
  */
 export function matchRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
@@ -814,7 +814,7 @@ function matchRouteBranch<
 /**
  * Returns a path with params interpolated.
  *
- * @see https://reactrouter.com/utils/generate-path
+ * @category Utils
  */
 export function generatePath<Path extends string>(
   originalPath: Path,
@@ -920,7 +920,7 @@ type Mutable<T> = {
  * Performs pattern matching on a URL pathname and returns information about
  * the match.
  *
- * @see https://reactrouter.com/utils/match-path
+ * @category Utils
  */
 export function matchPath<
   ParamKey extends ParamParseKey<Path>,
@@ -1080,7 +1080,7 @@ export function stripBasename(
 /**
  * Returns a resolved path object relative to the given pathname.
  *
- * @see https://reactrouter.com/utils/resolve-path
+ * @category Utils
  */
 export function resolvePath(to: To, fromPathname = "/"): Path {
   let {
@@ -1317,6 +1317,8 @@ export type JsonFunction = <Data>(
 /**
  * This is a shortcut for creating `application/json` responses. Converts `data`
  * to JSON and sets the `Content-Type` header.
+ *
+ * @category Utils
  */
 export const json: JsonFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
@@ -1533,6 +1535,9 @@ export type DeferFunction = (
   init?: number | ResponseInit
 ) => DeferredData;
 
+/**
+ * @category Utils
+ */
 export const defer: DeferFunction = (data, init = {}) => {
   let responseInit = typeof init === "number" ? { status: init } : init;
 
@@ -1547,6 +1552,8 @@ export type RedirectFunction = (
 /**
  * A redirect response. Sets the status code and the `Location` header.
  * Defaults to "302 Found".
+ *
+ * @category Utils
  */
 export const redirect: RedirectFunction = (url, init = 302) => {
   let responseInit = init;
@@ -1569,6 +1576,8 @@ export const redirect: RedirectFunction = (url, init = 302) => {
  * A redirect response that will force a document reload to the new location.
  * Sets the status code and the `Location` header.
  * Defaults to "302 Found".
+ *
+ * @category Utils
  */
 export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
@@ -1618,6 +1627,8 @@ export class ErrorResponseImpl implements ErrorResponse {
 /**
  * Check if the given error is an ErrorResponse generated from a 4xx/5xx
  * Response thrown from an action/loader
+ *
+ * @category Utils
  */
 export function isRouteErrorResponse(error: any): error is ErrorResponse {
   return (
