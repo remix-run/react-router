@@ -395,12 +395,35 @@ export function useResolvedPath(
 }
 
 /**
- * Returns the element of the route that matched the current location, prepared
- * with the correct context to render the remainder of the route tree. Route
- * elements in the tree must render an `<Outlet>` to render their child route's
- * element.
- *
- * @category Hooks
+  Hook version of {@link Routes | `<Routes>`} that uses objects instead of components. These objects have the same properties as the component props.
+
+  The return value of `useRoutes` is either a valid React element you can use to render the route tree, or `null` if nothing matched.
+
+  ```tsx
+  import * as React from "react";
+  import { useRoutes } from "react-router";
+
+  function App() {
+    let element = useRoutes([
+      {
+        path: "/",
+        element: <Dashboard />,
+        children: [
+          {
+            path: "messages",
+            element: <DashboardMessages />,
+          },
+          { path: "tasks", element: <DashboardTasks /> },
+        ],
+      },
+      { path: "team", element: <AboutPage /> },
+    ]);
+
+    return element;
+  }
+  ```
+
+ @category Hooks
  */
 export function useRoutes(
   routes: RouteObject[],
@@ -1062,9 +1085,31 @@ export function useLoaderData(): unknown {
 }
 
 /**
- * Returns the loaderData for the given routeId
- *
- * @category Hooks
+  Returns the loader data for a given route by route ID.
+
+  ```tsx
+  import { useRouteLoaderData } from "react-router";
+
+  function SomeComponent() {
+    const { user } = useRouteLoaderData("root");
+  }
+  ```
+
+  Route IDs are created automatically. They are simply the path of the route file relative to the app folder without the extension.
+
+  | Route Filename             | Route ID             |
+  | -------------------------- | -------------------- |
+  | `app/root.tsx`             | `"root"`             |
+  | `app/routes/teams.tsx`     | `"routes/teams"`     |
+  | `app/whatever/teams.$id.tsx` | `"whatever/teams.$id"` |
+
+  If you created an ID manually, you can use that instead:
+
+  ```tsx
+  route("/", "containers/app.tsx", { id: "app" }})
+  ```
+
+  @category Hooks
  */
 export function useRouteLoaderData(routeId: string): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseRouteLoaderData);

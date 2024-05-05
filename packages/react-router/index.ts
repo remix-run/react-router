@@ -309,6 +309,7 @@ export type {
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
+  SubmitTarget,
 } from "./lib/dom/dom";
 export { createSearchParams } from "./lib/dom/dom";
 export type {

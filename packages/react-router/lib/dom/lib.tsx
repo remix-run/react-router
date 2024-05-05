@@ -1671,8 +1671,18 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
 }
 
 /**
- * A convenient wrapper for reading and writing search parameters via the
- * URLSearchParams interface.
+  Returns a tuple of the current URL's {@link URLSearchParams} and a function to update them. Setting the search params causes a navigation.
+
+  ```tsx
+  import { useSearchParams } from "react-router";
+
+  export function SomeComponent() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    // ...
+  }
+  ```
+
+ @category Hooks
  */
 export function useSearchParams(
   defaultInit?: URLSearchParamsInit
@@ -1720,6 +1730,34 @@ export function useSearchParams(
   return [searchParams, setSearchParams];
 }
 
+/**
+  Sets new search params and causes a navigation when called.
+
+  ```tsx
+  <button
+    onClick={() => {
+      const params = new URLSearchParams();
+      params.set("someKey", "someValue");
+      setSearchParams(params, {
+        preventScrollReset: true,
+      });
+    }}
+  />
+  ```
+
+  It also supports a function for setting new search params.
+
+  ```tsx
+  <button
+    onClick={() => {
+      setSearchParams((prev) => {
+        prev.set("someKey", "someValue");
+        return prev;
+      });
+    }}
+  />
+  ```
+ */
 export type SetURLSearchParams = (
   nextInit?:
     | URLSearchParamsInit
@@ -1733,12 +1771,40 @@ export type SetURLSearchParams = (
 export interface SubmitFunction {
   (
     /**
-     * Specifies the `<form>` to be submitted to the server, a specific
-     * `<button>` or `<input type="submit">` to use to submit the form, or some
-     * arbitrary data to submit.
-     *
-     * Note: When using a `<button>` its `name` and `value` will also be
-     * included in the form data that is submitted.
+      Can be multiple types of elements and objects
+
+      **`HTMLFormElement`**
+
+      ```tsx
+      <Form
+        onSubmit={(event) => {
+          submit(event.currentTarget);
+        }}
+      />
+      ```
+
+      **`FormData`**
+
+      ```tsx
+      const formData = new FormData();
+      formData.append("myKey", "myValue");
+      submit(formData, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as `FormData`**
+
+      ```tsx
+      submit({ myKey: "myValue" }, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as JSON**
+
+      ```tsx
+      submit(
+        { myKey: "myValue" },
+        { method: "post", encType: "application/json" }
+      );
+      ```
      */
     target: SubmitTarget,
 
@@ -1755,7 +1821,45 @@ export interface SubmitFunction {
  */
 export interface FetcherSubmitFunction {
   (
+    /**
+      Can be multiple types of elements and objects
+
+      **`HTMLFormElement`**
+
+      ```tsx
+      <fetcher.Form
+        onSubmit={(event) => {
+          fetcher.submit(event.currentTarget);
+        }}
+      />
+      ```
+
+      **`FormData`**
+
+      ```tsx
+      const formData = new FormData();
+      formData.append("myKey", "myValue");
+      fetcher.submit(formData, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as `FormData`**
+
+      ```tsx
+      fetcher.submit({ myKey: "myValue" }, { method: "post" });
+      ```
+
+      **Plain object that will be serialized as JSON**
+
+      ```tsx
+      fetcher.submit(
+        { myKey: "myValue" },
+        { method: "post", encType: "application/json" }
+      );
+      ```
+
+     */
     target: SubmitTarget,
+
     // Fetchers cannot replace or set state because they are not navigation events
     options?: Omit<SubmitOptions, "replace" | "state">
   ): Promise<void>;
@@ -1774,8 +1878,24 @@ let fetcherId = 0;
 let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 
 /**
- * Returns a function that may be used to programmatically submit a form (or
- * some arbitrary data) to the server.
+  The imperative version of {@link Form | `<Form>`} that lets you submit a form from code instead of a user interaction.
+
+  ```tsx
+  import { useSubmit } from "react-router";
+
+  function SomeComponent() {
+    const submit = useSubmit();
+    return (
+      <Form
+        onChange={(event) => {
+          submit(event.currentTarget);
+        }}
+      />
+    );
+  }
+  ```
+
+  @category Hooks
  */
 export function useSubmit(): SubmitFunction {
   let { router } = useDataRouterContext(DataRouterHook.UseSubmit);
@@ -2415,12 +2535,9 @@ function usePrompt({
 export { usePrompt as unstable_usePrompt };
 
 /**
- * Return a boolean indicating if there is an active view transition to the
- * given href.  You can use this value to render CSS classes or viewTransitionName
- * styles onto your elements
- *
- * @param href The destination href
- * @param [opts.relative] Relative routing type ("route" | "path")
+  This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via {@link LinkProps.unstable_viewTransition} (or the `Form`, `submit`, or `navigate` call)
+
+  @category Hooks
  */
 function useViewTransitionState(
   to: To,
