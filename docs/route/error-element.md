@@ -1,5 +1,5 @@
 ---
-title: errorElement
+title: errorElement testing
 new: true
 ---
 
@@ -159,7 +159,7 @@ function RootBoundary() {
 
 This pattern of throwing when you know you can't continue down the data loading path you're on makes it pretty simple to properly handle exceptional situations.
 
-Imagine a function that gets the user's web token for authorized requests looking something like this:
+Imagine a function that gets the user's web token for authorized requests looking something like changes tzhis:
 
 ```tsx
 async function getUserToken() {
