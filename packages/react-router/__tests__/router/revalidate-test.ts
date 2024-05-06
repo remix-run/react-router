@@ -1,5 +1,11 @@
+import { createMemoryRouter } from "../../lib/components";
 import { IDLE_NAVIGATION } from "../../lib/router";
-import { cleanup, setup, TASK_ROUTES } from "./utils/data-router-setup";
+import {
+  cleanup,
+  setup,
+  createDeferred,
+  TASK_ROUTES,
+} from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 
 describe("router.revalidate", () => {
@@ -910,5 +916,218 @@ describe("router.revalidate", () => {
       state: "idle",
       data: "ROOT_DATA**",
     });
+  });
+
+  it("exposes a revalidation promise across navigations", async () => {
+    let revalidationDfd = createDeferred();
+    let navigationDfd = createDeferred();
+    let isFirstCall = true;
+    let router = createMemoryRouter(
+      [
+        {
+          id: "root",
+          loader() {
+            if (isFirstCall) {
+              isFirstCall = false;
+              return revalidationDfd.promise;
+            } else {
+              return navigationDfd.promise;
+            }
+          },
+          children: [
+            {
+              index: true,
+            },
+            {
+              path: "/page",
+            },
+          ],
+        },
+      ],
+      {
+        hydrationData: {
+          loaderData: { root: "ROOT" },
+        },
+      }
+    );
+
+    let revalidationValue = null;
+    let navigationValue = null;
+
+    await router.initialize();
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      revalidation: "idle",
+      loaderData: { root: "ROOT" },
+    });
+    expect(isFirstCall).toBe(true);
+
+    // Start a revalidation, but don't resolve the revalidation loader call
+    router.revalidate().then(() => {
+      revalidationValue = router.state.loaderData.root;
+    });
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      revalidation: "loading",
+      loaderData: { root: "ROOT" },
+    });
+    expect(isFirstCall).toBe(false);
+
+    // Interrupt with a GET navigation
+    router.navigate("/page").then(() => {
+      navigationValue = router.state.loaderData.root;
+    });
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "loading" },
+      revalidation: "loading",
+      loaderData: { root: "ROOT" },
+    });
+    expect(revalidationValue).toBeNull();
+    expect(navigationValue).toBeNull();
+
+    // Complete the navigation, which should resolve the revalidation
+    await navigationDfd.resolve("ROOT*");
+    expect(router.state).toMatchObject({
+      location: { pathname: "/page" },
+      navigation: { state: "idle" },
+      revalidation: "idle",
+      loaderData: { root: "ROOT*" },
+    });
+    expect(revalidationValue).toBe("ROOT*");
+    expect(navigationValue).toBe("ROOT*");
+
+    // no-op
+    revalidationDfd.reject();
+    expect(router.state).toMatchObject({
+      location: { pathname: "/page" },
+      navigation: { state: "idle" },
+      revalidation: "idle",
+      loaderData: { root: "ROOT*" },
+    });
+    expect(revalidationValue).toBe("ROOT*");
+    expect(navigationValue).toBe("ROOT*");
+  });
+
+  it("exposes a revalidation promise across multiple navigations", async () => {
+    let revalidationDfd = createDeferred();
+    let navigationDfd = createDeferred();
+    let navigationDfd2 = createDeferred();
+    let count = 0;
+    let router = createMemoryRouter(
+      [
+        {
+          id: "root",
+          loader() {
+            count++;
+            if (count === 1) {
+              return revalidationDfd.promise;
+            } else if (count === 2) {
+              return navigationDfd.promise;
+            } else {
+              return navigationDfd2.promise;
+            }
+          },
+          children: [
+            {
+              index: true,
+            },
+            {
+              path: "/page",
+            },
+            {
+              path: "/page2",
+            },
+          ],
+        },
+      ],
+      {
+        hydrationData: {
+          loaderData: { root: "ROOT" },
+        },
+      }
+    );
+
+    let revalidationValue = null;
+    let navigationValue = null;
+    let navigationValue2 = null;
+
+    await router.initialize();
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      revalidation: "idle",
+      loaderData: { root: "ROOT" },
+    });
+    expect(count).toBe(0);
+
+    // Start a revalidation, but don't resolve the revalidation loader call
+    router.revalidate().then(() => {
+      revalidationValue = router.state.loaderData.root;
+    });
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "idle" },
+      revalidation: "loading",
+      loaderData: { root: "ROOT" },
+    });
+    expect(count).toBe(1);
+
+    // Interrupt with a navigation
+    router.navigate("/page").then(() => {
+      navigationValue = router.state.loaderData.root;
+    });
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "loading" },
+      revalidation: "loading",
+      loaderData: { root: "ROOT" },
+    });
+    expect(count).toBe(2);
+    expect(revalidationValue).toBeNull();
+    expect(navigationValue).toBeNull();
+    expect(navigationValue2).toBeNull();
+
+    // Interrupt with another navigation
+    router.navigate("/page2").then(() => {
+      navigationValue2 = router.state.loaderData.root;
+    });
+    expect(router.state).toMatchObject({
+      location: { pathname: "/" },
+      navigation: { state: "loading" },
+      revalidation: "loading",
+      loaderData: { root: "ROOT" },
+    });
+    expect(count).toBe(3);
+    expect(revalidationValue).toBeNull();
+    expect(navigationValue).toBeNull();
+    expect(navigationValue2).toBeNull();
+
+    // Complete the navigation, which should resolve the revalidation
+    await navigationDfd2.resolve("ROOT**");
+    expect(router.state).toMatchObject({
+      location: { pathname: "/page2" },
+      navigation: { state: "idle" },
+      revalidation: "idle",
+      loaderData: { root: "ROOT**" },
+    });
+    expect(revalidationValue).toBe("ROOT**");
+    expect(navigationValue).toBe("ROOT**");
+    expect(navigationValue2).toBe("ROOT**");
+
+    // no-op
+    navigationDfd.reject();
+    revalidationDfd.reject();
+    expect(router.state).toMatchObject({
+      location: { pathname: "/page2" },
+      navigation: { state: "idle" },
+      revalidation: "idle",
+      loaderData: { root: "ROOT**" },
+    });
+    expect(revalidationValue).toBe("ROOT**");
+    expect(navigationValue).toBe("ROOT**");
+    expect(navigationValue2).toBe("ROOT**");
   });
 });
