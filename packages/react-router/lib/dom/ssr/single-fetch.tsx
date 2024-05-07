@@ -295,8 +295,15 @@ export function singleFetchUrl(reqUrl: URL | string) {
 async function fetchAndDecode(url: URL, init?: RequestInit) {
   let res = await fetch(url, init);
   invariant(res.body, "No response body to decode");
-  let decoded = await decodeViaTurboStream(res.body, window);
-  return { status: res.status, data: decoded.value };
+  try {
+    let decoded = await decodeViaTurboStream(res.body, window);
+    return { status: res.status, data: decoded.value };
+  } catch (e) {
+    // Unfortunately I don't think we can get access to the response text here.
+    // Pre-emptively cloning seems incorrect and we can't clone after consuming
+    // the body via turbo-stream
+    throw new Error("Unable to decode turbo-stream response");
+  }
 }
 
 // Note: If you change this function please change the corresponding

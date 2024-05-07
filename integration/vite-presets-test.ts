@@ -49,7 +49,7 @@ const files = {
               return {};
             },
           },
-          
+
           // Ensure preset config takes lower precedence than user config
           {
             name: "test-preset",

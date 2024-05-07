@@ -145,7 +145,7 @@ test.describe("SPA Mode", () => {
         let stderr = result.stderr.toString("utf8");
         expect(stderr).toMatch(
           "SPA Mode: Received a 500 status code from `entry.server.tsx` while " +
-            "generating the `index.html` file."
+            "prerendering the `/` path."
         );
         expect(stderr).toMatch("<h1>Loading...</h1>");
       });
@@ -170,8 +170,8 @@ test.describe("SPA Mode", () => {
         let stderr = result.stderr.toString("utf8");
         expect(stderr).toMatch(
           "SPA Mode: Did you forget to include <Scripts/> in your `root.tsx` " +
-            "`HydrateFallback` component?  Your `index.html` file cannot hydrate " +
-            "into a SPA without `<Scripts />`."
+            "`HydrateFallback` component?  Your prerendered HTML files cannot " +
+            "hydrate into a SPA without `<Scripts />`."
         );
       });
     });
