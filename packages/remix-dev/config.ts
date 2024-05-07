@@ -403,11 +403,6 @@ export async function resolveReactRouterConfig({
 
   let prerender: Array<string> | null = null;
   if (prerenderConfig) {
-    if (ssr) {
-      throw new Error(
-        "Prerendering is only supported when `ssr:false` is set."
-      );
-    }
     if (Array.isArray(prerenderConfig)) {
       prerender = prerenderConfig;
     } else if (typeof prerenderConfig === "function") {

@@ -1181,6 +1181,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               serverBuildDirectory,
               clientBuildDirectory
             );
+          } else if (ctx.reactRouterConfig.prerender != null) {
+            await handlePrerender(
+              viteConfig,
+              ctx.reactRouterConfig,
+              serverBuildDirectory,
+              clientBuildDirectory
+            );
           }
         },
       },
@@ -1318,27 +1325,16 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         if (!route) return;
 
         if (!ctx.reactRouterConfig.ssr) {
-          // TODO: Should we drop this in v7?  SPA Mode was originally envisioned
-          // as a guardrails-enabled way to do what you can basically do with your
-          // own pre-rendering.  Server loaders "work" but are an easy footgun
-          // if you aren't properly handling `clientLoader` logic on subsequent
-          // client-side navs to those pages.
-          // Pre-rendering is a more advanced usage of SPA mode and therefore we
-          // allow server loaders for more complete pre-rendered HTML.
-          // So we could keep ssr:false by itself as guard-rails enabled, and
-          // then let folks specify prerender to opt-into full capabilities
-          if (ctx.reactRouterConfig.prerender == null) {
-            let serverOnlyExports = esModuleLexer(code)[1]
-              .map((exp) => exp.n)
-              .filter((exp) => SERVER_ONLY_ROUTE_EXPORTS.includes(exp));
-            if (serverOnlyExports.length > 0) {
-              let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
-              let message =
-                `SPA Mode: ${serverOnlyExports.length} invalid route export(s) in ` +
-                `\`${route.file}\`: ${str}. See https://remix.run/guides/spa-mode ` +
-                `for more information.`;
-              throw Error(message);
-            }
+          let serverOnlyExports = esModuleLexer(code)[1]
+            .map((exp) => exp.n)
+            .filter((exp) => SERVER_ONLY_ROUTE_EXPORTS.includes(exp));
+          if (serverOnlyExports.length > 0) {
+            let str = serverOnlyExports.map((e) => `\`${e}\``).join(", ");
+            let message =
+              `SPA Mode: ${serverOnlyExports.length} invalid route export(s) in ` +
+              `\`${route.file}\`: ${str}. See https://remix.run/guides/spa-mode ` +
+              `for more information.`;
+            throw Error(message);
           }
 
           if (route.id !== "root") {
@@ -1643,41 +1639,146 @@ async function getRouteMetadata(
   return info;
 }
 
+async function getPrerenderBuildAndHandler(
+  viteConfig: Vite.ResolvedConfig,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  serverBuildDirectoryPath: string
+) {
+  let serverBuildPath = path.join(
+    serverBuildDirectoryPath,
+    reactRouterConfig.serverBuildFile
+  );
+  let build = await import(url.pathToFileURL(serverBuildPath).toString());
+  let { createRequestHandler: createHandler } = await import(
+    "@react-router/node"
+  );
+  return {
+    build,
+    handler: createHandler(build, viteConfig.mode),
+  };
+}
+
 async function handleSpaMode(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
   serverBuildDirectoryPath: string,
   clientBuildDirectory: string
 ) {
-  let { basename, serverBuildFile, prerender } = reactRouterConfig;
-  let routesToPrerender = prerender || ["/"];
-
-  // Create a handler and call it for all prerender paths - rendering down to the
-  // proper HydrateFallback ... or not!  Maybe they have a static landing page
-  // generated from routes/_index.tsx.
-  let serverBuildPath = path.join(serverBuildDirectoryPath, serverBuildFile);
-  let build = (await import(
-    url.pathToFileURL(serverBuildPath).toString()
-  )) as ServerBuild;
-  let routes = createPrerenderRoutes(build.routes);
-  let { createRequestHandler: createHandler } = await import(
-    "@react-router/node"
+  let { handler } = await getPrerenderBuildAndHandler(
+    viteConfig,
+    reactRouterConfig,
+    serverBuildDirectoryPath
   );
-  let handler = createHandler(build, viteConfig.mode);
+  let request = new Request(`http://localhost${reactRouterConfig.basename}`);
+  let response = await handler(request);
+  let html = await response.text();
 
-  for (let path of routesToPrerender) {
-    await prerenderRoute(
-      handler,
-      routes,
-      basename,
-      path,
-      clientBuildDirectory,
-      viteConfig
+  if (response.status !== 200) {
+    throw new Error(
+      `SPA Mode: Received a ${response.status} status code from ` +
+        `\`entry.server.tsx\` while generating the \`index.html\` file.\n${html}`
     );
   }
 
+  if (
+    !html.includes("window.__remixContext =") ||
+    !html.includes("window.__remixRouteModules =")
+  ) {
+    throw new Error(
+      "SPA Mode: Did you forget to include <Scripts/> in your `root.tsx` " +
+        "`HydrateFallback` component?  Your `index.html` file cannot hydrate " +
+        "into a SPA without `<Scripts />`."
+    );
+  }
+
+  // Write out the index.html file for the SPA
+  await fse.writeFile(path.join(clientBuildDirectory, "index.html"), html);
+
+  viteConfig.logger.info(
+    "SPA Mode: index.html has been written to your " +
+      colors.bold(path.relative(process.cwd(), clientBuildDirectory)) +
+      " directory"
+  );
+
   // Cleanup - we no longer need the server build assets
   fse.removeSync(serverBuildDirectoryPath);
+}
+
+async function handlePrerender(
+  viteConfig: Vite.ResolvedConfig,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  serverBuildDirectoryPath: string,
+  clientBuildDirectory: string
+) {
+  let { build, handler } = await getPrerenderBuildAndHandler(
+    viteConfig,
+    reactRouterConfig,
+    serverBuildDirectoryPath
+  );
+
+  let routes = createPrerenderRoutes(build.routes);
+  let routesToPrerender = reactRouterConfig.prerender || ["/"];
+  let requestInit = {
+    headers: {
+      "X-React-router-Prerender": "yes",
+    },
+  };
+  for (let path of routesToPrerender) {
+    let matches = matchRoutes(routes, path);
+    if (matches?.some((m) => m.route.loader)) {
+      await prerenderData(
+        handler,
+        routes,
+        reactRouterConfig.basename,
+        path,
+        clientBuildDirectory,
+        viteConfig,
+        requestInit
+      );
+    }
+    await prerenderRoute(
+      handler,
+      routes,
+      reactRouterConfig.basename,
+      path,
+      clientBuildDirectory,
+      viteConfig,
+      requestInit
+    );
+  }
+
+  async function prerenderData(
+    handler: RequestHandler,
+    routes: DataRouteObject[],
+    basename: string,
+    prerenderPath: string,
+    clientBuildDirectory: string,
+    viteConfig: Vite.ResolvedConfig,
+    requestInit: RequestInit
+  ) {
+    let normalizedPath = `${basename}${
+      prerenderPath === "/"
+        ? "/_root.data"
+        : `${prerenderPath.replace(/\/$/, "")}.data`
+    }`.replace(/\/\/+/g, "/");
+    let request = new Request(`http://localhost${normalizedPath}`, requestInit);
+    let response = await handler(request);
+    let data = await response.text();
+    if (response.status !== 200) {
+      throw new Error(
+        `Prerender: Received a ${response.status} status code from ` +
+          `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
+          `path.\n${data}`
+      );
+    }
+
+    // Write out the .data file
+    let outdir = path.relative(process.cwd(), clientBuildDirectory);
+    let outfile = path.join(outdir, normalizedPath.split("/").join(path.sep));
+    await fse.ensureDir(path.dirname(outfile));
+    await fse.outputFile(outfile, data);
+    viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
+  }
 }
 
 async function prerenderRoute(
@@ -1686,15 +1787,17 @@ async function prerenderRoute(
   basename: string,
   prerenderPath: string,
   clientBuildDirectory: string,
-  viteConfig: Vite.ResolvedConfig
+  viteConfig: Vite.ResolvedConfig,
+  requestInit: RequestInit
 ) {
   let normalizedPath = `${basename}${prerenderPath}/`.replace(/\/\/+/g, "/");
-  let request = new Request(`http://localhost${normalizedPath}`);
+  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
   let response = await handler(request);
   let html = await response.text();
+
   if (response.status !== 200) {
     throw new Error(
-      `SPA Mode: Received a ${response.status} status code from ` +
+      `Prerender: Received a ${response.status} status code from ` +
         `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
         `path.\n${html}`
     );
@@ -1705,50 +1808,18 @@ async function prerenderRoute(
     !html.includes("window.__remixRouteModules =")
   ) {
     throw new Error(
-      "SPA Mode: Did you forget to include <Scripts/> in your `root.tsx` " +
+      "Prerender: Did you forget to include <Scripts/> in your `root.tsx` " +
         "`HydrateFallback` component?  Your prerendered HTML files cannot " +
         "hydrate into a SPA without `<Scripts />`."
     );
   }
 
-  // Write out the HTML file for the SPA
-  await fse.ensureDir(path.join(clientBuildDirectory, normalizedPath));
-  await fse.writeFile(
-    path.join(clientBuildDirectory, normalizedPath, "index.html"),
-    html
-  );
-
-  let outfile = path.join(
-    path.relative(process.cwd(), clientBuildDirectory),
-    normalizedPath.split("/").join(path.sep),
-    "index.html"
-  );
-  viteConfig.logger.info(`SPA Mode: Prerendered ${colors.bold(outfile)}`);
-
-  let matches = matchRoutes(routes, prerenderPath);
-  if (matches?.some((m) => m.route.loader)) {
-    let normalizedDataPath = `${basename}${
-      prerenderPath === "/"
-        ? "/_root.data"
-        : `${prerenderPath.replace(/\/$/, "")}.data`
-    }`.replace(/\/\/+/g, "/");
-    let dataRequest = new Request(`http://localhost${normalizedDataPath}`);
-    let dataResponse = await handler(dataRequest);
-    if (!dataResponse.ok) {
-      throw new Error(
-        `Caught error when prerendering ${normalizedDataPath}: ${
-          dataResponse.status
-        } ${await dataResponse.text()}}`
-      );
-    }
-    let data = await dataResponse.text();
-    let dataOutfile = path.join(
-      path.relative(process.cwd(), clientBuildDirectory),
-      normalizedDataPath.split("/").join(path.sep)
-    );
-    await fse.outputFile(dataOutfile, data);
-    viteConfig.logger.info(`SPA Mode: Prerendered ${colors.bold(dataOutfile)}`);
-  }
+  // Write out the HTML file
+  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
+  await fse.ensureDir(path.dirname(outfile));
+  await fse.outputFile(outfile, html);
+  viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
 
 type ServerRoute = ServerBuild["routes"][string] & {

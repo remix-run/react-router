@@ -81,6 +81,11 @@ async function run() {
     express.static(build.assetsBuildDirectory, {
       immutable: true,
       maxAge: "1y",
+      setHeaders: function (res, path, stat) {
+        if (path.endsWith(".data")) {
+          res.set("Content-Type", "text/x-turbo");
+        }
+      },
     })
   );
   app.use(express.static("public", { maxAge: "1h" }));
