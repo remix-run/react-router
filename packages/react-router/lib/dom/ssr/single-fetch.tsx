@@ -294,16 +294,9 @@ export function singleFetchUrl(reqUrl: URL | string) {
 
 async function fetchAndDecode(url: URL, init?: RequestInit) {
   let res = await fetch(url, init);
-  if (res.headers.get("Content-Type")?.includes("text/x-turbo")) {
-    invariant(res.body, "No response body to decode");
-    let decoded = await decodeViaTurboStream(res.body, window);
-    return { status: res.status, data: decoded.value };
-  }
-
-  // If we didn't get back a turbo-stream response, then we never reached the
-  // Remix server and likely this is a network error - just expose up the
-  // response body as an Error
-  throw new Error(await res.text());
+  invariant(res.body, "No response body to decode");
+  let decoded = await decodeViaTurboStream(res.body, window);
+  return { status: res.status, data: decoded.value };
 }
 
 // Note: If you change this function please change the corresponding

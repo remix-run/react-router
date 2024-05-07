@@ -144,6 +144,11 @@ export type VitePluginConfig = {
    */
   manifest?: boolean;
   /**
+   * An array of URLs to prerender to HTML files at build time.  Can also be a
+   * function returning an array to dynamically generate URLs.
+   */
+  prerender?: Array<string> | (() => Array<string> | Promise<Array<string>>);
+  /**
    * An array of React Router plugin config presets to ease integration with
    * other platforms and tools.
    */
@@ -195,6 +200,10 @@ export type ResolvedVitePluginConfig = Readonly<{
    * Defaults to `false`.
    */
   manifest: boolean;
+  /**
+   * An array of URLs to prerender to HTML files at build time.
+   */
+  prerender: Array<string> | null;
   /**
    * Derived from Vite's `base` config
    * */
@@ -370,6 +379,7 @@ export async function resolveReactRouterConfig({
     ignoredRouteFiles,
     manifest,
     routes: userRoutesFunction,
+    prerender: prerenderConfig,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
@@ -379,10 +389,8 @@ export async function resolveReactRouterConfig({
     ...mergeReactRouterConfig(...presets, reactRouterUserConfig),
   };
 
-  let isSpaMode = !ssr;
-
   // Log warning for incompatible vite config flags
-  if (isSpaMode && serverBundles) {
+  if (!ssr && serverBundles) {
     console.warn(
       colors.yellow(
         colors.bold("⚠️  SPA Mode: ") +
@@ -391,6 +399,25 @@ export async function resolveReactRouterConfig({
       )
     );
     serverBundles = undefined;
+  }
+
+  let prerender: Array<string> | null = null;
+  if (prerenderConfig) {
+    if (ssr) {
+      throw new Error(
+        "Prerendering is only supported when `ssr:false` is set."
+      );
+    }
+    if (Array.isArray(prerenderConfig)) {
+      prerender = prerenderConfig;
+    } else if (typeof prerenderConfig === "function") {
+      prerender = await prerenderConfig();
+    } else {
+      throw new Error(
+        "The `prerender` config must be an array of string paths, or a function " +
+          "returning an array of string paths"
+      );
+    }
   }
 
   let appDirectory = path.resolve(rootDirectory, userAppDirectory || "app");
@@ -445,6 +472,7 @@ export async function resolveReactRouterConfig({
     buildEnd,
     future,
     manifest,
+    prerender,
     publicPath,
     routes,
     serverBuildFile,
@@ -468,7 +496,6 @@ export async function resolveEntryFiles({
   reactRouterConfig: ResolvedVitePluginConfig;
 }) {
   let { appDirectory, future } = reactRouterConfig;
-  let isSpaMode = !reactRouterConfig.ssr;
 
   let defaultsDirectory = path.resolve(__dirname, "config", "defaults");
 
@@ -481,7 +508,7 @@ export async function resolveEntryFiles({
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  if (isSpaMode && future?.unstable_singleFetch != true) {
+  if (!reactRouterConfig.ssr && future?.unstable_singleFetch !== true) {
     // This is a super-simple default since we don't need streaming in SPA Mode.
     // We can include this in a remix-spa template, but right now `npx remix reveal`
     // will still expose the streaming template since that command doesn't have
