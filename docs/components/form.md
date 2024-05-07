@@ -92,7 +92,7 @@ function ProjectsPage() {
 </DataBrowserRouter>;
 ```
 
-If the the current URL is `"/projects/123"`, the form inside the child
+If the current URL is `"/projects/123"`, the form inside the child
 route, `ProjectsPage`, will have a default action as you might expect: `"/projects/123"`. In this case, where the route is the deepest matching route, both `<Form>` and plain HTML forms have the same result.
 
 But the form inside of `ProjectsLayout` will point to `"/projects"`, not the full URL. In other words, it points to the matching segment of the URL for the route in which the form is rendered.
