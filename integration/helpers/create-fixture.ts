@@ -373,11 +373,11 @@ function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
   });
 
   // These logs are helpful for debugging. Remove comments if needed.
-  // console.log("spawning node " + buildArgs.join(" ") + ":\n");
-  // console.log("  STDOUT:");
-  // console.log("  " + buildSpawn.stdout.toString("utf-8"));
-  // console.log("  STDERR:");
-  // console.log("  " + buildSpawn.stderr.toString("utf-8"));
+  console.log("spawning node " + buildArgs.join(" ") + ":\n");
+  console.log("  STDOUT:");
+  console.log("  " + buildSpawn.stdout.toString("utf-8"));
+  console.log("  STDERR:");
+  console.log("  " + buildSpawn.stderr.toString("utf-8"));
 
   if (buildStdio) {
     buildStdio.write(buildSpawn.stdout.toString("utf-8"));

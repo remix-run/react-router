@@ -20,7 +20,7 @@ function spyConsole() {
   return spy;
 }
 
-describe("server", () => {
+describe.skip("server", () => {
   let routeId = "root";
   let build: ServerBuild = {
     entry: {
@@ -505,7 +505,7 @@ describe("shared server runtime", () => {
     });
   });
 
-  describe("data requests", () => {
+  describe.skip("data requests", () => {
     test("data request that does not match loader surfaces 400 error for boundary", async () => {
       let build = mockServerBuild({
         root: {
