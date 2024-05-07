@@ -1724,11 +1724,10 @@ async function handlePrerender(
     },
   };
   for (let path of routesToPrerender) {
-    let matches = matchRoutes(routes, path);
-    if (matches?.some((m) => m.route.loader)) {
+    let hasLoaders = matchRoutes(routes, path)?.some((m) => m.route.loader);
+    if (hasLoaders) {
       await prerenderData(
         handler,
-        routes,
         reactRouterConfig.basename,
         path,
         clientBuildDirectory,
@@ -1749,7 +1748,6 @@ async function handlePrerender(
 
   async function prerenderData(
     handler: RequestHandler,
-    routes: DataRouteObject[],
     basename: string,
     prerenderPath: string,
     clientBuildDirectory: string,
