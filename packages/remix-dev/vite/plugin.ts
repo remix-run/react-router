@@ -1174,20 +1174,36 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             );
           }
 
-          if (!ctx.reactRouterConfig.ssr) {
-            await handleSpaMode(
-              viteConfig,
-              ctx.reactRouterConfig,
-              serverBuildDirectory,
-              clientBuildDirectory
-            );
-          } else if (ctx.reactRouterConfig.prerender != null) {
+          if (ctx.reactRouterConfig.prerender != null) {
+            // If we have prerender routes, that takes precedence over SPA mode
+            // which is ssr:false and only the rot route being rendered
             await handlePrerender(
               viteConfig,
               ctx.reactRouterConfig,
               serverBuildDirectory,
               clientBuildDirectory
             );
+          } else if (!ctx.reactRouterConfig.ssr) {
+            await handleSpaMode(
+              viteConfig,
+              ctx.reactRouterConfig,
+              serverBuildDirectory,
+              clientBuildDirectory
+            );
+          }
+
+          // For both SPA mode and prerendering, we can remove the server builds
+          // if ssr:false is set
+          if (!ctx.reactRouterConfig.ssr) {
+            // Cleanup - we no longer need the server build assets
+            viteConfig.logger.info(
+              [
+                "Removing the server build in",
+                colors.green(serverBuildDirectory),
+                "due to ssr:false",
+              ].join(" ")
+            );
+            fse.removeSync(serverBuildDirectory);
           }
         },
       },
@@ -1642,10 +1658,10 @@ async function getRouteMetadata(
 async function getPrerenderBuildAndHandler(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
-  serverBuildDirectoryPath: string
+  serverBuildDirectory: string
 ) {
   let serverBuildPath = path.join(
-    serverBuildDirectoryPath,
+    serverBuildDirectory,
     reactRouterConfig.serverBuildFile
   );
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
@@ -1661,13 +1677,13 @@ async function getPrerenderBuildAndHandler(
 async function handleSpaMode(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
-  serverBuildDirectoryPath: string,
+  serverBuildDirectory: string,
   clientBuildDirectory: string
 ) {
   let { handler } = await getPrerenderBuildAndHandler(
     viteConfig,
     reactRouterConfig,
-    serverBuildDirectoryPath
+    serverBuildDirectory
   );
   let request = new Request(`http://localhost${reactRouterConfig.basename}`);
   let response = await handler(request);
@@ -1699,28 +1715,27 @@ async function handleSpaMode(
       colors.bold(path.relative(process.cwd(), clientBuildDirectory)) +
       " directory"
   );
-
-  // Cleanup - we no longer need the server build assets
-  fse.removeSync(serverBuildDirectoryPath);
 }
 
 async function handlePrerender(
   viteConfig: Vite.ResolvedConfig,
   reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
-  serverBuildDirectoryPath: string,
+  serverBuildDirectory: string,
   clientBuildDirectory: string
 ) {
   let { build, handler } = await getPrerenderBuildAndHandler(
     viteConfig,
     reactRouterConfig,
-    serverBuildDirectoryPath
+    serverBuildDirectory
   );
 
   let routes = createPrerenderRoutes(build.routes);
   let routesToPrerender = reactRouterConfig.prerender || ["/"];
   let requestInit = {
     headers: {
-      "X-React-router-Prerender": "yes",
+      // Header that can be used in the loader to know if you're running at
+      // build time or runtime
+      "X-React-Router-Prerender": "yes",
     },
   };
   for (let path of routesToPrerender) {
@@ -1737,7 +1752,6 @@ async function handlePrerender(
     }
     await prerenderRoute(
       handler,
-      routes,
       reactRouterConfig.basename,
       path,
       clientBuildDirectory,
@@ -1781,7 +1795,6 @@ async function handlePrerender(
 
 async function prerenderRoute(
   handler: RequestHandler,
-  routes: DataRouteObject[],
   basename: string,
   prerenderPath: string,
   clientBuildDirectory: string,

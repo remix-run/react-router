@@ -299,9 +299,12 @@ async function fetchAndDecode(url: URL, init?: RequestInit) {
     let decoded = await decodeViaTurboStream(res.body, window);
     return { status: res.status, data: decoded.value };
   } catch (e) {
-    // Unfortunately I don't think we can get access to the response text here.
-    // Pre-emptively cloning seems incorrect and we can't clone after consuming
-    // the body via turbo-stream
+    // Can't clone after consuming the body via turbo-stream so we can't
+    // include the body here.  In an ideal world we'd look for a turbo-stream
+    // content type here, or even X-Remix-Response but then folks can't
+    // statically deploy their prerendered .data files to a CDN unless they can
+    // tell that CDN to add special headers to those certain files - which is a
+    // bit restrictive.
     throw new Error("Unable to decode turbo-stream response");
   }
 }
