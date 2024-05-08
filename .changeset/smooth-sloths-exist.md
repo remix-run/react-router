@@ -3,4 +3,4 @@
 "react-router-dom-v5-compat": patch
 ---
 
-useLocation retains a non-null state when state passed explicitly
+Allow falsy `location.state` values passed to `<StaticRouter>`
