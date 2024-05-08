@@ -91,6 +91,17 @@ export function RemixServer({
           />
         </RemixErrorBoundary>
       </RemixContext.Provider>
+      {context.serverHandoffStreamAction ? (
+        <React.Suspense>
+          <StreamTransfer
+            context={context}
+            identifier={0}
+            reader={context.serverHandoffStreamAction.getReader()}
+            textDecoder={new TextDecoder()}
+            isAction={true}
+          />
+        </React.Suspense>
+      ) : null}
       {context.serverHandoffStream ? (
         <React.Suspense>
           <StreamTransfer
@@ -98,6 +109,7 @@ export function RemixServer({
             identifier={0}
             reader={context.serverHandoffStream.getReader()}
             textDecoder={new TextDecoder()}
+            isAction={false}
           />
         </React.Suspense>
       ) : null}

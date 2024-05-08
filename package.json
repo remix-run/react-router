@@ -145,7 +145,7 @@
     },
     "overrides": {
       "react": "0.0.0-experimental-96c584661-20240412",
-			"react-dom": "0.0.0-experimental-96c584661-20240412"
+      "react-dom": "0.0.0-experimental-96c584661-20240412"
     }
   }
 }

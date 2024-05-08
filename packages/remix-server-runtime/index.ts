@@ -6,6 +6,7 @@ export {
 } from "./formData";
 export { defer, json, redirect, redirectDocument } from "./responses";
 export { createRequestHandler } from "./server";
+export { createReactServerRequestHandler } from "./server-react";
 export {
   createSession,
   createSessionStorageFactory,
@@ -41,6 +42,7 @@ export type {
   CookieParseOptions,
   CookieSerializeOptions,
   CookieSignatureOptions,
+  CreateFromReadableStreamFunction,
   DataFunctionArgs,
   EntryContext,
   ErrorResponse,
@@ -58,6 +60,9 @@ export type {
   MemoryUploadHandlerOptions,
   HandleErrorFunction,
   PageLinkDescriptor,
+  ReactServerBuild,
+  ReactServerEntryModule,
+  RenderToReadableStreamFunction,
   RequestHandler,
   SerializeFrom,
   ServerBuild,

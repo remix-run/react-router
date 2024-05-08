@@ -573,7 +573,7 @@ export type ScriptProps = Omit<
  * @see https://remix.run/components/scripts
  */
 export function Scripts(props: ScriptProps) {
-  let { manifest, serverHandoffString, isSpaMode, renderMeta } =
+  let { manifest, serverHandoffString, isSpaMode, renderMeta, future } =
     useRemixContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
@@ -598,6 +598,15 @@ export function Scripts(props: ScriptProps) {
       "window.__remixContext.streamController = controller;" +
       "}" +
       "}).pipeThrough(new TextEncoderStream());";
+
+    if (future.unstable_serverComponents && staticContext?.actionData) {
+      streamScript +=
+        "window.__remixContext.streamAction = new ReadableStream({" +
+        "start(controller){" +
+        "window.__remixContext.streamControllerAction = controller;" +
+        "}" +
+        "}).pipeThrough(new TextEncoderStream());";
+    }
 
     let contextScript = staticContext
       ? `window.__remixContext = ${serverHandoffString};${streamScript}`

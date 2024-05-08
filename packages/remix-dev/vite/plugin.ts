@@ -579,6 +579,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         })
         .join("\n")}
       export const future = ${JSON.stringify(ctx.reactRouterConfig.future)};
+      export const basename = ${JSON.stringify(ctx.reactRouterConfig.basename)};
       export const entry = { module: entryServer };
       export const routes = {
         ${Object.keys(routes)

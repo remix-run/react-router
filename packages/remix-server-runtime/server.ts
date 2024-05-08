@@ -37,6 +37,8 @@ import {
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
 } from "./single-fetch";
+import type { CallReactServer } from "./single-fetch-rsc";
+import { getServerComponentsDataStrategy } from "./single-fetch-rsc";
 
 export type RequestHandler = (
   request: Request,
@@ -45,10 +47,11 @@ export type RequestHandler = (
 
 export type CreateRequestHandlerFunction = (
   build: ServerBuild | (() => ServerBuild | Promise<ServerBuild>),
-  mode?: string
+  mode?: string,
+  callReactServer?: CallReactServer
 ) => RequestHandler;
 
-function derive(build: ServerBuild, mode?: string) {
+export function derive(build: ServerBuild, mode?: string) {
   let routes = createRoutes(build.routes);
   let dataRoutes = createStaticHandlerDataRoutes(build.routes, build.future);
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
@@ -81,7 +84,8 @@ function derive(build: ServerBuild, mode?: string) {
 
 export const createRequestHandler: CreateRequestHandlerFunction = (
   build,
-  mode
+  mode,
+  callReactServer
 ) => {
   let _build: ServerBuild;
   let routes: ServerRoute[];
@@ -103,6 +107,12 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
       serverMode = derived.serverMode;
       staticHandler = derived.staticHandler;
       errorHandler = derived.errorHandler;
+    }
+
+    if (_build.future.unstable_serverComponents && !callReactServer) {
+      throw new Error(
+        "You must provide a `callReactServer` function when using server components."
+      );
     }
 
     let url = new URL(request.url);
@@ -134,15 +144,32 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         _build.basename
       );
 
-      response = await handleSingleFetchRequest(
-        serverMode,
-        _build,
-        staticHandler,
-        request,
-        handlerUrl,
-        loadContext,
-        handleError
-      );
+      if (_build.future.unstable_serverComponents) {
+        invariant(callReactServer, "callReactServer is required");
+        let init: RequestInit & { duplex?: "half" } = {
+          headers: request.headers,
+          method: request.method,
+        };
+        if (
+          request.method !== "GET" &&
+          request.method !== "HEAD" &&
+          request.body
+        ) {
+          init.body = request.body;
+          init.duplex = "half";
+        }
+        return callReactServer(request.url, init);
+      } else {
+        response = await handleSingleFetchRequest(
+          serverMode,
+          _build,
+          staticHandler,
+          request,
+          handlerUrl,
+          loadContext,
+          handleError
+        );
+      }
 
       if (_build.entry.module.handleDataRequest) {
         response = await _build.entry.module.handleDataRequest(response, {
@@ -203,7 +230,8 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
         request,
         loadContext,
         handleError,
-        criticalCss
+        criticalCss,
+        callReactServer
       );
     }
 
@@ -229,7 +257,7 @@ async function handleSingleFetchRequest(
   handleError: (err: unknown) => void
 ): Promise<Response> {
   let { result, headers, status } =
-    request.method !== "GET"
+    request.method !== "GET" && request.method !== "HEAD"
       ? await singleFetchAction(
           serverMode,
           staticHandler,
@@ -276,14 +304,45 @@ async function handleDocumentRequest(
   request: Request,
   loadContext: AppLoadContext,
   handleError: (err: unknown) => void,
-  criticalCss?: string
+  criticalCss?: string,
+  callReactServer?: CallReactServer
 ) {
   let context;
   let responseStubs = getResponseStubs();
+
+  let rscLoaderStream = undefined as
+    | ReadableStream<Uint8Array>
+    | null
+    | undefined;
+  let rscActionId: string | null = null;
+  let rscActionStream = undefined as
+    | ReadableStream<Uint8Array>
+    | null
+    | undefined;
+  const serverComponents = build.future.unstable_serverComponents;
+  if (serverComponents && !callReactServer) {
+    throw new Error(
+      "callReactServer is required for this server component builds"
+    );
+  }
+
   try {
     context = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),
+      unstable_dataStrategy: serverComponents
+        ? getServerComponentsDataStrategy(
+            responseStubs,
+            build.entry.module.createFromReadableStream!,
+            callReactServer!,
+            (resultStream) => {
+              rscLoaderStream = resultStream;
+            },
+            (actionId, resultStream) => {
+              rscActionId = actionId;
+              rscActionStream = resultStream;
+            }
+          )
+        : getSingleFetchDataStrategy(responseStubs),
     });
   } catch (error: unknown) {
     handleError(error);
@@ -324,6 +383,35 @@ async function handleDocumentRequest(
     actionData: context.actionData,
     errors: serializeErrors(context.errors, serverMode),
   };
+  let streamHandoff: Pick<
+    EntryContext,
+    | "serverHandoffStream"
+    | "serverHandoffActionId"
+    | "serverHandoffStreamAction"
+    | "renderMeta"
+  > | null = null;
+  if (build.future.unstable_serverComponents) {
+    if (!rscLoaderStream) {
+      throw new Error("No RSC stream");
+    }
+    streamHandoff = {
+      serverHandoffStream: rscLoaderStream,
+      serverHandoffActionId: rscActionId ?? undefined,
+      serverHandoffStreamAction: rscActionStream ?? undefined,
+      renderMeta: {},
+    };
+  } else {
+    streamHandoff = {
+      serverHandoffStream: encodeViaTurboStream(
+        state,
+        request.signal,
+        build.entry.module.streamTimeout,
+        serverMode
+      ),
+      renderMeta: {},
+    };
+  }
+
   let entryContext: EntryContext = {
     manifest: build.assets,
     routeModules: createEntryRouteModules(build.routes),
@@ -336,6 +424,7 @@ async function handleDocumentRequest(
       future: build.future,
       isSpaMode: build.isSpaMode,
     }),
+    serverHandoffActionId: streamHandoff?.serverHandoffActionId,
     serverHandoffStream: encodeViaTurboStream(
       state,
       request.signal,
@@ -346,6 +435,7 @@ async function handleDocumentRequest(
     future: build.future,
     isSpaMode: build.isSpaMode,
     serializeError: (err) => serializeError(err, serverMode),
+    ...streamHandoff,
   };
 
   let handleDocumentRequestFunction = build.entry.module.default;

@@ -48,4 +48,26 @@ export interface ServerEntryModule {
   handleDataRequest?: HandleDataRequestFunction;
   handleError?: HandleErrorFunction;
   streamTimeout?: number;
+  createFromReadableStream?: CreateFromReadableStreamFunction;
+}
+
+export interface RenderToReadableStreamFunction {
+  (data: unknown): ReadableStream<Uint8Array>;
+}
+
+export interface CreateFromReadableStreamFunction {
+  (body: ReadableStream<Uint8Array>): Promise<unknown>;
+}
+
+export interface ReactServerEntryModule {
+  renderToReadableStream: RenderToReadableStreamFunction;
+}
+
+export interface ReactServerBuild {
+  entry: {
+    module: ReactServerEntryModule;
+  };
+  routes: ServerRouteManifest;
+  future: FutureConfig;
+  basename: string;
 }
