@@ -148,126 +148,136 @@ describe("<NavLink />", () => {
   itPrefetchesPageLinks(NavLink);
 });
 
-// TODO: figure out why this test exists
-// describe("<RemixServer>", () => {
-//   it("handles empty default export objects from the compiler", async () => {
-//     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
-//       new Request("http://localhost/")
-//     );
-//     invariant(
-//       !(staticHandlerContext instanceof Response),
-//       "Expected a context"
-//     );
+describe("<RemixServer>", () => {
+  it("handles empty default export objects from the compiler", async () => {
+    let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
+      new Request("http://localhost/")
+    );
+    invariant(
+      !(staticHandlerContext instanceof Response),
+      "Expected a context"
+    );
 
-//     let context = {
-//       manifest: {
-//         routes: {
-//           root: {
-//             hasLoader: false,
-//             hasAction: false,
-//             hasErrorBoundary: false,
-//             id: "root",
-//             module: "root.js",
-//             path: "/",
-//           },
-//           empty: {
-//             hasLoader: false,
-//             hasAction: false,
-//             hasErrorBoundary: false,
-//             id: "empty",
-//             module: "empty.js",
-//             index: true,
-//             parentId: "root",
-//           },
-//         },
-//         entry: { imports: [], module: "" },
-//         url: "",
-//         version: "",
-//       },
-//       routeModules: {
-//         root: {
-//           default: () => {
-//             return (
-//               <>
-//                 <h1>Root</h1>
-//                 <Outlet />
-//               </>
-//             );
-//           },
-//         },
-//         empty: { default: {} },
-//       },
-//       staticHandlerContext,
-//       future: {},
-//     };
+    let context = {
+      manifest: {
+        routes: {
+          root: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "root",
+            module: "root.js",
+            path: "/",
+          },
+          empty: {
+            hasLoader: false,
+            hasAction: false,
+            hasErrorBoundary: false,
+            id: "empty",
+            module: "empty.js",
+            index: true,
+            parentId: "root",
+          },
+        },
+        entry: { imports: [], module: "" },
+        url: "",
+        version: "",
+      },
+      routeModules: {
+        root: {
+          default: () => {
+            return (
+              <>
+                <h1>Root</h1>
+                <Outlet />
+              </>
+            );
+          },
+        },
+        empty: { default: {} },
+      },
+      staticHandlerContext,
+      future: {},
+    };
 
-//     jest.spyOn(console, "warn").mockImplementation(() => {});
-//     jest.spyOn(console, "error");
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, "error");
 
-//     let { container } = render(
-//       <RemixServer context={context} url="http://localhost/" />
-//     );
+    let { container } = render(
+      <RemixServer context={context} url="http://localhost/" />
+    );
 
-//     expect(console.warn).toHaveBeenCalledWith(
-//       'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.'
-//     );
-//     expect(console.error).not.toHaveBeenCalled();
-//     expect(container.innerHTML).toMatch("<h1>Root</h1>");
-//   });
-// });
+    expect(console.warn).toHaveBeenCalledWith(
+      'Matched leaf route at location "/" does not have an element or Component. This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.'
+    );
+    expect(console.error).not.toHaveBeenCalled();
+    expect(container.innerHTML).toMatch("<h1>Root</h1>");
+  });
+});
 
-// describe("<HydratedRouter>", () => {
-//   it("handles empty default export objects from the compiler", () => {
-//     window.__remixContext = {
-//       url: "/",
-//       state: {
-//         loaderData: {},
-//       },
-//       future: {},
-//     };
-//     window.__remixRouteModules = {
-//       root: {
-//         default: () => {
-//           return (
-//             <>
-//               <h1>Root</h1>
-//               <Outlet />
-//             </>
-//           );
-//         },
-//       },
-//       empty: { default: {} },
-//     };
-//     window.__remixManifest = {
-//       routes: {
-//         root: {
-//           hasLoader: false,
-//           hasAction: false,
-//           hasErrorBoundary: false,
-//           id: "root",
-//           module: "root.js",
-//           path: "/",
-//         },
-//         empty: {
-//           hasLoader: false,
-//           hasAction: false,
-//           hasErrorBoundary: false,
-//           id: "empty",
-//           module: "empty.js",
-//           index: true,
-//           parentId: "root",
-//         },
-//       },
-//       entry: { imports: [], module: "" },
-//       url: "",
-//       version: "",
-//     };
+describe("<HydratedRouter>", () => {
+  it("handles empty default export objects from the compiler", async () => {
+    window.__remixContext = {
+      url: "/",
+      future: {},
+    };
+    window.__remixRouteModules = {
+      root: {
+        default: () => {
+          return (
+            <>
+              <h1>Root</h1>
+              <Outlet />
+            </>
+          );
+        },
+      },
+      empty: { default: {} },
+    };
+    window.__remixManifest = {
+      routes: {
+        root: {
+          hasLoader: false,
+          hasAction: false,
+          hasErrorBoundary: false,
+          id: "root",
+          module: "root.js",
+          path: "/",
+        },
+        empty: {
+          hasLoader: false,
+          hasAction: false,
+          hasErrorBoundary: false,
+          id: "empty",
+          module: "empty.js",
+          index: true,
+          parentId: "root",
+        },
+      },
+      entry: { imports: [], module: "" },
+      url: "",
+      version: "",
+    };
+    window.__remixContext!.stream = new ReadableStream({
+      start(controller) {
+        window.__remixContext!.streamController = controller;
+      },
+    }).pipeThrough(new TextEncoderStream());
+    window.__remixContext!.streamController.enqueue(
+      // ts-expect-error
+      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n'
+    );
+    window.__remixContext!.streamController.close();
 
-//     jest.spyOn(console, "error");
+    jest.spyOn(console, "error");
+    jest.spyOn(console, "warn").mockImplementation(() => {});
 
-//     let { container } = render(<HydratedRouter />);
+    let container;
+    await act(() => {
+      container = render(<HydratedRouter />).container;
+    });
 
-//     expect(console.error).not.toHaveBeenCalled();
-//     expect(container.innerHTML).toMatch("<h1>Root</h1>");
-//   });
-// });
+    expect(console.error).not.toHaveBeenCalled();
+    expect(container.innerHTML).toMatch("<h1>Root</h1>");
+  });
+});

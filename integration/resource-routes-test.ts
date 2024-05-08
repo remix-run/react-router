@@ -208,8 +208,8 @@ test.describe("loader in an app", async () => {
     expect(await res.text()).toEqual("Partial");
   });
 
-  // TODO: Matt and I chatted about this recently, revisit that chat and
-  // update this test if necessary
+  // TODO: This test should work once we bring over the changes from
+  // https://github.com/remix-run/remix/pull/9349 to the v7 branch
   test.skip("should handle objects returned from resource routes", async ({
     page,
   }) => {
