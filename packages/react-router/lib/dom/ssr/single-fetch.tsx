@@ -288,10 +288,10 @@ export function singleFetchUrl(reqUrl: URL | string) {
     typeof reqUrl === "string"
       ? new URL(
           reqUrl,
+          // This can be called during the SSR flow via PrefetchPageLinksImpl so
+          // don't assume window is available
           typeof window === "undefined"
-            ? // TODO: Trace usage of singleFetchUrl and make sure we don't use it anywhere
-              // this will make it to a network call.
-              "server://singlefetch/"
+            ? "server://singlefetch/"
             : window.location.origin
         )
       : reqUrl;
