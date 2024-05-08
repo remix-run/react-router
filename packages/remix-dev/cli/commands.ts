@@ -144,7 +144,9 @@ export async function generateEntry(
 
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    `entry.server.${serverRuntime}.tsx`
+    ctx?.reactRouterConfig.ssr === false
+      ? `entry.server.spa.tsx`
+      : `entry.server.${serverRuntime}.tsx`
   );
 
   let isServerEntry = entry === "entry.server";
