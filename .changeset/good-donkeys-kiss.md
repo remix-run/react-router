@@ -1,5 +1,4 @@
 ---
-"react-router": patch
 "react-router-dom": patch
 ---
 
