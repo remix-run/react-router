@@ -167,7 +167,7 @@ test.describe("ErrorBoundary", () => {
     test("Network errors that never reach the Remix server", async ({
       page,
     }) => {
-      // Cause a ?_data request to trigger an HTTP error that never reaches the
+      // Cause a .data request to trigger an HTTP error that never reaches the
       // Remix server, and ensure we properly handle it at the ErrorBoundary
       await page.route(/\/parent\/child-with-boundary\.data$/, (route) => {
         route.fulfill({ status: 500, body: "CDN Error!" });

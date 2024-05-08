@@ -160,15 +160,6 @@ export class PlaywrightFixture {
   }
 
   /**
-   * Collects data responses from the network, usually after a link click or
-   * form submission. This is useful for asserting that specific loaders
-   * were called (or not).
-   */
-  collectDataResponses() {
-    return this.collectResponses((url) => url.searchParams.has("_data"));
-  }
-
-  /**
    * Collects single fetch data responses from the network, usually after a
    * link click or form submission. This is useful for asserting that specific
    * loaders were called (or not).

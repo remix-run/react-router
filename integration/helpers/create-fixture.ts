@@ -75,9 +75,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       build: null,
       isSpaMode,
       requestDocument,
-      requestData: () => {
-        throw new Error("Cannot requestData in SPA Mode tests");
-      },
       requestResource: () => {
         throw new Error("Cannot requestResource in SPA Mode tests");
       },
@@ -101,19 +98,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
       ...init,
       signal: init?.signal || new AbortController().signal,
     });
-    return handler(request);
-  };
-
-  let requestData = async (
-    href: string,
-    routeId: string,
-    init?: RequestInit
-  ) => {
-    init = init || {};
-    init.signal = init.signal || new AbortController().signal;
-    let url = new URL(href, "test://test");
-    url.searchParams.set("_data", routeId);
-    let request = new Request(url.toString(), init);
     return handler(request);
   };
 
@@ -158,7 +142,6 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     build: app,
     isSpaMode,
     requestDocument,
-    requestData,
     requestResource,
     requestSingleFetchData,
     postDocument,
