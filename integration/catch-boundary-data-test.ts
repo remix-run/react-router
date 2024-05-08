@@ -194,15 +194,11 @@ test.describe("ErrorBoundary (thrown responses)", () => {
     await app.goto("/");
     await app.clickLink(NO_BOUNDARY_LOADER);
     await page.waitForSelector("#root-boundary");
-    await page.waitForSelector(
-      `#root-boundary-data:has-text("${ROOT_DATA}")`
-    );
+    await page.waitForSelector(`#root-boundary-data:has-text("${ROOT_DATA}")`);
   });
 
   test("renders layout boundary with data available", async () => {
-    let res = await fixture.requestDocument(
-      HAS_BOUNDARY_LAYOUT_NESTED_LOADER
-    );
+    let res = await fixture.requestDocument(HAS_BOUNDARY_LAYOUT_NESTED_LOADER);
     expect(res.status).toBe(401);
     let html = await res.text();
     expect(html).toMatch(ROOT_DATA);
@@ -247,4 +243,3 @@ test.describe("ErrorBoundary (thrown responses)", () => {
     );
   });
 });
-

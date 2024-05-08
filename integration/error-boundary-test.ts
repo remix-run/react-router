@@ -34,8 +34,7 @@ test.describe("ErrorBoundary", () => {
   let NO_BOUNDARY_RENDER = "/no/render" as const;
   let NO_BOUNDARY_RENDER_FILE = "/no.render" as const;
   let NO_BOUNDARY_NO_LOADER_OR_ACTION = "/no/no-loader-or-action" as const;
-  let NO_BOUNDARY_NO_LOADER_OR_ACTION_FILE =
-    "/no.no-loader-or-action" as const;
+  let NO_BOUNDARY_NO_LOADER_OR_ACTION_FILE = "/no.no-loader-or-action" as const;
 
   let NOT_FOUND_HREF = "/not/found";
 
@@ -418,9 +417,7 @@ test.describe("ErrorBoundary", () => {
     expect(await res.text()).toMatch(OWN_BOUNDARY_TEXT);
   });
 
-  test("script transition rendering errors with boundary", async ({
-    page,
-  }) => {
+  test("script transition rendering errors with boundary", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink(HAS_BOUNDARY_RENDER);
@@ -478,12 +475,9 @@ test.describe("ErrorBoundary", () => {
   });
 
   test("renders own boundary in document POST without action requests", async () => {
-    let res = await fixture.requestDocument(
-      HAS_BOUNDARY_NO_LOADER_OR_ACTION,
-      {
-        method: "post",
-      }
-    );
+    let res = await fixture.requestDocument(HAS_BOUNDARY_NO_LOADER_OR_ACTION, {
+      method: "post",
+    });
     expect(res.status).toBe(405);
     expect(await res.text()).toMatch(OWN_BOUNDARY_TEXT);
   });
@@ -614,9 +608,7 @@ test.describe("ErrorBoundary", () => {
     }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto(NO_ROOT_BOUNDARY_LOADER);
-      expect(await app.getHtml("h1")).toMatch(
-        INTERNAL_ERROR_BOUNDARY_HEADING
-      );
+      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
     });
 
     test("bubbles to internal boundary in action script transitions from other routes", async ({
@@ -626,9 +618,7 @@ test.describe("ErrorBoundary", () => {
       await app.goto("/");
       await app.clickSubmitButton(NO_ROOT_BOUNDARY_ACTION);
       await page.waitForSelector(`text=${INTERNAL_ERROR_BOUNDARY_HEADING}`);
-      expect(await app.getHtml("h1")).toMatch(
-        INTERNAL_ERROR_BOUNDARY_HEADING
-      );
+      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
     });
 
     test("bubbles to internal boundary if loader doesn't return (document requests)", async () => {
@@ -644,18 +634,13 @@ test.describe("ErrorBoundary", () => {
       await app.goto("/");
       await app.clickLink(NO_ROOT_BOUNDARY_LOADER_RETURN);
       await page.waitForSelector(`text=${INTERNAL_ERROR_BOUNDARY_HEADING}`);
-      expect(await app.getHtml("h1")).toMatch(
-        INTERNAL_ERROR_BOUNDARY_HEADING
-      );
+      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
     });
 
     test("bubbles to internal boundary if action doesn't return (document requests)", async () => {
-      let res = await fixture.requestDocument(
-        NO_ROOT_BOUNDARY_ACTION_RETURN,
-        {
-          method: "post",
-        }
-      );
+      let res = await fixture.requestDocument(NO_ROOT_BOUNDARY_ACTION_RETURN, {
+        method: "post",
+      });
       expect(res.status).toBe(500);
       expect(await res.text()).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
     });
@@ -667,9 +652,7 @@ test.describe("ErrorBoundary", () => {
       await app.goto("/");
       await app.clickSubmitButton(NO_ROOT_BOUNDARY_ACTION_RETURN);
       await page.waitForSelector(`text=${INTERNAL_ERROR_BOUNDARY_HEADING}`);
-      expect(await app.getHtml("h1")).toMatch(
-        INTERNAL_ERROR_BOUNDARY_HEADING
-      );
+      expect(await app.getHtml("h1")).toMatch(INTERNAL_ERROR_BOUNDARY_HEADING);
     });
   });
 });

@@ -196,9 +196,7 @@ test.describe("Client Data", () => {
       expect(html).toMatch("Child Server Loader");
     });
 
-    test("parent.clientLoader.hydrate/child.clientLoader", async ({
-      page,
-    }) => {
+    test("parent.clientLoader.hydrate/child.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
         await createTestFixture({
           files: getFiles({
@@ -224,9 +222,7 @@ test.describe("Client Data", () => {
       expect(html).toMatch("Child Server Loader");
     });
 
-    test("parent.clientLoader/child.clientLoader.hydrate", async ({
-      page,
-    }) => {
+    test("parent.clientLoader/child.clientLoader.hydrate", async ({ page }) => {
       appFixture = await createAppFixture(
         await createTestFixture({
           files: getFiles({
@@ -658,17 +654,11 @@ test.describe("Client Data", () => {
       await app.goto("/parent/child");
       await page.waitForSelector("#child-data");
       let html = await app.getHtml();
-      expect(html).toMatch(
-        "Child Server Loader Data (1) (mutated by client)"
-      );
+      expect(html).toMatch("Child Server Loader Data (1) (mutated by client)");
       app.clickElement("button");
-      await page.waitForSelector(
-        ':has-text("Child Server Loader Data (2+)")'
-      );
+      await page.waitForSelector(':has-text("Child Server Loader Data (2+)")');
       html = await app.getHtml("main");
-      expect(html).toMatch(
-        "Child Server Loader Data (2+) (mutated by client)"
-      );
+      expect(html).toMatch("Child Server Loader Data (2+) (mutated by client)");
     });
 
     test("initial hydration data check functions properly even if serverLoader isn't called on hydration", async ({
@@ -741,13 +731,9 @@ test.describe("Client Data", () => {
       let html = await app.getHtml();
       expect(html).toMatch("Child Client Loader Data");
       app.clickElement("button");
-      await page.waitForSelector(
-        ':has-text("Child Server Loader Data (2+)")'
-      );
+      await page.waitForSelector(':has-text("Child Server Loader Data (2+)")');
       html = await app.getHtml("main");
-      expect(html).toMatch(
-        "Child Server Loader Data (2+) (mutated by client)"
-      );
+      expect(html).toMatch("Child Server Loader Data (2+) (mutated by client)");
     });
 
     test("server loader errors are re-thrown from serverLoader()", async ({
@@ -1369,4 +1355,3 @@ test.describe("Client Data", () => {
     });
   });
 });
-

@@ -100,4 +100,3 @@ test.describe("deferred loaders", () => {
     expect(await element.innerText()).toMatch("hamburger 1");
   });
 });
-

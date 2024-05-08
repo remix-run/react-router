@@ -322,9 +322,7 @@ test.describe("useFetcher", () => {
     await app.clickElement("#fetcher-submit-text-empty");
     await new Promise((r) => setTimeout(r, 1000));
     await page.waitForSelector(`#fetcher-idle`);
-    expect(await app.getHtml()).toMatch(
-      'ACTION (text/plain;charset=UTF-8) "'
-    );
+    expect(await app.getHtml()).toMatch('ACTION (text/plain;charset=UTF-8) "');
   });
 
   test("submit can hit an action only route", async ({ page }) => {

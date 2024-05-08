@@ -164,9 +164,7 @@ test.describe("actions", () => {
     await page.click("button[type=submit]");
     await page.waitForSelector(`h1:has-text("405 Method Not Allowed")`);
     expect(logs.length).toBe(2);
-    expect(logs[0]).toMatch(
-      'Route "routes/no-action" does not have an action'
-    );
+    expect(logs[0]).toMatch('Route "routes/no-action" does not have an action');
     // logs[1] is the raw ErrorResponse instance from the boundary but playwright
     // seems to just log the name of the constructor, which in the minified code
     // is meaningless so we don't bother asserting
@@ -214,4 +212,3 @@ test.describe("actions", () => {
     expect(await app.getHtml()).toMatch(PAGE_TEXT);
   });
 });
-

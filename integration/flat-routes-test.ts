@@ -24,9 +24,7 @@ test.describe("flat routes", () => {
 
           export default defineConfig({
             plugins: [reactRouter({
-              ignoredRouteFiles: [${JSON.stringify(
-                `**/${IGNORED_ROUTE}.*`
-              )}],
+              ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
             })],
           });
         `,

@@ -622,9 +622,7 @@ test.describe("non-aborted", () => {
   });
 
   test("resolved promises render in initial payload", async ({ page }) => {
-    let response = await fixture.requestDocument(
-      "/deferred-noscript-resolved"
-    );
+    let response = await fixture.requestDocument("/deferred-noscript-resolved");
     let html = await response.text();
     let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
@@ -693,9 +691,7 @@ test.describe("non-aborted", () => {
   test("slow to resolve promises render in subsequent payload and hydrates", async ({
     page,
   }) => {
-    let response = await fixture.requestDocument(
-      "/deferred-script-unresolved"
-    );
+    let response = await fixture.requestDocument("/deferred-script-unresolved");
     let html = await response.text();
     let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
@@ -750,9 +746,7 @@ test.describe("non-aborted", () => {
   test("slow to reject promises render in subsequent payload and hydrates", async ({
     page,
   }) => {
-    let response = await fixture.requestDocument(
-      "/deferred-script-unrejected"
-    );
+    let response = await fixture.requestDocument("/deferred-script-unrejected");
     let html = await response.text();
     let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
@@ -883,9 +877,7 @@ test.describe("non-aborted", () => {
     await assertConsole();
   });
 
-  test("client transition with unresolved promises work", async ({
-    page,
-  }) => {
+  test("client transition with unresolved promises work", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     let assertConsole = monitorConsole(page);
     await app.goto("/");
@@ -922,9 +914,7 @@ test.describe("non-aborted", () => {
     await assertConsole();
   });
 
-  test("client transition with unrejected promises work", async ({
-    page,
-  }) => {
+  test("client transition with unrejected promises work", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     let assertConsole = monitorConsole(page);
     await app.goto("/");
@@ -1321,7 +1311,6 @@ test.describe("aborted", () => {
     await ensureInteractivity(page, ERROR_BOUNDARY_ID);
   });
 });
-
 
 async function ensureInteractivity(page: Page, id: string, expect: number = 1) {
   await page.waitForSelector("#interactive");

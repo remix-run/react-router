@@ -1,5 +1,5 @@
 import type { StaticHandlerContext } from "react-router";
-import {json } from "react-router";
+import { json } from "react-router";
 
 import { createRequestHandler } from "..";
 import { ServerMode } from "../mode";

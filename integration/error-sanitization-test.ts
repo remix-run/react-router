@@ -242,9 +242,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/_root.data?loader"
-      );
+      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
         root: {
           data: null,
@@ -265,9 +263,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in deferred data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/defer.data?loader"
-      );
+      let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
         // @ts-expect-error
         await data["routes/defer"].data.lazy;
@@ -291,9 +287,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("does not sanitize mismatched route errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/not-a-route.data"
-      );
+      let { data } = await fixture.requestSingleFetchData("/not-a-route.data");
       expect(data).toEqual({
         root: {
           error: new ErrorResponseImpl(
@@ -308,9 +302,7 @@ test.describe("Error Sanitization", () => {
       ]);
     });
 
-    test("does not support hydration of Error subclasses", async ({
-      page,
-    }) => {
+    test("does not support hydration of Error subclasses", async ({ page }) => {
       let response = await fixture.requestDocument("/?subclass");
       let html = await response.text();
       expect(html).toMatch("<p>MESSAGE:Unexpected Server Error");
@@ -411,9 +403,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("does not sanitize loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/_root.data?loader"
-      );
+      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
         root: {
           data: null,
@@ -434,9 +424,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("does not sanitize loader errors in deferred data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/defer.data?loader"
-      );
+      let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
         // @ts-expect-error
         await data["routes/defer"].data.lazy;
@@ -461,9 +449,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("does not sanitize mismatched route errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/not-a-route.data"
-      );
+      let { data } = await fixture.requestSingleFetchData("/not-a-route.data");
       expect(data).toEqual({
         root: {
           error: new ErrorResponseImpl(
@@ -488,10 +474,7 @@ test.describe("Error Sanitization", () => {
       );
 
       // Hydration
-      let appFixture = await createAppFixture(
-        fixture,
-        ServerMode.Development
-      );
+      let appFixture = await createAppFixture(fixture, ServerMode.Development);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/?subclass", true);
       html = await app.getHtml();
@@ -675,9 +658,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/_root.data?loader"
-      );
+      let { data } = await fixture.requestSingleFetchData("/_root.data?loader");
       expect(data).toEqual({
         root: { data: null },
         "routes/_index": { error: new Error("Unexpected Server Error") },
@@ -698,9 +679,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("sanitizes loader errors in deferred data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/defer.data?loader"
-      );
+      let { data } = await fixture.requestSingleFetchData("/defer.data?loader");
       try {
         // @ts-expect-error
         await data["routes/defer"].data.lazy;
@@ -729,9 +708,7 @@ test.describe("Error Sanitization", () => {
     });
 
     test("does not sanitize mismatched route errors in data requests", async () => {
-      let { data } = await fixture.requestSingleFetchData(
-        "/not-a-route.data"
-      );
+      let { data } = await fixture.requestSingleFetchData("/not-a-route.data");
       expect(data).toEqual({
         root: {
           error: new ErrorResponseImpl(
