@@ -76,6 +76,7 @@ interface FutureConfig {
   v3_fetcherPersist: boolean;
   v3_relativeSplatPath: boolean;
   v3_throwAbortReason: boolean;
+  unstable_serverComponents: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -434,6 +435,7 @@ export async function resolveReactRouterConfig({
     v3_fetcherPersist: userFuture?.v3_fetcherPersist === true,
     v3_relativeSplatPath: userFuture?.v3_relativeSplatPath === true,
     v3_throwAbortReason: userFuture?.v3_throwAbortReason === true,
+    unstable_serverComponents: userFuture?.unstable_serverComponents === true,
   };
 
   let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
@@ -472,12 +474,24 @@ export async function resolveEntryFiles({
 
   let userEntryClientFile = findEntry(appDirectory, "entry.client");
   let userEntryServerFile = findEntry(appDirectory, "entry.server");
+  let userEntryReactServerFile = findEntry(appDirectory, "entry.react-server");
 
   let entryServerFile: string;
-  let entryClientFile = userEntryClientFile || "entry.client.tsx";
+  let entryReactServerFile: string | undefined;
+  let entryClientFile =
+    userEntryClientFile || future.unstable_serverComponents
+      ? "entry.client.rsc.tsx"
+      : "entry.client.tsx";
 
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
+  let serverRuntime = deps["@react-router/deno"]
+    ? "deno"
+    : deps["@react-router/cloudflare"]
+    ? "cloudflare"
+    : deps["@react-router/node"]
+    ? "node"
+    : undefined;
 
   if (isSpaMode) {
     // This is a super-simple default since we don't need streaming in SPA Mode.
@@ -492,14 +506,6 @@ export async function resolveEntryFiles({
   } else if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
-    let serverRuntime = deps["@react-router/deno"]
-      ? "deno"
-      : deps["@react-router/cloudflare"]
-      ? "cloudflare"
-      : deps["@react-router/node"]
-      ? "node"
-      : undefined;
-
     if (!serverRuntime) {
       let serverRuntimes = [
         "@react-router/deno",
@@ -537,6 +543,28 @@ export async function resolveEntryFiles({
     entryServerFile = `entry.server.${serverRuntime}.tsx`;
   }
 
+  if (future.unstable_serverComponents) {
+    if (userEntryReactServerFile) {
+      entryReactServerFile = userEntryReactServerFile;
+    } else {
+      if (!serverRuntime) {
+        let serverRuntimes = [
+          "@react-router/deno",
+          "@react-router/cloudflare",
+          "@react-router/node",
+        ];
+        let formattedList = disjunctionListFormat.format(serverRuntimes);
+        throw new Error(
+          `Could not determine server runtime. Please install one of the following: ${formattedList}`
+        );
+      }
+
+      entryReactServerFile = `entry.react-server.${
+        serverRuntime === "node" ? serverRuntime : "web"
+      }.tsx`;
+    }
+  }
+
   let entryClientFilePath = userEntryClientFile
     ? path.resolve(reactRouterConfig.appDirectory, userEntryClientFile)
     : path.resolve(defaultsDirectory, entryClientFile);
@@ -545,7 +573,13 @@ export async function resolveEntryFiles({
     ? path.resolve(reactRouterConfig.appDirectory, userEntryServerFile)
     : path.resolve(defaultsDirectory, entryServerFile);
 
-  return { entryClientFilePath, entryServerFilePath };
+  let entryReactServerFilePath = userEntryReactServerFile
+    ? path.resolve(reactRouterConfig.appDirectory, userEntryReactServerFile)
+    : entryReactServerFile
+    ? path.resolve(defaultsDirectory, entryReactServerFile)
+    : undefined;
+
+  return { entryClientFilePath, entryReactServerFilePath, entryServerFilePath };
 }
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];

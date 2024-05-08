@@ -8,6 +8,7 @@ import {
   type ServerBundleBuildConfig,
   resolveViteConfig,
   extractPluginContext,
+  getReactServerOptions,
   getServerBuildDirectory,
 } from "./plugin";
 import {
@@ -289,7 +290,15 @@ export async function build(
 
   await cleanBuildDirectory(viteConfig, ctx);
 
-  // Run the Vite client build first
+  // Then run React server build first
+  if (reactRouterConfig.future.unstable_serverComponents) {
+    // TODO: This will be handled by the vite env API in the future
+    process.env.REACT_SERVER_BUILD = "1";
+    await viteBuild({ ssr: true });
+  }
+  process.env.REACT_SERVER_BUILD = "";
+
+  // Run the Vite client build second
   await viteBuild({ ssr: false });
 
   // Then run Vite SSR builds in parallel
@@ -339,4 +348,7 @@ export async function build(
     reactRouterConfig,
     viteConfig,
   });
+
+  const { serverModules } = getReactServerOptions();
+  invariant(!serverModules.size, "`use server` is not yet supported.");
 }

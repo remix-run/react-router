@@ -207,6 +207,22 @@ export const removeExports = (
         path.remove();
       }
     },
+
+    ExportDefaultDeclaration(path) {
+      if (exportsToRemove.includes("default")) {
+        removedExports.add("default");
+        path.remove();
+        return false;
+      }
+    },
+
+    ExportDefaultSpecifier(path) {
+      if (exportsToRemove.includes("default")) {
+        removedExports.add("default");
+        path.remove();
+        return false;
+      }
+    },
   });
 
   if (removedExports.size === 0) {
