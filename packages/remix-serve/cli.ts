@@ -79,11 +79,15 @@ async function run() {
   app.use(
     build.publicPath,
     express.static(build.assetsBuildDirectory, {
-      immutable: true,
-      maxAge: "1y",
       setHeaders: function (res, path, stat) {
         if (path.endsWith(".data")) {
           res.set("Content-Type", "text/x-turbo");
+        } else {
+          // Cache as an immutable asset for 1 year
+          // Do this here instead of via the immutable/maxAge headers so we can
+          // conditionally apply it to assets (which are hashed), and not
+          // pre-rendered .data files (not hashed)
+          res.set("Cache-Control", "public, max-age=31536000, immutable");
         }
       },
     })
