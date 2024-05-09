@@ -1824,7 +1824,7 @@ function validatePrerenderedHtml(html: string, prefix: string) {
     !html.includes("window.__remixRouteModules =")
   ) {
     throw new Error(
-      `${prefix}: Did you forget to include <Scripts/> in your route route? ` +
+      `${prefix}: Did you forget to include <Scripts/> in your root route? ` +
         "Your pre-rendered HTML files cannot hydrate without `<Scripts />`."
     );
   }
