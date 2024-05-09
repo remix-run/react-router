@@ -30,3 +30,13 @@ if (!globalThis.TextEncoder || !globalThis.TextDecoder) {
   globalThis.TextEncoder = TextEncoder;
   globalThis.TextDecoder = TextDecoder;
 }
+
+if (!globalThis.TextEncoderStream) {
+  const { TextEncoderStream } = require("node:stream/web");
+  globalThis.TextEncoderStream = TextEncoderStream;
+}
+
+if (!globalThis.TransformStream) {
+  const { TransformStream } = require("node:stream/web");
+  globalThis.TransformStream = TransformStream;
+}

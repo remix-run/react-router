@@ -41,9 +41,6 @@ export const viteConfig = {
   }) => {
     let pluginOptions: VitePluginConfig = {
       ssr: !args.spaMode,
-      future: {
-        unstable_singleFetch: args.singleFetch,
-      },
     };
 
     return dedent`

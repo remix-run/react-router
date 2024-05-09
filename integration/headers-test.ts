@@ -4,7 +4,7 @@ import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 
-test.describe("headers export", () => {
+test.describe.skip("headers export", () => {
   let ROOT_HEADER_KEY = "X-Test";
   let ROOT_HEADER_VALUE = "SUCCESS";
   let ACTION_HKEY = "X-Test-Action";

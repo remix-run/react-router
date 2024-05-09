@@ -68,7 +68,9 @@ test.describe("pathless layout routes", () => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     // do this after the first request so that it doesnt appear in our next assertions
-    let responses = app.collectResponses((url) => url.pathname === "/");
+    let responses = app.collectResponses(
+      (url) => url.pathname === "/_root.data"
+    );
     await page.click("button[type=submit]");
     await page.waitForSelector(`[data-testid="action-success"]`);
     let setCookies = await responses[0].headerValues("set-cookie");

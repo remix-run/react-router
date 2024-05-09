@@ -141,10 +141,10 @@ export async function generateEntry(
 
   let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
   let defaultEntryClient = path.resolve(defaultsDirectory, "entry.client.tsx");
+
   let defaultEntryServer = path.resolve(
     defaultsDirectory,
-    ctx?.reactRouterConfig.ssr === false &&
-      ctx?.reactRouterConfig.future.unstable_singleFetch !== true
+    ctx?.reactRouterConfig.ssr === false
       ? `entry.server.spa.tsx`
       : `entry.server.${serverRuntime}.tsx`
   );
