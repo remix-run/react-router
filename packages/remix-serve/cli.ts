@@ -77,17 +77,20 @@ async function run() {
   app.disable("x-powered-by");
   app.use(compression());
   app.use(
+    path.posix.join(build.publicPath, "assets"),
+    express.static(path.join(build.assetsBuildDirectory, "assets"), {
+      immutable: true,
+      maxAge: "1y",
+    })
+  );
+  app.use(
     build.publicPath,
     express.static(build.assetsBuildDirectory, {
-      setHeaders: function (res, path, stat) {
+      // Don't redirect directory index.html request to include a trailing slash
+      redirect: false,
+      setHeaders: function (res, path) {
         if (path.endsWith(".data")) {
           res.set("Content-Type", "text/x-turbo");
-        } else {
-          // Cache as an immutable asset for 1 year
-          // Do this here instead of via the immutable/maxAge headers so we can
-          // conditionally apply it to assets (which are hashed), and not
-          // pre-rendered .data files (not hashed)
-          res.set("Cache-Control", "public, max-age=31536000, immutable");
         }
       },
     })
