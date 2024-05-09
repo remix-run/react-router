@@ -37,6 +37,7 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AppLoadContext,
+  CallReactServer,
   Cookie,
   CookieOptions,
   CookieParseOptions,

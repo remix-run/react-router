@@ -498,7 +498,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       : // Otherwise, all routes are imported as usual
         ctx.reactRouterConfig.routes;
 
-    return `
+    let code = `
     import * as entryServer from ${JSON.stringify(
       resolveFileUrl(ctx, ctx.entryServerFilePath)
     )};
@@ -542,6 +542,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           })
           .join(",\n  ")}
       };`;
+
+    if (ctx.reactRouterConfig.future.unstable_serverComponents) {
+      code += `
+      export { default as clientReferences } from ${JSON.stringify(
+        clientReferencesId
+      )};`;
+    }
+
+    return code;
   };
 
   let { clientModules, serverModules } = getReactServerOptions();
@@ -1636,6 +1645,109 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         return modules;
       },
     },
+    {
+      name: "remix:react-server",
+      config() {
+        const env = process.env.REACT_SERVER_BUILD ? "server" : "client";
+
+        switch (env) {
+          case "server":
+            return {
+              optimizeDeps: {
+                include: [
+                  "react",
+                  "react/jsx-runtime",
+                  "react/jsx-dev-runtime",
+                  "react-server-dom-diy/server",
+                ],
+              },
+              resolve: {
+                conditions: ["react-server"],
+              },
+              ssr: {
+                noExternal: [
+                  "react",
+                  "react/jsx-runtime",
+                  "react/jsx-dev-runtime",
+                  "react-server-dom-diy/server",
+                ],
+                optimizeDeps: {
+                  include: [
+                    "react",
+                    "react/jsx-runtime",
+                    "react/jsx-dev-runtime",
+                    "react-server-dom-diy/server",
+                  ],
+                },
+                resolve: {
+                  conditions: ["react-server"],
+                  externalConditions: ["react-server"],
+                },
+              },
+            };
+        }
+      },
+      configResolved(resolvedViteConfig) {
+        viteConfig = resolvedViteConfig;
+        invariant(viteConfig);
+      },
+      transform(...args) {
+        invariant(viteConfig);
+        const env = process.env.REACT_SERVER_BUILD ? "server" : "client";
+
+        let hash = viteConfig.mode !== "production" ? devHash : prodHash;
+
+        switch (env) {
+          case "client":
+            return (
+              (
+                rscClientPlugin.vite({
+                  include: ["**/*"],
+                  transformModuleId: hash,
+                  useServerRuntime: {
+                    function: "createServerReference",
+                    module: "@react-router/dev/dist/runtime.client.js",
+                  },
+                  onModuleFound(id, type) {
+                    switch (type) {
+                      case "use server":
+                        serverModules.add(id);
+                        break;
+                    }
+                  },
+                }) as Vite.Plugin
+              ).transform as Function
+            ).call(this, ...args);
+          case "server":
+            return (
+              (
+                rscServerPlugin.vite({
+                  include: ["**/*"],
+                  transformModuleId: hash,
+                  useClientRuntime: {
+                    function: "registerClientReference",
+                    module: "react-server-dom-diy/server",
+                  },
+                  useServerRuntime: {
+                    function: "registerServerReference",
+                    module: "react-server-dom-diy/server",
+                  },
+                  onModuleFound(id, type) {
+                    switch (type) {
+                      case "use client":
+                        clientModules.add(id);
+                        break;
+                      case "use server":
+                        serverModules.add(id);
+                        break;
+                    }
+                  },
+                }) as Vite.Plugin
+              ).transform as Function
+            ).call(this, ...args);
+        }
+      },
+    },
   ];
 };
 
@@ -1852,108 +1964,6 @@ global.__serverModules = global.__serverModules || new Set<string>();
 export function getReactServerOptions() {
   return {
     clientModules: global.__clientModules,
-    serverModules: global.__clientModules,
-  };
-}
-
-export function reactServerPlugin({
-  env,
-  dev,
-  clientModules,
-  serverModules,
-}: {
-  env: "client" | "server";
-  dev: boolean;
-  clientModules: Set<string>;
-  serverModules: Set<string>;
-}): Vite.Plugin {
-  return {
-    name: "remix:react-server",
-    config() {
-      switch (env) {
-        case "server":
-          return {
-            optimizeDeps: {
-              include: [
-                "react",
-                "react/jsx-runtime",
-                "react/jsx-dev-runtime",
-                "react-server-dom-diy/server",
-              ],
-            },
-            resolve: {
-              conditions: ["react-server"],
-            },
-            ssr: {
-              noExternal: true,
-              optimizeDeps: {
-                include: [
-                  "react",
-                  "react/jsx-runtime",
-                  "react/jsx-dev-runtime",
-                  "react-server-dom-diy/server",
-                ],
-              },
-              resolve: {
-                conditions: ["react-server"],
-                externalConditions: ["react-server"],
-              },
-            },
-          };
-      }
-    },
-    transform(...args) {
-      let hash = dev ? devHash : prodHash;
-
-      switch (env) {
-        case "client":
-          return (
-            (
-              rscClientPlugin.vite({
-                include: ["**/*"],
-                transformModuleId: hash,
-                useServerRuntime: {
-                  function: "createServerReference",
-                  module: "@react-router/dev/dist/runtime.client.js",
-                },
-                onModuleFound(id, type) {
-                  switch (type) {
-                    case "use server":
-                      serverModules.add(id);
-                      break;
-                  }
-                },
-              }) as Vite.Plugin
-            ).transform as Function
-          ).call(this, ...args);
-        case "server":
-          return (
-            (
-              rscServerPlugin.vite({
-                include: ["**/*"],
-                transformModuleId: hash,
-                useClientRuntime: {
-                  function: "registerClientReference",
-                  module: "react-server-dom-diy/server",
-                },
-                useServerRuntime: {
-                  function: "registerServerReference",
-                  module: "react-server-dom-diy/server",
-                },
-                onModuleFound(id, type) {
-                  switch (type) {
-                    case "use client":
-                      clientModules.add(id);
-                      break;
-                    case "use server":
-                      serverModules.add(id);
-                      break;
-                  }
-                },
-              }) as Vite.Plugin
-            ).transform as Function
-          ).call(this, ...args);
-      }
-    },
+    serverModules: global.__serverModules,
   };
 }

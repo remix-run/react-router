@@ -540,7 +540,9 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = `entry.server.${serverRuntime}.tsx`;
+    entryServerFile = reactRouterConfig.future.unstable_serverComponents
+      ? `entry.server.${serverRuntime}.rsc.tsx`
+      : `entry.server.${serverRuntime}.tsx`;
   }
 
   if (future.unstable_serverComponents) {

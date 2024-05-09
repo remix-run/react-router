@@ -63,8 +63,6 @@ export function getServerComponentsDataStrategy(
       }
     );
 
-    console.log(request.method, await payloadPromise);
-
     return Promise.all(
       matches.map(async (m) =>
         m.resolve(async (): Promise<HandlerResult> => {

@@ -335,6 +335,7 @@ async function handleDocumentRequest(
             build.entry.module.createFromReadableStream!,
             callReactServer!,
             (resultStream) => {
+              // TODO: This is never called if there are no loaders is any of the matches
               rscLoaderStream = resultStream;
             },
             (actionId, resultStream) => {

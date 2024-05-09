@@ -14,8 +14,7 @@
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router": "workspace:*",
-    "react-server-dom-diy": "0.0.0-experimental-15a3a5622-202404158"
+    "react-router": "workspace:*"
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",

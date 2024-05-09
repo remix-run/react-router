@@ -65,3 +65,5 @@ export type {
   SessionStorage,
   FlashSessionData,
 } from "./sessions";
+
+export type { CallReactServer } from "./single-fetch-rsc";

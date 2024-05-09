@@ -6,7 +6,10 @@ import ReactServerDOM from "react-server-dom-diy/server";
 
 export function renderToReadableStream(data: unknown) {
   const passthrough = new stream.PassThrough();
-  const { pipe } = ReactServerDOM.renderToPipeableStream(data);
+  const { pipe } = ReactServerDOM.renderToPipeableStream(
+    data,
+    global.__diy_server_manifest__
+  );
   pipe(passthrough);
   return createReadableStreamFromReadable(passthrough);
 }

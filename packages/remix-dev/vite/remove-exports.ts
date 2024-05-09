@@ -374,5 +374,13 @@ export const removeExports = (
     });
   } while (referencesRemovedInThisPass);
 
-  return generate(document, generateOptions);
+  return {
+    code:
+      generate(document, generateOptions).code +
+      `\n${[...removedExports]
+        .map((exp) =>
+          exp === "default" ? "export default 1;" : `export const ${exp} = 1;`
+        )
+        .join("\n")}`,
+  };
 };
