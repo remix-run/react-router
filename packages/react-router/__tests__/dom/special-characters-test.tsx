@@ -831,8 +831,9 @@ describe("special character tests", () => {
       it("does not encode characters in MemoryRouter (navigate)", () => {
         function Start() {
           let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => {
+            navigate("/with space");
+          }, [navigate]);
           return null;
         }
         let ctx = render(
@@ -864,8 +865,9 @@ describe("special character tests", () => {
       it("does not encode characters in createMemoryRouter (navigate)", () => {
         function Start() {
           let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => {
+            navigate("/with space");
+          }, [navigate]);
           return null;
         }
         let router = createMemoryRouter([
@@ -903,8 +905,9 @@ describe("special character tests", () => {
 
         function Start() {
           let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => {
+            navigate("/with space");
+          }, [navigate]);
           return null;
         }
 
@@ -943,8 +946,9 @@ describe("special character tests", () => {
 
         function Start() {
           let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => {
+            navigate("/with space");
+          }, [navigate]);
           return null;
         }
 
@@ -988,8 +992,9 @@ describe("special character tests", () => {
 
         function Start() {
           let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => {
+            navigate("/with space");
+          }, [navigate]);
           return null;
         }
 
@@ -1030,8 +1035,9 @@ describe("special character tests", () => {
 
         function Start() {
           let navigate = useNavigate();
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-          React.useEffect(() => navigate("/with space"), []);
+          React.useEffect(() => {
+            navigate("/with space");
+          }, [navigate]);
           return null;
         }
 

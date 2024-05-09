@@ -168,7 +168,7 @@ export interface Router {
     routeId: string,
     href: string | null,
     opts?: RouterFetchOptions
-  ): void;
+  ): Promise<void>;
 
   /**
    * @internal
@@ -176,7 +176,7 @@ export interface Router {
    *
    * Trigger a revalidation of all current route loaders and fetcher loads
    */
-  revalidate(): void;
+  revalidate(): Promise<void>;
 
   /**
    * @internal
@@ -967,6 +967,9 @@ export function createRouter(init: RouterInit): Router {
   // a POP navigation that was blocked by the user without touching router state
   let ignoreNextHistoryUpdate = false;
 
+  let pendingRevalidationDfd: ReturnType<typeof createDeferred<void>> | null =
+    null;
+
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
   //   let router = createRouter(init).initialize();
@@ -1268,6 +1271,8 @@ export function createRouter(init: RouterInit): Router {
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
+    pendingRevalidationDfd?.resolve();
+    pendingRevalidationDfd = null;
     cancelledDeferredRoutes = [];
     cancelledFetcherLoads = [];
   }
@@ -1277,7 +1282,7 @@ export function createRouter(init: RouterInit): Router {
   async function navigate(
     to: number | To | null,
     opts?: RouterNavigateOptions
-  ): Promise<void> {
+  ) {
     if (typeof to === "number") {
       init.history.go(to);
       return;
@@ -1370,7 +1375,7 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    return await startNavigation(historyAction, nextLocation, {
+    await startNavigation(historyAction, nextLocation, {
       submission,
       // Send through the formData serialization error if we have one so we can
       // render at the right error boundary after we match routes
@@ -1386,13 +1391,30 @@ export function createRouter(init: RouterInit): Router {
   // is interrupted by a navigation, allow this to "succeed" by calling all
   // loaders during the next loader round
   function revalidate() {
+    // We can't just return the promise from `startNavigation` because that
+    // navigation may be interrupted and our revalidation wouldn't be finished
+    // until the _next_ navigation completes.  Instead we just track via a
+    // deferred and resolve it the next time we run through `completeNavigation`
+    // This is different than navigations which will settle if interrupted
+    // because the navigation to a specific location is no longer relevant.
+    // Revalidations are location-independent and will settle whenever we land
+    // on our final location
+    if (!pendingRevalidationDfd) {
+      pendingRevalidationDfd = createDeferred<void>();
+    }
+
     interruptActiveLoads();
     updateState({ revalidation: "loading" });
+
+    // Capture this here for the edge-case that we have a fully synchronous
+    // startNavigation which would resolve and null out pendingRevalidationDfd
+    // before we return from this function
+    let promise = pendingRevalidationDfd.promise;
 
     // If we're currently submitting an action, we don't need to start a new
     // navigation, we'll just let the follow up loader execution call all loaders
     if (state.navigation.state === "submitting") {
-      return;
+      return promise;
     }
 
     // If we're currently in an idle state, start a new navigation for the current
@@ -1402,7 +1424,7 @@ export function createRouter(init: RouterInit): Router {
       startNavigation(state.historyAction, state.location, {
         startUninterruptedRevalidation: true,
       });
-      return;
+      return promise;
     }
 
     // Otherwise, if we're currently in a loading state, just start a new
@@ -1413,6 +1435,7 @@ export function createRouter(init: RouterInit): Router {
       state.navigation.location,
       { overrideNavigation: state.navigation }
     );
+    return promise;
   }
 
   // Start a navigation to the given action/location.  Can optionally provide a
@@ -1898,7 +1921,7 @@ export function createRouter(init: RouterInit): Router {
   }
 
   // Trigger a fetcher load/submit for the given fetcher key
-  function fetch(
+  async function fetch(
     key: string,
     routeId: string,
     href: string | null,
@@ -1955,7 +1978,7 @@ export function createRouter(init: RouterInit): Router {
     pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
-      handleFetcherAction(
+      await handleFetcherAction(
         key,
         routeId,
         path,
@@ -1970,7 +1993,7 @@ export function createRouter(init: RouterInit): Router {
     // Store off the match so we can call it's shouldRevalidate on subsequent
     // revalidations
     fetchLoadMatches.set(key, { routeId, path });
-    handleFetcherLoader(
+    await handleFetcherLoader(
       key,
       routeId,
       path,
@@ -5239,4 +5262,29 @@ function persistAppliedTransitions(
   }
 }
 
+export function createDeferred<T = unknown>() {
+  let resolve: (val?: any) => Promise<void>;
+  let reject: (error?: Error) => Promise<void>;
+  let promise = new Promise<T>((res, rej) => {
+    resolve = async (val: T) => {
+      res(val);
+      try {
+        await promise;
+      } catch (e) {}
+    };
+    reject = async (error?: Error) => {
+      rej(error);
+      try {
+        await promise;
+      } catch (e) {}
+    };
+  });
+  return {
+    promise,
+    //@ts-ignore
+    resolve,
+    //@ts-ignore
+    reject,
+  };
+}
 //#endregion
