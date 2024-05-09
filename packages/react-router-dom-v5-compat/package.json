@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom-v5-compat",
-  "version": "6.23.1-pre.0",
+  "version": "6.23.1-pre.1",
   "description": "Migration path to React Router v6 from v4/5",
   "keywords": [
     "react",
