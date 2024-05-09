@@ -17,7 +17,6 @@ test.describe("ErrorBoundary", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router-dom";
@@ -175,7 +174,12 @@ test.describe("ErrorBoundary", () => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/parent");
       await app.clickLink("/parent/child-with-boundary");
-      await waitForAndAssert(page, app, "#child-error", "CDN Error");
+      await waitForAndAssert(
+        page,
+        app,
+        "#child-error",
+        "Unable to decode turbo-stream response"
+      );
     });
   });
 

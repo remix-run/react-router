@@ -301,16 +301,19 @@ export function singleFetchUrl(reqUrl: URL | string) {
 
 async function fetchAndDecode(url: URL, init?: RequestInit) {
   let res = await fetch(url, init);
-  if (res.headers.get("Content-Type")?.includes("text/x-turbo")) {
-    invariant(res.body, "No response body to decode");
+  invariant(res.body, "No response body to decode");
+  try {
     let decoded = await decodeViaTurboStream(res.body, window);
     return { status: res.status, data: decoded.value };
+  } catch (e) {
+    // Can't clone after consuming the body via turbo-stream so we can't
+    // include the body here.  In an ideal world we'd look for a turbo-stream
+    // content type here, or even X-Remix-Response but then folks can't
+    // statically deploy their prerendered .data files to a CDN unless they can
+    // tell that CDN to add special headers to those certain files - which is a
+    // bit restrictive.
+    throw new Error("Unable to decode turbo-stream response");
   }
-
-  // If we didn't get back a turbo-stream response, then we never reached the
-  // Remix server and likely this is a network error - just expose up the
-  // response body as an Error
-  throw new Error(await res.text());
 }
 
 // Note: If you change this function please change the corresponding
