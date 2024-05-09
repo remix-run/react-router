@@ -419,24 +419,6 @@ export function getNewMatchesForLinks(
   return newMatches;
 }
 
-export function getDataLinkHrefs(
-  page: string,
-  matches: AgnosticDataRouteMatch[],
-  manifest: AssetsManifest
-): string[] {
-  let path = parsePathPatch(page);
-  return dedupeHrefs(
-    matches
-      .filter((match) => manifest.routes[match.route.id].hasLoader)
-      .map((match) => {
-        let { pathname, search } = path;
-        let searchParams = new URLSearchParams(search);
-        searchParams.set("_data", match.route.id);
-        return `${pathname}?${searchParams}`;
-      })
-  );
-}
-
 export function getModuleLinkHrefs(
   matches: AgnosticDataRouteMatch[],
   manifestPatch: AssetsManifest

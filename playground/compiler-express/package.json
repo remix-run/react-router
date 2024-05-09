@@ -1,4 +1,5 @@
 {
+  "name": "@playground/compiler-express",
   "private": true,
   "sideEffects": false,
   "type": "module",

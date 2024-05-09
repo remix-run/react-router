@@ -286,7 +286,14 @@ export function addRevalidationParam(
 export function singleFetchUrl(reqUrl: URL | string) {
   let url =
     typeof reqUrl === "string"
-      ? new URL(reqUrl, window.location.origin)
+      ? new URL(
+          reqUrl,
+          // This can be called during the SSR flow via PrefetchPageLinksImpl so
+          // don't assume window is available
+          typeof window === "undefined"
+            ? "server://singlefetch/"
+            : window.location.origin
+        )
       : reqUrl;
   url.pathname = `${url.pathname === "/" ? "_root" : url.pathname}.data`;
   return url;

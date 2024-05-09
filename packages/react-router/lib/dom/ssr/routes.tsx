@@ -5,22 +5,10 @@ import type {
   LoaderFunctionArgs,
   ShouldRevalidateFunction,
 } from "../../router";
-import {
-  UNSAFE_ErrorResponseImpl as ErrorResponse,
-  redirect,
-} from "../../router";
+import { UNSAFE_ErrorResponseImpl as ErrorResponse } from "../../router";
 
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";
-import {
-  fetchData,
-  isCatchResponse,
-  isDeferredData,
-  isDeferredResponse,
-  isRedirectResponse,
-  isResponse,
-  parseDeferredReadableStream,
-} from "./data";
 import type { FutureConfig } from "./entry";
 import { prefetchStyleLinks } from "./links";
 import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
@@ -252,40 +240,24 @@ export function createClientRoutes(
   return (routesByParentId[parentId] || []).map((route) => {
     let routeModule = routeModulesCache[route.id];
 
-    // Fetch data from the server either via single fetch or the standard `?_data`
-    // request.  Unwrap it when called via `serverLoader`/`serverAction` in a
-    // client handler, otherwise return the raw response for the router to unwrap
-    async function fetchServerHandlerAndMaybeUnwrap(
-      request: Request,
-      unwrap: boolean,
-      singleFetch: unknown
-    ) {
-      if (typeof singleFetch === "function") {
-        let result = await singleFetch();
-        return result;
-      }
-      let result = await fetchServerHandler(request, route);
-      return unwrap ? unwrapServerResponse(result) : result;
+    function fetchServerHandler(singleFetch: unknown) {
+      invariant(
+        typeof singleFetch === "function",
+        "No single fetch function available for route handler"
+      );
+      return singleFetch();
     }
 
-    function fetchServerLoader(
-      request: Request,
-      unwrap: boolean,
-      singleFetch: unknown
-    ) {
+    function fetchServerLoader(singleFetch: unknown) {
       if (!route.hasLoader) return Promise.resolve(null);
-      return fetchServerHandlerAndMaybeUnwrap(request, unwrap, singleFetch);
+      return fetchServerHandler(singleFetch);
     }
 
-    function fetchServerAction(
-      request: Request,
-      unwrap: boolean,
-      singleFetch: unknown
-    ) {
+    function fetchServerAction(singleFetch: unknown) {
       if (!route.hasAction) {
         throw noActionDefinedError("action", route.id);
       }
-      return fetchServerHandlerAndMaybeUnwrap(request, unwrap, singleFetch);
+      return fetchServerHandler(singleFetch);
     }
 
     async function prefetchStylesAndCallHandler(
@@ -346,7 +318,7 @@ export function createClientRoutes(
             if (!routeModule.clientLoader) {
               if (isSpaMode) return null;
               // Call the server when no client loader exists
-              return fetchServerLoader(request, false, singleFetch);
+              return fetchServerLoader(singleFetch);
             }
 
             return routeModule.clientLoader({
@@ -364,7 +336,7 @@ export function createClientRoutes(
                 }
 
                 // Call the server loader for client-side navigations
-                return fetchServerLoader(request, true, singleFetch);
+                return fetchServerLoader(singleFetch);
               },
             });
           });
@@ -396,7 +368,7 @@ export function createClientRoutes(
             if (isSpaMode) {
               throw noActionDefinedError("clientAction", route.id);
             }
-            return fetchServerAction(request, false, singleFetch);
+            return fetchServerAction(singleFetch);
           }
 
           return routeModule.clientAction({
@@ -404,7 +376,7 @@ export function createClientRoutes(
             params,
             async serverAction() {
               preventInvalidServerHandlerCall("action", route, isSpaMode);
-              return fetchServerAction(request, true, singleFetch);
+              return fetchServerAction(singleFetch);
             },
           });
         });
@@ -420,7 +392,7 @@ export function createClientRoutes(
         ) =>
           prefetchStylesAndCallHandler(() => {
             if (isSpaMode) return Promise.resolve(null);
-            return fetchServerLoader(request, false, singleFetch);
+            return fetchServerLoader(singleFetch);
           });
       }
       if (!route.hasClientAction) {
@@ -432,7 +404,7 @@ export function createClientRoutes(
             if (isSpaMode) {
               throw noActionDefinedError("clientAction", route.id);
             }
-            return fetchServerAction(request, false, singleFetch);
+            return fetchServerAction(singleFetch);
           });
       }
 
@@ -454,7 +426,7 @@ export function createClientRoutes(
               ...args,
               async serverLoader() {
                 preventInvalidServerHandlerCall("loader", route, isSpaMode);
-                return fetchServerLoader(args.request, true, singleFetch);
+                return fetchServerLoader(singleFetch);
               },
             });
         }
@@ -469,7 +441,7 @@ export function createClientRoutes(
               ...args,
               async serverAction() {
                 preventInvalidServerHandlerCall("action", route, isSpaMode);
-                return fetchServerAction(args.request, true, singleFetch);
+                return fetchServerAction(singleFetch);
               },
             });
         }
@@ -550,64 +522,6 @@ async function loadRouteModuleWithBlockingLinks(
     meta: routeModule.meta,
     shouldRevalidate: routeModule.shouldRevalidate,
   };
-}
-
-async function fetchServerHandler(request: Request, route: EntryRoute) {
-  let result = await fetchData(request, route.id);
-
-  if (result instanceof Error) {
-    throw result;
-  }
-
-  if (isRedirectResponse(result)) {
-    throw getRedirect(result);
-  }
-
-  if (isCatchResponse(result)) {
-    throw result;
-  }
-
-  if (isDeferredResponse(result) && result.body) {
-    return await parseDeferredReadableStream(result.body);
-  }
-
-  return result;
-}
-
-function unwrapServerResponse(
-  result: Awaited<ReturnType<typeof fetchServerHandler>> | null
-) {
-  if (isDeferredData(result)) {
-    return result.data;
-  }
-
-  if (isResponse(result)) {
-    let contentType = result.headers.get("Content-Type");
-    // Check between word boundaries instead of startsWith() due to the last
-    // paragraph of https://httpwg.org/specs/rfc9110.html#field.content-type
-    if (contentType && /\bapplication\/json\b/.test(contentType)) {
-      return result.json();
-    } else {
-      return result.text();
-    }
-  }
-
-  return result;
-}
-
-function getRedirect(response: Response): Response {
-  let status = parseInt(response.headers.get("X-Remix-Status")!, 10) || 302;
-  let url = response.headers.get("X-Remix-Redirect")!;
-  let headers: Record<string, string> = {};
-  let revalidate = response.headers.get("X-Remix-Revalidate");
-  if (revalidate) {
-    headers["X-Remix-Revalidate"] = revalidate;
-  }
-  let reloadDocument = response.headers.get("X-Remix-Reload-Document");
-  if (reloadDocument) {
-    headers["X-Remix-Reload-Document"] = reloadDocument;
-  }
-  return redirect(url, { status, headers });
 }
 
 // Our compiler generates the default export as `{}` when no default is provided,

@@ -99,9 +99,8 @@ export interface Listener {
 }
 
 /**
- * Describes a location that is the destination of some navigation, either via
- * `history.push` or `history.replace`. This may be either a URL or the pieces
- * of a URL path.
+ * Describes a location that is the destination of some navigation used in
+ * {@link Link}, {@link useNavigate}, etc.
  */
 export type To = string | Partial<Path>;
 

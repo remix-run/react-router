@@ -76,7 +76,6 @@ interface FutureConfig {
   v3_fetcherPersist: boolean;
   v3_relativeSplatPath: boolean;
   v3_throwAbortReason: boolean;
-  unstable_singleFetch: boolean;
 }
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
@@ -435,7 +434,6 @@ export async function resolveReactRouterConfig({
     v3_fetcherPersist: userFuture?.v3_fetcherPersist === true,
     v3_relativeSplatPath: userFuture?.v3_relativeSplatPath === true,
     v3_throwAbortReason: userFuture?.v3_throwAbortReason === true,
-    unstable_singleFetch: userFuture?.unstable_singleFetch === true,
   };
 
   let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
@@ -481,7 +479,7 @@ export async function resolveEntryFiles({
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  if (isSpaMode && future?.unstable_singleFetch != true) {
+  if (isSpaMode) {
     // This is a super-simple default since we don't need streaming in SPA Mode.
     // We can include this in a remix-spa template, but right now `npx remix reveal`
     // will still expose the streaming template since that command doesn't have

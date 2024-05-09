@@ -26,3 +26,6 @@ node_modules/
 .tmp
 /.env
 /NOTES.md
+
+# v7 reference docs
+/public

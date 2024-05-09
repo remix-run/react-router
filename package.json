@@ -6,6 +6,7 @@
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
     "clean:integration": "node ./integration/helpers/cleanup.mjs",
+    "docs": "typedoc",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
     "lint": "eslint --cache .",
@@ -115,6 +116,7 @@
     "semver": "^7.5.4",
     "tslib": "^2.6.2",
     "type-fest": "^2.19.0",
+    "typedoc": "^0.25.13",
     "typescript": "^5.4.5",
     "undici": "^6.10.1",
     "unified": "^10.1.2",
@@ -129,10 +131,10 @@
   },
   "filesize": {
     "packages/react-router/dist/react-router.production.min.js": {
-      "none": "116.6 kB"
+      "none": "120 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
-      "none": "121.2 kB"
+      "none": "125 kB"
     }
   },
   "pnpm": {

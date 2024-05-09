@@ -218,7 +218,7 @@ test.describe("SPA Mode", () => {
         },
       });
       let res = await fixture.requestDocument("/");
-      expect(await res.text()).toMatch(/^<!DOCTYPE html>\n<html lang="en">/);
+      expect(await res.text()).toMatch(/^<!DOCTYPE html><html lang="en">/);
     });
 
     test("works when combined with a basename", async ({ page }) => {
@@ -337,39 +337,93 @@ test.describe("SPA Mode", () => {
             });
           `,
           "app/entry.server.tsx": js`
-            import fs from "node:fs";
-            import path from "node:path";
+            import * as fs from "node:fs";
+            import * as path from "node:path";
+            import { PassThrough } from "node:stream";
 
-            import type { EntryContext } from "@react-router/node";
-            import { RemixServer } from "react-router-dom";
-            import { renderToString } from "react-dom/server";
-
+            import type { AppLoadContext, EntryContext } from "@react-router/node";
+            import { createReadableStreamFromReadable } from "@react-router/node";
+            import { RemixServer } from "react-router";
+            import { renderToPipeableStream } from "react-dom/server";
+            
+            const ABORT_DELAY = 5_000;
+            
             export default function handleRequest(
+              request: Request,
+              responseStatusCode: number,
+              responseHeaders: Headers,
+              remixContext: EntryContext,
+              loadContext: AppLoadContext
+            ) {
+              return handleBotRequest(
+                request,
+                responseStatusCode,
+                responseHeaders,
+                remixContext
+              );
+            }
+            
+            async function handleBotRequest(
               request: Request,
               responseStatusCode: number,
               responseHeaders: Headers,
               remixContext: EntryContext
             ) {
+              const html = await new Promise((resolve, reject) => {
+                let shellRendered = false;
+                const { pipe, abort } = renderToPipeableStream(
+                  <RemixServer
+                    context={remixContext}
+                    url={request.url}
+                    abortDelay={ABORT_DELAY}
+                  />,
+                  {
+                    onAllReady() {
+                      shellRendered = true;
+                      const body = new PassThrough();
+                      const stream = createReadableStreamFromReadable(body);
+            
+                      responseHeaders.set("Content-Type", "text/html");
+            
+                      resolve(
+                        new Response(stream, {
+                          headers: responseHeaders,
+                          status: responseStatusCode,
+                        }).text()
+                      );
+            
+                      pipe(body);
+                    },
+                    onShellError(error: unknown) {
+                      reject(error);
+                    },
+                    onError(error: unknown) {
+                      responseStatusCode = 500;
+                      // Log streaming rendering errors from inside the shell.  Don't log
+                      // errors encountered during initial shell rendering since they'll
+                      // reject and get logged in handleDocumentRequest.
+                      if (shellRendered) {
+                        console.error(error);
+                      }
+                    },
+                  }
+                );
+            
+                setTimeout(abort, ABORT_DELAY);
+              });
+
               const shellHtml = fs
                 .readFileSync(
                   path.join(process.cwd(), "app/index.html")
                 )
                 .toString();
 
-              const appHtml = renderToString(
-                <RemixServer context={remixContext} url={request.url} />
-              );
-
-              const html = shellHtml.replace(
-                "<!-- Remix SPA -->",
-                appHtml
-              );
-
-              return new Response(html, {
-                headers: { "Content-Type": "text/html" },
+              const finalHTML = shellHtml.replace("<!-- Remix SPA -->", html);
+              return new Response(finalHTML, {
+                headers: responseHeaders,
                 status: responseStatusCode,
               });
-            }
+            }          
           `,
           "app/root.tsx": js`
             import { Outlet, Scripts } from "react-router-dom";

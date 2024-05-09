@@ -764,20 +764,159 @@ export { HistoryRouter as unstable_HistoryRouter };
 
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  /**
+    Defines the data and module prefetching behavior for the link.
+
+    ```tsx
+    <Link /> // default
+    <Link prefetch="none" />
+    <Link prefetch="intent" />
+    <Link prefetch="render" />
+    <Link prefetch="viewport" />
+    ```
+
+    - **none** - default, no prefetching
+    - **intent** - prefetches when the user hovers or focuses the link
+    - **render** - prefetches when the link renders
+    - **viewport** - prefetches when the link is in the viewport, very useful for mobile
+
+    Prefetching is done with HTML `<link rel="prefetch">` tags. They are inserted after the link.
+
+    ```tsx
+    <a href="..." />
+    <a href="..." />
+    <link rel="prefetch" /> // might conditionally render
+    ```
+
+    Because of this, if you are using `nav :last-child` you will need to use `nav :last-of-type` so the styles don't conditionally fall off your last link (and any other similar selectors).
+   */
   prefetch?: PrefetchBehavior;
+
+  /**
+    Will use document navigation instead of client side routing when the link is clicked: the browser will handle the transition normally (as if it were an `<a href>`).
+
+    ```tsx
+    <Link to="/logout" reloadDocument />
+    ```
+   */
   reloadDocument?: boolean;
+
+  /**
+    Replaces the current entry in the history stack instead of pushing a new one onto it.
+
+    ```tsx
+    <Link replace />
+    ```
+
+    ```
+    # with a history stack like this
+    A -> B
+
+    # normal link click pushes a new entry
+    A -> B -> C
+
+    # but with `replace`, B is replaced by C
+    A -> C
+    ```
+   */
   replace?: boolean;
+
+  /**
+    Adds persistent client side routing state to the next location.
+
+    ```tsx
+    <Link to="/somewhere/else" state={{ some: "value" }} />
+    ```
+
+    The location state is accessed from the `location`.
+
+    ```tsx
+    function SomeComp() {
+      const location = useLocation()
+      location.state; // { some: "value" }
+    }
+    ```
+
+    This state is inaccessible on the server as it is implemented on top of [`history.state`](https://developer.mozilla.org/en-US/docs/Web/API/History/state)
+   */
   state?: any;
+
+  /**
+    Prevents the scroll position from being reset to the top of the window when the link is clicked and the app is using {@link ScrollRestoration}. This only prevents new locations reseting scroll to the top, scroll position will be restored for back/forward button navigation.
+
+    ```tsx
+    <Link to="?tab=one" preventScrollReset />
+    ```
+   */
   preventScrollReset?: boolean;
+
+  /**
+    Defines the relative path behavior for the link.
+
+    ```tsx
+    <Link to=".." /> // default: "route"
+    <Link relative="route" />
+    <Link relative="path" />
+    ```
+
+    Consider a route hierarchy where a parent route pattern is "blog" and a child route pattern is "blog/:slug/edit".
+
+    - **route** - default, resolves the link relative to the route pattern. In the example above a relative link of `".."` will remove both `:slug/edit` segments back to "/blog".
+    - **path** - relative to the path so `..` will only remove one URL segment up to "/blog/:slug"
+   */
   relative?: RelativeRoutingType;
+
+  /**
+    Can be a string or a partial {@link Path}:
+
+    ```tsx
+    <Link to="/some/path" />
+
+    <Link
+      to={{
+        pathname: "/some/path",
+        search: "?query=string",
+        hash: "#hash",
+      }}
+    />
+    ```
+   */
   to: To;
+
+  /**
+    Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation.
+
+    ```jsx
+    <Link to={to} unstable_viewTransition>
+      Click me
+    </Link>
+    ```
+
+    To apply specific styles for the transition, see {@link useViewTransitionState}
+   */
   unstable_viewTransition?: boolean;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
- * The public API for rendering a history-aware `<a>`.
+  A progressively enhanced `<a href>` wrapper to enable navigation with client-side routing.
+
+  ```tsx
+  import { Link } from "react-router";
+
+  <Link to="/dashboard">Dashboard</Link>;
+
+  <Link
+    to={{
+      pathname: "/some/path",
+      search: "?query=string",
+      hash: "#hash",
+    }}
+  />
+  ```
+
+  @category Components
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
@@ -881,25 +1020,139 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
 );
 Link.displayName = "Link";
 
-type NavLinkRenderProps = {
+/**
+  The object passed to {@link NavLink} `children`, `className`, and `style` prop callbacks to render and style the link based on its state.
+
+  ```
+  // className
+  <NavLink
+    to="/messages"
+    className={({ isActive, isPending }) =>
+      isPending ? "pending" : isActive ? "active" : ""
+    }
+  >
+    Messages
+  </NavLink>
+
+  // style
+  <NavLink
+    to="/messages"
+    style={({ isActive, isPending }) => {
+      return {
+        fontWeight: isActive ? "bold" : "",
+        color: isPending ? "red" : "black",
+      }
+    )}
+  />
+
+  // children
+  <NavLink to="/tasks">
+    {({ isActive, isPending }) => (
+      <span className={isActive ? "active" : ""}>Tasks</span>
+    )}
+  </NavLink>
+  ```
+
+ */
+export type NavLinkRenderProps = {
+  /**
+   * Indicates if the link's URL matches the current location.
+   */
   isActive: boolean;
+
+  /**
+   * Indicates if the pending location matches the link's URL.
+   */
   isPending: boolean;
+
+  /**
+   * Indicates if a view transition to the link's URL is in progress. See {@link useViewTransitionState}
+   */
   isTransitioning: boolean;
 };
 
 export interface NavLinkProps
   extends Omit<LinkProps, "className" | "style" | "children"> {
+  /**
+    Can be regular React children or a function that receives an object with the active and pending states of the link.
+
+    ```tsx
+    <NavLink to="/tasks">
+      {({ isActive }) => (
+        <span className={isActive ? "active" : ""}>Tasks</span>
+      )}
+    </NavLink>
+    ```
+   */
   children?: React.ReactNode | ((props: NavLinkRenderProps) => React.ReactNode);
+
+  /**
+    Changes the matching logic to make it case-sensitive:
+
+    | Link                                         | URL           | isActive |
+    | -------------------------------------------- | ------------- | -------- |
+    | `<NavLink to="/SpOnGe-bOB" />`               | `/sponge-bob` | true     |
+    | `<NavLink to="/SpOnGe-bOB" caseSensitive />` | `/sponge-bob` | false    |
+   */
   caseSensitive?: boolean;
+
+  /**
+    Classes are automatically applied to NavLink that correspond to {@link NavLinkRenderProps}.
+
+    ```css
+    a.active { color: red; }
+    a.pending { color: blue; }
+    a.transitioning {
+      view-transition-name: my-transition;
+    }
+    ```
+   */
   className?: string | ((props: NavLinkRenderProps) => string | undefined);
+
+  /**
+    Changes the matching logic for the `active` and `pending` states to only match to the "end" of the {@link NavLink#to}. If the URL is longer, it will no longer be considered active.
+
+    | Link                          | URL          | isActive |
+    | ----------------------------- | ------------ | -------- |
+    | `<NavLink to="/tasks" />`     | `/tasks`     | true     |
+    | `<NavLink to="/tasks" />`     | `/tasks/123` | true     |
+    | `<NavLink to="/tasks" end />` | `/tasks`     | true     |
+    | `<NavLink to="/tasks" end />` | `/tasks/123` | false    |
+
+    `<NavLink to="/">` is an exceptional case because _every_ URL matches `/`. To avoid this matching every single route by default, it effectively ignores the `end` prop and only matches when you're at the root route.
+   */
   end?: boolean;
+
   style?:
     | React.CSSProperties
     | ((props: NavLinkRenderProps) => React.CSSProperties | undefined);
 }
 
 /**
- * A `<Link>` wrapper that knows if it's "active" or not.
+  Wraps {@link Link | `<Link>`} with additional props for styling active and pending states.
+  
+  - Automatically applies classes to the link based on its active and pending states, see {@link NavLinkProps.className}.
+  - Automatically applies `aria-current="page"` to the link when the link is active. See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current) on MDN.
+
+  ```tsx
+  import { NavLink } from "react-router"
+  <NavLink to="/message" />
+  ```
+
+  States are available through the className, style, and children render props. See {@link NavLinkRenderProps}.
+
+  ```tsx
+  <NavLink
+    to="/messages"
+    className={({ isActive, isPending }) =>
+      isPending ? "pending" : isActive ? "active" : ""
+    }
+  >
+    Messages
+  </NavLink>
+  ```
+
+  @category Components
  */
 export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   function NavLinkWithRef(
@@ -1021,14 +1274,16 @@ NavLink.displayName = "NavLink";
 export interface FetcherFormProps
   extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
-   * The HTTP verb to use when the form is submit. Supports "get", "post",
-   * "put", "delete", "patch".
+   * The HTTP verb to use when the form is submitted. Supports "get", "post",
+   * "put", "delete", and "patch".
+   *
+   * Native `<form>` only supports `get` and `post`, avoid the other verbs if
+   * you'd like to support progressive enhancement
    */
   method?: HTMLFormMethod;
 
   /**
-   * `<form encType>` - enhancing beyond the normal string type and limiting
-   * to the built-in browser supported values
+   * The encoding type to use for the form submission.
    */
   encType?:
     | "application/x-www-form-urlencoded"
@@ -1036,7 +1291,7 @@ export interface FetcherFormProps
     | "text/plain";
 
   /**
-   * Normal `<form action>` but supports React Router's relative paths.
+   * The URL to submit the form data to.  If `undefined`, this defaults to the closest route in context.
    */
   action?: string;
 
@@ -1062,17 +1317,23 @@ export interface FetcherFormProps
 
 export interface FormProps extends FetcherFormProps {
   /**
-   * Indicate a specific fetcherKey to use when using navigate=false
+   * Indicates a specific fetcherKey to use when using `navigate={false}` so you
+   * can pick up the fetcher's state in a different component in a {@link
+   * useFetcher}.
    */
   fetcherKey?: string;
 
   /**
-   * navigate=false will use a fetcher instead of a navigation
+   * Skips the navigation and uses a {@link useFetcher | fetcher} internally
+   * when `false`. This is essentially a shorthand for `useFetcher()` +
+   * `<fetcher.Form>` where you don't care about the resulting data in this
+   * component.
    */
   navigate?: boolean;
 
   /**
-   * Forces a full document navigation instead of a fetch.
+   * Forces a full document navigation instead of client side routing + data
+   * fetch.
    */
   reloadDocument?: boolean;
 
@@ -1089,7 +1350,10 @@ export interface FormProps extends FetcherFormProps {
   state?: any;
 
   /**
-   * Enable view transitions on this Form navigation
+   * Enables a [View
+   * Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
+   * for this navigation. To apply specific styles during the transition see
+   * {@link unstable_useViewTransitionState}.
    */
   unstable_viewTransition?: boolean;
 }
@@ -1103,11 +1367,28 @@ type HTMLSubmitEvent = React.BaseSyntheticEvent<
 type HTMLFormSubmitter = HTMLButtonElement | HTMLInputElement;
 
 /**
- * A `@remix-run/router`-aware `<form>`. It behaves like a normal form except
- * that the interaction with the server is with `fetch` instead of new document
- * requests, allowing components to add nicer UX to the page as the form is
- * submitted and returns with data.
- */
+
+A progressively enhanced HTML [`<form>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form) that submits data to actions via `fetch`, activating pending states in `useNavigation` which enables advanced user interfaces beyond a basic HTML form. After a form's action completes, all data on the page is automatically revalidated to keep the UI in sync with the data.
+
+Because it uses the HTML form API, server rendered pages are interactive at a basic level before JavaScript loads. Instead of React Router managing the submission, the browser manages the submission as well as the pending states (like the spinning favicon). After JavaScript loads, React Router takes over enabling web application user experiences.
+
+Form is most useful for submissions that should also change the URL or otherwise add an entry to the browser history stack. For forms that shouldn't manipulate the browser history stack, use [`<fetcher.Form>`][fetcher_form].
+
+```tsx
+import { Form } from "react-router";
+
+function NewEvent() {
+  return (
+    <Form action="/events" method="post">
+      <input name="title" type="text" />
+      <input name="description" type="text" />
+    </Form>
+  )
+}
+```
+
+@category Components
+*/
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
     {

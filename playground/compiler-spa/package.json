@@ -1,4 +1,5 @@
 {
+  "name": "@playground/compiler-spa",
   "private": true,
   "sideEffects": false,
   "type": "module",

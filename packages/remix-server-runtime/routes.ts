@@ -100,7 +100,7 @@ export function createStaticHandlerDataRoutes(
               loadContext: args.context,
               loader: route.module.loader!,
               routeId: route.id,
-              singleFetch: future.unstable_singleFetch === true,
+              singleFetch: true,
               response: (dataStrategyCtx as DataStrategyCtx | undefined)
                 ?.response,
             })
@@ -113,7 +113,7 @@ export function createStaticHandlerDataRoutes(
               loadContext: args.context,
               action: route.module.action!,
               routeId: route.id,
-              singleFetch: future.unstable_singleFetch === true,
+              singleFetch: true,
               response: (dataStrategyCtx as DataStrategyCtx | undefined)
                 ?.response,
             })
