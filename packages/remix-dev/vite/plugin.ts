@@ -1689,23 +1689,8 @@ async function handleSpaMode(
   let response = await handler(request);
   let html = await response.text();
 
-  if (response.status !== 200) {
-    throw new Error(
-      `SPA Mode: Received a ${response.status} status code from ` +
-        `\`entry.server.tsx\` while generating the \`index.html\` file.\n${html}`
-    );
-  }
-
-  if (
-    !html.includes("window.__remixContext =") ||
-    !html.includes("window.__remixRouteModules =")
-  ) {
-    throw new Error(
-      "SPA Mode: Did you forget to include <Scripts/> in your `root.tsx` " +
-        "`HydrateFallback` component?  Your `index.html` file cannot hydrate " +
-        "into a SPA without `<Scripts />`."
-    );
-  }
+  validatePrerenderedResponse(response, html, "SPA Mode", "/");
+  validatePrerenderedHtml(html, "SPA Mode");
 
   // Write out the index.html file for the SPA
   await fse.writeFile(path.join(clientBuildDirectory, "index.html"), html);
@@ -1743,18 +1728,18 @@ async function handlePrerender(
     if (hasLoaders) {
       await prerenderData(
         handler,
-        reactRouterConfig.basename,
         path,
         clientBuildDirectory,
+        reactRouterConfig,
         viteConfig,
         requestInit
       );
     }
     await prerenderRoute(
       handler,
-      reactRouterConfig.basename,
       path,
       clientBuildDirectory,
+      reactRouterConfig,
       viteConfig,
       requestInit
     );
@@ -1762,13 +1747,13 @@ async function handlePrerender(
 
   async function prerenderData(
     handler: RequestHandler,
-    basename: string,
     prerenderPath: string,
     clientBuildDirectory: string,
+    reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
     viteConfig: Vite.ResolvedConfig,
     requestInit: RequestInit
   ) {
-    let normalizedPath = `${basename}${
+    let normalizedPath = `${reactRouterConfig.basename}${
       prerenderPath === "/"
         ? "/_root.data"
         : `${prerenderPath.replace(/\/$/, "")}.data`
@@ -1776,13 +1761,8 @@ async function handlePrerender(
     let request = new Request(`http://localhost${normalizedPath}`, requestInit);
     let response = await handler(request);
     let data = await response.text();
-    if (response.status !== 200) {
-      throw new Error(
-        `Prerender: Received a ${response.status} status code from ` +
-          `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-          `path.\n${data}`
-      );
-    }
+
+    validatePrerenderedResponse(response, data, "Prerender", normalizedPath);
 
     // Write out the .data file
     let outdir = path.relative(process.cwd(), clientBuildDirectory);
@@ -1795,34 +1775,24 @@ async function handlePrerender(
 
 async function prerenderRoute(
   handler: RequestHandler,
-  basename: string,
   prerenderPath: string,
   clientBuildDirectory: string,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
   viteConfig: Vite.ResolvedConfig,
   requestInit: RequestInit
 ) {
-  let normalizedPath = `${basename}${prerenderPath}/`.replace(/\/\/+/g, "/");
+  let normalizedPath = `${reactRouterConfig.basename}${prerenderPath}/`.replace(
+    /\/\/+/g,
+    "/"
+  );
   let request = new Request(`http://localhost${normalizedPath}`, requestInit);
   let response = await handler(request);
   let html = await response.text();
 
-  if (response.status !== 200) {
-    throw new Error(
-      `Prerender: Received a ${response.status} status code from ` +
-        `\`entry.server.tsx\` while prerendering the \`${normalizedPath}\` ` +
-        `path.\n${html}`
-    );
-  }
+  validatePrerenderedResponse(response, html, "Prerender", normalizedPath);
 
-  if (
-    !html.includes("window.__remixContext =") ||
-    !html.includes("window.__remixRouteModules =")
-  ) {
-    throw new Error(
-      "Prerender: Did you forget to include <Scripts/> in your `root.tsx` " +
-        "`HydrateFallback` component?  Your prerendered HTML files cannot " +
-        "hydrate into a SPA without `<Scripts />`."
-    );
+  if (!reactRouterConfig.ssr) {
+    validatePrerenderedHtml(html, "Prerender");
   }
 
   // Write out the HTML file
@@ -1831,6 +1801,33 @@ async function prerenderRoute(
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, html);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
+}
+
+function validatePrerenderedResponse(
+  response: Response,
+  html: string,
+  prefix: string,
+  path: string
+) {
+  if (response.status !== 200) {
+    throw new Error(
+      `${prefix}: Received a ${response.status} status code from ` +
+        `\`entry.server.tsx\` while prerendering the \`${path}\` ` +
+        `path.\n${html}`
+    );
+  }
+}
+
+function validatePrerenderedHtml(html: string, prefix: string) {
+  if (
+    !html.includes("window.__remixContext =") ||
+    !html.includes("window.__remixRouteModules =")
+  ) {
+    throw new Error(
+      `${prefix}: Did you forget to include <Scripts/> in your route route? ` +
+        "Your pre-rendered HTML files cannot hydrate without `<Scripts />`."
+    );
+  }
 }
 
 type ServerRoute = ServerBuild["routes"][string] & {
