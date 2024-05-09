@@ -1,8 +1,4 @@
-import type {
-  UNSAFE_DeferredData as DeferredData,
-  ErrorResponse,
-  StaticHandler,
-} from "react-router";
+import type { ErrorResponse, StaticHandler } from "react-router";
 import {
   UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
   getStaticContextFromError,
@@ -18,14 +14,12 @@ import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { EntryContext } from "./entry";
 import { createEntryRouteModules } from "./entry";
 import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
-import { getDocumentHeaders } from "./headers";
 import invariant from "./invariant";
 import { ServerMode, isServerMode } from "./mode";
 import { matchServerRoutes } from "./routeMatching";
 import type { ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
 import {
-  createDeferredReadableStream,
   isRedirectResponse,
   isRedirectStatusCode,
   isResponse,
@@ -128,42 +122,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     };
 
     let response: Response;
-    if (url.searchParams.has("_data")) {
-      if (_build.future.unstable_singleFetch) {
-        handleError(
-          new Error(
-            "Warning: Single fetch-enabled apps should not be making ?_data requests, " +
-              "this is likely to break in the future"
-          )
-        );
-      }
-      let routeId = url.searchParams.get("_data")!;
-
-      response = await handleDataRequest(
-        serverMode,
-        _build,
-        staticHandler,
-        routeId,
-        request,
-        loadContext,
-        handleError
-      );
-
-      if (_build.entry.module.handleDataRequest) {
-        response = await _build.entry.module.handleDataRequest(response, {
-          context: loadContext,
-          params,
-          request,
-        });
-
-        if (isRedirectResponse(response)) {
-          response = createRemixRedirectResponse(response, _build.basename);
-        }
-      }
-    } else if (
-      _build.future.unstable_singleFetch &&
-      url.pathname.endsWith(".data")
-    ) {
+    if (url.pathname.endsWith(".data")) {
       let handlerUrl = new URL(request.url);
       handlerUrl.pathname = handlerUrl.pathname
         .replace(/\.data$/, "")
@@ -260,71 +219,6 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
   };
 };
 
-async function handleDataRequest(
-  serverMode: ServerMode,
-  build: ServerBuild,
-  staticHandler: StaticHandler,
-  routeId: string,
-  request: Request,
-  loadContext: AppLoadContext,
-  handleError: (err: unknown) => void
-) {
-  try {
-    let response = await staticHandler.queryRoute(request, {
-      routeId,
-      requestContext: loadContext,
-    });
-
-    if (isRedirectResponse(response)) {
-      return createRemixRedirectResponse(response, build.basename);
-    }
-
-    if (DEFERRED_SYMBOL in response) {
-      let deferredData = response[DEFERRED_SYMBOL] as DeferredData;
-      let body = createDeferredReadableStream(
-        deferredData,
-        request.signal,
-        serverMode
-      );
-      let init = deferredData.init || {};
-      let headers = new Headers(init.headers);
-      headers.set("Content-Type", "text/remix-deferred");
-      // Mark successful responses with a header so we can identify in-flight
-      // network errors that are missing this header
-      headers.set("X-Remix-Response", "yes");
-      init.headers = headers;
-      return new Response(body, init);
-    }
-
-    // Mark all successful responses with a header so we can identify in-flight
-    // network errors that are missing this header
-    response.headers.set("X-Remix-Response", "yes");
-    return response;
-  } catch (error: unknown) {
-    if (isResponse(error)) {
-      error.headers.set("X-Remix-Catch", "yes");
-      return error;
-    }
-
-    if (isRouteErrorResponse(error)) {
-      handleError(error);
-      return errorResponseToJson(error, serverMode);
-    }
-
-    let errorInstance =
-      error instanceof Error || error instanceof DOMException
-        ? error
-        : new Error("Unexpected Server Error");
-    handleError(errorInstance);
-    return routerJson(serializeError(errorInstance, serverMode), {
-      status: 500,
-      headers: {
-        "X-Remix-Error": "yes",
-      },
-    });
-  }
-}
-
 async function handleSingleFetchRequest(
   serverMode: ServerMode,
   build: ServerBuild,
@@ -389,9 +283,7 @@ async function handleDocumentRequest(
   try {
     context = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_dataStrategy: build.future.unstable_singleFetch
-        ? getSingleFetchDataStrategy(responseStubs)
-        : undefined,
+      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),
     });
   } catch (error: unknown) {
     handleError(error);
@@ -413,22 +305,15 @@ async function handleDocumentRequest(
     context.errors = sanitizeErrors(context.errors, serverMode);
   }
 
-  let statusCode: number;
-  let headers: Headers;
-  if (build.future.unstable_singleFetch) {
-    let merged = mergeResponseStubs(context, responseStubs);
-    statusCode = merged.statusCode;
-    headers = merged.headers;
+  let merged = mergeResponseStubs(context, responseStubs);
+  let statusCode = merged.statusCode;
+  let headers = merged.headers;
 
-    if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
-      return new Response(null, {
-        status: statusCode,
-        headers,
-      });
-    }
-  } else {
-    statusCode = context.statusCode;
-    headers = getDocumentHeaders(build, context);
+  if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
+    return new Response(null, {
+      status: statusCode,
+      headers,
+    });
   }
 
   // Server UI state to send to the client.
@@ -450,19 +335,14 @@ async function handleDocumentRequest(
       criticalCss,
       future: build.future,
       isSpaMode: build.isSpaMode,
-      ...(!build.future.unstable_singleFetch ? { state } : null),
     }),
-    ...(build.future.unstable_singleFetch
-      ? {
-          serverHandoffStream: encodeViaTurboStream(
-            state,
-            request.signal,
-            build.entry.module.streamTimeout,
-            serverMode
-          ),
-          renderMeta: {},
-        }
-      : null),
+    serverHandoffStream: encodeViaTurboStream(
+      state,
+      request.signal,
+      build.entry.module.streamTimeout,
+      serverMode
+    ),
+    renderMeta: {},
     future: build.future,
     isSpaMode: build.isSpaMode,
     serializeError: (err) => serializeError(err, serverMode),
@@ -526,19 +406,14 @@ async function handleDocumentRequest(
         basename: build.basename,
         future: build.future,
         isSpaMode: build.isSpaMode,
-        ...(!build.future.unstable_singleFetch ? { state } : null),
       }),
-      ...(build.future.unstable_singleFetch
-        ? {
-            serverHandoffStream: encodeViaTurboStream(
-              state,
-              request.signal,
-              build.entry.module.streamTimeout,
-              serverMode
-            ),
-            renderMeta: {},
-          }
-        : null),
+      serverHandoffStream: encodeViaTurboStream(
+        state,
+        request.signal,
+        build.entry.module.streamTimeout,
+        serverMode
+      ),
+      renderMeta: {},
     };
 
     try {

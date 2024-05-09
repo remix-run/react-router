@@ -1,4 +1,5 @@
 {
+  "name": "@playground/compiler",
   "private": true,
   "sideEffects": false,
   "type": "module",

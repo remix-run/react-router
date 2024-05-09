@@ -83,7 +83,7 @@ function itPrefetchesPageLinks<
         let dataHref = container
           .querySelector('link[rel="prefetch"][as="fetch"]')
           ?.getAttribute("href");
-        expect(dataHref).toBe("/idk?_data=idk");
+        expect(dataHref).toBe("/idk.data");
         let moduleHref = container
           .querySelector('link[rel="modulepreload"]')
           ?.getAttribute("href");
@@ -216,12 +216,9 @@ describe("<RemixServer>", () => {
 });
 
 describe("<HydratedRouter>", () => {
-  it("handles empty default export objects from the compiler", () => {
+  it("handles empty default export objects from the compiler", async () => {
     window.__remixContext = {
       url: "/",
-      state: {
-        loaderData: {},
-      },
       future: {},
     };
     window.__remixRouteModules = {
@@ -261,10 +258,24 @@ describe("<HydratedRouter>", () => {
       url: "",
       version: "",
     };
+    window.__remixContext!.stream = new ReadableStream({
+      start(controller) {
+        window.__remixContext!.streamController = controller;
+      },
+    }).pipeThrough(new TextEncoderStream());
+    window.__remixContext!.streamController.enqueue(
+      // ts-expect-error
+      '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n'
+    );
+    window.__remixContext!.streamController.close();
 
     jest.spyOn(console, "error");
+    jest.spyOn(console, "warn").mockImplementation(() => {});
 
-    let { container } = render(<HydratedRouter />);
+    let container;
+    await act(() => {
+      container = render(<HydratedRouter />).container;
+    });
 
     expect(console.error).not.toHaveBeenCalled();
     expect(container.innerHTML).toMatch("<h1>Root</h1>");

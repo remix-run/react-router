@@ -208,33 +208,32 @@ function createHydratedRouter(): RemixRouter {
   // TODO: Do some testing to confirm it's OK to skip the hard reload check
   // now that all route.lazy stuff is wired up
 
-  // When single fetch is enabled, we need to suspend until the initial state
-  // snapshot is decoded into window.__remixContext.state
-  if (ssrInfo.context.future.unstable_singleFetch) {
-    let localSsrInfo = ssrInfo;
-    // Note: `stateDecodingPromise` is not coupled to `router` - we'll reach this
-    // code potentially many times waiting for our state to arrive, but we'll
-    // then only get past here and create the `router` one time
-    if (!ssrInfo.stateDecodingPromise) {
-      let stream = ssrInfo.context.stream;
-      invariant(stream, "No stream found for single fetch decoding");
-      ssrInfo.context.stream = undefined;
-      ssrInfo.stateDecodingPromise = decodeViaTurboStream(stream, window)
-        .then((value) => {
-          ssrInfo!.context.state =
-            value.value as typeof localSsrInfo.context.state;
-          localSsrInfo.stateDecodingPromise!.value = true;
-        })
-        .catch((e) => {
-          localSsrInfo.stateDecodingPromise!.error = e;
-        });
-    }
-    if (ssrInfo.stateDecodingPromise.error) {
-      throw ssrInfo.stateDecodingPromise.error;
-    }
-    if (!ssrInfo.stateDecodingPromise.value) {
-      throw ssrInfo.stateDecodingPromise;
-    }
+  // We need to suspend until the initial state snapshot is decoded into
+  // window.__remixContext.state
+
+  let localSsrInfo = ssrInfo;
+  // Note: `stateDecodingPromise` is not coupled to `router` - we'll reach this
+  // code potentially many times waiting for our state to arrive, but we'll
+  // then only get past here and create the `router` one time
+  if (!ssrInfo.stateDecodingPromise) {
+    let stream = ssrInfo.context.stream;
+    invariant(stream, "No stream found for single fetch decoding");
+    ssrInfo.context.stream = undefined;
+    ssrInfo.stateDecodingPromise = decodeViaTurboStream(stream, window)
+      .then((value) => {
+        ssrInfo!.context.state =
+          value.value as typeof localSsrInfo.context.state;
+        localSsrInfo.stateDecodingPromise!.value = true;
+      })
+      .catch((e) => {
+        localSsrInfo.stateDecodingPromise!.error = e;
+      });
+  }
+  if (ssrInfo.stateDecodingPromise.error) {
+    throw ssrInfo.stateDecodingPromise.error;
+  }
+  if (!ssrInfo.stateDecodingPromise.value) {
+    throw ssrInfo.stateDecodingPromise;
   }
 
   let routes = createClientRoutes(
@@ -308,14 +307,14 @@ function createHydratedRouter(): RemixRouter {
       v7_prependBasename: true,
       v7_relativeSplatPath: ssrInfo.context.future.v3_relativeSplatPath,
       // Single fetch enables this underlying behavior
-      unstable_skipActionErrorRevalidation:
-        ssrInfo.context.future.unstable_singleFetch === true,
+      unstable_skipActionErrorRevalidation: true,
     },
     hydrationData,
     mapRouteProperties,
-    unstable_dataStrategy: ssrInfo.context.future.unstable_singleFetch
-      ? getSingleFetchDataStrategy(ssrInfo.manifest, ssrInfo.routeModules)
-      : undefined,
+    unstable_dataStrategy: getSingleFetchDataStrategy(
+      ssrInfo.manifest,
+      ssrInfo.routeModules
+    ),
   });
   ssrInfo.router = router;
 
@@ -407,7 +406,7 @@ export function HydratedRouter() {
           This fragment is important to ensure we match the <RemixServer> JSX
           structure so that useId values hydrate correctly
         */}
-      {ssrInfo.context.future.unstable_singleFetch ? <></> : null}
+      <></>
     </>
   );
 }

@@ -12,7 +12,7 @@ let fixture: Fixture;
 let appFixture: AppFixture;
 
 test.beforeEach(async ({ context }) => {
-  await context.route(/_data/, async (route) => {
+  await context.route(/\.data$/, async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     route.continue();
   });
