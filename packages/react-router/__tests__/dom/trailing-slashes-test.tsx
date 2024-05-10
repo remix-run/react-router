@@ -634,7 +634,8 @@ function getWindowImpl(initialUrl: string, isHash = false): Window {
 
 function SingleNavigate({ to }: { to: To }) {
   let navigate = useNavigate();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  React.useEffect(() => navigate(to), [to]);
+  React.useEffect(() => {
+    navigate(to);
+  }, [navigate, to]);
   return null;
 }

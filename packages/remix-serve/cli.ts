@@ -77,10 +77,22 @@ async function run() {
   app.disable("x-powered-by");
   app.use(compression());
   app.use(
-    build.publicPath,
-    express.static(build.assetsBuildDirectory, {
+    path.posix.join(build.publicPath, "assets"),
+    express.static(path.join(build.assetsBuildDirectory, "assets"), {
       immutable: true,
       maxAge: "1y",
+    })
+  );
+  app.use(
+    build.publicPath,
+    express.static(build.assetsBuildDirectory, {
+      // Don't redirect directory index.html request to include a trailing slash
+      redirect: false,
+      setHeaders: function (res, path) {
+        if (path.endsWith(".data")) {
+          res.set("Content-Type", "text/x-turbo");
+        }
+      },
     })
   );
   app.use(express.static("public", { maxAge: "1h" }));

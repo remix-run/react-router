@@ -18,7 +18,7 @@ const files = {
     let isDeepFrozen = (obj: any) =>
       Object.isFrozen(obj) &&
       Object.keys(obj).every(
-        prop => typeof obj[prop] !== 'object' || isDeepFrozen(obj[prop])
+        prop => typeof obj[prop] !== 'object' || obj[prop] === null || isDeepFrozen(obj[prop])
       );
 
     export default {
@@ -49,7 +49,7 @@ const files = {
               return {};
             },
           },
-          
+
           // Ensure preset config takes lower precedence than user config
           {
             name: "test-preset",
@@ -214,6 +214,7 @@ test("Vite / presets", async () => {
     "buildEnd",
     "future",
     "manifest",
+    "prerender",
     "publicPath",
     "routes",
     "serverBuildFile",

@@ -417,10 +417,9 @@ export function Navigate({
   );
   let jsonPath = JSON.stringify(path);
 
-  React.useEffect(
-    () => navigate(JSON.parse(jsonPath), { replace, state, relative }),
-    [navigate, jsonPath, relative, replace, state]
-  );
+  React.useEffect(() => {
+    navigate(JSON.parse(jsonPath), { replace, state, relative });
+  }, [navigate, jsonPath, relative, replace, state]);
 
   return null;
 }
