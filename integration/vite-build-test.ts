@@ -26,6 +26,7 @@ test.beforeAll(async () => {
     "vite.config.ts": js`
       import { defineConfig } from "vite";
       import { vitePlugin as reactRouter } from "@react-router/dev";
+      import envOnly from "vite-env-only";
       import mdx from "@mdx-js/rollup";
 
       export default defineConfig({
@@ -37,6 +38,14 @@ test.beforeAll(async () => {
         plugins: [
           mdx(),
           reactRouter(),
+          envOnly({
+            denyFiles: {
+              client: [
+                /\.server\.(\w+)?$/, // .server files
+                /(^|\/).server\//, // .server directories
+              ],
+            },
+          }),
         ],
       });
     `,

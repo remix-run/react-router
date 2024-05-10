@@ -262,8 +262,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.3(@types/node@18.19.26)
       vite-env-only:
-        specifier: ^2.0.0
-        version: 2.2.1
+        specifier: ^2.3.0
+        version: 2.3.0(vite@5.1.3)
       vite-tsconfig-paths:
         specifier: ^4.2.2
         version: 4.3.2(typescript@5.4.5)(vite@5.1.3)
@@ -504,8 +504,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.3(@types/node@18.19.26)
       vite-env-only:
-        specifier: ^2.0.0
-        version: 2.2.1
+        specifier: ^2.3.0
+        version: 2.3.0(vite@5.1.3)
       vite-tsconfig-paths:
         specifier: ^4.2.1
         version: 4.3.2(typescript@5.1.6)(vite@5.1.3)
@@ -13848,14 +13848,17 @@ packages:
       vfile-message: 4.0.2
     dev: false
 
-  /vite-env-only@2.2.1:
-    resolution: {integrity: sha512-yXNRBNf+XiJeebR/pTEjf0wGd9foJ7WbmFpUg8DtwIuTfEB/nyqZDJWJDt3VRNOUYvzgOGGMLB0VyNjBM8evXw==}
+  /vite-env-only@2.3.0(vite@5.1.3):
+    resolution: {integrity: sha512-Q+7+G31twPpGPsY8Oy7vzESLUF79+HnLV5G1g5nxxgQUFvldT/q14n7ZDkkhvWJ46N+8HfPtCWifsPNHG7KHOQ==}
+    peerDependencies:
+      vite: '*'
     dependencies:
       '@babel/core': 7.24.3
       '@babel/generator': 7.24.1
       '@babel/parser': 7.24.1
       '@babel/traverse': 7.24.1
       '@babel/types': 7.24.0
+      vite: 5.1.3(@types/node@18.19.26)
     transitivePeerDependencies:
       - supports-color
 

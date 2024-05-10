@@ -14,6 +14,7 @@ import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 import type { VitePluginConfig } from "@react-router/dev";
 
+const js = String.raw;
 const reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
@@ -43,7 +44,7 @@ export const viteConfig = {
       ssr: !args.spaMode,
     };
 
-    return dedent`
+    return dedent(js`
       import { vitePlugin as reactRouter } from "@react-router/dev";
       import envOnly from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
@@ -52,11 +53,18 @@ export const viteConfig = {
         ${await viteConfig.server(args)}
         plugins: [
           reactRouter(${JSON.stringify(pluginOptions)}),
-          envOnly(),
+          envOnly({
+            denyFiles: {
+              client: [
+                /\.server\.(\w+)?$/, // .server files
+                /(^|\/).server\//, // .server directories
+              ],
+            },
+          }),
           tsconfigPaths()
         ],
       };
-    `;
+    `);
   },
 };
 
