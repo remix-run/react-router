@@ -11,6 +11,7 @@ import type {
 import type { AppData, AppLoadContext } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "./serialize";
+import type { ResponseStub } from "./single-fetch";
 
 export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule | undefined;
@@ -26,25 +27,6 @@ export type DataFunctionArgs = RRActionFunctionArgs<AppLoadContext> &
     // even tough they're identical under the hood
     context: AppLoadContext;
   };
-
-export const ResponseStubOperationsSymbol = Symbol("ResponseStubOperations");
-export type ResponseStubOperation = [
-  "set" | "append" | "delete",
-  string,
-  string?
-];
-/**
- * A stubbed response to let you set the status/headers of your response from
- * loader/action functions
- */
-export type ResponseStub = {
-  status: number | undefined;
-  headers: Headers;
-};
-
-export type ResponseStubImpl = ResponseStub & {
-  [ResponseStubOperationsSymbol]: ResponseStubOperation[];
-};
 
 /**
  * A function that handles data mutations for a route on the server

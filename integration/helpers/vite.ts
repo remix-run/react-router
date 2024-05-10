@@ -36,7 +36,6 @@ export const viteConfig = {
   basic: async (args: {
     port: number;
     fsAllow?: string[];
-    singleFetch?: boolean;
     spaMode?: boolean;
   }) => {
     let pluginOptions: VitePluginConfig = {

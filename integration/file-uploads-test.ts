@@ -17,7 +17,6 @@ test.describe("file-uploads", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/fileUploadHandler.ts": js`
             import * as path from "node:path";

@@ -10,10 +10,6 @@
 export default defineConfig({
   plugins: [
     reactRouter({
-      // Single fetch is required for prerendering (which will be the default in v7)
-      future: {
-        unstable_singleFetch: true,
-      },
       async prerender() {
         let slugs = await fakeGetSlugsFromCms();
         // Prerender these paths into `.html` files at build time, and `.data`

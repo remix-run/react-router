@@ -21,7 +21,6 @@ test.describe("useFetcher", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/routes/resource-route-action-only.ts": js`
           import { json } from "@react-router/node";
@@ -434,7 +433,6 @@ test.describe("fetcher aborts and adjacent forms", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/routes/_index.tsx": js`
           import * as React from "react";

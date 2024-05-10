@@ -60,7 +60,6 @@ test.describe("Forms", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/routes/get-submission.tsx": js`
             import { useLoaderData, Form } from "react-router-dom";

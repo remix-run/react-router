@@ -21,7 +21,6 @@ test.describe("actions", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/routes/urlencoded.tsx": js`
           import { Form, useActionData } from "react-router-dom";
