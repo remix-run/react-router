@@ -2,7 +2,7 @@
   "name": "@remix-run/react-router",
   "private": true,
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && pnpm build:rsc",
     "build:rsc": "esbuild --bundle --format=cjs --tree-shaking=true --external:turbo-stream --external:react packages/react-router/rsc.ts --outfile=packages/react-router/dist/rsc.js",
     "clean": "git clean -fdX .",
     "clean:build": "git clean -fdx -e node_modules .",
