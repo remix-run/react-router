@@ -1,5 +1,5 @@
 {
-  "mode": "pre",
+  "mode": "exit",
   "tag": "pre",
   "initialVersions": {
     "react-router": "6.23.0",
