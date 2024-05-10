@@ -1,10 +1,4 @@
-import {
-  redirect,
-  json,
-  isDeferredData,
-  isResponse,
-  isRedirectStatusCode,
-} from "./responses";
+import { redirect, isDeferredData, isRedirectStatusCode } from "./responses";
 import type {
   ActionFunction,
   ActionFunctionArgs,
@@ -34,7 +28,6 @@ export async function callRouteAction({
   params,
   request,
   routeId,
-  singleFetch,
   response,
 }: {
   request: Request;
@@ -42,14 +35,13 @@ export async function callRouteAction({
   params: ActionFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
-  singleFetch: boolean;
   response: ResponseStub;
 }) {
   let result = await action({
     request: stripDataParam(stripIndexParam(request)),
     context: loadContext,
     params,
-    ...(singleFetch ? { response } : null),
+    response,
   });
 
   if (result === undefined) {
@@ -59,12 +51,7 @@ export async function callRouteAction({
     );
   }
 
-  // Allow naked object returns when single fetch is enabled
-  if (singleFetch) {
-    return result;
-  }
-
-  return isResponse(result) ? result : json(result);
+  return result;
 }
 
 export async function callRouteLoader({
@@ -73,7 +60,6 @@ export async function callRouteLoader({
   params,
   request,
   routeId,
-  singleFetch,
   response,
 }: {
   request: Request;
@@ -81,14 +67,13 @@ export async function callRouteLoader({
   params: LoaderFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
-  singleFetch: boolean;
   response: ResponseStub;
 }) {
   let result = await loader({
     request: stripDataParam(stripIndexParam(request)),
     context: loadContext,
     params,
-    ...(singleFetch ? { response } : null),
+    response,
   });
 
   if (result === undefined) {
@@ -108,12 +93,7 @@ export async function callRouteLoader({
     return result;
   }
 
-  // Allow naked object returns when single fetch is enabled
-  if (singleFetch) {
-    return result;
-  }
-
-  return isResponse(result) ? result : json(result);
+  return result;
 }
 
 // TODO: Document these search params better

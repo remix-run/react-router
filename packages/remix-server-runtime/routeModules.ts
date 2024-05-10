@@ -11,6 +11,7 @@ import type {
 import type { AppData, AppLoadContext } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "./serialize";
+import type { ResponseStub } from "./single-fetch";
 
 export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule | undefined;
