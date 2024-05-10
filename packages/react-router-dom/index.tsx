@@ -526,6 +526,7 @@ export function RouterProvider({
 
       let isViewTransitionUnavailable =
         router.window == null ||
+        router.window.document == null ||
         typeof router.window.document.startViewTransition !== "function";
 
       // If this isn't a view transition or it's not available in this browser,

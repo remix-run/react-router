@@ -590,9 +590,9 @@ class AwaitErrorBoundary extends React.Component<
       // Already tracked promise - check contents
       promise = resolve;
       status =
-        promise._error !== undefined
+        "_error" in promise
           ? AwaitRenderStatus.error
-          : promise._data !== undefined
+          : "_data" in promise
           ? AwaitRenderStatus.success
           : AwaitRenderStatus.pending;
     } else {
