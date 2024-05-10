@@ -1518,6 +1518,71 @@ test.describe("single-fetch", () => {
     );
   });
 
+  test("does not log thrown redirect response stubs via handleError", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/redirect.tsx": js`
+          export function action({ response }) {
+            response.status = 301;
+            response.headers.set("Location", "/data");
+            throw response;
+          }
+          export function loader({ response }) {
+            response.status = 301;
+            response.headers.set("Location", "/data");
+            throw response;
+          }
+          export default function Component() {
+            return <h1>Should not see me</h1>;
+          }
+        `,
+      },
+    });
+
+    let errorLogs = [];
+    console.error = (e) => errorLogs.push(e);
+    await fixture.requestDocument("/redirect");
+    await fixture.requestSingleFetchData("/redirect.data");
+    await fixture.requestSingleFetchData("/redirect.data", {
+      method: "post",
+      body: null,
+    });
+    expect(errorLogs.length).toBe(0);
+  });
+
+  test("does not log thrown non-redirect response stubs via handleError", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/redirect.tsx": js`
+          export function action({ response }) {
+            response.status = 400;
+            throw response;
+          }
+          export function loader({ response }) {
+            response.status = 400;
+            throw response;
+          }
+          export default function Component() {
+            return <h1>Should not see me</h1>;
+          }
+        `,
+      },
+    });
+
+    let errorLogs = [];
+    console.error = (e) => errorLogs.push(e);
+    await fixture.requestDocument("/redirect");
+    expect(errorLogs.length).toBe(1); // ErrorBoundary render logs this
+    await fixture.requestSingleFetchData("/redirect.data");
+    await fixture.requestSingleFetchData("/redirect.data", {
+      method: "post",
+      body: null,
+    });
+    expect(errorLogs.length).toBe(1);
+  });
+
   test.describe("client loaders", () => {
     test("when no routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(

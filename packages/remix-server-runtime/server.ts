@@ -33,6 +33,7 @@ import {
   getSingleFetchDataStrategy,
   getSingleFetchRedirect,
   getSingleFetchResourceRouteDataStrategy,
+  isResponseStub,
   mergeResponseStubs,
   singleFetchAction,
   singleFetchLoaders,
@@ -297,17 +298,6 @@ async function handleDocumentRequest(
     return context;
   }
 
-  // Sanitize errors outside of development environments
-  if (context.errors) {
-    Object.values(context.errors).forEach((err) => {
-      // @ts-expect-error This is "private" from users but intended for internal use
-      if (!isRouteErrorResponse(err) || err.error) {
-        handleError(err);
-      }
-    });
-    context.errors = sanitizeErrors(context.errors, serverMode);
-  }
-
   let merged = mergeResponseStubs(context, responseStubs);
   let statusCode = merged.statusCode;
   let headers = merged.headers;
@@ -317,6 +307,17 @@ async function handleDocumentRequest(
       status: statusCode,
       headers,
     });
+  }
+
+  // Sanitize errors outside of development environments
+  if (context.errors) {
+    Object.values(context.errors).forEach((err) => {
+      // @ts-expect-error This is "private" from users but intended for internal use
+      if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
+        handleError(err);
+      }
+    });
+    context.errors = sanitizeErrors(context.errors, serverMode);
   }
 
   // Server UI state to send to the client.

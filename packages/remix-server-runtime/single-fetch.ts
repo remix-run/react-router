@@ -174,7 +174,7 @@ export async function singleFetchAction(
     if (context.errors) {
       Object.values(context.errors).forEach((err) => {
         // @ts-expect-error This is "private" from users but intended for internal use
-        if (!isRouteErrorResponse(err) || err.error) {
+        if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
           handleError(err);
         }
       });
@@ -263,7 +263,7 @@ export async function singleFetchLoaders(
     if (context.errors) {
       Object.values(context.errors).forEach((err) => {
         // @ts-expect-error This is "private" from users but intended for internal use
-        if (!isRouteErrorResponse(err) || err.error) {
+        if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
           handleError(err);
         }
       });
