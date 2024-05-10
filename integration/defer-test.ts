@@ -45,7 +45,6 @@ test.describe("non-aborted", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/components/counter.tsx": js`
           import { useState } from "react";
@@ -994,7 +993,6 @@ test.describe("aborted", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";

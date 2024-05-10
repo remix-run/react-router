@@ -35,7 +35,6 @@ test.describe("navigation states", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/root.tsx": js`
             import { useMemo, useRef } from "react";

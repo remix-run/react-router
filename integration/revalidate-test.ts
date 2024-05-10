@@ -14,7 +14,6 @@ test.describe("Revalidation", () => {
   test.beforeAll(async () => {
     appFixture = await createAppFixture(
       await createFixture({
-        singleFetch: true,
         files: {
           "app/root.tsx": js`
               import { Link, Outlet, Scripts, useNavigation } from "react-router-dom";

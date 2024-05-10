@@ -13,7 +13,6 @@ let appFixture: AppFixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    singleFetch: true,
     files: {
       "app/routes/layout-action.tsx": js`
         import { json } from "@react-router/node";
