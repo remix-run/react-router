@@ -32,11 +32,13 @@ import {
   getResponseStubs,
   getSingleFetchDataStrategy,
   getSingleFetchRedirect,
+  getSingleFetchResourceRouteDataStrategy,
   mergeResponseStubs,
   singleFetchAction,
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
 } from "./single-fetch";
+import { ResponseStubOperationsSymbol } from "./routeModules";
 
 export type RequestHandler = (
   request: Request,
@@ -184,6 +186,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       response = await handleResourceRequest(
         serverMode,
+        _build,
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
@@ -433,6 +436,7 @@ async function handleDocumentRequest(
 
 async function handleResourceRequest(
   serverMode: ServerMode,
+  build: ServerBuild,
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
@@ -440,13 +444,18 @@ async function handleResourceRequest(
   handleError: (err: unknown) => void
 ) {
   try {
+    let responseStubs = getResponseStubs();
     // Note we keep the routeId here to align with the Remix handling of
     // resource routes which doesn't take ?index into account and just takes
     // the leaf match
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
+      unstable_dataStrategy: getSingleFetchResourceRouteDataStrategy({
+        responseStubs,
+      }),
     });
+
     if (typeof response === "object") {
       invariant(
         !(DEFERRED_SYMBOL in response),
@@ -454,12 +463,20 @@ async function handleResourceRequest(
           `forget to export a default UI component from the "${routeId}" route?`
       );
     }
-    // callRouteLoader/callRouteAction always return responses (w/o single fetch).
-    // With single fetch, users should always be Responses from resource routes
+
     invariant(
       isResponse(response),
-      "Expected a Response to be returned from queryRoute"
+      "Expected a Response to be returned from resource route handler"
     );
+
+    let stub = responseStubs[routeId];
+    // Use the response status and merge any response stub headers onto it
+    let ops = stub[ResponseStubOperationsSymbol];
+    for (let [op, ...args] of ops) {
+      // @ts-expect-error
+      response.headers[op](...args);
+    }
+
     return response;
   } catch (error: unknown) {
     if (isResponse(error)) {

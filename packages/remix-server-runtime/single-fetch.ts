@@ -1,6 +1,7 @@
 import type {
   StaticHandler,
   unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
+  unstable_DataStrategyFunction as DataStrategyFunction,
   StaticHandlerContext,
   UNSAFE_SingleFetchRedirectResult as SingleFetchRedirectResult,
   UNSAFE_SingleFetchResult as SingleFetchResult,
@@ -39,7 +40,7 @@ export function getSingleFetchDataStrategy(
     isActionDataRequest,
     loadRouteIds,
   }: { isActionDataRequest?: boolean; loadRouteIds?: string[] } = {}
-) {
+): DataStrategyFunction {
   return async ({ request, matches }: DataStrategyFunctionArgs) => {
     // Don't call loaders on action data requests
     if (isActionDataRequest && request.method === "GET") {
@@ -92,6 +93,32 @@ export function getSingleFetchDataStrategy(
   };
 }
 
+export function getSingleFetchResourceRouteDataStrategy({
+  responseStubs,
+}: {
+  responseStubs: ReturnType<typeof getResponseStubs>;
+}): DataStrategyFunction {
+  return async ({ matches }: DataStrategyFunctionArgs) => {
+    let results = await Promise.all(
+      matches.map(async (match) => {
+        let responseStub = match.shouldLoad
+          ? responseStubs[match.route.id]
+          : null;
+        let result = await match.resolve(async (handler) => {
+          // Cast `ResponseStubImpl -> ResponseStub` to hide the symbol in userland
+          let ctx: DataStrategyCtx = {
+            response: responseStub as ResponseStub,
+          };
+          let data = await handler(ctx);
+          return { type: "data", result: data };
+        });
+        return result;
+      })
+    );
+    return results;
+  };
+}
+
 export async function singleFetchAction(
   serverMode: ServerMode,
   staticHandler: StaticHandler,
@@ -118,7 +145,7 @@ export async function singleFetchAction(
       }),
     });
 
-    // Unlike `handleDataRequest`, when singleFetch is enabled, queryRoute does
+    // Unlike `handleDataRequest`, when singleFetch is enabled, query does
     // let non-Response return values through
     if (isResponse(result)) {
       return {

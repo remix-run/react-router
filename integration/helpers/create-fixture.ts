@@ -27,7 +27,6 @@ export interface FixtureInit {
   template?: "cf-template" | "deno-template" | "node-template";
   useReactRouterServe?: boolean;
   spaMode?: boolean;
-  singleFetch?: boolean;
   port?: number;
 }
 
@@ -312,7 +311,7 @@ export async function createFixtureProject(
     filename.startsWith("vite.config.")
   );
 
-  let { singleFetch, spaMode } = init;
+  let { spaMode } = init;
 
   await writeTestFiles(
     {
@@ -321,7 +320,6 @@ export async function createFixtureProject(
         : {
             "vite.config.js": await viteConfig.basic({
               port,
-              singleFetch,
               spaMode,
             }),
           }),
