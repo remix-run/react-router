@@ -1024,7 +1024,7 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
-type NavLinkRenderProps = {
+export type NavLinkRenderProps = {
   isActive: boolean;
   isPending: boolean;
   isTransitioning: boolean;
