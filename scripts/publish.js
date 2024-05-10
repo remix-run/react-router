@@ -43,7 +43,7 @@ async function ensureBuildVersion(packageName, version) {
 function publishBuild(packageName, tag) {
   let buildDir = path.join(rootDir, "packages", packageName);
   let args = ["--access public", `--tag ${tag}`];
-  if (tag === "experimental") {
+  if (tag === "experimental" || tag === "nightly") {
     args.push(`--no-git-checks`);
   } else {
     args.push("--publish-branch release-next");
@@ -77,6 +77,8 @@ async function run() {
     // 2. Determine the appropriate npm tag to use
     let tag = version.includes("experimental")
       ? "experimental"
+      : version.includes("nightly")
+      ? "nightly"
       : semver.prerelease(version) == null
       ? "latest"
       : "pre";
