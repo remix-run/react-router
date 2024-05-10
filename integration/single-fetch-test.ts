@@ -1583,6 +1583,89 @@ test.describe("single-fetch", () => {
     expect(errorLogs.length).toBe(1);
   });
 
+  test("supports nonce on streaming script tags", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+          export function loader() {
+            return {
+              message: "ROOT",
+            };
+          }
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts nonce="the-nonce" />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/entry.server.tsx": js`
+          import { PassThrough } from "node:stream";
+          import type { EntryContext } from "@react-router/node";
+          import { createReadableStreamFromReadable } from "@react-router/node";
+          import { RemixServer } from "react-router";
+          import { renderToPipeableStream } from "react-dom/server";
+          export default function handleRequest(
+            request: Request,
+            responseStatusCode: number,
+            responseHeaders: Headers,
+            remixContext: EntryContext
+          ) {
+            return new Promise((resolve, reject) => {
+              const { pipe } = renderToPipeableStream(
+                <RemixServer context={remixContext} url={request.url} nonce="the-nonce" />,
+                {
+                  onShellReady() {
+                    const body = new PassThrough();
+                    const stream = createReadableStreamFromReadable(body);
+                    responseHeaders.set("Content-Type", "text/html");
+                    resolve(
+                      new Response(stream, {
+                        headers: responseHeaders,
+                        status: responseStatusCode,
+                      })
+                    );
+                    pipe(body);
+                  },
+                  onShellError(error: unknown) {
+                    reject(error);
+                  },
+                  onError(error: unknown) {
+                    responseStatusCode = 500;
+                  },
+                }
+              );
+            });
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/data", true);
+    let scripts = await page.$$("script");
+    expect(scripts.length).toBe(6);
+    let remixScriptsCount = 0;
+    for (let script of scripts) {
+      let content = await script.innerHTML();
+      if (content.includes("window.__remix")) {
+        remixScriptsCount++;
+        expect(await script.getAttribute("nonce")).toEqual("the-nonce");
+      }
+    }
+    expect(remixScriptsCount).toBe(4);
+  });
+
   test.describe("client loaders", () => {
     test("when no routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
