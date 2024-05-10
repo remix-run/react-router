@@ -1671,6 +1671,17 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         const env = process.env.REACT_SERVER_BUILD ? "server" : "client";
 
         switch (env) {
+          case "client":
+            return {
+              optimizeDeps: {
+                include: [
+                  "react",
+                  "react/jsx-runtime",
+                  "react/jsx-dev-runtime",
+                  "react-server-dom-diy/client",
+                ],
+              },
+            };
           case "server":
             return {
               optimizeDeps: {

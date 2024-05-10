@@ -47,7 +47,8 @@
     "react-refresh": "^0.14.0",
     "react-router": "workspace:*",
     "semver": "^7.3.7",
-    "set-cookie-parser": "^2.6.0"
+    "set-cookie-parser": "^2.6.0",
+    "unplugin-rsc": "0.0.9"
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",
@@ -72,7 +73,6 @@
     "react-server-dom-diy": "0.0.0-experimental-15a3a5622-202404158",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0",
-    "unplugin-rsc": "0.0.9",
     "vite": "^5.1.0",
     "wrangler": "^3.28.2"
   },
