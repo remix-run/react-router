@@ -10,8 +10,8 @@ import type {
   ActionFunctionArgs,
   LoaderFunction,
   LoaderFunctionArgs,
-  ResponseStub,
 } from "./routeModules";
+import type { ResponseStub } from "./single-fetch";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
@@ -43,13 +43,13 @@ export async function callRouteAction({
   loadContext: AppLoadContext;
   routeId: string;
   singleFetch: boolean;
-  response?: ResponseStub;
+  response: ResponseStub;
 }) {
   let result = await action({
     request: stripDataParam(stripIndexParam(request)),
     context: loadContext,
     params,
-    response,
+    ...(singleFetch ? { response } : null),
   });
 
   if (result === undefined) {
@@ -82,13 +82,13 @@ export async function callRouteLoader({
   loadContext: AppLoadContext;
   routeId: string;
   singleFetch: boolean;
-  response?: ResponseStub;
+  response: ResponseStub;
 }) {
   let result = await loader({
     request: stripDataParam(stripIndexParam(request)),
     context: loadContext,
     params,
-    response,
+    ...(singleFetch ? { response } : null),
   });
 
   if (result === undefined) {

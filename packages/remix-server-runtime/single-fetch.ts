@@ -17,12 +17,6 @@ import { encode } from "turbo-stream";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
-import type {
-  ResponseStub,
-  ResponseStubImpl,
-  ResponseStubOperation,
-} from "./routeModules";
-import { ResponseStubOperationsSymbol } from "./routeModules";
 import { isDeferredData, isRedirectStatusCode, isResponse } from "./responses";
 
 const ResponseStubActionSymbol = Symbol("ResponseStubAction");
@@ -32,6 +26,25 @@ export { SingleFetchRedirectSymbol };
 
 export type DataStrategyCtx = {
   response: ResponseStub;
+};
+
+export const ResponseStubOperationsSymbol = Symbol("ResponseStubOperations");
+export type ResponseStubOperation = [
+  "set" | "append" | "delete",
+  string,
+  string?
+];
+/**
+ * A stubbed response to let you set the status/headers of your response from
+ * loader/action functions
+ */
+export type ResponseStub = {
+  status: number | undefined;
+  headers: Headers;
+};
+
+export type ResponseStubImpl = ResponseStub & {
+  [ResponseStubOperationsSymbol]: ResponseStubOperation[];
 };
 
 export function getSingleFetchDataStrategy(

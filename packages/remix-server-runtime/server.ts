@@ -38,8 +38,8 @@ import {
   singleFetchAction,
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
+  ResponseStubOperationsSymbol,
 } from "./single-fetch";
-import { ResponseStubOperationsSymbol } from "./routeModules";
 
 export type RequestHandler = (
   request: Request,

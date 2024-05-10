@@ -27,25 +27,6 @@ export type DataFunctionArgs = RRActionFunctionArgs<AppLoadContext> &
     context: AppLoadContext;
   };
 
-export const ResponseStubOperationsSymbol = Symbol("ResponseStubOperations");
-export type ResponseStubOperation = [
-  "set" | "append" | "delete",
-  string,
-  string?
-];
-/**
- * A stubbed response to let you set the status/headers of your response from
- * loader/action functions
- */
-export type ResponseStub = {
-  status: number | undefined;
-  headers: Headers;
-};
-
-export type ResponseStubImpl = ResponseStub & {
-  [ResponseStubOperationsSymbol]: ResponseStubOperation[];
-};
-
 /**
  * A function that handles data mutations for a route on the server
  */
