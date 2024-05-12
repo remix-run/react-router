@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route } from "react-router";
+import { PathPattern, matchPath } from '@remix-run/router';
 
 describe("<Routes>", () => {
   let consoleWarn: jest.SpyInstance;
@@ -144,5 +145,31 @@ describe("<Routes>", () => {
     }).toThrow(/children of <Routes> must be a <Route>/);
 
     expect(consoleError).toHaveBeenCalledTimes(1);
+  });
+
+  it("matches a route based on the customMatchPath prop", () => {
+    let renderer: TestRenderer.ReactTestRenderer;
+
+    const customMatchPath = <Path extends string>
+      (pattern: PathPattern<Path> | Path, pathname: string) => {
+        if (pathname.length > 5) return matchPath(pattern, pathname);
+        return null;
+    };
+
+    TestRenderer.act(() => {
+      renderer = TestRenderer.create(
+        <MemoryRouter initialEntries={["/slug"]}>
+          <Routes customMatchPath={customMatchPath}>
+            <Route path="/:slug" element={<h1>Home</h1>} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    expect(renderer.toJSON()).toBeNull();
+    expect(consoleWarn).toHaveBeenCalledTimes(1);
+    expect(consoleWarn).toHaveBeenCalledWith(
+      expect.stringContaining("No routes matched location")
+    );
   });
 });

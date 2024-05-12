@@ -501,7 +501,11 @@ export function matchRoutes<
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
-  basename = "/"
+  basename = "/",
+  customMatchPath?: <ParamKey extends ParamParseKey<Path>, Path extends string>(
+    pattern: PathPattern<Path> | Path,
+    pathname: string
+  ) => PathMatch<ParamKey> | null
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
@@ -524,7 +528,7 @@ export function matchRoutes<
     // should be a safe operation.  This avoids needing matchRoutes to be
     // history-aware.
     let decoded = decodePath(pathname);
-    matches = matchRouteBranch<string, RouteObjectType>(branches[i], decoded);
+    matches = matchRouteBranch<string, RouteObjectType>(branches[i], decoded, customMatchPath);
   }
 
   return matches;
@@ -768,7 +772,11 @@ function matchRouteBranch<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
-  pathname: string
+  pathname: string,
+  customMatchPath?: <ParamKey extends ParamParseKey<Path>, Path extends string>(
+    pattern: PathPattern<Path> | Path,
+    pathname: string
+  ) => PathMatch<ParamKey> | null
 ): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
@@ -782,10 +790,16 @@ function matchRouteBranch<
       matchedPathname === "/"
         ? pathname
         : pathname.slice(matchedPathname.length) || "/";
-    let match = matchPath(
-      { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
-      remainingPathname
-    );
+    let match =
+      typeof customMatchPath === "function"
+        ? customMatchPath(
+            { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
+            remainingPathname
+          )
+        : matchPath(
+            { path: meta.relativePath, caseSensitive: meta.caseSensitive, end },
+            remainingPathname
+          );
 
     if (!match) return null;
 

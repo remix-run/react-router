@@ -1,5 +1,7 @@
 import * as React from "react";
 import type {
+  AgnosticRouteMatch,
+  AgnosticRouteObject,
   Blocker,
   BlockerFunction,
   Location,
@@ -338,9 +340,13 @@ export function useResolvedPath(
  */
 export function useRoutes(
   routes: RouteObject[],
-  locationArg?: Partial<Location> | string
+  locationArg?: Partial<Location> | string,
+  customMatchPath?: <ParamKey extends ParamParseKey<Path>, Path extends string>(
+    pattern: PathPattern<Path> | Path,
+    pathname: string
+  ) => PathMatch<ParamKey> | null
 ): React.ReactElement | null {
-  return useRoutesImpl(routes, locationArg);
+  return useRoutesImpl(routes, locationArg, undefined, undefined, customMatchPath);
 }
 
 // Internal implementation with accept optional param for RouterProvider usage
@@ -348,7 +354,11 @@ export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
   dataRouterState?: RemixRouter["state"],
-  future?: RemixRouter["future"]
+  future?: RemixRouter["future"],
+  customMatchPath?: <ParamKey extends ParamParseKey<Path>, Path extends string>(
+    pattern: PathPattern<Path> | Path,
+    pathname: string
+  ) => PathMatch<ParamKey> | null
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -444,7 +454,7 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
+  let matches = matchRoutes(routes, { pathname: remainingPathname }, undefined, customMatchPath);
 
   if (__DEV__) {
     warning(

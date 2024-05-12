@@ -3,6 +3,9 @@ import type {
   LazyRouteFunction,
   Location,
   MemoryHistory,
+  ParamParseKey,
+  PathMatch,
+  PathPattern,
   RelativeRoutingType,
   Router as RemixRouter,
   RouterState,
@@ -492,6 +495,10 @@ export function Router({
 export interface RoutesProps {
   children?: React.ReactNode;
   location?: Partial<Location> | string;
+  customMatchPath?: <ParamKey extends ParamParseKey<Path>, Path extends string>(
+    pattern: PathPattern<Path> | Path,
+    pathname: string
+  ) => PathMatch<ParamKey> | null
 }
 
 /**
@@ -503,8 +510,9 @@ export interface RoutesProps {
 export function Routes({
   children,
   location,
+  customMatchPath,
 }: RoutesProps): React.ReactElement | null {
-  return useRoutes(createRoutesFromChildren(children), location);
+  return useRoutes(createRoutesFromChildren(children), location, customMatchPath);
 }
 
 export interface AwaitResolveRenderFunction {
