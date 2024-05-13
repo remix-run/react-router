@@ -271,7 +271,7 @@ let router = createBrowserRouter(routes, {
 Let's define a middleware on each route via `handle` and call middleware sequentially first, then call all loaders in parallel - providing any data made available via the middleware:
 
 ```ts
-const routes [
+const routes = [
   {
     id: "parent",
     path: "/parent",
