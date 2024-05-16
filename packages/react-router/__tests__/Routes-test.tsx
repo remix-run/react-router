@@ -1,7 +1,8 @@
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import { MemoryRouter, Routes, Route } from "react-router";
-import { PathPattern, matchPath } from '@remix-run/router';
+import type { PathPattern} from '@remix-run/router';
+import { matchPath } from '@remix-run/router';
 
 describe("<Routes>", () => {
   let consoleWarn: jest.SpyInstance;
