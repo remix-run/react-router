@@ -275,7 +275,9 @@ const routes = [
   {
     id: "parent",
     path: "/parent",
-    loader({ request }, context) { /*...*/ },
+    loader({ request }, context) {
+      /*...*/
+    },
     handle: {
       async middleware({ request }, context) {
         context.parent = "PARENT MIDDLEWARE";
@@ -285,7 +287,9 @@ const routes = [
       {
         id: "child",
         path: "child",
-        loader({ request }, context) { /*...*/ },
+        loader({ request }, context) {
+          /*...*/
+        },
         handle: {
           async middleware({ request }, context) {
             context.child = "CHILD MIDDLEWARE";
@@ -297,12 +301,19 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({ request, params, matches }) {
+  async unstable_dataStrategy({
+    request,
+    params,
+    matches,
+  }) {
     // Run middleware sequentially and let them add data to `context`
     let context = {};
     for (const match of matches) {
       if (match.route.handle?.middleware) {
-        await match.route.handle.middleware({ request, params }, context);
+        await match.route.handle.middleware(
+          { request, params },
+          context
+        );
       }
     }
 
