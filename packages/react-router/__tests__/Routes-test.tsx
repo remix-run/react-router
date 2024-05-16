@@ -151,7 +151,7 @@ describe("<Routes>", () => {
     let renderer: TestRenderer.ReactTestRenderer;
 
     const customMatchPath = <Path extends string>
-      (pattern: PathPattern<Path> | Path, pathname: string) => {
+      (pattern: PathPattern | Path, pathname: string) => {
         if (pathname.length > 5) return matchPath(pattern, pathname);
         return null;
     };
