@@ -258,10 +258,12 @@ let router = createBrowserRouter(routes, {
         console.log(`Processing route ${match.route.id}`);
         // Don't override anything - just resolve route.lazy + call loader
         let result = await match.resolve();
-        console.log(`Done processing route ${match.route.id}`);
+        console.log(
+          `Done processing route ${match.route.id}`
+        );
         return result;
       })
-    )
+    );
   },
 });
 ```
