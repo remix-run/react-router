@@ -32,10 +32,13 @@ import {
   getResponseStubs,
   getSingleFetchDataStrategy,
   getSingleFetchRedirect,
+  getSingleFetchResourceRouteDataStrategy,
+  isResponseStub,
   mergeResponseStubs,
   singleFetchAction,
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
+  ResponseStubOperationsSymbol,
 } from "./single-fetch";
 
 export type RequestHandler = (
@@ -184,6 +187,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     ) {
       response = await handleResourceRequest(
         serverMode,
+        _build,
         staticHandler,
         matches.slice(-1)[0].route.id,
         request,
@@ -294,17 +298,6 @@ async function handleDocumentRequest(
     return context;
   }
 
-  // Sanitize errors outside of development environments
-  if (context.errors) {
-    Object.values(context.errors).forEach((err) => {
-      // @ts-expect-error This is "private" from users but intended for internal use
-      if (!isRouteErrorResponse(err) || err.error) {
-        handleError(err);
-      }
-    });
-    context.errors = sanitizeErrors(context.errors, serverMode);
-  }
-
   let merged = mergeResponseStubs(context, responseStubs);
   let statusCode = merged.statusCode;
   let headers = merged.headers;
@@ -314,6 +307,17 @@ async function handleDocumentRequest(
       status: statusCode,
       headers,
     });
+  }
+
+  // Sanitize errors outside of development environments
+  if (context.errors) {
+    Object.values(context.errors).forEach((err) => {
+      // @ts-expect-error This is "private" from users but intended for internal use
+      if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
+        handleError(err);
+      }
+    });
+    context.errors = sanitizeErrors(context.errors, serverMode);
   }
 
   // Server UI state to send to the client.
@@ -433,6 +437,7 @@ async function handleDocumentRequest(
 
 async function handleResourceRequest(
   serverMode: ServerMode,
+  build: ServerBuild,
   staticHandler: StaticHandler,
   routeId: string,
   request: Request,
@@ -440,13 +445,18 @@ async function handleResourceRequest(
   handleError: (err: unknown) => void
 ) {
   try {
+    let responseStubs = getResponseStubs();
     // Note we keep the routeId here to align with the Remix handling of
     // resource routes which doesn't take ?index into account and just takes
     // the leaf match
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
+      unstable_dataStrategy: getSingleFetchResourceRouteDataStrategy({
+        responseStubs,
+      }),
     });
+
     if (typeof response === "object") {
       invariant(
         !(DEFERRED_SYMBOL in response),
@@ -454,12 +464,20 @@ async function handleResourceRequest(
           `forget to export a default UI component from the "${routeId}" route?`
       );
     }
-    // callRouteLoader/callRouteAction always return responses (w/o single fetch).
-    // With single fetch, users should always be Responses from resource routes
+
     invariant(
       isResponse(response),
-      "Expected a Response to be returned from queryRoute"
+      "Expected a Response to be returned from resource route handler"
     );
+
+    let stub = responseStubs[routeId];
+    // Use the response status and merge any response stub headers onto it
+    let ops = stub[ResponseStubOperationsSymbol];
+    for (let [op, ...args] of ops) {
+      // @ts-expect-error
+      response.headers[op](...args);
+    }
+
     return response;
   } catch (error: unknown) {
     if (isResponse(error)) {

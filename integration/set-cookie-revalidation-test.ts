@@ -16,7 +16,6 @@ let BANNER_MESSAGE = "you do not have permission to view /protected";
 test.describe("set-cookie revalidation", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/session.server.ts": js`
             import { createCookieSessionStorage } from "@react-router/node";

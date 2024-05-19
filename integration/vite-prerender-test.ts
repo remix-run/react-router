@@ -9,7 +9,6 @@ import {
 } from "./helpers/create-fixture.js";
 import type { Fixture, AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { createProject, build } from "./helpers/vite.js";
 
 let files = {
   "vite.config.ts": js`
@@ -20,9 +19,6 @@ let files = {
       build: { manifest: true },
       plugins: [
         reactRouter({
-          future: {
-            unstable_singleFetch: true,
-          },
           prerender: ['/', '/about'],
         })
       ],
@@ -127,7 +123,7 @@ test.describe("Prerendering", () => {
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
-    expect(fs.readdirSync(clientDir)).toEqual([
+    expect(fs.readdirSync(clientDir).sort()).toEqual([
       "_root.data",
       "about",
       "about.data",
@@ -166,9 +162,6 @@ test.describe("Prerendering", () => {
             build: { manifest: true },
             plugins: [
               reactRouter({
-                future: {
-                  unstable_singleFetch: true,
-                },
                 async prerender() {
                   await new Promise(r => setTimeout(r, 1));
                   return ['/', '/about'];
@@ -182,7 +175,7 @@ test.describe("Prerendering", () => {
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
-    expect(fs.readdirSync(clientDir)).toEqual([
+    expect(fs.readdirSync(clientDir).sort()).toEqual([
       "_root.data",
       "about",
       "about.data",

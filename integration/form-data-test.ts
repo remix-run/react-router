@@ -7,7 +7,6 @@ let fixture: Fixture;
 
 test.beforeAll(async () => {
   fixture = await createFixture({
-    singleFetch: true,
     files: {
       "app/routes/_index.tsx": js`
           import { json } from "@react-router/node";

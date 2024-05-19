@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.23.1
+
+### Patch Changes
+
+- allow undefined to be resolved with `<Await>` ([#11513](https://github.com/remix-run/react-router/pull/11513))
+- Updated dependencies:
+  - `@remix-run/router@1.16.1`
+
 ## 6.23.0
 
 ### Minor Changes

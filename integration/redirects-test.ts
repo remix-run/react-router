@@ -14,7 +14,6 @@ test.describe("redirects", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/routes/absolute.tsx": js`
             import * as React from 'react';

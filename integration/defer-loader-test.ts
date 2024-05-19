@@ -14,7 +14,6 @@ let appFixture: AppFixture;
 test.describe("deferred loaders", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/routes/_index.tsx": js`
           import { useLoaderData, Link } from "react-router-dom";

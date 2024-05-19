@@ -578,7 +578,6 @@ test.describe.skip("single fetch", () => {
   // Generate the test app using the given prefetch mode
   function fixtureFactory(mode: PrefetchType): FixtureInit {
     return {
-      singleFetch: true,
       files: {
         "app/root.tsx": js`
           import {
@@ -842,7 +841,6 @@ test.describe.skip("single fetch", () => {
 
     test.beforeAll(async () => {
       fixture = await createFixture({
-        singleFetch: true,
         files: {
           "app/routes/_index.tsx": js`
             import { Link } from "react-router-dom";
@@ -917,7 +915,6 @@ test.describe.skip("single fetch", () => {
       page,
     }) => {
       fixture = await createFixture({
-        singleFetch: true,
         files: {
           "app/root.tsx": js`
               import { Links, Meta, Scripts, useFetcher } from "react-router-dom";
@@ -996,7 +993,6 @@ test.describe.skip("single fetch", () => {
 
     test("dedupes prefetch tags", async ({ page }) => {
       fixture = await createFixture({
-        singleFetch: true,
         files: {
           "app/root.tsx": js`
             import {
