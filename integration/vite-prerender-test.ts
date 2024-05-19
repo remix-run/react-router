@@ -123,7 +123,7 @@ test.describe("Prerendering", () => {
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
-    expect(fs.readdirSync(clientDir)).toEqual([
+    expect(fs.readdirSync(clientDir).sort()).toEqual([
       "_root.data",
       "about",
       "about.data",
@@ -175,7 +175,7 @@ test.describe("Prerendering", () => {
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
-    expect(fs.readdirSync(clientDir)).toEqual([
+    expect(fs.readdirSync(clientDir).sort()).toEqual([
       "_root.data",
       "about",
       "about.data",
