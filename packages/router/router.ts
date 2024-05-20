@@ -1638,7 +1638,24 @@ export function createRouter(init: RouterInit): Router {
         return { shortCircuited: true };
       }
       if (!fogMatches) {
-        throw new Error("TODO: Implement lazy 404");
+        let error = getInternalRouterError(404, {
+          pathname: location.pathname,
+        });
+        let routesToUse = inFlightDataRoutes || dataRoutes;
+        let { matches: notFoundMatches, route } =
+          getShortCircuitMatches(routesToUse);
+        // Cancel all pending deferred on 404s since we don't keep any routes
+        cancelActiveDeferreds();
+        return {
+          matches: notFoundMatches,
+          pendingActionResult: [
+            route.id,
+            {
+              type: ResultType.error,
+              error,
+            },
+          ],
+        };
       }
       matches = fogMatches;
     }
@@ -1789,7 +1806,21 @@ export function createRouter(init: RouterInit): Router {
         return { shortCircuited: true };
       }
       if (!fogMatches) {
-        throw new Error("TODO: Implement lazy 404");
+        let error = getInternalRouterError(404, {
+          pathname: location.pathname,
+        });
+        let routesToUse = inFlightDataRoutes || dataRoutes;
+        let { matches: notFoundMatches, route } =
+          getShortCircuitMatches(routesToUse);
+        // Cancel all pending deferred on 404s since we don't keep any routes
+        cancelActiveDeferreds();
+        return {
+          matches: notFoundMatches,
+          loaderData: {},
+          errors: {
+            [route.id]: error,
+          },
+        };
       }
       matches = fogMatches;
     }

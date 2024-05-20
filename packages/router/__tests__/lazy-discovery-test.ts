@@ -1,5 +1,6 @@
 import type { AgnosticDataRouteObject, Router } from "../index";
 import { createMemoryHistory, createRouter } from "../index";
+import { ErrorResponseImpl } from "../utils";
 import { createDeferred, createFormData, tick } from "./utils/utils";
 
 let router: Router;
@@ -252,5 +253,437 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       "b",
       "c",
     ]);
+  });
+
+  describe("errors", () => {
+    it("lazy 404s (GET navigation)", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+            children: () => childrenDfd.promise,
+          },
+        ],
+      });
+
+      router.navigate("/parent/junk");
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+      });
+
+      childrenDfd.resolve([{ id: "child", path: "child" }]);
+      await tick();
+
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/junk" },
+        loaderData: {},
+        errors: {
+          "0": new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/parent/junk"'),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches).toEqual([
+        {
+          params: {},
+          pathname: "",
+          pathnameBase: "",
+          route: {
+            children: undefined,
+            hasErrorBoundary: false,
+            id: "0",
+            path: "/",
+          },
+        },
+      ]);
+    });
+
+    it("lazy 404s (POST navigation)", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+            children: () => childrenDfd.promise,
+          },
+        ],
+      });
+
+      router.navigate("/parent/junk", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state.navigation).toMatchObject({
+        state: "submitting",
+      });
+
+      childrenDfd.resolve([{ id: "child", path: "child" }]);
+      await tick();
+
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/junk" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          "0": new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error('No route matches URL "/parent/junk"'),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches).toEqual([
+        {
+          params: {},
+          pathname: "",
+          pathnameBase: "",
+          route: {
+            children: undefined,
+            hasErrorBoundary: false,
+            id: "0",
+            path: "/",
+          },
+        },
+      ]);
+    });
+
+    it("errors thrown at lazy boundary route (GET navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        hasErrorBoundary: true,
+                        async loader() {
+                          await tick();
+                          throw new Error("C ERROR");
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b/c");
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b/c" },
+        loaderData: {},
+        errors: {
+          c: new Error("C ERROR"),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "a",
+        "b",
+        "c",
+      ]);
+    });
+
+    it("errors bubbled to lazy parent route (GET navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  hasErrorBoundary: true,
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        async loader() {
+                          await tick();
+                          throw new Error("C ERROR");
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b/c");
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b/c" },
+        loaderData: {},
+        errors: {
+          b: new Error("C ERROR"),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "a",
+        "b",
+        "c",
+      ]);
+    });
+
+    it("errors bubbled when no boundary exists (GET navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        async loader() {
+                          await tick();
+                          throw new Error("C ERROR");
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b/c");
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b/c" },
+        loaderData: {},
+        errors: {
+          a: new Error("C ERROR"),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "a",
+        "b",
+        "c",
+      ]);
+    });
+
+    it("errors thrown at lazy boundary route (POST navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        hasErrorBoundary: true,
+                        async action() {
+                          await tick();
+                          throw new Error("C ERROR");
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b/c", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b/c" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          c: new Error("C ERROR"),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "a",
+        "b",
+        "c",
+      ]);
+    });
+
+    it("errors bubbled to lazy parent route (POST navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  hasErrorBoundary: true,
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        async action() {
+                          await tick();
+                          throw new Error("C ERROR");
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b/c", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b/c" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          b: new Error("C ERROR"),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "a",
+        "b",
+        "c",
+      ]);
+    });
+
+    it("errors bubbled when no boundary exists (POST navigation)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        async action() {
+                          await tick();
+                          throw new Error("C ERROR");
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b/c", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b/c" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          a: new Error("C ERROR"),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "a",
+        "b",
+        "c",
+      ]);
+    });
   });
 });
