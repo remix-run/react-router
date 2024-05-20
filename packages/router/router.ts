@@ -633,6 +633,10 @@ type PendingActionResult = [string, SuccessResult | ErrorResult];
 
 interface HandleActionResult extends ShortCircuitable {
   /**
+   * Route matches which may have been updated from fog of war discovery
+   */
+  matches?: RouterState["matches"];
+  /**
    * Tuple for the returned or thrown value from the current action.  The routeId
    * is the action route for success and the bubbled boundary route for errors.
    */
@@ -1550,6 +1554,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
+        isFogOfWar,
         { replace: opts.replace, flushSync }
       );
 
@@ -1557,6 +1562,7 @@ export function createRouter(init: RouterInit): Router {
         return;
       }
 
+      matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
       loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
@@ -1613,6 +1619,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
+    isFogOfWar: boolean,
     opts: { replace?: boolean; flushSync?: boolean } = {}
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
@@ -1620,6 +1627,21 @@ export function createRouter(init: RouterInit): Router {
     // Put us in a submitting state
     let navigation = getSubmittingNavigation(location, submission);
     updateState({ navigation }, { flushSync: opts.flushSync === true });
+
+    if (isFogOfWar) {
+      let fogMatches = await discover(
+        matches[matches.length - 1].route,
+        location.pathname,
+        request.signal
+      );
+      if (request.signal.aborted) {
+        return { shortCircuited: true };
+      }
+      if (!fogMatches) {
+        throw new Error("TODO: Implement lazy 404");
+      }
+      matches = fogMatches;
+    }
 
     // Call our action and get the result
     let result: DataResult;
@@ -1688,11 +1710,13 @@ export function createRouter(init: RouterInit): Router {
       }
 
       return {
+        matches,
         pendingActionResult: [boundaryMatch.route.id, result],
       };
     }
 
     return {
+      matches,
       pendingActionResult: [actionMatch.route.id, result],
     };
   }
