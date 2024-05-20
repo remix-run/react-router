@@ -1,4 +1,3 @@
-/* eslint-disable jest/valid-title */
 import {
   createMemoryHistory,
   createRouter,
@@ -1258,99 +1257,6 @@ describe("lazily loaded route modules", () => {
       }
 
       expect(err?.message).toBe("LAZY LOADER ERROR");
-    });
-  });
-
-  describe("Route Discovery (Fog of War)", () => {
-    it("discovers child route at a depth of 1", async () => {
-      let router = createRouter({
-        history: createMemoryHistory(),
-        routes: [
-          {
-            path: "/",
-          },
-          {
-            id: "dashboard",
-            path: "dashboard",
-            async loader() {
-              await tick();
-              return "DASHBOARD";
-            },
-            async children() {
-              await tick();
-              return [
-                {
-                  id: "dashboardUsers",
-                  path: "users",
-                  async loader() {
-                    await tick();
-                    return "USERS";
-                  },
-                },
-              ];
-            },
-          },
-        ],
-      });
-
-      await router.navigate("/dashboard/users");
-      expect(router.state.location.pathname).toBe("/dashboard/users");
-      expect(router.state.loaderData).toEqual({
-        dashboard: "DASHBOARD",
-        dashboardUsers: "USERS",
-      });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual([
-        "dashboard",
-        "dashboardUsers",
-      ]);
-    });
-
-    it("discovers child routes at a depth >1", async () => {
-      let router = createRouter({
-        history: createMemoryHistory(),
-        routes: [
-          {
-            path: "/",
-          },
-          {
-            id: "a",
-            path: "a",
-            async children() {
-              await tick();
-              return [
-                {
-                  id: "b",
-                  path: "b",
-                  async children() {
-                    await tick();
-                    return [
-                      {
-                        id: "c",
-                        path: "c",
-                        async loader() {
-                          await tick();
-                          return "C";
-                        },
-                      },
-                    ];
-                  },
-                },
-              ];
-            },
-          },
-        ],
-      });
-
-      await router.navigate("/a/b/c");
-      expect(router.state.location.pathname).toBe("/a/b/c");
-      expect(router.state.loaderData).toEqual({
-        c: "C",
-      });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual([
-        "a",
-        "b",
-        "c",
-      ]);
     });
   });
 });

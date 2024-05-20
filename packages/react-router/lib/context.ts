@@ -46,7 +46,7 @@ export interface NonIndexRouteObject {
   shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
   handle?: AgnosticNonIndexRouteObject["handle"];
   index?: false;
-  children?: RouteObject[];
+  children?: RouteObject[] | (() => Promise<RouteObject[]>);
   element?: React.ReactNode | null;
   hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
@@ -59,7 +59,7 @@ export interface NonIndexRouteObject {
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
 
 export type DataRouteObject = RouteObject & {
-  children?: DataRouteObject[];
+  children?: DataRouteObject[] | (() => Promise<DataRouteObject[]>);
   id: string;
 };
 

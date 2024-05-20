@@ -446,11 +446,11 @@ function isIndexRoute(
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   mapRouteProperties: MapRoutePropertiesFunction,
-  parentPath: number[] = [],
+  parentPath: string[] = [],
   manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
-    let treePath = [...parentPath, index];
+    let treePath = [...parentPath, String(index)];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
       route.index !== true || !route.children,
@@ -821,25 +821,26 @@ function matchRouteBranch<
       remainingPathname
     );
 
+    let route = meta.route;
+
+    // If this route has a `children()` function then allow partial matching
+    // up to this point if requested
+    if (!match && end && allowPartial && typeof route.children === "function") {
+      match = matchPath(
+        {
+          path: meta.relativePath,
+          caseSensitive: meta.caseSensitive,
+          end: false,
+        },
+        remainingPathname
+      );
+    }
+
     if (!match) {
-      if (end && allowPartial) {
-        match = matchPath(
-          {
-            path: meta.relativePath,
-            caseSensitive: meta.caseSensitive,
-            end: false,
-          },
-          remainingPathname
-        );
-      }
-      if (!match) {
-        return null;
-      }
+      return null;
     }
 
     Object.assign(matchedParams, match.params);
-
-    let route = meta.route;
 
     matches.push({
       // TODO: Can this as be avoided?
