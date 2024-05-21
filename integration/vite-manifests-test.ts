@@ -8,6 +8,22 @@ import { createProject, build, viteConfig } from "./helpers/vite.js";
 
 const js = String.raw;
 
+function createRoute(path: string) {
+  return {
+    [`app/routes/${path}`]: js`
+      export default function Route() {
+        return <p>Path: ${path}</p>;
+      }
+    `,
+  };
+}
+
+const TEST_ROUTES = [
+  "_index.tsx",
+  "parent-route.tsx",
+  "parent-route.child-route.tsx",
+];
+
 const files = {
   "app/root.tsx": js`
     import { Links, Meta, Outlet, Scripts } from "react-router-dom";
@@ -27,11 +43,7 @@ const files = {
       );
     }
   `,
-  "app/routes/_index.tsx": js`
-    export default function Route() {
-      return <p>Hello world</p>;
-    }
-  `,
+  ...Object.assign({}, ...TEST_ROUTES.map(createRoute)),
 };
 
 test.describe(() => {
@@ -39,14 +51,23 @@ test.describe(() => {
 
   test.beforeAll(async () => {
     cwd = await createProject({
-      "vite.config.ts": dedent`
+      "vite.config.ts": dedent(js`
         import { vitePlugin as reactRouter } from "@react-router/dev";
 
         export default {
           build: { manifest: true },
-          plugins: [reactRouter()],
+          plugins: [reactRouter({
+            buildEnd: async ({ buildManifest }) => {
+              let fs = await import("node:fs");
+              await fs.promises.writeFile(
+                "build/test-manifest.json",
+                JSON.stringify(buildManifest, null, 2),
+                "utf-8",
+              );
+            },
+          })],
         }
-      `,
+      `),
       ...files,
     });
 
@@ -63,6 +84,37 @@ test.describe(() => {
       path.join(cwd, "build", "server", ".vite")
     );
     expect(viteManifestFilesServer).toEqual(["manifest.json"]);
+  });
+
+  test("Vite / manifests enabled / React Router build manifest", async () => {
+    let manifestPath = path.join(cwd, "build", "test-manifest.json");
+    expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
+      routes: {
+        root: {
+          file: "root.tsx",
+          id: "root",
+          path: "",
+        },
+        "routes/_index": {
+          file: "routes/_index.tsx",
+          id: "routes/_index",
+          index: true,
+          parentId: "root",
+        },
+        "routes/parent-route": {
+          file: "routes/parent-route.tsx",
+          id: "routes/parent-route",
+          parentId: "root",
+          path: "parent-route",
+        },
+        "routes/parent-route.child-route": {
+          file: "routes/parent-route.child-route.tsx",
+          id: "routes/parent-route.child-route",
+          parentId: "routes/parent-route",
+          path: "child-route",
+        },
+      },
+    });
   });
 });
 
