@@ -1487,13 +1487,9 @@ export function createRouter(init: RouterInit): Router {
     }
 
     if (!matches) {
-      let error = getInternalRouterError(404, {
-        pathname: location.pathname,
-      });
-      let { matches: notFoundMatches, route } =
-        getShortCircuitMatches(routesToUse);
-      // Cancel all pending deferred on 404s since we don't keep any routes
-      cancelActiveDeferreds();
+      let { notFoundMatches, route, error } = handleNavigational404(
+        location.pathname
+      );
       completeNavigation(
         location,
         {
@@ -1560,6 +1556,28 @@ export function createRouter(init: RouterInit): Router {
 
       if (actionResult.shortCircuited) {
         return;
+      }
+
+      // If we received a 404 from handleAction, it's because we couldn't lazily
+      // discover the destination route so we don't want to call loaders
+      if (actionResult.pendingActionResult) {
+        let [routeId, result] = actionResult.pendingActionResult;
+        if (
+          isErrorResult(result) &&
+          isRouteErrorResponse(result.error) &&
+          result.error.status === 404
+        ) {
+          pendingNavigationController = null;
+
+          completeNavigation(location, {
+            matches: actionResult.matches,
+            loaderData: {},
+            errors: {
+              [routeId]: result.error,
+            },
+          });
+          return;
+        }
       }
 
       matches = actionResult.matches || matches;
@@ -1629,23 +1647,18 @@ export function createRouter(init: RouterInit): Router {
     updateState({ navigation }, { flushSync: opts.flushSync === true });
 
     if (isFogOfWar) {
-      let fogMatches = await discover(
-        matches[matches.length - 1].route,
+      let discoverResult = await discoverRoutes(
+        matches,
         location.pathname,
         request.signal
       );
-      if (request.signal.aborted) {
+      if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
-      }
-      if (!fogMatches) {
-        let error = getInternalRouterError(404, {
-          pathname: location.pathname,
-        });
-        let routesToUse = inFlightDataRoutes || dataRoutes;
-        let { matches: notFoundMatches, route } =
-          getShortCircuitMatches(routesToUse);
-        // Cancel all pending deferred on 404s since we don't keep any routes
-        cancelActiveDeferreds();
+      } else if (discoverResult.type === "error" || !discoverResult.matches) {
+        let { error, notFoundMatches, route } = handleNavigational404(
+          location.pathname,
+          discoverResult
+        );
         return {
           matches: notFoundMatches,
           pendingActionResult: [
@@ -1656,8 +1669,9 @@ export function createRouter(init: RouterInit): Router {
             },
           ],
         };
+      } else {
+        matches = discoverResult.matches;
       }
-      matches = fogMatches;
     }
 
     // Call our action and get the result
@@ -1718,10 +1732,11 @@ export function createRouter(init: RouterInit): Router {
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
 
-      // By default, all submissions are REPLACE navigations, but if the
-      // action threw an error that'll be rendered in an errorElement, we fall
-      // back to PUSH so that the user can use the back button to get back to
-      // the pre-submission form location to try again
+      // By default, all submissions to the current location are REPLACE
+      // navigations, but if the action threw an error that'll be rendered in
+      // an errorElement, we fall back to PUSH so that the user can use the
+      // back button to get back to the pre-submission form location to try
+      // again
       if ((opts && opts.replace) !== true) {
         pendingAction = HistoryAction.Push;
       }
@@ -1764,28 +1779,21 @@ export function createRouter(init: RouterInit): Router {
       fetcherSubmission ||
       getSubmissionFromNavigation(loadingNavigation);
 
-    if (isFogOfWar) {
-      // TODO: Dedup with below
-      if (
-        !isUninterruptedRevalidation &&
-        (!future.v7_partialHydration || !initialHydration)
-      ) {
-        let actionData: Record<string, RouteData> | null | undefined;
-        if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
-          // This is cast to `any` currently because `RouteData`uses any and it
-          // would be a breaking change to use any.
-          // TODO: v7 - change `RouteData` to use `unknown` instead of `any`
-          actionData = {
-            [pendingActionResult[0]]: pendingActionResult[1].data as any,
-          };
-        } else if (state.actionData) {
-          if (Object.keys(state.actionData).length === 0) {
-            actionData = null;
-          } else {
-            actionData = state.actionData;
-          }
-        }
+    // If this is an uninterrupted revalidation, we remain in our current idle
+    // state.  If not, we need to switch to our loading state and load data,
+    // preserving any new action data or existing action data (in the case of
+    // a revalidation interrupting an actionReload)
+    // If we have partialHydration enabled, then don't update the state for the
+    // initial data load since it's not a "navigation"
+    let shouldUpdateNavigationState =
+      !isUninterruptedRevalidation &&
+      (!future.v7_partialHydration || !initialHydration);
 
+    // When fog of war is enabled, we enter our `loading` state earlier so we
+    // can discover new routes during the `loading` state
+    if (isFogOfWar) {
+      if (shouldUpdateNavigationState) {
+        let actionData = getUpdatedActionData(pendingActionResult);
         updateState(
           {
             navigation: loadingNavigation,
@@ -1797,23 +1805,19 @@ export function createRouter(init: RouterInit): Router {
         );
       }
 
-      let fogMatches = await discover(
-        matches[matches.length - 1].route,
+      let discoverResult = await discoverRoutes(
+        matches,
         location.pathname,
         request.signal
       );
-      if (request.signal.aborted) {
+
+      if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
-      }
-      if (!fogMatches) {
-        let error = getInternalRouterError(404, {
-          pathname: location.pathname,
-        });
-        let routesToUse = inFlightDataRoutes || dataRoutes;
-        let { matches: notFoundMatches, route } =
-          getShortCircuitMatches(routesToUse);
-        // Cancel all pending deferred on 404s since we don't keep any routes
-        cancelActiveDeferreds();
+      } else if (discoverResult.type === "error" || !discoverResult.matches) {
+        let { error, notFoundMatches, route } = handleNavigational404(
+          location.pathname,
+          discoverResult
+        );
         return {
           matches: notFoundMatches,
           loaderData: {},
@@ -1821,8 +1825,9 @@ export function createRouter(init: RouterInit): Router {
             [route.id]: error,
           },
         };
+      } else {
+        matches = discoverResult.matches;
       }
-      matches = fogMatches;
     }
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -1877,53 +1882,20 @@ export function createRouter(init: RouterInit): Router {
       return { shortCircuited: true };
     }
 
-    // If this is an uninterrupted revalidation, we remain in our current idle
-    // state.  If not, we need to switch to our loading state and load data,
-    // preserving any new action data or existing action data (in the case of
-    // a revalidation interrupting an actionReload)
-    // If we have partialHydration enabled, then don't update the state for the
-    // initial data load since it's not a "navigation"
-    if (
-      !isUninterruptedRevalidation &&
-      (!future.v7_partialHydration || !initialHydration)
-    ) {
-      revalidatingFetchers.forEach((rf) => {
-        let fetcher = state.fetchers.get(rf.key);
-        let revalidatingFetcher = getLoadingFetcher(
-          undefined,
-          fetcher ? fetcher.data : undefined
-        );
-        state.fetchers.set(rf.key, revalidatingFetcher);
-      });
-
-      let actionData: Record<string, RouteData> | null | undefined;
-      if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
-        // This is cast to `any` currently because `RouteData`uses any and it
-        // would be a breaking change to use any.
-        // TODO: v7 - change `RouteData` to use `unknown` instead of `any`
-        actionData = {
-          [pendingActionResult[0]]: pendingActionResult[1].data as any,
-        };
-      } else if (state.actionData) {
-        if (Object.keys(state.actionData).length === 0) {
-          actionData = null;
-        } else {
-          actionData = state.actionData;
+    if (shouldUpdateNavigationState) {
+      let updates: Partial<RouterState> = {};
+      if (!isFogOfWar) {
+        // Only update navigation/actionNData if we didn't already do it above
+        updates.navigation = loadingNavigation;
+        let actionData = getUpdatedActionData(pendingActionResult);
+        if (actionData !== undefined) {
+          updates.actionData = actionData;
         }
       }
-
-      updateState(
-        {
-          navigation: loadingNavigation,
-          ...(actionData !== undefined ? { actionData } : {}),
-          ...(revalidatingFetchers.length > 0
-            ? { fetchers: new Map(state.fetchers) }
-            : {}),
-        },
-        {
-          flushSync,
-        }
-      );
+      if (revalidatingFetchers.length > 0) {
+        updates.fetchers = getUpdatedRevalidatingFetchers(revalidatingFetchers);
+      }
+      updateState(updates, { flushSync });
     }
 
     revalidatingFetchers.forEach((rf) => {
@@ -2033,6 +2005,39 @@ export function createRouter(init: RouterInit): Router {
       errors,
       ...(shouldUpdateFetchers ? { fetchers: new Map(state.fetchers) } : {}),
     };
+  }
+
+  function getUpdatedActionData(
+    pendingActionResult: PendingActionResult | undefined
+  ): Record<string, RouteData> | null | undefined {
+    if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
+      // This is cast to `any` currently because `RouteData`uses any and it
+      // would be a breaking change to use any.
+      // TODO: v7 - change `RouteData` to use `unknown` instead of `any`
+      return {
+        [pendingActionResult[0]]: pendingActionResult[1].data as any,
+      };
+    } else if (state.actionData) {
+      if (Object.keys(state.actionData).length === 0) {
+        return null;
+      } else {
+        return state.actionData;
+      }
+    }
+  }
+
+  function getUpdatedRevalidatingFetchers(
+    revalidatingFetchers: RevalidatingFetcher[]
+  ) {
+    revalidatingFetchers.forEach((rf) => {
+      let fetcher = state.fetchers.get(rf.key);
+      let revalidatingFetcher = getLoadingFetcher(
+        undefined,
+        fetcher ? fetcher.data : undefined
+      );
+      state.fetchers.set(rf.key, revalidatingFetcher);
+    });
+    return new Map(state.fetchers);
   }
 
   // Trigger a fetcher load/submit for the given fetcher key
@@ -2915,6 +2920,31 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
+  function handleNavigational404(
+    pathname: string,
+    discoverResult?: DiscoverRoutesResult
+  ) {
+    let error =
+      discoverResult && discoverResult.type === "error"
+        ? getInternalRouterError(404, {
+            type: "route-discovery",
+            routeId: discoverResult.routeId,
+            pathname,
+            message:
+              discoverResult.error != null && "message" in discoverResult.error
+                ? discoverResult.error
+                : String(discoverResult.error),
+          })
+        : getInternalRouterError(404, { pathname });
+    let routesToUse = inFlightDataRoutes || dataRoutes;
+    let { matches, route } = getShortCircuitMatches(routesToUse);
+
+    // Cancel all pending deferred on 404s since we don't keep any routes
+    cancelActiveDeferreds();
+
+    return { notFoundMatches: matches, route, error };
+  }
+
   function cancelActiveDeferreds(
     predicate?: (routeId: string) => boolean
   ): string[] {
@@ -2996,34 +3026,45 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
-  async function discover(
-    route: AgnosticDataRouteObject,
+  type DiscoverRoutesResult =
+    | { type: "success"; matches: AgnosticDataRouteMatch[] | null }
+    | { type: "error"; error: any; routeId: string }
+    | { type: "aborted" };
+
+  async function discoverRoutes(
+    matches: AgnosticDataRouteMatch[],
     pathname: string,
     signal?: AbortSignal
-  ) {
+  ): Promise<DiscoverRoutesResult> {
+    let partialMatches: AgnosticDataRouteMatch[] | null = matches;
+    let route = partialMatches[partialMatches.length - 1].route;
     while (true) {
-      await loadLazyRouteChildren(route, pendingRouteChildren);
-      if (signal?.aborted) {
-        return;
+      try {
+        await loadLazyRouteChildren(route, pendingRouteChildren);
+        if (signal?.aborted) {
+          return { type: "aborted" };
+        }
+      } catch (e) {
+        return { type: "error", error: e, routeId: route.id };
       }
       let routesToUse = inFlightDataRoutes || dataRoutes;
       let newMatches = matchRoutes(routesToUse, pathname, basename);
       if (newMatches) {
         // We found our target route so we can stop lazily discovering and
         // proceed with loaders
-        return newMatches;
+        return { type: "success", matches: newMatches };
       }
-      let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+      partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
         routesToUse,
         pathname,
         true,
         basename
       );
-      if (!fogMatches) {
+      if (!partialMatches) {
         // We are no longer partially matching so this is a legit 404
-        return null;
+        return { type: "success", matches: null };
       }
-      route = fogMatches[fogMatches.length - 1].route;
+      route = partialMatches[partialMatches.length - 1].route;
     }
   }
 
@@ -4993,11 +5034,13 @@ function getInternalRouterError(
     routeId,
     method,
     type,
+    message,
   }: {
     pathname?: string;
     routeId?: string;
     method?: string;
-    type?: "defer-action" | "invalid-body";
+    type?: "defer-action" | "invalid-body" | "route-discovery";
+    message?: string;
   } = {}
 ) {
   let statusText = "Unknown Server Error";
@@ -5019,8 +5062,13 @@ function getInternalRouterError(
     statusText = "Forbidden";
     errorMessage = `Route "${routeId}" does not match URL "${pathname}"`;
   } else if (status === 404) {
-    statusText = "Not Found";
-    errorMessage = `No route matches URL "${pathname}"`;
+    if (type === "route-discovery") {
+      statusText = "Not Found";
+      errorMessage = `Unable to match URL "${pathname}" - the \`children()\` function for route \`${routeId}\` threw the following error:\n${message}`;
+    } else {
+      statusText = "Not Found";
+      errorMessage = `No route matches URL "${pathname}"`;
+    }
   } else if (status === 405) {
     statusText = "Method Not Allowed";
     if (method && pathname && routeId) {

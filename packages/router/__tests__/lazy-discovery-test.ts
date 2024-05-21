@@ -255,6 +255,85 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("handles interruptions and reuses promises", async () => {
+    let aDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let bDfd = createDeferred<AgnosticDataRouteObject[]>();
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          children: () => aDfd.promise,
+        },
+      ],
+    });
+
+    router.navigate("/a/b/c");
+    await tick();
+    expect(router.state).toMatchObject({
+      navigation: { state: "loading", location: { pathname: "/a/b/c" } },
+    });
+
+    let count = 0;
+    aDfd.resolve([
+      {
+        id: "b",
+        path: "b",
+        children: () => {
+          count++;
+          return bDfd.promise;
+        },
+      },
+    ]);
+    await tick();
+    expect(router.state).toMatchObject({
+      navigation: { state: "loading", location: { pathname: "/a/b/c" } },
+    });
+    expect(count).toBe(1);
+
+    router.navigate("/a/b/d");
+    await tick();
+    expect(router.state).toMatchObject({
+      navigation: { state: "loading", location: { pathname: "/a/b/d" } },
+    });
+    expect(count).toBe(1);
+
+    bDfd.resolve([
+      {
+        id: "c",
+        path: "c",
+        loader() {
+          return "C";
+        },
+      },
+      {
+        id: "d",
+        path: "d",
+        loader() {
+          return "D";
+        },
+      },
+    ]);
+    await tick();
+
+    expect(router.state.location.pathname).toBe("/a/b/d");
+    expect(router.state.loaderData).toEqual({
+      d: "D",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "d",
+    ]);
+
+    // Reuses the same children() promise
+    expect(count).toBe(1);
+  });
+
   describe("errors", () => {
     it("lazy 404s (GET navigation)", async () => {
       let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
@@ -684,6 +763,156 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         "b",
         "c",
       ]);
+    });
+
+    it("handles errors thrown from children() (GET navigation)", async () => {
+      let shouldThrow = true;
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              if (shouldThrow) {
+                shouldThrow = false;
+                throw new Error("broke!");
+              }
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  loader() {
+                    return "B";
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b");
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          index: new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error(
+              'Unable to match URL "/a/b" - the `children()` function for route `a` threw the following error:\nError: broke!'
+            ),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["index"]);
+
+      await router.navigate("/");
+      expect(router.state).toMatchObject({
+        location: { pathname: "/" },
+        actionData: null,
+        loaderData: {},
+        errors: null,
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["index"]);
+
+      await router.navigate("/a/b");
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b" },
+        actionData: null,
+        loaderData: {
+          b: "B",
+        },
+        errors: null,
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
+    });
+
+    jest.setTimeout(120000);
+
+    it("handles errors thrown from children() (POST navigation)", async () => {
+      let shouldThrow = true;
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              if (shouldThrow) {
+                shouldThrow = false;
+                throw new Error("broke!");
+              }
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  action() {
+                    return "B";
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      await router.navigate("/a/b", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          index: new ErrorResponseImpl(
+            404,
+            "Not Found",
+            new Error(
+              'Unable to match URL "/a/b" - the `children()` function for route `a` threw the following error:\nError: broke!'
+            ),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["index"]);
+
+      await router.navigate("/");
+      expect(router.state).toMatchObject({
+        location: { pathname: "/" },
+        actionData: null,
+        loaderData: {},
+        errors: null,
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["index"]);
+
+      await router.navigate("/a/b", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      expect(router.state).toMatchObject({
+        location: { pathname: "/a/b" },
+        actionData: {
+          b: "B",
+        },
+        loaderData: {},
+        errors: null,
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
     });
   });
 });
