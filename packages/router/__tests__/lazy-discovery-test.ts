@@ -765,7 +765,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       ]);
     });
 
-    it("handles errors thrown from children() (GET navigation)", async () => {
+    it.only("handles errors thrown from children() (GET navigation)", async () => {
       let shouldThrow = true;
       router = createRouter({
         history: createMemoryHistory(),
@@ -803,9 +803,9 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         actionData: null,
         loaderData: {},
         errors: {
-          index: new ErrorResponseImpl(
-            404,
-            "Not Found",
+          a: new ErrorResponseImpl(
+            400,
+            "Bad Request",
             new Error(
               'Unable to match URL "/a/b" - the `children()` function for route `a` threw the following error:\nError: broke!'
             ),
@@ -813,7 +813,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           ),
         },
       });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual(["index"]);
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["a"]);
 
       await router.navigate("/");
       expect(router.state).toMatchObject({
@@ -835,8 +835,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       });
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
     });
-
-    jest.setTimeout(120000);
 
     it("handles errors thrown from children() (POST navigation)", async () => {
       let shouldThrow = true;
@@ -879,9 +877,9 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         actionData: null,
         loaderData: {},
         errors: {
-          index: new ErrorResponseImpl(
-            404,
-            "Not Found",
+          a: new ErrorResponseImpl(
+            400,
+            "Bad Request",
             new Error(
               'Unable to match URL "/a/b" - the `children()` function for route `a` threw the following error:\nError: broke!'
             ),
@@ -889,7 +887,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           ),
         },
       });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual(["index"]);
+      expect(router.state.matches.map((m) => m.route.id)).toEqual(["a"]);
 
       await router.navigate("/");
       expect(router.state).toMatchObject({

@@ -1471,7 +1471,6 @@ export function createRouter(init: RouterInit): Router {
     let isFogOfWar = false;
     let flushSync = (opts && opts.flushSync) === true;
 
-    // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
       let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
         routesToUse,
@@ -1486,8 +1485,9 @@ export function createRouter(init: RouterInit): Router {
       }
     }
 
+    // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
-      let { notFoundMatches, route, error } = handleNavigational404(
+      let { error, notFoundMatches, route } = handleNavigational404(
         location.pathname
       );
       completeNavigation(
@@ -1654,10 +1654,24 @@ export function createRouter(init: RouterInit): Router {
       );
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
-      } else if (discoverResult.type === "error" || !discoverResult.matches) {
-        let { error, notFoundMatches, route } = handleNavigational404(
+      } else if (discoverResult.type === "error") {
+        let { error, notFoundMatches, route } = handleDiscoverRouteError(
           location.pathname,
           discoverResult
+        );
+        return {
+          matches: notFoundMatches,
+          pendingActionResult: [
+            route.id,
+            {
+              type: ResultType.error,
+              error,
+            },
+          ],
+        };
+      } else if (!discoverResult.matches) {
+        let { notFoundMatches, error, route } = handleNavigational404(
+          location.pathname
         );
         return {
           matches: notFoundMatches,
@@ -1813,10 +1827,21 @@ export function createRouter(init: RouterInit): Router {
 
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
-      } else if (discoverResult.type === "error" || !discoverResult.matches) {
-        let { error, notFoundMatches, route } = handleNavigational404(
+      } else if (discoverResult.type === "error") {
+        let { error, notFoundMatches, route } = handleDiscoverRouteError(
           location.pathname,
           discoverResult
+        );
+        return {
+          matches: notFoundMatches,
+          loaderData: {},
+          errors: {
+            [route.id]: error,
+          },
+        };
+      } else if (!discoverResult.matches) {
+        let { error, notFoundMatches, route } = handleNavigational404(
+          location.pathname
         );
         return {
           matches: notFoundMatches,
@@ -2920,28 +2945,32 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
-  function handleNavigational404(
-    pathname: string,
-    discoverResult?: DiscoverRoutesResult
-  ) {
-    let error =
-      discoverResult && discoverResult.type === "error"
-        ? getInternalRouterError(404, {
-            type: "route-discovery",
-            routeId: discoverResult.routeId,
-            pathname,
-            message:
-              discoverResult.error != null && "message" in discoverResult.error
-                ? discoverResult.error
-                : String(discoverResult.error),
-          })
-        : getInternalRouterError(404, { pathname });
+  function handleNavigational404(pathname: string) {
+    let error = getInternalRouterError(404, { pathname });
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let { matches, route } = getShortCircuitMatches(routesToUse);
 
     // Cancel all pending deferred on 404s since we don't keep any routes
     cancelActiveDeferreds();
 
+    return { notFoundMatches: matches, route, error };
+  }
+
+  function handleDiscoverRouteError(
+    pathname: string,
+    discoverResult: DiscoverRoutesErrorResult
+  ) {
+    let matches = discoverResult.partialMatches;
+    let route = matches[matches.length - 1].route;
+    let error = getInternalRouterError(400, {
+      type: "route-discovery",
+      routeId: route.id,
+      pathname,
+      message:
+        discoverResult.error != null && "message" in discoverResult.error
+          ? discoverResult.error
+          : String(discoverResult.error),
+    });
     return { notFoundMatches: matches, route, error };
   }
 
@@ -3026,10 +3055,20 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
+  type DiscoverRoutesSuccessResult = {
+    type: "success";
+    matches: AgnosticDataRouteMatch[] | null;
+  };
+  type DiscoverRoutesErrorResult = {
+    type: "error";
+    error: any;
+    partialMatches: AgnosticDataRouteMatch[];
+  };
+  type DiscoverRoutesAbortedResult = { type: "aborted" };
   type DiscoverRoutesResult =
-    | { type: "success"; matches: AgnosticDataRouteMatch[] | null }
-    | { type: "error"; error: any; routeId: string }
-    | { type: "aborted" };
+    | DiscoverRoutesSuccessResult
+    | DiscoverRoutesErrorResult
+    | DiscoverRoutesAbortedResult;
 
   async function discoverRoutes(
     matches: AgnosticDataRouteMatch[],
@@ -3045,7 +3084,7 @@ export function createRouter(init: RouterInit): Router {
           return { type: "aborted" };
         }
       } catch (e) {
-        return { type: "error", error: e, routeId: route.id };
+        return { type: "error", error: e, partialMatches };
       }
       let routesToUse = inFlightDataRoutes || dataRoutes;
       let newMatches = matchRoutes(routesToUse, pathname, basename);
@@ -5048,7 +5087,11 @@ function getInternalRouterError(
 
   if (status === 400) {
     statusText = "Bad Request";
-    if (method && pathname && routeId) {
+    if (type === "route-discovery") {
+      errorMessage =
+        `Unable to match URL "${pathname}" - the \`children()\` function for ` +
+        `route \`${routeId}\` threw the following error:\n${message}`;
+    } else if (method && pathname && routeId) {
       errorMessage =
         `You made a ${method} request to "${pathname}" but ` +
         `did not provide a \`loader\` for route "${routeId}", ` +
@@ -5062,13 +5105,8 @@ function getInternalRouterError(
     statusText = "Forbidden";
     errorMessage = `Route "${routeId}" does not match URL "${pathname}"`;
   } else if (status === 404) {
-    if (type === "route-discovery") {
-      statusText = "Not Found";
-      errorMessage = `Unable to match URL "${pathname}" - the \`children()\` function for route \`${routeId}\` threw the following error:\n${message}`;
-    } else {
-      statusText = "Not Found";
-      errorMessage = `No route matches URL "${pathname}"`;
-    }
+    statusText = "Not Found";
+    errorMessage = `No route matches URL "${pathname}"`;
   } else if (status === 405) {
     statusText = "Method Not Allowed";
     if (method && pathname && routeId) {
