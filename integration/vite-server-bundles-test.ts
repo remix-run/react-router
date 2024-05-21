@@ -12,6 +12,8 @@ import {
   viteConfig,
 } from "./helpers/vite.js";
 
+const js = String.raw;
+
 const withBundleServer = async (
   cwd: string,
   serverBundle: string,
@@ -27,7 +29,7 @@ const ROUTE_FILE_COMMENT = "// THIS IS A ROUTE FILE";
 
 function createRoute(path: string) {
   return {
-    [`app/routes/${path}`]: `
+    [`app/routes/${path}`]: js`
       ${ROUTE_FILE_COMMENT}
       import { Outlet } from "react-router-dom";
       import { useState, useEffect } from "react";
@@ -73,7 +75,7 @@ const TEST_ROUTES = [
 ];
 
 const files = {
-  "app/root.tsx": `
+  "app/root.tsx": js`
     ${ROUTE_FILE_COMMENT}
     import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
@@ -118,14 +120,20 @@ test.describe(() => {
   test.beforeAll(async () => {
     port = await getPort();
     cwd = await createProject({
-      "vite.config.ts": dedent`
+      "vite.config.ts": dedent(js`
         import { vitePlugin as reactRouter } from "@react-router/dev";
 
         export default {
           ${await viteConfig.server({ port })}
           build: { manifest: true },
           plugins: [reactRouter({
-            manifest: true,
+            buildEnd: async ({ buildManifest }) => {
+              let fs = await import("node:fs");
+              await fs.promises.writeFile(
+                "build/test-manifest.json",
+                JSON.stringify(buildManifest, null, 2)
+              );
+            },
             serverBundles: async ({ branch }) => {
               // Smoke test to ensure we can read the route files via 'route.file'
               await Promise.all(branch.map(async (route) => {
@@ -158,7 +166,7 @@ test.describe(() => {
             }
           })]
         }
-      `,
+      `),
       ...files,
     });
   });
@@ -306,24 +314,22 @@ test.describe(() => {
     });
 
     test("Vite / server bundles / build / Vite manifests", () => {
-      let viteManifestFiles = fs.readdirSync(path.join(cwd, "build", ".vite"));
-
-      expect(viteManifestFiles).toEqual([
-        "client-manifest.json",
-        "server-bundle-a-manifest.json",
-        "server-bundle-b-manifest.json",
-        "server-bundle-c-manifest.json",
-        "server-root-manifest.json",
-      ]);
+      [
+        ["client"],
+        ["server", "bundle-a"],
+        ["server", "bundle-b"],
+        ["server", "bundle-c"],
+        ["server", "root"],
+      ].forEach((buildPaths) => {
+        let viteManifestFiles = fs.readdirSync(
+          path.join(cwd, "build", ...buildPaths, ".vite")
+        );
+        expect(viteManifestFiles).toEqual(["manifest.json"]);
+      });
     });
 
     test("Vite / server bundles / build / React Router build manifest", () => {
-      let manifestPath = path.join(
-        cwd,
-        "build",
-        ".react-router",
-        "manifest.json"
-      );
+      let manifestPath = path.join(cwd, "build", "test-manifest.json");
       expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
         serverBundles: {
           "bundle-c": {
