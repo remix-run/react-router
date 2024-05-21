@@ -193,24 +193,14 @@ function getViteManifestPaths(
   let buildRelative = (pathname: string) =>
     path.resolve(ctx.reactRouterConfig.buildDirectory, pathname);
 
-  let viteManifestPaths: Array<{ srcPath: string; destPath: string }> = [
-    {
-      srcPath: "client/.vite/manifest.json",
-      destPath: ".vite/client-manifest.json",
-    },
+  let viteManifestPaths: Array<string> = [
+    "client/.vite/manifest.json",
     ...serverBuilds.map(({ serverBundleBuildConfig }) => {
       let serverBundleId = serverBundleBuildConfig?.serverBundleId;
       let serverBundlePath = serverBundleId ? serverBundleId + "/" : "";
-      let serverBundleSuffix = serverBundleId ? serverBundleId + "-" : "";
-      return {
-        srcPath: `server/${serverBundlePath}.vite/manifest.json`,
-        destPath: `.vite/server-${serverBundleSuffix}manifest.json`,
-      };
+      return `server/${serverBundlePath}.vite/manifest.json`;
     }),
-  ].map(({ srcPath, destPath }) => ({
-    srcPath: buildRelative(srcPath),
-    destPath: buildRelative(destPath),
-  }));
+  ].map((srcPath) => buildRelative(srcPath));
 
   return viteManifestPaths;
 }
@@ -298,41 +288,23 @@ export async function build(
 
   let viteManifestPaths = getViteManifestPaths(ctx, serverBuilds);
   await Promise.all(
-    viteManifestPaths.map(async ({ srcPath, destPath }) => {
-      let manifestExists = await fse.pathExists(srcPath);
+    viteManifestPaths.map(async (viteManifestPath) => {
+      let manifestExists = await fse.pathExists(viteManifestPath);
       if (!manifestExists) return;
 
-      // Move/delete original Vite manifest file
-      if (ctx.viteManifestEnabled) {
-        await fse.ensureDir(path.dirname(destPath));
-        await fse.move(srcPath, destPath);
-      } else {
-        await fse.remove(srcPath);
+      // Delete original Vite manifest file if consumer doesn't want it
+      if (!ctx.viteManifestEnabled) {
+        await fse.remove(viteManifestPath);
       }
 
       // Remove .vite dir if it's now empty
-      let viteDir = path.dirname(srcPath);
+      let viteDir = path.dirname(viteManifestPath);
       let viteDirFiles = await fse.readdir(viteDir);
       if (viteDirFiles.length === 0) {
         await fse.remove(viteDir);
       }
     })
   );
-
-  if (ctx.reactRouterConfig.manifest) {
-    await fse.ensureDir(
-      path.join(ctx.reactRouterConfig.buildDirectory, ".react-router")
-    );
-    await fse.writeFile(
-      path.join(
-        ctx.reactRouterConfig.buildDirectory,
-        ".react-router",
-        "manifest.json"
-      ),
-      JSON.stringify(buildManifest, null, 2),
-      "utf-8"
-    );
-  }
 
   await reactRouterConfig.buildEnd?.({
     buildManifest,

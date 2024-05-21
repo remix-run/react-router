@@ -6,24 +6,10 @@ import dedent from "dedent";
 
 import { createProject, build, viteConfig } from "./helpers/vite.js";
 
-function createRoute(path: string) {
-  return {
-    [`app/routes/${path}`]: `
-      export default function Route() {
-        return <p>Path: ${path}</p>;
-      }
-    `,
-  };
-}
-
-const TEST_ROUTES = [
-  "_index.tsx",
-  "parent-route.tsx",
-  "parent-route.child-route.tsx",
-];
+const js = String.raw;
 
 const files = {
-  "app/root.tsx": `
+  "app/root.tsx": js`
     import { Links, Meta, Outlet, Scripts } from "react-router-dom";
 
     export default function Root() {
@@ -41,7 +27,11 @@ const files = {
       );
     }
   `,
-  ...Object.assign({}, ...TEST_ROUTES.map(createRoute)),
+  "app/routes/_index.tsx": js`
+    export default function Route() {
+      return <p>Hello world</p>;
+    }
+  `,
 };
 
 test.describe(() => {
@@ -54,7 +44,7 @@ test.describe(() => {
 
         export default {
           build: { manifest: true },
-          plugins: [reactRouter({ manifest: true })],
+          plugins: [reactRouter()],
         }
       `,
       ...files,
@@ -64,48 +54,15 @@ test.describe(() => {
   });
 
   test("Vite / manifests enabled / Vite manifests", () => {
-    let viteManifestFiles = fs.readdirSync(path.join(cwd, "build", ".vite"));
-
-    expect(viteManifestFiles).toEqual([
-      "client-manifest.json",
-      "server-manifest.json",
-    ]);
-  });
-
-  test("Vite / manifests enabled / React Router build manifest", async () => {
-    let manifestPath = path.join(
-      cwd,
-      "build",
-      ".react-router",
-      "manifest.json"
+    let viteManifestFilesClient = fs.readdirSync(
+      path.join(cwd, "build", "client", ".vite")
     );
-    expect(JSON.parse(fs.readFileSync(manifestPath, "utf8"))).toEqual({
-      routes: {
-        root: {
-          file: "root.tsx",
-          id: "root",
-          path: "",
-        },
-        "routes/_index": {
-          file: "routes/_index.tsx",
-          id: "routes/_index",
-          index: true,
-          parentId: "root",
-        },
-        "routes/parent-route": {
-          file: "routes/parent-route.tsx",
-          id: "routes/parent-route",
-          parentId: "root",
-          path: "parent-route",
-        },
-        "routes/parent-route.child-route": {
-          file: "routes/parent-route.child-route.tsx",
-          id: "routes/parent-route.child-route",
-          parentId: "routes/parent-route",
-          path: "child-route",
-        },
-      },
-    });
+    expect(viteManifestFilesClient).toEqual(["manifest.json"]);
+
+    let viteManifestFilesServer = fs.readdirSync(
+      path.join(cwd, "build", "server", ".vite")
+    );
+    expect(viteManifestFilesServer).toEqual(["manifest.json"]);
   });
 });
 
@@ -122,12 +79,10 @@ test.describe(() => {
   });
 
   test("Vite / manifest disabled / Vite manifests", () => {
-    let manifestDir = path.join(cwd, "build", ".vite");
-    expect(fs.existsSync(manifestDir)).toBe(false);
-  });
+    let manifestDirClient = path.join(cwd, "build", "client", ".vite");
+    expect(fs.existsSync(manifestDirClient)).toBe(false);
 
-  test("Vite / manifest disabled / React Router build manifest doesn't exist", async () => {
-    let manifestDir = path.join(cwd, "build", ".react-router");
-    expect(fs.existsSync(manifestDir)).toBe(false);
+    let manifestDirServer = path.join(cwd, "build", "server", ".vite");
+    expect(fs.existsSync(manifestDirServer)).toBe(false);
   });
 });
