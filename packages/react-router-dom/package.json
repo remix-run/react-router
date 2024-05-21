@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.23.1",
+  "version": "0.0.0-nightly-d4127aa37-20240521",
   "description": "Declarative routing for React web applications",
   "keywords": [
     "react",
