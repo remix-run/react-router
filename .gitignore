@@ -26,6 +26,7 @@ node_modules/
 .tmp
 /.env
 /NOTES.md
+/*.code-workspace
 
 # v7 reference docs
 /public
