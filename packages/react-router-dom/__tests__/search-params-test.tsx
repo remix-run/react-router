@@ -126,6 +126,54 @@ describe("useSearchParams", () => {
     expect(node.innerHTML).toMatch(/The new query is "Ryan Florence"/);
   });
 
+  it("keeps setSearchParams reference equal", () => {
+    function SearchPage() {
+      let [searchParams, setSearchParams] = useSearchParams({ "q": "0" });
+      let query = searchParams.get("q")!;
+
+      const initialSetSearchParamsRef = React.useRef(setSearchParams);
+
+      function handleClick() {
+        setSearchParams((cur) => {
+          cur.set("q", `${Number(cur.get("q")) + 1}`);
+          return cur;
+        });
+      }
+
+      const hasRefChanged = setSearchParams !== initialSetSearchParamsRef.current;
+
+      return (
+        <div>
+          <p>The current query is "{query}".</p>
+          <p>setSearchParams ref has {hasRefChanged ? "changed" : "not changed"}.</p>
+          <button type="button" onClick={handleClick}>Click me</button>
+        </div>
+      );
+    }
+
+    act(() => {
+      ReactDOM.createRoot(node).render(
+        <MemoryRouter initialEntries={["/search?q=0"]}>
+          <Routes>
+            <Route path="search" element={<SearchPage />} />
+          </Routes>
+        </MemoryRouter>
+      );
+    });
+
+    const button = node.querySelector("button")!;
+
+    expect(node.innerHTML).toMatch(/The current query is "0"/);
+    expect(node.innerHTML).toMatch(/setSearchParams ref has not changed/);
+
+    act(() => {
+       button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(node.innerHTML).toMatch(/The current query is "1"/);
+    expect(node.innerHTML).toMatch(/setSearchParams ref has not changed/);
+  });
+
   it("allows removal of search params when a default is provided", () => {
     function SearchPage() {
       let [searchParams, setSearchParams] = useSearchParams({
