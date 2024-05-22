@@ -213,7 +213,6 @@ test("Vite / presets", async () => {
     "buildDirectory",
     "buildEnd",
     "future",
-    "manifest",
     "prerender",
     "routes",
     "serverBuildFile",

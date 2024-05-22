@@ -138,11 +138,6 @@ export type VitePluginConfig = {
    */
   buildEnd?: BuildEndHook;
   /**
-   * Whether to write a `"manifest.json"` file to the build directory.`
-   * Defaults to `false`.
-   */
-  manifest?: boolean;
-  /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
    */
@@ -194,11 +189,6 @@ export type ResolvedVitePluginConfig = Readonly<{
    * Enabled future flags
    */
   future: FutureConfig;
-  /**
-   * Whether to write a `"manifest.json"` file to the build directory.`
-   * Defaults to `false`.
-   */
-  manifest: boolean;
   /**
    * An array of URLs to prerender to HTML files at build time.
    */
@@ -363,7 +353,6 @@ export async function resolveReactRouterConfig({
   let defaults = {
     basename: "/",
     buildDirectory: "build",
-    manifest: false,
     serverBuildFile: "index.js",
     serverModuleFormat: "esm",
     ssr: true,
@@ -376,7 +365,6 @@ export async function resolveReactRouterConfig({
     buildEnd,
     future: userFuture,
     ignoredRouteFiles,
-    manifest,
     routes: userRoutesFunction,
     prerender: prerenderConfig,
     serverBuildFile,
@@ -464,7 +452,6 @@ export async function resolveReactRouterConfig({
     buildDirectory,
     buildEnd,
     future,
-    manifest,
     prerender,
     routes,
     serverBuildFile,
