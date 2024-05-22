@@ -215,7 +215,6 @@ test("Vite / presets", async () => {
     "future",
     "manifest",
     "prerender",
-    "publicPath",
     "routes",
     "serverBuildFile",
     "serverBundles",
