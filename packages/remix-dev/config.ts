@@ -194,10 +194,6 @@ export type ResolvedVitePluginConfig = Readonly<{
    */
   prerender: Array<string> | null;
   /**
-   * Derived from Vite's `base` config
-   * */
-  publicPath: string;
-  /**
    * An object of all available routes, keyed by route id.
    */
   routes: RouteManifest;
@@ -314,6 +310,10 @@ let deepFreeze = (o: any) => {
   return o;
 };
 
+export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
+  return viteUserConfig.base ?? "/";
+}
+
 export async function resolveReactRouterConfig({
   rootDirectory,
   reactRouterUserConfig,
@@ -404,7 +404,7 @@ export async function resolveReactRouterConfig({
 
   let appDirectory = path.resolve(rootDirectory, userAppDirectory || "app");
   let buildDirectory = path.resolve(rootDirectory, userBuildDirectory);
-  let publicPath = viteUserConfig.base ?? "/";
+  let publicPath = resolvePublicPath(viteUserConfig);
 
   if (
     basename !== "/" &&
@@ -453,7 +453,6 @@ export async function resolveReactRouterConfig({
     buildEnd,
     future,
     prerender,
-    publicPath,
     routes,
     serverBuildFile,
     serverBundles,
