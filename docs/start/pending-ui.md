@@ -59,7 +59,7 @@ function Navbar() {
 
 ## Pending Form Submission
 
-When a form is submitted, the UI should immediately respond to the user's actions with a pending state. This is easiest to do with a [fetcher][use_fetcher] form because it's pending state is independent.
+When a form is submitted, the UI should immediately respond to the user's actions with a pending state. This is easiest to do with a [fetcher][use_fetcher] form because it has it's own independent state (whereas normal forms cause a global navigation).
 
 ```tsx filename=app/project.tsx
 import { useFetcher } from "react-router";
@@ -105,7 +105,7 @@ function NewProjectForm() {
 
 When the future state of the UI is known by the form submission data, an optimistic UI can be implemented for instant UI.
 
-```tsx filename=app/project.tsx lines=[6]
+```tsx filename=app/project.tsx lines=[4-7]
 function Task({ task }) {
   const fetcher = useFetcher();
 

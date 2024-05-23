@@ -1,5 +1,6 @@
 ---
 title: Prerendering
+new: true
 ---
 
 # Prerendering

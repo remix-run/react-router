@@ -7,7 +7,7 @@ order: 2
 
 ## Route Config File
 
-Routes are configured in `app/routes.ts`. The bundler plugin will automatically pick up this file and use it to generate your routes.
+Routes are configured in `app/routes.ts`. The Vite plugin uses this file to create bundles for each route.
 
 ```ts filename=app/routes.ts
 import { route } from "react-router/config";
@@ -31,7 +31,7 @@ export default [
 
 ## File System Routes
 
-Some people like to use file names to define their routes and enforce a project structure. There are two officially supported conventions.
+If you prefer a file system routing convention there are two conventions from React Router, but you can also make your own.
 
 ```tsx filename=app/routes.ts
 import { nested, flat } from "@react-router/fs-routes";
@@ -100,21 +100,18 @@ export default createRoute({
 
 ## Layout Routes
 
-```ts
-route.layout(componentFile, childrenFunction);
-```
-
 Using `route.layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. They can be added at any level.
 
-```tsx filename=app/routes.ts
-export const routes = createRoutes((route) => [
-  route.layout("./marketing/layout.tsx", () => [
+```tsx filename=app/routes.ts lines=[3,9]
+import { route } from "react-router/config";
+export const routes = [
+  route.layout("./marketing/layout.tsx", [
     route.index("./marketing/home.tsx"),
     route("contact", "./marketing/contact.tsx"),
   ]),
-  route("projects", () => [
+  route("projects", [
     route.index("./projects/home.tsx"),
-    route.layout("./projects/project-layout.tsx", () => [
+    route.layout("./projects/project-layout.tsx", [
       route(":pid", "./projects/project.tsx"),
       route(":pid/edit", "./projects/edit-project.tsx"),
     ]),
@@ -165,15 +162,11 @@ export default createRoute({
     // params.teamId will be available
   },
 
-  async clientLoader({ params }) {
-    // params.teamId will be available
-  },
-
   async action({ params }) {
     // params.teamId will be available
   },
 
-  component: function Team({ params }) {
+  Component({ params }) {
     console.log(params.teamId); // "hotspur"
   },
 });
@@ -231,21 +224,22 @@ const { "*": splat } = params;
 
 ## Case Sensitive Routes
 
-You can make your routes case sensitive with an optional third argument to `createRoutes`
+You can make your routes case sensitive by exporting a `config` object from `app/routes.ts`:
 
 ```ts filename=app/routes.ts
-import { createRoutes } from "react-router/config";
+import { route } from "react-router/config";
 
-export const routes = createRoutes(
-  (route) => [
-    // routes here
-  ],
-  { caseSensitive: true }
-);
+export const config = {
+  caseSensitive: true,
+};
+
+export default [
+  route("wEll-aCtuAlly", "./well-actually.tsx"),
+];
 ```
 
-- Will match `"wEll-aCtuA11y"`
-- Will not match `"well-actua11y"`
+- Will match `"wEll-aCtuAlly"`
+- Will not match `"well-actually"`
 
 ## Component Routes
 

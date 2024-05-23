@@ -25,13 +25,13 @@ export default defineRoute$({
     return { name: team.name };
   },
 
-  component: function Team({ data }) {
+  Component({ data }) {
     return <h1>{data.name}</h1>;
   },
 });
 ```
 
-These route modules define the majority of the React Router's behavior:
+These route modules define the majority of React Router's behavior:
 
 - automatic code-splitting
 - data loading
