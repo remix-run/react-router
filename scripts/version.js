@@ -70,11 +70,11 @@ async function run() {
     let routerVersion = currentRouterVersion;
 
     // 2. Confirm the next version number
-    let answer = await prompt(
-      `Are you sure you want to bump version ${currentVersion} to ${version}? [Yn] `
-    );
+    // let answer = await prompt(
+    //   `Are you sure you want to bump version ${currentVersion} to ${version}? [Yn] `
+    // );
 
-    if (answer === false) return 0;
+    // if (answer === false) return 0;
 
     // We only handle @remix-run/router for experimental since in normal/pre
     // releases it's versioned independently from the rest of the packages
