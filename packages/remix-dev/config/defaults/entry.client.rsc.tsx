@@ -71,6 +71,28 @@ if (import.meta.env.PROD) {
   };
 }
 
+window.__diy_client_manifest__.callServer = async (id, args) => {
+  const href = window.location.href;
+  const headers = new Headers({
+    Accept: "text/x-component",
+    "rsc-action": id,
+  });
+  const responsePromise = fetch(href, {
+    method: "POST",
+    headers,
+    body: await ReactServerDOM.encodeReply(args),
+  });
+
+  const result = await ReactServerDOM.createFromFetch(
+    responsePromise,
+    window.__diy_client_manifest__
+  );
+
+  window.__remixRouter.revalidate();
+
+  return result;
+};
+
 window.createFromReadableStream = function createFromReadableStream(
   body: ReadableStream<Uint8Array>
 ) {
@@ -88,3 +110,10 @@ startTransition(() => {
     </StrictMode>
   );
 });
+
+if (import.meta.hot) {
+  console.log("ACCEPTING HMR");
+  import.meta.hot.on("react-router:hmr", () => {
+    window.__remixRouter.revalidate();
+  });
+}

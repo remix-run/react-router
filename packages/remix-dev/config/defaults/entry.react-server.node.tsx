@@ -13,3 +13,7 @@ export function renderToReadableStream(data: unknown) {
   pipe(passthrough);
   return createReadableStreamFromReadable(passthrough);
 }
+
+export const decodeAction = ReactServerDOM.decodeAction;
+export const decodeFormState = ReactServerDOM.decodeFormState;
+export const decodeReply = ReactServerDOM.decodeReply;
