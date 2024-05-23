@@ -1602,6 +1602,8 @@ export function createRouter(init: RouterInit): Router {
       pendingActionResult = actionResult.pendingActionResult;
       loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
+      // No need to do fog of war matching again on loader execution
+      isFogOfWar = false;
 
       // Create a GET request for the loaders
       request = createClientSideRequest(
@@ -1822,7 +1824,10 @@ export function createRouter(init: RouterInit): Router {
       (!future.v7_partialHydration || !initialHydration);
 
     // When fog of war is enabled, we enter our `loading` state earlier so we
-    // can discover new routes during the `loading` state
+    // can discover new routes during the `loading` state.  We skip this if
+    // we've already run actions since we would have done our matching already.
+    // If the children() function threw then, we want to proceed with the
+    // partial matches it discovered.
     if (isFogOfWar) {
       if (shouldUpdateNavigationState) {
         let actionData = getUpdatedActionData(pendingActionResult);

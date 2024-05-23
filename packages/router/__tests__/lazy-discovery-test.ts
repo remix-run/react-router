@@ -334,6 +334,244 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(count).toBe(1);
   });
 
+  it("discovers child index routes", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          async children() {
+            await tick();
+            return [
+              {
+                id: "index",
+                index: true,
+                async loader() {
+                  await tick();
+                  return "INDEX";
+                },
+              },
+            ];
+          },
+        },
+      ],
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location.pathname).toBe("/a");
+    expect(router.state.loaderData).toEqual({
+      index: "INDEX",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "index"]);
+  });
+
+  it("discovers child routes through pathless routes", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          async children() {
+            await tick();
+            return [
+              {
+                id: "pathless",
+                path: "",
+                async children() {
+                  await tick();
+                  return [
+                    {
+                      id: "b",
+                      path: "b",
+                      async loader() {
+                        await tick();
+                        return "B";
+                      },
+                    },
+                  ];
+                },
+              },
+            ];
+          },
+        },
+      ],
+    });
+
+    await router.navigate("/a/b");
+    expect(router.state.location.pathname).toBe("/a/b");
+    expect(router.state.loaderData).toEqual({
+      b: "B",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "pathless",
+      "b",
+    ]);
+  });
+
+  it("discovers child index routes through pathless routes", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          async children() {
+            await tick();
+            return [
+              {
+                id: "pathless",
+                path: "",
+                async children() {
+                  await tick();
+                  return [
+                    {
+                      id: "b",
+                      path: "b",
+                      async children() {
+                        await tick();
+                        return [
+                          {
+                            id: "index",
+                            index: true,
+                            async loader() {
+                              await tick();
+                              return "INDEX";
+                            },
+                          },
+                        ];
+                      },
+                    },
+                  ];
+                },
+              },
+            ];
+          },
+        },
+      ],
+    });
+
+    await router.navigate("/a/b");
+    expect(router.state.location.pathname).toBe("/a/b");
+    expect(router.state.loaderData).toEqual({
+      index: "INDEX",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "pathless",
+      "b",
+      "index",
+    ]);
+  });
+
+  it("de-prioritizes splat routes in favor of looking for better async matches", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "splat",
+          path: "*",
+        },
+        {
+          id: "a",
+          path: "a",
+          async children() {
+            await tick();
+            return [
+              {
+                id: "b",
+                path: "b",
+                async children() {
+                  await tick();
+                  return [
+                    {
+                      id: "index",
+                      index: true,
+                      async loader() {
+                        await tick();
+                        return "INDEX";
+                      },
+                    },
+                  ];
+                },
+              },
+            ];
+          },
+        },
+      ],
+    });
+
+    await router.navigate("/a/b");
+    expect(router.state.location.pathname).toBe("/a/b");
+    expect(router.state.loaderData).toEqual({
+      index: "INDEX",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "index",
+    ]);
+  });
+
+  it("matches splats when other paths don't pan out", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "splat",
+          path: "*",
+        },
+        {
+          id: "a",
+          path: "a",
+          async children() {
+            await tick();
+            return [
+              {
+                id: "b",
+                path: "b",
+                async children() {
+                  await tick();
+                  return [
+                    {
+                      id: "index",
+                      index: true,
+                      async loader() {
+                        await tick();
+                        return "INDEX";
+                      },
+                    },
+                  ];
+                },
+              },
+            ];
+          },
+        },
+      ],
+    });
+
+    await router.navigate("/a/nope");
+    expect(router.state.location.pathname).toBe("/a/nope");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
+  });
+
   describe("errors", () => {
     it("lazy 404s (GET navigation)", async () => {
       let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
@@ -765,7 +1003,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       ]);
     });
 
-    it.only("handles errors thrown from children() (GET navigation)", async () => {
+    it("handles errors thrown from children() (GET navigation)", async () => {
       let shouldThrow = true;
       router = createRouter({
         history: createMemoryHistory(),
