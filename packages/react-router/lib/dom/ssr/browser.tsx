@@ -68,6 +68,7 @@ if (
   import.meta &&
   // @ts-expect-error
   import.meta.hot &&
+  typeof window !== "undefined" &&
   window.__remixManifest
 ) {
   let resolve: (router: RemixRouter) => void;
