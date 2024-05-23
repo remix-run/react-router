@@ -538,7 +538,7 @@ export function matchRoutesImpl<
     return null;
   }
 
-  let branches = flattenRoutes(routes);
+  let branches = flattenRoutes(routes, allowPartial);
   rankRouteBranches(branches);
 
   let matches = null;
@@ -603,6 +603,7 @@ function flattenRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   routes: RouteObjectType[],
+  allowPartial: boolean,
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
@@ -649,12 +650,14 @@ function flattenRoutes<
         typeof route.children !== "function",
         "Route children must be resolved prior to calling flattenRoutes"
       );
-      flattenRoutes(route.children, branches, routesMeta, path);
+      flattenRoutes(route.children, allowPartial, branches, routesMeta, path);
     }
 
     // Routes without a path shouldn't ever match by themselves unless they are
     // index routes, so don't add them to the list of possible branches.
-    if (route.path == null && !route.index) {
+    // When partial matching we do want these to match so we can detect their
+    // async children() functions
+    if (route.path == null && !route.index && !allowPartial) {
       return;
     }
 

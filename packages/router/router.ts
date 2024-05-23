@@ -1483,6 +1483,24 @@ export function createRouter(init: RouterInit): Router {
         isFogOfWar = true;
         matches = fogMatches;
       }
+    } else {
+      let leafRoute = matches[matches.length - 1].route;
+      if (
+        leafRoute.path &&
+        leafRoute.path.length > 0 &&
+        typeof leafRoute.children === "function"
+      ) {
+        // This route _might_ have an index child so we need to
+        // fetch around and find out
+        isFogOfWar = true;
+      }
+
+      if (leafRoute.path === "*") {
+        // If we matched a splat, it might only be because we haven't loaded
+        // the children that would match with a higher score, so let's go the
+        // fog of war route to be sure
+        isFogOfWar = true;
+      }
     }
 
     // Short circuit with a 404 on the root error boundary if we match nothing
@@ -3086,24 +3104,48 @@ export function createRouter(init: RouterInit): Router {
       } catch (e) {
         return { type: "error", error: e, partialMatches };
       }
+
       let routesToUse = inFlightDataRoutes || dataRoutes;
       let newMatches = matchRoutes(routesToUse, pathname, basename);
       if (newMatches) {
-        // We found our target route so we can stop lazily discovering and
-        // proceed with loaders
-        return { type: "success", matches: newMatches };
+        let leafRoute = newMatches[newMatches.length - 1].route;
+        if (leafRoute.index) {
+          // If we found an index route, we can stop
+          return { type: "success", matches: newMatches };
+        }
+        if (
+          leafRoute.path &&
+          leafRoute.path.length > 0 &&
+          leafRoute.path !== "*" && // Can't assume splats match higher?
+          typeof leafRoute.children !== "function"
+        ) {
+          // If we found a path'd non-splat route without async children, we
+          // can stop.
+          // If it's a splat route, we can't be sure there's not a higher-scoring
+          // route down some partial Matches trail so we need to check that out
+          // If it has an async children() function we need to go down that road
+          // in case it has index or pathless children that may match
+          return { type: "success", matches: newMatches };
+        }
       }
+
       partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
         routesToUse,
         pathname,
         true,
         basename
       );
+
       if (!partialMatches) {
         // We are no longer partially matching so this is a legit 404
         return { type: "success", matches: null };
       }
+
       route = partialMatches[partialMatches.length - 1].route;
+      if (route.path === "*") {
+        // The splat is still our most accurate partial, so run with it
+        return { type: "success", matches: partialMatches };
+      }
     }
   }
 
