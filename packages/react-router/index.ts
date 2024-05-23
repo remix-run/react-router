@@ -14,6 +14,7 @@ import type {
   LoaderFunctionArgs,
   Location,
   Navigation,
+  NavigationStates,
   ParamParseKey,
   Params,
   Path,
@@ -149,6 +150,7 @@ export type {
   NavigateOptions,
   NavigateProps,
   Navigation,
+  NavigationStates,
   Navigator,
   NonIndexRouteObject,
   OutletProps,
@@ -239,8 +241,11 @@ export type {
   AgnosticRouteObject,
   HydrationState,
   InitialEntry,
+  LowerCaseFormMethod,
   StaticHandler,
   TrackedPromise,
+  FetcherStates,
+  UpperCaseFormMethod,
   UNSAFE_DeferredData,
 } from "./lib/router";
 export {
@@ -256,6 +261,7 @@ export type {
   FormMethod,
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
+  Submission,
   V7_FormMethod,
 } from "./lib/router";
 
@@ -303,6 +309,7 @@ export type {
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
+  SubmitTarget,
 } from "./lib/dom/dom";
 export { createSearchParams } from "./lib/dom/dom";
 export type {
@@ -322,6 +329,7 @@ export {
   Scripts,
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
+export type { ScriptsProps } from "./lib/dom/ssr/components";
 export type {
   HtmlLinkDescriptor,
   LinkDescriptor,

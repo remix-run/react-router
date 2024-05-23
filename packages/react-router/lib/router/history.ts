@@ -550,6 +550,8 @@ export function createLocation(
 
 /**
  * Creates a string URL path from the given pathname, search, and hash components.
+ *
+ * @category Utils
  */
 export function createPath({
   pathname = "/",
@@ -565,6 +567,8 @@ export function createPath({
 
 /**
  * Parses a string URL path into its separate pathname, search, and hash components.
+ *
+ * @category Utils
  */
 export function parsePath(path: string): Partial<Path> {
   let parsedPath: Partial<Path> = {};

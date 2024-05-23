@@ -5,18 +5,18 @@ order: 2
 
 # Routing
 
+## Route Config File
+
 Routes are configured in `app/routes.ts`. The bundler plugin will automatically pick up this file and use it to generate your routes.
 
-Route modules are automatically code-split. See the [Code Splitting][code_splitting] discussion for details.
-
 ```ts filename=app/routes.ts
-import { createRoutes } from "react-router-dom/routes";
+import { route } from "react-router/config";
 
-export const routes = createRoutes((route) => [
+export default [
   route.index("./home.tsx"),
   route("about", "./about.tsx"),
 
-  route.layout("./auth/layout.tsx", () => [
+  route.layout("./auth/layout.tsx", [
     route("login", "./auth/login.tsx"),
     route("register", "./auth/register.tsx"),
   ]),
@@ -26,15 +26,26 @@ export const routes = createRoutes((route) => [
     route(":city", "./concerts/city.tsx"),
     route("trending", "./concerts/trending.tsx"),
   ]),
-]);
+];
 ```
 
-The `route` function and methods have the following signatures:
+## File System Routes
 
-```ts
-route(pattern, componentFile, childrenFunction);
-route.index(componentFile);
-route.layout(componentFile, childrenFunction);
+Some people like to use file names to define their routes and enforce a project structure. There are two officially supported conventions.
+
+```tsx filename=app/routes.ts
+import { nested, flat } from "@react-router/fs-routes";
+
+export const routes = [
+  // simulates Next.js route file names
+  ...nested("./routes"),
+
+  // simulates Remix v2 route file names
+  ...flat("./routes"),
+
+  // can still do regular configuration
+  route("/can/still/add/more", "./more.tsx"),
+];
 ```
 
 ## Linking
@@ -49,7 +60,12 @@ function Header() {
     <nav>
       <Link to="/">Home</Link>
       <Link to="/about">About</Link>
-      <Link to="/concerts">Concerts</Link>
+      <Link
+        to="/concerts/:id"
+        params={{ id: "salt-lake-city" }}
+      >
+        Concerts
+      </Link>
     </nav>
   );
 }
@@ -67,17 +83,19 @@ route("dashboard", "./dashboard.tsx", () => [
 ```
 
 ```tsx filename=app/dashboard.tsx
-import { Outlet } from "react-router";
+import { createRoute, Outlet } from "react-router";
 
-export default function Dashboard() {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      {/* will either be home.tsx or settings.tsx */}
-      <Outlet />
-    </div>
-  );
-}
+export default createRoute({
+  component: function Dashboard() {
+    return (
+      <div>
+        <h1>Dashboard</h1>
+        {/* will either be home.tsx or settings.tsx */}
+        <Outlet />
+      </div>
+    );
+  },
+});
 ```
 
 ## Layout Routes
@@ -113,7 +131,8 @@ route.index(componentFile);
 Index routes render into their parent's [Outlet][outlet] at their parent's URL (like a default child route).
 
 ```ts filename=app/routes.ts
-export const routes = createRoutes((route) => [
+import { route } from "react-router/config";
+export default [
   // renders into the root.tsx Outlet at /
   route.index("./home.tsx"),
   route("dashboard", "./dashboard.tsx", () => [
@@ -121,7 +140,7 @@ export const routes = createRoutes((route) => [
     route.index("./dashboard-home.tsx"),
     route("settings", "./dashboard-settings.tsx"),
   ]),
-]);
+];
 ```
 
 Note that index routes can't have children.
@@ -135,22 +154,29 @@ route("teams/:teamId", "./team.tsx");
 ```
 
 ```tsx filename=app/team.tsx
-export async function loader({ params }) {
-  // params.teamId will be available
-}
+import { createRoute } from "react-router";
 
-export async function clientLoader({ params }) {
-  // params.teamId will be available
-}
+export default createRoute({
+  // ensures this route is configured correctly in routes.ts
+  // and provides type hints for the rest of this route
+  params: ["teamId"],
 
-export async function action({ params }) {
-  // params.teamId will be available
-}
+  async loader({ params }) {
+    // params.teamId will be available
+  },
 
-function Team() {
-  let params = useParams();
-  console.log(params.teamId); // "hotspur"
-}
+  async clientLoader({ params }) {
+    // params.teamId will be available
+  },
+
+  async action({ params }) {
+    // params.teamId will be available
+  },
+
+  component: function Team({ params }) {
+    console.log(params.teamId); // "hotspur"
+  },
+});
 ```
 
 You can have multiple dynamic segments in one route path:
@@ -160,26 +186,13 @@ route("c/:categoryId/p/:productId", "./product.tsx");
 ```
 
 ```tsx filename=app/product.tsx
-export async function loader({ params }) {
-  // params.categoryId and params.productId will be available
-}
-```
+export default createRoute({
+  params: ["categoryId", "productId"],
 
-Dynamic segments cannot be "partial":
-
-- 🚫 `"/teams-:teamId"`
-- ✅ `"/teams/:teamId"`
-- 🚫 `"/:category--:productId"`
-- ✅ `"/:productSlug"`
-
-You can still support URL patterns like that, you just have to do a bit of your own parsing:
-
-```tsx
-export async function loader() {
-  const { productSlug } = useParams();
-  const [category, product] = productSlug.split("--");
-  // ...
-}
+  async loader({ params }) {
+    // params.categoryId and params.productId will be available
+  },
+});
 ```
 
 ## Optional Segments
@@ -221,7 +234,7 @@ const { "*": splat } = params;
 You can make your routes case sensitive with an optional third argument to `createRoutes`
 
 ```ts filename=app/routes.ts
-import { createRoutes } from "react-router-dom/routes";
+import { createRoutes } from "react-router/config";
 
 export const routes = createRoutes(
   (route) => [
@@ -234,27 +247,9 @@ export const routes = createRoutes(
 - Will match `"wEll-aCtuA11y"`
 - Will not match `"well-actua11y"`
 
-## File System Routes
-
-Since we've never met or created a file system routing convention we loved, we recommend sticking with `routes.ts`. This avoids inscrutable file names and allows you to organize your code however you like.
-
-However, if you prefer file system routes, you can use the `fsRoutes` function to automatically create routes from the file system, and use it as inspiration to create your own convention if you'd like.
-
-```tsx filename=app/routes.ts
-import { createRoutes } from "react-router-dom/routes";
-import { fsRoutes } from "@react-router/fs-routes";
-
-export const routes = createRoutes((route) => [
-  ...fsRoutes(route, "./routes"),
-  // can still add other routes manually  here
-]);
-```
-
-To learn the esoteric details of file system routes, see [Route File Naming][route_file_naming] doc.
-
 ## Component Routes
 
-You can also use components that match the URL to render a route tree.
+You can also use components that match the URL to elements anywhere in the component tree:
 
 ```tsx
 import { Routes, Route } from "react-router";
@@ -273,11 +268,8 @@ function Wizard() {
 }
 ```
 
-Note that these routes do not participate in data loading, actions, code splitting, or any other route module features.
-
-See [Component Routes][component_routes] for more information.
+Note that these routes do not participate in data loading, actions, code splitting, or any other route module features, so their use cases are more limited than those of the route module.
 
 [route_file_naming]: ../file-conventions/routes
 [outlet]: ../components/outlet
-[component_routes]: ../guides/component-routes
 [code_splitting]: ../discussion/code-splitting
