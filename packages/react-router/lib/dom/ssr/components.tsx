@@ -550,7 +550,17 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
  */
 let isHydrated = false;
 
-export type ScriptProps = Omit<
+/**
+  A couple common attributes:
+
+  - `<Scripts crossOrigin>` for hosting your static assets on a different server than your app.
+  - `<Scripts nonce>` to support a [content security policy for scripts](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/script-src) with [nonce-sources](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/Sources#sources) for your `<script>` tags.
+
+  You cannot pass through attributes such as `async`, `defer`, `src`, `type`, `noModule` because they are managed by React Router internally.
+
+  @category Types
+ */
+export type ScriptsProps = Omit<
   React.HTMLProps<HTMLScriptElement>,
   | "children"
   | "async"
@@ -563,16 +573,28 @@ export type ScriptProps = Omit<
 >;
 
 /**
- * Renders the `<script>` tags needed for the initial render. Bundles for
- * additional routes are loaded later as needed.
- *
- * @param props Additional properties to add to each script tag that is rendered.
- * In addition to scripts, \<link rel="modulepreload"> tags receive the crossOrigin
- * property if provided.
- *
- * @see https://remix.run/components/scripts
+  Renders the client runtime of your app. It should be rendered inside the `<body>` of the document.
+
+  ```tsx
+  import { Scripts } from "react-router";
+
+  export default function Root() {
+    return (
+      <html>
+        <head />
+        <body>
+          <Scripts />
+        </body>
+      </html>
+    );
+  }
+  ```
+
+  If server rendering, you can omit `<Scripts/>` and the app will work as a traditional web app without JavaScript, relying solely on HTML and browser behaviors.
+
+  @category Components
  */
-export function Scripts(props: ScriptProps) {
+export function Scripts(props: ScriptsProps) {
   let { manifest, serverHandoffString, isSpaMode, renderMeta, future } =
     useRemixContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();

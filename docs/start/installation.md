@@ -7,20 +7,21 @@ order: 1
 
 ## Starter Templates
 
-Most projects start with a template. The `react-router` CLI can create a very basic app:
+Most projects start with a template. Let's use a basic template maintained by React Router with `degit`:
 
 ```shellscript nonumber
-npx react-router create my-new-app
+npx degit @remix-run/templates/basic my-app
 ```
 
 Now change into the new directory and start the app
 
 ```shellscript nonumber
-cd my-new-app
+cd my-app
+npm i
 npm run dev
 ```
 
-You can now open your browser to `http://localhost:3000`
+You can now open your browser to `http://localhost:5173`
 
 TODO: Show how to find and use community templates
 
@@ -32,8 +33,8 @@ First create a new directory and install dependencies:
 mkdir my-new-app
 cd my-new-app
 npm init -y
-npm install react react-dom react-router-dom
-npm install -D vite @react-router/vite
+npm install react react-dom react-router
+npm install -D vite @react-router/dev
 ```
 
 Now create the following files:
@@ -49,13 +50,18 @@ touch vite.config.ts
 And then fill them in:
 
 ```tsx filename=app/root.tsx
-import { Scripts, Outlet } from "react-router";
+import {
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from "react-router";
 
 export function Layout() {
   return (
     <html lang="en">
       <body>
         <Outlet />
+        <ScrollRestoration />
         <Scripts />
       </body>
     </html>
@@ -82,54 +88,32 @@ export default function Home() {
 ```
 
 ```ts filename=app/routes.ts
-import { createRoutes } from "react-router";
+import { route } from "@react-router/dev/routes";
 
-export const routes = createRoutes((route) => [
+export const routes = createRoutes([
   route.index("./home.tsx"),
 ]);
 ```
 
 ```tsx filename=vite.config.ts
-import { plugin as app } from "@react-router/vite";
+import react from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [app()],
+  plugins: [react()],
 });
 ```
 
 And finally run the app:
 
 ```shellscript nonumber
-react-router dev
+npm run dev
 ```
 
-## Using Webpack
+## Without the Vite Plugin
 
-TODO: update this when we know exactly what it looks like
+React Router's full feature-set is easiest to use with the React Router Vite plugin, but you can also use React Router manually with your own bundling, server rendering, etc.
 
-You can also use the webpack plugin instead.
-
-```shellscript nonumber
-npm install -D webpack webpack-cli @react-router/webpack
-```
-
-```js filename=webpack.config.js
-import { ReactRouterPlugin } from "@react-router/webpack";
-
-export default {
-  plugins: [new ReactRouterPlugin()],
-};
-```
-
-And then run your app:
-
-```shellscript nonumber
-webpack dev
-```
-
-## Manual Usage
-
-React Router's full feature set requires the bundler plugins but you can also use React Router manually and do your own bundling, server rendering, etc. Refer to the [manual usage][manual_usage] for more information.
+Refer to [Manual Usage][manual_usage] for more information.
 
 [manual_usage]: ../guides/manual-usage

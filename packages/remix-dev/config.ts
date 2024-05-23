@@ -139,11 +139,6 @@ export type VitePluginConfig = {
    */
   buildEnd?: BuildEndHook;
   /**
-   * Whether to write a `"manifest.json"` file to the build directory.`
-   * Defaults to `false`.
-   */
-  manifest?: boolean;
-  /**
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
    */
@@ -196,18 +191,9 @@ export type ResolvedVitePluginConfig = Readonly<{
    */
   future: FutureConfig;
   /**
-   * Whether to write a `"manifest.json"` file to the build directory.`
-   * Defaults to `false`.
-   */
-  manifest: boolean;
-  /**
    * An array of URLs to prerender to HTML files at build time.
    */
   prerender: Array<string> | null;
-  /**
-   * Derived from Vite's `base` config
-   * */
-  publicPath: string;
   /**
    * An object of all available routes, keyed by route id.
    */
@@ -325,6 +311,10 @@ let deepFreeze = (o: any) => {
   return o;
 };
 
+export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
+  return viteUserConfig.base ?? "/";
+}
+
 export async function resolveReactRouterConfig({
   rootDirectory,
   reactRouterUserConfig,
@@ -364,7 +354,6 @@ export async function resolveReactRouterConfig({
   let defaults = {
     basename: "/",
     buildDirectory: "build",
-    manifest: false,
     serverBuildFile: "index.js",
     serverModuleFormat: "esm",
     ssr: true,
@@ -377,7 +366,6 @@ export async function resolveReactRouterConfig({
     buildEnd,
     future: userFuture,
     ignoredRouteFiles,
-    manifest,
     routes: userRoutesFunction,
     prerender: prerenderConfig,
     serverBuildFile,
@@ -417,7 +405,7 @@ export async function resolveReactRouterConfig({
 
   let appDirectory = path.resolve(rootDirectory, userAppDirectory || "app");
   let buildDirectory = path.resolve(rootDirectory, userBuildDirectory);
-  let publicPath = viteUserConfig.base ?? "/";
+  let publicPath = resolvePublicPath(viteUserConfig);
 
   if (
     basename !== "/" &&
@@ -466,9 +454,7 @@ export async function resolveReactRouterConfig({
     buildDirectory,
     buildEnd,
     future,
-    manifest,
     prerender,
-    publicPath,
     routes,
     serverBuildFile,
     serverBundles,

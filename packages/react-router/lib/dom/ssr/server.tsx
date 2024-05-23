@@ -12,17 +12,21 @@ export interface RemixServerProps {
   context: EntryContext;
   url: string | URL;
   abortDelay?: number;
+  nonce?: string;
 }
 
 /**
  * The entry point for a Remix app when it is rendered on the server (in
  * `app/entry.server.js`). This component is used to generate the HTML in the
  * response from the server.
+ *
+ * @category Components
  */
 export function RemixServer({
   context,
   url,
   abortDelay,
+  nonce,
 }: RemixServerProps): ReactElement {
   if (typeof url === "string") {
     url = new URL(url);
@@ -99,6 +103,7 @@ export function RemixServer({
             reader={context.serverHandoffStreamAction.getReader()}
             textDecoder={new TextDecoder()}
             isAction={true}
+            nonce={nonce}
           />
         </React.Suspense>
       ) : null}
@@ -110,6 +115,7 @@ export function RemixServer({
             reader={context.serverHandoffStream.getReader()}
             textDecoder={new TextDecoder()}
             isAction={false}
+            nonce={nonce}
           />
         </React.Suspense>
       ) : null}

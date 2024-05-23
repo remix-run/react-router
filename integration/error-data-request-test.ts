@@ -19,7 +19,6 @@ test.describe("ErrorBoundary", () => {
     console.error = (v) => errorLogs.push(v);
 
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router-dom";

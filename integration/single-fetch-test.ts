@@ -12,7 +12,7 @@ const ISO_DATE = "2024-03-12T12:00:00.000Z";
 
 const files = {
   "app/root.tsx": js`
-    import { Form, Link, Links, Meta, Outlet, Scripts } from "react-router-dom";
+    import { Form, Link, Links, Meta, Outlet, Scripts } from "react-router";
 
     export function loader() {
       return {
@@ -51,7 +51,7 @@ const files = {
   `,
 
   "app/routes/data.tsx": js`
-    import { useActionData, useLoaderData } from "react-router-dom";
+    import { useActionData, useLoaderData } from "react-router";
 
     export async function action({ request }) {
       let formData = await request.formData();
@@ -99,7 +99,6 @@ test.describe("single-fetch", () => {
   test("loads proper data on single fetch loader requests", async () => {
     let fixture = await createFixture(
       {
-        singleFetch: true,
         files,
       },
       ServerMode.Development
@@ -137,7 +136,6 @@ test.describe("single-fetch", () => {
 
     let fixture = await createFixture(
       {
-        singleFetch: true,
         files,
       },
       ServerMode.Development
@@ -161,7 +159,6 @@ test.describe("single-fetch", () => {
   test("loads proper data on single fetch action requests", async () => {
     let fixture = await createFixture(
       {
-        singleFetch: true,
         files,
       },
       ServerMode.Development
@@ -181,7 +178,6 @@ test.describe("single-fetch", () => {
 
   test("loads proper data on document request", async ({ page }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files,
     });
     let appFixture = await createAppFixture(fixture);
@@ -194,7 +190,6 @@ test.describe("single-fetch", () => {
 
   test("loads proper data on client side navigation", async ({ page }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files,
     });
     let appFixture = await createAppFixture(fixture);
@@ -211,7 +206,6 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files,
     });
     let appFixture = await createAppFixture(fixture);
@@ -227,11 +221,10 @@ test.describe("single-fetch", () => {
 
   test("allows fine-grained revalidation", async ({ page }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/no-revalidate.tsx": js`
-          import { Form, useActionData, useLoaderData, useNavigation } from "react-router-dom";
+          import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
 
           export async function action({ request }) {
             let fd = await request.formData();
@@ -296,11 +289,10 @@ test.describe("single-fetch", () => {
 
   test("does not revalidate on 4xx/5xx action responses", async ({ page }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/action.tsx": js`
-          import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router-dom";
+          import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router";
 
           export async function action({ request, response }) {
             let fd = await request.formData();
@@ -396,7 +388,6 @@ test.describe("single-fetch", () => {
 
   test("returns headers correctly for singular loader and action calls", async () => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/headers.tsx": js`
@@ -466,7 +457,6 @@ test.describe("single-fetch", () => {
 
   test("merges headers from nested routes", async () => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -621,7 +611,6 @@ test.describe("single-fetch", () => {
 
   test("merges status codes from nested routes", async () => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -719,7 +708,6 @@ test.describe("single-fetch", () => {
 
   test("merges headers from nested routes when raw Responses are returned", async () => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -821,7 +809,6 @@ test.describe("single-fetch", () => {
 
   test("merges status codes from nested routes when raw Responses are used", async () => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/a.tsx": js`
@@ -917,7 +904,6 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -958,7 +944,6 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -995,7 +980,6 @@ test.describe("single-fetch", () => {
 
   test("processes thrown loader redirects via Response", async ({ page }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -1032,7 +1016,6 @@ test.describe("single-fetch", () => {
 
   test("processes returned loader redirects via Response", async ({ page }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/routes/data.tsx": js`
@@ -1069,7 +1052,6 @@ test.describe("single-fetch", () => {
   }) => {
     let fixture = await createFixture(
       {
-        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1116,7 +1098,6 @@ test.describe("single-fetch", () => {
   }) => {
     let fixture = await createFixture(
       {
-        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1159,7 +1140,6 @@ test.describe("single-fetch", () => {
   test("processes thrown action redirects via Response", async ({ page }) => {
     let fixture = await createFixture(
       {
-        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1202,7 +1182,6 @@ test.describe("single-fetch", () => {
   test("processes returned action redirects via Response", async ({ page }) => {
     let fixture = await createFixture(
       {
-        singleFetch: true,
         files: {
           ...files,
           "app/routes/data.tsx": js`
@@ -1244,7 +1223,6 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/entry.server.tsx": js`
@@ -1252,7 +1230,7 @@ test.describe("single-fetch", () => {
 
           import type { EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { RemixServer } from "react-router-dom";
+          import { RemixServer } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
 
           export default function handleRequest(
@@ -1328,7 +1306,6 @@ test.describe("single-fetch", () => {
     page,
   }) => {
     let fixture = await createFixture({
-      singleFetch: true,
       files: {
         ...files,
         "app/entry.server.tsx": js`
@@ -1336,7 +1313,7 @@ test.describe("single-fetch", () => {
 
           import type { EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { RemixServer } from "react-router-dom";
+          import { RemixServer } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
 
           export default function handleRequest(
@@ -1408,15 +1385,295 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#target")).toContain("Target");
   });
 
+  test("throws an error on naked object returns from external resource route consumption", async () => {
+    let oldConsoleError = console.error;
+    console.error = () => {};
+
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/resource.tsx": js`
+            export function loader() {
+              return { message: "RESOURCE" };
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let res = await fixture.requestResource("/resource");
+    expect(res.status).toBe(500);
+    expect(await res.text()).toContain(
+      "Expected a Response to be returned from resource route handler"
+    );
+
+    console.error = oldConsoleError;
+  });
+
+  test("processes response stub onto resource routes returning raw data", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/resource.tsx": js`
+            import { json } from '@remix-run/node';
+            export function loader({ response }) {
+              response.status = 201;
+              response.headers.set('X-Stub', 'yes')
+              return { message: "RESOURCE" };
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let res = await fixture.requestResource("/resource.data");
+    expect(res.status).toBe(201);
+    expect(res.headers.get("X-Stub")).toBe("yes");
+    expect(await res.text()).toContain("RESOURCE");
+  });
+
+  test("processes response stub onto resource routes returning responses", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/resource.tsx": js`
+            import { json } from '@react-router/node';
+            export function loader({ response }) {
+              // This will be ignored in favor of the returned Response status
+              response.status = 200;
+              response.headers.set('X-Stub', 'yes')
+              // This will overwrite the returned Response header
+              response.headers.set('X-Set', '2')
+              // This will append to the returned Response header
+              response.headers.append('X-Append', '2')
+              return json({ message: "RESOURCE" }, {
+                // This one takes precedence
+                status: 201,
+                headers: {
+                  'X-Response': 'yes',
+                  'X-Set': '1',
+                  'X-Append': '1',
+                },
+              });
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let res = await fixture.requestResource("/resource");
+    expect(res.status).toBe(201);
+    expect(res.headers.get("X-Response")).toBe("yes");
+    expect(res.headers.get("X-Stub")).toBe("yes");
+    expect(res.headers.get("X-Set")).toBe("2");
+    expect(res.headers.get("X-Append")).toBe("1, 2");
+    expect(await res.json()).toEqual({
+      message: "RESOURCE",
+    });
+  });
+
+  test("allows fetcher to hit resource route and return via turbo stream", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { useFetcher } from "react-router";
+          export default function Component() {
+            let fetcher = useFetcher();
+            return (
+              <div>
+                <button id="load" onClick={() => fetcher.load('/resource')}>
+                  Load
+                </button>
+                {fetcher.data ? <pre id="fetcher-data">{fetcher.data.message} {fetcher.data.date.toISOString()}</pre> : null}
+              </div>
+            );
+          }
+        `,
+        "app/routes/resource.tsx": js`
+          export function loader() {
+            // Fetcher calls to resource routes will append ".data" and we'll go through
+            // the turbo-stream flow.  If a user were to curl this endpoint they'd go
+            // through "handleResourceRoute" and it would be returned as "json()"
+            return {
+              message: "RESOURCE",
+              date: new Date("${ISO_DATE}"),
+            };
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickElement("#load");
+    await page.waitForSelector("#fetcher-data");
+    expect(await app.getHtml("#fetcher-data")).toContain(
+      "RESOURCE 2024-03-12T12:00:00.000Z"
+    );
+  });
+
+  test("does not log thrown redirect response stubs via handleError", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/redirect.tsx": js`
+          export function action({ response }) {
+            response.status = 301;
+            response.headers.set("Location", "/data");
+            throw response;
+          }
+          export function loader({ response }) {
+            response.status = 301;
+            response.headers.set("Location", "/data");
+            throw response;
+          }
+          export default function Component() {
+            return <h1>Should not see me</h1>;
+          }
+        `,
+      },
+    });
+
+    let errorLogs = [];
+    console.error = (e) => errorLogs.push(e);
+    await fixture.requestDocument("/redirect");
+    await fixture.requestSingleFetchData("/redirect.data");
+    await fixture.requestSingleFetchData("/redirect.data", {
+      method: "post",
+      body: null,
+    });
+    expect(errorLogs.length).toBe(0);
+  });
+
+  test("does not log thrown non-redirect response stubs via handleError", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/redirect.tsx": js`
+          export function action({ response }) {
+            response.status = 400;
+            throw response;
+          }
+          export function loader({ response }) {
+            response.status = 400;
+            throw response;
+          }
+          export default function Component() {
+            return <h1>Should not see me</h1>;
+          }
+        `,
+      },
+    });
+
+    let errorLogs = [];
+    console.error = (e) => errorLogs.push(e);
+    await fixture.requestDocument("/redirect");
+    expect(errorLogs.length).toBe(1); // ErrorBoundary render logs this
+    await fixture.requestSingleFetchData("/redirect.data");
+    await fixture.requestSingleFetchData("/redirect.data", {
+      method: "post",
+      body: null,
+    });
+    expect(errorLogs.length).toBe(1);
+  });
+
+  test("supports nonce on streaming script tags", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/root.tsx": js`
+          import { Links, Meta, Outlet, Scripts } from "react-router";
+          export function loader() {
+            return {
+              message: "ROOT",
+            };
+          }
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Outlet />
+                  <Scripts nonce="the-nonce" />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/entry.server.tsx": js`
+          import { PassThrough } from "node:stream";
+          import type { EntryContext } from "@react-router/node";
+          import { createReadableStreamFromReadable } from "@react-router/node";
+          import { RemixServer } from "react-router";
+          import { renderToPipeableStream } from "react-dom/server";
+          export default function handleRequest(
+            request: Request,
+            responseStatusCode: number,
+            responseHeaders: Headers,
+            remixContext: EntryContext
+          ) {
+            return new Promise((resolve, reject) => {
+              const { pipe } = renderToPipeableStream(
+                <RemixServer context={remixContext} url={request.url} nonce="the-nonce" />,
+                {
+                  onShellReady() {
+                    const body = new PassThrough();
+                    const stream = createReadableStreamFromReadable(body);
+                    responseHeaders.set("Content-Type", "text/html");
+                    resolve(
+                      new Response(stream, {
+                        headers: responseHeaders,
+                        status: responseStatusCode,
+                      })
+                    );
+                    pipe(body);
+                  },
+                  onShellError(error: unknown) {
+                    reject(error);
+                  },
+                  onError(error: unknown) {
+                    responseStatusCode = 500;
+                  },
+                }
+              );
+            });
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/data", true);
+    let scripts = await page.$$("script");
+    expect(scripts.length).toBe(6);
+    let remixScriptsCount = 0;
+    for (let script of scripts) {
+      let content = await script.innerHTML();
+      if (content.includes("window.__remix")) {
+        remixScriptsCount++;
+        expect(await script.getAttribute("nonce")).toEqual("the-nonce");
+      }
+    }
+    expect(remixScriptsCount).toBe(4);
+  });
+
   test.describe("client loaders", () => {
     test("when no routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1434,7 +1691,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1452,7 +1709,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1496,11 +1753,10 @@ test.describe("single-fetch", () => {
     test("when one route has a client loader", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1518,7 +1774,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1536,7 +1792,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1592,11 +1848,10 @@ test.describe("single-fetch", () => {
     test("when multiple routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1614,7 +1869,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1637,7 +1892,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1695,11 +1950,10 @@ test.describe("single-fetch", () => {
     test("when all routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1722,7 +1976,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1745,7 +1999,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1806,11 +2060,10 @@ test.describe("single-fetch", () => {
     test("when no routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "react-router-dom";
+              import {  Link } from "react-router";
 
               export default function Index() {
                 return (
@@ -1821,7 +2074,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1839,7 +2092,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1857,7 +2110,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1892,11 +2145,10 @@ test.describe("single-fetch", () => {
     test("when one route has a client loader", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "react-router-dom";
+              import {  Link } from "react-router";
 
               export default function Index() {
                 return (
@@ -1907,7 +2159,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -1925,7 +2177,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -1943,7 +2195,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -1984,11 +2236,10 @@ test.describe("single-fetch", () => {
     test("when multiple routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "react-router-dom";
+              import {  Link } from "react-router";
 
               export default function Index() {
                 return (
@@ -1999,7 +2250,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -2017,7 +2268,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -2040,7 +2291,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };
@@ -2081,11 +2332,10 @@ test.describe("single-fetch", () => {
     test("when all routes have client loaders", async ({ page }) => {
       let fixture = await createFixture(
         {
-          singleFetch: true,
           files: {
             ...files,
             "app/routes/_index.tsx": js`
-              import {  Link } from "react-router-dom";
+              import {  Link } from "react-router";
 
               export default function Index() {
                 return (
@@ -2096,7 +2346,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "A server loader" };
@@ -2119,7 +2369,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return { message: "B server loader" };
@@ -2142,7 +2392,7 @@ test.describe("single-fetch", () => {
               }
             `,
             "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export function  loader() {
                 return { message: "C server loader" };

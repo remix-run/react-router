@@ -21,6 +21,7 @@ export type {
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
+  LowerCaseFormMethod,
   ParamParseKey,
   Params,
   PathMatch,
@@ -29,8 +30,10 @@ export type {
   RedirectFunction,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
+  Submission,
   TrackedPromise,
   UIMatch,
+  UpperCaseFormMethod,
   V7_FormMethod,
 } from "./utils";
 

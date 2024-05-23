@@ -37,6 +37,7 @@ import {
   type ResolvedVitePluginConfig,
   resolveReactRouterConfig,
   resolveEntryFiles,
+  resolvePublicPath,
 } from "../config";
 
 export async function resolveViteConfig({
@@ -152,6 +153,7 @@ export type ReactRouterPluginContext = ReactRouterPluginSsrBuildContext & {
   entryClientFilePath: string;
   entryReactServerFilePath?: string;
   entryServerFilePath: string;
+  publicPath: string;
   reactRouterConfig: ResolvedVitePluginConfig;
   viteManifestEnabled: boolean;
 };
@@ -245,14 +247,14 @@ const getReactRouterManifestBuildAssets = (
   ]);
 
   return {
-    module: `${ctx.reactRouterConfig.publicPath}${entryChunk.file}`,
+    module: `${ctx.publicPath}${entryChunk.file}`,
     imports:
       dedupe(chunks.flatMap((e) => e.imports ?? [])).map((imported) => {
-        return `${ctx.reactRouterConfig.publicPath}${viteManifest[imported].file}`;
+        return `${ctx.publicPath}${viteManifest[imported].file}`;
       }) ?? [],
     css:
       dedupe(chunks.flatMap((e) => e.css ?? [])).map((href) => {
-        return `${ctx.reactRouterConfig.publicPath}${href}`;
+        return `${ctx.publicPath}${href}`;
       }) ?? [],
   };
 };
@@ -459,6 +461,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         reactRouterConfig,
       });
 
+    let publicPath = resolvePublicPath(viteUserConfig);
     let viteManifestEnabled = viteUserConfig.build?.manifest === true;
 
     let ssrBuildCtx: ReactRouterPluginSsrBuildContext =
@@ -478,6 +481,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       entryClientFilePath,
       entryReactServerFilePath,
       entryServerFilePath,
+      publicPath,
       viteManifestEnabled,
       ...ssrBuildCtx,
     };
@@ -525,9 +529,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       export const isSpaMode = ${
         !ctx.reactRouterConfig.ssr && ctx.reactRouterConfig.prerender == null
       };
-      export const publicPath = ${JSON.stringify(
-        ctx.reactRouterConfig.publicPath
-      )};
+      export const publicPath = ${JSON.stringify(ctx.publicPath)};
       export const entry = { module: entryServer };
       export const routes = {
         ${Object.keys(routes)
@@ -726,7 +728,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       viteConfig.build.assetsDir,
       `manifest-${version}.js`
     );
-    let url = `${ctx.reactRouterConfig.publicPath}${manifestPath}`;
+    let url = `${ctx.publicPath}${manifestPath}`;
     let nonFingerprintedValues = { url, version };
 
     let reactRouterBrowserManifest: ReactRouterManifest = {
@@ -772,7 +774,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         index: route.index,
         caseSensitive: route.caseSensitive,
         module: path.posix.join(
-          ctx.reactRouterConfig.publicPath,
+          ctx.publicPath,
           `${resolveFileUrl(
             ctx,
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
@@ -790,18 +792,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     return {
       version: String(Math.random()),
       url: path.posix.join(
-        ctx.reactRouterConfig.publicPath,
+        ctx.publicPath,
         VirtualModule.url(browserManifestId)
       ),
       hmr: {
         runtime: path.posix.join(
-          ctx.reactRouterConfig.publicPath,
+          ctx.publicPath,
           VirtualModule.url(injectHmrRuntimeId)
         ),
       },
       entry: {
         module: path.posix.join(
-          ctx.reactRouterConfig.publicPath,
+          ctx.publicPath,
           resolveFileUrl(ctx, ctx.entryClientFilePath)
         ),
         imports: [],
@@ -1894,7 +1896,7 @@ async function getRouteMetadata(
     index: route.index,
     caseSensitive: route.caseSensitive,
     url: path.posix.join(
-      ctx.reactRouterConfig.publicPath,
+      ctx.publicPath,
       "/" +
         path.relative(
           ctx.rootDirectory,
@@ -1902,7 +1904,7 @@ async function getRouteMetadata(
         )
     ),
     module: path.posix.join(
-      ctx.reactRouterConfig.publicPath,
+      ctx.publicPath,
       `${resolveFileUrl(
         ctx,
         resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)

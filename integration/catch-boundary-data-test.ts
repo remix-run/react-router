@@ -38,7 +38,6 @@ test.describe("ErrorBoundary (thrown responses)", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/root.tsx": js`
           import { json } from "@react-router/node";

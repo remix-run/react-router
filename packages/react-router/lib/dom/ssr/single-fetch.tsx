@@ -42,6 +42,7 @@ interface StreamTransferProps {
   reader: ReadableStreamDefaultReader<Uint8Array>;
   textDecoder: TextDecoder;
   isAction: boolean;
+  nonce?: string;
 }
 
 // StreamTransfer recursively renders down chunks of the `serverHandoffStream`
@@ -52,6 +53,7 @@ export function StreamTransfer({
   reader,
   textDecoder,
   isAction,
+  nonce,
 }: StreamTransferProps) {
   // If the user didn't render the <Scripts> component then we don't have to
   // bother streaming anything in
@@ -100,6 +102,7 @@ export function StreamTransfer({
   let { done, value } = promise.result;
   let scriptTag = value ? (
     <script
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `window.__remixContext.streamController${
           isAction ? "Action" : ""
@@ -113,6 +116,7 @@ export function StreamTransfer({
       <>
         {scriptTag}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `window.__remixContext.streamController${
               isAction ? "Action" : ""
@@ -132,6 +136,7 @@ export function StreamTransfer({
             reader={reader}
             textDecoder={textDecoder}
             isAction={isAction}
+            nonce={nonce}
           />
         </React.Suspense>
       </>

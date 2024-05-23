@@ -965,10 +965,10 @@ test.describe("SPA Mode", () => {
 
     test("only generates client Vite manifest", () => {
       let viteManifestFiles = fs.readdirSync(
-        path.join(fixture.projectDir, "build", ".vite")
+        path.join(fixture.projectDir, "build", "client", ".vite")
       );
 
-      expect(viteManifestFiles).toEqual(["client-manifest.json"]);
+      expect(viteManifestFiles).toEqual(["manifest.json"]);
     });
   });
 });

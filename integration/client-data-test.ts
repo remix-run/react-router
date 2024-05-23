@@ -6,7 +6,7 @@ import {
   createFixture,
   js,
 } from "./helpers/create-fixture.js";
-import type { AppFixture, FixtureInit } from "./helpers/create-fixture.js";
+import type { AppFixture } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 function getFiles({
@@ -145,20 +145,10 @@ test.describe("Client Data", () => {
     appFixture.close();
   });
 
-  function createTestFixture(init: FixtureInit, serverMode?: ServerMode) {
-    return createFixture(
-      {
-        ...init,
-        singleFetch: true,
-      },
-      serverMode
-    );
-  }
-
   test.describe("clientLoader - critical route module", () => {
     test("no client loaders or fallbacks", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: false,
             parentClientLoaderHydrate: false,
@@ -178,7 +168,7 @@ test.describe("Client Data", () => {
 
     test("parent.clientLoader/child.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -198,7 +188,7 @@ test.describe("Client Data", () => {
 
     test("parent.clientLoader.hydrate/child.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: true,
@@ -224,7 +214,7 @@ test.describe("Client Data", () => {
 
     test("parent.clientLoader/child.clientLoader.hydrate", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -252,7 +242,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: true,
@@ -279,7 +269,7 @@ test.describe("Client Data", () => {
     });
 
     test("handles synchronous client loaders", async ({ page }) => {
-      let fixture = await createTestFixture({
+      let fixture = await createFixture({
         files: getFiles({
           parentClientLoader: false,
           parentClientLoaderHydrate: false,
@@ -318,7 +308,7 @@ test.describe("Client Data", () => {
     });
 
     test("handles deferred data through client loaders", async ({ page }) => {
-      let fixture = await createTestFixture({
+      let fixture = await createFixture({
         files: {
           ...getFiles({
             parentClientLoader: false,
@@ -388,7 +378,7 @@ test.describe("Client Data", () => {
     test("allows hydration execution without rendering a fallback", async ({
       page,
     }) => {
-      let fixture = await createTestFixture({
+      let fixture = await createFixture({
         files: getFiles({
           parentClientLoader: false,
           parentClientLoaderHydrate: false,
@@ -417,7 +407,7 @@ test.describe("Client Data", () => {
     test("HydrateFallback is not rendered if clientLoader.hydrate is not set (w/server loader)", async ({
       page,
     }) => {
-      let fixture = await createTestFixture({
+      let fixture = await createFixture({
         files: {
           ...getFiles({
             parentClientLoader: false,
@@ -471,7 +461,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,
@@ -514,7 +504,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,
@@ -557,7 +547,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,
@@ -600,7 +590,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,
@@ -665,7 +655,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,
@@ -742,7 +732,7 @@ test.describe("Client Data", () => {
       let _consoleError = console.error;
       console.error = () => {};
       appFixture = await createAppFixture(
-        await createTestFixture(
+        await createFixture(
           {
             files: {
               ...getFiles({
@@ -795,7 +785,7 @@ test.describe("Client Data", () => {
   test.describe("clientLoader - lazy route module", () => {
     test("no client loaders or fallbacks", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: false,
             parentClientLoaderHydrate: false,
@@ -817,7 +807,7 @@ test.describe("Client Data", () => {
 
     test("parent.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -838,7 +828,7 @@ test.describe("Client Data", () => {
 
     test("child.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: false,
             parentClientLoaderHydrate: false,
@@ -859,7 +849,7 @@ test.describe("Client Data", () => {
 
     test("parent.clientLoader/child.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -882,7 +872,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,
@@ -926,7 +916,7 @@ test.describe("Client Data", () => {
   test.describe("clientAction - critical route module", () => {
     test("child.clientAction", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture(
+        await createFixture(
           {
             files: getFiles({
               parentClientLoader: false,
@@ -964,7 +954,7 @@ test.describe("Client Data", () => {
 
     test("child.clientAction/parent.childLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -1006,7 +996,7 @@ test.describe("Client Data", () => {
 
     test("child.clientAction/child.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: false,
             parentClientLoaderHydrate: false,
@@ -1050,7 +1040,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -1094,7 +1084,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,
@@ -1139,7 +1129,7 @@ test.describe("Client Data", () => {
   test.describe("clientAction - lazy route module", () => {
     test("child.clientAction", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: false,
             parentClientLoaderHydrate: false,
@@ -1175,7 +1165,7 @@ test.describe("Client Data", () => {
 
     test("child.clientAction/parent.childLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -1219,7 +1209,7 @@ test.describe("Client Data", () => {
 
     test("child.clientAction/child.clientLoader", async ({ page }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: false,
             parentClientLoaderHydrate: false,
@@ -1265,7 +1255,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: getFiles({
             parentClientLoader: true,
             parentClientLoaderHydrate: false,
@@ -1311,7 +1301,7 @@ test.describe("Client Data", () => {
       page,
     }) => {
       appFixture = await createAppFixture(
-        await createTestFixture({
+        await createFixture({
           files: {
             ...getFiles({
               parentClientLoader: false,

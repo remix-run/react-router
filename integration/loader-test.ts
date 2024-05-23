@@ -16,7 +16,6 @@ test.describe("loader", () => {
 
   test.beforeAll(async () => {
     fixture = await createFixture({
-      singleFetch: true,
       files: {
         "app/root.tsx": js`
             import { json } from "@react-router/node";
@@ -74,7 +73,6 @@ test.describe("loader in an app", () => {
   test.beforeAll(async () => {
     appFixture = await createAppFixture(
       await createFixture({
-        singleFetch: true,
         files: {
           "app/root.tsx": js`
             import { Outlet } from 'react-router-dom'
