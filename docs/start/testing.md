@@ -35,8 +35,8 @@ export function LoginForm() {
 We can test this component with `createStub`. It takes an array of objects that resemble route modules with loaders, actions, and components.
 
 ```tsx
+import { createStub, route } from "react-router/testing";
 import * as Test from "@testing-library/react";
-import { createStub } from "react-router-dom/testing";
 import { LoginForm } from "./LoginForm";
 
 test("LoginForm renders error messages", async () => {
@@ -44,13 +44,8 @@ test("LoginForm renders error messages", async () => {
   const PASSWORD_MESSAGE = "Password is required";
 
   const Stub = createStub([
-    {
-      path: "/login",
-
-      // test the LoginForm
+    route("/login", {
       Component: LoginForm,
-
-      // simulate an action that returns errors
       action() {
         return {
           errors: {
@@ -59,7 +54,7 @@ test("LoginForm renders error messages", async () => {
           },
         };
       },
-    },
+    }),
   ]);
 
   // render the app stub at "/login"
@@ -73,11 +68,3 @@ test("LoginForm renders error messages", async () => {
   );
 });
 ```
-
-See the [`react-router/testing`][testing_guide] package for more information.
-
-## Integration tests
-
-(TODO: not really react router specific, recommend playright?)
-
-[testing_guide]: #TODO:

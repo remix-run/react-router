@@ -1,4 +1,4 @@
 ---
 title: View Transitions
-hidden: true
+new: true
 ---

@@ -5,18 +5,19 @@ order: 5
 
 # Data Loading
 
-Data is provided to routes from `loader` and `clientLoader`. Route components access both from the `data` prop. When server rendering, you can use async server components for data loading as well.
+Data is provided to routes from `loader` and `clientLoader`, accessed in the `data` prop of the Route Component.
 
 ## Client Data Loading
 
-The `clientLoader` export is used to fetch data on the client. This is useful for projects that aren't server rendering, and for pages you'd prefer to fetch in the browser.
+`clientLoader` is used to fetch data on the client. This is useful for projects that aren't server rendering, and for pages you'd prefer to fetch in the browser.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-
 import { defineRoute$ } from "react-router";
 
 export default defineRoute$({
+  params: ["pid"],
+
   async clientLoader({ params }) {
     const res = await fetch(`/api/products/${params.pid}`);
     const product = await res.json();
@@ -45,6 +46,8 @@ import { defineRoute$ } from "react-router";
 import { fakeDb } from "../db";
 
 export default defineRoute$({
+  params: ["pid"],
+
   async loader({ params }) {
     const product = await fakeDb.getProduct(params.pid);
     return { product };
@@ -140,7 +143,7 @@ Note that when server rendering, any URLs that aren't pre-rendered will be serve
 
 ## Using Both Loaders
 
-You can use both `loader` and `clientLoader` in the same route module. The `loader` will be used on the server for initial SSR (or pre-rendering) and the `clientLoader` will be used on subsequent client side navigations.
+`loader` and `clientLoader` can be used together. The `loader` will be used on the server for initial SSR (or pre-rendering) and the `clientLoader` will be used on subsequent clientside navigations.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
