@@ -37,7 +37,7 @@ export default defineRoute$({
 
 ## Server Data Loading
 
-When server rendering, the `loader` export is used to fetch data on the server for both initial page loads and client navigations through an automatic `fetch` by React Router in the browser.
+When server rendering, the `loader` method is used to fetch data on the server for both initial page loads and client navigations through an automatic `fetch` by React Router in the browser.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
