@@ -5,11 +5,11 @@ order: 5
 
 # Data Loading
 
-Data is provided to routes from `loader` and `clientLoader`, accessed in the `data` prop of the Route Component.
+Data is provided to the route via `loader` and `clientLoader`, and accessed in the `data` prop of the Route Component.
 
 ## Client Data Loading
 
-`clientLoader` is used to fetch data on the client. This is useful for projects that aren't server rendering, and for pages you'd prefer to fetch in the browser.
+`clientLoader` is used to fetch data on the client. This is useful for projects that aren't server rendering, and for pages you'd prefer fetch their data in the browser.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
@@ -41,7 +41,6 @@ When server rendering, the `loader` export is used to fetch data on the server f
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-
 import { defineRoute$ } from "react-router";
 import { fakeDb } from "../db";
 
@@ -71,11 +70,14 @@ Note that the `loader` function is removed from client bundles so you can use se
 RSC is supported by returning components from loaders and actions.
 
 ```tsx filename=app/product.tsx
+// route("products/:pid", "./product.tsx");
 import { defineRoute$ } from "react-router";
 import Product from "./product";
 import Reviews from "./reviews";
 
 export default defineRoute$({
+  params: ["pid"],
+
   async loader({ params }) {
     return {
       product: <Product id={params.pid} />,
@@ -96,13 +98,15 @@ export default defineRoute$({
 
 ## Static Data Loading
 
-When pre-rendering, the `loader` export is used to fetch data at build time.
+When pre-rendering, the `loader` method is used to fetch data at build time.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
 import { defineRoute$ } from "react-router";
 
 export default defineRoute$({
+  params: ["pid"],
+
   async loader({ params }) {
     let product = await getProductFromCSVFile(params.pid);
     return { product };
@@ -147,7 +151,6 @@ Note that when server rendering, any URLs that aren't pre-rendered will be serve
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-
 import { defineRoute$ } from "react-router";
 import { fakeDb } from "../db";
 

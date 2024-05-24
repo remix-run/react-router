@@ -83,9 +83,9 @@ route("dashboard", "./dashboard.tsx", () => [
 ```
 
 ```tsx filename=app/dashboard.tsx
-import { createRoute, Outlet } from "react-router";
+import { defineRoute$, Outlet } from "react-router";
 
-export default createRoute({
+export default defineRoute$({
   component: function Dashboard() {
     return (
       <div>
@@ -151,9 +151,9 @@ route("teams/:teamId", "./team.tsx");
 ```
 
 ```tsx filename=app/team.tsx
-import { createRoute } from "react-router";
+import { defineRoute$ } from "react-router";
 
-export default createRoute({
+export default defineRoute$({
   // ensures this route is configured correctly in routes.ts
   // and provides type hints for the rest of this route
   params: ["teamId"],
@@ -179,7 +179,7 @@ route("c/:categoryId/p/:productId", "./product.tsx");
 ```
 
 ```tsx filename=app/product.tsx
-export default createRoute({
+export default defineRoute$({
   params: ["categoryId", "productId"],
 
   async loader({ params }) {
