@@ -81,7 +81,6 @@ export function createReactServerRequestHandler(
     let resultStatus = 200;
     if (request.method === "POST") {
       let actionId = request.headers.get("rsc-action");
-      console.log({ actionId });
       if (actionId) {
         let [modId, ...actionNameParts] = actionId.split("#");
         let actionName = actionNameParts.join("#");
@@ -149,6 +148,11 @@ export function createReactServerRequestHandler(
             resultStatus = 500;
           }
         }
+        request = new Request(request.url, {
+          method: "GET",
+          headers: request.headers,
+          signal: request.signal,
+        });
       }
     }
 
