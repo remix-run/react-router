@@ -1,15 +1,15 @@
 import type { StaticHandler } from "react-router";
 
-import type {
-  HandleErrorFunction,
-  RenderToReadableStreamFunction,
-  ReactServerBuild,
-} from "./build";
+import type { HandleErrorFunction, ReactServerBuild } from "./build";
 import type { AppLoadContext } from "./data";
 import { ServerMode } from "./mode";
 import type { ServerRoute } from "./routes";
 import { derive } from "./server";
-import { singleFetchAction, singleFetchLoaders } from "./single-fetch";
+import {
+  singleFetchAction,
+  singleFetchLoaders,
+  getSingleFetchRedirect,
+} from "./single-fetch";
 import { getDevServerHooks } from "./dev";
 import { matchServerRoutes } from "./routeMatching";
 
@@ -27,16 +27,18 @@ export function createReactServerRequestHandler(
   let serverMode: ServerMode;
   let staticHandler: StaticHandler;
   let errorHandler: HandleErrorFunction;
-  let renderToReadableStream: RenderToReadableStreamFunction;
 
   return async (request, loadContext) => {
-    build = typeof _build === "function" ? await _build() : _build;
+    build = build ?? (typeof _build === "function" ? await _build() : _build);
     if (!build.entry.module.renderToReadableStream) {
       throw new Error(
         "The react server build does not have a renderToReadableStream function"
       );
     }
-    renderToReadableStream = build.entry.module.renderToReadableStream;
+    let renderToReadableStream = build.entry.module.renderToReadableStream;
+    let decodeAction = build.entry.module.decodeAction;
+    let decodeFormState = build.entry.module.decodeFormState;
+    let decodeReply = build.entry.module.decodeReply;
 
     if (typeof build === "function") {
       // TODO: TYPE THIS RIGHT
@@ -76,6 +78,80 @@ export function createReactServerRequestHandler(
       });
     };
 
+    let resultStatus = 200;
+    if (request.method === "POST") {
+      let actionId = request.headers.get("rsc-action");
+      console.log({ actionId });
+      if (actionId) {
+        let [modId, ...actionNameParts] = actionId.split("#");
+        let actionName = actionNameParts.join("#");
+        const [action, args] = await Promise.all([
+          build.serverReferences[modId]().then(
+            (mod) => mod[actionName] as (...args: unknown[]) => Promise<unknown>
+          ),
+          decodeReply(await request.formData()),
+        ]);
+
+        try {
+          const returnValue = action.apply(null, args);
+          await returnValue;
+          return new Response(renderToReadableStream({ returnValue }), {
+            status: 200,
+            headers: {
+              "Content-Type": "text/x-component",
+            },
+          });
+        } catch (reason) {
+          if (reason instanceof Response) {
+            return new Response(
+              renderToReadableStream(
+                getSingleFetchRedirect(reason.status, reason.headers)
+              ),
+              {
+                status: 202,
+                headers: {
+                  "Content-Type": "text/x-component",
+                },
+              }
+            );
+          }
+
+          handleError(reason);
+          return new Response(renderToReadableStream(Promise.reject(reason)), {
+            status: 500,
+            headers: {
+              "Content-Type": "text/x-component",
+            },
+          });
+        }
+      } else {
+        const formData = await request.formData();
+        const action = await decodeAction(formData);
+        if (action) {
+          try {
+            await action();
+          } catch (reason) {
+            if (reason instanceof Response) {
+              return new Response(
+                renderToReadableStream(
+                  getSingleFetchRedirect(reason.status, reason.headers)
+                ),
+                {
+                  status: 202,
+                  headers: {
+                    "Content-Type": "text/x-component",
+                  },
+                }
+              );
+            }
+
+            handleError(reason);
+            resultStatus = 500;
+          }
+        }
+      }
+    }
+
     let { result, headers, status } =
       request.method !== "GET" && request.method !== "HEAD"
         ? await singleFetchAction(
@@ -94,6 +170,7 @@ export function createReactServerRequestHandler(
             loadContext || {},
             handleError
           );
+    resultStatus = resultStatus > status ? resultStatus : status;
 
     // Mark all successful responses with a header so we can identify in-flight
     // network errors that are missing this header
@@ -105,7 +182,7 @@ export function createReactServerRequestHandler(
     // `activeDeferreds` or anything :)
     // TODO: Pass a signal
     return new Response(renderToReadableStream(result), {
-      status: status || 200,
+      status: resultStatus,
       headers: resultHeaders,
     });
   };

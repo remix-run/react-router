@@ -135,6 +135,27 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
     };
 
     let response: Response;
+
+    let actionId = request.headers.get("rsc-action");
+    if (
+      _build.future.unstable_serverComponents &&
+      request.method === "POST" &&
+      actionId
+    ) {
+      if (!callReactServer) {
+        throw new Error(
+          "callReactServer is required for server component builds"
+        );
+      }
+      return callReactServer(request.url, {
+        headers: request.headers,
+        method: request.method,
+        signal: request.signal,
+        body: request.body,
+        duplex: "half",
+      } as RequestInit & { duplex: "half" });
+    }
+
     if (url.pathname.endsWith(".data")) {
       let handlerUrl = new URL(request.url);
       handlerUrl.pathname = handlerUrl.pathname

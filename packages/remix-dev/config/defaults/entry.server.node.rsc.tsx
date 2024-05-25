@@ -17,6 +17,22 @@ export function createFromReadableStream(body: ReadableStream<Uint8Array>) {
   );
 }
 
+export async function decodeAction(formData: FormData) {
+  return ReactServerDOM.decodeAction(formData, global.__diy_server_manifest__);
+}
+
+export function decodeFormState(returnValue: unknown, formData: FormData) {
+  return ReactServerDOM.decodeFormState(
+    returnValue,
+    formData,
+    __diy_server_manifest__
+  );
+}
+
+export async function decodeReply(formData: FormData) {
+  return ReactServerDOM.decodeReply(formData, global.__diy_server_manifest__);
+}
+
 export default function handleRequest(
   request: Request,
   responseStatusCode: number,

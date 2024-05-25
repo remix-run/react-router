@@ -61,6 +61,11 @@ export interface CreateFromReadableStreamFunction {
 
 export interface ReactServerEntryModule {
   renderToReadableStream: RenderToReadableStreamFunction;
+  decodeAction: (
+    formData: FormData
+  ) => null | ((...args: unknown[]) => Promise<unknown>);
+  decodeFormState: (returnValue: unknown, formData: FormData) => unknown;
+  decodeReply: (formData: FormData) => Promise<unknown[]>;
 }
 
 export interface ReactServerBuild {
@@ -70,4 +75,5 @@ export interface ReactServerBuild {
   routes: ServerRouteManifest;
   future: FutureConfig;
   basename: string;
+  serverReferences: Record<string, () => Promise<Record<string, unknown>>>;
 }
