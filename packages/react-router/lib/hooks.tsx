@@ -912,7 +912,7 @@ export function useRevalidator() {
  * Returns the active route matches, useful for accessing loaderData for
  * parent/child routes or the route "handle" property
  */
-export function useMatches(): UIMatch[] {
+export function useMatches<D = unknown, H = unknown>(): UIMatch<D, H>[] {
   let { matches, loaderData } = useDataRouterState(
     DataRouterStateHook.UseMatches
   );
