@@ -339,7 +339,7 @@ let router = createBrowserRouter(routes, {
 It's also possible you don't even want to define a loader implementation at the route level. Maybe you want to just determine the routes and issue a single GraphQL request for all of your data? You can do that by setting your `route.loader=true` so it qualifies as "having a loader", and then store GQL fragments on `route.handle`:
 
 ```ts
-const routes [
+const routes = [
   {
     id: "parent",
     path: "/parent",
