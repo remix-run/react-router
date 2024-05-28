@@ -145,11 +145,11 @@ export type Submission =
  * Arguments passed to route loader/action functions.  Same for now but we keep
  * this as a private implementation detail in case they diverge in the future.
  */
-interface DataFunctionArgs<Context> {
+type DataFunctionArgs<Context> = {
   request: Request;
   params: Params;
   context?: Context;
-}
+};
 
 // TODO: (v7) Change the defaults from any to unknown in and remove Remix wrappers:
 //   ActionFunction, ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs
@@ -158,14 +158,12 @@ interface DataFunctionArgs<Context> {
 /**
  * Arguments passed to loader functions
  */
-export interface LoaderFunctionArgs<Context = any>
-  extends DataFunctionArgs<Context> {}
+export type LoaderFunctionArgs<Context = any> = DataFunctionArgs<Context>;
 
 /**
  * Arguments passed to action functions
  */
-export interface ActionFunctionArgs<Context = any>
-  extends DataFunctionArgs<Context> {}
+export type ActionFunctionArgs<Context = any> = DataFunctionArgs<Context>;
 
 /**
  * Loaders and actions can return anything except `undefined` (`null` is a
