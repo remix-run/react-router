@@ -345,7 +345,11 @@ const routes = [
     path: "/parent",
     loader: true,
     handle: {
-      gql: gql`fragment Parent on Whatever { parentField }`
+      gql: gql`
+        fragment Parent on Whatever {
+          parentField
+        }
+      `,
     },
     children: [
       {
@@ -353,7 +357,11 @@ const routes = [
         path: "child",
         loader: true,
         handle: {
-          gql: gql`fragment Child on Whatever { childField }`
+          gql: gql`
+            fragment Child on Whatever {
+              childField
+            }
+          `,
         },
       },
     ],
