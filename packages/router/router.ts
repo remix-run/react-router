@@ -1468,39 +1468,11 @@ export function createRouter(init: RouterInit): Router {
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
     let matches = matchRoutes(routesToUse, location, basename);
-    let isFogOfWar = false;
     let flushSync = (opts && opts.flushSync) === true;
 
-    if (!matches) {
-      let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
-        routesToUse,
-        location,
-        true,
-        basename
-      );
-
-      if (fogMatches) {
-        isFogOfWar = true;
-        matches = fogMatches;
-      }
-    } else {
-      let leafRoute = matches[matches.length - 1].route;
-      if (
-        leafRoute.path &&
-        leafRoute.path.length > 0 &&
-        typeof leafRoute.children === "function"
-      ) {
-        // This route _might_ have an index child so we need to
-        // fetch around and find out
-        isFogOfWar = true;
-      }
-
-      if (leafRoute.path === "*") {
-        // If we matched a splat, it might only be because we haven't loaded
-        // the children that would match with a higher score, so let's go the
-        // fog of war route to be sure
-        isFogOfWar = true;
-      }
+    let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
+    if (fogOfWar.active && fogOfWar.matches) {
+      matches = fogOfWar.matches;
     }
 
     // Short circuit with a 404 on the root error boundary if we match nothing
@@ -1568,7 +1540,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
-        isFogOfWar,
+        fogOfWar.active,
         { replace: opts.replace, flushSync }
       );
 
@@ -1603,7 +1575,7 @@ export function createRouter(init: RouterInit): Router {
       loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
       // No need to do fog of war matching again on loader execution
-      isFogOfWar = false;
+      fogOfWar.active = false;
 
       // Create a GET request for the loaders
       request = createClientSideRequest(
@@ -1623,7 +1595,7 @@ export function createRouter(init: RouterInit): Router {
       request,
       location,
       matches,
-      isFogOfWar,
+      fogOfWar.active,
       loadingNavigation,
       opts && opts.submission,
       opts && opts.fetcherSubmission,
@@ -2119,6 +2091,11 @@ export function createRouter(init: RouterInit): Router {
     );
     let matches = matchRoutes(routesToUse, normalizedPath, basename);
 
+    let fogOfWar = checkFogOfWar(matches, routesToUse, normalizedPath);
+    if (fogOfWar.active && fogOfWar.matches) {
+      matches = fogOfWar.matches;
+    }
+
     if (!matches) {
       setFetcherError(
         key,
@@ -2152,6 +2129,7 @@ export function createRouter(init: RouterInit): Router {
         path,
         match,
         matches,
+        fogOfWar.active,
         flushSync,
         submission
       );
@@ -2167,6 +2145,7 @@ export function createRouter(init: RouterInit): Router {
       path,
       match,
       matches,
+      fogOfWar.active,
       flushSync,
       submission
     );
@@ -2180,19 +2159,27 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
+    isFogOfWar: boolean,
     flushSync: boolean,
     submission: Submission
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
-    if (!match.route.action && !match.route.lazy) {
-      let error = getInternalRouterError(405, {
-        method: submission.formMethod,
-        pathname: path,
-        routeId: routeId,
-      });
-      setFetcherError(key, routeId, error, { flushSync });
+    function detectAndHandle405Error(m: AgnosticDataRouteMatch) {
+      if (!m.route.action && !m.route.lazy) {
+        let error = getInternalRouterError(405, {
+          method: submission.formMethod,
+          pathname: path,
+          routeId: routeId,
+        });
+        setFetcherError(key, routeId, error, { flushSync });
+        return true;
+      }
+      return false;
+    }
+
+    if (!isFogOfWar && detectAndHandle405Error(match)) {
       return;
     }
 
@@ -2202,7 +2189,6 @@ export function createRouter(init: RouterInit): Router {
       flushSync,
     });
 
-    // Call the action for the fetcher
     let abortController = new AbortController();
     let fetchRequest = createClientSideRequest(
       init.history,
@@ -2210,6 +2196,39 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal,
       submission
     );
+
+    if (isFogOfWar) {
+      let discoverResult = await discoverRoutes(
+        requestMatches,
+        path,
+        fetchRequest.signal
+      );
+
+      if (discoverResult.type === "aborted") {
+        return;
+      } else if (discoverResult.type === "error") {
+        let { error } = handleDiscoverRouteError(path, discoverResult);
+        setFetcherError(key, routeId, error, { flushSync });
+        return;
+      } else if (!discoverResult.matches) {
+        setFetcherError(
+          key,
+          routeId,
+          getInternalRouterError(404, { pathname: path }),
+          { flushSync }
+        );
+        return;
+      } else {
+        requestMatches = discoverResult.matches;
+        match = getTargetMatch(requestMatches, path);
+
+        if (detectAndHandle405Error(match)) {
+          return;
+        }
+      }
+    }
+
+    // Call the action for the fetcher
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
@@ -2438,6 +2457,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
+    isFogOfWar: boolean,
     flushSync: boolean,
     submission?: Submission
   ) {
@@ -2451,13 +2471,41 @@ export function createRouter(init: RouterInit): Router {
       { flushSync }
     );
 
-    // Call the loader for this fetcher route match
     let abortController = new AbortController();
     let fetchRequest = createClientSideRequest(
       init.history,
       path,
       abortController.signal
     );
+
+    if (isFogOfWar) {
+      let discoverResult = await discoverRoutes(
+        matches,
+        path,
+        fetchRequest.signal
+      );
+
+      if (discoverResult.type === "aborted") {
+        return;
+      } else if (discoverResult.type === "error") {
+        let { error } = handleDiscoverRouteError(path, discoverResult);
+        setFetcherError(key, routeId, error, { flushSync });
+        return;
+      } else if (!discoverResult.matches) {
+        setFetcherError(
+          key,
+          routeId,
+          getInternalRouterError(404, { pathname: path }),
+          { flushSync }
+        );
+        return;
+      } else {
+        matches = discoverResult.matches;
+        match = getTargetMatch(matches, path);
+      }
+    }
+
+    // Call the loader for this fetcher route match
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
@@ -3078,6 +3126,45 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
+  function checkFogOfWar(
+    matches: AgnosticDataRouteMatch[] | null,
+    routesToUse: AgnosticDataRouteObject[],
+    pathname: string
+  ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
+    if (!matches) {
+      let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+        routesToUse,
+        pathname,
+        true,
+        basename
+      );
+
+      if (fogMatches) {
+        return { active: true, matches: fogMatches };
+      }
+    } else {
+      let leafRoute = matches[matches.length - 1].route;
+      if (
+        leafRoute.path &&
+        leafRoute.path.length > 0 &&
+        typeof leafRoute.children === "function"
+      ) {
+        // This route _might_ have an index child so we need to
+        // fetch around and find out
+        return { active: true, matches: null };
+      }
+
+      if (leafRoute.path === "*") {
+        // If we matched a splat, it might only be because we haven't loaded
+        // the children that would match with a higher score, so let's go the
+        // fog of war route to be sure
+        return { active: true, matches: null };
+      }
+    }
+
+    return { active: false, matches: null };
+  }
+
   type DiscoverRoutesSuccessResult = {
     type: "success";
     matches: AgnosticDataRouteMatch[] | null;
@@ -3096,14 +3183,14 @@ export function createRouter(init: RouterInit): Router {
   async function discoverRoutes(
     matches: AgnosticDataRouteMatch[],
     pathname: string,
-    signal?: AbortSignal
+    signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
     let partialMatches: AgnosticDataRouteMatch[] | null = matches;
     let route = partialMatches[partialMatches.length - 1].route;
     while (true) {
       try {
         await loadLazyRouteChildren(route, pendingRouteChildren);
-        if (signal?.aborted) {
+        if (signal.aborted) {
           return { type: "aborted" };
         }
       } catch (e) {

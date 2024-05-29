@@ -1151,4 +1151,176 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
     });
   });
+
+  describe("fetchers", () => {
+    it("discovers child route at a depth of 1 (fetcher.load)", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+      let childLoaderDfd = createDeferred();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+            children: () => childrenDfd.promise,
+          },
+        ],
+      });
+
+      let key = "key";
+      router.fetch(key, "0", "/parent/child");
+      expect(router.getFetcher(key).state).toBe("loading");
+
+      childrenDfd.resolve([
+        {
+          id: "child",
+          path: "child",
+          loader: () => childLoaderDfd.promise,
+        },
+      ]);
+      expect(router.getFetcher(key).state).toBe("loading");
+
+      childLoaderDfd.resolve("CHILD");
+      await tick();
+
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(router.getFetcher(key).data).toBe("CHILD");
+    });
+
+    it("discovers child routes at a depth >1 (fetcher.load)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        async loader() {
+                          await tick();
+                          return "C";
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      let key = "key";
+      await router.fetch(key, "0", "/a/b/c");
+      // Needed for now since router.fetch is not async until v7
+      await new Promise((r) => setTimeout(r, 10));
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(router.getFetcher(key).data).toBe("C");
+    });
+
+    it("discovers child route at a depth of 1 (fetcher.submit)", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+      let childActionDfd = createDeferred();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "parent",
+            children: () => childrenDfd.promise,
+          },
+        ],
+      });
+
+      let key = "key";
+      router.fetch(key, "0", "/parent/child", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      expect(router.getFetcher(key).state).toBe("submitting");
+
+      childrenDfd.resolve([
+        {
+          id: "child",
+          path: "child",
+          action: () => childActionDfd.promise,
+        },
+      ]);
+      expect(router.getFetcher(key).state).toBe("submitting");
+
+      childActionDfd.resolve("CHILD");
+      await tick();
+
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(router.getFetcher(key).data).toBe("CHILD");
+    });
+
+    it("discovers child routes at a depth >1 (fetcher.submit)", async () => {
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "a",
+            path: "a",
+            async children() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  async children() {
+                    await tick();
+                    return [
+                      {
+                        id: "c",
+                        path: "c",
+                        async action() {
+                          await tick();
+                          return "C ACTION";
+                        },
+                      },
+                    ];
+                  },
+                },
+              ];
+            },
+          },
+        ],
+      });
+
+      let key = "key";
+      await router.fetch(key, "0", "/a/b/c", {
+        formMethod: "POST",
+        formData: createFormData({}),
+      });
+      // Needed for now since router.fetch is not async until v7
+      await new Promise((r) => setTimeout(r, 10));
+      expect(router.getFetcher(key).state).toBe("idle");
+      expect(router.getFetcher(key).data).toBe("C ACTION");
+    });
+  });
 });
