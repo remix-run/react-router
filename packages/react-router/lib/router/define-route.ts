@@ -22,17 +22,6 @@ type Serializable =
   | Set<Serializable>
   | Promise<Serializable>;
 
-export type TypedResponse<T = unknown> = Omit<Response, "json"> & {
-  json(): Promise<T>;
-};
-
-type DataFunctionReturnValue =
-  | Serializable
-  // TODO: | TypedDeferredData<Record<string, unknown>> // do we want to allow `defer()` for back compat?
-  | TypedResponse<Record<string, unknown>>;
-
-// TODO: clientLoader and all the other route module export APIs (meta, handle, ErrorBoundary, etc.)
-
 export type ResponseStub = {
   status: number | undefined;
   headers: Headers;
@@ -47,7 +36,7 @@ type LoaderArgs<Param extends string> = {
 };
 export type Loader<Param extends string> = (
   args: LoaderArgs<Param>
-) => MaybePromise<DataFunctionReturnValue>;
+) => MaybePromise<Serializable>;
 
 // action
 type ActionArgs<Param extends string> = {
@@ -58,13 +47,16 @@ type ActionArgs<Param extends string> = {
 };
 export type Action<Param extends string> = (
   args: ActionArgs<Param>
-) => MaybePromise<DataFunctionReturnValue>;
+) => MaybePromise<Serializable>;
 
 type Component<P extends string, L extends Loader<P>> = (args: {
   params: string extends P ? Record<never, string> : Record<P, string>;
   data: Awaited<ReturnType<L>>;
 }) => ReactNode;
 
+// loader -> data for component
+// loader -> serverLoader for clientLoader -> data for component
+// TODO: clientLoader and all the other route module export APIs (meta, handle, ErrorBoundary, etc.)
 export const defineRoute$ = <
   const P extends string,
   L extends Loader<P>,
@@ -73,5 +65,5 @@ export const defineRoute$ = <
   params?: P[];
   loader?: L;
   action?: A;
-  component?: Component<NoInfer<P>, NoInfer<L>>;
+  Component?: Component<NoInfer<P>, NoInfer<L>>;
 }) => route;
