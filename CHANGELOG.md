@@ -711,6 +711,8 @@ Date: 2023-06-14
 
 `6.13.0` is really a patch release in spirit but comes with a SemVer minor bump since we added a new future flag.
 
+#### v7_startTransition
+
 The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
 
 Therefore, in `6.13.0` the default behavior will no longer leverage `React.startTransition`:
