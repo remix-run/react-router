@@ -1,6 +1,6 @@
 {
   "name": "@react-router/server-runtime",
-  "version": "2.9.0-pre.0",
+  "version": "0.0.0-nightly-037474993-20240530",
   "description": "Server runtime for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
