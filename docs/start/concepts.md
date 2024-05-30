@@ -568,7 +568,7 @@ The `Outlet` component will always render the next match. That means `<Teams>` a
 If the URL were `/contact-us`, the element tree would change to:
 
 ```jsx
-<ContactForm />
+<Contact />
 ```
 
 Because the contact form is not under the main `<App>` route.
