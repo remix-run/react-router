@@ -864,14 +864,16 @@ You can also check out the docs [here](https://reactrouter.com/en/dev/guides/api
 
 ### Minor Changes
 
-- The first future flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` (and some Remix) behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+#### future.v7_normalizeFormMethod
 
-  - When `future.v7_normalizeFormMethod` is unspecified or set to `false` (default v6 behavior),
-    - `useNavigation().formMethod` is lowercase
-    - `useFetcher().formMethod` is lowercase
-  - When `future.v7_normalizeFormMethod === true`:
-    - `useNavigation().formMethod` is UPPERCASE
-    - `useFetcher().formMethod` is UPPERCASE
+The first future flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` (and some Remix) behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+- When `future.v7_normalizeFormMethod` is unspecified or set to `false` (default v6 behavior),
+  - `useNavigation().formMethod` is lowercase
+  - `useFetcher().formMethod` is lowercase
+- When `future.v7_normalizeFormMethod === true`:
+  - `useNavigation().formMethod` is UPPERCASE
+  - `useFetcher().formMethod` is UPPERCASE
 
 ### Patch Changes
 
