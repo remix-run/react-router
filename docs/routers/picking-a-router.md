@@ -134,6 +134,7 @@ The following APIs are introduced in React Router 6.4 and will only work when us
 [useactiondata]: ../hooks/use-action-data
 [useasyncerror]: ../hooks/use-async-error
 [useasyncvalue]: ../hooks/use-async-value
+[useblocker]: ../hooks/use-blocker
 [usefetcher]: ../hooks/use-fetcher
 [usefetchers]: ../hooks/use-fetchers
 [useloaderdata]: ../hooks/use-loader-data
