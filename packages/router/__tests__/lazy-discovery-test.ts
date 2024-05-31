@@ -459,9 +459,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
-  // TODO: Onus is on the dev here to never include a parent without an index
-  // because it matches fully so no need to call patchRouteSOnMiss()
-  it.skip("discovers child index routes", async () => {
+  it("discovers child routes through pathless routes", async () => {
     router = createRouter({
       history: createMemoryHistory(),
       routes: [
@@ -475,65 +473,30 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       ],
       async unstable_patchRoutesOnMiss(pathname, matches) {
         await tick();
-        return [
-          {
-            id: "index",
-            index: true,
-            async loader() {
-              await tick();
-              return "INDEX";
+        if (last(matches).route.id === "a") {
+          return [
+            {
+              id: "pathless",
+              path: "",
             },
-          },
-        ];
+          ];
+        } else if (last(matches).route.id === "pathless") {
+          return [
+            {
+              id: "b",
+              path: "b",
+              async loader() {
+                await tick();
+                return "B";
+              },
+            },
+          ];
+        }
+        return null;
       },
     });
 
-    await router.navigate("/a");
-    expect(router.state.location.pathname).toBe("/a");
-    expect(router.state.loaderData).toEqual({
-      index: "INDEX",
-    });
-    expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "index"]);
-  });
-
-  // TODO: Onus is on the dev here to never include a parent without child
-  // pathless routes because it matches fully so no need to call patchRoutesOnMiss()
-  it.skip("discovers child routes through pathless routes", async () => {
-    router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-        {
-          path: "/",
-        },
-        {
-          id: "a",
-          path: "a",
-        },
-      ],
-      async unstable_patchRoutesOnMiss(pathname, matches) {
-        await tick();
-        return [
-          {
-            id: "pathless",
-            path: "",
-            async children() {
-              await tick();
-              return [
-                {
-                  id: "b",
-                  path: "b",
-                  async loader() {
-                    await tick();
-                    return "B";
-                  },
-                },
-              ];
-            },
-          },
-        ];
-      },
-    });
-
+    debugger;
     await router.navigate("/a/b");
     expect(router.state.location.pathname).toBe("/a/b");
     expect(router.state.loaderData).toEqual({
@@ -543,66 +506,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       "a",
       "pathless",
       "b",
-    ]);
-  });
-
-  // TODO: Onus is on the dev here to never include a parent without child
-  // pathless routes because it matches fully so no need to call patchRoutesOnMiss()
-  it.skip("discovers child index routes through pathless routes", async () => {
-    router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-        {
-          path: "/",
-        },
-        {
-          id: "a",
-          path: "a",
-          async children() {
-            await tick();
-            return [
-              {
-                id: "pathless",
-                path: "",
-                async children() {
-                  await tick();
-                  return [
-                    {
-                      id: "b",
-                      path: "b",
-                      async children() {
-                        await tick();
-                        return [
-                          {
-                            id: "index",
-                            index: true,
-                            async loader() {
-                              await tick();
-                              return "INDEX";
-                            },
-                          },
-                        ];
-                      },
-                    },
-                  ];
-                },
-              },
-            ];
-          },
-        },
-      ],
-    });
-
-    await router.navigate("/a/b");
-    expect(router.state.location.pathname).toBe("/a/b");
-    expect(router.state.loaderData).toEqual({
-      index: "INDEX",
-    });
-    expect(router.state.matches.map((m) => m.route.id)).toEqual([
-      "a",
-      "pathless",
-      "b",
-      "index",
     ]);
   });
 
