@@ -255,6 +255,15 @@ export interface DataStrategyFunction {
   (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
 }
 
+export interface PatchRoutesOnMissFunction<
+  M extends AgnosticDataRouteMatch = AgnosticDataRouteMatch
+> {
+  (path: string, matches: M[]):
+    | M["route"][]
+    | null
+    | Promise<M["route"][] | null>;
+}
+
 /**
  * Function provided by the framework-aware layers to set any framework-specific
  * properties from framework-agnostic properties
@@ -329,7 +338,7 @@ export type AgnosticIndexRouteObject = AgnosticBaseRouteObject & {
  * Non-index routes may have children, but cannot have index
  */
 export type AgnosticNonIndexRouteObject = AgnosticBaseRouteObject & {
-  children?: AgnosticRouteObject[] | (() => Promise<AgnosticRouteObject[]>);
+  children?: AgnosticRouteObject[];
   index?: false;
 };
 
@@ -480,25 +489,12 @@ export function convertRoutesToDataRoutes(
       manifest[id] = pathOrLayoutRoute;
 
       if (route.children) {
-        if (typeof route.children === "function") {
-          let loadChildren = route.children;
-          pathOrLayoutRoute.children = async () => {
-            let children = await loadChildren();
-            return convertRoutesToDataRoutes(
-              children,
-              mapRouteProperties,
-              treePath,
-              manifest
-            );
-          };
-        } else {
-          pathOrLayoutRoute.children = convertRoutesToDataRoutes(
-            route.children,
-            mapRouteProperties,
-            treePath,
-            manifest
-          );
-        }
+        pathOrLayoutRoute.children = convertRoutesToDataRoutes(
+          route.children,
+          mapRouteProperties,
+          treePath,
+          manifest
+        );
       }
 
       return pathOrLayoutRoute;
@@ -538,7 +534,7 @@ export function matchRoutesImpl<
     return null;
   }
 
-  let branches = flattenRoutes(routes, allowPartial);
+  let branches = flattenRoutes(routes);
   rankRouteBranches(branches);
 
   let matches = null;
@@ -603,7 +599,6 @@ function flattenRoutes<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   routes: RouteObjectType[],
-  allowPartial: boolean,
   branches: RouteBranch<RouteObjectType>[] = [],
   parentsMeta: RouteMeta<RouteObjectType>[] = [],
   parentPath = ""
@@ -646,18 +641,12 @@ function flattenRoutes<
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
       );
-      invariant(
-        typeof route.children !== "function",
-        "Route children must be resolved prior to calling flattenRoutes"
-      );
-      flattenRoutes(route.children, allowPartial, branches, routesMeta, path);
+      flattenRoutes(route.children, branches, routesMeta, path);
     }
 
     // Routes without a path shouldn't ever match by themselves unless they are
     // index routes, so don't add them to the list of possible branches.
-    // When partial matching we do want these to match so we can detect their
-    // async children() functions
-    if (route.path == null && !route.index && !allowPartial) {
+    if (route.path == null && !route.index) {
       return;
     }
 
@@ -826,9 +815,7 @@ function matchRouteBranch<
 
     let route = meta.route;
 
-    // If this route has a `children()` function then allow partial matching
-    // up to this point if requested
-    if (!match && end && allowPartial && typeof route.children === "function") {
+    if (!match && end && allowPartial) {
       match = matchPath(
         {
           path: meta.relativePath,

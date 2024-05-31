@@ -35,6 +35,7 @@ import type {
   UIMatch,
   V7_FormMethod,
   V7_MutationFormMethod,
+  PatchRoutesOnMissFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -378,6 +379,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
+  unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
   unstable_dataStrategy?: DataStrategyFunction;
 }
 
@@ -784,6 +786,9 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
+  let patchRoutesOnMissImpl =
+    init.unstable_patchRoutesOnMiss || (() => Promise.resolve(null));
+
   // Config driven behavior flags
   let future: FutureConfig = {
     v7_fetcherPersist: false,
@@ -972,10 +977,11 @@ export function createRouter(init: RouterInit): Router {
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
 
-  // Map of pending children() function executions so that we only kick them off once
-  let pendingRouteChildren = new Map<
+  // Map of pending patchRoutesOnMiss() promises (keyed by path/matches) so
+  // that we only kick them off once for a given combo
+  let pendingPatchRoutes = new Map<
     string,
-    Promise<AgnosticDataRouteObject[]>
+    Promise<AgnosticDataRouteObject[] | null>
   >();
 
   // Flag to ignore the next history update, so we can revert the URL change on
@@ -3144,21 +3150,17 @@ export function createRouter(init: RouterInit): Router {
       }
     } else {
       let leafRoute = matches[matches.length - 1].route;
-      if (
-        leafRoute.path &&
-        leafRoute.path.length > 0 &&
-        typeof leafRoute.children === "function"
-      ) {
-        // This route _might_ have an index child so we need to
-        // fetch around and find out
-        return { active: true, matches: null };
-      }
-
       if (leafRoute.path === "*") {
-        // If we matched a splat, it might only be because we haven't loaded
-        // the children that would match with a higher score, so let's go the
-        // fog of war route to be sure
-        return { active: true, matches: null };
+        // If we matched a splat, it might only be because we haven't yet fetched
+        // the children that would match with a higher score, so let's fetch
+        // around and find out
+        let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+          routesToUse,
+          pathname,
+          true,
+          basename
+        );
+        return { active: true, matches: partialMatches };
       }
     }
 
@@ -3189,7 +3191,16 @@ export function createRouter(init: RouterInit): Router {
     let route = partialMatches[partialMatches.length - 1].route;
     while (true) {
       try {
-        await loadLazyRouteChildren(route, pendingRouteChildren);
+        await loadLazyRouteChildren(
+          route,
+          patchRoutesOnMissImpl,
+          pathname,
+          partialMatches,
+          manifest,
+          mapRouteProperties,
+          pendingPatchRoutes,
+          signal
+        );
         if (signal.aborted) {
           return { type: "aborted" };
         }
@@ -3199,40 +3210,51 @@ export function createRouter(init: RouterInit): Router {
 
       let routesToUse = inFlightDataRoutes || dataRoutes;
       let newMatches = matchRoutes(routesToUse, pathname, basename);
+      let matchedSplat = false;
       if (newMatches) {
         let leafRoute = newMatches[newMatches.length - 1].route;
+
         if (leafRoute.index) {
           // If we found an index route, we can stop
           return { type: "success", matches: newMatches };
         }
-        if (
-          leafRoute.path &&
-          leafRoute.path.length > 0 &&
-          leafRoute.path !== "*" && // Can't assume splats match higher?
-          typeof leafRoute.children !== "function"
-        ) {
-          // If we found a path'd non-splat route without async children, we
-          // can stop.
-          // If it's a splat route, we can't be sure there's not a higher-scoring
-          // route down some partial Matches trail so we need to check that out
-          // If it has an async children() function we need to go down that road
-          // in case it has index or pathless children that may match
-          return { type: "success", matches: newMatches };
+
+        if (leafRoute.path && leafRoute.path.length > 0) {
+          if (leafRoute.path === "*") {
+            // If we found a splat route, we can't be sure there's not a
+            // higher-scoring route down some partial matches trail so we need
+            // to check that out
+            matchedSplat = true;
+          } else {
+            // If we found a non-splat route, we can stop
+            return { type: "success", matches: newMatches };
+          }
         }
       }
 
-      partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+      let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
         routesToUse,
         pathname,
         true,
         basename
       );
 
-      if (!partialMatches) {
-        // We are no longer partially matching so this is a legit 404
-        return { type: "success", matches: null };
+      // Loop detection if we find the same partials after a run through patchRoutesOnMiss
+      if (
+        !newPartialMatches ||
+        partialMatches.map((m) => m.route.id).join("-") ===
+          newPartialMatches.map((m) => m.route.id).join("-")
+      ) {
+        // We are no longer partially matching anything new so this was either a
+        // legit splat match above, or it's a 404
+        if (matchedSplat) {
+          return { type: "success", matches: newMatches };
+        } else {
+          return { type: "success", matches: null };
+        }
       }
 
+      partialMatches = newPartialMatches;
       route = partialMatches[partialMatches.length - 1].route;
       if (route.path === "*") {
         // The splat is still our most accurate partial, so run with it
@@ -4451,24 +4473,53 @@ function shouldRevalidateLoader(
  */
 async function loadLazyRouteChildren(
   route: AgnosticDataRouteObject,
-  pendingRouteChildren: Map<string, Promise<AgnosticDataRouteObject[]>>
+  patchRoutesOnMissImpl: PatchRoutesOnMissFunction,
+  path: string,
+  matches: AgnosticDataRouteMatch[],
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  pendingRouteChildren: Map<string, Promise<AgnosticDataRouteObject[] | null>>,
+  signal: AbortSignal
 ) {
-  if (typeof route.children !== "function") {
-    return;
-  }
-
-  let pending = pendingRouteChildren.get(route.id);
+  let key = [path, ...matches.map((m) => m.route.id)].join("-");
+  let pending = pendingRouteChildren.get(key);
+  let children: AgnosticDataRouteObject[] | null = null;
   if (!pending) {
-    // convertRoutesToDataRoutes wraps the underlying children function to
-    // ensure returned routes are converted to data routes
-    pending = route.children() as Promise<AgnosticDataRouteObject[]>;
-    pendingRouteChildren.set(route.id, pending);
+    let maybePromise = patchRoutesOnMissImpl(path, matches);
+    if (isPromise<AgnosticDataRouteObject[]>(maybePromise)) {
+      pending = maybePromise;
+      pendingRouteChildren.set(key, pending);
+    } else {
+      children = maybePromise as Awaited<
+        ReturnType<typeof patchRoutesOnMissImpl>
+      >;
+    }
   }
 
   try {
-    route.children = await pending;
+    if (pending) {
+      children = await pending;
+    }
+
+    if (signal.aborted) {
+      return;
+    }
+
+    if (children) {
+      let dataChildren = convertRoutesToDataRoutes(
+        children,
+        mapRouteProperties,
+        [route.id, "patch"],
+        manifest
+      );
+      if (route.children) {
+        route.children.push(...dataChildren);
+      } else {
+        route.children = dataChildren;
+      }
+    }
   } finally {
-    pendingRouteChildren.delete(route.id);
+    pendingRouteChildren.delete(key);
   }
 }
 
@@ -5297,6 +5348,10 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   // If the hash is removed the browser will re-perform a request to the server
   // /page#hash -> /page
   return false;
+}
+
+function isPromise<T = unknown>(val: unknown): val is Promise<T> {
+  return typeof val === "object" && val != null && "then" in val;
 }
 
 function isHandlerResult(result: unknown): result is HandlerResult {
