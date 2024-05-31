@@ -815,7 +815,12 @@ function matchRouteBranch<
 
     let route = meta.route;
 
-    if (!match && end && allowPartial) {
+    if (
+      !match &&
+      end &&
+      allowPartial &&
+      !routesMeta[routesMeta.length - 1].route.index
+    ) {
       match = matchPath(
         {
           path: meta.relativePath,

@@ -246,6 +246,16 @@ export interface Router {
 
   /**
    * @internal
+   * PRIVATE DO NOT USE
+   *
+   * Patch additional children routes into an existing parent route
+   * @param routeId The parent route id
+   * @param children The additional children routes
+   */
+  patchRoutes(routeId: string, children: AgnosticRouteObject[]): void;
+
+  /**
+   * @internal
    * PRIVATE - DO NOT USE
    *
    * HMR needs to pass in-flight route updates to React Router
@@ -3304,6 +3314,9 @@ export function createRouter(init: RouterInit): Router {
     dispose,
     getBlocker,
     deleteBlocker,
+    patchRoutes(routeId, children) {
+      return patchRoutes(routeId, children, manifest, mapRouteProperties);
+    },
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
@@ -4501,25 +4514,35 @@ async function loadLazyRouteChildren(
       children = await pending;
     }
 
-    if (signal.aborted) {
-      return;
-    }
-
-    if (children) {
-      let dataChildren = convertRoutesToDataRoutes(
-        children,
-        mapRouteProperties,
-        [route.id, "patch"],
-        manifest
-      );
-      if (route.children) {
-        route.children.push(...dataChildren);
-      } else {
-        route.children = dataChildren;
-      }
+    if (children && !signal.aborted) {
+      patchRoutes(route.id, children, manifest, mapRouteProperties);
     }
   } finally {
     pendingRouteChildren.delete(key);
+  }
+}
+
+function patchRoutes(
+  routeId: string,
+  children: AgnosticRouteObject[],
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction
+) {
+  let route = manifest[routeId];
+  invariant(
+    route,
+    `No route found to patch children into: routeId = ${routeId}`
+  );
+  let dataChildren = convertRoutesToDataRoutes(
+    children,
+    mapRouteProperties,
+    [routeId, "patch"],
+    manifest
+  );
+  if (route.children) {
+    route.children.push(...dataChildren);
+  } else {
+    route.children = dataChildren;
   }
 }
 

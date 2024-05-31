@@ -496,7 +496,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       },
     });
 
-    debugger;
     await router.navigate("/a/b");
     expect(router.state.location.pathname).toBe("/a/b");
     expect(router.state.loaderData).toEqual({
