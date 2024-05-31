@@ -401,6 +401,64 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("allows folks to implement at the route level via handle.children()", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+          handle: {
+            async loadChildren() {
+              await tick();
+              return [
+                {
+                  id: "b",
+                  path: "b",
+                  handle: {
+                    async loadChildren() {
+                      await tick();
+                      return [
+                        {
+                          id: "c",
+                          path: "c",
+                          async loader() {
+                            await tick();
+                            return "C";
+                          },
+                        },
+                      ];
+                    },
+                  },
+                },
+              ];
+            },
+          },
+        },
+      ],
+      unstable_patchRoutesOnMiss(path, matches) {
+        if (last(matches).route.handle?.loadChildren) {
+          return last(matches).route.handle.loadChildren?.();
+        }
+        return null;
+      },
+    });
+
+    await router.navigate("/a/b/c");
+    expect(router.state.location.pathname).toBe("/a/b/c");
+    expect(router.state.loaderData).toEqual({
+      c: "C",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+  });
+
   // TODO: Onus is on the dev here to never include a parent without an index
   // because it matches fully so no need to call patchRouteSOnMiss()
   it.skip("discovers child index routes", async () => {
