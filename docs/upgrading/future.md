@@ -199,3 +199,25 @@ createBrowserRouter(routes, {
   },
 });
 ```
+
+## v7_throwAbortReason
+
+<docs-warning>If you are not using a `createStaticHandler` you can skip this</docs-warning>
+
+**Background**
+
+When a server-side request is aborted, Remix will throw the `request.signal.reason` instead of an error such as `new Error("query() call aborted...")`.
+
+👉 **Enable the Flag**
+
+```tsx
+createStaticHandler(routes, {
+  future: {
+    v7_throwAbortReason: true,
+  },
+});
+```
+
+**Update your Code**
+
+You likely won't need to adjust any code, unless you had custom logic that was matching the previous error message to distinguish it from other errors.
