@@ -711,6 +711,8 @@ Date: 2023-06-14
 
 `6.13.0` is really a patch release in spirit but comes with a SemVer minor bump since we added a new future flag.
 
+#### v7_startTransition
+
 The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
 
 Therefore, in `6.13.0` the default behavior will no longer leverage `React.startTransition`:
@@ -862,14 +864,16 @@ You can also check out the docs [here](https://reactrouter.com/en/dev/guides/api
 
 ### Minor Changes
 
-- The first future flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` (and some Remix) behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+#### future.v7_normalizeFormMethod
 
-  - When `future.v7_normalizeFormMethod` is unspecified or set to `false` (default v6 behavior),
-    - `useNavigation().formMethod` is lowercase
-    - `useFetcher().formMethod` is lowercase
-  - When `future.v7_normalizeFormMethod === true`:
-    - `useNavigation().formMethod` is UPPERCASE
-    - `useFetcher().formMethod` is UPPERCASE
+The first future flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` (and some Remix) behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+- When `future.v7_normalizeFormMethod` is unspecified or set to `false` (default v6 behavior),
+  - `useNavigation().formMethod` is lowercase
+  - `useFetcher().formMethod` is lowercase
+- When `future.v7_normalizeFormMethod === true`:
+  - `useNavigation().formMethod` is UPPERCASE
+  - `useFetcher().formMethod` is UPPERCASE
 
 ### Patch Changes
 
