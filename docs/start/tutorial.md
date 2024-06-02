@@ -271,7 +271,7 @@ export default function Contact() {
   const contact = {
     first: "Your",
     last: "Name",
-    avatar: "https://placekitten.com/g/200/200",
+    avatar: "https://robohash.org/you.png?size=200x200",
     twitter: "your_handle",
     notes: "Some notes",
     favorite: true,
@@ -282,7 +282,7 @@ export default function Contact() {
       <div>
         <img
           key={contact.avatar}
-          src={contact.avatar || null}
+          src={contact.avatar || `https://robohash.org/${contact.id}.png?size=200x200`}
         />
       </div>
 
@@ -337,8 +337,7 @@ export default function Contact() {
 }
 
 function Favorite({ contact }) {
-  // yes, this is a `let` for later
-  let favorite = contact.favorite;
+  const favorite = contact.favorite;
   return (
     <Form method="post">
       <button
@@ -1718,7 +1717,7 @@ import {
 
 function Favorite({ contact }) {
   const fetcher = useFetcher();
-  let favorite = contact.favorite;
+  const favorite = contact.favorite;
 
   return (
     <fetcher.Form method="post">
@@ -1747,7 +1746,7 @@ Might want to take a look at that form while we're here. As always, our form has
 import { getContact, updateContact } from "../contacts";
 
 export async function action({ request, params }) {
-  let formData = await request.formData();
+  const formData = await request.formData();
   return updateContact(params.contactId, {
     favorite: formData.get("favorite") === "true",
   });
@@ -1814,10 +1813,9 @@ The fetcher knows the form data being submitted to the action, so it's available
 function Favorite({ contact }) {
   const fetcher = useFetcher();
 
-  let favorite = contact.favorite;
-  if (fetcher.formData) {
-    favorite = fetcher.formData.get("favorite") === "true";
-  }
+  const favorite = fetcher.formData
+    ? fetcher.formData.get("favorite") === "true"
+    : contact.favorite;
 
   return (
     <fetcher.Form method="post">
