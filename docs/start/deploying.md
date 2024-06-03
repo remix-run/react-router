@@ -8,8 +8,8 @@ new: true
 
 React Router can be deployed two ways:
 
-- Static Hosting
 - Fullstack Hosting
+- Static Hosting
 
 To get the most benefits from React and React Router, we recommend fullstack hosting.
 
@@ -96,8 +96,6 @@ This template includes:
 - Optimized Image Transforms with `<Image/>` and Vercel images
 - ISR for statically pre-rendered routes
 
-</div>
-
 [View it live →](#TODO)
 
 ### Manual Fullstack Deployment
@@ -120,7 +118,7 @@ You can get started with the following Deploy Now buttons:
 
 ### Manual Static Hosting
 
-Ensure the `ssr` flag is not `true` in your Vite config:
+Ensure the `ssr` flag is `false` in your Vite config:
 
 ```ts
 import react from "@react-router/dev/vite";
