@@ -38,6 +38,8 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "../config";
+import type { HasFields } from "./define-route";
+import { getDefineRouteHasFields } from "./define-route";
 
 export async function resolveViteConfig({
   configFile,
@@ -283,18 +285,21 @@ const writeFileSafe = async (file: string, contents: string): Promise<void> => {
   await fse.writeFile(file, contents);
 };
 
+// TODO: change this to return <Reco
 const getRouteManifestModuleExports = async (
   viteChildCompiler: Vite.ViteDevServer | null,
   ctx: ReactRouterPluginContext
-): Promise<Record<string, string[]>> => {
+): Promise<Record<string, HasFields>> => {
   let entries = await Promise.all(
     Object.entries(ctx.reactRouterConfig.routes).map(async ([key, route]) => {
-      let sourceExports = await getRouteModuleExports(
+      // do the old thing when `defineRoute$` isn't present
+      // otherwise use the new AST-based `has*` fields detector
+      let hasFields = await getRouteModuleHasFields({
         viteChildCompiler,
         ctx,
-        route.file
-      );
-      return [key, sourceExports] as const;
+        routeFile: route.file,
+      });
+      return [key, hasFields] as const;
     })
   );
   return Object.fromEntries(entries);
@@ -588,7 +593,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         ctx.reactRouterConfig.appDirectory,
         route.file
       );
-      let sourceExports = routeManifestExports[key];
+      let hasFields = routeManifestExports[key];
       let isRootRoute = route.parentId === undefined;
 
       let routeManifestEntry = {
@@ -597,11 +602,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         path: route.path,
         index: route.index,
         caseSensitive: route.caseSensitive,
-        hasAction: sourceExports.includes("action"),
-        hasLoader: sourceExports.includes("loader"),
-        hasClientAction: sourceExports.includes("clientAction"),
-        hasClientLoader: sourceExports.includes("clientLoader"),
-        hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
+        ...hasFields,
         ...getReactRouterManifestBuildAssets(
           ctx,
           viteManifest,
@@ -665,7 +666,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     );
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
-      let sourceExports = routeManifestExports[key];
+      let hasFields = routeManifestExports[key];
       routes[key] = {
         id: route.id,
         parentId: route.parentId,
@@ -679,11 +680,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
           )}`
         ),
-        hasAction: sourceExports.includes("action"),
-        hasLoader: sourceExports.includes("loader"),
-        hasClientAction: sourceExports.includes("clientAction"),
-        hasClientLoader: sourceExports.includes("clientLoader"),
-        hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
+        ...hasFields,
         imports: [],
       };
     }
@@ -987,16 +984,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         if (id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING)) {
           let routeModuleId = id.replace(BUILD_CLIENT_ROUTE_QUERY_STRING, "");
-          let sourceExports = await getRouteModuleExports(
+          // TODO: make this work with new hasFields codepaths for defineRoute$ compat
+          let hasFields = await getRouteModuleHasFields({
             viteChildCompiler,
             ctx,
-            routeModuleId
-          );
+            routeFile: routeModuleId,
+          });
+
+          let clientExports = CLIENT_ROUTE_EXPORTS.filter(
+            (xport) => xport // TODO: make a fields util and a hasFields util, don't precompute hasFields, precompute _fields_
+          ).join(", ");
 
           let routeFileName = path.basename(routeModuleId);
-          let clientExports = sourceExports
-            .filter((exportName) => CLIENT_ROUTE_EXPORTS.includes(exportName))
-            .join(", ");
+          // let clientExports = sourceExports
+          //   .filter((exportName) => CLIENT_ROUTE_EXPORTS.includes(exportName))
+          //   .join(", ");
 
           return `export { ${clientExports} } from "./${routeFileName}";`;
         }
@@ -1612,12 +1614,12 @@ async function getRouteMetadata(
   route: ConfigRoute,
   readRouteFile?: () => string | Promise<string>
 ) {
-  let sourceExports = await getRouteModuleExports(
-    viteChildCompiler,
+  let hasFields = await getRouteModuleHasFields({
     ctx,
-    route.file,
-    readRouteFile
-  );
+    viteChildCompiler,
+    routeFile: route.file,
+    readRouteFile,
+  });
 
   let info = {
     id: route.id,
@@ -1640,11 +1642,7 @@ async function getRouteMetadata(
         resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
       )}?import`
     ), // Ensure the Vite dev server responds with a JS module
-    hasAction: sourceExports.includes("action"),
-    hasClientAction: sourceExports.includes("clientAction"),
-    hasLoader: sourceExports.includes("loader"),
-    hasClientLoader: sourceExports.includes("clientLoader"),
-    hasErrorBoundary: sourceExports.includes("ErrorBoundary"),
+    ...hasFields,
     imports: [],
   };
   return info;
@@ -1876,4 +1874,46 @@ function createPrerenderRoutes(
           ...commonRoute,
         };
   });
+}
+
+async function getRouteModuleHasFieldsFromExports(args: {
+  viteChildCompiler: Vite.ViteDevServer | null;
+  ctx: ReactRouterPluginContext;
+  routeFile: string;
+  readRouteFile?: () => string | Promise<string>;
+}): Promise<HasFields> {
+  let xports = await getRouteModuleExports(
+    args.viteChildCompiler,
+    args.ctx,
+    args.routeFile,
+    args.readRouteFile
+  );
+
+  return {
+    hasLoader: xports.includes("loader"),
+    hasClientLoader: xports.includes("clientLoader"),
+    hasAction: xports.includes("action"),
+    hasClientAction: xports.includes("clientAction"),
+    hasErrorBoundary: xports.includes("ErrorBoundary"),
+  };
+}
+
+async function getRouteModuleHasFields(args: {
+  routeFile: string;
+  readRouteFile?: () => string | Promise<string>;
+
+  // optional for back compat
+  viteChildCompiler: Vite.ViteDevServer | null;
+  ctx: ReactRouterPluginContext;
+}): Promise<HasFields> {
+  if (!args.routeFile.includes(`defineRoute$`)) {
+    return getRouteModuleHasFieldsFromExports(args);
+  }
+
+  // TODO: probably also need to pass `readRouteFile` to `getDefineRouteHasFields`
+  let fields = getDefineRouteHasFields(args.routeFile);
+  if (!fields) {
+    return getRouteModuleHasFieldsFromExports(args);
+  }
+  return fields;
 }
