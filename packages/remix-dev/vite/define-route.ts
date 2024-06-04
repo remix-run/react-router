@@ -1,7 +1,10 @@
 import type { Binding, NodePath } from "@babel/traverse";
 import { parse, traverse, generate, t } from "./babel";
 import type { GeneratorResult } from "@babel/generator";
-import { deadCodeElimination, findReferencedIdentifiers } from "./dce";
+import {
+  deadCodeElimination,
+  findReferencedIdentifiers,
+} from "babel-dead-code-elimination";
 
 const MACRO = "defineRoute$";
 const MACRO_PKG = "react-router";
