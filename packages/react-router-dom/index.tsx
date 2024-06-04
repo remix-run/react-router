@@ -80,6 +80,7 @@ import {
   getSearchParamsForLocation,
   shouldProcessLinkClick,
 } from "./dom";
+import {trace, context, SpanContext} from "@opentelemetry/api";
 
 ////////////////////////////////////////////////////////////////////////////////
 //#region Re-exports
@@ -395,6 +396,36 @@ export { FetchersContext as UNSAFE_FetchersContext };
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
+//#region OpenTelemetry
+////////////////////////////////////////////////////////////////////////////////
+
+const REACT_ROUTER_TRACER = "react-router";
+const REACT_ROUTER_SPAN_NAME = "route-change";
+const REACT_ROUTER_ATTRIBUTE_NAMESPACE = 'react_router'
+
+function createNavigationSpan(newState: RouterState, previousState: RouterState) {
+  const state = newState.location.state;
+  const spanContext = state && state.spanContext ? (state.spanContext as SpanContext) : null;
+  const currentContext = spanContext ? trace.setSpanContext(context.active(), spanContext) : context.active();
+  const tracer = trace.getTracer(REACT_ROUTER_TRACER);
+
+  context.with(currentContext, () => {
+    const span = tracer.startSpan(REACT_ROUTER_SPAN_NAME);
+
+    span.setAttributes({
+      [`${REACT_ROUTER_ATTRIBUTE_NAMESPACE}.current.url.path`]: previousState.location.pathname,
+      [`${REACT_ROUTER_ATTRIBUTE_NAMESPACE}.current.url.query`]: previousState.location.search,
+      [`${REACT_ROUTER_ATTRIBUTE_NAMESPACE}.next.url.path`]: newState.location.pathname,
+      [`${REACT_ROUTER_ATTRIBUTE_NAMESPACE}.next.url.query`]: newState.location.search,
+      [`${REACT_ROUTER_ATTRIBUTE_NAMESPACE}.history_action`]: newState.historyAction,
+    });
+    span.end();
+  });
+}
+
+//#endregion
+
+////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -523,6 +554,8 @@ export function RouterProvider({
           fetcherData.current.set(key, fetcher.data);
         }
       });
+
+      createNavigationSpan(newState, state);
 
       let isViewTransitionUnavailable =
         router.window == null ||
