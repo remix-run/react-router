@@ -28,7 +28,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
       },
-      external: ["react", "react-dom", "react-router", "@remix-run/router"],
+      external: ["react", "react-dom", "react-router", "@remix-run/router", "@opentelemetry/api"],
       plugins: [
         extensions({ extensions: [".ts", ".tsx"] }),
         babel({

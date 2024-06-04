@@ -232,6 +232,9 @@ importers:
 
   packages/react-router-dom:
     dependencies:
+      '@opentelemetry/api':
+        specifier: ^1.8.0
+        version: 1.8.0
       '@remix-run/router':
         specifier: workspace:*
         version: link:../router
@@ -248,6 +251,9 @@ importers:
 
   packages/react-router-dom-v5-compat:
     dependencies:
+      '@opentelemetry/api':
+        specifier: ^1.8.0
+        version: 1.8.0
       '@remix-run/router':
         specifier: workspace:*
         version: link:../router
@@ -2474,6 +2480,11 @@ packages:
     resolution: {integrity: sha512-D4iHGTdAnEEVsB8fl95m1hiz7D5YiRdQ9b/OEb3BYRVwbLsGHcRVPz+u+BgRLNk0Q0/4iZCBqDN96j2XNxfXrA==}
     dependencies:
       '@octokit/openapi-types': 18.0.0
+    dev: false
+
+  /@opentelemetry/api@1.8.0:
+    resolution: {integrity: sha512-I/s6F7yKUDdtMsoBWXJe8Qz40Tui5vsuKCWJEWVL+5q9sSWRzzx6v2KeNsOBEwd94j0eWkpWCH4yB6rZg9Mf0w==}
+    engines: {node: '>=8.0.0'}
     dev: false
 
   /@react-native-community/cli-clean@8.0.4:
