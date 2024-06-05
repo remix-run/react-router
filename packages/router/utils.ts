@@ -355,9 +355,7 @@ export type AgnosticDataIndexRouteObject = AgnosticIndexRouteObject & {
 };
 
 export type AgnosticDataNonIndexRouteObject = AgnosticNonIndexRouteObject & {
-  children?:
-    | AgnosticDataRouteObject[]
-    | (() => Promise<AgnosticDataRouteObject[]>);
+  children?: AgnosticDataRouteObject[];
   id: string;
 };
 
