@@ -365,11 +365,11 @@ let router = createBrowserRouter(routes, {
 
 <docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
 
-By default, React Router wants you to provide a full route tree up front via `createBrowserRouter(routes)`. This allows React Router to perform full route matching client side and execute loaders/render new routes in the most optimistic manner without introducing waterfalls. However, it means that your initial JS bundle is larger by definition - which can slow down application start-up times.
+By default, React Router wants you to provide a full route tree up front via `createBrowserRouter(routes)`. This allows React Router to perform synchronous route matching, execute loaders, and then render route components in the most optimistic manner without introducing waterfalls. However, it means that your initial JS bundle is larger by definition - which may slow down application start-up times as your application grows.
 
-To combat this, we introduced [`route.lazy`][route-lazy] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route matching aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your routes up front and can match synchronously but delay loading any of the route implementation aspects until the route is actually navigated to.
+To combat this, we introduced [`route.lazy`][route-lazy] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route matching aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your routes up front and can perform synchronous route matching, but then delay loading any of the route implementation aspects until the route is actually navigated to.
 
-However, in some cases - this doesn't go far enough. If your application is large enough, providing all route definitions up front can be prohibitively large. Or, Micro-frontend or Module-federation architectures it might not eve be possible to provide all route definitions up front.
+However, in some cases - even this doesn't go far enough. If your application is large enough, providing all route definitions up front can be prohibitively large. In addition, in some Micro-frontend/Module-federation architectures, it might not even be possible to provide all route definitions up front.
 
 This is where `patchRoutesOnMiss` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding it's routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
 
@@ -389,16 +389,12 @@ const router = createBrowserRouter(
   ],
   {
     unstable_patchRoutesOnMiss(path, matches) {
-      // `/a` partially matches the root route - returning will patch these as
-      // children of the root route
+      // `/a` partially matches the root route, so returned routes will patch
+      // in as children of the root route
       return [
         {
           path: "a",
-          loader: () => "A",
-          Component() {
-            let data = useLoaderData();
-            return <h2>{data}</h2>;
-          },
+          Component: AComponent,
         },
       ];
     },
@@ -412,36 +408,27 @@ const router = createBrowserRouter(
 const router = createBrowserRouter(
   [
     {
-      id: "root",
       path: "/",
       Component: RootComponent,
     },
   ],
   {
     unstable_patchRoutesOnMiss(path, matches, patch) {
-      // This explicitly says to patch these as children of the root route
+      // This explicitly says to patch these as children of the root route.
+      // This is functionally equivalent to Option 1 above.
       patch("root", [
         {
           path: "a",
-          loader: () => "A",
-          Component() {
-            let data = useLoaderData();
-            return <h2>{data}</h2>;
-          },
+          Component: AComponent,
         },
       ]);
 
-      // Or if you want to patch these routes as siblings of the root route
+      // Or, if you want to patch these routes as siblings of the root route
       // (i.e., they have no parent), you can pass null for the routeId
       patch(null, [
         {
-          // this will be a sibling route of the root `/ route
           path: "/a",
-          loader: () => "A",
-          Component() {
-            let data = useLoaderData();
-            return <h2>{data}</h2>;
-          },
+          Component: AComponent,
         },
       ]);
     },
@@ -449,7 +436,7 @@ const router = createBrowserRouter(
 );
 ```
 
-In the above examples, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By returning the new route for `a`, it will be appended as a new child to the root route and we'll attempt to match again - this time successfully matching the `a` route and the navigation can complete successfully.
+In the above examples, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By returning the new route for `a` (or calling `patch`), it will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
 This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
 
