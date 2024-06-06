@@ -53,6 +53,7 @@ import type {
   RouterState,
   RouterSubscriber,
   BlockerFunction,
+  unstable_PatchRoutesOnMissFunction,
 } from "@remix-run/router";
 import {
   createRouter,
@@ -256,6 +257,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   window?: Window;
 }
 
@@ -274,6 +276,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -293,6 +296,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }

@@ -252,7 +252,7 @@ export interface Router {
    * @param routeId The parent route id
    * @param children The additional children routes
    */
-  patchRoutes(routeId: string, children: AgnosticRouteObject[]): void;
+  patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
 
   /**
    * @internal
@@ -3207,6 +3207,7 @@ export function createRouter(init: RouterInit): Router {
           patchRoutesOnMissImpl!,
           pathname,
           partialMatches,
+          dataRoutes || inFlightDataRoutes,
           manifest,
           mapRouteProperties,
           pendingPatchRoutes,
@@ -3246,8 +3247,8 @@ export function createRouter(init: RouterInit): Router {
       let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
         routesToUse,
         pathname,
-        true,
-        basename
+        basename,
+        true
       );
 
       // Loop detection if we find the same partials after a run through patchRoutesOnMiss
@@ -3316,7 +3317,13 @@ export function createRouter(init: RouterInit): Router {
     getBlocker,
     deleteBlocker,
     patchRoutes(routeId, children) {
-      return patchRoutes(routeId, children, manifest, mapRouteProperties);
+      return patchRoutes(
+        routeId,
+        children,
+        dataRoutes || inFlightDataRoutes,
+        manifest,
+        mapRouteProperties
+      );
     },
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
@@ -4490,6 +4497,7 @@ async function loadLazyRouteChildren(
   patchRoutesOnMissImpl: PatchRoutesOnMissFunction,
   path: string,
   matches: AgnosticDataRouteMatch[],
+  routes: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   pendingRouteChildren: Map<string, Promise<AgnosticDataRouteObject[] | null>>,
@@ -4497,9 +4505,11 @@ async function loadLazyRouteChildren(
 ) {
   let key = [path, ...matches.map((m) => m.route.id)].join("-");
   let pending = pendingRouteChildren.get(key);
-  let children: AgnosticDataRouteObject[] | null = null;
+  let children: AgnosticDataRouteObject[] | null | undefined = null;
   if (!pending) {
-    let maybePromise = patchRoutesOnMissImpl(path, matches);
+    let maybePromise = patchRoutesOnMissImpl(path, matches, (r, c) =>
+      patchRoutes(r, c, routes, manifest, mapRouteProperties)
+    );
     if (isPromise<AgnosticDataRouteObject[]>(maybePromise)) {
       pending = maybePromise;
       pendingRouteChildren.set(key, pending);
@@ -4516,7 +4526,7 @@ async function loadLazyRouteChildren(
     }
 
     if (children && !signal.aborted) {
-      patchRoutes(route.id, children, manifest, mapRouteProperties);
+      patchRoutes(route.id, children, routes, manifest, mapRouteProperties);
     }
   } finally {
     pendingRouteChildren.delete(key);
@@ -4524,26 +4534,37 @@ async function loadLazyRouteChildren(
 }
 
 function patchRoutes(
-  routeId: string,
+  routeId: string | null,
   children: AgnosticRouteObject[],
+  routes: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction
 ) {
-  let route = manifest[routeId];
-  invariant(
-    route,
-    `No route found to patch children into: routeId = ${routeId}`
-  );
-  let dataChildren = convertRoutesToDataRoutes(
-    children,
-    mapRouteProperties,
-    [routeId, "patch"],
-    manifest
-  );
-  if (route.children) {
-    route.children.push(...dataChildren);
+  if (routeId) {
+    let route = manifest[routeId];
+    invariant(
+      route,
+      `No route found to patch children into: routeId = ${routeId}`
+    );
+    let dataChildren = convertRoutesToDataRoutes(
+      children,
+      mapRouteProperties,
+      [routeId, "patch", String(route.children?.length || "0")],
+      manifest
+    );
+    if (route.children) {
+      route.children.push(...dataChildren);
+    } else {
+      route.children = dataChildren;
+    }
   } else {
-    route.children = dataChildren;
+    let dataChildren = convertRoutesToDataRoutes(
+      children,
+      mapRouteProperties,
+      ["patch", String(routes.length || "0")],
+      manifest
+    );
+    routes.push(...dataChildren);
   }
 }
 

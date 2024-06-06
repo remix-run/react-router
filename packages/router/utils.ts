@@ -258,10 +258,11 @@ export interface DataStrategyFunction {
 export interface PatchRoutesOnMissFunction<
   M extends AgnosticDataRouteMatch = AgnosticDataRouteMatch
 > {
-  (path: string, matches: M[]):
-    | M["route"][]
-    | null
-    | Promise<M["route"][] | null>;
+  (
+    path: string,
+    matches: M[],
+    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void
+  ): M["route"][] | null | undefined | Promise<M["route"][] | null | undefined>;
 }
 
 /**
@@ -512,7 +513,7 @@ export function matchRoutes<
   locationArg: Partial<Location> | string,
   basename = "/"
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
-  return matchRoutesImpl(routes, locationArg, false, basename);
+  return matchRoutesImpl(routes, locationArg, basename, false);
 }
 
 export function matchRoutesImpl<
@@ -520,8 +521,8 @@ export function matchRoutesImpl<
 >(
   routes: RouteObjectType[],
   locationArg: Partial<Location> | string,
-  allowPartial = false,
-  basename = "/"
+  basename: string,
+  allowPartial: boolean
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;

@@ -32,6 +32,7 @@ import type {
   To,
   UIMatch,
   unstable_HandlerResult,
+  unstable_PatchRoutesOnMissFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -297,6 +298,7 @@ export function createMemoryRouter(
     initialEntries?: InitialEntry[];
     initialIndex?: number;
     unstable_dataStrategy?: unstable_DataStrategyFunction;
+    unstable_patchRoutesOnMiss: unstable_PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -313,6 +315,7 @@ export function createMemoryRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
   }).initialize();
 }
 
