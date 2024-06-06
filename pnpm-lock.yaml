@@ -575,8 +575,8 @@ importers:
         specifier: ^5.0.1
         version: 5.0.2
       babel-dead-code-elimination:
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -6411,8 +6411,8 @@ packages:
       dequal: 2.0.3
     dev: false
 
-  /babel-dead-code-elimination@1.0.0:
-    resolution: {integrity: sha512-6Z905/y0n1Hq15U0bdbUosrLPGD1s7G9Wj2GFBeLawO/6h4CCze6GWn3b1YAHFwXw1E7R0PieuGB3gkQOGP9TQ==}
+  /babel-dead-code-elimination@1.0.1:
+    resolution: {integrity: sha512-QD6IAGZU/Qd7qJJPptnPVGRl9SnK9IdowcIjOcxVKbfB70chvCXRaV2BOgxpVckQud3CppYoI6QA+/cfdBGAMA==}
     dependencies:
       '@babel/core': 7.24.3
       '@babel/parser': 7.24.1

@@ -1,112 +1,62 @@
+import * as babel from "@babel/core";
 import type { Binding, NodePath } from "@babel/traverse";
-import { parse, traverse, generate, t } from "./babel";
 import type { GeneratorResult } from "@babel/generator";
 import {
   deadCodeElimination,
   findReferencedIdentifiers,
 } from "babel-dead-code-elimination";
 
-const MACRO = "defineRoute$";
-const MACRO_PKG = "react-router";
-const SERVER_ONLY_PROPERTIES = ["loader", "action"];
+import { generate, parse, t, traverse } from "./babel";
 
-type Field = NodePath<t.ObjectProperty | t.ObjectMethod>;
-type Fields = {
-  params?: NodePath<t.ObjectProperty>;
-  loader?: Field;
-  clientLoader?: Field;
-  action?: Field;
-  clientAction?: Field;
-  Component?: Field;
-  ErrorBoundary?: Field;
-};
+function parseRoute(source: string) {
+  let ast = parse(source, {
+    sourceType: "module",
+    plugins: ["jsx", ["typescript", {}]],
+  });
 
-export type HasFields = {
-  hasLoader: boolean;
-  hasClientLoader: boolean;
-  hasAction: boolean;
-  hasClientAction: boolean;
-  hasErrorBoundary: boolean;
-};
+  // Workaround for `path.buildCodeFrameError`
+  // See:
+  // - https://github.com/babel/babel/issues/11889
+  // - https://github.com/babel/babel/issues/11350#issuecomment-606169054
+  // @ts-expect-error `@types/babel__core` is missing types for `File`
+  new babel.File({ filename: undefined }, { code: source, ast });
 
-function analyzeRoute(path: NodePath<t.CallExpression>): Fields {
-  if (path.node.arguments.length !== 1) {
-    throw path.buildCodeFrameError(`macro must take exactly one argument`);
-  }
-  let arg = path.node.arguments[0];
-  let argPath = path.get("arguments.0") as NodePath<t.Node>;
-  if (!t.isObjectExpression(arg)) {
-    throw argPath.buildCodeFrameError(
-      "macro argument must be a literal object"
-    );
-  }
-
-  let fields: Fields = {};
-  for (let [i, property] of arg.properties.entries()) {
-    if (!t.isObjectProperty(property) && !t.isObjectMethod(property)) {
-      let propertyPath = argPath.get(`properties.${i}`) as NodePath<t.Node>;
-      throw propertyPath.buildCodeFrameError(
-        "macro argument must only have statically analyzable properties"
-      );
-    }
-    let propertyPath = argPath.get(`properties.${i}`) as NodePath<
-      t.ObjectProperty | t.ObjectMethod
-    >;
-    if (property.computed || !t.isIdentifier(property.key)) {
-      throw propertyPath.buildCodeFrameError(
-        "macro argument must only have statically analyzable fields"
-      );
-    }
-
-    let key = property.key.name;
-    if (key === "params") {
-      let paramsPath = propertyPath as NodePath<t.ObjectProperty>;
-      checkRouteParams(paramsPath);
-      fields["params"] = paramsPath;
-      continue;
-    }
-
-    if (
-      key === "loader" ||
-      key === "clientLoader" ||
-      key === "action" ||
-      key === "clientAction" ||
-      key === "Component" ||
-      key === "ErrorBoundary"
-    ) {
-      fields[key] = propertyPath;
-    }
-  }
-  return fields;
+  return ast;
 }
 
-export function getDefineRouteHasFields(source: string): HasFields | null {
-  let ast = parse(source, { sourceType: "module" });
-  let foundMacro = false;
-  let metadata: HasFields = {
-    hasLoader: false,
-    hasClientAction: false,
-    hasAction: false,
-    hasClientLoader: false,
-    hasErrorBoundary: false,
-  };
-  traverse(ast, {
-    CallExpression(path) {
-      if (!isMacro(path)) return;
+let fields = [
+  "loader",
+  "clientLoader",
+  "action",
+  "clientAction",
+  "Component",
+  "ErrorBoundary",
+] as const;
 
-      foundMacro = true;
-      let fields = analyzeRoute(path);
-      metadata = {
-        hasLoader: fields.loader !== undefined,
-        hasClientLoader: fields.clientLoader !== undefined,
-        hasAction: fields.action !== undefined,
-        hasClientAction: fields.clientAction !== undefined,
-        hasErrorBoundary: fields.ErrorBoundary !== undefined,
-      };
+type Field = (typeof fields)[number];
+type FieldPath = NodePath<t.ObjectProperty | t.ObjectMethod>;
+
+function isField(field: string): field is Field {
+  return (fields as readonly string[]).includes(field);
+}
+
+type Analysis = Record<Field, FieldPath | null>;
+
+export function parseRouteFields(source: string): string[] {
+  let ast = parseRoute(source);
+
+  let fieldNames: Field[] = [];
+  traverse(ast, {
+    ExportDefaultDeclaration(path) {
+      let fields = analyzeRouteExport(path);
+      if (fields instanceof Error) throw fields;
+      for (let [key, fieldPath] of Object.entries(fields)) {
+        if (!fieldPath) continue;
+        fieldNames.push(key as Field);
+      }
     },
   });
-  if (!foundMacro) return null;
-  return metadata;
+  return fieldNames;
 }
 
 export function transform(
@@ -114,37 +64,100 @@ export function transform(
   id: string,
   options: { ssr: boolean }
 ): GeneratorResult {
-  let ast = parse(source, { sourceType: "module" });
+  let ast = parseRoute(source);
+
   let refs = findReferencedIdentifiers(ast);
-
   traverse(ast, {
-    Identifier(path) {
-      if (t.isImportSpecifier(path.parent)) return;
-      let binding = path.scope.getBinding(path.node.name);
-      if (!binding) return;
-      if (!isMacroBinding(binding)) return;
-      if (t.isCallExpression(path.parent)) return;
-      throw path.buildCodeFrameError(
-        `'${path.node.name}' macro cannot be manipulated at runtime as it must be statically analyzable`
-      );
-    },
-    CallExpression(path) {
-      if (!isMacro(path)) return;
+    ExportDefaultDeclaration(path) {
+      let fields = analyzeRouteExport(path);
+      if (fields instanceof Error) throw fields;
+      if (options.ssr) return;
 
-      let fields = analyzeRoute(path);
-      if (options.ssr) {
-        let markedForRemoval: NodePath<t.Node>[] = [];
-        for (let [key, fieldPath] of Object.entries(fields)) {
-          if (SERVER_ONLY_PROPERTIES.includes(key)) {
-            markedForRemoval.push(fieldPath);
-          }
+      let markedForRemoval: NodePath<t.Node>[] = [];
+      for (let [key, fieldPath] of Object.entries(fields)) {
+        if (["loader", "action"].includes(key)) {
+          if (!fieldPath) continue;
+          markedForRemoval.push(fieldPath);
         }
-        markedForRemoval.forEach((path) => path.remove());
       }
+      markedForRemoval.forEach((path) => path.remove());
     },
   });
   deadCodeElimination(ast, refs);
   return generate(ast, { sourceMaps: true, sourceFileName: id }, source);
+}
+
+function analyzeRouteExport(
+  path: NodePath<t.ExportDefaultDeclaration>
+): Analysis | Error {
+  let route = path.node.declaration;
+
+  // export default {...}
+  if (t.isObjectExpression(route)) {
+    let routePath = path.get("declaration") as NodePath<t.ObjectExpression>;
+    return analyzeRoute(routePath);
+  }
+
+  // export default defineRoute({...})
+  if (t.isCallExpression(route)) {
+    let routePath = path.get("declaration") as NodePath<t.CallExpression>;
+    if (!isDefineRoute(routePath)) {
+      return routePath.buildCodeFrameError("TODO");
+    }
+
+    if (routePath.node.arguments.length !== 1) {
+      return path.buildCodeFrameError(
+        `defineRoute must take exactly one argument`
+      );
+    }
+    let arg = routePath.node.arguments[0];
+    let argPath = path.get("arguments.0") as NodePath<t.ObjectExpression>;
+    if (!t.isObjectExpression(arg)) {
+      return argPath.buildCodeFrameError(
+        "defineRoute argument must be a literal object"
+      );
+    }
+    return analyzeRoute(argPath);
+  }
+
+  return path.get("declaration").buildCodeFrameError("TODO");
+}
+
+function analyzeRoute(path: NodePath<t.ObjectExpression>): Analysis {
+  let analysis: Analysis = {
+    loader: null,
+    clientLoader: null,
+    action: null,
+    clientAction: null,
+    Component: null,
+    ErrorBoundary: null,
+  };
+
+  for (let [i, property] of path.node.properties.entries()) {
+    if (!t.isObjectProperty(property) && !t.isObjectMethod(property)) {
+      let propertyPath = path.get(`properties.${i}`) as NodePath<t.Node>;
+      throw propertyPath.buildCodeFrameError("todo");
+    }
+
+    let propertyPath = path.get(`properties.${i}`) as NodePath<
+      t.ObjectProperty | t.ObjectMethod
+    >;
+    if (property.computed || !t.isIdentifier(property.key)) {
+      throw propertyPath.buildCodeFrameError("todo");
+    }
+
+    let key = property.key.name;
+    if (key === "params") {
+      let paramsPath = propertyPath as NodePath<t.ObjectProperty>;
+      checkRouteParams(paramsPath);
+      continue;
+    }
+    if (isField(key)) {
+      analysis[key] = propertyPath;
+      continue;
+    }
+  }
+  return analysis;
 }
 
 function checkRouteParams(path: NodePath<t.ObjectProperty>) {
@@ -164,25 +177,34 @@ function checkRouteParams(path: NodePath<t.ObjectProperty>) {
   }
 }
 
-function isMacro(path: NodePath<t.CallExpression>): boolean {
+function isDefineRoute(path: NodePath<t.CallExpression>): boolean {
   if (!t.isIdentifier(path.node.callee)) return false;
-  let name = path.node.callee.name;
-  let binding = path.scope.getBinding(name);
-
+  let binding = path.scope.getBinding(path.node.callee.name);
   if (!binding) return false;
-  if (!isMacroBinding(binding)) return false;
-  return true;
+  return isCanonicallyImportedAs(binding, {
+    imported: "defineRoute",
+    source: "react-router",
+  });
 }
 
-function isMacroBinding(binding: Binding): boolean {
+function isCanonicallyImportedAs(
+  binding: Binding,
+  {
+    source: sourceName,
+    imported: importedName,
+  }: {
+    source: string;
+    imported: string;
+  }
+): boolean {
   // import source
   if (!t.isImportDeclaration(binding?.path.parent)) return false;
-  if (binding.path.parent.source.value !== MACRO_PKG) return false;
+  if (binding.path.parent.source.value !== sourceName) return false;
 
   // import specifier
   if (!t.isImportSpecifier(binding?.path.node)) return false;
   let { imported } = binding.path.node;
   if (!t.isIdentifier(imported)) return false;
-  if (imported.name !== MACRO) return false;
+  if (imported.name !== importedName) return false;
   return true;
 }

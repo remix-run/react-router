@@ -38,8 +38,7 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "../config";
-import type { HasFields } from "./define-route";
-import { getDefineRouteHasFields } from "./define-route";
+import { parseRouteFields } from "./define-route";
 
 export async function resolveViteConfig({
   configFile,
@@ -285,65 +284,19 @@ const writeFileSafe = async (file: string, contents: string): Promise<void> => {
   await fse.writeFile(file, contents);
 };
 
-// TODO: change this to return <Reco
 const getRouteManifestModuleExports = async (
-  viteChildCompiler: Vite.ViteDevServer | null,
-  ctx: ReactRouterPluginContext
+  ctx: ReactRouterPluginContext,
+  viteChildCompiler: Vite.ViteDevServer | null
 ): Promise<Record<string, HasFields>> => {
   let entries = await Promise.all(
     Object.entries(ctx.reactRouterConfig.routes).map(async ([key, route]) => {
-      // do the old thing when `defineRoute$` isn't present
-      // otherwise use the new AST-based `has*` fields detector
-      let hasFields = await getRouteModuleHasFields({
-        viteChildCompiler,
-        ctx,
-        routeFile: route.file,
-      });
+      let source = await getRouteSource(ctx, route.file, viteChildCompiler);
+      let fields = parseRouteFields(source);
+      let hasFields = toHasFields(fields);
       return [key, hasFields] as const;
     })
   );
   return Object.fromEntries(entries);
-};
-
-const getRouteModuleExports = async (
-  viteChildCompiler: Vite.ViteDevServer | null,
-  ctx: ReactRouterPluginContext,
-  routeFile: string,
-  readRouteFile?: () => string | Promise<string>
-): Promise<string[]> => {
-  if (!viteChildCompiler) {
-    throw new Error("Vite child compiler not found");
-  }
-
-  // We transform the route module code with the Vite child compiler so that we
-  // can parse the exports from non-JS files like MDX. This ensures that we can
-  // understand the exports from anything that Vite can compile to JS, not just
-  // the route file formats that the Remix compiler historically supported.
-
-  let ssr = true;
-  let { pluginContainer, moduleGraph } = viteChildCompiler;
-
-  let routePath = path.resolve(ctx.reactRouterConfig.appDirectory, routeFile);
-  let url = resolveFileUrl(ctx, routePath);
-
-  let resolveId = async () => {
-    let result = await pluginContainer.resolveId(url, undefined, { ssr });
-    if (!result) throw new Error(`Could not resolve module ID for ${url}`);
-    return result.id;
-  };
-
-  let [id, code] = await Promise.all([
-    resolveId(),
-    readRouteFile?.() ?? fse.readFile(routePath, "utf-8"),
-    // pluginContainer.transform(...) fails if we don't do this first:
-    moduleGraph.ensureEntryFromUrl(url, ssr),
-  ]);
-
-  let transformed = await pluginContainer.transform(code, id, { ssr });
-  let [, exports] = esModuleLexer(transformed.code);
-  let exportNames = exports.map((e) => e.n);
-
-  return exportNames;
 };
 
 const getServerBundleBuildConfig = (
@@ -489,7 +442,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       : // Otherwise, all routes are imported as usual
         ctx.reactRouterConfig.routes;
 
-    return `
+    let content = `
     import * as entryServer from ${JSON.stringify(
       resolveFileUrl(ctx, ctx.entryServerFilePath)
     )};
@@ -533,6 +486,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           })
           .join(",\n  ")}
       };`;
+
+    return content;
   };
 
   let loadViteManifest = async (directory: string) => {
@@ -584,8 +539,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     let serverRoutes: ReactRouterManifest["routes"] = {};
 
     let routeManifestExports = await getRouteManifestModuleExports(
-      viteChildCompiler,
-      ctx
+      ctx,
+      viteChildCompiler
     );
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
@@ -661,8 +616,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     let routes: ReactRouterManifest["routes"] = {};
 
     let routeManifestExports = await getRouteManifestModuleExports(
-      viteChildCompiler,
-      ctx
+      ctx,
+      viteChildCompiler
     );
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
@@ -944,7 +899,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             );
           }
         }
-
         viteChildCompiler = await vite.createServer({
           ...viteUserConfig,
           mode: viteConfig.mode,
@@ -984,21 +938,18 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         if (id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING)) {
           let routeModuleId = id.replace(BUILD_CLIENT_ROUTE_QUERY_STRING, "");
-          // TODO: make this work with new hasFields codepaths for defineRoute$ compat
-          let hasFields = await getRouteModuleHasFields({
-            viteChildCompiler,
+          let source = await getRouteSource(
             ctx,
-            routeFile: routeModuleId,
-          });
+            routeModuleId,
+            viteChildCompiler
+          );
+          let fields = parseRouteFields(source);
 
-          let clientExports = CLIENT_ROUTE_EXPORTS.filter(
-            (xport) => xport // TODO: make a fields util and a hasFields util, don't precompute hasFields, precompute _fields_
-          ).join(", ");
+          let clientExports = fields
+            .filter((field) => CLIENT_ROUTE_EXPORTS.includes(field))
+            .join(", ");
 
           let routeFileName = path.basename(routeModuleId);
-          // let clientExports = sourceExports
-          //   .filter((exportName) => CLIENT_ROUTE_EXPORTS.includes(exportName))
-          //   .join(", ");
 
           return `export { ${clientExports} } from "./${routeFileName}";`;
         }
@@ -1481,8 +1432,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           let oldRouteMetadata = serverManifest.routes[route.id];
           let newRouteMetadata = await getRouteMetadata(
             ctx,
-            viteChildCompiler,
             route,
+            viteChildCompiler,
             read
           );
 
@@ -1610,16 +1561,18 @@ function getRoute(
 
 async function getRouteMetadata(
   ctx: ReactRouterPluginContext,
-  viteChildCompiler: Vite.ViteDevServer | null,
   route: ConfigRoute,
+  viteChildCompiler: Vite.ViteDevServer | null,
   readRouteFile?: () => string | Promise<string>
 ) {
-  let hasFields = await getRouteModuleHasFields({
+  let source = await getRouteSource(
     ctx,
+    route.file,
     viteChildCompiler,
-    routeFile: route.file,
-    readRouteFile,
-  });
+    readRouteFile
+  );
+  let fields = parseRouteFields(source);
+  let hasFields = toHasFields(fields);
 
   let info = {
     id: route.id,
@@ -1876,44 +1829,54 @@ function createPrerenderRoutes(
   });
 }
 
-async function getRouteModuleHasFieldsFromExports(args: {
-  viteChildCompiler: Vite.ViteDevServer | null;
-  ctx: ReactRouterPluginContext;
-  routeFile: string;
-  readRouteFile?: () => string | Promise<string>;
-}): Promise<HasFields> {
-  let xports = await getRouteModuleExports(
-    args.viteChildCompiler,
-    args.ctx,
-    args.routeFile,
-    args.readRouteFile
-  );
+async function getRouteSource(
+  ctx: ReactRouterPluginContext,
+  routeFile: string,
+  viteChildCompiler: Vite.ViteDevServer | null,
+  readRouteFile?: () => string | Promise<string>
+): Promise<string> {
+  // TODO: if routeFile is not js/jsx/ts/tsx, use child compiler
+  //
+  // if (!viteChildCompiler) {
+  //   throw new Error("Vite child compiler not found");
+  // }
+  // let ssr = true;
+  // let { pluginContainer, moduleGraph } = viteChildCompiler;
 
-  return {
-    hasLoader: xports.includes("loader"),
-    hasClientLoader: xports.includes("clientLoader"),
-    hasAction: xports.includes("action"),
-    hasClientAction: xports.includes("clientAction"),
-    hasErrorBoundary: xports.includes("ErrorBoundary"),
-  };
+  let routePath = path.resolve(ctx.reactRouterConfig.appDirectory, routeFile);
+  // let url = resolveFileUrl(ctx, routePath);
+  // let resolveId = async () => {
+  //   let result = await pluginContainer.resolveId(url, undefined, { ssr });
+  //   if (!result) throw new Error(`Could not resolve module ID for ${url}`);
+  //   return result.id;
+  // };
+
+  // let [id, code] = await Promise.all([
+  //   resolveId(),
+  //   readRouteFile?.() ?? fse.readFile(routePath, "utf-8"),
+  //   // pluginContainer.transform(...) fails if we don't do this first:
+  //   moduleGraph.ensureEntryFromUrl(url, ssr),
+  // ]);
+
+  // let transformed = await pluginContainer.transform(code, id, { ssr });
+
+  return readRouteFile?.() ?? fse.readFile(routePath, "utf-8");
+  // return transformed.code;
 }
 
-async function getRouteModuleHasFields(args: {
-  routeFile: string;
-  readRouteFile?: () => string | Promise<string>;
-
-  // optional for back compat
-  viteChildCompiler: Vite.ViteDevServer | null;
-  ctx: ReactRouterPluginContext;
-}): Promise<HasFields> {
-  if (!args.routeFile.includes(`defineRoute$`)) {
-    return getRouteModuleHasFieldsFromExports(args);
-  }
-
-  // TODO: probably also need to pass `readRouteFile` to `getDefineRouteHasFields`
-  let fields = getDefineRouteHasFields(args.routeFile);
-  if (!fields) {
-    return getRouteModuleHasFieldsFromExports(args);
-  }
-  return fields;
+type HasFields = {
+  hasLoader: boolean;
+  hasClientLoader: boolean;
+  hasAction: boolean;
+  hasClientAction: boolean;
+  hasErrorBoundary: boolean;
+};
+function toHasFields(fields: string[]) {
+  return {
+    hasLoader: fields.includes("loader"),
+    hasClientLoader: fields.includes("clientLoader"),
+    hasAction: fields.includes("action"),
+    hasClientAction: fields.includes("clientAction"),
+    hasErrorBoundary: fields.includes("ErrorBoundary"),
+  };
 }
