@@ -1,5 +1,6 @@
 import type { Router } from "../index";
 import { createMemoryHistory, createRouter } from "../index";
+import { waitFor } from "@testing-library/react";
 
 const LOADER_LATENCY_MS = 100;
 const routes = [
@@ -442,21 +443,25 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS * 2);
-        expect(router.getBlocker("KEY", fn)).toEqual({
-          state: "unblocked",
-          proceed: undefined,
-          reset: undefined,
-          location: undefined,
-        });
+        await sleep(LOADER_LATENCY_MS);
+
+        await waitFor(() =>
+          expect(router.getBlocker("KEY", fn)).toEqual({
+            state: "unblocked",
+            proceed: undefined,
+            reset: undefined,
+            location: undefined,
+          })
+        );
       });
 
       it("navigates after proceeding navigation completes", async () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS * 2);
-        expect(router.state.location.pathname).toBe("/about");
+        await waitFor(() =>
+          expect(router.state.location.pathname).toBe("/about")
+        );
       });
     });
 
