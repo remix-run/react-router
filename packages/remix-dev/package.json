@@ -71,15 +71,13 @@
     "fast-glob": "3.2.11",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0",
-    "vite": "^5.1.0",
-    "wrangler": "^3.28.2"
+    "vite": "^5.1.0"
   },
   "peerDependencies": {
     "react-router": "workspace:^",
     "@react-router/serve": "workspace:^",
     "typescript": "^5.1.0",
-    "vite": "^5.1.0",
-    "wrangler": "^3.28.2"
+    "vite": "^5.1.0"
   },
   "peerDependenciesMeta": {
     "@react-router/serve": {
@@ -89,9 +87,6 @@
       "optional": true
     },
     "vite": {
-      "optional": true
-    },
-    "wrangler": {
       "optional": true
     }
   },
