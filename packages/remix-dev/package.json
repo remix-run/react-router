@@ -85,9 +85,6 @@
     },
     "typescript": {
       "optional": true
-    },
-    "vite": {
-      "optional": true
     }
   },
   "engines": {
