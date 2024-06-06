@@ -520,7 +520,3 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [route-lazy]: ../route/lazy
 [fog-of-war]: https://en.wikipedia.org/wiki/Fog_of_war
 [fog-of-war-rfc]: https://github.com/remix-run/react-router/discussions/11113
-
-```
-
-```
