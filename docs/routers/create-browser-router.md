@@ -379,62 +379,62 @@ There are 2 ways to patch routes into the route tree:
 
 1. Returning an array of children will patch them into the leaf match:
 
-```jsx
-const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      Component: RootComponent,
-    },
-  ],
-  {
-    unstable_patchRoutesOnMiss(path, matches) {
-      // `/a` partially matches the root route, so returned routes will patch
-      // in as children of the root route
-      return [
-        {
-          path: "a",
-          Component: AComponent,
-        },
-      ];
-    },
-  }
-);
-```
+   ```jsx
+   const router = createBrowserRouter(
+     [
+       {
+         path: "/",
+         Component: RootComponent,
+       },
+     ],
+     {
+       unstable_patchRoutesOnMiss(path, matches) {
+         // `/a` partially matches the root route, so returned routes will patch
+         // in as children of the root route
+         return [
+           {
+             path: "a",
+             Component: AComponent,
+           },
+         ];
+       },
+     }
+   );
+   ```
 
 2. Using the provided `patch` function allows you to patch as children of any currently known route in the route tree:
 
-```jsx
-const router = createBrowserRouter(
-  [
-    {
-      path: "/",
-      Component: RootComponent,
-    },
-  ],
-  {
-    unstable_patchRoutesOnMiss(path, matches, patch) {
-      // This explicitly says to patch these as children of the root route.
-      // This is functionally equivalent to Option 1 above.
-      patch("root", [
-        {
-          path: "a",
-          Component: AComponent,
-        },
-      ]);
+   ```jsx
+   const router = createBrowserRouter(
+     [
+       {
+         path: "/",
+         Component: RootComponent,
+       },
+     ],
+     {
+       unstable_patchRoutesOnMiss(path, matches, patch) {
+         // This explicitly says to patch these as children of the root route.
+         // This is functionally equivalent to Option 1 above.
+         patch("root", [
+           {
+             path: "a",
+             Component: AComponent,
+           },
+         ]);
 
-      // Or, if you want to patch these routes as siblings of the root route
-      // (i.e., they have no parent), you can pass null for the routeId
-      patch(null, [
-        {
-          path: "/a",
-          Component: AComponent,
-        },
-      ]);
-    },
-  }
-);
-```
+         // Or, if you want to patch these routes as siblings of the root route
+         // (i.e., they have no parent), you can pass null for the routeId
+         patch(null, [
+           {
+             path: "/a",
+             Component: AComponent,
+           },
+         ]);
+       },
+     }
+   );
+   ```
 
 In the above examples, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By returning the new route for `a` (or calling `patch`), it will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
