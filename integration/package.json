@@ -8,8 +8,6 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@cloudflare/kv-asset-handler": "^0.3.0",
-    "@cloudflare/workers-types": "^4.20230518.0",
     "@playwright/test": "^1.33.0",
     "@react-router/dev": "workspace:*",
     "@react-router/express": "workspace:*",
