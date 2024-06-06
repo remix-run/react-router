@@ -796,8 +796,7 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
-  let patchRoutesOnMissImpl =
-    init.unstable_patchRoutesOnMiss || (() => Promise.resolve(null));
+  let patchRoutesOnMissImpl = init.unstable_patchRoutesOnMiss;
 
   // Config driven behavior flags
   let future: FutureConfig = {
@@ -3147,30 +3146,32 @@ export function createRouter(init: RouterInit): Router {
     routesToUse: AgnosticDataRouteObject[],
     pathname: string
   ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
-    if (!matches) {
-      let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
-        routesToUse,
-        pathname,
-        true,
-        basename
-      );
-
-      if (fogMatches) {
-        return { active: true, matches: fogMatches };
-      }
-    } else {
-      let leafRoute = matches[matches.length - 1].route;
-      if (leafRoute.path === "*") {
-        // If we matched a splat, it might only be because we haven't yet fetched
-        // the children that would match with a higher score, so let's fetch
-        // around and find out
-        let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+    if (patchRoutesOnMissImpl) {
+      if (!matches) {
+        let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
           routesToUse,
           pathname,
-          true,
-          basename
+          basename,
+          true
         );
-        return { active: true, matches: partialMatches };
+
+        if (fogMatches) {
+          return { active: true, matches: fogMatches };
+        }
+      } else {
+        let leafRoute = matches[matches.length - 1].route;
+        if (leafRoute.path === "*") {
+          // If we matched a splat, it might only be because we haven't yet fetched
+          // the children that would match with a higher score, so let's fetch
+          // around and find out
+          let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+            routesToUse,
+            pathname,
+            basename,
+            true
+          );
+          return { active: true, matches: partialMatches };
+        }
       }
     }
 
@@ -3203,7 +3204,7 @@ export function createRouter(init: RouterInit): Router {
       try {
         await loadLazyRouteChildren(
           route,
-          patchRoutesOnMissImpl,
+          patchRoutesOnMissImpl!,
           pathname,
           partialMatches,
           manifest,
