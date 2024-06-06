@@ -75,11 +75,6 @@ let conjunctionListFormat = new Intl.ListFormat("en", {
   type: "conjunction",
 });
 
-let disjunctionListFormat = new Intl.ListFormat("en", {
-  style: "long",
-  type: "disjunction",
-});
-
 export async function generateEntry(
   entry: string,
   reactRouterRoot: string,
@@ -116,26 +111,8 @@ export async function generateEntry(
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  let serverRuntime = deps["@react-router/deno"]
-    ? "deno"
-    : deps["@react-router/cloudflare"]
-    ? "cloudflare"
-    : deps["@react-router/node"]
-    ? "node"
-    : undefined;
-
-  if (!serverRuntime) {
-    let serverRuntimes = [
-      "@react-router/deno",
-      "@react-router/cloudflare",
-      "@react-router/node",
-    ];
-    let formattedList = disjunctionListFormat.format(serverRuntimes);
-    console.error(
-      colors.error(
-        `Could not determine server runtime. Please install one of the following: ${formattedList}`
-      )
-    );
+  if (!deps["@react-router/node"]) {
+    console.error(colors.error(`No default server entry detected.`));
     return;
   }
 
@@ -146,7 +123,7 @@ export async function generateEntry(
     defaultsDirectory,
     ctx?.reactRouterConfig.ssr === false
       ? `entry.server.spa.tsx`
-      : `entry.server.${serverRuntime}.tsx`
+      : `entry.server.node.tsx`
   );
 
   let isServerEntry = entry === "entry.server";
