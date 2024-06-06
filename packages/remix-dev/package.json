@@ -88,9 +88,6 @@
     "typescript": {
       "optional": true
     },
-    "vite": {
-      "optional": true
-    },
     "wrangler": {
       "optional": true
     }
