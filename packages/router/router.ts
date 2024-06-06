@@ -965,7 +965,8 @@ export function createRouter(init: RouterInit): Router {
 
   // Flag to ignore the next history update, so we can revert the URL change on
   // a POP navigation that was blocked by the user without touching router state
-  let ignoreNextHistoryUpdate = false;
+  let ignoreNextHistoryUpdate: ((value: undefined) => void) | undefined =
+    undefined;
 
   // Initialize the router, all side effects should be kicked off from here.
   // Implemented as a Fluent API for ease of:
@@ -978,7 +979,8 @@ export function createRouter(init: RouterInit): Router {
         // Ignore this event if it was just us resetting the URL from a
         // blocked POP navigation
         if (ignoreNextHistoryUpdate) {
-          ignoreNextHistoryUpdate = false;
+          ignoreNextHistoryUpdate(undefined);
+          ignoreNextHistoryUpdate = undefined;
           return;
         }
 
@@ -1000,7 +1002,9 @@ export function createRouter(init: RouterInit): Router {
 
         if (blockerKey && delta != null) {
           // Restore the URL to match the current UI, but don't update router state
-          ignoreNextHistoryUpdate = true;
+          const nextHistoryUpdatePromise = new Promise(
+            (resolve, r) => (ignoreNextHistoryUpdate = resolve)
+          );
           init.history.go(delta * -1);
 
           // Put the blocker into a blocked state
@@ -1014,8 +1018,8 @@ export function createRouter(init: RouterInit): Router {
                 reset: undefined,
                 location,
               });
-              // Re-do the same POP navigation we just blocked
-              init.history.go(delta);
+              // Re-do the same POP navigation we just blocked, after the url restoration is also complete
+              nextHistoryUpdatePromise.then(() => init.history.go(delta));
             },
             reset() {
               let blockers = new Map(state.blockers);
