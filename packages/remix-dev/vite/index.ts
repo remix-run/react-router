@@ -9,5 +9,3 @@ export const vitePlugin: ReactRouterVitePlugin = (...args) => {
     require("./plugin") as typeof import("./plugin");
   return reactRouterVitePlugin(...args);
 };
-
-export { cloudflareDevProxyVitePlugin } from "./cloudflare-proxy-plugin";
