@@ -24,7 +24,6 @@ const TMP_DIR = path.join(root, ".tmp", "integration");
 export interface FixtureInit {
   buildStdio?: Writable;
   files?: { [filename: string]: string };
-  template?: "cf-template" | "deno-template" | "node-template";
   useReactRouterServe?: boolean;
   spaMode?: boolean;
   port?: number;
@@ -279,7 +278,7 @@ export async function createFixtureProject(
   init: FixtureInit = {},
   mode?: ServerMode
 ): Promise<string> {
-  let template = init.template ?? "node-template";
+  let template = "node-template";
   let integrationTemplateDir = path.resolve(__dirname, template);
   let projectName = `rr-${template}-${Math.random().toString(32).slice(2)}`;
   let projectDir = path.join(TMP_DIR, projectName);
