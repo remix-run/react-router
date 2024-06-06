@@ -405,3 +405,4 @@ export {
   decodeViaTurboStream as UNSAFE_decodeViaTurboStream,
   SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
 } from "./lib/dom/ssr/single-fetch";
+export { defineRoute } from "./lib/router/define-route";

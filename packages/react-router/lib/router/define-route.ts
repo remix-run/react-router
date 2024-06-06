@@ -57,6 +57,7 @@ type Component<P extends string, L extends Loader<P>> = (args: {
 // loader -> data for component
 // loader -> serverLoader for clientLoader -> data for component
 // TODO: clientLoader and all the other route module export APIs (meta, handle, ErrorBoundary, etc.)
+// TODO: `handle`, HydrateFallback, shouldRevalidate, Layout, meta, links
 export const defineRoute = <
   const P extends string,
   L extends Loader<P>,

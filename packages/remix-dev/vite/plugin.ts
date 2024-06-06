@@ -481,7 +481,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           path: ${JSON.stringify(route.path)},
           index: ${JSON.stringify(route.index)},
           caseSensitive: ${JSON.stringify(route.caseSensitive)},
-          module: route${index}
+          module: {
+            ...route${index}.default,
+            default: route${index}.default.Component,
+            Component: undefined,
+          }
         }`;
           })
           .join(",\n  ")}
@@ -1836,32 +1840,8 @@ async function getRouteSource(
   readRouteFile?: () => string | Promise<string>
 ): Promise<string> {
   // TODO: if routeFile is not js/jsx/ts/tsx, use child compiler
-  //
-  // if (!viteChildCompiler) {
-  //   throw new Error("Vite child compiler not found");
-  // }
-  // let ssr = true;
-  // let { pluginContainer, moduleGraph } = viteChildCompiler;
-
   let routePath = path.resolve(ctx.reactRouterConfig.appDirectory, routeFile);
-  // let url = resolveFileUrl(ctx, routePath);
-  // let resolveId = async () => {
-  //   let result = await pluginContainer.resolveId(url, undefined, { ssr });
-  //   if (!result) throw new Error(`Could not resolve module ID for ${url}`);
-  //   return result.id;
-  // };
-
-  // let [id, code] = await Promise.all([
-  //   resolveId(),
-  //   readRouteFile?.() ?? fse.readFile(routePath, "utf-8"),
-  //   // pluginContainer.transform(...) fails if we don't do this first:
-  //   moduleGraph.ensureEntryFromUrl(url, ssr),
-  // ]);
-
-  // let transformed = await pluginContainer.transform(code, id, { ssr });
-
   return readRouteFile?.() ?? fse.readFile(routePath, "utf-8");
-  // return transformed.code;
 }
 
 type HasFields = {

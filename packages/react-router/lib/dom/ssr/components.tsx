@@ -642,7 +642,10 @@ ${matches
   .join("\n")}
 window.__remixRouteModules = {${matches
           .map(
-            (match, index) => `${JSON.stringify(match.route.id)}:route${index}`
+            (match, index) =>
+              `${JSON.stringify(
+                match.route.id
+              )}: { ...route${index}.default, default: route${index}.default.Component, Component: undefined}`
           )
           .join(",")}};
 

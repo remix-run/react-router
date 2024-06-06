@@ -200,7 +200,10 @@ export async function loadRouteModule(
   }
 
   try {
-    let routeModule = await import(/* webpackIgnore: true */ route.module);
+    let { Component, ...routeModule } = (
+      await import(/* webpackIgnore: true */ route.module)
+    ).default;
+    routeModule.default = Component;
     routeModulesCache[route.id] = routeModule;
     return routeModule;
   } catch (error: unknown) {

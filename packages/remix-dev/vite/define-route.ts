@@ -24,13 +24,19 @@ function parseRoute(source: string) {
   return ast;
 }
 
+// TODO: account for layout,
 let fields = [
+  "meta",
+  "links",
   "loader",
   "clientLoader",
   "action",
   "clientAction",
   "Component",
   "ErrorBoundary",
+  "HydrateFallback",
+  "handle",
+  "shouldRevalidate",
 ] as const;
 
 type Field = (typeof fields)[number];
@@ -42,7 +48,7 @@ function isField(field: string): field is Field {
 
 type Analysis = Record<Field, FieldPath | null>;
 
-export function parseRouteFields(source: string): string[] {
+export function parseRouteFields(source: string): Field[] {
   let ast = parseRoute(source);
 
   let fieldNames: Field[] = [];
@@ -102,48 +108,63 @@ function analyzeRouteExport(
   if (t.isCallExpression(route)) {
     let routePath = path.get("declaration") as NodePath<t.CallExpression>;
     if (!isDefineRoute(routePath)) {
-      return routePath.buildCodeFrameError("TODO");
+      return routePath.buildCodeFrameError(
+        "Default export of a route module must either be a literal object or a call to `defineRoute`"
+      );
     }
 
     if (routePath.node.arguments.length !== 1) {
       return path.buildCodeFrameError(
-        `defineRoute must take exactly one argument`
+        "`defineRoute` must take exactly one argument"
       );
     }
     let arg = routePath.node.arguments[0];
-    let argPath = path.get("arguments.0") as NodePath<t.ObjectExpression>;
+    let argPath = routePath.get("arguments.0") as NodePath<t.ObjectExpression>;
     if (!t.isObjectExpression(arg)) {
       return argPath.buildCodeFrameError(
-        "defineRoute argument must be a literal object"
+        "`defineRoute` argument must be a literal object"
       );
     }
     return analyzeRoute(argPath);
   }
 
-  return path.get("declaration").buildCodeFrameError("TODO");
+  return path
+    .get("declaration")
+    .buildCodeFrameError(
+      "Default export of a route module must be either a literal object or a call to `defineRoute`"
+    );
 }
 
 function analyzeRoute(path: NodePath<t.ObjectExpression>): Analysis {
   let analysis: Analysis = {
+    meta: null,
+    links: null,
     loader: null,
     clientLoader: null,
     action: null,
     clientAction: null,
     Component: null,
     ErrorBoundary: null,
+    HydrateFallback: null,
+    handle: null,
+    shouldRevalidate: null,
   };
 
   for (let [i, property] of path.node.properties.entries()) {
     if (!t.isObjectProperty(property) && !t.isObjectMethod(property)) {
       let propertyPath = path.get(`properties.${i}`) as NodePath<t.Node>;
-      throw propertyPath.buildCodeFrameError("todo");
+      throw propertyPath.buildCodeFrameError(
+        "Route properties cannot have dynamically computed keys"
+      );
     }
 
     let propertyPath = path.get(`properties.${i}`) as NodePath<
       t.ObjectProperty | t.ObjectMethod
     >;
     if (property.computed || !t.isIdentifier(property.key)) {
-      throw propertyPath.buildCodeFrameError("todo");
+      throw propertyPath.buildCodeFrameError(
+        "Route properties cannot have dynamically computed keys"
+      );
     }
 
     let key = property.key.name;
@@ -162,16 +183,20 @@ function analyzeRoute(path: NodePath<t.ObjectExpression>): Analysis {
 
 function checkRouteParams(path: NodePath<t.ObjectProperty>) {
   if (t.isObjectMethod(path.node)) {
-    throw path.buildCodeFrameError(`params must be statically analyzable`);
+    throw path.buildCodeFrameError(
+      "Route params must be a literal array of literal strings"
+    );
   }
   if (!t.isArrayExpression(path.node.value)) {
-    throw path.buildCodeFrameError(`params must be statically analyzable`);
+    throw path.buildCodeFrameError(
+      "Route params must be a literal array of literal strings"
+    );
   }
   for (let [i, element] of path.node.value.elements.entries()) {
     if (!t.isStringLiteral(element)) {
       let elementPath = path.get(`value.elements.${i}`) as NodePath<t.Node>;
       throw elementPath.buildCodeFrameError(
-        `params must be statically analyzable`
+        "Route params must be a literal array of literal strings"
       );
     }
   }
