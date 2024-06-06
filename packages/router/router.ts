@@ -1003,7 +1003,7 @@ export function createRouter(init: RouterInit): Router {
         if (blockerKey && delta != null) {
           // Restore the URL to match the current UI, but don't update router state
           const nextHistoryUpdatePromise = new Promise<void>(
-            (resolve, _r) => (ignoreNextHistoryUpdate = resolve)
+            (resolve) => (ignoreNextHistoryUpdate = resolve)
           );
           init.history.go(delta * -1);
 
