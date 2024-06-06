@@ -1,9 +1,0 @@
-name = "remix-cloudflare-workers"
-
-workers_dev = true
-main = "./build/index.js"
-# https://developers.cloudflare.com/workers/platform/compatibility-dates
-compatibility_date = "2023-04-20"
-
-[site]
-  bucket = "./public"
