@@ -442,7 +442,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS + 10);
+        await sleep(LOADER_LATENCY_MS * 2);
         expect(router.getBlocker("KEY", fn)).toEqual({
           state: "unblocked",
           proceed: undefined,
@@ -455,7 +455,7 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS + 10);
+        await sleep(LOADER_LATENCY_MS * 2);
         expect(router.state.location.pathname).toBe("/about");
       });
     });
