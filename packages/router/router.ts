@@ -1609,7 +1609,7 @@ export function createRouter(init: RouterInit): Router {
       );
       result = results[0];
 
-      if (request.signal.aborted) {
+      if (request.signal?.aborted) {
         return { shortCircuited: true };
       }
     }
@@ -1805,7 +1805,7 @@ export function createRouter(init: RouterInit): Router {
     let abortPendingFetchRevalidations = () =>
       revalidatingFetchers.forEach((f) => abortFetcher(f.key));
     if (pendingNavigationController) {
-      pendingNavigationController.signal.addEventListener(
+      pendingNavigationController.signal?.addEventListener?.(
         "abort",
         abortPendingFetchRevalidations
       );
@@ -1820,7 +1820,7 @@ export function createRouter(init: RouterInit): Router {
         request
       );
 
-    if (request.signal.aborted) {
+    if (request.signal?.aborted) {
       return { shortCircuited: true };
     }
 
@@ -1828,7 +1828,7 @@ export function createRouter(init: RouterInit): Router {
     // circuited because fetchControllers would have been aborted and
     // reassigned to new controllers for the next navigation
     if (pendingNavigationController) {
-      pendingNavigationController.signal.removeEventListener(
+      pendingNavigationController.signal?.removeEventListener?.(
         "abort",
         abortPendingFetchRevalidations
       );
@@ -2030,7 +2030,7 @@ export function createRouter(init: RouterInit): Router {
     );
     let actionResult = actionResults[0];
 
-    if (fetchRequest.signal.aborted) {
+    if (fetchRequest.signal?.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
       // re-submit which would have put _new_ controller is in fetchControllers
       if (fetchControllers.get(key) === abortController) {
@@ -2145,7 +2145,7 @@ export function createRouter(init: RouterInit): Router {
     let abortPendingFetchRevalidations = () =>
       revalidatingFetchers.forEach((rf) => abortFetcher(rf.key));
 
-    abortController.signal.addEventListener(
+    abortController.signal?.addEventListener?.(
       "abort",
       abortPendingFetchRevalidations
     );
@@ -2159,11 +2159,11 @@ export function createRouter(init: RouterInit): Router {
         revalidationRequest
       );
 
-    if (abortController.signal.aborted) {
+    if (abortController.signal?.aborted) {
       return;
     }
 
-    abortController.signal.removeEventListener(
+    abortController.signal?.removeEventListener?.(
       "abort",
       abortPendingFetchRevalidations
     );
@@ -2294,7 +2294,7 @@ export function createRouter(init: RouterInit): Router {
       fetchControllers.delete(key);
     }
 
-    if (fetchRequest.signal.aborted) {
+    if (fetchRequest.signal?.aborted) {
       return;
     }
 
@@ -3273,7 +3273,7 @@ export function createStaticHandler(
       );
       result = results[0];
 
-      if (request.signal.aborted) {
+      if (request.signal?.aborted) {
         throwStaticHandlerAbortedError(request, isRouteRequest, future);
       }
     }
@@ -3454,7 +3454,7 @@ export function createStaticHandler(
       unstable_dataStrategy
     );
 
-    if (request.signal.aborted) {
+    if (request.signal?.aborted) {
       throwStaticHandlerAbortedError(request, isRouteRequest, future);
     }
 
@@ -3573,7 +3573,7 @@ function throwStaticHandlerAbortedError(
   isRouteRequest: boolean,
   future: StaticHandlerFutureConfig
 ) {
-  if (future.v7_throwAbortReason && request.signal.reason !== undefined) {
+  if (future.v7_throwAbortReason && request.signal?.reason !== undefined) {
     throw request.signal.reason;
   }
 
@@ -4236,7 +4236,7 @@ async function callLoaderOrAction(
     // satisfy the function return value
     let abortPromise = new Promise<HandlerResult>((_, r) => (reject = r));
     onReject = () => reject();
-    request.signal.addEventListener("abort", onReject);
+    request.signal?.addEventListener?.("abort", onReject);
 
     let actualHandler = (ctx?: unknown) => {
       if (typeof handler !== "function") {
@@ -4341,7 +4341,7 @@ async function callLoaderOrAction(
     return { type: ResultType.error, result: e };
   } finally {
     if (onReject) {
-      request.signal.removeEventListener("abort", onReject);
+      request.signal?.removeEventListener?.("abort", onReject);
     }
   }
 
@@ -4671,7 +4671,7 @@ function processLoaderData(
     let result = fetcherResults[index];
 
     // Process fetcher non-redirect errors
-    if (controller && controller.signal.aborted) {
+    if (controller && controller.signal?.aborted) {
       // Nothing to do for aborted fetchers
       continue;
     } else if (isErrorResult(result)) {
