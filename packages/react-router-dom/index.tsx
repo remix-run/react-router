@@ -72,6 +72,7 @@ import type {
   ParamKeyValuePair,
   URLSearchParamsInit,
   SubmitTarget,
+  FetcherSubmitOptions,
 } from "./dom";
 import {
   createSearchParams,
@@ -1523,7 +1524,7 @@ export interface FetcherSubmitFunction {
   (
     target: SubmitTarget,
     // Fetchers cannot replace or set state because they are not navigation events
-    options?: Omit<SubmitOptions, "replace" | "state">
+    options?: FetcherSubmitOptions
   ): void;
 }
 
