@@ -3155,9 +3155,7 @@ export function createRouter(init: RouterInit): Router {
           true
         );
 
-        if (fogMatches) {
-          return { active: true, matches: fogMatches };
-        }
+        return { active: true, matches: fogMatches || [] };
       } else {
         let leafRoute = matches[matches.length - 1].route;
         if (leafRoute.path === "*") {
@@ -3199,7 +3197,10 @@ export function createRouter(init: RouterInit): Router {
     signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
     let partialMatches: AgnosticDataRouteMatch[] | null = matches;
-    let route = partialMatches[partialMatches.length - 1].route;
+    let route =
+      partialMatches.length > 0
+        ? partialMatches[partialMatches.length - 1].route
+        : null;
     while (true) {
       try {
         await loadLazyRouteChildren(
@@ -4493,19 +4494,22 @@ function shouldRevalidateLoader(
  * definitions and update the routes/routeManifest
  */
 async function loadLazyRouteChildren(
-  route: AgnosticDataRouteObject,
+  route: AgnosticDataRouteObject | null,
   patchRoutesOnMissImpl: PatchRoutesOnMissFunction,
   path: string,
   matches: AgnosticDataRouteMatch[],
   routes: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  pendingRouteChildren: Map<string, Promise<AgnosticDataRouteObject[] | null>>,
+  pendingRouteChildren: Map<
+    string,
+    Promise<AgnosticDataRouteObject[] | null | undefined | void>
+  >,
   signal: AbortSignal
 ) {
   let key = [path, ...matches.map((m) => m.route.id)].join("-");
   let pending = pendingRouteChildren.get(key);
-  let children: AgnosticDataRouteObject[] | null | undefined = null;
+  let children: AgnosticDataRouteObject[] | null | undefined | void = null;
   if (!pending) {
     let maybePromise = patchRoutesOnMissImpl(path, matches, (r, c) =>
       patchRoutes(r, c, routes, manifest, mapRouteProperties)
@@ -4526,7 +4530,16 @@ async function loadLazyRouteChildren(
     }
 
     if (children && !signal.aborted) {
-      patchRoutes(route.id, children, routes, manifest, mapRouteProperties);
+      if (route) {
+        patchRoutes(route.id, children, routes, manifest, mapRouteProperties);
+      } else {
+        warning(
+          false,
+          "You cannot return routes from `patchRoutesOnMiss` when there were no " +
+            "partial matches, since React Router doesn't know where to patch the " +
+            "routes.  Please use `patch(routeId, children)` instead."
+        );
+      }
     }
   } finally {
     pendingRouteChildren.delete(key);

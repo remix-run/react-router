@@ -578,6 +578,215 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
   });
 
+  describe("patch", () => {
+    it("discovers new root routes", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+      let childLoaderDfd = createDeferred();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            path: "/parent",
+          },
+        ],
+        async unstable_patchRoutesOnMiss(_, __, patch) {
+          patch(null, await childrenDfd.promise);
+        },
+      });
+
+      router.navigate("/parent/child");
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childrenDfd.resolve([
+        {
+          id: "parent-child",
+          path: "/parent/child",
+          loader: () => childLoaderDfd.promise,
+        },
+      ]);
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childLoaderDfd.resolve("CHILD");
+      await tick();
+
+      expect(router.state.location.pathname).toBe("/parent/child");
+      expect(router.state.loaderData).toEqual({
+        "parent-child": "CHILD",
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent-child",
+      ]);
+    });
+
+    it("lets you patch elsewhere in the tree (dynamic param)", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+      let childLoaderDfd = createDeferred();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "root",
+            path: "/",
+          },
+          {
+            id: "param",
+            path: "/:param",
+          },
+        ],
+        async unstable_patchRoutesOnMiss(_, matches, patch) {
+          // We matched for the param but we want to patch in under root
+          expect(matches.length).toBe(1);
+          expect(matches[0].route.id).toBe("param");
+          patch("root", await childrenDfd.promise);
+        },
+      });
+
+      router.navigate("/parent/child");
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childrenDfd.resolve([
+        {
+          id: "parent-child",
+          path: "/parent/child",
+          loader: () => childLoaderDfd.promise,
+        },
+      ]);
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childLoaderDfd.resolve("CHILD");
+      await tick();
+
+      expect(router.state.location.pathname).toBe("/parent/child");
+      expect(router.state.loaderData).toEqual({
+        "parent-child": "CHILD",
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "root",
+        "parent-child",
+      ]);
+    });
+
+    it("lets you patch elsewhere in the tree (splat)", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+      let childLoaderDfd = createDeferred();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "other",
+            path: "/other",
+          },
+          {
+            id: "splat",
+            path: "*",
+          },
+        ],
+        async unstable_patchRoutesOnMiss(_, matches, patch) {
+          // We matched for the splat but we want to patch in at the top
+          expect(matches.length).toBe(1);
+          expect(matches[0].route.id).toBe("splat");
+          let children = await childrenDfd.promise;
+          patch(null, children);
+        },
+      });
+
+      router.navigate("/parent/child");
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childrenDfd.resolve([
+        {
+          id: "parent-child",
+          path: "/parent/child",
+          loader: () => childLoaderDfd.promise,
+        },
+      ]);
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childLoaderDfd.resolve("CHILD");
+      await tick();
+
+      expect(router.state.location.pathname).toBe("/parent/child");
+      expect(router.state.loaderData).toEqual({
+        "parent-child": "CHILD",
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent-child",
+      ]);
+    });
+
+    it("works when there are no partial matches", async () => {
+      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+      let childLoaderDfd = createDeferred();
+
+      router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            path: "/nope",
+          },
+        ],
+        async unstable_patchRoutesOnMiss(_, matches, patch) {
+          expect(matches.length).toBe(0);
+          let children = await childrenDfd.promise;
+          patch(null, children);
+        },
+      });
+
+      router.navigate("/parent/child");
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childrenDfd.resolve([
+        {
+          id: "parent-child",
+          path: "/parent/child",
+          loader: () => childLoaderDfd.promise,
+        },
+      ]);
+      expect(router.state.navigation).toMatchObject({
+        state: "loading",
+        location: { pathname: "/parent/child" },
+      });
+
+      childLoaderDfd.resolve("CHILD");
+      await tick();
+
+      expect(router.state.location.pathname).toBe("/parent/child");
+      expect(router.state.loaderData).toEqual({
+        "parent-child": "CHILD",
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent-child",
+      ]);
+    });
+  });
+
   describe("errors", () => {
     it("lazy 404s (GET navigation)", async () => {
       let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();

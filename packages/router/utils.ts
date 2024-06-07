@@ -262,7 +262,12 @@ export interface PatchRoutesOnMissFunction<
     path: string,
     matches: M[],
     patch: (routeId: string | null, children: AgnosticRouteObject[]) => void
-  ): M["route"][] | null | undefined | Promise<M["route"][] | null | undefined>;
+  ):
+    | M["route"][]
+    | null
+    | undefined
+    | void
+    | Promise<M["route"][] | null | undefined | void>;
 }
 
 /**
