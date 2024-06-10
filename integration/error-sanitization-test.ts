@@ -493,7 +493,7 @@ test.describe("Error Sanitization", () => {
               import { PassThrough } from "node:stream";
 
               import { createReadableStreamFromReadable } from "@react-router/node";
-              import { RemixServer, isRouteErrorResponse } from "react-router-dom";
+              import { ServerRouter, isRouteErrorResponse } from "react-router-dom";
               import { renderToPipeableStream } from "react-dom/server";
 
               const ABORT_DELAY = 5_000;
@@ -507,7 +507,7 @@ test.describe("Error Sanitization", () => {
                 return new Promise((resolve, reject) => {
                   let shellRendered = false;
                   const { pipe, abort } = renderToPipeableStream(
-                    <RemixServer
+                    <ServerRouter
                       context={remixContext}
                       url={request.url}
                       abortDelay={ABORT_DELAY}

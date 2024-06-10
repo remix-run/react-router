@@ -89,7 +89,7 @@ test.describe("SPA Mode", () => {
           });
         `,
           "app/entry.server.tsx": js`
-          import { RemixServer } from "react-router";
+          import { ServerRouter } from "react-router";
           import { renderToString } from "react-dom/server";
 
           export default function handleRequest(
@@ -99,7 +99,7 @@ test.describe("SPA Mode", () => {
             remixContext
           ) {
             const html = renderToString(
-              <RemixServer context={remixContext} url={request.url} />
+              <ServerRouter context={remixContext} url={request.url} />
             );
             return new Response(html, {
               headers: { "Content-Type": "text/html" },
@@ -342,7 +342,7 @@ test.describe("SPA Mode", () => {
 
             import type { AppLoadContext, EntryContext } from "@react-router/node";
             import { createReadableStreamFromReadable } from "@react-router/node";
-            import { RemixServer } from "react-router";
+            import { ServerRouter } from "react-router";
             import { renderToPipeableStream } from "react-dom/server";
 
             const ABORT_DELAY = 5_000;
@@ -371,7 +371,7 @@ test.describe("SPA Mode", () => {
               const html = await new Promise((resolve, reject) => {
                 let shellRendered = false;
                 const { pipe, abort } = renderToPipeableStream(
-                  <RemixServer
+                  <ServerRouter
                     context={remixContext}
                     url={request.url}
                     abortDelay={ABORT_DELAY}

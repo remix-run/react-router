@@ -35,7 +35,7 @@ test.describe("Vite custom entry dev", () => {
 
           import type { EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { RemixServer } from "react-router-dom";
+          import { ServerRouter } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";
 
           const ABORT_DELAY = 5_000;
@@ -49,7 +49,7 @@ test.describe("Vite custom entry dev", () => {
             return new Promise((resolve, reject) => {
               let shellRendered = false;
               const { pipe, abort } = renderToPipeableStream(
-                <RemixServer
+                <ServerRouter
                   context={remixContext}
                   url={request.url}
                   abortDelay={ABORT_DELAY}

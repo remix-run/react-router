@@ -2,7 +2,7 @@ import { PassThrough } from "node:stream";
 
 import type { AppLoadContext, EntryContext } from "@react-router/node";
 import { createReadableStreamFromReadable } from "@react-router/node";
-import { RemixServer } from "react-router";
+import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToPipeableStream } from "react-dom/server";
 
@@ -39,7 +39,7 @@ function handleBotRequest(
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
-      <RemixServer
+      <ServerRouter
         context={reactRouterContext}
         url={request.url}
         abortDelay={ABORT_DELAY}
@@ -89,7 +89,7 @@ function handleBrowserRequest(
   return new Promise((resolve, reject) => {
     let shellRendered = false;
     const { pipe, abort } = renderToPipeableStream(
-      <RemixServer
+      <ServerRouter
         context={reactRouterContext}
         url={request.url}
         abortDelay={ABORT_DELAY}

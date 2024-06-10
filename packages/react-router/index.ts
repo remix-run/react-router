@@ -343,8 +343,8 @@ export type {
   MetaFunction,
   LinksFunction,
 } from "./lib/dom/ssr/routeModules";
-export type { RemixServerProps } from "./lib/dom/ssr/server";
-export { RemixServer } from "./lib/dom/ssr/server";
+export type { ServerRouterProps } from "./lib/dom/ssr/server";
+export { ServerRouter } from "./lib/dom/ssr/server";
 export type { RemixStubProps } from "./lib/dom/ssr/create-remix-stub";
 export { createRemixStub } from "./lib/dom/ssr/create-remix-stub";
 
