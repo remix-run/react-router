@@ -23,7 +23,7 @@ export type {
   LoaderFunctionArgs,
   ParamParseKey,
   Params,
-  PatchRoutesOnMissFunction as unstable_PatchRoutesOnMissFunction,
+  AgnosticPatchRoutesOnMissFunction as unstable_AgnosticPatchRoutesOnMissFunction,
   PathMatch,
   PathParam,
   PathPattern,

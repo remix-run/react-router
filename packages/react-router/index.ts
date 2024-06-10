@@ -32,7 +32,7 @@ import type {
   To,
   UIMatch,
   unstable_HandlerResult,
-  unstable_PatchRoutesOnMissFunction,
+  unstable_AgnosticPatchRoutesOnMissFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -288,6 +288,9 @@ function mapRouteProperties(route: RouteObject) {
 
   return updates;
 }
+
+export interface unstable_PatchRoutesOnMissFunction
+  extends unstable_AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
 
 export function createMemoryRouter(
   routes: RouteObject[],

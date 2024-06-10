@@ -255,8 +255,8 @@ export interface DataStrategyFunction {
   (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
 }
 
-export interface PatchRoutesOnMissFunction<
-  M extends AgnosticDataRouteMatch = AgnosticDataRouteMatch
+export interface AgnosticPatchRoutesOnMissFunction<
+  M extends AgnosticRouteMatch = AgnosticRouteMatch
 > {
   (
     path: string,

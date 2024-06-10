@@ -578,6 +578,56 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
   });
 
+  it("discovers routes during initial hydration", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let loaderDfd = createDeferred();
+    let childLoaderDfd = createDeferred();
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/parent/child"] }),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "parent",
+          loader: () => loaderDfd.promise,
+        },
+      ],
+      unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+    });
+    router.initialize();
+
+    expect(router.state.initialized).toBe(false);
+
+    loaderDfd.resolve("PARENT");
+    expect(router.state.initialized).toBe(false);
+
+    childrenDfd.resolve([
+      {
+        id: "child",
+        path: "child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    expect(router.state.initialized).toBe(false);
+
+    childLoaderDfd.resolve("CHILD");
+    await tick();
+
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.loaderData).toEqual({
+      parent: "PARENT",
+      child: "CHILD",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent",
+      "child",
+    ]);
+  });
+
   describe("patch", () => {
     it("discovers new root routes", async () => {
       let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();

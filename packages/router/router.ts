@@ -35,7 +35,7 @@ import type {
   UIMatch,
   V7_FormMethod,
   V7_MutationFormMethod,
-  PatchRoutesOnMissFunction,
+  AgnosticPatchRoutesOnMissFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -389,7 +389,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
-  unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
+  unstable_patchRoutesOnMiss?: AgnosticPatchRoutesOnMissFunction;
   unstable_dataStrategy?: DataStrategyFunction;
 }
 
@@ -829,7 +829,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialErrors: RouteData | null = null;
 
-  if (initialMatches == null) {
+  if (initialMatches == null && !patchRoutesOnMissImpl) {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the error boundary to take over
     let error = getInternalRouterError(404, {
@@ -841,13 +841,15 @@ export function createRouter(init: RouterInit): Router {
   }
 
   let initialized: boolean;
-  let hasLazyRoutes = initialMatches.some((m) => m.route.lazy);
-  let hasLoaders = initialMatches.some((m) => m.route.loader);
-  if (hasLazyRoutes) {
+  if (!initialMatches) {
+    // We need to run patchRoutesOnMiss in initialize()
+    initialized = false;
+    initialMatches = [];
+  } else if (initialMatches.some((m) => m.route.lazy)) {
     // All initialMatches need to be loaded before we're ready.  If we have lazy
     // functions around still then we'll need to run them in initialize()
     initialized = false;
-  } else if (!hasLoaders) {
+  } else if (!initialMatches.some((m) => m.route.loader)) {
     // If we've got no loaders to run, then we're good to go
     initialized = true;
   } else if (future.v7_partialHydration) {
@@ -4495,7 +4497,7 @@ function shouldRevalidateLoader(
  */
 async function loadLazyRouteChildren(
   route: AgnosticDataRouteObject | null,
-  patchRoutesOnMissImpl: PatchRoutesOnMissFunction,
+  patchRoutesOnMissImpl: AgnosticPatchRoutesOnMissFunction,
   path: string,
   matches: AgnosticDataRouteMatch[],
   routes: AgnosticDataRouteObject[],
@@ -4509,7 +4511,7 @@ async function loadLazyRouteChildren(
 ) {
   let key = [path, ...matches.map((m) => m.route.id)].join("-");
   let pending = pendingRouteChildren.get(key);
-  let children: AgnosticDataRouteObject[] | null | undefined | void = null;
+  let children: AgnosticRouteObject[] | null | undefined | void = null;
   if (!pending) {
     let maybePromise = patchRoutesOnMissImpl(path, matches, (r, c) =>
       patchRoutes(r, c, routes, manifest, mapRouteProperties)

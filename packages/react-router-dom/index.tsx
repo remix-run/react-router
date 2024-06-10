@@ -15,6 +15,7 @@ import type {
   RouteObject,
   RouterProviderProps,
   To,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 import {
   Router,
@@ -53,7 +54,6 @@ import type {
   RouterState,
   RouterSubscriber,
   BlockerFunction,
-  unstable_PatchRoutesOnMissFunction,
 } from "@remix-run/router";
 import {
   createRouter,
