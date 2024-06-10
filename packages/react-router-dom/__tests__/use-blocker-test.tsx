@@ -12,6 +12,7 @@ import {
   useBlocker,
   useNavigate,
 } from "../index";
+import { waitFor } from "@testing-library/react";
 
 type Router = ReturnType<typeof createMemoryRouter>;
 
@@ -488,7 +489,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("About");
+        await waitFor(() => expect(h1?.textContent).toBe("About"));
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -516,7 +517,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("Home");
+        await waitFor(() => expect(h1?.textContent).toBe("Home"));
       });
     });
   });
@@ -578,7 +579,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("About");
+        await waitFor(() => expect(h1?.textContent).toBe("About"));
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -663,7 +664,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).not.toBe("About");
+        await waitFor(() => expect(h1?.textContent).not.toBe("About"));
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
@@ -792,7 +793,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("About");
+        await waitFor(() => expect(h1?.textContent).toBe("About"));
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -820,7 +821,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("Home");
+        await waitFor(() => expect(h1?.textContent).toBe("Home"));
       });
     });
   });
@@ -890,7 +891,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("About");
+        await waitFor(() => expect(h1?.textContent).toBe("About"));
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -983,7 +984,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).not.toBe("About");
+        await waitFor(() => expect(h1?.textContent).not.toBe("About"));
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
@@ -1120,7 +1121,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("About");
+        await waitFor(() => expect(h1?.textContent).toBe("About"));
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -1148,7 +1149,7 @@ describe("navigation blocking with useBlocker", () => {
           await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        expect(h1?.textContent).toBe("Contact");
+        await waitFor(() => expect(h1?.textContent).toBe("Contact"));
       });
     });
   });

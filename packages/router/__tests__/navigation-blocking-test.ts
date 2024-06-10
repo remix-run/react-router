@@ -132,21 +132,23 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about");
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
-        expect(router.getBlocker("KEY", fn)).toEqual({
-          state: "unblocked",
-          proceed: undefined,
-          reset: undefined,
-          location: undefined,
-        });
+        await waitFor(() =>
+          expect(router.getBlocker("KEY", fn)).toEqual({
+            state: "unblocked",
+            proceed: undefined,
+            reset: undefined,
+            location: undefined,
+          })
+        );
       });
 
       it("navigates after proceeding navigation completes", async () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about");
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
-        expect(router.state.location.pathname).toBe("/about");
+        await waitFor(() =>
+          expect(router.state.location.pathname).toBe("/about")
+        );
       });
     });
 
@@ -171,8 +173,9 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn).reset?.();
 
         // wait for '/about' loader so we catch failure if navigation proceeds
-        await sleep(LOADER_LATENCY_MS);
-        expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
+        await waitFor(() =>
+          expect(router.state.location.pathname).toBe(pathnameBeforeNavigation)
+        );
       });
     });
   });
@@ -274,21 +277,23 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
-        expect(router.getBlocker("KEY", fn)).toEqual({
-          state: "unblocked",
-          proceed: undefined,
-          reset: undefined,
-          location: undefined,
-        });
+        await waitFor(() =>
+          expect(router.getBlocker("KEY", fn)).toEqual({
+            state: "unblocked",
+            proceed: undefined,
+            reset: undefined,
+            location: undefined,
+          })
+        );
       });
 
       it("navigates after proceeding navigation completes", async () => {
         router.getBlocker("KEY", fn);
         await router.navigate("/about", { replace: true });
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
-        expect(router.state.location.pathname).toBe("/about");
+        await waitFor(() =>
+          expect(router.state.location.pathname).toBe("/about")
+        );
       });
 
       it("replaces the current history entry after proceeding completes", async () => {
@@ -296,8 +301,9 @@ describe("navigation blocking", () => {
         let historyLengthBeforeNavigation = window.history.length;
         await router.navigate("/about", { replace: true });
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
-        expect(window.history.length).toBe(historyLengthBeforeNavigation);
+        await waitFor(() =>
+          expect(window.history.length).toBe(historyLengthBeforeNavigation)
+        );
       });
     });
 
@@ -322,8 +328,9 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn).reset?.();
 
         // wait for '/about' loader so we catch failure if navigation proceeds
-        await sleep(LOADER_LATENCY_MS);
-        expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
+        await waitFor(() =>
+          expect(router.state.location.pathname).toBe(pathnameBeforeNavigation)
+        );
       });
     });
   });
@@ -443,8 +450,6 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
-        await sleep(LOADER_LATENCY_MS);
-
         await waitFor(() =>
           expect(router.getBlocker("KEY", fn)).toEqual({
             state: "unblocked",
@@ -486,8 +491,9 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn).reset?.();
 
         // wait for '/about' loader so we catch failure if navigation proceeds
-        await sleep(LOADER_LATENCY_MS);
-        expect(router.state.location.pathname).toBe(pathnameBeforeNavigation);
+        await waitFor(() =>
+          expect(router.state.location.pathname).toBe(pathnameBeforeNavigation)
+        );
       });
     });
   });
