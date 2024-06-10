@@ -301,7 +301,7 @@ export function createMemoryRouter(
     initialEntries?: InitialEntry[];
     initialIndex?: number;
     unstable_dataStrategy?: unstable_DataStrategyFunction;
-    unstable_patchRoutesOnMiss: unstable_PatchRoutesOnMissFunction;
+    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
   return createRouter({
