@@ -1,5 +1,5 @@
 diff --git a/lib/web/fetch/body.js b/lib/web/fetch/body.js
-index 0e33d2c9057b7c51b2e019f80184e33ad700b467..a3125b04e99ffdeaeffcc2d3d7fd560195d34a8b 100644
+index 0e33d2c9057b7c51b2e019f80184e33ad700b467..b90dee51ba491e33d9eb9bb3bcf0e03d533cf48f 100644
 --- a/lib/web/fetch/body.js
 +++ b/lib/web/fetch/body.js
 @@ -350,8 +350,9 @@ function bodyMixinMethods (instance) {
@@ -8,7 +8,7 @@ index 0e33d2c9057b7c51b2e019f80184e33ad700b467..a3125b04e99ffdeaeffcc2d3d7fd5601
                // 2. If that fails for some reason, then throw a TypeError.
 -              if (parsed === 'failure') {
 -                throw new TypeError('Failed to parse body as FormData.')
-+              if (parsed.startsWith('failure')) {
++              if (parsed && parsed.startsWith('failure')) {
 +
 +                throw new TypeError('Failed to parse body as FormData - ' + parsed)
                }
