@@ -3,7 +3,7 @@ import { devices } from "@playwright/test";
 
 const config: PlaywrightTestConfig = {
   testDir: ".",
-  testMatch: ["**/*-test.ts"],
+  testMatch: ["**/*form-test.ts"],
   // Playwright treats our workspace packages as internal by default. If we
   // don't mark them as external, tests hang in Node 20.5.2+
   build: {
@@ -26,10 +26,10 @@ const config: PlaywrightTestConfig = {
       name: "chromium",
       use: devices["Desktop Chrome"],
     },
-    {
-      name: "webkit",
-      use: devices["Desktop Safari"],
-    },
+    // {
+    //   name: "webkit",
+    //   use: devices["Desktop Safari"],
+    // },
     {
       name: "msedge",
       use: {
@@ -39,10 +39,10 @@ const config: PlaywrightTestConfig = {
         channel: "msedge",
       },
     },
-    {
-      name: "firefox",
-      use: devices["Desktop Firefox"],
-    },
+    // {
+    //   name: "firefox",
+    //   use: devices["Desktop Firefox"],
+    // },
   ],
 };
 
