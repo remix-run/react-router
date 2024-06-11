@@ -1,0 +1,74 @@
+diff --git a/lib/web/fetch/body.js b/lib/web/fetch/body.js
+index 0e33d2c9057b7c51b2e019f80184e33ad700b467..a3125b04e99ffdeaeffcc2d3d7fd560195d34a8b 100644
+--- a/lib/web/fetch/body.js
++++ b/lib/web/fetch/body.js
+@@ -350,8 +350,9 @@ function bodyMixinMethods (instance) {
+               const parsed = multipartFormDataParser(value, mimeType)
+ 
+               // 2. If that fails for some reason, then throw a TypeError.
+-              if (parsed === 'failure') {
+-                throw new TypeError('Failed to parse body as FormData.')
++              if (parsed.startsWith('failure')) {
++
++                throw new TypeError('Failed to parse body as FormData - ' + parsed)
+               }
+ 
+               // 3. Return a new FormData object, appending each entry,
+diff --git a/lib/web/fetch/formdata-parser.js b/lib/web/fetch/formdata-parser.js
+index 843a6ce518f0e297adf897a3633e2139ca118eb6..f2f7b9f1da4e58676de0d190778bda09c2d60ae1 100644
+--- a/lib/web/fetch/formdata-parser.js
++++ b/lib/web/fetch/formdata-parser.js
+@@ -112,7 +112,7 @@ function multipartFormDataParser (input, mimeType) {
+   //    Otherwise, let boundary be the result of UTF-8 decoding mimeType’s
+   //    parameters["boundary"].
+   if (boundaryString === undefined) {
+-    return 'failure'
++    return 'failure1'
+   }
+ 
+   const boundary = Buffer.from(`--${boundaryString}`, 'utf8')
+@@ -138,7 +138,7 @@ function multipartFormDataParser (input, mimeType) {
+     if (input.subarray(position.position, position.position + boundary.length).equals(boundary)) {
+       position.position += boundary.length
+     } else {
+-      return 'failure'
++      return 'failure2'
+     }
+ 
+     // 5.2. If position points to the sequence of bytes 0x2D 0x2D 0x0D 0x0A
+@@ -154,7 +154,7 @@ function multipartFormDataParser (input, mimeType) {
+     // 5.3. If position does not point to a sequence of bytes starting with 0x0D
+     //      0x0A (CR LF), return failure.
+     if (input[position.position] !== 0x0d || input[position.position + 1] !== 0x0a) {
+-      return 'failure'
++      return 'failure3'
+     }
+ 
+     // 5.4. Advance position by 2. (This skips past the newline.)
+@@ -166,7 +166,7 @@ function multipartFormDataParser (input, mimeType) {
+     const result = parseMultipartFormDataHeaders(input, position)
+ 
+     if (result === 'failure') {
+-      return 'failure'
++      return 'failure4'
+     }
+ 
+     let { name, filename, contentType, encoding } = result
+@@ -184,7 +184,7 @@ function multipartFormDataParser (input, mimeType) {
+       const boundaryIndex = input.indexOf(boundary.subarray(2), position.position)
+ 
+       if (boundaryIndex === -1) {
+-        return 'failure'
++        return 'failure5'
+       }
+ 
+       body = input.subarray(position.position, boundaryIndex - 4)
+@@ -201,7 +201,7 @@ function multipartFormDataParser (input, mimeType) {
+     // 5.9. If position does not point to a sequence of bytes starting with
+     //      0x0D 0x0A (CR LF), return failure. Otherwise, advance position by 2.
+     if (input[position.position] !== 0x0d || input[position.position + 1] !== 0x0a) {
+-      return 'failure'
++      return 'failure6'
+     } else {
+       position.position += 2
+     }
