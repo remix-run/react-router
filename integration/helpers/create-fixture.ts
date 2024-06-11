@@ -40,6 +40,8 @@ export function json(value: JsonObject) {
 }
 
 export async function createFixture(init: FixtureInit, mode?: ServerMode) {
+  installGlobals();
+
   let projectDir = await createFixtureProject(init, mode);
   let buildPath = url.pathToFileURL(
     path.join(projectDir, "build/server/index.js")
