@@ -26,10 +26,10 @@ const config: PlaywrightTestConfig = {
       name: "chromium",
       use: devices["Desktop Chrome"],
     },
-    // {
-    //   name: "webkit",
-    //   use: devices["Desktop Safari"],
-    // },
+    {
+      name: "webkit",
+      use: devices["Desktop Safari"],
+    },
     {
       name: "msedge",
       use: {
@@ -39,10 +39,10 @@ const config: PlaywrightTestConfig = {
         channel: "msedge",
       },
     },
-    // {
-    //   name: "firefox",
-    //   use: devices["Desktop Firefox"],
-    // },
+    {
+      name: "firefox",
+      use: devices["Desktop Firefox"],
+    },
   ],
 };
 
