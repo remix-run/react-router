@@ -33,7 +33,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           loader: () => loaderDfd.promise,
         },
       ],
-      unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+      async unstable_patchRoutesOnMiss({ patch }) {
+        let children = await childrenDfd.promise;
+        patch("parent", children);
+      },
     });
 
     router.navigate("/parent/child");
@@ -86,19 +89,19 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss(pathname, matches) {
+      async unstable_patchRoutesOnMiss({ patch, matches }) {
         await tick();
         if (last(matches).route.id === "a") {
-          return [
+          patch("a", [
             {
               id: "b",
               path: "b",
             },
-          ];
+          ]);
         }
 
         if (last(matches).route.id === "b") {
-          return [
+          patch("b", [
             {
               id: "c",
               path: "c",
@@ -107,10 +110,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                 return "C";
               },
             },
-          ];
+          ]);
         }
-
-        return null;
       },
     });
 
@@ -144,7 +145,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           loader: () => loaderDfd.promise,
         },
       ],
-      unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+      async unstable_patchRoutesOnMiss({ patch }) {
+        let children = await childrenDfd.promise;
+        patch("parent", children);
+      },
     });
 
     router.navigate("/parent/child", {
@@ -215,19 +219,19 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss(pathname, matches) {
+      async unstable_patchRoutesOnMiss({ patch, matches }) {
         await tick();
         if (last(matches).route.id === "a") {
-          return [
+          patch("a", [
             {
               id: "b",
               path: "b",
             },
-          ];
+          ]);
         }
 
         if (last(matches).route.id === "b") {
-          return [
+          patch("b", [
             {
               id: "c",
               path: "c",
@@ -240,10 +244,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                 return "C";
               },
             },
-          ];
+          ]);
         }
-
-        return null;
       },
     });
 
@@ -269,7 +271,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
 
   it("reuses promises", async () => {
     let aDfd = createDeferred<AgnosticDataRouteObject[]>();
-    let bDfd = createDeferred<AgnosticDataRouteObject[]>();
     let calls: string[][] = [];
     router = createRouter({
       history: createMemoryHistory(),
@@ -282,10 +283,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      unstable_patchRoutesOnMiss(pathname, matches) {
+      async unstable_patchRoutesOnMiss({ path, matches, patch }) {
         let routeId = last(matches).route.id;
-        calls.push([pathname, routeId]);
-        return aDfd.promise;
+        calls.push([path, routeId]);
+        patch("a", await aDfd.promise);
       },
     });
 
@@ -337,15 +338,16 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      unstable_patchRoutesOnMiss(pathname, matches) {
+      async unstable_patchRoutesOnMiss({ path, matches, patch }) {
         let routeId = last(matches).route.id;
+        if (!path) {
+          return;
+        }
         if (routeId === "a") {
-          return aDfd.promise;
+          patch("a", await aDfd.promise);
+        } else if (routeId === "b") {
+          patch("b", await bDfd.promise);
         }
-        if (routeId === "b" && pathname) {
-          return bDfd.promise;
-        }
-        return null;
       },
     });
 
@@ -439,11 +441,9 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           },
         },
       ],
-      unstable_patchRoutesOnMiss(path, matches) {
-        if (last(matches).route.handle?.loadChildren) {
-          return last(matches).route.handle.loadChildren?.();
-        }
-        return null;
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        let leafRoute = last(matches).route;
+        patch(leafRoute.id, await leafRoute.handle.loadChildren?.());
       },
     });
 
@@ -471,17 +471,17 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss(pathname, matches) {
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
         await tick();
         if (last(matches).route.id === "a") {
-          return [
+          patch("a", [
             {
               id: "pathless",
               path: "",
             },
-          ];
+          ]);
         } else if (last(matches).route.id === "pathless") {
-          return [
+          patch("pathless", [
             {
               id: "b",
               path: "b",
@@ -490,9 +490,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                 return "B";
               },
             },
-          ];
+          ]);
         }
-        return null;
       },
     });
 
@@ -524,17 +523,16 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss(path, matches) {
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
         await tick();
         if (last(matches).route.id === "a") {
-          return [
+          patch("a", [
             {
               id: "b",
               path: "b",
             },
-          ];
+          ]);
         }
-        return null;
       },
     });
 
@@ -559,17 +557,16 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss(path, matches) {
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
         await tick();
         if (last(matches).route.id === "a") {
-          return [
+          patch("a", [
             {
               id: "b",
               path: "b",
             },
-          ];
+          ]);
         }
-        return null;
       },
     });
 
@@ -595,7 +592,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           loader: () => loaderDfd.promise,
         },
       ],
-      unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+      async unstable_patchRoutesOnMiss({ patch }) {
+        let children = await childrenDfd.promise;
+        patch("parent", children);
+      },
     });
     router.initialize();
 
@@ -628,213 +628,211 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
-  describe("patch", () => {
-    it("discovers new root routes", async () => {
-      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
-      let childLoaderDfd = createDeferred();
+  it("discovers new root routes", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let childLoaderDfd = createDeferred();
 
-      router = createRouter({
-        history: createMemoryHistory(),
-        routes: [
-          {
-            path: "/",
-          },
-          {
-            path: "/parent",
-          },
-        ],
-        async unstable_patchRoutesOnMiss(_, __, patch) {
-          patch(null, await childrenDfd.promise);
-        },
-      });
-
-      router.navigate("/parent/child");
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childrenDfd.resolve([
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
         {
-          id: "parent-child",
-          path: "/parent/child",
-          loader: () => childLoaderDfd.promise,
+          path: "/",
         },
-      ]);
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childLoaderDfd.resolve("CHILD");
-      await tick();
-
-      expect(router.state.location.pathname).toBe("/parent/child");
-      expect(router.state.loaderData).toEqual({
-        "parent-child": "CHILD",
-      });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual([
-        "parent-child",
-      ]);
+        {
+          path: "/parent",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        patch(null, await childrenDfd.promise);
+      },
     });
 
-    it("lets you patch elsewhere in the tree (dynamic param)", async () => {
-      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
-      let childLoaderDfd = createDeferred();
-
-      router = createRouter({
-        history: createMemoryHistory(),
-        routes: [
-          {
-            id: "root",
-            path: "/",
-          },
-          {
-            id: "param",
-            path: "/:param",
-          },
-        ],
-        async unstable_patchRoutesOnMiss(_, matches, patch) {
-          // We matched for the param but we want to patch in under root
-          expect(matches.length).toBe(1);
-          expect(matches[0].route.id).toBe("param");
-          patch("root", await childrenDfd.promise);
-        },
-      });
-
-      router.navigate("/parent/child");
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childrenDfd.resolve([
-        {
-          id: "parent-child",
-          path: "/parent/child",
-          loader: () => childLoaderDfd.promise,
-        },
-      ]);
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childLoaderDfd.resolve("CHILD");
-      await tick();
-
-      expect(router.state.location.pathname).toBe("/parent/child");
-      expect(router.state.loaderData).toEqual({
-        "parent-child": "CHILD",
-      });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual([
-        "root",
-        "parent-child",
-      ]);
+    router.navigate("/parent/child");
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
     });
 
-    it("lets you patch elsewhere in the tree (splat)", async () => {
-      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
-      let childLoaderDfd = createDeferred();
-
-      router = createRouter({
-        history: createMemoryHistory(),
-        routes: [
-          {
-            id: "other",
-            path: "/other",
-          },
-          {
-            id: "splat",
-            path: "*",
-          },
-        ],
-        async unstable_patchRoutesOnMiss(_, matches, patch) {
-          // We matched for the splat but we want to patch in at the top
-          expect(matches.length).toBe(1);
-          expect(matches[0].route.id).toBe("splat");
-          let children = await childrenDfd.promise;
-          patch(null, children);
-        },
-      });
-
-      router.navigate("/parent/child");
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childrenDfd.resolve([
-        {
-          id: "parent-child",
-          path: "/parent/child",
-          loader: () => childLoaderDfd.promise,
-        },
-      ]);
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childLoaderDfd.resolve("CHILD");
-      await tick();
-
-      expect(router.state.location.pathname).toBe("/parent/child");
-      expect(router.state.loaderData).toEqual({
-        "parent-child": "CHILD",
-      });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual([
-        "parent-child",
-      ]);
+    childrenDfd.resolve([
+      {
+        id: "parent-child",
+        path: "/parent/child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
     });
 
-    it("works when there are no partial matches", async () => {
-      let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
-      let childLoaderDfd = createDeferred();
+    childLoaderDfd.resolve("CHILD");
+    await tick();
 
-      router = createRouter({
-        history: createMemoryHistory(),
-        routes: [
-          {
-            path: "/nope",
-          },
-        ],
-        async unstable_patchRoutesOnMiss(_, matches, patch) {
-          expect(matches.length).toBe(0);
-          let children = await childrenDfd.promise;
-          patch(null, children);
-        },
-      });
-
-      router.navigate("/parent/child");
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childrenDfd.resolve([
-        {
-          id: "parent-child",
-          path: "/parent/child",
-          loader: () => childLoaderDfd.promise,
-        },
-      ]);
-      expect(router.state.navigation).toMatchObject({
-        state: "loading",
-        location: { pathname: "/parent/child" },
-      });
-
-      childLoaderDfd.resolve("CHILD");
-      await tick();
-
-      expect(router.state.location.pathname).toBe("/parent/child");
-      expect(router.state.loaderData).toEqual({
-        "parent-child": "CHILD",
-      });
-      expect(router.state.matches.map((m) => m.route.id)).toEqual([
-        "parent-child",
-      ]);
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.loaderData).toEqual({
+      "parent-child": "CHILD",
     });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent-child",
+    ]);
+  });
+
+  it("lets you patch elsewhere in the tree (dynamic param)", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let childLoaderDfd = createDeferred();
+
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          id: "root",
+          path: "/",
+        },
+        {
+          id: "param",
+          path: "/:param",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        // We matched for the param but we want to patch in under root
+        expect(matches.length).toBe(1);
+        expect(matches[0].route.id).toBe("param");
+        patch("root", await childrenDfd.promise);
+      },
+    });
+
+    router.navigate("/parent/child");
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
+
+    childrenDfd.resolve([
+      {
+        id: "parent-child",
+        path: "/parent/child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
+
+    childLoaderDfd.resolve("CHILD");
+    await tick();
+
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.loaderData).toEqual({
+      "parent-child": "CHILD",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "parent-child",
+    ]);
+  });
+
+  it("lets you patch elsewhere in the tree (splat)", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let childLoaderDfd = createDeferred();
+
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          id: "other",
+          path: "/other",
+        },
+        {
+          id: "splat",
+          path: "*",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        // We matched for the splat but we want to patch in at the top
+        expect(matches.length).toBe(1);
+        expect(matches[0].route.id).toBe("splat");
+        let children = await childrenDfd.promise;
+        patch(null, children);
+      },
+    });
+
+    router.navigate("/parent/child");
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
+
+    childrenDfd.resolve([
+      {
+        id: "parent-child",
+        path: "/parent/child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
+
+    childLoaderDfd.resolve("CHILD");
+    await tick();
+
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.loaderData).toEqual({
+      "parent-child": "CHILD",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent-child",
+    ]);
+  });
+
+  it("works when there are no partial matches", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let childLoaderDfd = createDeferred();
+
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/nope",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        expect(matches.length).toBe(0);
+        let children = await childrenDfd.promise;
+        patch(null, children);
+      },
+    });
+
+    router.navigate("/parent/child");
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
+
+    childrenDfd.resolve([
+      {
+        id: "parent-child",
+        path: "/parent/child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    expect(router.state.navigation).toMatchObject({
+      state: "loading",
+      location: { pathname: "/parent/child" },
+    });
+
+    childLoaderDfd.resolve("CHILD");
+    await tick();
+
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.loaderData).toEqual({
+      "parent-child": "CHILD",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent-child",
+    ]);
   });
 
   describe("errors", () => {
@@ -852,7 +850,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+        async unstable_patchRoutesOnMiss({ patch }) {
+          let children = await childrenDfd.promise;
+          patch("parent", children);
+        },
       });
 
       router.navigate("/parent/junk");
@@ -904,7 +905,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+        async unstable_patchRoutesOnMiss({ patch }) {
+          let children = await childrenDfd.promise;
+          patch("parent", children);
+        },
       });
 
       router.navigate("/parent/junk", {
@@ -958,18 +962,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(path, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
             await tick();
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -979,9 +983,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   throw new Error("C ERROR");
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 
@@ -1012,19 +1015,19 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(path, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
                 hasErrorBoundary: true,
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
             await tick();
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -1033,9 +1036,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   throw new Error("C ERROR");
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 
@@ -1066,18 +1068,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(path, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
             await tick();
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -1086,9 +1088,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   throw new Error("C ERROR");
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 
@@ -1119,18 +1120,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(path, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
             await tick();
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -1140,9 +1141,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   throw new Error("C ERROR");
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 
@@ -1177,19 +1177,19 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(path, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
                 hasErrorBoundary: true,
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
             await tick();
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -1198,9 +1198,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   throw new Error("C ERROR");
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 
@@ -1235,18 +1234,18 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(path, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
             await tick();
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -1255,9 +1254,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   throw new Error("C ERROR");
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 
@@ -1294,13 +1292,13 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss() {
+        async unstable_patchRoutesOnMiss({ patch }) {
           await tick();
           if (shouldThrow) {
             shouldThrow = false;
             throw new Error("broke!");
           }
-          return [
+          patch("a", [
             {
               id: "b",
               path: "b",
@@ -1308,7 +1306,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                 return "B";
               },
             },
-          ];
+          ]);
         },
       });
 
@@ -1365,13 +1363,13 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss() {
+        async unstable_patchRoutesOnMiss({ patch }) {
           await tick();
           if (shouldThrow) {
             shouldThrow = false;
             throw new Error("broke!");
           }
-          return [
+          patch("a", [
             {
               id: "b",
               path: "b",
@@ -1379,7 +1377,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                 return "B";
               },
             },
-          ];
+          ]);
         },
       });
 
@@ -1445,7 +1443,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+        async unstable_patchRoutesOnMiss({ patch }) {
+          let children = await childrenDfd.promise;
+          patch("parent", children);
+        },
       });
 
       let key = "key";
@@ -1480,17 +1481,17 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(pathname, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -1499,9 +1500,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   return "C";
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 
@@ -1528,7 +1528,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        unstable_patchRoutesOnMiss: () => childrenDfd.promise,
+        async unstable_patchRoutesOnMiss({ patch }) {
+          let children = await childrenDfd.promise;
+          patch("parent", children);
+        },
       });
 
       let key = "key";
@@ -1566,17 +1569,17 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss(pathname, matches) {
+        async unstable_patchRoutesOnMiss({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
-            return [
+            patch("a", [
               {
                 id: "b",
                 path: "b",
               },
-            ];
+            ]);
           } else if (last(matches).route.id === "b") {
-            return [
+            patch("b", [
               {
                 id: "c",
                 path: "c",
@@ -1585,9 +1588,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
                   return "C ACTION";
                 },
               },
-            ];
+            ]);
           }
-          return null;
         },
       });
 

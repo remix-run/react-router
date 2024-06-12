@@ -230,6 +230,8 @@ interface HandlerResult {
 }
 ```
 
+### Overview
+
 `unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives a `matches` array which is an array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
 
 - **`match.resolve`** - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
@@ -373,74 +375,62 @@ However, in some cases - even this doesn't go far enough. If your application is
 
 This is where `patchRoutesOnMiss` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding it's routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
 
+### Type Declaration
+
+```ts
+export interface unstable_PatchRoutesOnMissFunction {
+  (opts: {
+    path: string;
+    matches: RouteMatch[];
+    patch: (
+      routeId: string | null,
+      children: RouteObject[]
+    ) => void;
+  }): void | Promise<void>;
+}
+```
+
+### Overview
+
 `patchRoutesOnMiss` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location.
 
-There are 2 ways to patch routes into the route tree:
+```jsx
+const router = createBrowserRouter(
+  [
+    {
+      id: "root",
+      path: "/",
+      Component: RootComponent,
+    },
+  ],
+  {
+    unstable_patchRoutesOnMiss(path, matches, patch) {
+      // Patch the `a` route as a child of the route with id `root`
+      patch("root", [
+        {
+          path: "a",
+          Component: AComponent,
+        },
+      ]);
 
-1. Returning an array of children will patch them into the leaf match:
+      // Or, if you want to patch these routes as siblings of the root route
+      // (i.e., they have no parent), you can pass `null` for the parent route id
+      patch(null, [
+        {
+          path: "/a",
+          Component: AComponent,
+        },
+      ]);
+    },
+  }
+);
+```
 
-   ```jsx
-   const router = createBrowserRouter(
-     [
-       {
-         path: "/",
-         Component: RootComponent,
-       },
-     ],
-     {
-       unstable_patchRoutesOnMiss(path, matches) {
-         // `/a` partially matches the root route, so returned routes will patch
-         // in as children of the root route
-         return [
-           {
-             path: "a",
-             Component: AComponent,
-           },
-         ];
-       },
-     }
-   );
-   ```
-
-2. Using the provided `patch` function allows you to patch as children of any currently known route in the route tree:
-
-   ```jsx
-   const router = createBrowserRouter(
-     [
-       {
-         path: "/",
-         Component: RootComponent,
-       },
-     ],
-     {
-       unstable_patchRoutesOnMiss(path, matches, patch) {
-         // This explicitly says to patch these as children of the root route.
-         // This is functionally equivalent to Option 1 above.
-         patch("root", [
-           {
-             path: "a",
-             Component: AComponent,
-           },
-         ]);
-
-         // Or, if you want to patch these routes as siblings of the root route
-         // (i.e., they have no parent), you can pass null for the routeId
-         patch(null, [
-           {
-             path: "/a",
-             Component: AComponent,
-           },
-         ]);
-       },
-     }
-   );
-   ```
-
-In the above examples, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By returning the new route for `a` (or calling `patch`), it will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
+In the above example, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By calling `patch`, it the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
 This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
 
-You can also perform asynchronous matching to lazily fetch entire section of your application:
+You can also perform asynchronous matching to lazily fetch entire sections of your application:
 
 ```jsx
 let router = createBrowserRouter(
@@ -450,9 +440,11 @@ let router = createBrowserRouter(
       Component: Home,
     },
     {
+      id: "dashboard",
       path: "/dashboard",
     },
     {
+      id: "account",
       path: "/account",
     },
   ],
@@ -460,19 +452,18 @@ let router = createBrowserRouter(
     async unstable_patchRoutesOnMiss(path, matches) {
       if (path.startsWith("/dashboard")) {
         let children = await import("./dashboard");
-        return children;
+        patch("dashboard", children);
       }
       if (path.startsWith("/account")) {
         let children = await import("./account");
-        return children;
+        patch("account", children);
       }
-      return null;
     },
   }
 );
 ```
 
-If you don't wish to perform your own pseudo-matching, you can even leverage the `handle` field on a route to keep the children definitions co-located:
+If you don't wish to perform your own pseudo-matching, you can leverage the partial `matches` srray and the `handle` field on a route to keep the children definitions co-located:
 
 ```jsx
 let router = createBrowserRouter([
@@ -494,7 +485,11 @@ let router = createBrowserRouter([
   },
 ], {
   unstable_patchRoutesOnMiss(path, matches) {
-    return matches[matches.length - 1].route.handle?.lazyChildren?.();
+    let leafRoute = matches[matches.length - 1]?.route;
+    if (leafRoute?.handle?.lazyChildren) {
+      let children = await leafRoute.handle.lazyChildren();
+      patch(leafRoute.id, children);
+    }
   }
 });
 ```

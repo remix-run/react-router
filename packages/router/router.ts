@@ -992,7 +992,7 @@ export function createRouter(init: RouterInit): Router {
   // that we only kick them off once for a given combo
   let pendingPatchRoutes = new Map<
     string,
-    Promise<AgnosticDataRouteObject[] | null>
+    ReturnType<AgnosticPatchRoutesOnMissFunction>
   >();
 
   // Flag to ignore the next history update, so we can revert the URL change on
@@ -3206,7 +3206,6 @@ export function createRouter(init: RouterInit): Router {
     while (true) {
       try {
         await loadLazyRouteChildren(
-          route,
           patchRoutesOnMissImpl!,
           pathname,
           partialMatches,
@@ -4496,52 +4495,39 @@ function shouldRevalidateLoader(
  * definitions and update the routes/routeManifest
  */
 async function loadLazyRouteChildren(
-  route: AgnosticDataRouteObject | null,
   patchRoutesOnMissImpl: AgnosticPatchRoutesOnMissFunction,
   path: string,
   matches: AgnosticDataRouteMatch[],
   routes: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  pendingRouteChildren: Map<
-    string,
-    Promise<AgnosticDataRouteObject[] | null | undefined | void>
-  >,
+  pendingRouteChildren: Map<string, ReturnType<typeof patchRoutesOnMissImpl>>,
   signal: AbortSignal
 ) {
   let key = [path, ...matches.map((m) => m.route.id)].join("-");
-  let pending = pendingRouteChildren.get(key);
-  let children: AgnosticRouteObject[] | null | undefined | void = null;
-  if (!pending) {
-    let maybePromise = patchRoutesOnMissImpl(path, matches, (r, c) =>
-      patchRoutes(r, c, routes, manifest, mapRouteProperties)
-    );
-    if (isPromise<AgnosticDataRouteObject[]>(maybePromise)) {
-      pending = maybePromise;
-      pendingRouteChildren.set(key, pending);
-    } else {
-      children = maybePromise as Awaited<
-        ReturnType<typeof patchRoutesOnMissImpl>
-      >;
-    }
-  }
-
   try {
-    if (pending) {
-      children = await pending;
+    let pending = pendingRouteChildren.get(key);
+    if (!pending) {
+      pending = patchRoutesOnMissImpl({
+        path,
+        matches,
+        patch: (routeId, children) => {
+          if (!signal.aborted) {
+            patchRoutes(
+              routeId,
+              children,
+              routes,
+              manifest,
+              mapRouteProperties
+            );
+          }
+        },
+      });
+      pendingRouteChildren.set(key, pending);
     }
 
-    if (children && !signal.aborted) {
-      if (route) {
-        patchRoutes(route.id, children, routes, manifest, mapRouteProperties);
-      } else {
-        warning(
-          false,
-          "You cannot return routes from `patchRoutesOnMiss` when there were no " +
-            "partial matches, since React Router doesn't know where to patch the " +
-            "routes.  Please use `patch(routeId, children)` instead."
-        );
-      }
+    if (pending && isPromise<AgnosticRouteObject[]>(pending)) {
+      await pending;
     }
   } finally {
     pendingRouteChildren.delete(key);

@@ -258,16 +258,11 @@ export interface DataStrategyFunction {
 export interface AgnosticPatchRoutesOnMissFunction<
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > {
-  (
-    path: string,
-    matches: M[],
-    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void
-  ):
-    | M["route"][]
-    | null
-    | undefined
-    | void
-    | Promise<M["route"][] | null | undefined | void>;
+  (opts: {
+    path: string;
+    matches: M[];
+    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void;
+  }): void | Promise<void>;
 }
 
 /**
