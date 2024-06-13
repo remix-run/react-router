@@ -150,7 +150,10 @@ function isFormDataSubmitterSupported() {
   return _formDataSupportsSubmitter;
 }
 
-export interface FetcherSubmitOptions {
+/**
+ * Submit options shared by both navigations and fetchers
+ */
+interface SharedSubmitOptions {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
    * Defaults to "GET".
@@ -188,6 +191,14 @@ export interface FetcherSubmitOptions {
   unstable_flushSync?: boolean;
 }
 
+/**
+ * Submit options available to fetchers
+ */
+export interface FetcherSubmitOptions extends SharedSubmitOptions {}
+
+/**
+ * Submit options available to navigations
+ */
 export interface SubmitOptions extends FetcherSubmitOptions {
   /**
    * Set `true` to replace the current entry in the browser's history stack
