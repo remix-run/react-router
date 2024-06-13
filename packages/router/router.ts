@@ -3215,11 +3215,12 @@ export function createRouter(init: RouterInit): Router {
           pendingPatchRoutes,
           signal
         );
-        if (signal.aborted) {
-          return { type: "aborted" };
-        }
       } catch (e) {
         return { type: "error", error: e, partialMatches };
+      }
+
+      if (signal.aborted) {
+        return { type: "aborted" };
       }
 
       let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -3253,19 +3254,15 @@ export function createRouter(init: RouterInit): Router {
         true
       );
 
-      // Loop detection if we find the same partials after a run through patchRoutesOnMiss
+      // If we are no longer partially matching anything, this was either a
+      // legit splat match above, or it's a 404.  Also avoid loops if the
+      // second pass results in the same partial matches
       if (
         !newPartialMatches ||
         partialMatches.map((m) => m.route.id).join("-") ===
           newPartialMatches.map((m) => m.route.id).join("-")
       ) {
-        // We are no longer partially matching anything new so this was either a
-        // legit splat match above, or it's a 404
-        if (matchedSplat) {
-          return { type: "success", matches: newMatches };
-        } else {
-          return { type: "success", matches: null };
-        }
+        return { type: "success", matches: matchedSplat ? newMatches : null };
       }
 
       partialMatches = newPartialMatches;

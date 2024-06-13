@@ -151,6 +151,7 @@ export type {
   To,
   UIMatch,
   unstable_HandlerResult,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 export {
   AbortedDeferredError,

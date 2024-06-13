@@ -367,13 +367,13 @@ let router = createBrowserRouter(routes, {
 
 <docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
 
-By default, React Router wants you to provide a full route tree up front via `createBrowserRouter(routes)`. This allows React Router to perform synchronous route matching, execute loaders, and then render route components in the most optimistic manner without introducing waterfalls. However, it means that your initial JS bundle is larger by definition - which may slow down application start-up times as your application grows.
+By default, React Router wants you to provide a full route tree up front via `createBrowserRouter(routes)`. This allows React Router to perform synchronous route matching, execute loaders, and then render route components in the most optimistic manner without introducing waterfalls. The tradeoff is that your initial JS bundle is larger by definition - which may slow down application start-up times as your application grows.
 
-To combat this, we introduced [`route.lazy`][route-lazy] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route _definition_ aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your routes up front and can perform synchronous route matching, but then delay loading any of the route implementation aspects until the route is actually navigated to.
+To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route _definition_ aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your routes up front and can perform synchronous route matching, but then delay loading any of the route implementation aspects until the route is actually navigated to.
 
-However, in some cases - even this doesn't go far enough. If your application is large enough, providing all route definitions up front can be prohibitively large. Additionally, it might not even be possible to provide all route definitions up front in certain Micro-Frontend or Module-Federation architectures.
+In some cases, even this doesn't go far enough. For very large applications, providing all route definitions up front can be prohibitively expensive. Additionally, it might not even be possible to provide all route definitions up front in certain Micro-Frontend or Module-Federation architectures.
 
-This is where `patchRoutesOnMiss` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
+This is where `unstable_patchRoutesOnMiss` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
 
 ### Type Declaration
 
@@ -392,7 +392,9 @@ export interface unstable_PatchRoutesOnMissFunction {
 
 ### Overview
 
-`patchRoutesOnMiss` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location.
+`unstable_patchRoutesOnMiss` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
+
+**Patching children into an existing route**
 
 ```jsx
 const router = createBrowserRouter(
@@ -404,23 +406,12 @@ const router = createBrowserRouter(
     },
   ],
   {
-    unstable_patchRoutesOnMiss(path, matches, patch) {
-      // Patch the `a` route as a child of the route with id `root`
-      patch("root", [
-        {
-          path: "a",
-          Component: AComponent,
-        },
-      ]);
-
-      // Or, if you want to patch these routes as siblings of the root route
-      // (i.e., they have no parent), you can pass `null` for the parent route id
-      patch(null, [
-        {
-          path: "/a",
-          Component: AComponent,
-        },
-      ]);
+    async unstable_patchRoutesOnMiss({ path, patch }) {
+      if (path === "/a") {
+        // Load/patch the `a` route as a child of the route with id `root`
+        let route = await getARoute(); // { path: 'a', Component: A }
+        patch("root", [route]);
+      }
     },
   }
 );
@@ -428,7 +419,32 @@ const router = createBrowserRouter(
 
 In the above example, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By calling `patch`, it the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
-This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
+**Patching new root-level routes**
+
+If you need to patch a new route to the top of the tree (i.e., it doesn't have a parent), you can pass `null` as the `routeId`:
+
+```jsx
+const router = createBrowserRouter(
+  [
+    {
+      id: "root",
+      path: "/",
+      Component: RootComponent,
+    },
+  ],
+  {
+    async unstable_patchRoutesOnMiss({ path, patch }) {
+      if (path === "/root-sibling") {
+        // Load/patch the `/sibling` route at the top
+        let route = await getRootSiblingRoute(); // { path: '/sibling', Component: Sibling }
+        patch(null, [route]);
+      }
+    },
+  }
+);
+```
+
+**Patching sub-trees asyncronously**
 
 You can also perform asynchronous matching to lazily fetch entire sections of your application:
 
@@ -449,7 +465,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnMiss(path, matches) {
+    async unstable_patchRoutesOnMiss({ path, patch }) {
       if (path.startsWith("/dashboard")) {
         let children = await import("./dashboard");
         patch("dashboard", children);
@@ -462,6 +478,8 @@ let router = createBrowserRouter(
   }
 );
 ```
+
+**Co-locating route discovery with route definition**
 
 If you don't wish to perform your own pseudo-matching, you can leverage the partial `matches` array and the `handle` field on a route to keep the children definitions co-located:
 
@@ -484,7 +502,7 @@ let router = createBrowserRouter([
     }
   },
 ], {
-  unstable_patchRoutesOnMiss(path, matches) {
+  async unstable_patchRoutesOnMiss({ matches, patch }) {
     let leafRoute = matches[matches.length - 1]?.route;
     if (leafRoute?.handle?.lazyChildren) {
       let children = await leafRoute.handle.lazyChildren();
@@ -513,5 +531,6 @@ Useful for environments like browser devtool plugins or testing to use a differe
 [hydratefallback]: ../route/hydrate-fallback-element
 [relativesplatpath]: ../hooks/use-resolved-path#splat-paths
 [route-lazy]: ../route/lazy
+[6-9-0]: https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v690
 [fog-of-war]: https://en.wikipedia.org/wiki/Fog_of_war
 [fog-of-war-rfc]: https://github.com/remix-run/react-router/discussions/11113
