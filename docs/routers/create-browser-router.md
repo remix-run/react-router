@@ -463,7 +463,7 @@ let router = createBrowserRouter(
 );
 ```
 
-If you don't wish to perform your own pseudo-matching, you can leverage the partial `matches` srray and the `handle` field on a route to keep the children definitions co-located:
+If you don't wish to perform your own pseudo-matching, you can leverage the partial `matches` array and the `handle` field on a route to keep the children definitions co-located:
 
 ```jsx
 let router = createBrowserRouter([
