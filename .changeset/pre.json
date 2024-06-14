@@ -8,5 +8,9 @@
     "react-router-native": "6.23.1",
     "@remix-run/router": "1.16.1"
   },
-  "changesets": []
+  "changesets": [
+    "fog-of-war",
+    "gorgeous-geese-sit",
+    "smooth-sloths-exist"
+  ]
 }
