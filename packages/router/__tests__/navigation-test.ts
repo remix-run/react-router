@@ -170,7 +170,7 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      // Node 18 and 20 output different errors here
+      // Node 16/18 versus 20 output different errors here :/
       let expected =
         process.version.startsWith("v16") || process.version.startsWith("v18")
           ? "Unexpected token } in JSON at position 15"
@@ -206,6 +206,8 @@ describe("navigations", () => {
         })
       );
       expect(t.router.state.loaderData).toEqual({});
+
+      // Node 16/18 versus 20 output different errors here :/
       let expected =
         process.version.startsWith("v16") || process.version.startsWith("v18")
           ? "Unexpected token } in JSON at position 15"
