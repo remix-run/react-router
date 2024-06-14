@@ -262,10 +262,12 @@ let router = createBrowserRouter(routes, {
         console.log(`Processing route ${match.route.id}`);
         // Don't override anything - just resolve route.lazy + call loader
         let result = await match.resolve();
-        console.log(`Done processing route ${match.route.id}`);
-        return result.
+        console.log(
+          `Done processing route ${match.route.id}`
+        );
+        return result;
       })
-    )
+    );
   },
 });
 ```
@@ -275,11 +277,13 @@ let router = createBrowserRouter(routes, {
 Let's define a middleware on each route via `handle` and call middleware sequentially first, then call all loaders in parallel - providing any data made available via the middleware:
 
 ```ts
-const routes [
+const routes = [
   {
     id: "parent",
     path: "/parent",
-    loader({ request }, context) { /*...*/ },
+    loader({ request }, context) {
+      /*...*/
+    },
     handle: {
       async middleware({ request }, context) {
         context.parent = "PARENT MIDDLEWARE";
@@ -289,7 +293,9 @@ const routes [
       {
         id: "child",
         path: "child",
-        loader({ request }, context) { /*...*/ },
+        loader({ request }, context) {
+          /*...*/
+        },
         handle: {
           async middleware({ request }, context) {
             context.child = "CHILD MIDDLEWARE";
@@ -301,12 +307,19 @@ const routes [
 ];
 
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({ request, params, matches }) {
+  async unstable_dataStrategy({
+    request,
+    params,
+    matches,
+  }) {
     // Run middleware sequentially and let them add data to `context`
     let context = {};
     for (const match of matches) {
       if (match.route.handle?.middleware) {
-        await match.route.handle.middleware({ request, params }, context);
+        await match.route.handle.middleware(
+          { request, params },
+          context
+        );
       }
     }
 
@@ -330,13 +343,17 @@ let router = createBrowserRouter(routes, {
 It's also possible you don't even want to define a loader implementation at the route level. Maybe you want to just determine the routes and issue a single GraphQL request for all of your data? You can do that by setting your `route.loader=true` so it qualifies as "having a loader", and then store GQL fragments on `route.handle`:
 
 ```ts
-const routes [
+const routes = [
   {
     id: "parent",
     path: "/parent",
     loader: true,
     handle: {
-      gql: gql`fragment Parent on Whatever { parentField }`
+      gql: gql`
+        fragment Parent on Whatever {
+          parentField
+        }
+      `,
     },
     children: [
       {
@@ -344,7 +361,11 @@ const routes [
         path: "child",
         loader: true,
         handle: {
-          gql: gql`fragment Child on Whatever { childField }`
+          gql: gql`
+            fragment Child on Whatever {
+              childField
+            }
+          `,
         },
       },
     ],

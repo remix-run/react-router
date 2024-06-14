@@ -491,7 +491,7 @@ Date: 2023-10-16
 
 #### View Transitions 🚀
 
-We're excited to release experimental support for the the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition) in React Router! You can now trigger navigational DOM updates to be wrapped in `document.startViewTransition` to enable CSS animated transitions on SPA navigations in your application.
+We're excited to release experimental support for the [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition) in React Router! You can now trigger navigational DOM updates to be wrapped in `document.startViewTransition` to enable CSS animated transitions on SPA navigations in your application.
 
 The simplest approach to enabling a View Transition in your React Router app is via the new [`<Link unstable_viewTransition>`](https://reactrouter.com/components/link#unstable_viewtransition) prop. This will cause the navigation DOM update to be wrapped in `document.startViewTransition` which will enable transitions for the DOM update. Without any additional CSS styles, you'll get a basic cross-fade animation for your page.
 
@@ -711,6 +711,8 @@ Date: 2023-06-14
 
 `6.13.0` is really a patch release in spirit but comes with a SemVer minor bump since we added a new future flag.
 
+#### v7_startTransition
+
 The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
 
 Therefore, in `6.13.0` the default behavior will no longer leverage `React.startTransition`:
@@ -862,14 +864,16 @@ You can also check out the docs [here](https://reactrouter.com/en/dev/guides/api
 
 ### Minor Changes
 
-- The first future flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` (and some Remix) behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+#### future.v7_normalizeFormMethod
 
-  - When `future.v7_normalizeFormMethod` is unspecified or set to `false` (default v6 behavior),
-    - `useNavigation().formMethod` is lowercase
-    - `useFetcher().formMethod` is lowercase
-  - When `future.v7_normalizeFormMethod === true`:
-    - `useNavigation().formMethod` is UPPERCASE
-    - `useFetcher().formMethod` is UPPERCASE
+The first future flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` (and some Remix) behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
+
+- When `future.v7_normalizeFormMethod` is unspecified or set to `false` (default v6 behavior),
+  - `useNavigation().formMethod` is lowercase
+  - `useFetcher().formMethod` is lowercase
+- When `future.v7_normalizeFormMethod === true`:
+  - `useNavigation().formMethod` is UPPERCASE
+  - `useFetcher().formMethod` is UPPERCASE
 
 ### Patch Changes
 
@@ -1046,7 +1050,7 @@ Support absolute URLs in `<Link to>`. If the URL is for the current origin, it w
 
 - Fixes 2 separate issues for revalidating fetcher `shouldRevalidate` calls ([#9948](https://github.com/remix-run/react-router/pull/9948))
   - The `shouldRevalidate` function was only being called for _explicit_ revalidation scenarios (after a mutation, manual `useRevalidator` call, or an `X-Remix-Revalidate` header used for cookie setting in Remix). It was not properly being called on _implicit_ revalidation scenarios that also apply to navigation `loader` revalidation, such as a change in search params or clicking a link for the page we're already on. It's now correctly called in those additional scenarios.
-  - The parameters being passed were incorrect and inconsistent with one another since the `current*`/`next*` parameters reflected the static `fetcher.load` URL (and thus were identical). Instead, they should have reflected the the navigation that triggered the revalidation (as the `form*` parameters did). These parameters now correctly reflect the triggering navigation.
+  - The parameters being passed were incorrect and inconsistent with one another since the `current*`/`next*` parameters reflected the static `fetcher.load` URL (and thus were identical). Instead, they should have reflected the navigation that triggered the revalidation (as the `form*` parameters did). These parameters now correctly reflect the triggering navigation.
 - Fix bug with search params removal via `useSearchParams` ([#9969](https://github.com/remix-run/react-router/pull/9969))
 - Respect `preventScrollReset` on `<fetcher.Form>` ([#9963](https://github.com/remix-run/react-router/pull/9963))
 - Fix navigation for hash routers on manual URL changes ([#9980](https://github.com/remix-run/react-router/pull/9980))
