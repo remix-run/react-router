@@ -15,6 +15,7 @@ import type {
   RouteObject,
   RouterProviderProps,
   To,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 import {
   Router,
@@ -151,6 +152,7 @@ export type {
   To,
   UIMatch,
   unstable_HandlerResult,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -257,6 +259,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   window?: Window;
 }
 
@@ -275,6 +278,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -294,6 +298,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }

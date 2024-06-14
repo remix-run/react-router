@@ -3098,7 +3098,6 @@ describe("createMemoryRouter", () => {
         </React.Suspense>
       );
 
-      console.log(getHtml(container));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <p>
