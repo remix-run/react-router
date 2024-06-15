@@ -193,7 +193,7 @@ Date: YYYY-MM-DD
 
 ## v6.24.0
 
-Date: 2024-07-18
+Date: 2024-06-18
 
 ### What's Changed
 
