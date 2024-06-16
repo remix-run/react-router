@@ -1720,9 +1720,9 @@ export function useFetcher<TData = any>({
   let submit = React.useCallback<FetcherSubmitFunction>(
     (target, opts) => {
       submitImpl(target, {
-        ...opts,
         navigate: false,
         fetcherKey,
+        ...opts,
       });
     },
     [fetcherKey, submitImpl]
