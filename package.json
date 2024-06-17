@@ -14,7 +14,7 @@
     "prerelease": "pnpm build",
     "release": "changeset publish",
     "size": "filesize",
-    "test": "jest",
+    "test": "jest --config ./jest.config.js",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "typecheck": "pnpm run --recursive --parallel typecheck",
     "pretest:integration": "pnpm build",
