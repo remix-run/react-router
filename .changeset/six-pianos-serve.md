@@ -2,4 +2,4 @@
 "react-router-dom": patch
 ---
 
-Exported NavLinkRenderProps type. Usefull when typing custom NavLink callback.
+Export `NavLinkRenderProps` type for easier typing of custom `NavLink` callback
