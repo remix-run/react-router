@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 
-import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "react-router/server-runtime";
 import {
   createAppFixture,
   createFixture,

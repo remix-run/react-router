@@ -14,7 +14,6 @@
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
     "@react-router/serve": "workspace:*",
-    "@react-router/server-runtime": "workspace:*",
     "express": "^4.17.1",
     "isbot": "^4.1.0",
     "react": "^18.2.0",

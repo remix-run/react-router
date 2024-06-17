@@ -9,7 +9,7 @@ export function deserializeErrors(
   let serialized: RemixRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
-    // serializeErrors in remix-server-runtime/errors.ts :)
+    // serializeErrors in react-router/server-runtime/errors.ts :)
     if (val && val.__type === "RouteErrorResponse") {
       serialized[key] = new ErrorResponseImpl(
         val.status,

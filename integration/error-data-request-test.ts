@@ -58,7 +58,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/loader-return-json.jsx`]: js`
-          import { json } from "@react-router/server-runtime";
+          import { json } from "react-router/server-runtime";
 
           export async function loader() {
             return json({ ok: true });
@@ -80,7 +80,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/action-return-json.jsx`]: js`
-          import { json } from "@react-router/server-runtime";
+          import { json } from "react-router/server-runtime";
 
           export async function action() {
             return json({ ok: true });

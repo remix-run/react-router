@@ -8,7 +8,6 @@ packages:
   - "packages/remix-express"
   - "packages/remix-node"
   - "packages/remix-serve"
-  - "packages/remix-server-runtime"
   - "playground/compiler"
   - "playground/compiler-express"
   - "playground/compiler-spa"

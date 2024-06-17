@@ -20,14 +20,32 @@
   "sideEffects": false,
   "main": "./dist/main.js",
   "unpkg": "./dist/umd/react-router.production.min.js",
-  "module": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/main.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./server-runtime": {
+      "import": "./dist/server-runtime/esm/index.mjs",
+      "require": "./dist/server-runtime/index.js",
+      "types": "./dist/server-runtime/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
   "dependencies": {
+    "@types/cookie": "^0.6.0",
+    "@web3-storage/multipart-parser": "^1.0.0",
+    "cookie": "^0.6.0",
+    "source-map": "^0.7.3",
     "turbo-stream": "^2.0.0"
   },
   "devDependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-router": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=16.8",

@@ -6,7 +6,7 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "react-router/server-runtime";
 
 const ISO_DATE = "2024-03-12T12:00:00.000Z";
 

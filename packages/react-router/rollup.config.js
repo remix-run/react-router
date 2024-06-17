@@ -12,6 +12,7 @@ const {
   isBareModuleId,
   getBuildDirectories,
   validateReplacedVersion,
+  remixBabelConfig,
   PRETTY,
   WATCH,
 } = require("../../rollup.utils");
@@ -25,7 +26,7 @@ module.exports = function rollup() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/index.js`,
+        file: `${OUTPUT_DIR}/index.mjs`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
@@ -232,7 +233,58 @@ module.exports = function rollup() {
     },
   ];
 
-  return [...modules, ...webModules, ...globals, ...node];
+  const serverRuntime = [
+    {
+      external: (id) => isBareModuleId(id),
+      input: `${SOURCE_DIR}/server-runtime/index.ts`,
+      output: {
+        banner: createBanner(name, version),
+        dir: `${OUTPUT_DIR}/server-runtime`,
+        format: "cjs",
+        preserveModules: true,
+        exports: "named",
+      },
+      plugins: [
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          extensions: [".ts", ".tsx"],
+          ...remixBabelConfig,
+        }),
+        nodeResolve({ extensions: [".ts", ".tsx"] }),
+        typescript({
+          tsconfig: path.join(__dirname, "server-runtime", "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: !WATCH,
+        }),
+        copy({
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
+        }),
+      ],
+    },
+    {
+      external: (id) => isBareModuleId(id),
+      input: `${SOURCE_DIR}/server-runtime/index.ts`,
+      output: {
+        banner: createBanner(name, version),
+        dir: `${OUTPUT_DIR}/server-runtime/esm`,
+        format: "esm",
+        preserveModules: true,
+        entryFileNames: "[name].mjs",
+      },
+      plugins: [
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          extensions: [".ts", ".tsx"],
+          ...remixBabelConfig,
+        }),
+        nodeResolve({ extensions: [".ts", ".tsx"] }),
+      ],
+    },
+  ];
+
+  return [...modules, ...webModules, ...globals, ...node, ...serverRuntime];
 };
 
 /**

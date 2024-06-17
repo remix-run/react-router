@@ -6,11 +6,11 @@ import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
 import babel from "@babel/core";
-import type { RequestHandler, ServerBuild } from "@react-router/server-runtime";
+import type { RequestHandler, ServerBuild } from "react-router/server-runtime";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
-} from "@react-router/server-runtime";
+} from "react-router/server-runtime";
 import type { DataRouteObject } from "react-router";
 import { matchRoutes } from "react-router";
 import {
@@ -787,7 +787,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                   "@react-router/netlify",
                   "@react-router/node",
                   "@react-router/serve",
-                  "@react-router/server-runtime",
+                  "react-router/server-runtime",
                 ]
               : undefined,
           },
@@ -1515,10 +1515,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 };
 
 function isInReactRouterMonorepo() {
-  // We use '@react-router/server-runtime' for this check since it's a
+  // We use '@react-router/node' for this check since it's a
   // dependency of this package and guaranteed to be in node_modules
   let serverRuntimePath = path.dirname(
-    require.resolve("@react-router/server-runtime/package.json")
+    require.resolve("@react-router/node/package.json")
   );
   let serverRuntimeParentDir = path.basename(
     path.resolve(serverRuntimePath, "..")
@@ -1829,7 +1829,7 @@ type ServerRoute = ServerBuild["routes"][string] & {
   children: ServerRoute[];
 };
 
-// Note: Duplicated from remix-server-runtime
+// Note: Duplicated from react-router/server-runtime
 function groupRoutesByParentId(manifest: ServerBuild["routes"]) {
   let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
 
@@ -1844,7 +1844,7 @@ function groupRoutesByParentId(manifest: ServerBuild["routes"]) {
   return routes;
 }
 
-// Note: Duplicated from remix-server-runtime
+// Note: Duplicated from react-router/server-runtime
 function createPrerenderRoutes(
   manifest: ServerBuild["routes"],
   parentId: string = "",

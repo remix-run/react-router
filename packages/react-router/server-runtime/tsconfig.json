@@ -12,7 +12,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "rootDir": ".",
-    "outDir": "./dist",
+    "outDir": "../dist/server-runtime",
 
     // Avoid naming conflicts between lib.dom.d.ts and globals.ts
     "skipLibCheck": true

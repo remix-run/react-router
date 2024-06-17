@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import type { ServerBuild } from "@react-router/server-runtime";
+import type { ServerBuild } from "react-router/server-runtime";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
