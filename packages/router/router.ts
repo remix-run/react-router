@@ -773,7 +773,8 @@ export function createRouter(init: RouterInit): Router {
     manifest
   );
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
-  let basename = init.basename || "/";
+  // make sure it has a leading /
+  let basename = init.basename?.replace(/^\/*/, "/") || "/";
   let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
   // Config driven behavior flags
   let future: FutureConfig = {
