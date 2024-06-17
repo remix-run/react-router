@@ -24,14 +24,24 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/main.js",
-      "types": "./dist/index.d.ts"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/main.js"
+      }
     },
     "./server-runtime": {
-      "import": "./dist/server-runtime/esm/index.mjs",
-      "require": "./dist/server-runtime/index.js",
-      "types": "./dist/server-runtime/index.d.ts"
+      "import": {
+        "types": "./dist/server-runtime/index.d.ts",
+        "default": "./dist/server-runtime/esm/index.mjs"
+      },
+      "require": {
+        "types": "./dist/server-runtime/index.d.ts",
+        "default": "./dist/server-runtime/index.js"
+      }
     },
     "./package.json": "./package.json"
   },
