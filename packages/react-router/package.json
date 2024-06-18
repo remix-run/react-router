@@ -24,24 +24,14 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/main.js"
-      }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/main.js"
     },
     "./server": {
-      "import": {
-        "types": "./dist/server/index.d.ts",
-        "default": "./dist/server/esm/index.mjs"
-      },
-      "require": {
-        "types": "./dist/server/index.d.ts",
-        "default": "./dist/server/index.js"
-      }
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/esm/index.mjs",
+      "require": "./dist/server/index.js"
     },
     "./package.json": "./package.json"
   },
