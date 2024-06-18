@@ -1,0 +1,182 @@
+/**
+ * @jest-environment node
+ */
+
+import * as React from "react";
+import renderer from "react-test-renderer";
+import { RouterProvider } from "../lib/dom/lib";
+import { createMemoryRouter } from "../lib/components";
+import { useLoaderData, useNavigate } from "../lib/hooks";
+
+describe("RouterProvider works when no DOM APIs are available", () => {
+  it("renders and navigates", async () => {
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => {
+          let navigate = useNavigate();
+          return <button onClick={() => navigate("/foo")}>Go to /foo</button>;
+        },
+      },
+      {
+        path: "/foo",
+        loader: () => "FOO",
+        Component: () => {
+          let data = useLoaderData() as string;
+          return <h1>{data}</h1>;
+        },
+      },
+    ]);
+    const component = renderer.create(<RouterProvider router={router} />);
+    let tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <button
+        onClick={[Function]}
+      >
+        Go to /foo
+      </button>
+    `);
+
+    await renderer.act(async () => {
+      // @ts-expect-error
+      tree.props.onClick();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <h1>
+        FOO
+      </h1>
+    `);
+  });
+
+  it("is defensive against a view transition navigation", async () => {
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => {
+          let navigate = useNavigate();
+          return <button onClick={() => navigate("/foo")}>Go to /foo</button>;
+        },
+      },
+      {
+        path: "/foo",
+        loader: () => "FOO",
+        Component: () => {
+          let data = useLoaderData() as string;
+          return <h1>{data}</h1>;
+        },
+      },
+    ]);
+    const component = renderer.create(<RouterProvider router={router} />);
+    let tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <button
+        onClick={[Function]}
+      >
+        Go to /foo
+      </button>
+    `);
+
+    let spy = jest.fn();
+    let unsubscribe = router.subscribe(spy);
+
+    await renderer.act(async () => {
+      router.navigate("/foo", {
+        unstable_viewTransition: true,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <h1>
+        FOO
+      </h1>
+    `);
+
+    expect(spy.mock.calls[0][0].location.pathname).toBe("/");
+    expect(spy.mock.calls[0][0].navigation.state).toBe("loading");
+    expect(spy.mock.calls[0][0].navigation.location.pathname).toBe("/foo");
+    expect(spy.mock.calls[0][1].unstable_viewTransitionOpts).toBeUndefined();
+
+    expect(spy.mock.calls[1][0].location.pathname).toBe("/foo");
+    expect(spy.mock.calls[1][0].navigation.state).toBe("idle");
+    expect(spy.mock.calls[1][1].unstable_viewTransitionOpts).toEqual({
+      currentLocation: {
+        hash: "",
+        key: "default",
+        pathname: "/",
+        search: "",
+        state: null,
+      },
+      nextLocation: {
+        hash: "",
+        key: expect.any(String),
+        pathname: "/foo",
+        search: "",
+        state: null,
+      },
+    });
+
+    unsubscribe();
+  });
+
+  it("is defensive against a flushSync navigation", async () => {
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => {
+          let navigate = useNavigate();
+          return <button onClick={() => navigate("/foo")}>Go to /foo</button>;
+        },
+      },
+      {
+        path: "/foo",
+        loader: () => "FOO",
+        Component: () => {
+          let data = useLoaderData() as string;
+          return <h1>{data}</h1>;
+        },
+      },
+    ]);
+    const component = renderer.create(<RouterProvider router={router} />);
+    let tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <button
+        onClick={[Function]}
+      >
+        Go to /foo
+      </button>
+    `);
+
+    let spy = jest.fn();
+    let unsubscribe = router.subscribe(spy);
+
+    await renderer.act(async () => {
+      router.navigate("/foo", {
+        unstable_flushSync: true,
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <h1>
+        FOO
+      </h1>
+    `);
+
+    expect(spy.mock.calls[0][0].location.pathname).toBe("/");
+    expect(spy.mock.calls[0][0].navigation.state).toBe("loading");
+    expect(spy.mock.calls[0][0].navigation.location.pathname).toBe("/foo");
+    expect(spy.mock.calls[0][1].unstable_flushSync).toBe(true);
+
+    expect(spy.mock.calls[1][0].location.pathname).toBe("/foo");
+    expect(spy.mock.calls[1][0].navigation.state).toBe("idle");
+    expect(spy.mock.calls[1][1].unstable_flushSync).toBe(false);
+
+    unsubscribe();
+  });
+});

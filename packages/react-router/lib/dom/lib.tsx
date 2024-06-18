@@ -53,7 +53,7 @@ import {
   usePrefetchBehavior,
 } from "./ssr/components";
 import type {
-  RouterProviderProps,
+  FutureConfig,
   FutureConfig as RenderFutureConfig,
 } from "../components";
 import { Router, mapRouteProperties } from "../components";
@@ -290,7 +290,7 @@ const flushSyncImpl = ReactDOM[FLUSH_SYNC];
 const USE_ID = "useId";
 const useIdImpl = React[USE_ID];
 
-function startTransitionSafe(cb: () => void) {
+export function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
     startTransitionImpl(cb);
   } else {
@@ -336,6 +336,14 @@ class Deferred<T> {
       };
     });
   }
+}
+
+export interface RouterProviderProps {
+  fallbackElement?: React.ReactNode;
+  router: RemixRouter;
+  // Only accept future flags relevant to rendering behavior
+  // routing flags should be accessed via router.future
+  future?: Partial<Pick<FutureConfig, "v7_startTransition">>;
 }
 
 /**
