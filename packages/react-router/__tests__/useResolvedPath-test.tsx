@@ -431,7 +431,12 @@ describe("useResolvedPath", () => {
           <Routes>
             <Route path="foo">
               <Route>
-                <Route path="*" element={<Component desc='<Route path="/foo"><Route><Route path="*" /></Route></Route>'/>}/>
+                <Route
+                  path="*"
+                  element={
+                    <Component desc='<Route path="/foo"><Route><Route path="*" /></Route></Route>' />
+                  }
+                />
               </Route>
             </Route>
           </Routes>
