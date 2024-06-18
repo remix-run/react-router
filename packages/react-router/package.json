@@ -33,14 +33,14 @@
         "default": "./dist/main.js"
       }
     },
-    "./server-runtime": {
+    "./server": {
       "import": {
-        "types": "./dist/server-runtime/index.d.ts",
-        "default": "./dist/server-runtime/esm/index.mjs"
+        "types": "./dist/server/index.d.ts",
+        "default": "./dist/server/esm/index.mjs"
       },
       "require": {
-        "types": "./dist/server-runtime/index.d.ts",
-        "default": "./dist/server-runtime/index.js"
+        "types": "./dist/server/index.d.ts",
+        "default": "./dist/server/index.js"
       }
     },
     "./package.json": "./package.json"

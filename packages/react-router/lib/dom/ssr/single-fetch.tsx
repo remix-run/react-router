@@ -322,7 +322,7 @@ async function fetchAndDecode(url: URL, init?: RequestInit) {
 }
 
 // Note: If you change this function please change the corresponding
-// encodeViaTurboStream function in server-runtime
+// encodeViaTurboStream function in react-router/server
 export function decodeViaTurboStream(
   body: ReadableStream<Uint8Array>,
   global: Window | typeof globalThis

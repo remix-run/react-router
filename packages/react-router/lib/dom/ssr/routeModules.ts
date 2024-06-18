@@ -96,7 +96,7 @@ export interface LinksFunction {
   (): LinkDescriptor[];
 }
 
-// Loose copy from react-router/server-runtime to avoid circular imports
+// Loose copy from react-router/server to avoid circular imports
 type LoaderFunction = (
   args: LoaderFunctionArgs & {
     // Context is always provided in Remix, and typed for module augmentation support.

@@ -34,7 +34,7 @@ export {
   unstable_composeUploadHandlers,
   unstable_createMemoryUploadHandler,
   unstable_parseMultipartFormData,
-} from "react-router/server-runtime";
+} from "react-router/server";
 
 export type {
   ActionFunction,
@@ -79,4 +79,4 @@ export type {
   UnsignFunction,
   UploadHandler,
   UploadHandlerPart,
-} from "react-router/server-runtime";
+} from "react-router/server";

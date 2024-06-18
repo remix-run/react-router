@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { UNSAFE_ServerMode as ServerMode } from "react-router/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "react-router/server";
 import { createFixture, js } from "./helpers/create-fixture.js";
 import type { Fixture } from "./helpers/create-fixture.js";
 
@@ -159,7 +159,7 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/cookie.tsx": js`
-            import { json } from "react-router/server-runtime";
+            import { json } from "react-router/server";
             import { Outlet } from "react-router-dom";
 
             export function loader({ request }) {

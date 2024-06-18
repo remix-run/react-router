@@ -3,7 +3,7 @@ import {
   createCookieSessionStorageFactory,
   createMemorySessionStorageFactory,
   createSessionStorageFactory,
-} from "react-router/server-runtime";
+} from "react-router/server";
 
 import { sign, unsign } from "./crypto";
 

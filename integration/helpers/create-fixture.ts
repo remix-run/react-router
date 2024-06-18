@@ -8,9 +8,9 @@ import stripIndent from "strip-indent";
 import { sync as spawnSync, spawn } from "cross-spawn";
 import type { JsonObject } from "type-fest";
 
-import { UNSAFE_ServerMode as ServerMode } from "react-router/server-runtime";
-import type { ServerBuild } from "react-router/server-runtime";
-import { createRequestHandler } from "react-router/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "react-router/server";
+import type { ServerBuild } from "react-router/server";
+import { createRequestHandler } from "react-router/server";
 import { createRequestHandler as createExpressHandler } from "@react-router/express";
 import { installGlobals } from "@react-router/node";
 import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router";

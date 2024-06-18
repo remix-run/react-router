@@ -21,7 +21,7 @@ export interface RouteManifest<Route> {
   [routeId: string]: Route;
 }
 
-// NOTE: make sure to change the Route in server-runtime if you change this
+// NOTE: make sure to change the Route in react-router/server if you change this
 interface Route {
   index?: boolean;
   caseSensitive?: boolean;
@@ -30,7 +30,7 @@ interface Route {
   path?: string;
 }
 
-// NOTE: make sure to change the EntryRoute in server-runtime if you change this
+// NOTE: make sure to change the EntryRoute in react-router/server if you change this
 export interface EntryRoute extends Route {
   hasAction: boolean;
   hasLoader: boolean;

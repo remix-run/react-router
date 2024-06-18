@@ -5,7 +5,7 @@ import type {
   SessionStorage,
   SessionIdStorageStrategy,
   SessionData,
-} from "react-router/server-runtime";
+} from "react-router/server";
 
 import { createSessionStorage } from "../implementations";
 

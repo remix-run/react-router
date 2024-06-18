@@ -456,7 +456,7 @@ export function getSingleFetchRedirect(
 }
 
 // Note: If you change this function please change the corresponding
-// decodeViaTurboStream function in server-runtime
+// decodeViaTurboStream function in react-router/server
 export function encodeViaTurboStream(
   data: any,
   requestSignal: AbortSignal,

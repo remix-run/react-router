@@ -31,9 +31,9 @@ module.exports = {
       __dirname,
       "../packages/react-router/index.ts"
     ),
-    "^react-router/server-runtime$": path.resolve(
+    "^react-router/server$": path.resolve(
       __dirname,
-      "../packages/react-router/server-runtime/index.ts"
+      "../packages/react-router/server/index.ts"
     ),
     "^@web3-storage/multipart-parser$": require.resolve(
       "@web3-storage/multipart-parser"

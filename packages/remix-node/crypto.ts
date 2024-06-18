@@ -1,5 +1,5 @@
 import cookieSignature from "cookie-signature";
-import type { SignFunction, UnsignFunction } from "react-router/server-runtime";
+import type { SignFunction, UnsignFunction } from "react-router/server";
 
 export const sign: SignFunction = async (value, secret) => {
   return cookieSignature.sign(value, secret);

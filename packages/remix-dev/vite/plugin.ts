@@ -6,11 +6,11 @@ import * as path from "node:path";
 import * as url from "node:url";
 import * as fse from "fs-extra";
 import babel from "@babel/core";
-import type { RequestHandler, ServerBuild } from "react-router/server-runtime";
+import type { RequestHandler, ServerBuild } from "react-router/server";
 import {
   unstable_setDevServerHooks as setDevServerHooks,
   createRequestHandler,
-} from "react-router/server-runtime";
+} from "react-router/server";
 import type { DataRouteObject } from "react-router";
 import { matchRoutes } from "react-router";
 import {
@@ -787,7 +787,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                   "@react-router/netlify",
                   "@react-router/node",
                   "@react-router/serve",
-                  "react-router/server-runtime",
+                  "react-router/server",
                 ]
               : undefined,
           },
@@ -1829,7 +1829,7 @@ type ServerRoute = ServerBuild["routes"][string] & {
   children: ServerRoute[];
 };
 
-// Note: Duplicated from react-router/server-runtime
+// Note: Duplicated from react-router/server
 function groupRoutesByParentId(manifest: ServerBuild["routes"]) {
   let routes: Record<string, Omit<ServerRoute, "children">[]> = {};
 
@@ -1844,7 +1844,7 @@ function groupRoutesByParentId(manifest: ServerBuild["routes"]) {
   return routes;
 }
 
-// Note: Duplicated from react-router/server-runtime
+// Note: Duplicated from react-router/server
 function createPrerenderRoutes(
   manifest: ServerBuild["routes"],
   parentId: string = "",

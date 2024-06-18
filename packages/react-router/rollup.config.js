@@ -236,10 +236,10 @@ module.exports = function rollup() {
   const serverRuntime = [
     {
       external: (id) => isBareModuleId(id),
-      input: `${SOURCE_DIR}/server-runtime/index.ts`,
+      input: `${SOURCE_DIR}/server/index.ts`,
       output: {
         banner: createBanner(name, version),
-        dir: `${OUTPUT_DIR}/server-runtime`,
+        dir: `${OUTPUT_DIR}/server`,
         format: "cjs",
         preserveModules: true,
         exports: "named",
@@ -253,7 +253,7 @@ module.exports = function rollup() {
         }),
         nodeResolve({ extensions: [".ts", ".tsx"] }),
         typescript({
-          tsconfig: path.join(__dirname, "server-runtime", "tsconfig.json"),
+          tsconfig: path.join(__dirname, "server", "tsconfig.json"),
           exclude: ["__tests__"],
           noEmitOnError: !WATCH,
         }),
@@ -264,10 +264,10 @@ module.exports = function rollup() {
     },
     {
       external: (id) => isBareModuleId(id),
-      input: `${SOURCE_DIR}/server-runtime/index.ts`,
+      input: `${SOURCE_DIR}/server/index.ts`,
       output: {
         banner: createBanner(name, version),
-        dir: `${OUTPUT_DIR}/server-runtime/esm`,
+        dir: `${OUTPUT_DIR}/server/esm`,
         format: "esm",
         preserveModules: true,
         entryFileNames: "[name].mjs",
