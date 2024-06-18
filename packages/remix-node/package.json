@@ -13,6 +13,17 @@
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./install": {
+      "types": "./dist/install.d.ts",
+      "default": "./dist/install.js"
+    },
+    "./package.json": "./package.json"
+  },
   "sideEffects": [
     "./install.js"
   ],

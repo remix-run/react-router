@@ -14,7 +14,15 @@
   "sideEffects": false,
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "module": "dist/esm/index.js",
+  "module": "dist/esm/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "tsc": "tsc"
   },

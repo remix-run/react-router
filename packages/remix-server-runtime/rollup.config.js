@@ -60,6 +60,7 @@ module.exports = function rollup() {
         dir: `${OUTPUT_DIR}/esm`,
         format: "esm",
         preserveModules: true,
+        entryFileNames: "[name].mjs",
       },
       plugins: [
         babel({
