@@ -1,4 +1,3 @@
-/* eslint-disable jest/valid-title */
 import {
   createMemoryHistory,
   createRouter,

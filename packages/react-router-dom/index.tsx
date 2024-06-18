@@ -15,6 +15,7 @@ import type {
   RouteObject,
   RouterProviderProps,
   To,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 import {
   Router,
@@ -73,6 +74,7 @@ import type {
   ParamKeyValuePair,
   URLSearchParamsInit,
   SubmitTarget,
+  FetcherSubmitOptions,
 } from "./dom";
 import {
   createSearchParams,
@@ -151,6 +153,7 @@ export type {
   To,
   UIMatch,
   unstable_HandlerResult,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -257,6 +260,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   window?: Window;
 }
 
@@ -275,6 +279,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -294,6 +299,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -527,6 +533,7 @@ export function RouterProvider({
 
       let isViewTransitionUnavailable =
         router.window == null ||
+        router.window.document == null ||
         typeof router.window.document.startViewTransition !== "function";
 
       // If this isn't a view transition or it's not available in this browser,
@@ -1160,8 +1167,10 @@ if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
 
-export interface FetcherFormProps
-  extends React.FormHTMLAttributes<HTMLFormElement> {
+/**
+ * Form props shared by navigations and fetchers
+ */
+interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * The HTTP verb to use when the form is submit. Supports "get", "post",
    * "put", "delete", "patch".
@@ -1202,7 +1211,15 @@ export interface FetcherFormProps
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
 }
 
-export interface FormProps extends FetcherFormProps {
+/**
+ * Form props available to fetchers
+ */
+export interface FetcherFormProps extends SharedFormProps {}
+
+/**
+ * Form props available to navigations
+ */
+export interface FormProps extends SharedFormProps {
   /**
    * Indicate a specific fetcherKey to use when using navigate=false
    */
@@ -1525,7 +1542,7 @@ export interface FetcherSubmitFunction {
   (
     target: SubmitTarget,
     // Fetchers cannot replace or set state because they are not navigation events
-    options?: Omit<SubmitOptions, "replace" | "state">
+    options?: FetcherSubmitOptions
   ): void;
 }
 

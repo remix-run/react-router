@@ -91,7 +91,7 @@ function EditContact() {
 }
 ```
 
-Please note that `relative: "path"` only impacts the resolution of a relative path. It does not change the the "starting" location for that relative path resolution. This resolution is always relative to the current location in the Route hierarchy (i.e., the route `Link` is rendered in).
+Please note that `relative: "path"` only impacts the resolution of a relative path. It does not change the "starting" location for that relative path resolution. This resolution is always relative to the current location in the Route hierarchy (i.e., the route `Link` is rendered in).
 
 If you wish to use path-relative routing against the current URL instead of the route hierarchy, you can do that with the current [`location`][use-location] and the `URL` constructor (note the trailing slash behavior):
 
@@ -107,7 +107,7 @@ new URL("..", window.origin + location.pathname);
 
 // With trailing slashes:
 new URL(".", window.origin + location.pathname + "/");
-// 'https://remix.run/docs/en/main/start/future-flags/'
+// 'https://remix.run/docs/en/main/start/quickstart/'
 new URL("..", window.origin + location.pathname + "/");
 // 'https://remix.run/docs/en/main/start/'
 ```

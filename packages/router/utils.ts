@@ -255,6 +255,16 @@ export interface DataStrategyFunction {
   (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
 }
 
+export interface AgnosticPatchRoutesOnMissFunction<
+  M extends AgnosticRouteMatch = AgnosticRouteMatch
+> {
+  (opts: {
+    path: string;
+    matches: M[];
+    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void;
+  }): void | Promise<void>;
+}
+
 /**
  * Function provided by the framework-aware layers to set any framework-specific
  * properties from framework-agnostic properties
@@ -444,11 +454,11 @@ function isIndexRoute(
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   mapRouteProperties: MapRoutePropertiesFunction,
-  parentPath: number[] = [],
+  parentPath: string[] = [],
   manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
-    let treePath = [...parentPath, index];
+    let treePath = [...parentPath, String(index)];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
       route.index !== true || !route.children,
@@ -503,6 +513,17 @@ export function matchRoutes<
   locationArg: Partial<Location> | string,
   basename = "/"
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
+  return matchRoutesImpl(routes, locationArg, basename, false);
+}
+
+export function matchRoutesImpl<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
+  routes: RouteObjectType[],
+  locationArg: Partial<Location> | string,
+  basename: string,
+  allowPartial: boolean
+): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -524,7 +545,11 @@ export function matchRoutes<
     // should be a safe operation.  This avoids needing matchRoutes to be
     // history-aware.
     let decoded = decodePath(pathname);
-    matches = matchRouteBranch<string, RouteObjectType>(branches[i], decoded);
+    matches = matchRouteBranch<string, RouteObjectType>(
+      branches[i],
+      decoded,
+      allowPartial
+    );
   }
 
   return matches;
@@ -615,7 +640,6 @@ function flattenRoutes<
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
       );
-
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 
@@ -768,7 +792,8 @@ function matchRouteBranch<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
-  pathname: string
+  pathname: string,
+  allowPartial = false
 ): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
@@ -787,11 +812,29 @@ function matchRouteBranch<
       remainingPathname
     );
 
-    if (!match) return null;
+    let route = meta.route;
+
+    if (
+      !match &&
+      end &&
+      allowPartial &&
+      !routesMeta[routesMeta.length - 1].route.index
+    ) {
+      match = matchPath(
+        {
+          path: meta.relativePath,
+          caseSensitive: meta.caseSensitive,
+          end: false,
+        },
+        remainingPathname
+      );
+    }
+
+    if (!match) {
+      return null;
+    }
 
     Object.assign(matchedParams, match.params);
-
-    let route = meta.route;
 
     matches.push({
       // TODO: Can this as be avoided?

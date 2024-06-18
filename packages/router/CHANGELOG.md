@@ -1,5 +1,27 @@
 # `@remix-run/router`
 
+## 1.16.1
+
+### Patch Changes
+
+- Support `unstable_dataStrategy` on `staticHandler.queryRoute` ([#11515](https://github.com/remix-run/react-router/pull/11515))
+
+## 1.16.0
+
+### Minor Changes
+
+- Add a new `unstable_dataStrategy` configuration option ([#11098](https://github.com/remix-run/react-router/pull/11098))
+  - This option allows Data Router applications to take control over the approach for executing route loaders and actions
+  - The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix single-fetch, middleware/context APIs, automatic loader caching, and more
+- Move `unstable_dataStrategy` from `createStaticHandler` to `staticHandler.query` so it can be request-specific for use with the `ResponseStub` approach in Remix. It's not really applicable to `queryRoute` for now since that's a singular handler call anyway so any pre-processing/post/processing could be done there manually. ([#11377](https://github.com/remix-run/react-router/pull/11377))
+- Add a new `future.unstable_skipActionRevalidation` future flag ([#11098](https://github.com/remix-run/react-router/pull/11098))
+  - Currently, active loaders revalidate after any action, regardless of the result
+  - With this flag enabled, actions that return/throw a 4xx/5xx response status will no longer automatically revalidate
+  - This should reduce load on your server since it's rare that a 4xx/5xx should actually mutate any data
+  - If you need to revalidate after a 4xx/5xx result with this flag enabled, you can still do that via returning `true` from `shouldRevalidate`
+  - `shouldRevalidate` now also receives a new `unstable_actionStatus` argument alongside `actionResult` so you can make decision based on the status of the `action` response without having to encode it into the action data
+- Added a `skipLoaderErrorBubbling` flag to `staticHandler.query` to disable error bubbling on loader executions for single-fetch scenarios where the client-side router will handle the bubbling ([#11098](https://github.com/remix-run/react-router/pull/11098))
+
 ## 1.15.3
 
 ### Patch Changes

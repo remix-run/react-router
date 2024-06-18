@@ -109,7 +109,7 @@ new URL("..", window.origin + location.pathname);
 
 // With trailing slashes:
 new URL(".", window.origin + location.pathname + "/");
-// 'https://remix.run/docs/en/main/start/future-flags/'
+// 'https://remix.run/docs/en/main/start/quickstart/'
 new URL("..", window.origin + location.pathname + "/");
 // 'https://remix.run/docs/en/main/start/'
 ```

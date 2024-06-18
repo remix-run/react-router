@@ -87,7 +87,7 @@ Note that the APIs here are not React Router specific, but rather standard web o
 
 ## `loader.hydrate`
 
-If you are [Server-Side Rendering][ssr] and leveraging the `fututre.v7_partialHydration` flag for [Partial Hydration][partialhydration], then you may wish to opt-into running a route `loader` on initial hydration _even though it has hydration data_ (for example, to let a user prime a cache with the hydration data). To force a `loader` to run on hydration in a partial hydration scenario, you can set a `hydrate` property on the `loader` function:
+If you are [Server-Side Rendering][ssr] and leveraging the `future.v7_partialHydration` flag for [Partial Hydration][partialhydration], then you may wish to opt-into running a route `loader` on initial hydration _even though it has hydration data_ (for example, to let a user prime a cache with the hydration data). To force a `loader` to run on hydration in a partial hydration scenario, you can set a `hydrate` property on the `loader` function:
 
 ## Returning Responses
 
