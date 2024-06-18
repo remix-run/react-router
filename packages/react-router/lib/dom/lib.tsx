@@ -1,4 +1,11 @@
 import * as React from "react";
+
+// TODO: This static import doesn't allow us to work quite right in a pure-react
+// app that doesn't even have react-dom as a dependency.  Let's look into using
+// an export map for `react-router/dom   that would provide the `flushSync` method
+// to the memory `<RouterProvider>` via a prop.  And then
+// `import { RouterProvider } from 'react-router/memory'` // memory use case
+// `import { RouterProvider } from 'react-router/dom'` // DOM use case
 import * as ReactDOM from "react-dom";
 import type {
   BrowserHistory,

@@ -7,8 +7,6 @@ import type {
   MemoryHistory,
   RelativeRoutingType,
   Router as RemixRouter,
-  RouterState,
-  RouterSubscriber,
   To,
   TrackedPromise,
   unstable_DataStrategyFunction,
