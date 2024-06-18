@@ -23,14 +23,12 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
-    "import": {
+    ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/main.js"
     },
-    "require": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/main.js"
-    }
+    "./package.json": "./package.json"
   },
   "dependencies": {
     "react-router": "workspace:*"
