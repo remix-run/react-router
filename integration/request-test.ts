@@ -15,7 +15,7 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "@react-router/node";
+        import { json } from "react-router/server";
         import { Form, useLoaderData, useActionData } from "react-router-dom";
 
         async function requestToJson(request) {

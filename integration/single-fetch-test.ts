@@ -907,7 +907,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@react-router/node';
+          import { redirect } from 'react-router/server';
           export function loader({ request, response }) {
             response.status = 302;
             response.headers.set('Location', '/target');
@@ -947,7 +947,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@react-router/node';
+          import { redirect } from 'react-router/server';
           export function loader({ request, response }) {
             response.status = 302;
             response.headers.set('Location', '/target');
@@ -983,7 +983,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@react-router/node';
+          import { redirect } from 'react-router/server';
           export function loader() {
             throw redirect('/target');
           }
@@ -1019,7 +1019,7 @@ test.describe("single-fetch", () => {
       files: {
         ...files,
         "app/routes/data.tsx": js`
-          import { redirect } from '@react-router/node';
+          import { redirect } from 'react-router/server';
           export function loader() {
             return redirect('/target');
           }
@@ -1055,7 +1055,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@react-router/node';
+            import { redirect } from 'react-router/server';
             export function action({ response }) {
               response.status = 302;
               response.headers.set('Location', '/target');
@@ -1101,7 +1101,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@react-router/node';
+            import { redirect } from 'react-router/server';
             export function action({ response }) {
               response.status = 302;
               response.headers.set('Location', '/target');
@@ -1143,7 +1143,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@react-router/node';
+            import { redirect } from 'react-router/server';
             export function action() {
               throw redirect('/target');
             }
@@ -1185,7 +1185,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/data.tsx": js`
-            import { redirect } from '@react-router/node';
+            import { redirect } from 'react-router/server';
             export function action() {
               return redirect('/target');
             }
@@ -1228,7 +1228,7 @@ test.describe("single-fetch", () => {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
 
-          import type { EntryContext } from "@react-router/node";
+          import type { EntryContext } from "react-router/server";
           import { createReadableStreamFromReadable } from "@react-router/node";
           import { RemixServer } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
@@ -1279,7 +1279,7 @@ test.describe("single-fetch", () => {
           }
         `,
         "app/routes/data.tsx": js`
-          import { redirect } from '@react-router/node';
+          import { redirect } from 'react-router/server';
           export function loader() {
             return redirect('/target');
           }
@@ -1311,7 +1311,7 @@ test.describe("single-fetch", () => {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
 
-          import type { EntryContext } from "@react-router/node";
+          import type { EntryContext } from "react-router/server";
           import { createReadableStreamFromReadable } from "@react-router/node";
           import { RemixServer } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
@@ -1362,7 +1362,7 @@ test.describe("single-fetch", () => {
           }
         `,
         "app/routes/data.tsx": js`
-          import { redirect } from '@react-router/node';
+          import { redirect } from 'react-router/server';
           export function action() {
             return redirect('/target');
           }
@@ -1440,7 +1440,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/resource.tsx": js`
-            import { json } from '@react-router/node';
+            import { json } from 'react-router/server';
             export function loader({ response }) {
               // This will be ignored in favor of the returned Response status
               response.status = 200;
@@ -1611,7 +1611,7 @@ test.describe("single-fetch", () => {
         `,
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
-          import type { EntryContext } from "@react-router/node";
+          import type { EntryContext } from "react-router/server";
           import { createReadableStreamFromReadable } from "@react-router/node";
           import { RemixServer } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";

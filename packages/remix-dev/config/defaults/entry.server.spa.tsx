@@ -1,6 +1,6 @@
 import { PassThrough } from "node:stream";
 
-import type { AppLoadContext, EntryContext } from "@react-router/node";
+import type { AppLoadContext, EntryContext } from "react-router/server";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { RemixServer } from "react-router";
 import { renderToPipeableStream } from "react-dom/server";

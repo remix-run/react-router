@@ -12,7 +12,16 @@
   },
   "license": "MIT",
   "main": "dist/index.js",
+  "module": "dist/esm/index.mjs",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "sideEffects": [
     "./install.js"
   ],
@@ -22,7 +31,6 @@
   "dependencies": {
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie-signature": "^1.1.0",
-    "react-router": "workspace:*",
     "source-map-support": "^0.5.21",
     "stream-slice": "^0.1.2",
     "undici": "^6.10.1"
@@ -30,9 +38,11 @@
   "devDependencies": {
     "@types/cookie-signature": "^1.0.3",
     "@types/source-map-support": "^0.5.4",
+    "react-router": "workspace:*",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {
+    "react-router": "workspace:*",
     "typescript": "^5.1.0"
   },
   "peerDependenciesMeta": {

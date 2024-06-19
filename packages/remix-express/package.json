@@ -25,11 +25,13 @@
     "@types/supertest": "^2.0.10",
     "express": "^4.17.1",
     "node-mocks-http": "^1.10.1",
+    "react-router": "workspace:*",
     "supertest": "^6.3.3",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {
     "express": "^4.17.1",
+    "react-router": "workspace:*",
     "typescript": "^5.1.0"
   },
   "peerDependenciesMeta": {

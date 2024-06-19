@@ -1661,7 +1661,7 @@ async function getPrerenderBuildAndHandler(
   );
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
   let { createRequestHandler: createHandler } = await import(
-    "@react-router/node"
+    "react-router/server"
   );
   return {
     build,

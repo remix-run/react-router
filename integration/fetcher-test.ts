@@ -23,7 +23,7 @@ test.describe("useFetcher", () => {
     fixture = await createFixture({
       files: {
         "app/routes/resource-route-action-only.ts": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router/server";
           export function action() {
             return new Response("${CHEESESTEAK}");
           }
@@ -149,7 +149,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/fetcher-echo.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router/server";
           import { useFetcher } from "react-router-dom";
 
           export async function action({ request }) {

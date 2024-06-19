@@ -1291,7 +1291,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
         `,
 
       "app/routes/boom.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router/server";
           export function loader() { return boom(); }
           export default function() { return <b>my page</b>; }
         `,

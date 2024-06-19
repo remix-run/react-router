@@ -44,9 +44,9 @@ If you prefer to do it manually, here's a list of the equivalent packages:
 | `@remix-run/cloudflare`  | ➡️  | `@react-router/cloudflare` |
 | TODO: get the whole list |
 
-Also note that nearly all modules your app needs can come from `react-router-dom` instead of `@remix-run/node` and `@remix-run/cloudflare`, so try to import from there first.
+Also note that nearly all server-only imports your app needs can come from `react-router/server` instead of `@remix-run/node`, `@remix-run/cloudflare` etc., so try to import from there first.
 
 ```diff
 -import { redirect } from "@react-router/node";
-+import { redirect } from "react-router";
++import { redirect } from "react-router/server";
 ```

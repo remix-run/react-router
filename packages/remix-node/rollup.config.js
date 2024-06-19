@@ -50,5 +50,25 @@ module.exports = function rollup() {
         }),
       ],
     },
+    {
+      external: (id) => isBareModuleId(id),
+      input: `${SOURCE_DIR}/index.ts`,
+      output: {
+        banner: createBanner(name, version),
+        dir: `${OUTPUT_DIR}/esm`,
+        format: "esm",
+        preserveModules: true,
+        entryFileNames: "[name].mjs",
+      },
+      plugins: [
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          extensions: [".ts", ".tsx"],
+          ...remixBabelConfig,
+        }),
+        nodeResolve({ extensions: [".ts", ".tsx"] }),
+      ],
+    },
   ];
 };

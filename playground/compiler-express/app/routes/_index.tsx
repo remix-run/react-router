@@ -1,4 +1,4 @@
-import type { MetaFunction } from "@react-router/node";
+import type { MetaFunction } from "react-router/server";
 
 export const meta: MetaFunction = () => {
   return [

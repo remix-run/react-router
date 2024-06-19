@@ -16,7 +16,7 @@ test.describe("pathless layout routes", () => {
       await createFixture({
         files: {
           "app/routes/_index.tsx": js`
-            import { redirect, json } from "@react-router/node";
+            import { redirect, json } from "react-router/server";
             import { Form, useActionData } from "react-router-dom";
 
             export let loader = async () => {

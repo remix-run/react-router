@@ -33,7 +33,7 @@ test.describe("Vite custom entry dev", () => {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
 
-          import type { EntryContext } from "@react-router/node";
+          import type { EntryContext } from "react-router/server";
           import { createReadableStreamFromReadable } from "@react-router/node";
           import { RemixServer } from "react-router-dom";
           import { renderToPipeableStream } from "react-dom/server";

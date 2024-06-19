@@ -28,7 +28,7 @@ test.describe("deferred loaders", () => {
         `,
 
         "app/routes/redirect.tsx": js`
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router/server";
           export function loader() {
             return defer({food: "pizza"}, { status: 301, headers: { Location: "/?redirected" } });
           }
@@ -37,7 +37,7 @@ test.describe("deferred loaders", () => {
 
         "app/routes/direct-promise-access.tsx": js`
           import * as React from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router/server";
           import { useLoaderData, Link, Await } from "react-router-dom";
           export function loader() {
             return defer({

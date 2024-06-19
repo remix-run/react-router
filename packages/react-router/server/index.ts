@@ -62,9 +62,10 @@ export type {
   SerializeFrom,
   ServerBuild,
   ServerEntryModule,
-  ServerRuntimeMetaArgs,
-  ServerRuntimeMetaDescriptor,
-  ServerRuntimeMetaFunction,
+  // Aliases previously provided by runtime packages
+  ServerRuntimeMetaArgs as MetaArgs,
+  ServerRuntimeMetaDescriptor as MetaDescriptor,
+  ServerRuntimeMetaFunction as MetaFunction,
   Session,
   SessionData,
   SessionIdStorageStrategy,

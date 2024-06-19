@@ -1,4 +1,4 @@
-import type { EntryContext } from "@react-router/node";
+import type { EntryContext } from "react-router/server";
 import { RemixServer } from "react-router";
 import { renderToString } from "react-dom/server";
 

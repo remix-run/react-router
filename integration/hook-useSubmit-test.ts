@@ -45,7 +45,7 @@ test.describe("`useSubmit()` returned function", () => {
           }
         `,
         "app/routes/action.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router/server";
           import { useActionData, useSubmit } from "react-router-dom";
 
           export async function action({ request }) {

@@ -57,7 +57,7 @@ test.describe("Vite dev", () => {
         `,
         "app/routes/_index.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router/server";
           import { Await, useLoaderData } from "react-router-dom";
 
           export function loader() {
@@ -83,7 +83,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/set-cookies.tsx": js`
-          import { LoaderFunction } from "@react-router/node";
+          import { LoaderFunction } from "react-router/server";
 
           export const loader: LoaderFunction = () => {
             const headers = new Headers();
@@ -114,7 +114,7 @@ test.describe("Vite dev", () => {
           };
         `,
         "app/routes/get-cookies.tsx": js`
-          import { json, LoaderFunctionArgs } from "@react-router/node";
+          import { json, LoaderFunctionArgs } from "react-router/server";
           import { useLoaderData } from "react-router-dom"
 
           export const loader = ({ request }: LoaderFunctionArgs) => json({cookies: request.headers.get("Cookie")});
@@ -140,7 +140,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/mdx.mdx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router/server";
           import { useLoaderData } from "react-router-dom";
 
           export const loader = () => {
@@ -163,7 +163,7 @@ test.describe("Vite dev", () => {
         `,
         "app/routes/dotenv.tsx": js`
           import { useState, useEffect } from "react";
-          import { json } from "@react-router/node";
+          import { json } from "react-router/server";
           import { useLoaderData } from "react-router-dom";
 
           export const loader = () => {
@@ -191,7 +191,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/error-stacktrace.tsx": js`
-          import type { LoaderFunction, MetaFunction } from "@react-router/node";
+          import type { LoaderFunction, MetaFunction } from "react-router/server";
           import { Link, useLocation } from "react-router-dom";
 
           export const loader: LoaderFunction = ({ request }) => {

@@ -133,7 +133,7 @@ test.describe("navigation states", () => {
             }
           `,
         [`app/routes/${STATES.LOADING_REDIRECT}.jsx`]: js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router/server";
             export function loader() {
               return redirect("/?redirected");
             }
@@ -155,7 +155,7 @@ test.describe("navigation states", () => {
             }
           `,
         [`app/routes/${STATES.SUBMITTING_LOADER_REDIRECT}.jsx`]: js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router/server";
             export function loader() {
               return redirect("/?redirected");
             }
@@ -179,7 +179,7 @@ test.describe("navigation states", () => {
             }
           `,
         [`app/routes/${STATES.SUBMITTING_ACTION_REDIRECT}.jsx`]: js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router/server";
             export function action() {
               return redirect("/?redirected");
             }
@@ -192,7 +192,7 @@ test.describe("navigation states", () => {
             }
           `,
         [`app/routes/${STATES.FETCHER_REDIRECT}.jsx`]: js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router/server";
             export function action() {
               return redirect("/?redirected");
             }

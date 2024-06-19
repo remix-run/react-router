@@ -40,7 +40,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router/server";
           import {
             Links,
             Meta,

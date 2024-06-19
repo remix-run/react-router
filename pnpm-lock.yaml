@@ -705,6 +705,9 @@ importers:
       node-mocks-http:
         specifier: ^1.10.1
         version: 1.14.1
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
       supertest:
         specifier: ^6.3.3
         version: 6.3.4
@@ -720,9 +723,6 @@ importers:
       cookie-signature:
         specifier: ^1.1.0
         version: 1.2.1
-      react-router:
-        specifier: workspace:*
-        version: link:../react-router
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -739,6 +739,9 @@ importers:
       '@types/source-map-support':
         specifier: ^0.5.4
         version: 0.5.10
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -779,6 +782,9 @@ importers:
       '@types/source-map-support':
         specifier: ^0.5.6
         version: 0.5.10
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
 
   playground/compiler:
     dependencies:
