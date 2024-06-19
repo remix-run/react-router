@@ -4398,13 +4398,6 @@ async function callLoaderOrAction(
     } else {
       result = await runHandler(handler);
     }
-
-    invariant(
-      result.result !== undefined,
-      `You defined ${type === "action" ? "an action" : "a loader"} for route ` +
-        `"${match.route.id}" but didn't return anything from your \`${type}\` ` +
-        `function. Please return a value or \`null\`.`
-    );
   } catch (e) {
     // We should already be catching and converting normal handler executions to
     // HandlerResults and returning them, so anything that throws here is an
