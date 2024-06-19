@@ -474,7 +474,7 @@ export async function resolveEntryFiles({
   rootDirectory: string;
   reactRouterConfig: ResolvedVitePluginConfig;
 }) {
-  let { appDirectory, future } = reactRouterConfig;
+  let { appDirectory } = reactRouterConfig;
 
   let defaultsDirectory = path.resolve(__dirname, "config", "defaults");
 
@@ -500,23 +500,9 @@ export async function resolveEntryFiles({
   } else if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
-    let serverRuntime = deps["@react-router/deno"]
-      ? "deno"
-      : deps["@react-router/cloudflare"]
-      ? "cloudflare"
-      : deps["@react-router/node"]
-      ? "node"
-      : undefined;
-
-    if (!serverRuntime) {
-      let serverRuntimes = [
-        "@react-router/deno",
-        "@react-router/cloudflare",
-        "@react-router/node",
-      ];
-      let formattedList = disjunctionListFormat.format(serverRuntimes);
+    if (!deps["@react-router/node"]) {
       throw new Error(
-        `Could not determine server runtime. Please install one of the following: ${formattedList}`
+        `Could not determine server runtime. Please install @react-router/node, or provide a custom entry.server.tsx/jsx file in your app directory.`
       );
     }
 
@@ -542,7 +528,7 @@ export async function resolveEntryFiles({
       });
     }
 
-    entryServerFile = `entry.server.${serverRuntime}.tsx`;
+    entryServerFile = `entry.server.node.tsx`;
   }
 
   let entryClientFilePath = userEntryClientFile
@@ -566,35 +552,3 @@ function findEntry(dir: string, basename: string): string | undefined {
 
   return undefined;
 }
-
-// adds types for `Intl.ListFormat` to the global namespace
-// we could also update our `tsconfig.json` to include `lib: ["es2021"]`
-declare namespace Intl {
-  type ListType = "conjunction" | "disjunction";
-
-  interface ListFormatOptions {
-    localeMatcher?: "lookup" | "best fit";
-    type?: ListType;
-    style?: "long" | "short" | "narrow";
-  }
-
-  interface ListFormatPart {
-    type: "element" | "literal";
-    value: string;
-  }
-
-  class ListFormat {
-    constructor(locales?: string | string[], options?: ListFormatOptions);
-    format(values: any[]): string;
-    formatToParts(values: any[]): ListFormatPart[];
-    supportedLocalesOf(
-      locales: string | string[],
-      options?: ListFormatOptions
-    ): string[];
-  }
-}
-
-let disjunctionListFormat = new Intl.ListFormat("en", {
-  style: "long",
-  type: "disjunction",
-});
