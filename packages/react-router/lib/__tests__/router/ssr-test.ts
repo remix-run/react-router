@@ -2065,33 +2065,11 @@ describe("ssr", () => {
       expect(data).toBe("");
     });
 
-    it("should error if an action/loader returns undefined", async () => {
+    it("should allow returning undefined from an action/loader", async () => {
       let T = setupFlexRouteTest();
-      let data;
 
-      try {
-        data = await T.resolveLoader(undefined);
-      } catch (e) {
-        data = e;
-      }
-      expect(data).toEqual(
-        new Error(
-          'You defined a loader for route "flex" but didn\'t return anything ' +
-            "from your `loader` function. Please return a value or `null`."
-        )
-      );
-
-      try {
-        data = await T.resolveAction(undefined);
-      } catch (e) {
-        data = e;
-      }
-      expect(data).toEqual(
-        new Error(
-          'You defined an action for route "flex" but didn\'t return anything ' +
-            "from your `action` function. Please return a value or `null`."
-        )
-      );
+      expect(await T.resolveLoader(undefined)).toBeUndefined();
+      expect(await T.resolveAction(undefined)).toBeUndefined();
     });
 
     it("should handle relative redirect responses (loader)", async () => {

@@ -1987,7 +1987,7 @@ describe("a router", () => {
       router.dispose();
     });
 
-    it("throws an error if actions/loaders return undefined", async () => {
+    it("allows returning undefined from actions/loaders", async () => {
       let t = setup({
         routes: [
           {
@@ -2008,12 +2008,10 @@ describe("a router", () => {
         location: {
           pathname: "/path",
         },
-        errors: {
-          path: new Error(
-            'You defined a loader for route "path" but didn\'t return anything ' +
-              "from your `loader` function. Please return a value or `null`."
-          ),
+        loaderData: {
+          path: undefined,
         },
+        errors: null,
       });
 
       await t.navigate("/");
@@ -2029,16 +2027,18 @@ describe("a router", () => {
         formData: createFormData({}),
       });
       await nav3.actions.path.resolve(undefined);
+      await nav3.loaders.path.resolve("PATH");
       expect(t.router.state).toMatchObject({
         location: {
           pathname: "/path",
         },
-        errors: {
-          path: new Error(
-            'You defined an action for route "path" but didn\'t return anything ' +
-              "from your `action` function. Please return a value or `null`."
-          ),
+        actionData: {
+          path: undefined,
         },
+        loaderData: {
+          path: "PATH",
+        },
+        errors: null,
       });
     });
   });
