@@ -24,7 +24,7 @@ module.exports = function rollup() {
   return [
     {
       external: (id) => isBareModuleId(id),
-      input: `${SOURCE_DIR}/index.ts`,
+      input: [`${SOURCE_DIR}/index.ts`, `${SOURCE_DIR}/install.ts`],
       output: {
         banner: createBanner(name, version),
         dir: OUTPUT_DIR,

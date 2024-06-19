@@ -20,10 +20,14 @@
       "import": "./dist/esm/index.mjs",
       "require": "./dist/index.js"
     },
+    "./install": {
+      "types": "./dist/install.d.ts",
+      "default": "./dist/install.js"
+    },
     "./package.json": "./package.json"
   },
   "sideEffects": [
-    "./install.js"
+    "./dist/install.js"
   ],
   "scripts": {
     "tsc": "tsc"
