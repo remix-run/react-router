@@ -870,7 +870,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                         rollupOptions: {
                           ...baseRollupOptions,
                           preserveEntrySignatures: "exports-only",
-                          input: serverBuildId,
+                          input:
+                            viteUserConfig.build?.rollupOptions?.input ??
+                            serverBuildId,
                           output: {
                             entryFileNames:
                               ctx.reactRouterConfig.serverBuildFile,
