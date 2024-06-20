@@ -334,6 +334,14 @@ async function handleDocumentRequest(
   let context;
   let responseStubs = getResponseStubs();
   try {
+    // When in SPA mode, always request the root, allowing us to respond for
+    // routes being defined and passed to <RemixBrowser routes>, which would
+    // otherwise 404 because no server-side routes exist
+    if (build.isSpaMode) {
+      let url = new URL(request.url);
+      url.pathname = build.basename || "/";
+      request = new Request(url);
+    }
     context = await staticHandler.query(request, {
       requestContext: loadContext,
       unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),

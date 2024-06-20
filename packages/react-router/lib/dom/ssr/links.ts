@@ -427,7 +427,10 @@ export function getModuleLinkHrefs(
     matches
       .map((match) => {
         let route = manifestPatch.routes[match.route.id];
-        let hrefs = [route.module];
+        let hrefs = [];
+        if (route.module) {
+          hrefs.push(route.module);
+        }
         if (route.imports) {
           hrefs = hrefs.concat(route.imports);
         }
@@ -448,8 +451,10 @@ function getCurrentPageModulePreloadHrefs(
     matches
       .map((match) => {
         let route = manifest.routes[match.route.id];
-        let hrefs = [route.module];
-
+        let hrefs = [];
+        if (route.module) {
+          hrefs.push(route.module);
+        }
         if (route.imports) {
           hrefs = hrefs.concat(route.imports);
         }

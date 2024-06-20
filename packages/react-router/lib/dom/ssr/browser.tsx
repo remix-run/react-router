@@ -1,13 +1,22 @@
 import * as React from "react";
-import type { HydrationState, Router as RemixRouter } from "../../router";
+import type {
+  HydrationState,
+  LoaderFunction,
+  Router as RemixRouter,
+} from "../../router";
 import { createBrowserHistory, createRouter, matchRoutes } from "../../router";
+import type { DataRouteObject } from "../../context";
 
 import "../global";
 import { mapRouteProperties } from "../../components";
 import { RouterProvider } from "../lib";
 import type { AssetsManifest } from "./entry";
 import { deserializeErrors } from "./errors";
-import type { RouteModules } from "./routeModules";
+import type {
+  ClientActionFunction,
+  ClientLoaderFunction,
+  RouteModules,
+} from "./routeModules";
 import invariant from "./invariant";
 import {
   createClientRoutes,
@@ -57,7 +66,7 @@ function initSsrInfo(): void {
   }
 }
 
-function createHydratedRouter(): RemixRouter {
+function createHydratedRouter(propRoutes?: DataRouteObject[]): RemixRouter {
   initSsrInfo();
 
   if (!ssrInfo) {
@@ -119,6 +128,37 @@ function createHydratedRouter(): RemixRouter {
     ssrInfo.context.state,
     ssrInfo.context.isSpaMode
   );
+
+  // If the user provided their own data routes, add them to our manifest-created
+  // routes here before creating the data router
+  let propRoutesError: unknown;
+  if (propRoutes && propRoutes.length > 0) {
+    let rootRoute = routes[0];
+    if (!rootRoute.children) {
+      rootRoute.children = [];
+    }
+
+    try {
+      validatePropRoutes(
+        propRoutes,
+        rootRoute.children,
+        ssrInfo.context.isSpaMode === true
+      );
+
+      // If a route doesn't have a loader, add a dummy hydrating loader to stop
+      // rendering at that level for hydration
+      let hydratingLoader: LoaderFunction = () => null;
+      hydratingLoader.hydrate = true;
+      for (let route of propRoutes) {
+        if (!route.loader) {
+          route = { ...route, loader: hydratingLoader };
+        }
+        rootRoute.children.push(route);
+      }
+    } catch (e) {
+      propRoutesError = e;
+    }
+  }
 
   let hydrationData: HydrationState | undefined = undefined;
   if (!ssrInfo.context.isSpaMode) {
@@ -203,6 +243,24 @@ function createHydratedRouter(): RemixRouter {
   });
   ssrInfo.router = router;
 
+  // Do this after creating the router so ID's have been added to the routes
+  // that we can use as keys in the manifest. `router.routes` will contain the
+  // route IDs, `props.routes` may not.
+  if (propRoutes && ssrInfo) {
+    if (propRoutesError) {
+      console.warn(propRoutesError);
+    } else {
+      let rootDataRoute = router.routes[0];
+      for (let route of rootDataRoute.children || []) {
+        addPropRoutesToRemix(
+          ssrInfo,
+          route as DataRouteObject,
+          rootDataRoute.id
+        );
+      }
+    }
+  }
+
   // We can call initialize() immediately if the router doesn't have any
   // loaders to run on hydration
   if (router.state.initialized) {
@@ -217,12 +275,111 @@ function createHydratedRouter(): RemixRouter {
   return router;
 }
 
+function addPropRoutesToRemix(
+  ssrInfo: SSRInfo,
+  route: DataRouteObject,
+  parentId: string
+) {
+  if (!ssrInfo.manifest.routes[route.id]) {
+    ssrInfo.manifest.routes[route.id] = {
+      index: route.index,
+      caseSensitive: route.caseSensitive,
+      id: route.id,
+      path: route.path,
+      parentId,
+      hasAction: false,
+      hasLoader: false,
+      hasClientAction: route.action != null,
+      hasClientLoader: route.loader != null,
+      hasErrorBoundary: route.hasErrorBoundary === true,
+      imports: [],
+      css: [],
+      module: undefined,
+    };
+    ssrInfo.routeModules[route.id] = {
+      ...route,
+      clientAction: route.action as ClientActionFunction,
+      clientLoader: route.loader as ClientLoaderFunction,
+      default: route.Component || (() => null),
+      HydrateFallback: route.HydrateFallback || undefined,
+      ErrorBoundary: route.ErrorBoundary || undefined,
+    };
+  }
+  if (route.children) {
+    for (let child of route.children) {
+      addPropRoutesToRemix(ssrInfo, child, route.id);
+    }
+  }
+}
+
+function validatePropRoutes(
+  propRoutes: DataRouteObject[],
+  rootChildren: DataRouteObject[],
+  isSpaMode: boolean
+) {
+  if (!isSpaMode) {
+    throw new Error(
+      `The <HydratedRouter routes> prop is only usable in SPA Mode.`
+    );
+  }
+
+  let existingRootChildren = new Set();
+  for (let child of rootChildren) {
+    if (child.index) {
+      existingRootChildren.add("_index");
+    } else if (child.path) {
+      existingRootChildren.add(child.path);
+    }
+  }
+
+  for (let route of propRoutes) {
+    if (route.index && existingRootChildren.has("_index")) {
+      throw new Error(
+        `Cannot add a duplicate child index route to the root route via ` +
+          `the \`HydratedRouter\` \`routes\` prop.  The \`routes\` prop ` +
+          `will be ignored.`
+      );
+    }
+
+    if (route.path && existingRootChildren.has(route.path.replace(/^\//, ""))) {
+      throw new Error(
+        `Cannot add a duplicate child route with path \`${route.path}\` to ` +
+          `the root route via the \`HydratedRouter\` \`routes\` prop.  The ` +
+          `\`routes\` prop will be ignored.`
+      );
+    }
+  }
+}
+
+export interface HydratedRouterProps {
+  /**
+   *  Optional prop that can be used with "SPA Mode" when using the Vite plugin
+   * if you have not yet moved your routes to use the file-based routing
+   * convention or the `routes` config in the Vite plugin. The routes passed via
+   * this prop will be appended as additional children of your root route.
+   *
+   * Routes defined this way are strictly client-side, so your `loader`/`action`
+   * will be internally converted to Remix `clientLoader`/`clientAction`'s.
+   *
+   * ⚠️ This is not intended to be used as a primary method of defining routes,
+   * and is intended to be used as a migration path from a React Router
+   * `RouterProvider` application.
+   *
+   * ⚠️ If any collisions are detected from routes on the file system then a
+   * warning will be logged and the `routes` prop will be ignored.
+   */
+  routes?: DataRouteObject[];
+}
+
 /**
+ * Top-level component of your React Router application when using the Vite plugin.
+ * Renders from the root component down for the matched routes.
+ *
  * @category Router Components
  */
-export function HydratedRouter() {
+export function HydratedRouter(props: HydratedRouterProps): React.ReactElement {
   if (!router) {
-    router = createHydratedRouter();
+    router = createHydratedRouter(props.routes);
   }
 
   // Critical CSS can become stale after code changes, e.g. styles might be

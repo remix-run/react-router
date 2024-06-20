@@ -15,6 +15,7 @@ import type { AppData } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
+import invariant from "./invariant";
 
 export interface RouteModules {
   [routeId: string]: RouteModule | undefined;
@@ -200,6 +201,7 @@ export async function loadRouteModule(
   }
 
   try {
+    invariant(route.module, "Can't load route without a defined module");
     let routeModule = await import(/* webpackIgnore: true */ route.module);
     routeModulesCache[route.id] = routeModule;
     return routeModule;
