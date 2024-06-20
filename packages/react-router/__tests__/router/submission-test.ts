@@ -536,7 +536,7 @@ describe("submissions", () => {
         expect(t.router.state.fetchers.get("key")?.formMethod).toBeUndefined();
       });
 
-      it("normalizes to uppercase in v7 via v7_normalizeFormMethod", async () => {
+      it("normalizes to uppercase", async () => {
         let t = setup({
           routes: [
             {
@@ -553,7 +553,6 @@ describe("submissions", () => {
             },
           ],
           future: {
-            v7_normalizeFormMethod: true,
             v7_prependBasename: false,
           },
         });

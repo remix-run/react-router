@@ -33,8 +33,6 @@ import type {
   Submission,
   SuccessResult,
   UIMatch,
-  V7_FormMethod,
-  V7_MutationFormMethod,
   AgnosticPatchRoutesOnMissFunction,
 } from "./utils";
 import {
@@ -367,7 +365,6 @@ export type HydrationState = Partial<
  */
 export interface FutureConfig {
   v7_fetcherPersist: boolean;
-  v7_normalizeFormMethod: boolean;
   v7_partialHydration: boolean;
   v7_prependBasename: boolean;
   unstable_skipActionErrorRevalidation: boolean;
@@ -735,17 +732,17 @@ interface RevalidatingFetcher extends FetchLoadMatch {
 }
 
 const validMutationMethodsArr: MutationFormMethod[] = [
-  "post",
-  "put",
-  "patch",
-  "delete",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
 ];
 const validMutationMethods = new Set<MutationFormMethod>(
   validMutationMethodsArr
 );
 
 const validRequestMethodsArr: FormMethod[] = [
-  "get",
+  "GET",
   ...validMutationMethodsArr,
 ];
 const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
@@ -845,7 +842,6 @@ export function createRouter(init: RouterInit): Router {
   // Config driven behavior flags
   let future: FutureConfig = {
     v7_fetcherPersist: false,
-    v7_normalizeFormMethod: false,
     v7_partialHydration: false,
     v7_prependBasename: false,
     unstable_skipActionErrorRevalidation: false,
@@ -1373,7 +1369,6 @@ export function createRouter(init: RouterInit): Router {
       opts?.relative
     );
     let { path, submission, error } = normalizeNavigateOptions(
-      future.v7_normalizeFormMethod,
       false,
       normalizedPath,
       opts
@@ -2180,7 +2175,6 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let { path, submission, error } = normalizeNavigateOptions(
-      future.v7_normalizeFormMethod,
       true,
       normalizedPath,
       opts
@@ -3668,7 +3662,7 @@ export function createStaticHandler(
     );
 
     try {
-      if (isMutationMethod(request.method.toLowerCase())) {
+      if (isMutationMethod(request.method)) {
         let result = await submit(
           request,
           matches,
@@ -4140,7 +4134,6 @@ function normalizeTo(
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
-  normalizeFormMethod: boolean,
   isFetcher: boolean,
   path: string,
   opts?: BaseNavigateOrFetchOptions
@@ -4168,9 +4161,7 @@ function normalizeNavigateOptions(
 
   // Create a Submission on non-GET navigations
   let rawFormMethod = opts.formMethod || "get";
-  let formMethod = normalizeFormMethod
-    ? (rawFormMethod.toUpperCase() as V7_FormMethod)
-    : (rawFormMethod.toLowerCase() as FormMethod);
+  let formMethod = rawFormMethod.toUpperCase() as FormMethod;
   let formAction = stripHashFromPath(path);
 
   if (opts.body !== undefined) {
@@ -5501,14 +5492,12 @@ function isRedirectResponse(result: any): result is Response {
   return status >= 300 && status <= 399 && location != null;
 }
 
-function isValidMethod(method: string): method is FormMethod | V7_FormMethod {
-  return validRequestMethods.has(method.toLowerCase() as FormMethod);
+function isValidMethod(method: string): method is FormMethod {
+  return validRequestMethods.has(method.toUpperCase() as FormMethod);
 }
 
-function isMutationMethod(
-  method: string
-): method is MutationFormMethod | V7_MutationFormMethod {
-  return validMutationMethods.has(method.toLowerCase() as MutationFormMethod);
+function isMutationMethod(method: string): method is MutationFormMethod {
+  return validMutationMethods.has(method.toUpperCase() as MutationFormMethod);
 }
 
 async function resolveDeferredResults(

@@ -82,18 +82,11 @@ export type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 export type HTMLFormMethod = LowerCaseFormMethod | UpperCaseFormMethod;
 
 /**
- * Active navigation/fetcher form methods are exposed in lowercase on the
- * RouterState
+ * Active navigation/fetcher form methods are exposed in uppercase on the
+ * RouterState. This is to align with the normalization done via fetch().
  */
-export type FormMethod = LowerCaseFormMethod;
-export type MutationFormMethod = Exclude<FormMethod, "get">;
-
-/**
- * In v7, active navigation/fetcher form methods are exposed in uppercase on the
- * RouterState.  This is to align with the normalization done via fetch().
- */
-export type V7_FormMethod = UpperCaseFormMethod;
-export type V7_MutationFormMethod = Exclude<V7_FormMethod, "GET">;
+export type FormMethod = UpperCaseFormMethod;
+export type MutationFormMethod = Exclude<FormMethod, "GET">;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
@@ -116,7 +109,7 @@ type JsonValue = JsonPrimitive | JsonObject | JsonArray;
  */
 export type Submission =
   | {
-      formMethod: FormMethod | V7_FormMethod;
+      formMethod: FormMethod;
       formAction: string;
       formEncType: FormEncType;
       formData: FormData;
@@ -124,7 +117,7 @@ export type Submission =
       text: undefined;
     }
   | {
-      formMethod: FormMethod | V7_FormMethod;
+      formMethod: FormMethod;
       formAction: string;
       formEncType: FormEncType;
       formData: undefined;
@@ -132,7 +125,7 @@ export type Submission =
       text: undefined;
     }
   | {
-      formMethod: FormMethod | V7_FormMethod;
+      formMethod: FormMethod;
       formAction: string;
       formEncType: FormEncType;
       formData: undefined;
