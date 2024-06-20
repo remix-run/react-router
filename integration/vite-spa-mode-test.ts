@@ -871,6 +871,118 @@ test.describe("SPA Mode", () => {
         expect(await app.getHtml("#child-data")).toContain("Child Loader");
       });
 
+      test("Allows users to combine file-based SSR routes with HydratedRouter routes", async ({
+        page,
+      }) => {
+        fixture = await createFixture({
+          files: {
+            "vite.config.ts": js`
+              import { defineConfig } from "vite";
+              import { vitePlugin as reactRouter } from "@react-router/dev";
+              export default defineConfig({
+                plugins: [
+                  reactRouter()
+                ],
+              });
+            `,
+            "app/root.tsx": js`
+              import {
+                Meta,
+                Links,
+                Outlet,
+                Routes,
+                Route,
+                Scripts,
+                ScrollRestoration,
+              } from "react-router";
+              export function Layout({ children }: { children: React.ReactNode }) {
+                return (
+                  <html>
+                    <head>
+                      <Meta />
+                      <Links />
+                    </head>
+                    <body>
+                      {children}
+                      <ScrollRestoration />
+                      <Scripts />
+                    </body>
+                  </html>
+                );
+              }
+              export default function Root() {
+                return <Outlet />;
+              }
+            `,
+            "app/entry.client.tsx": js`
+              import { Link, HydratedRouter, Outlet, useLoaderData } from "react-router";
+              import { startTransition, StrictMode } from "react";
+              import { hydrateRoot } from "react-dom/client";
+              const routes = [{
+                path: '/parent',
+                loader() {
+                  return "Parent Loader";
+                },
+                Component() {
+                  let data = useLoaderData();
+                  return (
+                    <>
+                      <p id="parent-data">{data}</p>
+                      <Outlet />
+                    </>
+                  );
+                },
+                children: [{
+                  path: 'child',
+                  loader() {
+                    return "Child Loader";
+                  },
+                  Component() {
+                    let data = useLoaderData();
+                    return <p id="child-data">{data}</p>;
+                  },
+                }]
+              }];
+              startTransition(() => {
+                hydrateRoot(
+                  document,
+                  <StrictMode>
+                    <HydratedRouter routes={routes} />
+                  </StrictMode>
+                );
+              });
+            `,
+            "app/routes/_index.tsx": js`
+              import { Link, useLoaderData } from "react-router";
+              export function loader() {
+                return "Index Server Loader";
+              }
+              export default function Component() {
+                let data = useLoaderData();
+                return (
+                  <>
+                    <Link to="/parent/child">Go to /parent/child</Link>
+                    <p id="index-data">{data}</p>
+                  </>
+                );
+              }
+            `,
+          },
+        });
+        appFixture = await createAppFixture(fixture);
+        let app = new PlaywrightFixture(appFixture, page);
+        await app.goto("/");
+        await page.waitForSelector("#index-data");
+        expect(await app.getHtml("#index-data")).toContain(
+          "Index Server Loader"
+        );
+
+        await app.clickLink("/parent/child");
+        await page.waitForSelector("#child-data");
+        expect(await app.getHtml("#parent-data")).toContain("Parent Loader");
+        expect(await app.getHtml("#child-data")).toContain("Child Loader");
+      });
+
       test("Throws an error if users provide duplicate index routes", async ({
         page,
       }) => {
