@@ -2,14 +2,14 @@ import { prettyDOM, render, screen } from "@testing-library/react";
 import user from "@testing-library/user-event";
 import * as React from "react";
 
-import { Meta, Outlet, createRemixStub } from "../../../index";
+import { Meta, Outlet, createRoutesStub } from "../../../index";
 
 const getHtml = (c: HTMLElement) =>
   prettyDOM(c, undefined, { highlight: false });
 
 describe("meta", () => {
   it("no meta export renders meta from nearest route meta in the tree", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         id: "root",
         path: "/",
@@ -37,7 +37,7 @@ describe("meta", () => {
     ]);
 
     let { container } = render(
-      <RemixStub
+      <RoutesStub
         hydrationData={{
           loaderData: {
             root: {
@@ -66,7 +66,7 @@ describe("meta", () => {
   });
 
   it("empty meta array does not render a tag", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         meta: () => [],
@@ -81,7 +81,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -93,7 +93,7 @@ describe("meta", () => {
   });
 
   it("meta from `matches` renders meta tags", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         id: "root",
         path: "/",
@@ -123,7 +123,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -141,7 +141,7 @@ describe("meta", () => {
   });
 
   it("{ charSet } adds a <meta charset='utf-8' />", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         meta: () => [{ charSet: "utf-8" }],
@@ -149,7 +149,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -161,7 +161,7 @@ describe("meta", () => {
   });
 
   it("{ title } adds a <title />", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         meta: () => [{ title: "Document Title" }],
@@ -169,7 +169,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -181,7 +181,7 @@ describe("meta", () => {
   });
 
   it("{ property: 'og:*', content: '*' } adds a <meta property='og:*' />", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         meta: () => [
@@ -192,7 +192,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <meta
@@ -221,7 +221,7 @@ describe("meta", () => {
       email: ["sonnyday@fancymail.com", "surfergal@veryprofessional.org"],
     };
 
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         meta: () => [
@@ -233,7 +233,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
 
     // For some reason, prettyDOM strips the script tag (maybe because of
     // dangerouslySetInnerHTML), so we just parse the HTML out into JSON and assert that way
@@ -244,7 +244,7 @@ describe("meta", () => {
   });
 
   it("{ tagName: 'link' } adds a <link />", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         meta: () => [
@@ -258,7 +258,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
         <link
@@ -270,7 +270,7 @@ describe("meta", () => {
   });
 
   it("does not mutate meta when using tagName", async () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         meta: ({ data }) => data?.meta,
@@ -297,7 +297,7 @@ describe("meta", () => {
       },
     ]);
 
-    let { container } = render(<RemixStub />);
+    let { container } = render(<RoutesStub />);
 
     await screen.findByText("Increment 0");
     expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -329,7 +329,7 @@ describe("meta", () => {
   });
 
   it("loader errors are passed to meta", () => {
-    let RemixStub = createRemixStub([
+    let RoutesStub = createRoutesStub([
       {
         path: "/",
         Component() {
@@ -361,7 +361,7 @@ describe("meta", () => {
     ]);
 
     let { container } = render(
-      <RemixStub hydrationData={{ errors: { index: new Error("Oh no!") } }} />
+      <RoutesStub hydrationData={{ errors: { index: new Error("Oh no!") } }} />
     );
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
