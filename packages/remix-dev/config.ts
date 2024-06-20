@@ -487,17 +487,7 @@ export async function resolveEntryFiles({
   let pkgJson = await PackageJson.load(rootDirectory);
   let deps = pkgJson.content.dependencies ?? {};
 
-  if (!reactRouterConfig.ssr) {
-    // This is a super-simple default since we don't need streaming in SPA Mode.
-    // We can include this in a remix-spa template, but right now `npx remix reveal`
-    // will still expose the streaming template since that command doesn't have
-    // access to the `ssr:false` flag in the vite config (the streaming template
-    // works just fine so maybe instead of having this we _only have this version
-    // in the template...).  We let users manage an entry.server file in SPA Mode
-    // so they can de ide if they want to hydrate the full document or just an
-    // embedded `<div id="app">` or whatever.
-    entryServerFile = "entry.server.spa.tsx";
-  } else if (userEntryServerFile) {
+  if (userEntryServerFile) {
     entryServerFile = userEntryServerFile;
   } else {
     if (!deps["@react-router/node"]) {
