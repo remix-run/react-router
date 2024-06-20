@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/entry.server.tsx": js`
         import * as React from "react";
-        import { RemixServer } from "react-router-dom";
+        import { ServerRouter } from "react-router-dom";
         import { renderToString } from "react-dom/server";
 
         export default function handleRequest(
@@ -26,7 +26,7 @@ test.beforeAll(async () => {
           remixContext
         ) {
           let markup = renderToString(
-            <RemixServer context={remixContext} url={request.url} />
+            <ServerRouter context={remixContext} url={request.url} />
           );
           responseHeaders.set("Content-Type", "text/html");
           responseHeaders.set("x-custom-header", "custom-value");
