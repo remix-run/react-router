@@ -1,8 +1,12 @@
 import type { ReactNode } from "react";
 
-import type { MetaDescriptor, MetaMatch } from "../dom/ssr/routeModules";
+import type {
+  MetaDescriptor,
+  MetaMatch as _MetaMatch,
+} from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../dom/ssr/links";
 import type { Location } from "./history";
+import type { UIMatch } from "./utils";
 
 // TODO: allow widest type (branded type: NOT_SET)
 
@@ -150,7 +154,7 @@ type Route<
       ClientLoaderHydrate,
       HydrateFallback
     >;
-    matches?: Array<MetaMatch>;
+    matches?: Array<_MetaMatch>;
   }) => MetaDescriptor[];
 
   Component?: (args: {
@@ -237,6 +241,30 @@ export function defineRootRoute<
 ): T {
   return route;
 }
+
+type LoaderDataFromRoute<R> = R extends Route<
+  any,
+  infer ServerLoaderData,
+  infer ClientLoaderData,
+  infer ClientLoaderHydrate,
+  infer HydrateFallback,
+  any,
+  any
+>
+  ? LoaderData<
+      ServerLoaderData,
+      ClientLoaderData,
+      ClientLoaderHydrate,
+      HydrateFallback
+    >
+  : never;
+
+export type MetaMatch<R extends Route<any, any, any, any, any, any, any>> =
+  _MetaMatch<string, LoaderDataFromRoute<R>>;
+
+export type Match<R extends Route<any, any, any, any, any, any, any>> = Pretty<
+  UIMatch<LoaderDataFromRoute<R>>
+>;
 
 // === TESTS ===
 
