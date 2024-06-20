@@ -97,6 +97,7 @@ type LoaderData<
 
 // prettier-ignore
 type ActionData<ServerActionData, ClientActionData> = Awaited<
+  [IsDefined<ServerActionData>, IsDefined<ClientActionData>] extends [true, true] ? ServerActionData | ClientActionData :
   IsDefined<ClientActionData> extends true ? ClientActionData :
   IsDefined<ServerActionData> extends true ? ServerActionData :
   undefined
@@ -500,11 +501,11 @@ defineRoute({
     return 2;
   },
   Component({ actionData }) {
-    expectEqual<typeof actionData, 2 | undefined>(true);
+    expectEqual<typeof actionData, 1 | 2 | undefined>(true);
     return null;
   },
   ErrorBoundary({ actionData }) {
-    expectEqual<typeof actionData, 2 | undefined>(true);
+    expectEqual<typeof actionData, 1 | 2 | undefined>(true);
     return null;
   },
 });
