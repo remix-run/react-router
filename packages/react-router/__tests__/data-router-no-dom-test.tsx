@@ -4,7 +4,7 @@
 
 import * as React from "react";
 import renderer from "react-test-renderer";
-import { RouterProvider } from "../lib/dom/lib";
+import { RouterProvider, useFetcher } from "../lib/dom/lib";
 import { createMemoryRouter } from "../lib/components";
 import { useLoaderData, useNavigate } from "../lib/hooks";
 
@@ -178,5 +178,113 @@ describe("RouterProvider works when no DOM APIs are available", () => {
     expect(spy.mock.calls[1][1].unstable_flushSync).toBe(false);
 
     unsubscribe();
+  });
+
+  it("supports fetcher loads", async () => {
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => {
+          let fetcher = useFetcher();
+          return (
+            <button onClick={() => fetcher.load("/fetch")}>
+              Load fetcher
+              {fetcher.data || ""}
+            </button>
+          );
+        },
+      },
+      {
+        path: "/fetch",
+        loader() {
+          return "LOADER";
+        },
+      },
+    ]);
+    const component = renderer.create(<RouterProvider router={router} />);
+    let tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <button
+        onClick={[Function]}
+      >
+        Load fetcher
+      </button>
+    `);
+
+    await renderer.act(async () => {
+      // @ts-expect-error
+      tree.props.onClick();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <button
+        onClick={[Function]}
+      >
+        Load fetcher
+        LOADER
+      </button>
+    `);
+  });
+
+  it("supports fetcher submissions", async () => {
+    let router = createMemoryRouter([
+      {
+        path: "/",
+        Component: () => {
+          let fetcher = useFetcher();
+          return (
+            <button
+              onClick={() =>
+                fetcher.submit(
+                  { message: "echo" },
+                  {
+                    method: "post",
+                    action: "/fetch",
+                    encType: "application/json",
+                  }
+                )
+              }
+            >
+              Submit fetcher
+              {fetcher.data?.message || ""}
+            </button>
+          );
+        },
+      },
+      {
+        path: "/fetch",
+        async action({ request }) {
+          let data = await request.json();
+          return { message: data.message.toUpperCase() };
+        },
+      },
+    ]);
+    const component = renderer.create(<RouterProvider router={router} />);
+    let tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <button
+        onClick={[Function]}
+      >
+        Submit fetcher
+      </button>
+    `);
+
+    await renderer.act(async () => {
+      // @ts-expect-error
+      tree.props.onClick();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+
+    tree = component.toJSON();
+    expect(tree).toMatchInlineSnapshot(`
+      <button
+        onClick={[Function]}
+      >
+        Submit fetcher
+        ECHO
+      </button>
+    `);
   });
 });

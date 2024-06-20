@@ -1173,7 +1173,7 @@ export interface NavLinkProps
 
 /**
   Wraps {@link Link | `<Link>`} with additional props for styling active and pending states.
-  
+
   - Automatically applies classes to the link based on its active and pending states, see {@link NavLinkProps.className}.
   - Automatically applies `aria-current="page"` to the link when the link is active. See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current) on MDN.
 
@@ -1910,15 +1910,6 @@ export interface FetcherSubmitFunction {
   ): Promise<void>;
 }
 
-function validateClientSideSubmission() {
-  if (typeof document === "undefined") {
-    throw new Error(
-      "You are calling submit during the server render. " +
-        "Try calling submit within a `useEffect` or callback instead."
-    );
-  }
-}
-
 let fetcherId = 0;
 let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 
@@ -1949,8 +1940,6 @@ export function useSubmit(): SubmitFunction {
 
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
-      validateClientSideSubmission();
-
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
         basename
@@ -2132,7 +2121,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
 
   /**
     Loads data from a route. Useful for loading data imperatively inside of user events outside of a normal button or form, like a combobox or search input.
-      
+
     ```tsx
     let fetcher = useFetcher()
 
@@ -2159,7 +2148,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
 
 /**
   Useful for creating complex, dynamic user interfaces that require multiple, concurrent data interactions without causing a navigation.
-  
+
   Fetchers track their own, independent state and can be used to load data, submit forms, and generally interact with loaders and actions.
 
   ```tsx

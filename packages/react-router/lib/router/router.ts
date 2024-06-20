@@ -789,7 +789,6 @@ export function createRouter(init: RouterInit): Router {
     typeof routerWindow !== "undefined" &&
     typeof routerWindow.document !== "undefined" &&
     typeof routerWindow.document.createElement !== "undefined";
-  const isServer = !isBrowser;
 
   invariant(
     init.routes.length > 0,
@@ -1973,14 +1972,6 @@ export function createRouter(init: RouterInit): Router {
     href: string | null,
     opts?: RouterFetchOptions
   ) {
-    if (isServer) {
-      throw new Error(
-        "router.fetch() was called during the server render, but it shouldn't be. " +
-          "You are likely calling a useFetcher() method in the body of your component. " +
-          "Try moving it to a useEffect or a callback."
-      );
-    }
-
     if (fetchControllers.has(key)) abortFetcher(key);
     let flushSync = (opts && opts.unstable_flushSync) === true;
 
