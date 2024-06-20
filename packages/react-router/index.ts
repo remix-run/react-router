@@ -345,8 +345,8 @@ export type {
 } from "./lib/dom/ssr/routeModules";
 export type { ServerRouterProps } from "./lib/dom/ssr/server";
 export { ServerRouter } from "./lib/dom/ssr/server";
-export type { RemixStubProps } from "./lib/dom/ssr/create-remix-stub";
-export { createRemixStub } from "./lib/dom/ssr/create-remix-stub";
+export type { RoutesTestStubProps } from "./lib/dom/ssr/routes-test-stub";
+export { createRoutesStub } from "./lib/dom/ssr/routes-test-stub";
 export { defineRoute } from "./lib/router/define-route";
 
 ///////////////////////////////////////////////////////////////////////////////
