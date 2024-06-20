@@ -19,7 +19,6 @@ export type {
   unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
-  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,

@@ -255,11 +255,7 @@ export function HydratedRouter() {
         }}
       >
         <RemixErrorBoundary location={location}>
-          <RouterProvider
-            router={router}
-            fallbackElement={null}
-            future={{ v7_startTransition: true }}
-          />
+          <RouterProvider router={router} fallbackElement={null} />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>
       {/*

@@ -47,16 +47,11 @@ import {
   useOutlet,
   useRoutes,
 } from "./hooks";
-import { startTransitionSafe } from "./dom/lib";
 import { getResolveToMatches } from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
 const ENABLE_DEV_WARNINGS = true;
-
-export interface FutureConfig {
-  v7_startTransition: boolean;
-}
 
 /**
  * @private
@@ -166,7 +161,6 @@ export interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -179,7 +173,6 @@ export function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
-  future,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -195,14 +188,11 @@ export function MemoryRouter({
     action: history.action,
     location: history.location,
   });
-  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      v7_startTransition
-        ? startTransitionSafe(() => setStateImpl(newState))
-        : setStateImpl(newState);
+      React.startTransition(() => setStateImpl(newState));
     },
-    [setStateImpl, v7_startTransition]
+    [setStateImpl]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -214,7 +204,6 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      future={future}
     />
   );
 }
@@ -251,7 +240,7 @@ export function Navigate({
     `<Navigate> may be used only in the context of a <Router> component.`
   );
 
-  let { future, static: isStatic } = React.useContext(NavigationContext);
+  let { static: isStatic } = React.useContext(NavigationContext);
 
   warning(
     !isStatic,
@@ -398,7 +387,6 @@ export interface RouterProps {
   navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
-  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -417,7 +405,6 @@ export function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
-  future,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
@@ -433,11 +420,9 @@ export function Router({
       basename,
       navigator,
       static: staticProp,
-      future: {
-        ...future,
-      },
+      future: {},
     }),
-    [basename, future, navigator, staticProp]
+    [basename, navigator, staticProp]
   );
 
   if (typeof locationProp === "string") {

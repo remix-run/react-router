@@ -1,5 +1,5 @@
 /* eslint-disable jest/valid-title */
-import type { FutureConfig, HydrationState } from "../../lib/router";
+import type { HydrationState } from "../../lib/router";
 import {
   createMemoryHistory,
   createRouter,
@@ -19,7 +19,6 @@ import { createFormData, tick } from "./utils/utils";
 function initializeTest(init?: {
   url?: string;
   hydrationData?: HydrationState;
-  future?: Partial<FutureConfig>;
 }) {
   return setup({
     routes: [

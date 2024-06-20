@@ -7,7 +7,6 @@ import type {
   InitialEntry,
   Router,
   RouterNavigateOptions,
-  FutureConfig,
 } from "../../../lib/router";
 import {
   createMemoryHistory,
@@ -143,7 +142,6 @@ type SetupOpts = {
   initialIndex?: number;
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
-  future?: Partial<FutureConfig>;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
