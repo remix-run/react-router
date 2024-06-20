@@ -1,4 +1,11 @@
 import * as React from "react";
+
+// TODO: This static import doesn't allow us to work quite right in a pure-react
+// app that doesn't even have react-dom as a dependency.  Let's look into using
+// an export map for `react-router/dom   that would provide the `flushSync` method
+// to the memory `<RouterProvider>` via a prop.  And then
+// `import { RouterProvider } from 'react-router/memory'` // memory use case
+// `import { RouterProvider } from 'react-router/dom'` // DOM use case
 import * as ReactDOM from "react-dom";
 import type {
   BrowserHistory,
@@ -53,7 +60,7 @@ import {
   usePrefetchBehavior,
 } from "./ssr/components";
 import type {
-  RouterProviderProps,
+  FutureConfig,
   FutureConfig as RenderFutureConfig,
 } from "../components";
 import { Router, mapRouteProperties } from "../components";
@@ -290,7 +297,7 @@ const flushSyncImpl = ReactDOM[FLUSH_SYNC];
 const USE_ID = "useId";
 const useIdImpl = React[USE_ID];
 
-function startTransitionSafe(cb: () => void) {
+export function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
     startTransitionImpl(cb);
   } else {
@@ -336,6 +343,14 @@ class Deferred<T> {
       };
     });
   }
+}
+
+export interface RouterProviderProps {
+  fallbackElement?: React.ReactNode;
+  router: RemixRouter;
+  // Only accept future flags relevant to rendering behavior
+  // routing flags should be accessed via router.future
+  future?: Partial<Pick<FutureConfig, "v7_startTransition">>;
 }
 
 /**
@@ -1158,7 +1173,7 @@ export interface NavLinkProps
 
 /**
   Wraps {@link Link | `<Link>`} with additional props for styling active and pending states.
-  
+
   - Automatically applies classes to the link based on its active and pending states, see {@link NavLinkProps.className}.
   - Automatically applies `aria-current="page"` to the link when the link is active. See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current) on MDN.
 
@@ -1895,15 +1910,6 @@ export interface FetcherSubmitFunction {
   ): Promise<void>;
 }
 
-function validateClientSideSubmission() {
-  if (typeof document === "undefined") {
-    throw new Error(
-      "You are calling submit during the server render. " +
-        "Try calling submit within a `useEffect` or callback instead."
-    );
-  }
-}
-
 let fetcherId = 0;
 let getUniqueFetcherId = () => `__${String(++fetcherId)}__`;
 
@@ -1934,8 +1940,6 @@ export function useSubmit(): SubmitFunction {
 
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
-      validateClientSideSubmission();
-
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
         basename
@@ -2117,7 +2121,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
 
   /**
     Loads data from a route. Useful for loading data imperatively inside of user events outside of a normal button or form, like a combobox or search input.
-      
+
     ```tsx
     let fetcher = useFetcher()
 
@@ -2144,7 +2148,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
 
 /**
   Useful for creating complex, dynamic user interfaces that require multiple, concurrent data interactions without causing a navigation.
-  
+
   Fetchers track their own, independent state and can be used to load data, submit forms, and generally interact with loaders and actions.
 
   ```tsx

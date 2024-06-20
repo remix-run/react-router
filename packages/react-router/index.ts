@@ -57,7 +57,6 @@ import type {
   PathRouteProps,
   RouteProps,
   RouterProps,
-  RouterProviderProps,
   RoutesProps,
 } from "./lib/components";
 import {
@@ -67,7 +66,6 @@ import {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createRoutesFromChildren,
   renderMatches,
@@ -168,7 +166,6 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
-  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
@@ -188,7 +185,6 @@ export {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createMemoryRouter,
   createPath,
@@ -279,6 +275,7 @@ export type {
   SubmitFunction,
   FetcherSubmitFunction,
   FetcherWithComponents,
+  RouterProviderProps,
 } from "./lib/dom/lib";
 export {
   createBrowserRouter,
@@ -293,6 +290,7 @@ export {
   unstable_HistoryRouter,
   NavLink,
   Form,
+  RouterProvider,
   ScrollRestoration,
   useLinkClickHandler,
   useSearchParams,

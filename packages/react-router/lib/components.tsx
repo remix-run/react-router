@@ -7,8 +7,6 @@ import type {
   MemoryHistory,
   RelativeRoutingType,
   Router as RemixRouter,
-  RouterState,
-  RouterSubscriber,
   To,
   TrackedPromise,
   unstable_DataStrategyFunction,
@@ -28,7 +26,6 @@ import {
 import * as React from "react";
 
 import type {
-  DataRouteObject,
   IndexRouteObject,
   Navigator,
   NonIndexRouteObject,
@@ -37,8 +34,6 @@ import type {
 } from "./context";
 import {
   AwaitContext,
-  DataRouterContext,
-  DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -51,8 +46,8 @@ import {
   useNavigate,
   useOutlet,
   useRoutes,
-  useRoutesImpl,
 } from "./hooks";
+import { startTransitionSafe } from "./dom/lib";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -161,158 +156,6 @@ export function createMemoryRouter(
 /**
  * @category Types
  */
-export interface RouterProviderProps {
-  fallbackElement?: React.ReactNode;
-  router: RemixRouter;
-  // Only accept future flags relevant to rendering behavior
-  // routing flags should be accessed via router.future
-  future?: Partial<Pick<FutureConfig, "v7_startTransition">>;
-}
-
-/**
-  Webpack + React 17 fails to compile on any of the following because webpack
-  complains that `startTransition` doesn't exist in `React`:
-  * import { startTransition } from "react"
-  * import * as React from from "react";
-    "startTransition" in React ? React.startTransition(() => setState()) : setState()
-  * import * as React from from "react";
-    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
-
-  Moving it to a constant such as the following solves the Webpack/React 17 issue:
-  * import * as React from from "react";
-    const START_TRANSITION = "startTransition";
-    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
-
-  However, that introduces webpack/terser minification issues in production builds
-  in React 18 where minification/obfuscation ends up removing the call of
-  React.startTransition entirely from the first half of the ternary.  Grabbing
-  this exported reference once up front resolves that issue.
-
-  See https://github.com/remix-run/react-router/issues/10579
-*/
-const START_TRANSITION = "startTransition";
-const startTransitionImpl = React[START_TRANSITION];
-
-/**
- * Given a Remix Router instance, render the appropriate UI
- *
- * @category Router Components
- */
-export function RouterProvider({
-  fallbackElement,
-  router,
-  future,
-}: RouterProviderProps): React.ReactElement {
-  let [state, setStateImpl] = React.useState(router.state);
-  let { v7_startTransition } = future || {};
-
-  let setState = React.useCallback<RouterSubscriber>(
-    (newState: RouterState) => {
-      if (v7_startTransition && startTransitionImpl) {
-        startTransitionImpl(() => setStateImpl(newState));
-      } else {
-        setStateImpl(newState);
-      }
-    },
-    [setStateImpl, v7_startTransition]
-  );
-
-  // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
-  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
-
-  React.useEffect(() => {
-    warning(
-      fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using " +
-        "`v7_partialHydration`, use a `HydrateFallback` component instead"
-    );
-    // Only log this once on initial mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      encodeLocation: router.encodeLocation,
-      go: (n) => router.navigate(n),
-      push: (to, state, opts) =>
-        router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-      replace: (to, state, opts) =>
-        router.navigate(to, {
-          replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-    };
-  }, [router]);
-
-  let basename = router.basename || "/";
-
-  let dataRouterContext = React.useMemo(
-    () => ({
-      router,
-      navigator,
-      static: false,
-      basename,
-    }),
-    [router, navigator, basename]
-  );
-
-  // The fragment and {null} here are important!  We need them to keep React 18's
-  // useId happy when we are server-rendering since we may have a <script> here
-  // containing the hydrated server-side staticContext (from StaticRouterProvider).
-  // useId relies on the component tree structure to generate deterministic id's
-  // so we need to ensure it remains the same on the client even though
-  // we don't need the <script> tag
-  return (
-    <>
-      <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <Router
-            basename={basename}
-            location={state.location}
-            navigationType={state.historyAction}
-            navigator={navigator}
-            future={{
-              v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-            }}
-          >
-            {state.initialized || router.future.v7_partialHydration ? (
-              <DataRoutes
-                routes={router.routes}
-                future={router.future}
-                state={state}
-              />
-            ) : (
-              fallbackElement
-            )}
-          </Router>
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>
-      {null}
-    </>
-  );
-}
-
-function DataRoutes({
-  routes,
-  future,
-  state,
-}: {
-  routes: DataRouteObject[];
-  future: RemixRouter["future"];
-  state: RouterState;
-}): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, future);
-}
-
-/**
- * @category Types
- */
 export interface MemoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -350,8 +193,8 @@ export function MemoryRouter({
   let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
+      v7_startTransition
+        ? startTransitionSafe(() => setStateImpl(newState))
         : setStateImpl(newState);
     },
     [setStateImpl, v7_startTransition]
