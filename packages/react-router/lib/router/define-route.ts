@@ -6,7 +6,8 @@ import type { Location } from "./history";
 
 // TODO: allow widest type (branded type: NOT_SET)
 
-interface Context {} // TODO: AppLoadContext
+// TODO: replace `Context` with `AppLoadContext` once `react-router` absorbs `server-runtime` (https://github.com/remix-run/react-router/pull/11669)
+interface Context {}
 
 type MaybePromise<T> = T | Promise<T>;
 type Pretty<T> = { [K in keyof T]: T[K] } & {};
