@@ -606,7 +606,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
 
     let { container } = render(
       <React.StrictMode>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        <RouterProvider router={router} />
       </React.StrictMode>
     );
 
@@ -673,7 +673,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
 
     let { container } = render(
       <React.StrictMode>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        <RouterProvider router={router} />
       </React.StrictMode>
     );
 
@@ -746,7 +746,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
 
     let { container } = render(
       <React.StrictMode>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        <RouterProvider router={router} />
       </React.StrictMode>
     );
 
@@ -821,7 +821,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
 
     let { container } = render(
       <React.StrictMode>
-        <RouterProvider router={router} future={{ v7_startTransition: true }} />
+        <RouterProvider router={router} />
       </React.StrictMode>
     );
 
