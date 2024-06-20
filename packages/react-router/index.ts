@@ -347,6 +347,7 @@ export type { ServerRouterProps } from "./lib/dom/ssr/server";
 export { ServerRouter } from "./lib/dom/ssr/server";
 export type { RemixStubProps } from "./lib/dom/ssr/create-remix-stub";
 export { createRemixStub } from "./lib/dom/ssr/create-remix-stub";
+export { defineRoute } from "./lib/router/define-route";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
@@ -403,5 +404,3 @@ export {
   decodeViaTurboStream as UNSAFE_decodeViaTurboStream,
   SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
 } from "./lib/dom/ssr/single-fetch";
-
-export { defineRoute } from "./lib/router/define-route";
