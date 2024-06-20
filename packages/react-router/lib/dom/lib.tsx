@@ -607,9 +607,6 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
-                future={{
-                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-                }}
               >
                 {state.initialized || router.future.v7_partialHydration ? (
                   <DataRoutes
@@ -1022,6 +1019,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     }
 
     // Rendered into <a href> for relative URLs
+    debugger;
     let href = useHref(to, { relative });
     let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
       prefetch,

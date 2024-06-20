@@ -57,7 +57,6 @@ function derive(build: ServerBuild, mode?: string) {
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
     future: {
-      v7_relativeSplatPath: build.future?.v3_relativeSplatPath === true,
       v7_throwAbortReason: build.future?.v3_throwAbortReason === true,
     },
   });

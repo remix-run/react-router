@@ -121,9 +121,7 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
-  future: {
-    v7_relativeSplatPath: boolean;
-  };
+  future: {};
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(

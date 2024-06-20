@@ -166,7 +166,6 @@ function createHydratedRouter(): RemixRouter {
       v7_fetcherPersist: ssrInfo.context.future.v3_fetcherPersist,
       v7_partialHydration: true,
       v7_prependBasename: true,
-      v7_relativeSplatPath: ssrInfo.context.future.v3_relativeSplatPath,
       // Single fetch enables this underlying behavior
       unstable_skipActionErrorRevalidation: true,
     },

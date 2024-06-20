@@ -138,7 +138,7 @@ describe("path resolution", () => {
             path: "*",
           },
         ],
-        "/foo",
+        "/foo/bar",
         false
       );
     });
