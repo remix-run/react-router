@@ -5,10 +5,10 @@ module.exports = function rollup(options) {
   return [
     "react-router",
     "react-router-dom",
-    "remix-dev",
-    "remix-express",
-    "remix-node",
-    "remix-serve",
+    "react-router-dev",
+    "react-router-express",
+    "react-router-node",
+    "react-router-serve",
   ]
     .flatMap((dir) => {
       let configPath = path.join("packages", dir, "rollup.config.js");

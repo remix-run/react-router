@@ -14,7 +14,7 @@ export interface RouteManifest<Route> {
 
 export type ServerRouteManifest = RouteManifest<Omit<ServerRoute, "children">>;
 
-// NOTE: make sure to change the Route in remix-react/remix-dev if you change this
+// NOTE: make sure to change the Route in remix-react/react-router-dev if you change this
 export interface Route {
   index?: boolean;
   caseSensitive?: boolean;
@@ -23,7 +23,7 @@ export interface Route {
   path?: string;
 }
 
-// NOTE: make sure to change the EntryRoute in remix-react/remix-dev if you change this
+// NOTE: make sure to change the EntryRoute in react-router/react-router-dev if you change this
 export interface EntryRoute extends Route {
   hasAction: boolean;
   hasLoader: boolean;

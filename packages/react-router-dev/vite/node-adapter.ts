@@ -30,7 +30,7 @@ function fromNodeHeaders(nodeHeaders: IncomingHttpHeaders): Headers {
   return headers;
 }
 
-// Based on `createRemixRequest` in packages/remix-express/server.ts
+// Based on `createRemixRequest` in packages/react-router-express/server.ts
 export function fromNodeRequest(
   nodeReq: Vite.Connect.IncomingMessage
 ): Request {

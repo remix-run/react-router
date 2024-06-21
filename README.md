@@ -21,10 +21,10 @@ There are many different ways to contribute to React Router's development. If yo
 
 This repository is a monorepo containing the following packages:
 
-- [`@react-router/dev`](/packages/remix-dev)
-- [`@react-router/express`](/packages/remix-express)
-- [`@react-router/node`](/packages/remix-node)
-- [`@react-router/serve`](/packages/remix-serve)
+- [`@react-router/dev`](/packages/react-router-dev)
+- [`@react-router/express`](/packages/react-router-express)
+- [`@react-router/node`](/packages/react-router-node)
+- [`@react-router/serve`](/packages/react-router-serve)
 - [`react-router`](/packages/react-router)
 - [`react-router-dom`](/packages/react-router-dom)
 
