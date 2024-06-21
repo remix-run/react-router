@@ -18,7 +18,7 @@ import {
   decodeViaTurboStream,
   getSingleFetchDataStrategy,
 } from "./single-fetch";
-import { RemixContext } from "./components";
+import { FrameworkContext } from "./components";
 import { RemixErrorBoundary } from "./errorBoundaries";
 
 type SSRInfo = {
@@ -246,7 +246,7 @@ export function HydratedRouter() {
     // This fragment is important to ensure we match the <ServerRouter> JSX
     // structure so that useId values hydrate correctly
     <>
-      <RemixContext.Provider
+      <FrameworkContext.Provider
         value={{
           manifest: ssrInfo.manifest,
           routeModules: ssrInfo.routeModules,
@@ -262,7 +262,7 @@ export function HydratedRouter() {
             future={{ v7_startTransition: true }}
           />
         </RemixErrorBoundary>
-      </RemixContext.Provider>
+      </FrameworkContext.Provider>
       {/*
           This fragment is important to ensure we match the <ServerRouter> JSX
           structure so that useId values hydrate correctly

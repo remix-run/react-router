@@ -493,7 +493,7 @@ export {
 };
 
 /** @internal */
-export { RemixContext as UNSAFE_RemixContext } from "./lib/dom/ssr/components";
+export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
 
 /** @internal */
 export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
@@ -502,7 +502,7 @@ export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeMod
 export type {
   FutureConfig as UNSAFE_FutureConfig,
   AssetsManifest as UNSAFE_AssetsManifest,
-  RemixContextObject as UNSAFE_RemixContextObject,
+  FrameworkContextObject as UNSAFE_FrameworkContextObject,
 } from "./lib/dom/ssr/entry";
 
 /** @internal */

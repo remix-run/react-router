@@ -212,7 +212,7 @@ export type {
   UNSAFE_RouteModules,
   UNSAFE_FutureConfig,
   UNSAFE_AssetsManifest,
-  UNSAFE_RemixContextObject,
+  UNSAFE_FrameworkContextObject,
   UNSAFE_EntryRoute,
   UNSAFE_RouteManifest,
   UNSAFE_SingleFetchRedirectResult,
@@ -231,7 +231,7 @@ export {
   UNSAFE_useRouteId,
   UNSAFE_useRoutesImpl,
   UNSAFE_ErrorResponseImpl,
-  UNSAFE_RemixContext,
+  UNSAFE_FrameworkContext as UNSAFE_RemixContext,
   UNSAFE_decodeViaTurboStream,
   UNSAFE_SingleFetchRedirectSymbol,
 } from "react-router";
