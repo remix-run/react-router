@@ -1,6 +1,5 @@
 ---
 title: Using Fetchers
-new: true
 ---
 
 # Using Fetchers
@@ -299,7 +298,7 @@ export function UserSearchCombobox() {
 
 ### 3. Add type inference
 
-```tsx
+```tsx lines=[2,5]
 import { useFetcher } from "react-router";
 import type { Search } from "./search-users";
 
@@ -313,7 +312,7 @@ Ensure you use `import type` so you only import the types.
 
 ### 4. Render the data
 
-```tsx
+```tsx lines=[10-16]
 import { useFetcher } from "react-router";
 
 export function UserSearchCombobox() {
@@ -339,7 +338,7 @@ Note you will need to hit "enter" to submit the form and see the results.
 
 ### 5. Render a pending state
 
-```tsx
+```tsx lines=[12-14]
 import { useFetcher } from "react-router";
 
 export function UserSearchCombobox() {
@@ -369,7 +368,7 @@ export function UserSearchCombobox() {
 
 Fetchers can be submitted programmatically with `fetcher.submit`:
 
-```tsx
+```tsx lines=[5-7]
 <fetcher.Form method="get" action="/search-users">
   <input
     type="text"
