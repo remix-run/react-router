@@ -336,7 +336,7 @@ defineRoute({
 // Loader data: server -> server
 defineRoute({
   serverLoader() {
-    return 1;
+    return 1 as const;
   },
   meta({ loaderData }) {
     expectEqual<typeof loaderData, 1 | undefined>(true);
@@ -355,7 +355,7 @@ defineRoute({
 // Loader data: server + client -> server | client
 defineRoute({
   serverLoader() {
-    return 1;
+    return 1 as const;
   },
   async clientLoader({ serverLoader }) {
     let serverData = await serverLoader();
@@ -379,7 +379,7 @@ defineRoute({
 // Loader data: server + client + hydrate -> server | client
 defineRoute({
   serverLoader() {
-    return 1;
+    return 1 as const;
   },
   async clientLoader({ serverLoader }) {
     let serverData = await serverLoader();
@@ -404,7 +404,7 @@ defineRoute({
 // Loader data: server + client + hydrate + hydratefallback -> client
 defineRoute({
   serverLoader() {
-    return 1;
+    return 1 as const;
   },
   async clientLoader({ serverLoader }) {
     let serverData = await serverLoader();
@@ -491,7 +491,7 @@ defineRoute({
 // Action data: server -> server
 defineRoute({
   serverAction() {
-    return 1;
+    return 1 as const;
   },
   Component({ actionData }) {
     expectEqual<typeof actionData, 1 | undefined>(true);
@@ -522,7 +522,7 @@ defineRoute({
 // Action data: server + client -> client
 defineRoute({
   serverAction() {
-    return 1;
+    return 1 as const;
   },
   clientAction() {
     return 2 as const;
