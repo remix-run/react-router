@@ -354,7 +354,6 @@ export {
 } from "./lib/router/define-route";
 
 // Expose old @remix-run/server-runtime API, minus duplicate APIs
-// Default implementations for the Remix server runtime interface
 export { createCookieFactory, isCookie } from "./lib/server-runtime/cookies";
 export {
   composeUploadHandlers as unstable_composeUploadHandlers,
