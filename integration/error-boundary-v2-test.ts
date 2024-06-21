@@ -19,7 +19,7 @@ test.describe("ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export default function Root() {
             return (
@@ -46,7 +46,7 @@ test.describe("ErrorBoundary", () => {
             isRouteErrorResponse,
             useLoaderData,
             useRouteError,
-          } from "react-router-dom";
+          } from "react-router";
 
           export function loader() {
             return "PARENT LOADER";
@@ -86,7 +86,7 @@ test.describe("ErrorBoundary", () => {
             useLoaderData,
             useLocation,
             useRouteError,
-          } from "react-router-dom";
+          } from "react-router";
 
           export function loader({ request }) {
             let errorType = new URL(request.url).searchParams.get('type');
@@ -115,7 +115,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         "app/routes/parent.child-without-boundary.tsx": js`
-          import { useLoaderData, useLocation } from "react-router-dom";
+          import { useLoaderData, useLocation } from "react-router";
 
           export function loader({ request }) {
             let errorType = new URL(request.url).searchParams.get('type');

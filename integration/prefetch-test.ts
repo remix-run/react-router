@@ -29,7 +29,7 @@ test.describe.skip("multi fetch", () => {
             Outlet,
             Scripts,
             useLoaderData,
-          } from "react-router-dom";
+          } from "react-router";
 
           export default function Root() {
             const styles =
@@ -285,7 +285,7 @@ test.describe.skip("multi fetch", () => {
       fixture = await createFixture({
         files: {
           "app/routes/_index.tsx": js`
-            import { Link } from "react-router-dom";
+            import { Link } from "react-router";
 
             export default function Component() {
               return (
@@ -359,7 +359,7 @@ test.describe.skip("multi fetch", () => {
       fixture = await createFixture({
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Scripts, useFetcher } from "react-router-dom";
+              import { Links, Meta, Scripts, useFetcher } from "react-router";
               import globalCss from "./global.css";
 
               export function links() {
@@ -444,7 +444,7 @@ test.describe.skip("multi fetch", () => {
               Outlet,
               Scripts,
               useLoaderData,
-            } from "react-router-dom";
+            } from "react-router";
 
             export default function Root() {
               const styles =
@@ -494,7 +494,7 @@ test.describe.skip("multi fetch", () => {
           `,
 
           "app/routes/with-nested-links.tsx": js`
-            import { Outlet } from "react-router-dom";
+            import { Outlet } from "react-router";
             import globalCss from "../global.css";
 
             export function links() {
@@ -587,7 +587,7 @@ test.describe.skip("single fetch", () => {
             Outlet,
             Scripts,
             useLoaderData,
-          } from "react-router-dom";
+          } from "react-router";
 
           export default function Root() {
             const styles =
@@ -843,7 +843,7 @@ test.describe.skip("single fetch", () => {
       fixture = await createFixture({
         files: {
           "app/routes/_index.tsx": js`
-            import { Link } from "react-router-dom";
+            import { Link } from "react-router";
 
             export default function Component() {
               return (
@@ -917,7 +917,7 @@ test.describe.skip("single fetch", () => {
       fixture = await createFixture({
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Scripts, useFetcher } from "react-router-dom";
+              import { Links, Meta, Scripts, useFetcher } from "react-router";
               import globalCss from "./global.css";
 
               export function links() {
@@ -1002,7 +1002,7 @@ test.describe.skip("single fetch", () => {
               Outlet,
               Scripts,
               useLoaderData,
-            } from "react-router-dom";
+            } from "react-router";
 
             export default function Root() {
               const styles =
@@ -1052,7 +1052,7 @@ test.describe.skip("single fetch", () => {
           `,
 
           "app/routes/with-nested-links.tsx": js`
-            import { Outlet } from "react-router-dom";
+            import { Outlet } from "react-router";
             import globalCss from "../global.css";
 
             export function links() {

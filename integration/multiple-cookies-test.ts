@@ -17,7 +17,7 @@ test.describe("pathless layout routes", () => {
         files: {
           "app/routes/_index.tsx": js`
             import { redirect, json } from "@react-router/node";
-            import { Form, useActionData } from "react-router-dom";
+            import { Form, useActionData } from "react-router";
 
             export let loader = async () => {
               let headers = new Headers();

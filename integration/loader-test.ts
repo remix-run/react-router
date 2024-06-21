@@ -19,7 +19,7 @@ test.describe("loader", () => {
       files: {
         "app/root.tsx": js`
             import { json } from "@react-router/node";
-            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+            import { Links, Meta, Outlet, Scripts } from "react-router";
 
             export const loader = () => json("${ROOT_DATA}");
 
@@ -75,7 +75,7 @@ test.describe("loader in an app", () => {
       await createFixture({
         files: {
           "app/root.tsx": js`
-            import { Outlet } from 'react-router-dom'
+            import { Outlet } from "react-router"
 
             export default function Root() {
               return (

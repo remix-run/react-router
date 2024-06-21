@@ -402,9 +402,6 @@ importers:
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
-      react-router-dom:
-        specifier: workspace:*
-        version: link:../../../packages/react-router-dom
     devDependencies:
       '@react-router/dev':
         specifier: workspace:*
@@ -466,9 +463,6 @@ importers:
       react-router:
         specifier: workspace:*
         version: link:../../../packages/react-router
-      react-router-dom:
-        specifier: workspace:*
-        version: link:../../../packages/react-router-dom
       serialize-javascript:
         specifier: ^6.0.1
         version: 6.0.2

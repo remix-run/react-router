@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/entry.server.tsx": js`
         import * as React from "react";
-        import { ServerRouter } from "react-router-dom";
+        import { ServerRouter } from "react-router";
         import { renderToString } from "react-dom/server";
 
         export default function handleRequest(

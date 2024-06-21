@@ -38,7 +38,7 @@ test.describe("navigation states", () => {
       files: {
         "app/root.tsx": js`
             import { useMemo, useRef } from "react";
-            import { Outlet, Scripts, useNavigation } from "react-router-dom";
+            import { Outlet, Scripts, useNavigation } from "react-router";
             export default function() {
               const navigation = useNavigation();
               const navigationsRef = useRef();
@@ -68,7 +68,7 @@ test.describe("navigation states", () => {
             }
           `,
         "app/routes/_index.tsx": js`
-            import { Form, Link, useFetcher } from "react-router-dom";
+            import { Form, Link, useFetcher } from "react-router";
             export function loader() { return null; }
             export default function() {
               const fetcher = useFetcher();

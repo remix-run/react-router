@@ -26,7 +26,7 @@ function getFiles({
 }) {
   return {
     "app/root.tsx": js`
-      import { Outlet, Scripts } from "react-router-dom"
+      import { Outlet, Scripts } from "react-router"
 
       export default function Root() {
         return (
@@ -43,14 +43,14 @@ function getFiles({
       }
     `,
     "app/routes/_index.tsx": js`
-      import { Link } from "react-router-dom"
+      import { Link } from "react-router"
       export default function Component() {
         return <Link to="/parent/child">Go to /parent/child</Link>
       }
     `,
     "app/routes/parent.tsx": js`
       import { json } from '@react-router/node'
-      import { Outlet, useLoaderData } from "react-router-dom"
+      import { Outlet, useLoaderData } from "react-router"
       export function loader() {
         return json({ message: 'Parent Server Loader'});
       }
@@ -90,7 +90,7 @@ function getFiles({
     `,
     "app/routes/parent.child.tsx": js`
       import { json } from '@react-router/node'
-      import { Form, Outlet, useActionData, useLoaderData } from "react-router-dom"
+      import { Form, Outlet, useActionData, useLoaderData } from "react-router"
       export function loader() {
         return json({ message: 'Child Server Loader'});
       }
@@ -319,7 +319,7 @@ test.describe("Client Data", () => {
           "app/routes/parent.child.tsx": js`
             import * as React from 'react';
             import { defer, json } from '@react-router/node'
-            import { Await, useLoaderData } from "react-router-dom"
+            import { Await, useLoaderData } from "react-router"
             export function loader() {
               return defer({
                 message: 'Child Server Loader',
@@ -418,7 +418,7 @@ test.describe("Client Data", () => {
           "app/routes/parent.child.tsx": js`
             import * as React from 'react';
             import { json } from '@react-router/node';
-            import { useLoaderData } from "react-router-dom";
+            import { useLoaderData } from "react-router";
             export function loader() {
               return json({
                 message: "Child Server Loader Data",
@@ -471,7 +471,7 @@ test.describe("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
               // Even without setting hydrate=true, this should run on hydration
               export async function clientLoader({ serverLoader }) {
                 await new Promise(r => setTimeout(r, 100));
@@ -514,7 +514,7 @@ test.describe("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
               // Even without setting hydrate=true, this should run on hydration
               export async function clientLoader({ serverLoader }) {
                 await new Promise(r => setTimeout(r, 100));
@@ -557,7 +557,7 @@ test.describe("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { useLoaderData, useRouteError } from "react-router-dom";
+              import { useLoaderData, useRouteError } from "react-router";
               export async function clientLoader({ serverLoader }) {
                 return await serverLoader();
               }
@@ -601,7 +601,7 @@ test.describe("Client Data", () => {
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
               import { json } from '@react-router/node';
-              import { useLoaderData, useRevalidator } from "react-router-dom";
+              import { useLoaderData, useRevalidator } from "react-router";
               let isFirstCall = true;
               export async function loader({ serverLoader }) {
                 if (isFirstCall) {
@@ -666,7 +666,7 @@ test.describe("Client Data", () => {
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
               import { json } from '@react-router/node';
-              import { useLoaderData, useRevalidator } from "react-router-dom";
+              import { useLoaderData, useRevalidator } from "react-router";
               let isFirstCall = true;
               export async function loader({ serverLoader }) {
                 if (isFirstCall) {
@@ -742,7 +742,7 @@ test.describe("Client Data", () => {
                 childClientLoaderHydrate: false,
               }),
               "app/routes/parent.child.tsx": js`
-                import { ClientLoaderFunctionArgs, useRouteError } from "react-router-dom";
+                import { ClientLoaderFunctionArgs, useRouteError } from "react-router";
 
                 export function loader() {
                   throw new Error("Broken!")
@@ -882,7 +882,7 @@ test.describe("Client Data", () => {
             }),
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
-              import { useLoaderData, useRouteError } from "react-router-dom";
+              import { useLoaderData, useRouteError } from "react-router";
               export async function clientLoader({ serverLoader }) {
                 return await serverLoader();
               }
@@ -1095,7 +1095,7 @@ test.describe("Client Data", () => {
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
               import { json } from '@react-router/node';
-              import { Form, useRouteError } from "react-router-dom";
+              import { Form, useRouteError } from "react-router";
               export async function clientAction({ serverAction }) {
                 return await serverAction();
               }
@@ -1312,7 +1312,7 @@ test.describe("Client Data", () => {
             "app/routes/parent.child.tsx": js`
               import * as React from 'react';
               import { json } from '@react-router/node';
-              import { Form, useRouteError } from "react-router-dom";
+              import { Form, useRouteError } from "react-router";
               export async function clientAction({ serverAction }) {
                 return await serverAction();
               }

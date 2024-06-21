@@ -48,7 +48,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
             Scripts,
             useLoaderData,
             useMatches,
-          } from "react-router-dom";
+          } from "react-router";
 
           export const loader = () => json("${ROOT_DATA}");
 
@@ -88,7 +88,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link } from "react-router-dom";
+          import { Link } from "react-router";
           export default function Index() {
             return (
               <div>
@@ -110,7 +110,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         `,
 
         [`app/routes${HAS_BOUNDARY_LAYOUT_NESTED_LOADER_FILE}.jsx`]: js`
-          import { useMatches } from "react-router-dom";
+          import { useMatches } from "react-router";
           export function loader() {
             return "${LAYOUT_DATA}";
           }
@@ -140,7 +140,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
         `,
 
         [`app/routes${HAS_BOUNDARY_NESTED_LOADER_FILE}.jsx`]: js`
-          import { Outlet, useLoaderData } from "react-router-dom";
+          import { Outlet, useLoaderData } from "react-router";
           export function loader() {
             return "${LAYOUT_DATA}";
           }

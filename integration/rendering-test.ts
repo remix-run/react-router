@@ -16,7 +16,7 @@ test.describe("rendering", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export default function Root() {
             return (

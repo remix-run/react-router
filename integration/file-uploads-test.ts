@@ -45,7 +45,7 @@ test.describe("file-uploads", () => {
             import {
               unstable_parseMultipartFormData as parseMultipartFormData,
             } from "@react-router/node";
-            import { Form, useActionData } from "react-router-dom";
+            import { Form, useActionData } from "react-router";
             import { uploadHandler } from "~/fileUploadHandler";
 
             export let action = async ({ request }) => {

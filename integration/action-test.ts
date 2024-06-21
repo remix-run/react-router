@@ -23,7 +23,7 @@ test.describe("actions", () => {
     fixture = await createFixture({
       files: {
         "app/routes/urlencoded.tsx": js`
-          import { Form, useActionData } from "react-router-dom";
+          import { Form, useActionData } from "react-router";
 
           export let action = async ({ request }) => {
             let formData = await request.formData();
@@ -48,7 +48,7 @@ test.describe("actions", () => {
         `,
 
         "app/routes/request-text.tsx": js`
-          import { Form, useActionData } from "react-router-dom";
+          import { Form, useActionData } from "react-router";
 
           export let action = async ({ request }) => {
             let text = await request.text();
@@ -75,7 +75,7 @@ test.describe("actions", () => {
 
         [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
           import { redirect } from "@react-router/node";
-          import { Form } from "react-router-dom";
+          import { Form } from "react-router";
 
           export function action() {
             throw redirect("/${REDIRECT_TARGET}")
@@ -97,7 +97,7 @@ test.describe("actions", () => {
         `,
 
         "app/routes/no-action.tsx": js`
-          import { Form } from "react-router-dom";
+          import { Form } from "react-router";
 
           export default function Component() {
             return (
