@@ -8,8 +8,6 @@ import type { LinkDescriptor } from "../dom/ssr/links";
 import type { Location } from "./history";
 import type { UIMatch } from "./utils";
 
-// TODO: allow widest type (branded type: NOT_SET)
-
 // TODO: replace `Context` with `AppLoadContext` once `react-router` absorbs `server-runtime` (https://github.com/remix-run/react-router/pull/11669)
 interface Context {}
 
@@ -66,7 +64,7 @@ type Params<Param extends string> = Pretty<
   & {[K in Param as K extends `${infer P}?` ? P : never]?: string}
 >
 
-type IsDefined<T> = undefined extends T ? false : true;
+type IsDefined<T> = Equal<T, undefined> extends true ? false : true;
 
 // prettier-ignore
 type _LoaderData<
@@ -75,13 +73,13 @@ type _LoaderData<
   ClientLoaderHydrate extends boolean,
   HydrateFallback,
 > = Awaited<
-  [IsDefined<HydrateFallback>, ClientLoaderHydrate]  extends [true, true] ?
+  [undefined extends HydrateFallback ? false : true, ClientLoaderHydrate]  extends [true, true] ?
     IsDefined<ClientLoaderData> extends true ? ClientLoaderData :
     undefined
   :
   [IsDefined<ClientLoaderData>, IsDefined<ServerLoaderData>] extends [true, true] ? ServerLoaderData | ClientLoaderData :
   IsDefined<ClientLoaderData> extends true ?
-    IsDefined<ClientLoaderHydrate> extends true ? ClientLoaderData :
+    ClientLoaderHydrate extends true ? ClientLoaderData :
     ClientLoaderData | undefined
   :
   IsDefined<ServerLoaderData> extends true ? ServerLoaderData :
@@ -114,10 +112,10 @@ type HydrateFallbackComponent<Param extends string> = (args: {
 
 type Route<
   Param extends string,
-  ServerLoaderData extends Data | undefined,
-  ClientLoaderData extends Data | undefined,
   ClientLoaderHydrate extends boolean,
   HydrateFallback extends HydrateFallbackComponent<Param> | undefined,
+  ServerLoaderData extends Data | undefined,
+  ClientLoaderData extends Data | undefined,
   ServerActionData extends Data | undefined,
   ClientActionData extends Data | undefined
 > = {
@@ -183,22 +181,22 @@ type Route<
 };
 
 export function defineRoute<
+  T,
   const Param extends string,
-  ServerLoaderData extends Data | undefined,
-  ClientLoaderData extends Data | undefined,
   ClientLoaderHydrate extends boolean,
   HydrateFallback extends HydrateFallbackComponent<Param> | undefined,
-  ServerActionData extends Data | undefined,
-  ClientActionData extends Data | undefined,
-  T
+  ServerLoaderData extends Data | undefined = undefined,
+  ClientLoaderData extends Data | undefined = undefined,
+  ServerActionData extends Data | undefined = undefined,
+  ClientActionData extends Data | undefined = undefined
 >(
   route: T &
     Route<
       Param,
-      ServerLoaderData,
-      ClientLoaderData,
       ClientLoaderHydrate,
       HydrateFallback,
+      ServerLoaderData,
+      ClientLoaderData,
       ServerActionData,
       ClientActionData
     >
@@ -207,22 +205,22 @@ export function defineRoute<
 }
 
 export function defineRootRoute<
+  T,
   const Param extends string,
-  ServerLoaderData extends Data | undefined,
-  ClientLoaderData extends Data | undefined,
   ClientLoaderHydrate extends boolean,
   HydrateFallback extends HydrateFallbackComponent<Param> | undefined,
-  ServerActionData extends Data | undefined,
-  ClientActionData extends Data | undefined,
-  T
+  ServerLoaderData extends Data | undefined = undefined,
+  ClientLoaderData extends Data | undefined = undefined,
+  ServerActionData extends Data | undefined = undefined,
+  ClientActionData extends Data | undefined = undefined
 >(
   route: T &
     Route<
       Param,
-      ServerLoaderData,
-      ClientLoaderData,
       ClientLoaderHydrate,
       HydrateFallback,
+      ServerLoaderData,
+      ClientLoaderData,
       ServerActionData,
       ClientActionData
     > & {
@@ -244,10 +242,10 @@ export function defineRootRoute<
 
 type LoaderDataFromRoute<R> = R extends Route<
   any,
-  infer ServerLoaderData,
-  infer ClientLoaderData,
   infer ClientLoaderHydrate,
   infer HydrateFallback,
+  infer ServerLoaderData,
+  infer ClientLoaderData,
   any,
   any
 >
@@ -535,6 +533,28 @@ defineRoute({
   },
   ErrorBoundary({ actionData }) {
     expectEqual<typeof actionData, 1 | 2 | undefined>(true);
+    return null;
+  },
+});
+
+// Allow `undefined` as a return value from loaders and actions
+declare function maybe<const T>(t: T): T | undefined;
+defineRoute({
+  serverLoader() {
+    return maybe(1);
+  },
+  clientLoader() {
+    return maybe(2);
+  },
+  serverAction() {
+    return maybe(3);
+  },
+  clientAction() {
+    return maybe(4);
+  },
+  Component({ loaderData, actionData }) {
+    expectEqual<typeof loaderData, 1 | 2 | undefined>(true);
+    expectEqual<typeof actionData, 3 | 4 | undefined>(true);
     return null;
   },
 });
