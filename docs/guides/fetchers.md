@@ -223,7 +223,7 @@ export default defineRoute({
       async (_prev: any, formData: FormData) => {
         setTitle(formData.get("title") as string);
         let result = await updateTitleAction(formData);
-        if (result.ok) revalidator.revalidate();
+        if (result.ok) await revalidator.revalidate();
         return result;
       },
       null
