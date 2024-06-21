@@ -1,5 +1,4 @@
 /* eslint-disable jest/valid-title */
-
 import type { FutureConfig, HydrationState } from "../../lib/router";
 import {
   createMemoryHistory,
