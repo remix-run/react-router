@@ -3,7 +3,7 @@ import { devices } from "@playwright/test";
 
 const config: PlaywrightTestConfig = {
   testDir: ".",
-  testMatch: ["**/*-test.ts"],
+  testMatch: ["**/*form-test.ts"],
   // Playwright treats our workspace packages as internal by default. If we
   // don't mark them as external, tests hang in Node 20.5.2+
   build: {
