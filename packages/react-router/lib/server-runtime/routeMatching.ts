@@ -1,6 +1,5 @@
-import type { Params, AgnosticRouteObject } from "react-router";
-import { matchRoutes } from "react-router";
-
+import type { Params, AgnosticRouteObject } from "../router";
+import { matchRoutes } from "../router";
 import type { ServerRoute } from "./routes";
 
 export interface RouteMatch<Route> {

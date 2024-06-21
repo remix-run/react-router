@@ -1,3 +1,4 @@
+/* eslint-disable import/no-nodejs-modules */
 const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const copy = require("rollup-plugin-copy");
@@ -48,6 +49,7 @@ module.exports = function rollup() {
           extensions: [".ts", ".tsx"],
         }),
         typescript({
+          // eslint-disable-next-line no-restricted-globals
           tsconfig: path.join(__dirname, "tsconfig.json"),
           exclude: ["__tests__"],
           noEmitOnError: !WATCH,

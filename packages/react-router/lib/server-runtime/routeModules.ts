@@ -6,11 +6,10 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   Location,
   Params,
-} from "react-router";
-
+} from "../router";
 import type { AppData, AppLoadContext } from "./data";
 import type { LinkDescriptor } from "./links";
-import type { SerializeFrom } from "./serialize";
+import type { SerializeFrom } from "../dom/ssr/components";
 import type { ResponseStub } from "./single-fetch";
 
 export interface RouteModules<RouteModule> {

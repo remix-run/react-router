@@ -93,7 +93,6 @@ async function run() {
     await ensureBuildVersion("remix-express", version);
     await ensureBuildVersion("remix-node", version);
     await ensureBuildVersion("remix-serve", version);
-    await ensureBuildVersion("remix-server-runtime", version);
 
     // 4. Publish to npm
     publishBuild("react-router", tag);
@@ -102,7 +101,6 @@ async function run() {
     publishBuild("remix-express", tag);
     publishBuild("remix-node", tag);
     publishBuild("remix-serve", tag);
-    publishBuild("remix-server-runtime", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);

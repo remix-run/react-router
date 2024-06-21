@@ -1,7 +1,7 @@
 import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router";
 
-import type { ServerBuild } from "../build";
-import { createRequestHandler } from "../server";
+import type { ServerBuild } from "../../lib/server-runtime/build";
+import { createRequestHandler } from "../../lib/server-runtime/server";
 
 describe("loaders", () => {
   // so that HTML/Fetch requests are the same, and so redirects don't hang on to

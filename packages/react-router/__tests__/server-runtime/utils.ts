@@ -5,9 +5,13 @@ import type {
   HandleErrorFunction,
   HeadersFunction,
   LoaderFunction,
-} from "../";
-import type { FutureConfig } from "../entry";
-import type { EntryRoute, ServerRoute, ServerRouteManifest } from "../routes";
+} from "../../lib/server-runtime";
+import type { FutureConfig } from "../../lib/server-runtime/entry";
+import type {
+  EntryRoute,
+  ServerRoute,
+  ServerRouteManifest,
+} from "../../lib/server-runtime/routes";
 
 export function mockServerBuild(
   routes: Record<

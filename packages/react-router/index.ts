@@ -328,6 +328,7 @@ export {
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
 export type { ScriptsProps } from "./lib/dom/ssr/components";
+export type { EntryContext } from "./lib/dom/ssr/entry";
 export type {
   HtmlLinkDescriptor,
   LinkDescriptor,
@@ -352,6 +353,118 @@ export {
   type Match,
   type MetaMatch,
 } from "./lib/router/define-route";
+
+// Expose old @remix-run/server-runtime API, minus duplicate APIs
+export { createCookieFactory, isCookie } from "./lib/server-runtime/cookies";
+export {
+  composeUploadHandlers as unstable_composeUploadHandlers,
+  parseMultipartFormData as unstable_parseMultipartFormData,
+} from "./lib/server-runtime/formData";
+// TODO: (v7) Clean up code paths for these exports
+// export {
+//   defer,
+//   json,
+//   redirect,
+//   redirectDocument,
+// } from "./lib/server-runtime/responses";
+export { createRequestHandler } from "./lib/server-runtime/server";
+export {
+  createSession,
+  createSessionStorageFactory,
+  isSession,
+} from "./lib/server-runtime/sessions";
+export { createCookieSessionStorageFactory } from "./lib/server-runtime/sessions/cookieStorage";
+export { createMemorySessionStorageFactory } from "./lib/server-runtime/sessions/memoryStorage";
+export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./lib/server-runtime/upload/memoryUploadHandler";
+export { MaxPartSizeExceededError } from "./lib/server-runtime/upload/errors";
+export { setDevServerHooks as unstable_setDevServerHooks } from "./lib/server-runtime/dev";
+
+export type {
+  CreateCookieFunction,
+  IsCookieFunction,
+} from "./lib/server-runtime/cookies";
+// TODO: (v7) Clean up code paths for these exports
+// export type {
+//   JsonFunction,
+//   RedirectFunction,
+// } from "./lib/server-runtime/responses";
+export type { CreateRequestHandlerFunction } from "./lib/server-runtime/server";
+export type {
+  CreateSessionFunction,
+  CreateSessionStorageFunction,
+  IsSessionFunction,
+} from "./lib/server-runtime/sessions";
+export type { CreateCookieSessionStorageFunction } from "./lib/server-runtime/sessions/cookieStorage";
+export type { CreateMemorySessionStorageFunction } from "./lib/server-runtime/sessions/memoryStorage";
+
+export type {
+  HandleDataRequestFunction,
+  HandleDocumentRequestFunction,
+  HandleErrorFunction,
+  ServerBuild,
+  ServerEntryModule,
+} from "./lib/server-runtime/build";
+
+export type {
+  UploadHandlerPart,
+  UploadHandler,
+} from "./lib/server-runtime/formData";
+export type {
+  MemoryUploadHandlerOptions,
+  MemoryUploadHandlerFilterArgs,
+} from "./lib/server-runtime/upload/memoryUploadHandler";
+
+export type {
+  Cookie,
+  CookieOptions,
+  CookieParseOptions,
+  CookieSerializeOptions,
+  CookieSignatureOptions,
+} from "./lib/server-runtime/cookies";
+
+export type { SignFunction, UnsignFunction } from "./lib/server-runtime/crypto";
+
+export type { AppLoadContext } from "./lib/server-runtime/data";
+
+export type {
+  // TODO: (v7) Clean up code paths for these exports
+  // HtmlLinkDescriptor,
+  // LinkDescriptor,
+  PageLinkDescriptor,
+} from "./lib/server-runtime/links";
+
+export type {
+  TypedDeferredData,
+  TypedResponse,
+} from "./lib/server-runtime/responses";
+
+export type {
+  // TODO: (v7) Clean up code paths for these exports
+  // ActionFunction,
+  // ActionFunctionArgs,
+  // LinksFunction,
+  // LoaderFunction,
+  // LoaderFunctionArgs,
+  // ServerRuntimeMetaArgs,
+  // ServerRuntimeMetaDescriptor,
+  // ServerRuntimeMetaFunction,
+  DataFunctionArgs,
+  HeadersArgs,
+  HeadersFunction,
+} from "./lib/server-runtime/routeModules";
+
+export type { RequestHandler } from "./lib/server-runtime/server";
+
+export type {
+  Session,
+  SessionData,
+  SessionIdStorageStrategy,
+  SessionStorage,
+  FlashSessionData,
+} from "./lib/server-runtime/sessions";
+
+// Private exports for internal use
+export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!

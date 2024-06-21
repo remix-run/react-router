@@ -13,8 +13,6 @@ module.exports = {
     "@react-router/express$": "<rootDir>/../remix-express/index.ts",
     "@react-router/node$": "<rootDir>/../remix-node/index.ts",
     "@react-router/serve$": "<rootDir>/../remix-serve/index.ts",
-    "@react-router/server-runtime$":
-      "<rootDir>/../remix-server-runtime/index.ts",
     "^react-router$": "<rootDir>/../react-router/index.ts",
     "^@web3-storage/multipart-parser$": require.resolve(
       "@web3-storage/multipart-parser"

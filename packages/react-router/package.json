@@ -23,6 +23,11 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
+    "@types/cookie": "^0.6.0",
+    "@web3-storage/multipart-parser": "^1.0.0",
+    "cookie": "^0.6.0",
+    "react-router": "workspace:*",
+    "source-map": "^0.7.3",
     "turbo-stream": "^2.0.0"
   },
   "devDependencies": {

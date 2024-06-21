@@ -1,5 +1,5 @@
-import { json } from "../responses";
-import { createRequestHandler } from "../server";
+import { json } from "../../lib/server-runtime/responses";
+import { createRequestHandler } from "../../lib/server-runtime/server";
 
 describe("createRequestHandler", () => {
   it("retains request headers when stripping body off for loaders", async () => {

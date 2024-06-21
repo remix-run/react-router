@@ -1,19 +1,19 @@
-import type {
-  StaticHandler,
-  unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
-  unstable_DataStrategyFunction as DataStrategyFunction,
-  StaticHandlerContext,
-  UNSAFE_SingleFetchRedirectResult as SingleFetchRedirectResult,
-  UNSAFE_SingleFetchResult as SingleFetchResult,
-  UNSAFE_SingleFetchResults as SingleFetchResults,
-} from "react-router";
-import {
-  isRouteErrorResponse,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-  UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol,
-} from "react-router";
 import { encode } from "turbo-stream";
 
+import {
+  type StaticHandler,
+  type unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
+  type unstable_DataStrategyFunction as DataStrategyFunction,
+  type StaticHandlerContext,
+  isRouteErrorResponse,
+  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
+} from "../router";
+import {
+  type SingleFetchRedirectResult,
+  type SingleFetchResult,
+  type SingleFetchResults,
+  SingleFetchRedirectSymbol,
+} from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";

@@ -2,10 +2,9 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
-} from "react-router";
-
+} from "../router";
 import { callRouteAction, callRouteLoader } from "./data";
-import type { FutureConfig } from "./entry";
+import type { FutureConfig } from "../dom/ssr/entry";
 import type { ServerRouteModule } from "./routeModules";
 import type { DataStrategyCtx } from "./single-fetch";
 

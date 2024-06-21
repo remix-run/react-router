@@ -285,9 +285,6 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../packages/remix-node
-      '@react-router/server-runtime':
-        specifier: workspace:*
-        version: link:../packages/remix-server-runtime
       '@types/express':
         specifier: ^4.17.9
         version: 4.17.21
@@ -384,9 +381,6 @@ importers:
       '@react-router/serve':
         specifier: workspace:*
         version: link:../../../packages/remix-serve
-      '@react-router/server-runtime':
-        specifier: workspace:*
-        version: link:../../../packages/remix-server-runtime
       express:
         specifier: ^4.17.1
         version: 4.19.2
@@ -494,6 +488,21 @@ importers:
 
   packages/react-router:
     dependencies:
+      '@types/cookie':
+        specifier: ^0.6.0
+        version: 0.6.0
+      '@web3-storage/multipart-parser':
+        specifier: ^1.0.0
+        version: 1.0.0
+      cookie:
+        specifier: ^0.6.0
+        version: 0.6.0
+      react-router:
+        specifier: workspace:*
+        version: 'link:'
+      source-map:
+        specifier: ^0.7.3
+        version: 0.7.4
       turbo-stream:
         specifier: ^2.0.0
         version: 2.0.0
@@ -550,9 +559,6 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
-      '@react-router/server-runtime':
-        specifier: workspace:*
-        version: link:../remix-server-runtime
       arg:
         specifier: ^5.0.1
         version: 5.0.2
@@ -592,9 +598,6 @@ importers:
       react-refresh:
         specifier: ^0.14.0
         version: 0.14.0
-      react-router:
-        specifier: workspace:*
-        version: link:../react-router
       semver:
         specifier: ^7.3.7
         version: 7.5.4
@@ -662,6 +665,9 @@ importers:
       fast-glob:
         specifier: 3.2.11
         version: 3.2.11
+      react-router:
+        specifier: workspace:^
+        version: link:../react-router
       strip-ansi:
         specifier: ^6.0.1
         version: 6.0.1
@@ -702,9 +708,6 @@ importers:
 
   packages/remix-node:
     dependencies:
-      '@react-router/server-runtime':
-        specifier: workspace:*
-        version: link:../remix-server-runtime
       '@web3-storage/multipart-parser':
         specifier: ^1.0.0
         version: 1.0.0
@@ -727,6 +730,9 @@ importers:
       '@types/source-map-support':
         specifier: ^0.5.4
         version: 0.5.10
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
       typescript:
         specifier: ^5.1.6
         version: 5.1.6
@@ -767,31 +773,6 @@ importers:
       '@types/source-map-support':
         specifier: ^0.5.6
         version: 0.5.10
-
-  packages/remix-server-runtime:
-    dependencies:
-      '@types/cookie':
-        specifier: ^0.6.0
-        version: 0.6.0
-      '@web3-storage/multipart-parser':
-        specifier: ^1.0.0
-        version: 1.0.0
-      cookie:
-        specifier: ^0.6.0
-        version: 0.6.0
-      react-router:
-        specifier: workspace:*
-        version: link:../react-router
-      source-map:
-        specifier: ^0.7.3
-        version: 0.7.4
-      turbo-stream:
-        specifier: ^2.0.0
-        version: 2.0.0
-    devDependencies:
-      typescript:
-        specifier: ^5.1.6
-        version: 5.1.6
 
   playground/compiler:
     dependencies:

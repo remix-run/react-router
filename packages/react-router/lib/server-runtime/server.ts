@@ -1,4 +1,4 @@
-import type { ErrorResponse, StaticHandler } from "react-router";
+import type { ErrorResponse, StaticHandler } from "../router";
 import {
   UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
   getStaticContextFromError,
@@ -7,11 +7,10 @@ import {
   json as routerJson,
   stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "react-router";
-
+} from "../router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
-import type { EntryContext } from "./entry";
+import type { EntryContext } from "../dom/ssr/entry";
 import { createEntryRouteModules } from "./entry";
 import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
 import invariant from "./invariant";

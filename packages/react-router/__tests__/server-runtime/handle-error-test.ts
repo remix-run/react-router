@@ -1,8 +1,8 @@
 import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "react-router";
 
-import type { ServerBuild } from "../build";
-import { createRequestHandler } from "../server";
-import { json } from "../responses";
+import type { ServerBuild } from "../../lib/server-runtime/build";
+import { createRequestHandler } from "../../lib/server-runtime/server";
+import { json } from "../../lib/server-runtime/responses";
 
 function getHandler(routeModule = {}, entryServerModule = {}) {
   let routeId = "root";

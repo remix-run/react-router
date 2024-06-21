@@ -1,4 +1,8 @@
-import { parseMultipartFormData } from "../formData";
+/**
+ * @jest-environment node
+ */
+
+import { parseMultipartFormData } from "../../lib/server-runtime/formData";
 
 declare global {
   interface RequestInit {

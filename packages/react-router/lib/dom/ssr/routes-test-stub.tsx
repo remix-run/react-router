@@ -104,6 +104,7 @@ export function createRoutesStub(
         future: {
           v3_fetcherPersist: future?.v3_fetcherPersist === true,
           v3_relativeSplatPath: future?.v3_relativeSplatPath === true,
+          v3_throwAbortReason: future?.v3_throwAbortReason === true,
         },
         manifest: {
           routes: {},

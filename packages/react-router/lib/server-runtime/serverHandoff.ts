@@ -1,6 +1,5 @@
-import type { HydrationState } from "react-router";
-
-import type { FutureConfig } from "./entry";
+import type { HydrationState } from "../router";
+import type { FutureConfig } from "../dom/ssr/entry";
 import { escapeHtml } from "./markup";
 
 type ValidateShape<T, Shape> =

@@ -9,7 +9,6 @@ module.exports = function rollup(options) {
     "remix-express",
     "remix-node",
     "remix-serve",
-    "remix-server-runtime",
   ]
     .flatMap((dir) => {
       let configPath = path.join("packages", dir, "rollup.config.js");

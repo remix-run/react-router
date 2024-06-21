@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "react-router";
+import {
+  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
+  UNSAFE_ServerMode as ServerMode,
+} from "react-router";
 
-import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
 import type { Fixture } from "./helpers/create-fixture.js";
 import {
   createAppFixture,
@@ -77,8 +79,7 @@ const routeFiles = {
 
   "app/routes/defer.tsx": js`
     import * as React from 'react';
-    import { defer } from "@react-router/server-runtime";
-    import { Await, useAsyncError, useLoaderData, useRouteError  } from "react-router";
+    import { defer, Await, useAsyncError, useLoaderData, useRouteError } from "react-router";
 
     export function loader({ request }) {
       if (new URL(request.url).searchParams.has('loader')) {

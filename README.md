@@ -25,7 +25,6 @@ This repository is a monorepo containing the following packages:
 - [`@react-router/express`](/packages/remix-express)
 - [`@react-router/node`](/packages/remix-node)
 - [`@react-router/serve`](/packages/remix-serve)
-- [`@react-router/server-runtime`](/packages/remix-server-runtime)
 - [`react-router`](/packages/react-router)
 - [`react-router-dom`](/packages/react-router-dom)
 
