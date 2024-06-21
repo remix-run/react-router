@@ -115,9 +115,9 @@ type Route<
   ClientLoaderHydrate extends boolean,
   HydrateFallback extends HydrateFallbackComponent<Param> | undefined,
   ServerLoaderData extends Data | undefined,
-  ClientLoaderData extends Data | undefined,
+  ClientLoaderData,
   ServerActionData extends Data | undefined,
-  ClientActionData extends Data | undefined
+  ClientActionData
 > = {
   params?: Param[];
   links?: (args: { params: Params<Param> }) => LinkDescriptor[];
@@ -186,9 +186,9 @@ export function defineRoute<
   ClientLoaderHydrate extends boolean,
   HydrateFallback extends HydrateFallbackComponent<Param> | undefined,
   ServerLoaderData extends Data | undefined = undefined,
-  ClientLoaderData extends Data | undefined = undefined,
+  ClientLoaderData = undefined,
   ServerActionData extends Data | undefined = undefined,
-  ClientActionData extends Data | undefined = undefined
+  ClientActionData = undefined
 >(
   route: T &
     Route<
@@ -210,9 +210,9 @@ export function defineRootRoute<
   ClientLoaderHydrate extends boolean,
   HydrateFallback extends HydrateFallbackComponent<Param> | undefined,
   ServerLoaderData extends Data | undefined = undefined,
-  ClientLoaderData extends Data | undefined = undefined,
+  ClientLoaderData = undefined,
   ServerActionData extends Data | undefined = undefined,
-  ClientActionData extends Data | undefined = undefined
+  ClientActionData = undefined
 >(
   route: T &
     Route<
@@ -507,7 +507,7 @@ defineRoute({
 defineRoute({
   clientAction({ serverAction }) {
     expectEqual<typeof serverAction, undefined>(true);
-    return 2;
+    return 2 as const;
   },
   Component({ actionData }) {
     expectEqual<typeof actionData, 2 | undefined>(true);
@@ -525,7 +525,7 @@ defineRoute({
     return 1;
   },
   clientAction() {
-    return 2;
+    return 2 as const;
   },
   Component({ actionData }) {
     expectEqual<typeof actionData, 1 | 2 | undefined>(true);
@@ -555,6 +555,34 @@ defineRoute({
   Component({ loaderData, actionData }) {
     expectEqual<typeof loaderData, 1 | 2 | undefined>(true);
     expectEqual<typeof actionData, 3 | 4 | undefined>(true);
+    return null;
+  },
+});
+
+// Do not allow server loader and action to return non-serializable data
+declare const unserializable: { a: 1; b: () => 2 };
+defineRoute({
+  // @ts-expect-error
+  serverLoader() {
+    return unserializable;
+  },
+  // @ts-expect-error
+  serverAction() {
+    return unserializable;
+  },
+});
+
+// Allow client loader and action to return non-serializable data
+defineRoute({
+  clientLoader() {
+    return unserializable;
+  },
+  clientAction() {
+    return unserializable;
+  },
+  Component({ loaderData, actionData }) {
+    expectEqual<typeof loaderData, typeof unserializable | undefined>(true);
+    expectEqual<typeof actionData, typeof unserializable | undefined>(true);
     return null;
   },
 });
