@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/routes/layout-action.tsx": js`
         import { json } from "@react-router/node";
-        import { Outlet, useFetcher, useFormAction } from "react-router-dom";
+        import { Outlet, useFetcher, useFormAction } from "react-router";
 
         export let action = ({ params }) => json("layout action data");
 
@@ -45,7 +45,7 @@ test.beforeAll(async () => {
           useFetcher,
           useFormAction,
           useLoaderData,
-        } from "react-router-dom";
+        } from "react-router";
 
         export let loader = ({ params }) => json("index data");
 
@@ -76,7 +76,7 @@ test.beforeAll(async () => {
           useFetcher,
           useFormAction,
           useLoaderData,
-        } from "react-router-dom";
+        } from "react-router";
 
         export let loader = ({ params }) => json(params.param);
 
@@ -103,7 +103,7 @@ test.beforeAll(async () => {
 
       "app/routes/layout-loader.tsx": js`
         import { json } from "@react-router/node";
-        import { Outlet, useFetcher, useFormAction } from "react-router-dom";
+        import { Outlet, useFetcher, useFormAction } from "react-router";
 
         export let loader = () => json("layout loader data");
 
@@ -132,7 +132,7 @@ test.beforeAll(async () => {
           useFetcher,
           useFormAction,
           useLoaderData,
-        } from "react-router-dom";
+        } from "react-router";
 
         export let loader = ({ params }) => json("index data");
 
@@ -159,7 +159,7 @@ test.beforeAll(async () => {
           useFetcher,
           useFormAction,
           useLoaderData,
-        } from "react-router-dom";
+        } from "react-router";
 
         export let loader = ({ params }) => json(params.param);
 

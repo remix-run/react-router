@@ -15,7 +15,7 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { Link } from "react-router-dom";
+        import { Link } from "react-router";
 
         export default function Index() {
           return (
