@@ -2,9 +2,11 @@
 title: Adopting Vite (Routes)
 ---
 
-# Adopting Route Modules from Component `<Routes>`
+# Adopting Vite (Routes)
 
 If you are using `<RouterProvider>` please see [Adopting Route Modules from RouterProvider](./vite-router-provider) instead.
+
+If you are using `<Routes>` this is the right place.
 
 The React Router vite plugin adds framework features to React Router. This document wil help you adopt the plugin in your app if you'd like.
 
