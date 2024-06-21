@@ -11,9 +11,9 @@ import {
   ScrollRestoration,
   createBrowserRouter,
 } from "../../index";
-import type { RemixContextObject } from "../../lib/dom/ssr/entry";
+import type { FrameworkContextObject } from "../../lib/dom/ssr/entry";
 import { createMemoryRouter, redirect } from "react-router";
-import { RemixContext, Scripts } from "../../lib/dom/ssr/components";
+import { FrameworkContext, Scripts } from "../../lib/dom/ssr/components";
 import "@testing-library/jest-dom/extend-expect";
 
 describe(`ScrollRestoration`, () => {
@@ -207,7 +207,7 @@ describe(`ScrollRestoration`, () => {
       window.scrollTo = scrollTo;
     });
 
-    let context: RemixContextObject = {
+    let context: FrameworkContextObject = {
       future: {
         v3_fetcherPersist: false,
         v3_relativeSplatPath: false,
@@ -245,9 +245,9 @@ describe(`ScrollRestoration`, () => {
       ]);
 
       render(
-        <RemixContext.Provider value={context}>
+        <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </RemixContext.Provider>
+        </FrameworkContext.Provider>
       );
       let script = screen.getByTestId("scroll-script");
       expect(script instanceof HTMLScriptElement).toBe(true);
@@ -272,9 +272,9 @@ describe(`ScrollRestoration`, () => {
         },
       ]);
       render(
-        <RemixContext.Provider value={context}>
+        <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </RemixContext.Provider>
+        </FrameworkContext.Provider>
       );
       let script = screen.getByTestId("scroll-script");
       expect(script).toHaveAttribute("nonce", "hello");
@@ -298,9 +298,9 @@ describe(`ScrollRestoration`, () => {
       ]);
       router.state.restoreScrollPosition = 20;
       render(
-        <RemixContext.Provider value={context}>
+        <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </RemixContext.Provider>
+        </FrameworkContext.Provider>
       );
 
       expect(scrollToMock).toHaveBeenCalledWith(0, 20);
@@ -322,9 +322,9 @@ describe(`ScrollRestoration`, () => {
         },
       ]);
       render(
-        <RemixContext.Provider value={context}>
+        <FrameworkContext.Provider value={context}>
           <RouterProvider router={router} />
-        </RemixContext.Provider>
+        </FrameworkContext.Provider>
       );
       // Always called when using <ScrollRestoration />
       expect(scrollToMock).toHaveBeenCalledWith(0, 0);

@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Scripts, useRemixContext } from "./components";
+import { Scripts, useFrameworkContext } from "./components";
 import type { Location } from "../../router/history";
 import { isRouteErrorResponse } from "../../router/utils";
 
@@ -129,7 +129,7 @@ export function BoundaryShell({
   renderScripts?: boolean;
   children: React.ReactNode | React.ReactNode[];
 }) {
-  let { routeModules } = useRemixContext();
+  let { routeModules } = useFrameworkContext();
 
   if (routeModules.root?.Layout) {
     return children;

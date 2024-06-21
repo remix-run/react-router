@@ -10,7 +10,7 @@ import {
   RouterProvider,
 } from "../../../index";
 import { HydratedRouter } from "../../../lib/dom/ssr/browser";
-import { RemixContext } from "../../../lib/dom/ssr/components";
+import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
 import "@testing-library/jest-dom/extend-expect";
@@ -70,9 +70,9 @@ function itPrefetchesPageLinks<
         });
 
         let { container, unmount } = render(
-          <RemixContext.Provider value={context}>
+          <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </RemixContext.Provider>
+          </FrameworkContext.Provider>
         );
 
         fireEvent[event](container.firstChild);
@@ -122,9 +122,9 @@ function itPrefetchesPageLinks<
         });
 
         let { container, unmount } = render(
-          <RemixContext.Provider value={context}>
+          <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </RemixContext.Provider>
+          </FrameworkContext.Provider>
         );
 
         fireEvent[event](container.firstChild);

@@ -14,10 +14,14 @@ import type { LinksFunction, MetaFunction, RouteModules } from "./routeModules";
 import type { InitialEntry } from "../../router/history";
 import type { HydrationState } from "../../router/router";
 import { convertRoutesToDataRoutes } from "../../router/utils";
-import type { AssetsManifest, FutureConfig, RemixContextObject } from "./entry";
+import type {
+  AssetsManifest,
+  FutureConfig,
+  FrameworkContextObject,
+} from "./entry";
 import { Outlet, createMemoryRouter } from "../../components";
 import type { EntryRoute } from "./routes";
-import { RemixContext } from "./components";
+import { FrameworkContext } from "./components";
 import { RouterProvider } from "../lib";
 
 interface StubIndexRouteObject
@@ -97,7 +101,7 @@ export function createRoutesStub(
     future,
   }: RoutesTestStubProps) {
     let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
-    let remixContextRef = React.useRef<RemixContextObject>();
+    let remixContextRef = React.useRef<FrameworkContextObject>();
 
     if (routerRef.current == null) {
       remixContextRef.current = {
@@ -133,9 +137,9 @@ export function createRoutesStub(
     }
 
     return (
-      <RemixContext.Provider value={remixContextRef.current}>
+      <FrameworkContext.Provider value={remixContextRef.current}>
         <RouterProvider router={routerRef.current} />
-      </RemixContext.Provider>
+      </FrameworkContext.Provider>
     );
   };
 }

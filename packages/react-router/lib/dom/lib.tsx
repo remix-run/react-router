@@ -55,7 +55,7 @@ import {
 import type { PrefetchBehavior, ScriptsProps } from "./ssr/components";
 import {
   PrefetchPageLinks,
-  RemixContext,
+  FrameworkContext,
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
@@ -1544,7 +1544,7 @@ export function ScrollRestoration({
   storageKey,
   ...props
 }: ScrollRestorationProps) {
-  let remixContext = React.useContext(RemixContext);
+  let remixContext = React.useContext(FrameworkContext);
   let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
   let matches = useMatches();

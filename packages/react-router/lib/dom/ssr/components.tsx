@@ -10,7 +10,7 @@ import {
   type RouterState,
 } from "../../router";
 
-import type { RemixContextObject } from "./entry";
+import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
 import {
   getKeyedLinksForMatches,
@@ -53,16 +53,19 @@ function useDataRouterStateContext() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// RemixContext
+// FrameworkContext
 
-export const RemixContext = React.createContext<RemixContextObject | undefined>(
-  undefined
-);
-RemixContext.displayName = "Remix";
+export const FrameworkContext = React.createContext<
+  FrameworkContextObject | undefined
+>(undefined);
+FrameworkContext.displayName = "FrameworkContext";
 
-export function useRemixContext(): RemixContextObject {
-  let context = React.useContext(RemixContext);
-  invariant(context, "You must render this element inside a <Remix> element");
+export function useFrameworkContext(): FrameworkContextObject {
+  let context = React.useContext(FrameworkContext);
+  invariant(
+    context,
+    "You must render this element inside a <HydratedRouter> element"
+  );
   return context;
 }
 
@@ -91,7 +94,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers
 ): [boolean, React.RefObject<T>, PrefetchHandlers] {
-  let remixContext = React.useContext(RemixContext);
+  let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
   let { onFocus, onBlur, onMouseEnter, onMouseLeave, onTouchStart } =
@@ -139,8 +142,8 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     setShouldPrefetch(false);
   };
 
-  // No prefetching if not using Remix-style SSR
-  if (!remixContext) {
+  // No prefetching if not using SSR
+  if (!frameworkContext) {
     return [false, ref, {}];
   }
 
@@ -219,7 +222,8 @@ function getActiveMatches(
   @category Components
  */
 export function Links() {
-  let { isSpaMode, manifest, routeModules, criticalCss } = useRemixContext();
+  let { isSpaMode, manifest, routeModules, criticalCss } =
+    useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -279,7 +283,7 @@ export function PrefetchPageLinks({
 }
 
 function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
-  let { manifest, routeModules } = useRemixContext();
+  let { manifest, routeModules } = useFrameworkContext();
 
   let [keyedPrefetchLinks, setKeyedPrefetchLinks] = React.useState<
     KeyedHtmlLinkDescriptor[]
@@ -312,7 +316,7 @@ function PrefetchPageLinksImpl({
   matches: AgnosticDataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useRemixContext();
+  let { manifest, routeModules } = useFrameworkContext();
   let { matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -412,7 +416,7 @@ function PrefetchPageLinksImpl({
   @category Components
  */
 export function Meta() {
-  let { isSpaMode, routeModules } = useRemixContext();
+  let { isSpaMode, routeModules } = useFrameworkContext();
   let {
     errors,
     matches: routerMatches,
@@ -545,7 +549,7 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
 }
 
 /**
- * Tracks whether Remix has finished hydrating or not, so scripts can be skipped
+ * Tracks whether hydration is finished, so scripts can be skipped
  * during client-side updates.
  */
 let isHydrated = false;
@@ -596,7 +600,7 @@ export type ScriptsProps = Omit<
  */
 export function Scripts(props: ScriptsProps) {
   let { manifest, serverHandoffString, isSpaMode, renderMeta } =
-    useRemixContext();
+    useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
   let navigation = useNavigation();

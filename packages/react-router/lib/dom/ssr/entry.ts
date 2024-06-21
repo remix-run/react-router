@@ -9,7 +9,7 @@ type SerializedError = {
   message: string;
   stack?: string;
 };
-export interface RemixContextObject {
+export interface FrameworkContextObject {
   manifest: AssetsManifest;
   routeModules: RouteModules;
   criticalCss?: string;
@@ -35,7 +35,7 @@ export interface RemixContextObject {
 
 // Additional React-Router information needed at runtime, but not hydrated
 // through RemixContext
-export interface EntryContext extends RemixContextObject {
+export interface EntryContext extends FrameworkContextObject {
   staticHandlerContext: StaticHandlerContext;
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }

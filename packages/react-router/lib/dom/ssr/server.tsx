@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import * as React from "react";
 
 import { createStaticRouter, StaticRouterProvider } from "../server";
-import { RemixContext } from "./components";
+import { FrameworkContext } from "./components";
 import type { EntryContext } from "./entry";
 import { RemixErrorBoundary } from "./errorBoundaries";
 import { createServerRoutes, shouldHydrateRouteLoader } from "./routes";
@@ -74,7 +74,7 @@ export function ServerRouter({
 
   return (
     <>
-      <RemixContext.Provider
+      <FrameworkContext.Provider
         value={{
           manifest,
           routeModules,
@@ -94,7 +94,7 @@ export function ServerRouter({
             hydrate={false}
           />
         </RemixErrorBoundary>
-      </RemixContext.Provider>
+      </FrameworkContext.Provider>
       {context.serverHandoffStream ? (
         <React.Suspense>
           <StreamTransfer
