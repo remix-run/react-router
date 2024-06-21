@@ -33,7 +33,7 @@ test.describe("set-cookie revalidation", () => {
           `,
 
         "app/root.tsx": js`
-            import { json } from "@react-router/node";
+            import { json } from "react-router";
             import {
               Links,
               Meta,
@@ -93,7 +93,7 @@ test.describe("set-cookie revalidation", () => {
           `,
 
         "app/routes/protected.tsx": js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router";
 
             import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 

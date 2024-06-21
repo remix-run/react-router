@@ -45,7 +45,7 @@ test("Vite / dead-code elimination for server exports", async () => {
     "app/.server/utils.ts": serverOnlyModule,
     "app/routes/remove-server-exports-and-dce.tsx": `
       import fs from "node:fs";
-      import { json } from "@react-router/node";
+      import { json } from "react-router";
       import { useLoaderData } from "react-router";
 
       import { serverOnly as serverOnlyFile } from "../utils.server";

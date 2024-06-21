@@ -35,7 +35,7 @@ test.describe("redirects", () => {
           `,
 
         "app/routes/absolute._index.tsx": js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router";
             import { Form } from "react-router";
 
             export async function action({ request }) {
@@ -58,7 +58,7 @@ test.describe("redirects", () => {
           `,
 
         "app/routes/loader.external.ts": js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router";
             export const loader = () => {
               return redirect("https://remix.run/");
             }
@@ -89,7 +89,7 @@ test.describe("redirects", () => {
           `,
 
         "app/routes/redirect-document.a.tsx": js`
-            import { redirectDocument } from "@react-router/node";
+            import { redirectDocument } from "react-router";
             export const loader = () =>  redirectDocument("/redirect-document/b");
           `,
 

@@ -9,8 +9,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "react-router": "*",
     "@react-router/node": "*",
-    "@react-router/react": "*",
     "@react-router/serve": "*",
     "isbot": "^4.1.0",
     "react": "^18.2.0",

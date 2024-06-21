@@ -46,7 +46,7 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.tsx": js`
-              import { json } from "@react-router/node";
+              import { json } from "react-router";
               import { Outlet, useLoaderData } from "react-router";
 
               export async function loader({ request }) {
@@ -86,7 +86,7 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.child.tsx": js`
-              import { json } from "@react-router/node";
+              import { json } from "react-router";
               import { Form, useLoaderData, useRevalidator } from "react-router";
 
               export async function action() {

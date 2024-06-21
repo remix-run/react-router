@@ -683,6 +683,9 @@ importers:
       '@react-router/node':
         specifier: workspace:*
         version: link:../remix-node
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
     devDependencies:
       '@types/express':
         specifier: ^4.17.9
@@ -757,6 +760,9 @@ importers:
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
+      react-router:
+        specifier: workspace:*
+        version: link:../react-router
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21

@@ -28,6 +28,9 @@ test.beforeAll(async () => {
           unstable_createMemoryUploadHandler as createMemoryUploadHandler,
           unstable_parseMultipartFormData as parseMultipartFormData,
           MaxPartSizeExceededError,
+        } from "react-router";
+        import {
+          unstable_createFileUploadHandler as createFileUploadHandler,
         } from "@react-router/node";
         import { Form, useActionData } from "react-router";
 
@@ -90,7 +93,7 @@ test.beforeAll(async () => {
           unstable_createMemoryUploadHandler as createMemoryUploadHandler,
           unstable_parseMultipartFormData as parseMultipartFormData,
           MaxPartSizeExceededError,
-        } from "@react-router/node";
+        } from "react-router";
         import { Form, useActionData } from "react-router";
 
         export let action = async ({ request }) => {
@@ -143,7 +146,7 @@ test.beforeAll(async () => {
         import {
           json,
           unstable_parseMultipartFormData as parseMultipartFormData,
-        } from "@react-router/node";
+        } from "react-router";
         import { Form, useActionData } from "react-router";
 
         export let action = async ({ request }) => {

@@ -74,7 +74,7 @@ test.describe("actions", () => {
         `,
 
         [`app/routes/${THROWS_REDIRECT}.jsx`]: js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
           import { Form } from "react-router";
 
           export function action() {

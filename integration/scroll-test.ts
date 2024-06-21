@@ -15,7 +15,7 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { redirect } from "@react-router/node";
+        import { redirect } from "react-router";
         import { Form } from "react-router";
 
         export function action() {

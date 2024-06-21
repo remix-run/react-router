@@ -30,6 +30,7 @@
   },
   "peerDependencies": {
     "express": "^4.17.1",
+    "react-router": "workspace:*",
     "typescript": "^5.1.0"
   },
   "peerDependenciesMeta": {

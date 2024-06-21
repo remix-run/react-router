@@ -119,7 +119,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${REDIRECT}.jsx`]: js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
           export function loader() {
             return redirect("/${REDIRECT_TARGET}")
           }
@@ -129,7 +129,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${REDIRECT_HASH}.jsx`]: js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
           export function loader() {
             return redirect("/${REDIRECT_TARGET}#my-hash")
           }
@@ -139,7 +139,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/gh-1691.tsx": js`
-          import { json, redirect } from "@react-router/node";
+          import { json, redirect } from "react-router";
           import { useFetcher} from "react-router";
 
           export const action = async ( ) => {
@@ -195,7 +195,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/parent.child.tsx": js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
           import { useFetcher} from "react-router";
 
           export const action = async ({ request }) => {
