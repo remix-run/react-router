@@ -34,13 +34,6 @@ export type ActionFunction = (
   args: ActionFunctionArgs
 ) => ReturnType<RRActionFunction>;
 
-// export interface ActionFunction<Context = any> {
-//   (
-//     args: ActionFunctionArgs<Context>,
-//     handlerCtx?: unknown
-//   ): DataFunctionReturnValue;
-// }
-
 /**
  * Arguments passed to a route `action` function
  */
