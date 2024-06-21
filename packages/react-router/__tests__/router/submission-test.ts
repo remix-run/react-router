@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import type { HydrationState } from "../../lib/router";
 import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
 import { cleanup, setup } from "./utils/data-router-setup";

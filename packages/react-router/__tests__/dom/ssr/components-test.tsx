@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import { createStaticHandler } from "react-router";
 import { act, fireEvent, render } from "@testing-library/react";
 import * as React from "react";

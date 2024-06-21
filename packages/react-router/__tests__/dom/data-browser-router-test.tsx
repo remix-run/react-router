@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import type { ErrorResponse, Fetcher } from "react-router";
 import "@testing-library/jest-dom";
 import {

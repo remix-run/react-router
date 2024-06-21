@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 

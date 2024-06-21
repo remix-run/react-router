@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import type { Router } from "../../lib/router";
 import { createMemoryHistory, createRouter } from "../../lib/router";
 

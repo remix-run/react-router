@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import * as React from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import {

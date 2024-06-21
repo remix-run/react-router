@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import { createMemoryHistory, createRouter, redirect } from "../../lib/router";
 import type { ShouldRevalidateFunctionArgs } from "../../lib/router";
 import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";

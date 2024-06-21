@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import type { StaticHandlerContext } from "react-router";
 import { json } from "react-router";
 

@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import { createMemoryHistory, createRouter } from "../../lib/router";
 
 // This suite of tests specifically runs in the node jest environment to catch

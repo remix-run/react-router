@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import { JSDOM } from "jsdom";
 // Drop support for the submitter parameter, as in a legacy browser. This
 // needs to be done before react-router-dom is required, since it does some

@@ -1,7 +1,3 @@
-/**
- * @jest-environment jsdom
- */
-
 import { IDLE_NAVIGATION } from "../../lib/router";
 import { cleanup, setup } from "./utils/data-router-setup";
 

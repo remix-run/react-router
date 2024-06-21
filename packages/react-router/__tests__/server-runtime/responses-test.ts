@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import type { TypedResponse } from "../../lib/server-runtime/responses";
 import { json, redirect } from "../../lib/server-runtime/responses";
 import { isEqual } from "./utils";
