@@ -1658,9 +1658,7 @@ async function getPrerenderBuildAndHandler(
     reactRouterConfig.serverBuildFile
   );
   let build = await import(url.pathToFileURL(serverBuildPath).toString());
-  let { createRequestHandler: createHandler } = await import(
-    "@react-router/node"
-  );
+  let { createRequestHandler: createHandler } = await import("react-router");
   return {
     build,
     handler: createHandler(build, viteConfig.mode),

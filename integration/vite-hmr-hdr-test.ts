@@ -162,7 +162,7 @@ async function workflow({
     contents
       .replace(
         "// imports",
-        `// imports\nimport { json } from "@react-router/node";\nimport { useLoaderData } from "react-router"`
+        `// imports\nimport { json } from "react-router";\nimport { useLoaderData } from "react-router"`
       )
       .replace(
         "// loader",

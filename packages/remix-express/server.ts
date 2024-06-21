@@ -3,9 +3,9 @@
 /// <reference lib="DOM.Iterable" />
 
 import type * as express from "express";
-import type { AppLoadContext, ServerBuild } from "@react-router/node";
+import type { AppLoadContext, ServerBuild } from "react-router";
+import { createRequestHandler as createRemixRequestHandler } from "react-router";
 import {
-  createRequestHandler as createRemixRequestHandler,
   createReadableStreamFromReadable,
   writeReadableStreamToWritable,
 } from "@react-router/node";

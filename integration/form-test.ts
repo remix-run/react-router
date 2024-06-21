@@ -298,7 +298,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/stop-propagation.tsx": js`
-            import { json } from "@react-router/node";
+            import { json } from "react-router";
             import { Form, useActionData } from "react-router";
 
             export async function action({ request }) {
@@ -321,7 +321,7 @@ test.describe("Forms", () => {
 
         "app/routes/form-method.tsx": js`
             import { Form, useActionData, useLoaderData, useSearchParams } from "react-router";
-            import { json } from "@react-router/node";
+            import { json } from "react-router";
 
             export function action({ request }) {
               return json(request.method)

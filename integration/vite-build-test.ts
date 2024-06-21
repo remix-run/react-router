@@ -63,7 +63,7 @@ test.beforeAll(async () => {
     `,
     "app/routes/_index.tsx": js`
       import { useState, useEffect } from "react";
-      import { json } from "@react-router/node";
+      import { json } from "react-router";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
@@ -95,7 +95,7 @@ test.beforeAll(async () => {
       export const serverOnly2 = "SERVER_ONLY_2"
     `,
     "app/routes/resource.ts": js`
-      import { json } from "@react-router/node";
+      import { json } from "react-router";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
 
@@ -110,7 +110,7 @@ test.beforeAll(async () => {
     `,
     "app/routes/mdx.mdx": js`
       import { useEffect, useState } from "react";
-      import { json } from "@react-router/node";
+      import { json } from "react-router";
       import { useLoaderData } from "react-router";
 
       import { serverOnly1, serverOnly2 } from "../utils.server";
@@ -170,7 +170,7 @@ test.beforeAll(async () => {
       }
     `,
     "app/routes/dotenv.tsx": js`
-      import { json } from "@react-router/node";
+      import { json } from "react-router";
       import { useLoaderData } from "react-router";
 
       export const loader = () => {

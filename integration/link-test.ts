@@ -308,7 +308,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router";
           import { Link, Outlet, useLoaderData, useNavigation } from "react-router";
           import stylesHref from "~/gists.css?url";
           export function links() {
@@ -359,7 +359,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.$username.tsx": js`
-          import { json, redirect } from "@react-router/node";
+          import { json, redirect } from "react-router";
           import { Link, useLoaderData, useParams } from "react-router";
           export async function loader({ params }) {
             let { username } = params;
@@ -458,7 +458,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/resources.theme-css.tsx": js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
           export async function loader({ request }) {
             return new Response(":root { --nc-tx-1: #ffffff; --nc-tx-2: #eeeeee; }",
               {

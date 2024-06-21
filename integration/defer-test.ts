@@ -75,7 +75,7 @@ test.describe("non-aborted", () => {
           }
         `,
         "app/root.tsx": js`
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
           import Interactive from "~/components/interactive";
@@ -116,7 +116,7 @@ test.describe("non-aborted", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -148,7 +148,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-noscript-resolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -183,7 +183,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-noscript-unresolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -222,7 +222,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-resolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -258,7 +258,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-unresolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -302,7 +302,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-rejected.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -343,7 +343,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-unrejected.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -409,7 +409,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-rejected-no-error-element.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -453,7 +453,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-unrejected-no-error-element.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -501,7 +501,7 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-manual-resolve.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -568,7 +568,7 @@ test.describe("non-aborted", () => {
         `,
 
         "app/routes/headers.tsx": js`
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           export function loader() {
             return defer({}, { headers: { "x-custom-header": "value from loader" } });
           }
@@ -996,7 +996,7 @@ test.describe("aborted", () => {
       files: {
         "app/entry.server.tsx": js`
           import { PassThrough } from "node:stream";
-          import type { AppLoadContext, EntryContext } from "@react-router/node";
+          import type { AppLoadContext, EntryContext } from "react-router";
           import { createReadableStreamFromReadable } from "@react-router/node";
           import { ServerRouter } from "react-router";
           import { isbot } from "isbot";
@@ -1142,7 +1142,7 @@ test.describe("aborted", () => {
           }
         `,
         "app/root.tsx": js`
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
           import Interactive from "~/components/interactive";
@@ -1184,7 +1184,7 @@ test.describe("aborted", () => {
 
         "app/routes/deferred-server-aborted.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -1229,7 +1229,7 @@ test.describe("aborted", () => {
 
         "app/routes/deferred-server-aborted-no-error-element.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
