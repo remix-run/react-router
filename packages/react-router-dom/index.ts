@@ -104,8 +104,8 @@ export type {
   MetaArgs,
   MetaDescriptor,
   MetaFunction,
-  RemixServerProps,
-  RemixStubProps,
+  ServerRouterProps,
+  RoutesTestStubProps,
 } from "react-router";
 
 export {
@@ -190,8 +190,8 @@ export {
   Links,
   Scripts,
   PrefetchPageLinks,
-  RemixServer,
-  createRemixStub,
+  ServerRouter,
+  createRoutesStub,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -601,7 +601,7 @@ export function Scripts(props: ScriptsProps) {
   let { matches: routerMatches } = useDataRouterStateContext();
   let navigation = useNavigation();
 
-  // Let <RemixServer> know that we hydrated and we should render the single
+  // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
   if (renderMeta) {
     renderMeta.didRenderScripts = true;

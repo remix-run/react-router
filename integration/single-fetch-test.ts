@@ -1230,7 +1230,7 @@ test.describe("single-fetch", () => {
 
           import type { EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { RemixServer } from "react-router";
+          import { ServerRouter } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
 
           export default function handleRequest(
@@ -1241,7 +1241,7 @@ test.describe("single-fetch", () => {
           ) {
             return new Promise((resolve, reject) => {
               const { pipe } = renderToPipeableStream(
-                <RemixServer context={remixContext} url={request.url} />,
+                <ServerRouter context={remixContext} url={request.url} />,
                 {
                   onShellReady() {
                     const body = new PassThrough();
@@ -1313,7 +1313,7 @@ test.describe("single-fetch", () => {
 
           import type { EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { RemixServer } from "react-router";
+          import { ServerRouter } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
 
           export default function handleRequest(
@@ -1324,7 +1324,7 @@ test.describe("single-fetch", () => {
           ) {
             return new Promise((resolve, reject) => {
               const { pipe } = renderToPipeableStream(
-                <RemixServer context={remixContext} url={request.url} />,
+                <ServerRouter context={remixContext} url={request.url} />,
                 {
                   onShellReady() {
                     const body = new PassThrough();
@@ -1613,7 +1613,7 @@ test.describe("single-fetch", () => {
           import { PassThrough } from "node:stream";
           import type { EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { RemixServer } from "react-router";
+          import { ServerRouter } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
           export default function handleRequest(
             request: Request,
@@ -1623,7 +1623,7 @@ test.describe("single-fetch", () => {
           ) {
             return new Promise((resolve, reject) => {
               const { pipe } = renderToPipeableStream(
-                <RemixServer context={remixContext} url={request.url} nonce="the-nonce" />,
+                <ServerRouter context={remixContext} url={request.url} nonce="the-nonce" />,
                 {
                   onShellReady() {
                     const body = new PassThrough();

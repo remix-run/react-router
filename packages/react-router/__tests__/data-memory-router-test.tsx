@@ -44,7 +44,6 @@ import urlDataStrategy from "./router/utils/urlDataStrategy";
 import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
-import { RouterProvider as DomRouterProvider } from "../lib/dom/lib";
 
 describe("createMemoryRouter", () => {
   let consoleWarn: jest.SpyInstance;
@@ -1197,9 +1196,7 @@ describe("createMemoryRouter", () => {
       },
     ]);
 
-    // TODO: Fetchers only supported in DomRouterProvider at the moment, but
-    // that should be fixed once we align the two
-    render(<DomRouterProvider router={router} />);
+    render(<RouterProvider router={router} />);
 
     await waitFor(() => screen.getByText("Fetch (1, empty)"));
     fireEvent.click(screen.getByText("Fetch (1, empty)"));
@@ -1255,9 +1252,7 @@ describe("createMemoryRouter", () => {
       },
     ]);
 
-    // TODO: Fetchers only supported in DomRouterProvider at the moment, but
-    // that should be fixed once we align the two
-    render(<DomRouterProvider router={router} />);
+    render(<RouterProvider router={router} />);
 
     await waitFor(() => screen.getByText("Fetch (1, empty)"));
     fireEvent.click(screen.getByText("Fetch (1, empty)"));
@@ -3375,7 +3370,6 @@ describe("createMemoryRouter", () => {
         </React.Suspense>
       );
 
-      console.log(getHtml(container));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <p>

@@ -243,7 +243,7 @@ export function HydratedRouter() {
   // Then we need a stateful location here so the user can back-button navigate
   // out of there
   return (
-    // This fragment is important to ensure we match the <RemixServer> JSX
+    // This fragment is important to ensure we match the <ServerRouter> JSX
     // structure so that useId values hydrate correctly
     <>
       <RemixContext.Provider
@@ -264,7 +264,7 @@ export function HydratedRouter() {
         </RemixErrorBoundary>
       </RemixContext.Provider>
       {/*
-          This fragment is important to ensure we match the <RemixServer> JSX
+          This fragment is important to ensure we match the <ServerRouter> JSX
           structure so that useId values hydrate correctly
         */}
       <></>

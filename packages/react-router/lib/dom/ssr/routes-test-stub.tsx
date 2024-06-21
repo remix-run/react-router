@@ -50,7 +50,7 @@ interface AppLoadContext {
   [key: string]: unknown;
 }
 
-export interface RemixStubProps {
+export interface RoutesTestStubProps {
   /**
    *  The initial entries in the history stack. This allows you to start a test with
    *  multiple locations already in the history stack (for testing a back navigation, etc.)
@@ -86,16 +86,16 @@ export interface RemixStubProps {
 /**
  * @category Utils
  */
-export function createRemixStub(
+export function createRoutesStub(
   routes: StubRouteObject[],
   context: AppLoadContext = {}
 ) {
-  return function RemixStub({
+  return function RoutesTestStub({
     initialEntries,
     initialIndex,
     hydrationData,
     future,
-  }: RemixStubProps) {
+  }: RoutesTestStubProps) {
     let routerRef = React.useRef<ReturnType<typeof createMemoryRouter>>();
     let remixContextRef = React.useRef<RemixContextObject>();
 

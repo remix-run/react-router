@@ -8,7 +8,7 @@ import { RemixErrorBoundary } from "./errorBoundaries";
 import { createServerRoutes, shouldHydrateRouteLoader } from "./routes";
 import { StreamTransfer } from "./single-fetch";
 
-export interface RemixServerProps {
+export interface ServerRouterProps {
   context: EntryContext;
   url: string | URL;
   abortDelay?: number;
@@ -22,12 +22,12 @@ export interface RemixServerProps {
  *
  * @category Components
  */
-export function RemixServer({
+export function ServerRouter({
   context,
   url,
   abortDelay,
   nonce,
-}: RemixServerProps): ReactElement {
+}: ServerRouterProps): ReactElement {
   if (typeof url === "string") {
     url = new URL(url);
   }

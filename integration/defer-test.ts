@@ -998,7 +998,7 @@ test.describe("aborted", () => {
           import { PassThrough } from "node:stream";
           import type { AppLoadContext, EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { RemixServer } from "react-router-dom";
+          import { ServerRouter } from "react-router-dom";
           import { isbot } from "isbot";
           import { renderToPipeableStream } from "react-dom/server";
 
@@ -1039,7 +1039,7 @@ test.describe("aborted", () => {
               let didError = false;
 
               let { pipe, abort } = renderToPipeableStream(
-                <RemixServer context={remixContext} url={request.url} />,
+                <ServerRouter context={remixContext} url={request.url} />,
                 {
                   onAllReady() {
                     let body = new PassThrough();
@@ -1081,7 +1081,7 @@ test.describe("aborted", () => {
               let didError = false;
 
               let { pipe, abort } = renderToPipeableStream(
-                <RemixServer context={remixContext} url={request.url} />,
+                <ServerRouter context={remixContext} url={request.url} />,
                 {
                   onShellReady() {
                     let body = new PassThrough();

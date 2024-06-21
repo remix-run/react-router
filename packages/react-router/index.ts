@@ -57,7 +57,6 @@ import type {
   PathRouteProps,
   RouteProps,
   RouterProps,
-  RouterProviderProps,
   RoutesProps,
 } from "./lib/components";
 import {
@@ -67,7 +66,6 @@ import {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createRoutesFromChildren,
   renderMatches,
@@ -168,7 +166,6 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
-  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
@@ -188,7 +185,6 @@ export {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createMemoryRouter,
   createPath,
@@ -279,6 +275,7 @@ export type {
   SubmitFunction,
   FetcherSubmitFunction,
   FetcherWithComponents,
+  RouterProviderProps,
 } from "./lib/dom/lib";
 export {
   createBrowserRouter,
@@ -293,6 +290,7 @@ export {
   unstable_HistoryRouter,
   NavLink,
   Form,
+  RouterProvider,
   ScrollRestoration,
   useLinkClickHandler,
   useSearchParams,
@@ -345,10 +343,15 @@ export type {
   MetaFunction,
   LinksFunction,
 } from "./lib/dom/ssr/routeModules";
-export type { RemixServerProps } from "./lib/dom/ssr/server";
-export { RemixServer } from "./lib/dom/ssr/server";
-export type { RemixStubProps } from "./lib/dom/ssr/create-remix-stub";
-export { createRemixStub } from "./lib/dom/ssr/create-remix-stub";
+export type { ServerRouterProps } from "./lib/dom/ssr/server";
+export { ServerRouter } from "./lib/dom/ssr/server";
+export type { RoutesTestStubProps } from "./lib/dom/ssr/routes-test-stub";
+export { createRoutesStub } from "./lib/dom/ssr/routes-test-stub";
+export {
+  defineRoute,
+  type Match,
+  type MetaMatch,
+} from "./lib/router/define-route";
 
 // Expose old @remix-run/server-runtime API, minus duplicate APIs
 // Default implementations for the Remix server runtime interface
