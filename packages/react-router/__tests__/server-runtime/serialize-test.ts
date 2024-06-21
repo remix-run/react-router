@@ -1,5 +1,5 @@
-import type { SerializeFrom } from "../../lib/server-runtime/index";
-import { defer, json } from "../../lib/server-runtime/index";
+import type { SerializeFrom } from "../../lib/server-runtime/serialize";
+import { defer, json } from "../../lib/server-runtime/responses";
 import { isEqual } from "./utils";
 
 // eslint-disable-next-line jest/expect-expect

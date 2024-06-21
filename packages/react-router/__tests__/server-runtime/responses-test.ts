@@ -1,5 +1,5 @@
-import type { TypedResponse } from "../../lib/server-runtime/index";
-import { json, redirect } from "../../lib/server-runtime/index";
+import type { TypedResponse } from "../../lib/server-runtime/responses";
+import { json, redirect } from "../../lib/server-runtime/responses";
 import { isEqual } from "./utils";
 
 describe("json", () => {
