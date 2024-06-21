@@ -61,9 +61,9 @@ describe(`ScrollRestoration`, () => {
 
     // check scroll activity
     expect(mockScroll.mock.calls).toEqual([
-      [0, 0],
-      [0, 0],
-      [0, 100], // restored
+      [{ left: 0, top: 0, behavior: undefined }],
+      [{ left: 0, top: 0, behavior: undefined }],
+      [{ left: 0, top: 100, behavior: undefined }], // restored
     ]);
 
     expect(consoleWarnMock).not.toHaveBeenCalled();
@@ -131,9 +131,11 @@ describe(`ScrollRestoration`, () => {
     const mockScroll = jest.fn();
     window.scrollTo = mockScroll;
 
-    jest.spyOn(window, "sessionStorage", "get").mockImplementation(() => {
-      throw new Error("denied");
-    });
+    const sessionStorageMock = jest
+      .spyOn(window, "sessionStorage", "get")
+      .mockImplementation(() => {
+        throw new Error("denied");
+      });
 
     let router = createBrowserRouter(
       [
@@ -174,9 +176,9 @@ describe(`ScrollRestoration`, () => {
 
     // check scroll activity
     expect(mockScroll.mock.calls).toEqual([
-      [0, 0],
-      [0, 0],
-      [0, 100], // restored (still possible because the user hasn't left the page)
+      [{ left: 0, top: 0, behavior: undefined }],
+      [{ left: 0, top: 0, behavior: undefined }],
+      [{ left: 0, top: 100, behavior: undefined }], // restored (still possible because the user hasn't left the page)
     ]);
 
     expect(consoleWarnMock).toHaveBeenCalledWith(
@@ -186,7 +188,71 @@ describe(`ScrollRestoration`, () => {
     );
 
     consoleWarnMock.mockRestore();
+    sessionStorageMock.mockRestore();
   });
+
+  it.each([undefined, "smooth", "instant", "auto"])(
+    "scrolls with the specified behavior",
+    (behavior) => {
+      const consoleWarnMock = jest
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
+
+      let testWindow = getWindowImpl("/base");
+      const mockScroll = jest.fn();
+      window.scrollTo = mockScroll;
+
+      let router = createBrowserRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              return (
+                <>
+                  <Outlet />
+                  <ScrollRestoration
+                    behavior={behavior}
+                    getKey={(location) =>
+                      "test3-" + behavior + location.pathname
+                    }
+                  />
+                </>
+              );
+            },
+            children: testPages,
+          },
+        ],
+        { basename: "/base", window: testWindow }
+      );
+      let { container } = render(<RouterProvider router={router} />);
+
+      expect(getHtml(container)).toMatch("On page 1");
+
+      // simulate scrolling
+      Object.defineProperty(window, "scrollY", { writable: true, value: 100 });
+
+      // leave page
+      window.dispatchEvent(new Event("pagehide"));
+      fireEvent.click(screen.getByText("Go to page 2"));
+      expect(getHtml(container)).toMatch("On page 2");
+
+      // return to page
+      window.dispatchEvent(new Event("pagehide"));
+      fireEvent.click(screen.getByText("Go to page 1"));
+
+      expect(getHtml(container)).toMatch("On page 1");
+
+      // check scroll activity
+      expect(mockScroll.mock.calls).toEqual([
+        [{ left: 0, top: 0, behavior }],
+        [{ left: 0, top: 0, behavior }],
+        [{ left: 0, top: 100, behavior }],
+      ]);
+
+      expect(consoleWarnMock).not.toHaveBeenCalled();
+      consoleWarnMock.mockRestore();
+    }
+  );
 });
 
 const testPages = [

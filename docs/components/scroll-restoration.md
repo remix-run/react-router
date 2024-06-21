@@ -81,6 +81,16 @@ Or you may want to only use the pathname for some paths, and use the normal beha
 />
 ```
 
+## `behavior`
+
+Optional prop that specifies which scroll behavior to use when scrolling to a position.
+
+Possible values: `smooth`, `instant`, `auto`.
+
+Can be useful if you've set `scroll-behavior` globally, but want `<ScrollRestoration />` to use another behavior.
+
+See also: [`scrollTo` behavior option][scroll-behavior]
+
 ## Preventing Scroll Reset
 
 When navigation creates new scroll keys, the scroll position is reset to the top of the page. You can prevent the "scroll to top" behavior from your links and forms:
@@ -102,3 +112,4 @@ Server Rendering frameworks can prevent scroll flashing because they can send a 
 [preventscrollreset]: ../components/link#preventscrollreset
 [form-preventscrollreset]: ../components/form#preventscrollreset
 [pickingarouter]: ../routers/picking-a-router
+[scroll-behavior]: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollTo#behavior

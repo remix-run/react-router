@@ -1330,6 +1330,7 @@ if (__DEV__) {
 export interface ScrollRestorationProps {
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
+  behavior?: ScrollBehavior;
 }
 
 /**
@@ -1339,8 +1340,9 @@ export interface ScrollRestorationProps {
 export function ScrollRestoration({
   getKey,
   storageKey,
+  behavior,
 }: ScrollRestorationProps) {
-  useScrollRestoration({ getKey, storageKey });
+  useScrollRestoration({ getKey, storageKey, behavior });
   return null;
 }
 
@@ -1780,9 +1782,11 @@ let savedScrollPositions: Record<string, number> = {};
 function useScrollRestoration({
   getKey,
   storageKey,
+  behavior,
 }: {
   getKey?: GetScrollRestorationKeyFunction;
   storageKey?: string;
+  behavior?: ScrollBehavior;
 } = {}) {
   let { router } = useDataRouterContext(DataRouterHook.UseScrollRestoration);
   let { restoreScrollPosition, preventScrollReset } = useDataRouterState(
@@ -1874,7 +1878,7 @@ function useScrollRestoration({
 
       // been here before, scroll to it
       if (typeof restoreScrollPosition === "number") {
-        window.scrollTo(0, restoreScrollPosition);
+        window.scrollTo({ left: 0, top: restoreScrollPosition, behavior });
         return;
       }
 
@@ -1895,8 +1899,8 @@ function useScrollRestoration({
       }
 
       // otherwise go to the top on new locations
-      window.scrollTo(0, 0);
-    }, [location, restoreScrollPosition, preventScrollReset]);
+      window.scrollTo({ left: 0, top: 0, behavior });
+    }, [location, restoreScrollPosition, preventScrollReset, behavior]);
   }
 }
 
