@@ -26,8 +26,6 @@ export type { SignFunction, UnsignFunction } from "./crypto";
 
 export type { AppLoadContext } from "./data";
 
-export type { EntryContext } from "./entry";
-
 export type {
   HtmlLinkDescriptor,
   LinkDescriptor,
@@ -49,8 +47,6 @@ export type {
   ServerRuntimeMetaDescriptor,
   ServerRuntimeMetaFunction,
 } from "./routeModules";
-
-export type { SerializeFrom } from "./serialize";
 
 export type { RequestHandler } from "./server";
 

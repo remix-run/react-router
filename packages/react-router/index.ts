@@ -328,6 +328,7 @@ export {
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
 export type { ScriptsProps } from "./lib/dom/ssr/components";
+export type { EntryContext } from "./lib/dom/ssr/entry";
 export type {
   HtmlLinkDescriptor,
   LinkDescriptor,
@@ -396,6 +397,7 @@ export type {
   // TODO: (v7) Clean up code paths for these exports
   // ActionFunction,
   // ActionFunctionArgs,
+  // EntryContext,
   // ErrorResponse,
   // HtmlLinkDescriptor,
   // LinkDescriptor,
@@ -405,6 +407,7 @@ export type {
   // ServerRuntimeMetaArgs,
   // ServerRuntimeMetaDescriptor,
   // ServerRuntimeMetaFunction,
+  // SerializeFrom,
   AppLoadContext,
   Cookie,
   CookieOptions,
@@ -412,7 +415,6 @@ export type {
   CookieSerializeOptions,
   CookieSignatureOptions,
   DataFunctionArgs,
-  EntryContext,
   FlashSessionData,
   HandleDataRequestFunction,
   HandleDocumentRequestFunction,
@@ -423,7 +425,6 @@ export type {
   HandleErrorFunction,
   PageLinkDescriptor,
   RequestHandler,
-  SerializeFrom,
   ServerBuild,
   ServerEntryModule,
   Session,

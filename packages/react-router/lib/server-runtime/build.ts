@@ -1,5 +1,9 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "./routeModules";
-import type { AssetsManifest, EntryContext, FutureConfig } from "./entry";
+import type {
+  AssetsManifest,
+  EntryContext,
+  FutureConfig,
+} from "../dom/ssr/entry";
 import type { ServerRouteManifest } from "./routes";
 import type { AppLoadContext } from "./data";
 
