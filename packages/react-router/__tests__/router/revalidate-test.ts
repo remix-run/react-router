@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { createMemoryRouter } from "../../lib/components";
 import { IDLE_NAVIGATION } from "../../lib/router";
 import {

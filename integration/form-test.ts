@@ -394,7 +394,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/empty-file-upload.tsx": js`
-            import { json } from "@react-router/server-runtime";
+            import { json } from "react-router";
             import { Form, useActionData } from "react-router-dom";
 
             export async function action({ request }) {
@@ -454,7 +454,7 @@ test.describe("Forms", () => {
         "myfile.txt": "stuff",
 
         "app/routes/pathless-layout-parent.tsx": js`
-            import { json } from '@react-router/server-runtime'
+            import { json } from "react-router"
             import { Form, Outlet, useActionData } from 'react-router-dom'
 
             export async function action({ request }) {

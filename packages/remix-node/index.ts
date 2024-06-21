@@ -34,7 +34,7 @@ export {
   unstable_composeUploadHandlers,
   unstable_createMemoryUploadHandler,
   unstable_parseMultipartFormData,
-} from "@react-router/server-runtime";
+} from "react-router";
 
 export type {
   ActionFunction,
@@ -66,9 +66,9 @@ export type {
   SerializeFrom,
   ServerBuild,
   ServerEntryModule,
-  ServerRuntimeMetaArgs as MetaArgs,
-  ServerRuntimeMetaDescriptor as MetaDescriptor,
-  ServerRuntimeMetaFunction as MetaFunction,
+  MetaArgs,
+  MetaDescriptor,
+  MetaFunction,
   Session,
   SessionData,
   SessionIdStorageStrategy,
@@ -79,4 +79,4 @@ export type {
   UnsignFunction,
   UploadHandler,
   UploadHandlerPart,
-} from "@react-router/server-runtime";
+} from "react-router";

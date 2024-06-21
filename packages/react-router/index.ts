@@ -350,6 +350,95 @@ export { RemixServer } from "./lib/dom/ssr/server";
 export type { RemixStubProps } from "./lib/dom/ssr/create-remix-stub";
 export { createRemixStub } from "./lib/dom/ssr/create-remix-stub";
 
+// Expose old @remix-run/server-runtime API, minus duplicate APIs
+// Default implementations for the Remix server runtime interface
+export { createCookieFactory, isCookie } from "./lib/server-runtime/cookies";
+export {
+  composeUploadHandlers as unstable_composeUploadHandlers,
+  parseMultipartFormData as unstable_parseMultipartFormData,
+} from "./lib/server-runtime/formData";
+// TODO: (v7) Clean up code paths for these exports
+// export {
+//   defer,
+//   json,
+//   redirect,
+//   redirectDocument,
+// } from "./lib/server-runtime/responses";
+export { createRequestHandler } from "./lib/server-runtime/server";
+export {
+  createSession,
+  createSessionStorageFactory,
+  isSession,
+} from "./lib/server-runtime/sessions";
+export { createCookieSessionStorageFactory } from "./lib/server-runtime/sessions/cookieStorage";
+export { createMemorySessionStorageFactory } from "./lib/server-runtime/sessions/memoryStorage";
+export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./lib/server-runtime/upload/memoryUploadHandler";
+export { MaxPartSizeExceededError } from "./lib/server-runtime/upload/errors";
+export { setDevServerHooks as unstable_setDevServerHooks } from "./lib/server-runtime/dev";
+
+export type {
+  // TODO: (v7) Clean up code paths for these exports
+  // JsonFunction,
+  // RedirectFunction,
+  CreateCookieFunction,
+  CreateCookieSessionStorageFunction,
+  CreateMemorySessionStorageFunction,
+  CreateRequestHandlerFunction,
+  CreateSessionFunction,
+  CreateSessionStorageFunction,
+  IsCookieFunction,
+  IsSessionFunction,
+} from "./lib/server-runtime/interface";
+
+export type {
+  // TODO: (v7) Clean up code paths for these exports
+  // ActionFunction,
+  // ActionFunctionArgs,
+  // ErrorResponse,
+  // HtmlLinkDescriptor,
+  // LinkDescriptor,
+  // LinksFunction,
+  // LoaderFunction,
+  // LoaderFunctionArgs,
+  // ServerRuntimeMetaArgs,
+  // ServerRuntimeMetaDescriptor,
+  // ServerRuntimeMetaFunction,
+  AppLoadContext,
+  Cookie,
+  CookieOptions,
+  CookieParseOptions,
+  CookieSerializeOptions,
+  CookieSignatureOptions,
+  DataFunctionArgs,
+  EntryContext,
+  FlashSessionData,
+  HandleDataRequestFunction,
+  HandleDocumentRequestFunction,
+  HeadersArgs,
+  HeadersFunction,
+  MemoryUploadHandlerFilterArgs,
+  MemoryUploadHandlerOptions,
+  HandleErrorFunction,
+  PageLinkDescriptor,
+  RequestHandler,
+  SerializeFrom,
+  ServerBuild,
+  ServerEntryModule,
+  Session,
+  SessionData,
+  SessionIdStorageStrategy,
+  SessionStorage,
+  SignFunction,
+  TypedDeferredData,
+  TypedResponse,
+  UnsignFunction,
+  UploadHandler,
+  UploadHandlerPart,
+} from "./lib/server-runtime/reexport";
+
+// Private exports for internal use
+export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
+
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any

@@ -1,5 +1,4 @@
-import type { StaticHandlerContext } from "react-router";
-
+import type { StaticHandlerContext } from "../router";
 import type { SerializedError } from "./errors";
 import type { RouteManifest, ServerRouteManifest, EntryRoute } from "./routes";
 import type { RouteModules, EntryRouteModule } from "./routeModules";

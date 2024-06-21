@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import type { HydrationState } from "../../lib/router";
 import { json } from "../../lib/router";
 import { cleanup, setup } from "./utils/data-router-setup";

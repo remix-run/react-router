@@ -20,7 +20,6 @@
     "tsc": "tsc"
   },
   "dependencies": {
-    "@react-router/server-runtime": "workspace:*",
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie-signature": "^1.1.0",
     "source-map-support": "^0.5.21",
@@ -30,9 +29,11 @@
   "devDependencies": {
     "@types/cookie-signature": "^1.0.3",
     "@types/source-map-support": "^0.5.4",
+    "react-router": "workspace:*",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {
+    "react-router": "workspace:*",
     "typescript": "^5.1.0"
   },
   "peerDependenciesMeta": {

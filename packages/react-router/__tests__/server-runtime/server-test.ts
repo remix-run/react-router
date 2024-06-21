@@ -1,9 +1,9 @@
 import type { StaticHandlerContext } from "react-router";
 import { json } from "react-router";
 
-import { createRequestHandler } from "..";
-import { ServerMode } from "../mode";
-import type { ServerBuild } from "../build";
+import { createRequestHandler } from "../../lib/server-runtime";
+import { ServerMode } from "../../lib/server-runtime/mode";
+import type { ServerBuild } from "../../lib/server-runtime/build";
 import { mockServerBuild } from "./utils";
 
 function spyConsole() {

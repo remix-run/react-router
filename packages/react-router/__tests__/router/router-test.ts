@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import type { HydrationState } from "../../lib/router";
 import {
   createMemoryHistory,

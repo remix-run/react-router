@@ -1,14 +1,11 @@
-import type {
-  UNSAFE_DeferredData as DeferredData,
-  TrackedPromise,
-} from "react-router";
 import {
+  type UNSAFE_DeferredData as DeferredData,
+  type TrackedPromise,
   defer as routerDefer,
   json as routerJson,
   redirect as routerRedirect,
   redirectDocument as routerRedirectDocument,
-} from "react-router";
-
+} from "../router";
 import { serializeError } from "./errors";
 import type { ServerMode } from "./mode";
 

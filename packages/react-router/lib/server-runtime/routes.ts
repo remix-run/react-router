@@ -2,8 +2,7 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
-} from "react-router";
-
+} from "../router";
 import { callRouteAction, callRouteLoader } from "./data";
 import type { FutureConfig } from "./entry";
 import type { ServerRouteModule } from "./routeModules";

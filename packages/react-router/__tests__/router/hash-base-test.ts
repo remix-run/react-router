@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { JSDOM } from "jsdom";
 
 import type { HashHistory } from "../../lib/router";

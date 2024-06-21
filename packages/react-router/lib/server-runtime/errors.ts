@@ -1,5 +1,4 @@
-import type { StaticHandlerContext } from "react-router";
-import { isRouteErrorResponse } from "react-router";
+import { type StaticHandlerContext, isRouteErrorResponse } from "../router";
 
 import { ServerMode } from "./mode";
 

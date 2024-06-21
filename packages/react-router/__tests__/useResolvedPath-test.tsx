@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import * as React from "react";
 import * as TestRenderer from "react-test-renderer";
 import type { Path } from "react-router";

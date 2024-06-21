@@ -1,5 +1,4 @@
-import type { HydrationState } from "react-router";
-
+import type { HydrationState } from "../router";
 import type { FutureConfig } from "./entry";
 import { escapeHtml } from "./markup";
 

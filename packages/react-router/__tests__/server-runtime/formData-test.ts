@@ -1,4 +1,4 @@
-import { parseMultipartFormData } from "../formData";
+import { parseMultipartFormData } from "../../lib/server-runtime/formData";
 
 declare global {
   interface RequestInit {

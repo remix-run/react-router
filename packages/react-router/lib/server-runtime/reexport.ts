@@ -1,4 +1,4 @@
-export type { ErrorResponse } from "react-router";
+export type { ErrorResponse } from "../router";
 
 export type {
   HandleDataRequestFunction,

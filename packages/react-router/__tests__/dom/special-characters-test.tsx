@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 /* eslint-disable jest/expect-expect */
 
 import { JSDOM } from "jsdom";
