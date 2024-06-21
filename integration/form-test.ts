@@ -62,7 +62,7 @@ test.describe("Forms", () => {
     fixture = await createFixture({
       files: {
         "app/routes/get-submission.tsx": js`
-            import { useLoaderData, Form } from "react-router-dom";
+            import { useLoaderData, Form } from "react-router";
 
             export function loader({ request }) {
               let url = new URL(request.url);
@@ -144,7 +144,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/inbox.tsx": js`
-            import { Form } from "react-router-dom";
+            import { Form } from "react-router";
             export default function() {
               return (
                 <>
@@ -169,7 +169,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/blog.tsx": js`
-            import { Form, Outlet } from "react-router-dom";
+            import { Form, Outlet } from "react-router";
             export default function() {
               return (
                 <>
@@ -196,7 +196,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/blog._index.tsx": js`
-            import { Form } from "react-router-dom";
+            import { Form } from "react-router";
             export function action() {
               return { ok: true };
             }
@@ -230,7 +230,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/blog.$postId.tsx": js`
-            import { Form } from "react-router-dom";
+            import { Form } from "react-router";
             export default function() {
               return (
                 <>
@@ -255,7 +255,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/projects.tsx": js`
-            import { Form, Outlet } from "react-router-dom";
+            import { Form, Outlet } from "react-router";
             export default function() {
               return (
                 <>
@@ -273,7 +273,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/projects.$.tsx": js`
-            import { Form } from "react-router-dom";
+            import { Form } from "react-router";
             export default function() {
               return (
                 <>
@@ -299,7 +299,7 @@ test.describe("Forms", () => {
 
         "app/routes/stop-propagation.tsx": js`
             import { json } from "@react-router/node";
-            import { Form, useActionData } from "react-router-dom";
+            import { Form, useActionData } from "react-router";
 
             export async function action({ request }) {
               let formData = await request.formData();
@@ -320,7 +320,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/form-method.tsx": js`
-            import { Form, useActionData, useLoaderData, useSearchParams } from "react-router-dom";
+            import { Form, useActionData, useLoaderData, useSearchParams } from "react-router";
             import { json } from "@react-router/node";
 
             export function action({ request }) {
@@ -351,7 +351,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/submitter.tsx": js`
-            import { Form } from "react-router-dom";
+            import { Form } from "react-router";
 
             export default function() {
               return (
@@ -374,7 +374,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/file-upload.tsx": js`
-            import { Form, useSearchParams } from "react-router-dom";
+            import { Form, useSearchParams } from "react-router";
 
             export default function() {
               const [params] = useSearchParams();
@@ -394,8 +394,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/empty-file-upload.tsx": js`
-            import { json } from "react-router";
-            import { Form, useActionData } from "react-router-dom";
+            import { json, Form, useActionData } from "react-router";
 
             export async function action({ request }) {
               let formData = await request.formData();
@@ -430,7 +429,7 @@ test.describe("Forms", () => {
         //
         // TODO: refactor other tests to use this
         "app/routes/outputFormData.tsx": js`
-            import { useActionData, useSearchParams } from "react-router-dom";
+            import { useActionData, useSearchParams } from "react-router";
 
             export async function action({ request }) {
               const formData = await request.formData();
@@ -454,8 +453,7 @@ test.describe("Forms", () => {
         "myfile.txt": "stuff",
 
         "app/routes/pathless-layout-parent.tsx": js`
-            import { json } from "react-router"
-            import { Form, Outlet, useActionData } from 'react-router-dom'
+            import { json, Form, Outlet, useActionData } from "react-router"
 
             export async function action({ request }) {
               return json({ submitted: true });
@@ -476,7 +474,7 @@ test.describe("Forms", () => {
           `,
 
         "app/routes/pathless-layout-parent._pathless.nested.tsx": js`
-            import { Outlet } from 'react-router-dom';
+            import { Outlet } from "react-router";
 
             export default function () {
               return (

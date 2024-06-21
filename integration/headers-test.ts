@@ -18,7 +18,7 @@ test.describe.skip("headers export", () => {
         files: {
           "app/root.tsx": js`
             import { json } from "@react-router/node";
-            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+            import { Links, Meta, Outlet, Scripts } from "react-router";
 
             export const loader = () => json({});
 
@@ -159,8 +159,7 @@ test.describe.skip("headers export", () => {
           `,
 
           "app/routes/cookie.tsx": js`
-            import { json } from "react-router";
-            import { Outlet } from "react-router-dom";
+            import { json, Outlet } from "react-router";
 
             export function loader({ request }) {
               if (new URL(request.url).searchParams.has("parent-throw")) {
@@ -221,7 +220,7 @@ test.describe.skip("headers export", () => {
       {
         files: {
           "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+            import { Links, Meta, Outlet, Scripts } from "react-router";
 
             export default function Root() {
               return (

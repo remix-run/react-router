@@ -35,7 +35,7 @@ test.describe("Vite custom entry dev", () => {
 
           import type { EntryContext } from "@react-router/node";
           import { createReadableStreamFromReadable } from "@react-router/node";
-          import { ServerRouter } from "react-router-dom";
+          import { ServerRouter } from "react-router";
           import { renderToPipeableStream } from "react-dom/server";
 
           const ABORT_DELAY = 5_000;
@@ -94,7 +94,7 @@ test.describe("Vite custom entry dev", () => {
           }
         `,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export default function Root() {
             return (

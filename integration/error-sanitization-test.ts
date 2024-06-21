@@ -14,7 +14,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 
 const routeFiles = {
   "app/root.tsx": js`
-    import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+    import { Links, Meta, Outlet, Scripts } from "react-router";
 
     export default function Root() {
       return (
@@ -35,7 +35,7 @@ const routeFiles = {
   `,
 
   "app/routes/_index.tsx": js`
-    import { useLoaderData, useLocation, useRouteError } from "react-router-dom";
+    import { useLoaderData, useLocation, useRouteError } from "react-router";
 
     export function loader({ request }) {
       if (new URL(request.url).searchParams.has('loader')) {
@@ -79,8 +79,7 @@ const routeFiles = {
 
   "app/routes/defer.tsx": js`
     import * as React from 'react';
-    import { defer } from "react-router";
-    import { Await, useAsyncError, useLoaderData, useRouteError  } from "react-router-dom";
+    import { defer, Await, useAsyncError, useLoaderData, useRouteError } from "react-router";
 
     export function loader({ request }) {
       if (new URL(request.url).searchParams.has('loader')) {
@@ -495,7 +494,7 @@ test.describe("Error Sanitization", () => {
               import { PassThrough } from "node:stream";
 
               import { createReadableStreamFromReadable } from "@react-router/node";
-              import { ServerRouter, isRouteErrorResponse } from "react-router-dom";
+              import { ServerRouter, isRouteErrorResponse } from "react-router";
               import { renderToPipeableStream } from "react-dom/server";
 
               const ABORT_DELAY = 5_000;

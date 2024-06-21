@@ -16,7 +16,7 @@ test.beforeAll(async () => {
     files: {
       "app/routes/_index.tsx": js`
         import { json } from "@react-router/node";
-        import { Form, useLoaderData, useActionData } from "react-router-dom";
+        import { Form, useLoaderData, useActionData } from "react-router";
 
         async function requestToJson(request) {
           let body = null;

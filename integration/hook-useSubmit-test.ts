@@ -16,7 +16,7 @@ test.describe("`useSubmit()` returned function", () => {
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
-          import { useLoaderData, useSubmit } from "react-router-dom";
+          import { useLoaderData, useSubmit } from "react-router";
 
           export function loader({ request }) {
             let url = new URL(request.url);
@@ -46,7 +46,7 @@ test.describe("`useSubmit()` returned function", () => {
         `,
         "app/routes/action.tsx": js`
           import { json } from "@react-router/node";
-          import { useActionData, useSubmit } from "react-router-dom";
+          import { useActionData, useSubmit } from "react-router";
 
           export async function action({ request }) {
             let contentType = request.headers.get('Content-Type');

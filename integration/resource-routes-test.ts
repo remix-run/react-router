@@ -22,7 +22,7 @@ test.describe("loader in an app", async () => {
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
-          import { Form, Link } from "react-router-dom";
+          import { Form, Link } from "react-router";
 
           export default () => (
             <>
@@ -117,7 +117,7 @@ test.describe("loader in an app", async () => {
         `,
         "app/routes/$.tsx": js`
           import { json } from "@react-router/node";
-          import { useRouteError } from "react-router-dom";
+          import { useRouteError } from "react-router";
           export function loader({ request }) {
             throw json({ message: new URL(request.url).pathname + ' not found' }, {
               status: 404
@@ -278,11 +278,11 @@ test.describe("Development server", async () => {
       {
         files: {
           "app/routes/_index.tsx": js`
-            import { Link } from "react-router-dom";
+            import { Link } from "react-router";
             export default () => <Link to="/child">Child</Link>;
           `,
           "app/routes/_main.tsx": js`
-            import { useRouteError } from "react-router-dom";
+            import { useRouteError } from "react-router";
             export function ErrorBoundary() {
               return <pre>{useRouteError().message}</pre>;
             }

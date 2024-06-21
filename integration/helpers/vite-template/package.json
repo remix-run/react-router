@@ -21,7 +21,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "workspace:*",
-    "react-router-dom": "workspace:*",
     "serialize-javascript": "^6.0.1"
   },
   "devDependencies": {

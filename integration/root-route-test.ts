@@ -79,7 +79,7 @@ test.describe("root route", () => {
       {
         files: {
           "app/root.tsx": js`
-          import { useRouteError } from "react-router-dom";
+          import { useRouteError } from "react-router";
           export function Layout({ children }) {
             return (
               <html>

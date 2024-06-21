@@ -48,7 +48,7 @@ test.describe("ErrorBoundary", () => {
       {
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+              import { Links, Meta, Outlet, Scripts } from "react-router";
 
               export default function Root() {
                 return (
@@ -83,7 +83,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/_index.tsx": js`
-              import { Link, Form } from "react-router-dom";
+              import { Link, Form } from "react-router";
               export default function () {
                 return (
                   <div>
@@ -122,7 +122,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${HAS_BOUNDARY_ACTION_FILE}.jsx`]: js`
-              import { Form } from "react-router-dom";
+              import { Form } from "react-router";
               export async function action() {
                 throw new Error("Kaboom!")
               }
@@ -141,7 +141,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${NO_BOUNDARY_ACTION_FILE}.jsx`]: js`
-              import { Form } from "react-router-dom";
+              import { Form } from "react-router";
               export function action() {
                 throw new Error("Kaboom!")
               }
@@ -211,7 +211,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/fetcher-boundary.tsx": js`
-              import { useFetcher } from "react-router-dom";
+              import { useFetcher } from "react-router";
               export function ErrorBoundary() {
                 return <p id="fetcher-boundary">${OWN_BOUNDARY_TEXT}</p>
               }
@@ -229,7 +229,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/fetcher-no-boundary.tsx": js`
-              import { useFetcher } from "react-router-dom";
+              import { useFetcher } from "react-router";
               export default function() {
                 let fetcher = useFetcher();
 
@@ -246,7 +246,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/action.tsx": js`
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { Outlet, useLoaderData } from "react-router";
 
               export function loader() {
                 return "PARENT";
@@ -263,7 +263,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/action.child-error.tsx": js`
-              import { Form, useLoaderData, useRouteError } from "react-router-dom";
+              import { Form, useLoaderData, useRouteError } from "react-router";
 
               export function loader() {
                 return "CHILD";
@@ -500,7 +500,7 @@ test.describe("ErrorBoundary", () => {
       fixture = await createFixture({
         files: {
           "app/root.tsx": js`
-              import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+              import { Links, Meta, Outlet, Scripts } from "react-router";
 
               export default function Root() {
                 return (
@@ -519,7 +519,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           "app/routes/_index.tsx": js`
-              import { Link, Form } from "react-router-dom";
+              import { Link, Form } from "react-router";
 
               export default function () {
                 return (
@@ -568,7 +568,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${NO_ROOT_BOUNDARY_LOADER_RETURN}.jsx`]: js`
-              import { useLoaderData } from "react-router-dom";
+              import { useLoaderData } from "react-router";
 
               export async function loader() {}
 
@@ -583,7 +583,7 @@ test.describe("ErrorBoundary", () => {
             `,
 
           [`app/routes${NO_ROOT_BOUNDARY_ACTION_RETURN}.jsx`]: js`
-              import { useActionData } from "react-router-dom";
+              import { useActionData } from "react-router";
 
               export async function action() {}
 
@@ -665,7 +665,7 @@ test.describe("loaderData in ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+            import { Links, Meta, Outlet, Scripts } from "react-router";
 
             export default function Root() {
               return (
@@ -686,7 +686,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           `,
 
         "app/routes/parent.tsx": js`
-            import { Outlet, useLoaderData, useMatches, useRouteError } from "react-router-dom";
+            import { Outlet, useLoaderData, useMatches, useRouteError } from "react-router";
 
             export function loader() {
               return "PARENT";
@@ -716,7 +716,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           `,
 
         "app/routes/parent.child-with-boundary.tsx": js`
-            import { Form, useLoaderData, useRouteError } from "react-router-dom";
+            import { Form, useLoaderData, useRouteError } from "react-router";
 
             export function loader() {
               return "CHILD";
@@ -751,7 +751,7 @@ test.describe("loaderData in ErrorBoundary", () => {
           `,
 
         "app/routes/parent.child-without-boundary.tsx": js`
-            import { Form, useLoaderData } from "react-router-dom";
+            import { Form, useLoaderData } from "react-router";
 
             export function loader() {
               return "CHILD";
@@ -955,7 +955,7 @@ test.describe("Default ErrorBoundary", () => {
 
     return {
       "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router";
 
           export default function Root() {
             return (
@@ -978,7 +978,7 @@ test.describe("Default ErrorBoundary", () => {
         `,
 
       "app/routes/_index.tsx": js`
-          import { Link } from "react-router-dom";
+          import { Link } from "react-router";
           export default function () {
             return (
               <div>
@@ -1243,7 +1243,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
   let fixture = await createFixture({
     files: {
       "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts, useRouteError } from "react-router";
 
           export default function App() {
             return (
@@ -1278,7 +1278,7 @@ test("Allows back-button out of an error boundary after a hard reload", async ({
           }
         `,
       "app/routes/_index.tsx": js`
-          import { Link } from "react-router-dom";
+          import { Link } from "react-router";
 
           export default function Index() {
             return (

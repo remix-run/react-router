@@ -27,7 +27,7 @@ test.describe("rendering", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export function shouldRevalidate() {
             return false;
@@ -52,7 +52,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link } from "react-router-dom";
+          import { Link } from "react-router";
           export default function() {
             return (
               <div>
@@ -66,7 +66,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${PAGE}.jsx`]: js`
-          import { Outlet, useLoaderData } from "react-router-dom";
+          import { Outlet, useLoaderData } from "react-router";
 
           export function loader() {
             return "${PAGE_TEXT}"
@@ -88,7 +88,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${PAGE}._index.jsx`]: js`
-          import { useLoaderData, Link } from "react-router-dom";
+          import { useLoaderData, Link } from "react-router";
 
           export function loader() {
             return "${PAGE_INDEX_TEXT}"
@@ -106,7 +106,7 @@ test.describe("rendering", () => {
         `,
 
         [`app/routes/${PAGE}.${CHILD}.jsx`]: js`
-          import { useLoaderData } from "react-router-dom";
+          import { useLoaderData } from "react-router";
 
           export function loader() {
             return "${CHILD_TEXT}"
@@ -140,7 +140,7 @@ test.describe("rendering", () => {
 
         "app/routes/gh-1691.tsx": js`
           import { json, redirect } from "@react-router/node";
-          import { useFetcher} from "react-router-dom";
+          import { useFetcher} from "react-router";
 
           export const action = async ( ) => {
             return redirect("/gh-1691");
@@ -168,7 +168,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/parent.tsx": js`
-          import { Outlet, useLoaderData } from "react-router-dom";
+          import { Outlet, useLoaderData } from "react-router";
 
           if (!global.counts) {
             global.count = 0;
@@ -196,7 +196,7 @@ test.describe("rendering", () => {
 
         "app/routes/parent.child.tsx": js`
           import { redirect } from "@react-router/node";
-          import { useFetcher} from "react-router-dom";
+          import { useFetcher} from "react-router";
 
           export const action = async ({ request }) => {
             return redirect("/parent");
