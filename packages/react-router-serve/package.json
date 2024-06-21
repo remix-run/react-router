@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/react-router",
-    "directory": "packages/remix-serve"
+    "directory": "packages/react-router-serve"
   },
   "license": "MIT",
   "bin": {

@@ -9,7 +9,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/react-router",
-    "directory": "packages/remix-dev"
+    "directory": "packages/react-router-dev"
   },
   "license": "MIT",
   "main": "dist/index.js",

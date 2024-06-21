@@ -18,7 +18,7 @@ module.exports = function rollup() {
   const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
     // We don't live in a folder matching our package name
-    "remix-dev"
+    "react-router-dev"
   );
 
   return [

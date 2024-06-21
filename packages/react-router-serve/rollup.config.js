@@ -5,7 +5,6 @@ const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const copy = require("rollup-plugin-copy");
 
 const {
-  isBareModuleId,
   createBanner,
   getBuildDirectories,
   remixBabelConfig,
@@ -18,25 +17,25 @@ module.exports = function rollup() {
   const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
     // We don't live in a folder matching our package name
-    "remix-express"
+    "react-router-serve"
   );
 
   return [
     {
-      external: (id) => isBareModuleId(id),
-      input: `${SOURCE_DIR}/index.ts`,
+      external() {
+        return true;
+      },
+      input: `${SOURCE_DIR}/cli.ts`,
       output: {
-        banner: createBanner(name, version),
+        banner: createBanner(name, version, { executable: true }),
         dir: OUTPUT_DIR,
         format: "cjs",
-        preserveModules: true,
-        exports: "auto",
       },
       plugins: [
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
-          extensions: [".ts", ".tsx"],
+          extensions: [".ts"],
           ...remixBabelConfig,
         }),
         typescript({
@@ -44,10 +43,19 @@ module.exports = function rollup() {
           exclude: ["__tests__"],
           noEmitOnError: !WATCH,
         }),
-        nodeResolve({ extensions: [".ts", ".tsx"] }),
+        nodeResolve({ extensions: [".ts"] }),
         copy({
           targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
         }),
+        {
+          name: "dynamic-import-polyfill",
+          renderDynamicImport() {
+            return {
+              left: "import(",
+              right: ")",
+            };
+          },
+        },
       ],
     },
   ];

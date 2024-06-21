@@ -58,7 +58,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
   // // To get speed ups in dev, make sure you build before running tests or are running `pnpm watch`
   let sourceDir = path.resolve(__dirname, "../..");
   let sourceTS = path.resolve(sourceDir, "cli.ts");
-  // // when the most recent change happened _anywhere_ within `packages/remix-dev/`
+  // // when the most recent change happened _anywhere_ within `packages/react-router-dev/`
 
   let sourceModified = await mtimeDir(sourceDir);
 
