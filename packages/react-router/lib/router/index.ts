@@ -24,6 +24,7 @@ export type {
   LowerCaseFormMethod,
   ParamParseKey,
   Params,
+  AgnosticPatchRoutesOnMissFunction as unstable_AgnosticPatchRoutesOnMissFunction,
   PathMatch,
   PathParam,
   PathPattern,

@@ -170,11 +170,11 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      // Node 18 and 20 output different errors here
-      // Node 18 and 20 output different errors here
-      let expected = process.version.startsWith("v18")
-        ? "Unexpected token } in JSON at position 15"
-        : "Unexpected non-whitespace character after JSON at position 15";
+      // Node 16/18 versus 20 output different errors here :/
+      let expected =
+        process.version.startsWith("v16") || process.version.startsWith("v18")
+          ? "Unexpected token } in JSON at position 15"
+          : "Unexpected non-whitespace character after JSON at position 15";
       expect(t.router.state.errors?.foo).toEqual(new SyntaxError(expected));
     });
 
@@ -207,10 +207,11 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      // Node 18 and 20 output different errors here
-      let expected = process.version.startsWith("v18")
-        ? "Unexpected token } in JSON at position 15"
-        : "Unexpected non-whitespace character after JSON at position 15";
+      // Node 16/18 versus 20 output different errors here :/
+      let expected =
+        process.version.startsWith("v16") || process.version.startsWith("v18")
+          ? "Unexpected token } in JSON at position 15"
+          : "Unexpected non-whitespace character after JSON at position 15";
       expect(t.router.state.errors?.root).toEqual(new SyntaxError(expected));
     });
 

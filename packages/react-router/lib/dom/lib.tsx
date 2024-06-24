@@ -43,7 +43,12 @@ import {
 } from "../router";
 
 import "./global";
-import type { SubmitOptions, URLSearchParamsInit, SubmitTarget } from "./dom";
+import type {
+  SubmitOptions,
+  URLSearchParamsInit,
+  SubmitTarget,
+  FetcherSubmitOptions,
+} from "./dom";
 import {
   createSearchParams,
   defaultMethod,
@@ -62,6 +67,7 @@ import {
 import type {
   FutureConfig,
   FutureConfig as RenderFutureConfig,
+  unstable_PatchRoutesOnMissFunction,
 } from "../components";
 import { Router, mapRouteProperties } from "../components";
 import type {
@@ -125,6 +131,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   window?: Window;
 }
 
@@ -146,6 +153,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -168,6 +176,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -1314,8 +1323,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 );
 NavLink.displayName = "NavLink";
 
-export interface FetcherFormProps
-  extends React.FormHTMLAttributes<HTMLFormElement> {
+/**
+ * Form props shared by navigations and fetchers
+ */
+interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * The HTTP verb to use when the form is submitted. Supports "get", "post",
    * "put", "delete", and "patch".
@@ -1359,9 +1370,16 @@ export interface FetcherFormProps
 }
 
 /**
+ * Form props available to fetchers
  * @category Types
  */
-export interface FormProps extends FetcherFormProps {
+export interface FetcherFormProps extends SharedFormProps {}
+
+/**
+ * Form props available to navigations
+ * @category Types
+ */
+export interface FormProps extends SharedFormProps {
   /**
    * Indicates a specific fetcherKey to use when using `navigate={false}` so you
    * can pick up the fetcher's state in a different component in a {@link
@@ -1906,7 +1924,7 @@ export interface FetcherSubmitFunction {
     target: SubmitTarget,
 
     // Fetchers cannot replace or set state because they are not navigation events
-    options?: Omit<SubmitOptions, "replace" | "state">
+    options?: FetcherSubmitOptions
   ): Promise<void>;
 }
 

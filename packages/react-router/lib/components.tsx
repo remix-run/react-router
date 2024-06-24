@@ -10,6 +10,7 @@ import type {
   To,
   TrackedPromise,
   unstable_DataStrategyFunction,
+  unstable_AgnosticPatchRoutesOnMissFunction,
 } from "./router";
 import {
   AbortedDeferredError,
@@ -122,6 +123,9 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
+export interface unstable_PatchRoutesOnMissFunction
+  extends unstable_AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
+
 /**
  * @category Routers
  */
@@ -134,6 +138,7 @@ export function createMemoryRouter(
     initialEntries?: InitialEntry[];
     initialIndex?: number;
     unstable_dataStrategy?: unstable_DataStrategyFunction;
+    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -150,6 +155,7 @@ export function createMemoryRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
   }).initialize();
 }
 
@@ -307,7 +313,7 @@ export interface OutletProps {
     );
   }
   ```
- 
+
   @category Components
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {

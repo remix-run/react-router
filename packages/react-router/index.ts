@@ -58,6 +58,7 @@ import type {
   RouteProps,
   RouterProps,
   RoutesProps,
+  unstable_PatchRoutesOnMissFunction,
 } from "./lib/components";
 import {
   Await,
@@ -175,6 +176,7 @@ export type {
   Blocker,
   BlockerFunction,
   unstable_HandlerResult,
+  unstable_PatchRoutesOnMissFunction,
 };
 export {
   AbortedDeferredError,

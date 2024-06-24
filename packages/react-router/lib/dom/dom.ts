@@ -155,7 +155,10 @@ function isFormDataSubmitterSupported() {
   return _formDataSupportsSubmitter;
 }
 
-export interface SubmitOptions {
+/**
+ * Submit options shared by both navigations and fetchers
+ */
+interface SharedSubmitOptions {
   /**
    * The HTTP method used to submit the form. Overrides `<form method>`.
    * Defaults to "GET".
@@ -175,28 +178,6 @@ export interface SubmitOptions {
   encType?: FormEncType;
 
   /**
-   * Indicate a specific fetcherKey to use when using navigate=false
-   */
-  fetcherKey?: string;
-
-  /**
-   * navigate=false will use a fetcher instead of a navigation
-   */
-  navigate?: boolean;
-
-  /**
-   * Set `true` to replace the current entry in the browser's history stack
-   * instead of creating a new one (i.e. stay on "the same page"). Defaults
-   * to `false`.
-   */
-  replace?: boolean;
-
-  /**
-   * State object to add to the history stack entry for this navigation
-   */
-  state?: any;
-
-  /**
    * Determines whether the form action is relative to the route hierarchy or
    * the pathname.  Use this if you want to opt out of navigating the route
    * hierarchy and want to instead route based on /-delimited URL segments
@@ -210,9 +191,41 @@ export interface SubmitOptions {
   preventScrollReset?: boolean;
 
   /**
-   * Enable flushSync for this navigation's state updates
+   * Enable flushSync for this submission's state updates
    */
   unstable_flushSync?: boolean;
+}
+
+/**
+ * Submit options available to fetchers
+ */
+export interface FetcherSubmitOptions extends SharedSubmitOptions {}
+
+/**
+ * Submit options available to navigations
+ */
+export interface SubmitOptions extends FetcherSubmitOptions {
+  /**
+   * Set `true` to replace the current entry in the browser's history stack
+   * instead of creating a new one (i.e. stay on "the same page"). Defaults
+   * to `false`.
+   */
+  replace?: boolean;
+
+  /**
+   * State object to add to the history stack entry for this navigation
+   */
+  state?: any;
+
+  /**
+   * Indicate a specific fetcherKey to use when using navigate=false
+   */
+  fetcherKey?: string;
+
+  /**
+   * navigate=false will use a fetcher instead of a navigation
+   */
+  navigate?: boolean;
 
   /**
    * Enable view transitions on this submission navigation

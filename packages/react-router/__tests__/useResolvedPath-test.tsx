@@ -420,6 +420,43 @@ describe("useResolvedPath", () => {
         </div>"
       `);
     });
+
+    // gh-issue #11629
+    it("when enabled, '.' resolves to the current path including any splat paths nested in pathless routes", () => {
+      let { container } = render(
+        <MemoryRouter
+          initialEntries={["/foo/bar"]}
+          future={{ v7_relativeSplatPath: true }}
+        >
+          <Routes>
+            <Route path="foo">
+              <Route>
+                <Route
+                  path="*"
+                  element={
+                    <Component desc='<Route path="/foo"><Route><Route path="*" /></Route></Route>' />
+                  }
+                />
+              </Route>
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      );
+      let html = getHtml(container);
+      html = html ? html.replace(/&lt;/g, "<").replace(/&gt;/g, ">") : html;
+      expect(html).toMatchInlineSnapshot(`
+        "<div>
+          --- Routes: <Route path="/foo"><Route><Route path="*" /></Route></Route> ---
+          useLocation(): /foo/bar
+          useResolvedPath('.'): /foo/bar
+          useResolvedPath('..'): /foo
+          useResolvedPath('..', { relative: 'path' }): /foo
+          useResolvedPath('baz/qux'): /foo/bar/baz/qux
+          useResolvedPath('./baz/qux'): /foo/bar/baz/qux
+
+        </div>"
+      `);
+    });
   });
 });
 

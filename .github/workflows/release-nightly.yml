@@ -1,0 +1,95 @@
+name: 🌒 Nightly Release
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *" # every day at 12AM PST
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+
+jobs:
+  # HEADS UP! this "nightly" job will only ever run on the `main` branch due to
+  # it being a cron job, and the last commit on main will be what github shows
+  # as the trigger however in the checkout below we specify the `v7` branch,
+  # so all the scripts in this job will be ran from that, confusing i know, so
+  # in some cases we'll need to create multiple PRs when modifying nightly
+  # release processes
+  nightly:
+    name: 🌒 Nightly Release
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+    outputs:
+      # allows this to be used in the `comment` job below - will be undefined
+      # if there's no release necessary
+      NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: v7
+          # checkout using a custom token so that we can push later on
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: 📥 Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: 🕵️ Check for changes
+        id: version
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          # get latest nightly tag
+          LATEST_NIGHTLY_TAG=$(git tag -l v0.0.0-nightly-\* --sort=-creatordate | head -n 1)
+
+          # check if last commit to v7 starts with the nightly tag we're about
+          # to create (minus the date)
+          # if it is, we'll skip the nightly creation
+          # if not, we'll create a new nightly tag
+          if [[ ${LATEST_NIGHTLY_TAG} == v0.0.0-nightly-${SHORT_SHA}-* ]]; then
+            echo "🛑 Latest nightly tag is the same as the latest commit sha, skipping nightly release"
+          else
+            # yyyyMMdd format (e.g. 20221207)
+            DATE=$(date '+%Y%m%d')
+            # v0.0.0-nightly-<short sha>-<date>
+            NEXT_VERSION=0.0.0-nightly-${SHORT_SHA}-${DATE}
+            # set output so it can be used in other jobs
+            echo "NEXT_VERSION=${NEXT_VERSION}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ⤴️ Update version
+        if: steps.version.outputs.NEXT_VERSION
+        run: |
+          git config --local user.email "hello@remix.run"
+          git config --local user.name "Remix Run Bot"
+          git checkout -b nightly/${{ steps.version.outputs.NEXT_VERSION }}
+          pnpm run version ${{steps.version.outputs.NEXT_VERSION}}
+          git push origin --tags
+
+      - name: 🏗 Build
+        if: steps.version.outputs.NEXT_VERSION
+        run: pnpm build
+
+      - name: 🔐 Setup npm auth
+        if: steps.version.outputs.NEXT_VERSION
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: 🚀 Publish
+        if: steps.version.outputs.NEXT_VERSION
+        run: pnpm run publish

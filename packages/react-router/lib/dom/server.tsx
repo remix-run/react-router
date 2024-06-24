@@ -377,6 +377,9 @@ export function createStaticRouter(
     deleteBlocker() {
       throw msg("deleteBlocker");
     },
+    patchRoutes() {
+      throw msg("patchRoutes");
+    },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
     _internalSetRoutes() {
