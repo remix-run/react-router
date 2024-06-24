@@ -1,13 +1,13 @@
 # `@remix-run/router`
 
-## 1.17.0-pre.0
+## 1.17.0
 
 ### Minor Changes
 
 - Add support for Lazy Route Discovery (a.k.a. Fog of War) ([#11626](https://github.com/remix-run/react-router/pull/11626))
 
-  - RFC: https://github.com/remix-run/react-router/discussions/11113
-  - `unstable_patchRoutesOnMiss` docs: https://reactrouter.com/en/main/routers/create-browser-router
+  - RFC: <https://github.com/remix-run/react-router/discussions/11113>
+  - `unstable_patchRoutesOnMiss` docs: <https://reactrouter.com/en/main/routers/create-browser-router>
 
 ## 1.16.1
 
