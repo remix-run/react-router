@@ -5,11 +5,9 @@ import type {
   MetaMatch as _MetaMatch,
 } from "../dom/ssr/routeModules";
 import type { LinkDescriptor } from "../dom/ssr/links";
+import type { AppLoadContext } from "../server-runtime/data";
 import type { Location } from "./history";
 import type { UIMatch } from "./utils";
-
-// TODO: replace `Context` with `AppLoadContext` once `react-router` absorbs `server-runtime` (https://github.com/remix-run/react-router/pull/11669)
-interface Context {}
 
 type MaybePromise<T> = T | Promise<T>;
 type Pretty<T> = { [K in keyof T]: T[K] } & {};
@@ -43,7 +41,7 @@ export type ResponseStub = {
 
 // loader
 type LoaderArgs<Param extends string> = {
-  context: Context;
+  context: AppLoadContext;
   request: Request;
   params: Params<Param>;
   response: ResponseStub;
@@ -51,7 +49,7 @@ type LoaderArgs<Param extends string> = {
 
 // action
 type ActionArgs<Param extends string> = {
-  context: Context;
+  context: AppLoadContext;
   request: Request;
   params: Params<Param>;
   response: ResponseStub;
