@@ -1,6 +1,6 @@
-import type { AgnosticDataRouteObject, Router } from "../index";
-import { createMemoryHistory, createRouter } from "../index";
-import { ErrorResponseImpl } from "../utils";
+import type { AgnosticDataRouteObject, Router } from "../../lib/router/index";
+import { createMemoryHistory, createRouter } from "../../lib/router/index";
+import { ErrorResponseImpl } from "../../lib/router/utils";
 import { createDeferred, createFormData, tick } from "./utils/utils";
 
 let router: Router;
