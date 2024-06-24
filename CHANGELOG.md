@@ -15,7 +15,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
 - [React Router Releases](#react-router-releases)
   - [v6.24.0](#v6240)
     - [What's Changed](#whats-changed)
-      - [Lazy Route Discovery (a.k.a. Fog of War)](#lazy-route-discovery-aka-fog-of-war)
+      - [Lazy Route Discovery (a.k.a. "Fog of War")](#lazy-route-discovery-aka-fog-of-war)
     - [Minor Changes](#minor-changes)
     - [Patch Changes](#patch-changes)
   - [v6.23.1](#v6231)
@@ -86,7 +86,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-19)
   - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-8)
-      - [v7_startTransition](#v7_starttransition)
+      - [v7\_startTransition](#v7_starttransition)
     - [Minor Changes](#minor-changes-11)
     - [Patch Changes](#patch-changes-20)
   - [v6.12.1](#v6121)
@@ -106,7 +106,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-10)
     - [Minor Changes](#minor-changes-14)
-      - [future.v7_normalizeFormMethod](#futurev7_normalizeformmethod)
+      - [future.v7\_normalizeFormMethod](#futurev7_normalizeformmethod)
     - [Patch Changes](#patch-changes-26)
   - [v6.9.0](#v690)
     - [What's Changed](#whats-changed-11)
@@ -193,15 +193,15 @@ Date: YYYY-MM-DD
 
 ## v6.24.0
 
-Date: 2024-06-18
+Date: 2024-06-24
 
 ### What's Changed
 
-#### Lazy Route Discovery (a.k.a. Fog of War)
+#### Lazy Route Discovery (a.k.a. "Fog of War")
 
-We're really excited to release our new API for "Lazy Route Discovery" in v6.24.0! For some background information, please check out the original [RFC](https://github.com/remix-run/react-router/discussions/11113). The tl;dr; is that ever since we introduced the Data APIs in v6.4 via `<RouterProvider>`, we've been a little bummed that one of the tradeoffs was the lack of a compelling code-splitting story mirroring what we had in the `<BrowserRouter>`/`<Routes>` apps. We took a baby-step towards improving that story with `route.lazy` in v6.9, but with v6.24 we've gone the rest of the way.
+We're really excited to release our new API for "Lazy Route Discovery" in `v6.24.0`! For some background information, please check out the original [RFC](https://github.com/remix-run/react-router/discussions/11113). The **tl;dr;** is that ever since we introduced the Data APIs in v6.4 via `<RouterProvider>`, we've been a little bummed that one of the tradeoffs was the lack of a compelling code-splitting story mirroring what we had in the `<BrowserRouter>`/`<Routes>` apps. We took a baby-step towards improving that story with `route.lazy` in `v6.9.0`, but with `v6.24.0` we've gone the rest of the way.
 
-With 6.24, you can now load portions of the route tree lazily via the new `unstable_patchRoutesOnMiss` option passed to `createBrowserRouter` (and it's memory/hash counterparts). This gives you a way to hook into spots where React Router is unable to match a given path and patch new routes into the route tree during the navigation (or fetcher call).
+With "Fog of War", you can now load portions of the route tree lazily via the new `unstable_patchRoutesOnMiss` option passed to `createBrowserRouter` (and it's memory/hash counterparts). This gives you a way to hook into spots where React Router is unable to match a given path and patch new routes into the route tree during the navigation (or fetcher call).
 
 Here's a very small example, but please refer to the [documentation](https://reactrouter.com/en/main/routers/create-browser-router#unstable_patchroutesonmiss) for more information and use cases:
 
@@ -229,7 +229,7 @@ const router = createBrowserRouter(
 
 ### Minor Changes
 
-- Add support for Lazy Route Discovery (a.k.a. Fog of War) ([#11626](https://github.com/remix-run/react-router/pull/11626))
+- Add support for Lazy Route Discovery (a.k.a. "Fog of War") ([#11626](https://github.com/remix-run/react-router/pull/11626))
 
 ### Patch Changes
 
