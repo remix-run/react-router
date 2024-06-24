@@ -66,7 +66,7 @@ export function StaticRouter({
     pathname: locationProp.pathname || "/",
     search: locationProp.search || "",
     hash: locationProp.hash || "",
-    state: locationProp.state || null,
+    state: locationProp.state != null ? locationProp.state : null,
     key: locationProp.key || "default",
   };
 
@@ -375,6 +375,9 @@ export function createStaticRouter(
     },
     deleteBlocker() {
       throw msg("deleteBlocker");
+    },
+    patchRoutes() {
+      throw msg("patchRoutes");
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
