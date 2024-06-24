@@ -1,5 +1,22 @@
 # `react-router-dom`
 
+## 6.24.0
+
+### Minor Changes
+
+- Add support for Lazy Route Discovery (a.k.a. Fog of War) ([#11626](https://github.com/remix-run/react-router/pull/11626))
+
+  - RFC: <https://github.com/remix-run/react-router/discussions/11113>
+  - `unstable_patchRoutesOnMiss` docs: <https://reactrouter.com/en/main/routers/create-browser-router>
+
+### Patch Changes
+
+- Fix `fetcher.submit` types - remove incorrect `navigate`/`fetcherKey`/`unstable_viewTransition` options because they are only relevant for `useSubmit` ([#11631](https://github.com/remix-run/react-router/pull/11631))
+- Allow falsy `location.state` values passed to `<StaticRouter>` ([#11495](https://github.com/remix-run/react-router/pull/11495))
+- Updated dependencies:
+  - `react-router@6.24.0`
+  - `@remix-run/router@1.17.0`
+
 ## 6.23.1
 
 ### Patch Changes
