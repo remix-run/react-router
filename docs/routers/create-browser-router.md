@@ -430,7 +430,8 @@ const router = createBrowserRouter(
     async unstable_patchRoutesOnMiss({ path, patch }) {
       if (path === "/a") {
         // Load/patch the `a` route as a child of the route with id `root`
-        let route = await getARoute(); // { path: 'a', Component: A }
+        let route = await getARoute();
+        //  ^ { path: 'a', Component: A }
         patch("root", [route]);
       }
     },
@@ -456,8 +457,9 @@ const router = createBrowserRouter(
   {
     async unstable_patchRoutesOnMiss({ path, patch }) {
       if (path === "/root-sibling") {
-        // Load/patch the `/sibling` route at the top
-        let route = await getRootSiblingRoute(); // { path: '/sibling', Component: Sibling }
+        // Load/patch the `/root-sibling` route as a sibling of the root route
+        let route = await getRootSiblingRoute();
+        //  ^ { path: '/root-sibling', Component: RootSibling }
         patch(null, [route]);
       }
     },
