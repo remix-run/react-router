@@ -1019,7 +1019,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     }
 
     // Rendered into <a href> for relative URLs
-    debugger;
     let href = useHref(to, { relative });
     let [shouldPrefetch, prefetchRef, prefetchHandlers] = usePrefetchBehavior(
       prefetch,
