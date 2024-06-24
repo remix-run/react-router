@@ -86,7 +86,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
     - [Patch Changes](#patch-changes-19)
   - [v6.13.0](#v6130)
     - [What's Changed](#whats-changed-8)
-      - [v7_startTransition](#v7_starttransition)
+      - [`future.v7_startTransition`](#futurev7_starttransition)
     - [Minor Changes](#minor-changes-11)
     - [Patch Changes](#patch-changes-20)
   - [v6.12.1](#v6121)
@@ -106,7 +106,7 @@ We manage release notes in this file instead of the paginated Github Releases Pa
   - [v6.10.0](#v6100)
     - [What's Changed](#whats-changed-10)
     - [Minor Changes](#minor-changes-14)
-      - [future.v7_normalizeFormMethod](#futurev7_normalizeformmethod)
+      - [`future.v7_normalizeFormMethod`](#futurev7_normalizeformmethod)
     - [Patch Changes](#patch-changes-26)
   - [v6.9.0](#v690)
     - [What's Changed](#whats-changed-11)
@@ -203,7 +203,7 @@ We're really excited to release our new API for "Lazy Route Discovery" in `v6.24
 
 With "Fog of War", you can now load portions of the route tree lazily via the new `unstable_patchRoutesOnMiss` option passed to `createBrowserRouter` (and it's memory/hash counterparts). This gives you a way to hook into spots where React Router is unable to match a given path and patch new routes into the route tree during the navigation (or fetcher call).
 
-Here's a very small example, but please refer to the [documentation](https://reactrouter.com/en/main/routers/create-browser-router#unstable_patchroutesonmiss) for more information and use cases:
+Here's a very small example, but please refer to the [documentation](https://reactrouter.com/en/main/routers/create-browser-router#optsunstable_patchroutesonmiss) for more information and use cases:
 
 ```js
 const router = createBrowserRouter(
@@ -506,7 +506,7 @@ Per this [RFC](https://github.com/remix-run/remix/discussions/7698), we've intro
 
 - You may now specify your own fetcher identifier via `useFetcher({ key: string })`, which allows you to access the same fetcher instance from different components in your application without prop-drilling
 - Fetcher keys are now exposed on the fetchers returned from `useFetchers` so that they can be looked up by `key`
-- `Form` and `useSumbit` now support optional `navigate`/`fetcherKey` props/params to allow kicking off a fetcher submission under the hood with an optionally user-specified `key`
+- `Form` and `useSubmit` now support optional `navigate`/`fetcherKey` props/params to allow kicking off a fetcher submission under the hood with an optionally user-specified `key`
   - `<Form method="post" navigate={false} fetcherKey="my-key">`
   - `submit(data, { method: "post", navigate: false, fetcherKey: "my-key" })`
   - Invoking a fetcher in this way is ephemeral and stateless
@@ -765,7 +765,7 @@ Date: 2023-06-14
 
 `6.13.0` is really a patch release in spirit but comes with a SemVer minor bump since we added a new future flag.
 
-#### v7_startTransition
+#### `future.v7_startTransition`
 
 The **tl;dr;** is that `6.13.0` is the same as [`6.12.0`](https://github.com/remix-run/react-router/releases/tag/react-router%406.12.0) bue we've moved the usage of `React.startTransition` behind an opt-in `future.v7_startTransition` [future flag](https://reactrouter.com/en/main/guides/api-development-strategy) because we found that there are applications in the wild that are currently using `Suspense` in ways that are incompatible with `React.startTransition`.
 
@@ -918,7 +918,7 @@ You can also check out the docs [here](https://reactrouter.com/en/dev/guides/api
 
 ### Minor Changes
 
-#### future.v7_normalizeFormMethod
+#### `future.v7_normalizeFormMethod`
 
 The first future flag being introduced is `future.v7_normalizeFormMethod` which will normalize the exposed `useNavigation()/useFetcher()` `formMethod` fields as uppercase HTTP methods to align with the `fetch()` (and some Remix) behavior. ([#10207](https://github.com/remix-run/react-router/pull/10207))
 
