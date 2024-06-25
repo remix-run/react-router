@@ -56,9 +56,6 @@ function derive(build: ServerBuild, mode?: string) {
   let serverMode = isServerMode(mode) ? mode : ServerMode.Production;
   let staticHandler = createStaticHandler(dataRoutes, {
     basename: build.basename,
-    future: {
-      v7_throwAbortReason: build.future?.v3_throwAbortReason === true,
-    },
   });
 
   let errorHandler =

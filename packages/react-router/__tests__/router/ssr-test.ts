@@ -737,9 +737,9 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toMatchInlineSnapshot(
-        `[Error: query() call aborted: GET http://localhost/path?key=value]`
-      );
+      expect(e).toBeInstanceOf(DOMException);
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
     });
 
     it("should handle aborted submit requests", async () => {
@@ -764,92 +764,21 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toMatchInlineSnapshot(
-        `[Error: query() call aborted: POST http://localhost/path?key=value]`
-      );
-    });
-
-    it("should handle aborted load requests (v7_throwAbortReason=true)", async () => {
-      let dfd = createDeferred();
-      let controller = new AbortController();
-      let { query } = createStaticHandler(
-        [
-          {
-            id: "root",
-            path: "/path",
-            loader: () => dfd.promise,
-          },
-        ],
-        { future: { v7_throwAbortReason: true } }
-      );
-      let request = createRequest("/path?key=value", {
-        signal: controller.signal,
-      });
-      let e;
-      try {
-        let contextPromise = query(request);
-        controller.abort();
-        // This should resolve even though we never resolved the loader
-        await contextPromise;
-      } catch (_e) {
-        e = _e;
-      }
-      // DOMException added in node 17
-      if (process.versions.node.split(".").map(Number)[0] >= 17) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(e).toBeInstanceOf(DOMException);
-      }
+      expect(e).toBeInstanceOf(DOMException);
       expect(e.name).toBe("AbortError");
       expect(e.message).toBe("This operation was aborted");
     });
 
-    it("should handle aborted submit requests (v7_throwAbortReason=true)", async () => {
+    it("should handle aborted requests", async () => {
       let dfd = createDeferred();
       let controller = new AbortController();
-      let { query } = createStaticHandler(
-        [
-          {
-            id: "root",
-            path: "/path",
-            action: () => dfd.promise,
-          },
-        ],
-        { future: { v7_throwAbortReason: true } }
-      );
-      let request = createSubmitRequest("/path?key=value", {
-        signal: controller.signal,
-      });
-      let e;
-      try {
-        let contextPromise = query(request);
-        controller.abort();
-        // This should resolve even though we never resolved the loader
-        await contextPromise;
-      } catch (_e) {
-        e = _e;
-      }
-      // DOMException added in node 17
-      if (process.versions.node.split(".").map(Number)[0] >= 17) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(e).toBeInstanceOf(DOMException);
-      }
-      expect(e.name).toBe("AbortError");
-      expect(e.message).toBe("This operation was aborted");
-    });
-
-    it("should handle aborted requests (v7_throwAbortReason=true + custom reason)", async () => {
-      let dfd = createDeferred();
-      let controller = new AbortController();
-      let { query } = createStaticHandler(
-        [
-          {
-            id: "root",
-            path: "/path",
-            loader: () => dfd.promise,
-          },
-        ],
-        { future: { v7_throwAbortReason: true } }
-      );
+      let { query } = createStaticHandler([
+        {
+          id: "root",
+          path: "/path",
+          loader: () => dfd.promise,
+        },
+      ]);
       let request = createRequest("/path?key=value", {
         signal: controller.signal,
       });
@@ -2234,12 +2163,12 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toMatchInlineSnapshot(
-        `[Error: queryRoute() call aborted: GET http://localhost/path?key=value]`
-      );
+      expect(e).toBeInstanceOf(DOMException);
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
     });
 
-    it("should handle aborted submit requests", async () => {
+    it("should handle aborted submit requests - custom reason", async () => {
       let dfd = createDeferred();
       let controller = new AbortController();
       let { queryRoute } = createStaticHandler([
@@ -2261,92 +2190,21 @@ describe("ssr", () => {
       } catch (_e) {
         e = _e;
       }
-      expect(e).toMatchInlineSnapshot(
-        `[Error: queryRoute() call aborted: POST http://localhost/path?key=value]`
-      );
-    });
-
-    it("should handle aborted load requests (v7_throwAbortReason=true)", async () => {
-      let dfd = createDeferred();
-      let controller = new AbortController();
-      let { queryRoute } = createStaticHandler(
-        [
-          {
-            id: "root",
-            path: "/path",
-            loader: () => dfd.promise,
-          },
-        ],
-        { future: { v7_throwAbortReason: true } }
-      );
-      let request = createRequest("/path?key=value", {
-        signal: controller.signal,
-      });
-      let e;
-      try {
-        let statePromise = queryRoute(request, { routeId: "root" });
-        controller.abort();
-        // This should resolve even though we never resolved the loader
-        await statePromise;
-      } catch (_e) {
-        e = _e;
-      }
-      // DOMException added in node 17
-      if (process.versions.node.split(".").map(Number)[0] >= 17) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(e).toBeInstanceOf(DOMException);
-      }
+      expect(e).toBeInstanceOf(DOMException);
       expect(e.name).toBe("AbortError");
       expect(e.message).toBe("This operation was aborted");
     });
 
-    it("should handle aborted submit requests (v7_throwAbortReason=true)", async () => {
+    it("should handle aborted load requests - custom reason", async () => {
       let dfd = createDeferred();
       let controller = new AbortController();
-      let { queryRoute } = createStaticHandler(
-        [
-          {
-            id: "root",
-            path: "/path",
-            action: () => dfd.promise,
-          },
-        ],
-        { future: { v7_throwAbortReason: true } }
-      );
-      let request = createSubmitRequest("/path?key=value", {
-        signal: controller.signal,
-      });
-      let e;
-      try {
-        let statePromise = queryRoute(request, { routeId: "root" });
-        controller.abort();
-        // This should resolve even though we never resolved the loader
-        await statePromise;
-      } catch (_e) {
-        e = _e;
-      }
-      // DOMException added in node 17
-      if (process.versions.node.split(".").map(Number)[0] >= 17) {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(e).toBeInstanceOf(DOMException);
-      }
-      expect(e.name).toBe("AbortError");
-      expect(e.message).toBe("This operation was aborted");
-    });
-
-    it("should handle aborted load requests (v7_throwAbortReason=true + custom reason)", async () => {
-      let dfd = createDeferred();
-      let controller = new AbortController();
-      let { queryRoute } = createStaticHandler(
-        [
-          {
-            id: "root",
-            path: "/path",
-            loader: () => dfd.promise,
-          },
-        ],
-        { future: { v7_throwAbortReason: true } }
-      );
+      let { queryRoute } = createStaticHandler([
+        {
+          id: "root",
+          path: "/path",
+          loader: () => dfd.promise,
+        },
+      ]);
       let request = createRequest("/path?key=value", {
         signal: controller.signal,
       });
