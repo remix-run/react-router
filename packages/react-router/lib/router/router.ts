@@ -3379,13 +3379,6 @@ export function createRouter(init: RouterInit): Router {
 
 export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
-/**
- * Future flags to toggle new feature behavior
- */
-export interface StaticHandlerFutureConfig {
-  v7_throwAbortReason: boolean;
-}
-
 export interface CreateStaticHandlerOptions {
   basename?: string;
   /**
@@ -3393,7 +3386,7 @@ export interface CreateStaticHandlerOptions {
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
-  future?: Partial<StaticHandlerFutureConfig>;
+  future?: {};
 }
 
 export function createStaticHandler(
@@ -3420,9 +3413,8 @@ export function createStaticHandler(
     mapRouteProperties = defaultMapRouteProperties;
   }
   // Config driven behavior flags
-  let future: StaticHandlerFutureConfig = {
-    v7_throwAbortReason: false,
-    ...(opts ? opts.future : null),
+  let future = {
+    ...opts?.future,
   };
 
   let dataRoutes = convertRoutesToDataRoutes(
@@ -3735,7 +3727,7 @@ export function createStaticHandler(
       result = results[0];
 
       if (request.signal.aborted) {
-        throwStaticHandlerAbortedError(request, isRouteRequest, future);
+        throwStaticHandlerAbortedError(request, isRouteRequest);
       }
     }
 
@@ -3916,7 +3908,7 @@ export function createStaticHandler(
     );
 
     if (request.signal.aborted) {
-      throwStaticHandlerAbortedError(request, isRouteRequest, future);
+      throwStaticHandlerAbortedError(request, isRouteRequest);
     }
 
     // Process and commit output from loaders
@@ -4032,15 +4024,16 @@ export function getStaticContextFromError(
 
 function throwStaticHandlerAbortedError(
   request: Request,
-  isRouteRequest: boolean,
-  future: StaticHandlerFutureConfig
+  isRouteRequest: boolean
 ) {
-  if (future.v7_throwAbortReason && request.signal.reason !== undefined) {
+  if (request.signal.reason !== undefined) {
     throw request.signal.reason;
   }
 
   let method = isRouteRequest ? "queryRoute" : "query";
-  throw new Error(`${method}() call aborted: ${request.method} ${request.url}`);
+  throw new Error(
+    `${method}() call aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`
+  );
 }
 
 function isSubmissionNavigation(
