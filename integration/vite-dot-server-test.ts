@@ -218,18 +218,18 @@ test.describe("Vite / server-only escape hatch", async () => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": dedent`
       import { vitePlugin as reactRouter } from "@react-router/dev";
-      import envOnly from "vite-env-only";
+      import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
       export default {
         ${await viteConfig.server({ port })}
-        plugins: [reactRouter(), envOnly(), tsconfigPaths()],
+        plugins: [reactRouter(), envOnlyMacros(), tsconfigPaths()],
       }
     `,
     "app/utils.server.ts": serverOnlyModule,
     "app/.server/utils.ts": serverOnlyModule,
     "app/routes/_index.tsx": `
-      import { serverOnly$ } from "vite-env-only";
+      import { serverOnly$ } from "vite-env-only/macros";
 
       import { serverOnly as serverOnlyFile } from "~/utils.server";
       import serverOnlyDir from "~/.server/utils";
