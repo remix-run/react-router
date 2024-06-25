@@ -6,7 +6,10 @@ import {
   js,
 } from "./helpers/create-fixture.js";
 import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
-import { UNSAFE_ServerMode as ServerMode } from "react-router";
+import {
+  UNSAFE_ServerMode as ServerMode,
+  UNSAFE_SingleFetchRedirectSymbol as SingleFetchRedirectSymbol,
+} from "react-router";
 
 const ISO_DATE = "2024-03-12T12:00:00.000Z";
 
@@ -932,6 +935,17 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -969,6 +983,17 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -988,7 +1013,7 @@ test.describe("single-fetch", () => {
           export function loader({ request, response }) {
             response.status = 302;
             response.headers.set('Location', '/target');
-            return null
+            return response
           }
           export default function Component() {
             return null
@@ -1006,6 +1031,17 @@ test.describe("single-fetch", () => {
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
 
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
@@ -1045,6 +1081,17 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1080,6 +1127,17 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1109,10 +1167,23 @@ test.describe("single-fetch", () => {
         `,
       },
     });
+
     let res = await fixture.requestDocument("/data");
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1149,6 +1220,17 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1181,6 +1263,17 @@ test.describe("single-fetch", () => {
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
 
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
@@ -1228,6 +1321,18 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1271,6 +1376,18 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1291,7 +1408,7 @@ test.describe("single-fetch", () => {
             export function action({ response }) {
               response.status = 302;
               response.headers.set('Location', '/target');
-              return null
+              return response
             }
             export default function Component() {
               return null
@@ -1314,6 +1431,18 @@ test.describe("single-fetch", () => {
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
 
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -1359,6 +1488,18 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1400,6 +1541,18 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1440,6 +1593,18 @@ test.describe("single-fetch", () => {
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
 
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -1483,6 +1648,18 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1522,6 +1699,18 @@ test.describe("single-fetch", () => {
     expect(res.status).toBe(302);
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
 
     let appFixture = await createAppFixture(fixture, ServerMode.Development);
     let app = new PlaywrightFixture(appFixture, page);
@@ -1606,6 +1795,18 @@ test.describe("single-fetch", () => {
         `,
       },
     });
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data");
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1689,6 +1890,19 @@ test.describe("single-fetch", () => {
         `,
       },
     });
+
+    let { status, data } = await fixture.requestSingleFetchData("/data.data", {
+      method: "post",
+      body: null,
+    });
+    expect(data).toEqual({
+      status: 302,
+      redirect: "/target",
+      reload: false,
+      revalidate: false,
+    });
+    expect(status).toBe(202);
+
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1830,29 +2044,6 @@ test.describe("single-fetch", () => {
     expect(await res.text()).toBe("");
   });
 
-  test("processes response stub onto resource routes returning raw data", async () => {
-    let fixture = await createFixture(
-      {
-        files: {
-          ...files,
-          "app/routes/resource.tsx": js`
-            import { json } from '@react-router/node';
-            export function loader({ response }) {
-              response.status = 201;
-              response.headers.set('X-Stub', 'yes')
-              return { message: "RESOURCE" };
-            }
-          `,
-        },
-      },
-      ServerMode.Development
-    );
-    let res = await fixture.requestResource("/resource.data");
-    expect(res.status).toBe(201);
-    expect(res.headers.get("X-Stub")).toBe("yes");
-    expect(await res.text()).toContain("RESOURCE");
-  });
-
   test("processes response stub onto resource routes returning responses", async () => {
     let fixture = await createFixture(
       {
@@ -1894,7 +2085,7 @@ test.describe("single-fetch", () => {
     });
   });
 
-  test("processes returned response stub redirects", async () => {
+  test("processes returned response stub redirects from resource route", async () => {
     let fixture = await createFixture(
       {
         files: {
@@ -1916,7 +2107,7 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/whatever");
   });
 
-  test("processes thrown response stub redirects", async () => {
+  test("processes thrown response stub redirects from resource route", async () => {
     let fixture = await createFixture(
       {
         files: {
@@ -1938,7 +2129,7 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/whatever");
   });
 
-  test("processes response stub redirects when null is returned", async () => {
+  test("processes response stub redirects when null is returned from resource route", async () => {
     let fixture = await createFixture(
       {
         files: {

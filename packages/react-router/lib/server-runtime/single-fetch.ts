@@ -47,6 +47,13 @@ export type ResponseStubImpl = ResponseStub & {
   [ResponseStubOperationsSymbol]: ResponseStubOperation[];
 };
 
+// We can't use a 3xx status or else the `fetch()` would follow the redirect.
+// We need to communicate the redirect back as data so we can act on it in the
+// client side router.  We use a 202 to avoid any automatic caching we might
+// get from a 200 since a "temporary" redirect should not be cached.  This lets
+// the user control cache behavior via Cache-Control
+export const SINGLE_FETCH_REDIRECT_STATUS = 202;
+
 export function getSingleFetchDataStrategy(
   responseStubs: ReturnType<typeof getResponseStubs>,
   {
@@ -164,7 +171,7 @@ export async function singleFetchAction(
       return {
         result: getSingleFetchRedirect(result.status, result.headers),
         headers: result.headers,
-        status: 200,
+        status: SINGLE_FETCH_REDIRECT_STATUS,
       };
     }
 
@@ -179,7 +186,7 @@ export async function singleFetchAction(
       return {
         result: getSingleFetchRedirect(statusCode, headers),
         headers,
-        status: 200, // Don't want the `fetch` call to follow the redirect
+        status: SINGLE_FETCH_REDIRECT_STATUS,
       };
     }
 
@@ -255,7 +262,7 @@ export async function singleFetchLoaders(
           ),
         },
         headers: result.headers,
-        status: 200, // Don't want the `fetch` call to follow the redirect
+        status: SINGLE_FETCH_REDIRECT_STATUS,
       };
     }
 
@@ -272,7 +279,7 @@ export async function singleFetchLoaders(
           ),
         },
         headers,
-        status: 200, // Don't want the `fetch` call to follow the redirect
+        status: SINGLE_FETCH_REDIRECT_STATUS,
       };
     }
 
