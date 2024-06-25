@@ -940,6 +940,43 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#target")).toContain("Target");
   });
 
+  test("processes thrown loader redirects via responseStub (resource route)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@react-router/node';
+          export function loader({ request, response }) {
+            response.status = 302;
+            response.headers.set('Location', '/target');
+            throw response;
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+
+    console.error = () => {};
+
+    let res = await fixture.requestDocument("/data");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
   test("processes returned loader redirects via responseStub", async ({
     page,
   }) => {
@@ -970,6 +1007,112 @@ test.describe("single-fetch", () => {
     expect(res.headers.get("Location")).toBe("/target");
     expect(await res.text()).toBe("");
 
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes loader redirects via responseStub when null is returned", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@react-router/node';
+          export function loader({ request, response }) {
+            response.status = 302;
+            response.headers.set('Location', '/target');
+            return null
+          }
+          export default function Component() {
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+
+    let res = await fixture.requestDocument("/data");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes returned loader redirects via responseStub (resource route)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@react-router/node';
+          export function loader({ request, response }) {
+            response.status = 302;
+            response.headers.set('Location', '/target');
+            return response;
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+
+    let res = await fixture.requestDocument("/data");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes loader redirects via responseStub when null is returned (resource route)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@react-router/node';
+          export function loader({ request, response }) {
+            response.status = 302;
+            response.headers.set('Location', '/target');
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+    let res = await fixture.requestDocument("/data");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
@@ -1093,6 +1236,49 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#target")).toContain("Target");
   });
 
+  test("processes thrown action redirects via responseStub (resource route)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/data.tsx": js`
+            import { redirect } from '@react-router/node';
+            export function action({ response }) {
+              response.status = 302;
+              response.headers.set('Location', '/target');
+              throw response;
+            }
+          `,
+          "app/routes/target.tsx": js`
+            export default function Component() {
+              return <h1 id="target">Target</h1>
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+
+    console.error = () => {};
+
+    let res = await fixture.requestDocument("/data", {
+      method: "post",
+      body: null,
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
+
+    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
   test("processes returned action redirects via responseStub", async ({
     page,
   }) => {
@@ -1108,6 +1294,132 @@ test.describe("single-fetch", () => {
               return null
             }
             export default function Component() {
+              return null
+            }
+          `,
+          "app/routes/target.tsx": js`
+            export default function Component() {
+              return <h1 id="target">Target</h1>
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+
+    let res = await fixture.requestDocument("/data", {
+      method: "post",
+      body: null,
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
+
+    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes action redirects via responseStub when null is returned", async ({
+    page,
+  }) => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/data.tsx": js`
+            import { redirect } from '@react-router/node';
+            export function action({ response }) {
+              response.status = 302;
+              response.headers.set('Location', '/target');
+              return null
+            }
+            export default function Component() {
+              return null
+            }
+          `,
+          "app/routes/target.tsx": js`
+            export default function Component() {
+              return <h1 id="target">Target</h1>
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+
+    let res = await fixture.requestDocument("/data", {
+      method: "post",
+      body: null,
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
+
+    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes returned action redirects via responseStub (resource route)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/data.tsx": js`
+            import { redirect } from '@react-router/node';
+            export function action({ response }) {
+              response.status = 302;
+              response.headers.set('Location', '/target');
+              return response
+            }
+          `,
+          "app/routes/target.tsx": js`
+            export default function Component() {
+              return <h1 id="target">Target</h1>
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+
+    let res = await fixture.requestDocument("/data", {
+      method: "post",
+      body: null,
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/target");
+    expect(await res.text()).toBe("");
+
+    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
+  test("processes returned action redirects via responseStub when null is returned (resource route)", async ({
+    page,
+  }) => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/data.tsx": js`
+            import { redirect } from '@react-router/node';
+            export function action({ response }) {
+              response.status = 302;
+              response.headers.set('Location', '/target');
               return null
             }
           `,
@@ -1385,6 +1697,91 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#target")).toContain("Target");
   });
 
+  test("processes thrown loader errors via responseStub", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@react-router/node';
+          import { isRouteErrorResponse, useRouteError } from 'react-router';
+          export function loader({ request, response }) {
+            response.status = 404;
+            response.headers.set('X-Foo', 'Bar');
+            throw response;
+          }
+          export default function Component() {
+            return null
+          }
+          export function ErrorBoundary() {
+            let error = useRouteError();
+            if (isRouteErrorResponse(error)) {
+              return <p id="error">{error.status}</p>
+            }
+            throw new Error('Nope')
+          }
+        `,
+      },
+    });
+
+    console.error = () => {};
+
+    let res = await fixture.requestDocument("/data");
+    expect(res.status).toBe(404);
+    expect(res.headers.get("X-Foo")).toBe("Bar");
+    expect(await res.text()).toContain('<p id="error">404</p>');
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/data");
+    await page.waitForSelector("#error");
+    expect(await app.getHtml("#error")).toContain("404");
+  });
+
+  test("processes thrown action errors via responseStub", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@react-router/node';
+          import { isRouteErrorResponse, useRouteError } from 'react-router';
+          export function action({ request, response }) {
+            response.status = 404;
+            response.headers.set('X-Foo', 'Bar');
+            throw response;
+          }
+          export default function Component() {
+            return null
+          }
+          export function ErrorBoundary() {
+            let error = useRouteError();
+            if (isRouteErrorResponse(error)) {
+              return <p id="error">{error.status}</p>
+            }
+            throw new Error('Nope')
+          }
+        `,
+      },
+    });
+
+    console.error = () => {};
+
+    let res = await fixture.requestDocument("/data", {
+      method: "post",
+      body: null,
+    });
+    expect(res.status).toBe(404);
+    expect(res.headers.get("X-Foo")).toBe("Bar");
+    expect(await res.text()).toContain('<p id="error">404</p>');
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/data");
+    await page.waitForSelector("#error");
+    expect(await app.getHtml("#error")).toContain("404");
+  });
+
   test("throws an error on naked object returns from external resource route consumption", async () => {
     let oldConsoleError = console.error;
     console.error = () => {};
@@ -1439,7 +1836,7 @@ test.describe("single-fetch", () => {
         files: {
           ...files,
           "app/routes/resource.tsx": js`
-            import { json } from '@remix-run/node';
+            import { json } from '@react-router/node';
             export function loader({ response }) {
               response.status = 201;
               response.headers.set('X-Stub', 'yes')

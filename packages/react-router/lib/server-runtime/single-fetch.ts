@@ -196,7 +196,11 @@ export async function singleFetchAction(
 
     if (context.errors) {
       let error = Object.values(context.errors)[0];
-      singleFetchResult = { error: isResponseStub(error) ? null : error };
+      singleFetchResult = {
+        error: isResponseStub(error)
+          ? convertResponseStubToErrorResponse(error)
+          : error,
+      };
     } else {
       singleFetchResult = { data: Object.values(context.actionData || {})[0] };
     }
@@ -297,7 +301,9 @@ export async function singleFetchLoaders(
       let error = context.errors?.[m.route.id];
       if (error !== undefined) {
         if (isResponseStub(error)) {
-          results[m.route.id] = { error: null };
+          results[m.route.id] = {
+            error: convertResponseStubToErrorResponse(error),
+          };
         } else {
           results[m.route.id] = { error };
         }
@@ -380,6 +386,10 @@ function proxyResponseToResponseStub(
   for (let v of headers.getSetCookie()) {
     responseStub.headers.append("Set-Cookie", v);
   }
+}
+
+export function convertResponseStubToErrorResponse(stub: ResponseStub) {
+  return new ErrorResponseImpl(stub.status || 500, "", null);
 }
 
 export function mergeResponseStubs(

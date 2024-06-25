@@ -38,6 +38,7 @@ import {
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
   ResponseStubOperationsSymbol,
+  convertResponseStubToErrorResponse,
 } from "./single-fetch";
 
 export type RequestHandler = (
@@ -306,6 +307,11 @@ async function handleDocumentRequest(
 
   // Sanitize errors outside of development environments
   if (context.errors) {
+    for (let [routeId, error] of Object.entries(context.errors)) {
+      if (isResponseStub(error)) {
+        context.errors[routeId] = convertResponseStubToErrorResponse(error);
+      }
+    }
     Object.values(context.errors).forEach((err) => {
       // @ts-expect-error This is "private" from users but intended for internal use
       if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
