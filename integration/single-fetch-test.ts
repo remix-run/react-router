@@ -1411,6 +1411,28 @@ test.describe("single-fetch", () => {
     console.error = oldConsoleError;
   });
 
+  test("allows resource routes to return null using a response stub", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/resource.tsx": js`
+            export function loader({ response }) {
+              response.status = 201;
+              response.headers.set('X-Created-Id', '1');
+              return null;
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let res = await fixture.requestResource("/resource");
+    expect(res.status).toBe(201);
+    expect(res.headers.get("X-Created-Id")).toBe("1");
+    expect(await res.text()).toBe("");
+  });
+
   test("processes response stub onto resource routes returning raw data", async () => {
     let fixture = await createFixture(
       {
@@ -1473,6 +1495,72 @@ test.describe("single-fetch", () => {
     expect(await res.json()).toEqual({
       message: "RESOURCE",
     });
+  });
+
+  test("processes returned response stub redirects", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/resource.tsx": js`
+            import { json } from '@react-router/node';
+            export function loader({ response }) {
+              response.status = 301;
+              response.headers.set('Location', '/whatever')
+              return response;
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let res = await fixture.requestResource("/resource");
+    expect(res.status).toBe(301);
+    expect(res.headers.get("Location")).toBe("/whatever");
+  });
+
+  test("processes thrown response stub redirects", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/resource.tsx": js`
+            import { json } from '@react-router/node';
+            export function loader({ response }) {
+              response.status = 301;
+              response.headers.set('Location', '/whatever')
+              throw response;
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let res = await fixture.requestResource("/resource");
+    expect(res.status).toBe(301);
+    expect(res.headers.get("Location")).toBe("/whatever");
+  });
+
+  test("processes response stub redirects when null is returned", async () => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/resource.tsx": js`
+            import { json } from '@react-router/node';
+            export function loader({ response }) {
+              response.status = 301;
+              response.headers.set('Location', '/whatever')
+              return null;
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+    let res = await fixture.requestResource("/resource");
+    expect(res.status).toBe(301);
+    expect(res.headers.get("Location")).toBe("/whatever");
   });
 
   test("allows fetcher to hit resource route and return via turbo stream", async ({
