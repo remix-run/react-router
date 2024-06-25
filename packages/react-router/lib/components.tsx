@@ -127,7 +127,7 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
-    future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
+    future?: Partial<RouterFutureConfig>;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
@@ -137,10 +137,7 @@ export function createMemoryRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: {
-      ...opts?.future,
-      v7_prependBasename: true,
-    },
+    future: opts?.future,
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,

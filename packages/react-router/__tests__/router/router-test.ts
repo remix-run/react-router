@@ -555,7 +555,7 @@ describe("a router", () => {
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/base/name");
 
-      await t.navigate("/base/name/tasks");
+      await t.navigate("/tasks");
       expect(t.router.state).toMatchObject({
         location: {
           pathname: "/base/name/tasks",
@@ -565,7 +565,7 @@ describe("a router", () => {
       expect(t.history.action).toEqual("PUSH");
       expect(t.history.location.pathname).toEqual("/base/name/tasks");
 
-      await t.navigate("/base/name/tasks/1");
+      await t.navigate("/tasks/1");
       expect(t.router.state).toMatchObject({
         location: {
           pathname: "/base/name/tasks/1",

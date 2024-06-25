@@ -608,15 +608,7 @@ export function setup({
       return helpers;
     }
 
-    let navHref = href;
-    if (currentRouter.basename) {
-      navHref = stripBasename(navHref, currentRouter.basename) as string;
-      invariant(
-        navHref,
-        "href passed to t.navigate() should start with basename"
-      );
-    }
-    helpers = getNavigationHelpers(navHref, navigationId);
+    helpers = getNavigationHelpers(href, navigationId);
     shims?.forEach((routeId) =>
       shimHelper(helpers.loaders, "navigation", "loader", routeId)
     );

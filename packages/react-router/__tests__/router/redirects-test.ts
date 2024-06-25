@@ -44,7 +44,7 @@ describe("redirects", () => {
       initialEntries: ["/base/name"],
     });
 
-    let nav1 = await t.navigate("/base/name/parent");
+    let nav1 = await t.navigate("/parent");
 
     let nav2 = await nav1.loaders.parent.redirectReturn("/parent/child");
     await nav2.loaders.parent.resolve("PARENT");
@@ -451,7 +451,7 @@ describe("redirects", () => {
   it("properly handles same-origin absolute URLs when using a basename", async () => {
     let t = setup({ routes: REDIRECT_ROUTES, basename: "/base" });
 
-    let A = await t.navigate("/base/parent/child", {
+    let A = await t.navigate("/parent/child", {
       formMethod: "post",
       formData: createFormData({}),
     });
@@ -476,7 +476,7 @@ describe("redirects", () => {
   it("treats same-origin absolute URLs as external if they don't match the basename", async () => {
     let t = setup({ routes: REDIRECT_ROUTES, basename: "/base" });
 
-    let A = await t.navigate("/base/parent/child", {
+    let A = await t.navigate("/parent/child", {
       formMethod: "post",
       formData: createFormData({}),
     });

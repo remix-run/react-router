@@ -552,9 +552,6 @@ describe("submissions", () => {
               ],
             },
           ],
-          future: {
-            v7_prependBasename: false,
-          },
         });
         let A = await t.navigate("/child", {
           formMethod: "get",
