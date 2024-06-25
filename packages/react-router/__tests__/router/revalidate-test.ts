@@ -271,7 +271,7 @@ describe("router.revalidate", () => {
           pathname: "/tasks",
           search: "?key=value",
         },
-        formMethod: "get",
+        formMethod: "GET",
         formData: createFormData({ key: "value" }),
       },
       revalidation: "loading",

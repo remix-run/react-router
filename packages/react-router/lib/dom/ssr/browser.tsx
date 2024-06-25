@@ -162,7 +162,6 @@ function createHydratedRouter(): RemixRouter {
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
     future: {
-      v7_normalizeFormMethod: true,
       v7_fetcherPersist: ssrInfo.context.future.v3_fetcherPersist,
       v7_partialHydration: true,
       v7_prependBasename: true,

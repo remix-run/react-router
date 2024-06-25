@@ -507,7 +507,7 @@ export function setup({
     // Otherwise we should only need a loader for the leaf match
     let activeLoaderMatches = [match];
     // @ts-expect-error
-    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
+    if (opts?.formMethod != null && opts.formMethod.toUpperCase() !== "GET") {
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
           inFlightRoutes || currentRouter.routes,
@@ -572,7 +572,7 @@ export function setup({
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
-    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
+    if (opts?.formMethod != null && opts.formMethod.toUpperCase() !== "GET") {
       activeActionType = "navigation";
       activeActionNavigationId = navigationId;
       // Assume happy path and mark this navigations loaders as active.  Even if
@@ -662,7 +662,7 @@ export function setup({
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
-    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
+    if (opts?.formMethod != null && opts.formMethod.toUpperCase() !== "GET") {
       activeActionType = "fetch";
       activeActionFetchId = navigationId;
     } else {

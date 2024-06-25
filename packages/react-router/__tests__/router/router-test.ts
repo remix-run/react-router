@@ -690,7 +690,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "value" })
       );
@@ -710,7 +710,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "value" })
       );
@@ -730,7 +730,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=2",
       });
-      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "2" })
       );
@@ -750,7 +750,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=1",
       });
-      expect(t.router.state.navigation.formMethod).toBe("post");
+      expect(t.router.state.navigation.formMethod).toBe("POST");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "2" })
       );

@@ -77,7 +77,6 @@ export type {
   FormMethod,
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
-  V7_FormMethod,
   BrowserRouterProps,
   HashRouterProps,
   HistoryRouterProps,

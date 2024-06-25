@@ -504,16 +504,16 @@ describe("submissions", () => {
           formMethod: "get",
           formData: createFormData({}),
         });
-        expect(t.router.state.navigation.formMethod).toBe("get");
+        expect(t.router.state.navigation.formMethod).toBe("GET");
         await A.loaders.child.resolve("LOADER");
         expect(t.router.state.navigation.formMethod).toBeUndefined();
         await t.router.navigate("/");
 
         let B = await t.navigate("/child", {
-          formMethod: "POST",
+          formMethod: "post",
           formData: createFormData({}),
         });
-        expect(t.router.state.navigation.formMethod).toBe("post");
+        expect(t.router.state.navigation.formMethod).toBe("POST");
         await B.actions.child.resolve("ACTION");
         await B.loaders.child.resolve("LOADER");
         expect(t.router.state.navigation.formMethod).toBeUndefined();
@@ -523,20 +523,20 @@ describe("submissions", () => {
           formMethod: "GET",
           formData: createFormData({}),
         });
-        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("get");
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("GET");
         await C.loaders.child.resolve("LOADER FETCH");
         expect(t.router.state.fetchers.get("key")?.formMethod).toBeUndefined();
 
         let D = await t.fetch("/child", "key", {
-          formMethod: "post",
+          formMethod: "POST",
           formData: createFormData({}),
         });
-        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("post");
+        expect(t.router.state.fetchers.get("key")?.formMethod).toBe("POST");
         await D.actions.child.resolve("ACTION FETCH");
         expect(t.router.state.fetchers.get("key")?.formMethod).toBeUndefined();
       });
 
-      it("normalizes to uppercase in v7 via v7_normalizeFormMethod", async () => {
+      it("normalizes to uppercase", async () => {
         let t = setup({
           routes: [
             {
@@ -553,7 +553,6 @@ describe("submissions", () => {
             },
           ],
           future: {
-            v7_normalizeFormMethod: true,
             v7_prependBasename: false,
           },
         });

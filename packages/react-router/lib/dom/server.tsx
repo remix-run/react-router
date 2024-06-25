@@ -304,7 +304,6 @@ export function createStaticRouter(
     get future() {
       return {
         v7_fetcherPersist: false,
-        v7_normalizeFormMethod: false,
         v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
         unstable_skipActionErrorRevalidation: false,

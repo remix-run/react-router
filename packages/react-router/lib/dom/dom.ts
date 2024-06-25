@@ -59,9 +59,9 @@ export type URLSearchParamsInit =
   supports arrays as values in the object form of the initializer
   instead of just strings. This is convenient when you need multiple
   values for a given key, but don't want to use an array initializer.
-  
+
   For example, instead of:
-  
+
   ```tsx
   let searchParams = new URLSearchParams([
     ['sort', 'name'],

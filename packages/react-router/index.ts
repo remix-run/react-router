@@ -258,7 +258,6 @@ export type {
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
   Submission,
-  V7_FormMethod,
 } from "./lib/router";
 
 export type {

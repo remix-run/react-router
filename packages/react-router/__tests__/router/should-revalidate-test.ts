@@ -256,7 +256,7 @@ describe("shouldRevalidate", () => {
       nextParams: {},
       nextUrl: expect.urlMatch("http://localhost/child"),
       defaultShouldRevalidate: true,
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/child",
       formEncType: "application/x-www-form-urlencoded",
       actionResult: "ACTION",
@@ -310,7 +310,7 @@ describe("shouldRevalidate", () => {
       nextParams: {},
       nextUrl: expect.urlMatch("http://localhost/"),
       defaultShouldRevalidate: true,
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/child",
       formEncType: "application/x-www-form-urlencoded",
       actionResult: undefined,
@@ -364,7 +364,7 @@ describe("shouldRevalidate", () => {
       nextParams: {},
       nextUrl: expect.urlMatch("http://localhost/child"),
       defaultShouldRevalidate: true,
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/child",
       formEncType: "application/x-www-form-urlencoded",
       actionResult: "ACTION",
@@ -406,7 +406,7 @@ describe("shouldRevalidate", () => {
     // @ts-expect-error
     let arg = shouldRevalidate.mock.calls[0][0];
     let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/",
       formEncType: "application/json",
       text: undefined,
@@ -448,7 +448,7 @@ describe("shouldRevalidate", () => {
     // @ts-expect-error
     let arg = shouldRevalidate.mock.calls[0][0];
     let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/",
       formEncType: "text/plain",
       text: "hello world",
@@ -657,7 +657,7 @@ describe("shouldRevalidate", () => {
       formAction: "/child",
       formData: createFormData({}),
       formEncType: "application/x-www-form-urlencoded",
-      formMethod: "post",
+      formMethod: "POST",
       defaultShouldRevalidate: true,
     });
 
@@ -715,7 +715,7 @@ describe("shouldRevalidate", () => {
         "formAction": "/fetch",
         "formData": FormData {},
         "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "post",
+        "formMethod": "POST",
         "json": undefined,
         "nextParams": {},
         "nextUrl": "http://localhost/",
@@ -779,7 +779,7 @@ describe("shouldRevalidate", () => {
         "formAction": "/fetch",
         "formData": FormData {},
         "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "post",
+        "formMethod": "POST",
         "json": undefined,
         "nextParams": {},
         "nextUrl": "http://localhost/",

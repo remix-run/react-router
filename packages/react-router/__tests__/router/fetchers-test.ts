@@ -169,7 +169,7 @@ describe("fetchers", () => {
         formData: createFormData({ key: "value" }),
       });
       expect(A.fetcher.state).toBe("loading");
-      expect(A.fetcher.formMethod).toBe("get");
+      expect(A.fetcher.formMethod).toBe("GET");
       expect(A.fetcher.formAction).toBe("/foo");
       expect(A.fetcher.formData).toEqual(createFormData({ key: "value" }));
       expect(A.fetcher.formEncType).toBe("application/x-www-form-urlencoded");
@@ -2111,7 +2111,7 @@ describe("fetchers", () => {
           "formAction": "/two/three",
           "formData": FormData {},
           "formEncType": "application/x-www-form-urlencoded",
-          "formMethod": "post",
+          "formMethod": "POST",
           "json": undefined,
           "nextParams": {
             "a": "two",
