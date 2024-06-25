@@ -904,7 +904,7 @@ describe("router.revalidate", () => {
     let key = "key";
     let F = await t.fetch("/", key);
     await F.loaders.root.resolve("ROOT_DATA*");
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "idle",
       data: "ROOT_DATA*",
     });
@@ -912,7 +912,7 @@ describe("router.revalidate", () => {
     let R = await t.revalidate();
     await R.loaders.root.resolve("ROOT_DATA**");
     await R.loaders.index.resolve("INDEX_DATA");
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "idle",
       data: "ROOT_DATA**",
     });

@@ -2152,12 +2152,7 @@ export function useFetcher<TData = any>({
   // Registration/cleanup
   React.useEffect(() => {
     router.getFetcher(fetcherKey);
-    return () => {
-      // Tell the router we've unmounted - if v7_fetcherPersist is enabled this
-      // will not delete immediately but instead queue up a delete after the
-      // fetcher returns to an `idle` state
-      router.deleteFetcher(fetcherKey);
-    };
+    return () => router.deleteFetcher(fetcherKey);
   }, [router, fetcherKey]);
 
   // Fetcher additions

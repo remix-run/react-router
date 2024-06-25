@@ -300,7 +300,6 @@ export function createStaticRouter(
     },
     get future() {
       return {
-        v7_fetcherPersist: false,
         unstable_skipActionErrorRevalidation: false,
       };
     },

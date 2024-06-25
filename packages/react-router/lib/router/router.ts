@@ -365,7 +365,6 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  v7_fetcherPersist: boolean;
   unstable_skipActionErrorRevalidation: boolean;
 }
 
@@ -840,7 +839,6 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    v7_fetcherPersist: false,
     unstable_skipActionErrorRevalidation: false,
     ...init.future,
   };
@@ -1006,8 +1004,8 @@ export function createRouter(init: RouterInit): Router {
   // Ref-count mounted fetchers so we know when it's ok to clean them up
   let activeFetchers = new Map<string, number>();
 
-  // Fetchers that have requested a delete when using v7_fetcherPersist,
-  // they'll be officially removed after they return to idle
+  // Fetchers that have requested a delete - they'll be officially removed after
+  // they return to idle
   let deletedFetchers = new Set<string>();
 
   // Store DeferredData instances for active route matches.  When a
@@ -1160,20 +1158,18 @@ export function createRouter(init: RouterInit): Router {
     let completedFetchers: string[] = [];
     let deletedFetchersKeys: string[] = [];
 
-    if (future.v7_fetcherPersist) {
-      state.fetchers.forEach((fetcher, key) => {
-        if (fetcher.state === "idle") {
-          if (deletedFetchers.has(key)) {
-            // Unmounted from the UI and can be totally removed
-            deletedFetchersKeys.push(key);
-          } else {
-            // Returned to idle but still mounted in the UI, so semi-remains for
-            // revalidations and such
-            completedFetchers.push(key);
-          }
+    state.fetchers.forEach((fetcher, key) => {
+      if (fetcher.state === "idle") {
+        if (deletedFetchers.has(key)) {
+          // Unmounted from the UI and can be totally removed
+          deletedFetchersKeys.push(key);
+        } else {
+          // Returned to idle but still mounted in the UI, so semi-remains for
+          // revalidations and such
+          completedFetchers.push(key);
         }
-      });
-    }
+      }
+    });
 
     // Iterate over a local copy so that if flushSync is used and we end up
     // removing and adding a new subscriber due to the useCallback dependencies,
@@ -1187,10 +1183,8 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Remove idle fetchers from state since we only care about in-flight fetchers.
-    if (future.v7_fetcherPersist) {
-      completedFetchers.forEach((key) => state.fetchers.delete(key));
-      deletedFetchersKeys.forEach((key) => deleteFetcher(key));
-    }
+    completedFetchers.forEach((key) => state.fetchers.delete(key));
+    deletedFetchersKeys.forEach((key) => deleteFetcher(key));
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -2307,10 +2301,9 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // When using v7_fetcherPersist, we don't want errors bubbling up to the UI
-    // or redirects processed for unmounted fetchers so we just revert them to
-    // idle
-    if (future.v7_fetcherPersist && deletedFetchers.has(key)) {
+    // We don't want errors bubbling up to the UI or redirects processed for
+    // unmounted fetchers so we just revert them to idle
+    if (deletedFetchers.has(key)) {
       if (isRedirectResult(actionResult) || isErrorResult(actionResult)) {
         updateFetcherState(key, getDoneFetcher(undefined));
         return;
@@ -2910,13 +2903,11 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
-    if (future.v7_fetcherPersist) {
-      activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
-      // If this fetcher was previously marked for deletion, unmark it since we
-      // have a new instance
-      if (deletedFetchers.has(key)) {
-        deletedFetchers.delete(key);
-      }
+    activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
+    // If this fetcher was previously marked for deletion, unmark it since we
+    // have a new instance
+    if (deletedFetchers.has(key)) {
+      deletedFetchers.delete(key);
     }
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
@@ -2940,16 +2931,12 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function deleteFetcherAndUpdateState(key: string): void {
-    if (future.v7_fetcherPersist) {
-      let count = (activeFetchers.get(key) || 0) - 1;
-      if (count <= 0) {
-        activeFetchers.delete(key);
-        deletedFetchers.add(key);
-      } else {
-        activeFetchers.set(key, count);
-      }
+    let count = (activeFetchers.get(key) || 0) - 1;
+    if (count <= 0) {
+      activeFetchers.delete(key);
+      deletedFetchers.add(key);
     } else {
-      deleteFetcher(key);
+      activeFetchers.set(key, count);
     }
     updateState({ fetchers: new Map(state.fetchers) });
   }
@@ -4410,9 +4397,8 @@ function getMatchesToLoad(
   fetchLoadMatches.forEach((f, key) => {
     // Don't revalidate:
     //  - on initial load (shouldn't be any fetchers then anyway)
-    //  - if fetcher won't be present in the subsequent render
-    //    - no longer matches the URL (v7_fetcherPersist=false)
-    //    - was unmounted but persisted due to v7_fetcherPersist=true
+    //  - if fetcher no longer matches the URL
+    //  - if fetcher was unmounted
     if (
       isInitialLoad ||
       !matches.some((m) => m.route.id === f.routeId) ||

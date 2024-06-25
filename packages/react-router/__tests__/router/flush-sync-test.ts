@@ -99,20 +99,20 @@ describe("flushSync", () => {
       expect.anything(),
       expect.objectContaining({ unstable_flushSync: false })
     );
-    expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+    expect(t.fetchers[key].state).toBe("loading");
 
     await A.loaders.root.resolve("ROOT");
-    expect(t.router.state.fetchers.get(key)?.data).toBe("ROOT");
+    expect(t.fetchers[key].data).toBe("ROOT");
 
     let B = await t.fetch("/", key, { unstable_flushSync: true });
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.objectContaining({ unstable_flushSync: true })
     );
-    expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+    expect(t.fetchers[key].state).toBe("loading");
 
     await B.loaders.root.resolve("ROOT2");
-    expect(t.router.state.fetchers.get(key)?.data).toBe("ROOT2");
+    expect(t.fetchers[key].data).toBe("ROOT2");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.objectContaining({ unstable_flushSync: false })
@@ -138,14 +138,14 @@ describe("flushSync", () => {
       expect.anything(),
       expect.objectContaining({ unstable_flushSync: false })
     );
-    expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+    expect(t.fetchers[key].state).toBe("submitting");
 
     await A.actions.root.resolve("ROOT");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.objectContaining({ unstable_flushSync: false })
     );
-    expect(t.router.state.fetchers.get(key)?.data).toBe("ROOT");
+    expect(t.fetchers[key].data).toBe("ROOT");
 
     let B = await t.fetch("/", key, {
       formMethod: "post",
@@ -156,10 +156,10 @@ describe("flushSync", () => {
       expect.anything(),
       expect.objectContaining({ unstable_flushSync: true })
     );
-    expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
+    expect(t.fetchers[key].state).toBe("submitting");
 
     await B.actions.root.resolve("ROOT2");
-    expect(t.router.state.fetchers.get(key)?.data).toBe("ROOT2");
+    expect(t.fetchers[key].data).toBe("ROOT2");
     expect(spy).toHaveBeenLastCalledWith(
       expect.anything(),
       expect.objectContaining({ unstable_flushSync: false })

@@ -188,7 +188,6 @@ function createHydratedRouter(): RemixRouter {
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
     future: {
-      v7_fetcherPersist: ssrInfo.context.future.v3_fetcherPersist,
       // Single fetch enables this underlying behavior
       unstable_skipActionErrorRevalidation: true,
     },
