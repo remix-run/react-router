@@ -21,7 +21,7 @@
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
     "compression": "^1.7.4",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "get-port": "5.1.1",
     "morgan": "^1.10.0",
     "source-map-support": "^0.5.21"
