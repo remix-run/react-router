@@ -1,4 +1,4 @@
-import { IDLE_NAVIGATION } from "../index";
+import { createMemoryHistory, createRouter, IDLE_NAVIGATION, redirect } from "../index";
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, setup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
@@ -290,6 +290,35 @@ describe("redirects", () => {
       },
       errors: null,
     });
+  });
+
+  it("supports loaders with redirectResponse argument", async () => {
+    let history = createMemoryHistory({ initialEntries: ["/"] });
+    const loaderSpy = jest.fn()
+    let router = createRouter({
+      routes: [
+        {
+          path: "/some/authenticated/route",
+          loader: () => redirect("/auth/login", { statusText: "You need to be logged in to visit this page!" }),
+        },
+        {
+          path: "/auth",
+          children: [
+          {
+            path: "login",
+            loader: loaderSpy,
+          },
+          ]
+        },
+      ],
+      history,
+    }).initialize();
+
+    await router.navigate("/some/authenticated/route")
+
+    const redirectResponse = loaderSpy.mock.calls[0][0].redirectResponse;
+    expect(redirectResponse).toBeInstanceOf(Response)
+    expect(redirectResponse.statusText).toBe("You need to be logged in to visit this page!")
   });
 
   it("preserves query and hash in redirects", async () => {
