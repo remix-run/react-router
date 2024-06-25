@@ -28,7 +28,7 @@ import {
   UNSAFE_FetchersContext as FetchersContext,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
 } from "./lib";
-import { Router, mapRouteProperties, type FutureConfig } from "../components";
+import { Router, mapRouteProperties } from "../components";
 import type { DataRouteObject, RouteObject } from "../context";
 import { DataRouterContext, DataRouterStateContext } from "../context";
 import { useRoutesImpl } from "../hooks";
@@ -37,7 +37,6 @@ export interface StaticRouterProps {
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
-  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -50,7 +49,6 @@ export function StaticRouter({
   basename,
   children,
   location: locationProp = "/",
-  future,
 }: StaticRouterProps) {
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);
@@ -73,7 +71,6 @@ export function StaticRouter({
       location={location}
       navigationType={action}
       navigator={staticNavigator}
-      future={future}
       static={true}
     />
   );

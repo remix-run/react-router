@@ -48,7 +48,6 @@ import {
 
 import type {
   AwaitProps,
-  FutureConfig,
   IndexRouteProps,
   LayoutRouteProps,
   MemoryRouterProps,
@@ -134,7 +133,6 @@ export type {
   unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
-  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
