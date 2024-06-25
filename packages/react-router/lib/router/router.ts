@@ -365,7 +365,6 @@ export type HydrationState = Partial<
  */
 export interface FutureConfig {
   v7_fetcherPersist: boolean;
-  v7_prependBasename: boolean;
   unstable_skipActionErrorRevalidation: boolean;
 }
 
@@ -841,7 +840,6 @@ export function createRouter(init: RouterInit): Router {
   // Config driven behavior flags
   let future: FutureConfig = {
     v7_fetcherPersist: false,
-    v7_prependBasename: false,
     unstable_skipActionErrorRevalidation: false,
     ...init.future,
   };
@@ -1357,7 +1355,6 @@ export function createRouter(init: RouterInit): Router {
       state.location,
       state.matches,
       basename,
-      future.v7_prependBasename,
       to,
       opts?.fromRouteId,
       opts?.relative
@@ -2145,7 +2142,6 @@ export function createRouter(init: RouterInit): Router {
       state.location,
       state.matches,
       basename,
-      future.v7_prependBasename,
       href,
       routeId,
       opts?.relative
@@ -4061,7 +4057,6 @@ function normalizeTo(
   location: Path,
   matches: AgnosticDataRouteMatch[],
   basename: string,
-  prependBasename: boolean,
   to: To | null,
   fromRouteId?: string,
   relative?: RelativeRoutingType
@@ -4116,7 +4111,7 @@ function normalizeTo(
   // this is a root navigation, then just use the raw basename which allows
   // the basename to have full control over the presence of a trailing slash
   // on root actions
-  if (prependBasename && basename !== "/") {
+  if (basename !== "/") {
     path.pathname =
       path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
   }
@@ -4967,7 +4962,6 @@ function normalizeRelativeRoutingRedirectResponse(
       new URL(request.url),
       trimmedMatches,
       basename,
-      true,
       location
     );
     response.headers.set("Location", location);

@@ -124,7 +124,7 @@ try {
 
 interface DOMRouterOpts {
   basename?: string;
-  future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
+  future?: Partial<RouterFutureConfig>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
   unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
@@ -140,10 +140,7 @@ export function createBrowserRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: {
-      ...opts?.future,
-      v7_prependBasename: true,
-    },
+    future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
@@ -163,10 +160,7 @@ export function createHashRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: {
-      ...opts?.future,
-      v7_prependBasename: true,
-    },
+    future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,

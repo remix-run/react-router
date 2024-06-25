@@ -301,7 +301,6 @@ export function createStaticRouter(
     get future() {
       return {
         v7_fetcherPersist: false,
-        v7_prependBasename: false,
         unstable_skipActionErrorRevalidation: false,
       };
     },
