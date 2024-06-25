@@ -911,6 +911,49 @@ test.describe("Client Data", () => {
           'not have a server loader (routeId: "routes/parent.child")'
       );
     });
+    test("does not prefetch server loader if a client loader is present", async ({
+      page,
+    }) => {
+      appFixture = await createAppFixture(
+        await createFixture({
+          files: {
+            ...getFiles({
+              parentClientLoader: true,
+              parentClientLoaderHydrate: false,
+              childClientLoader: false,
+              childClientLoaderHydrate: false,
+            }),
+            "app/routes/_index.tsx": js`
+              import { Link } from 'react-router'
+              export default function Component() {
+                return (
+                  <>
+                    <Link prefetch="render" to="/parent">Go to /parent</Link>
+                    <Link prefetch="render" to="/parent/child">Go to /parent/child</Link>
+                  </>
+                );
+              }
+          `,
+          },
+        })
+      );
+
+      let dataUrls: string[] = [];
+      page.on("request", (request) => {
+        if (request.url().includes(".data")) {
+          dataUrls.push(request.url());
+        }
+      });
+
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/", true);
+      // Only prefetch child server loader since parent has a `clientLoader`
+      expect(dataUrls).toEqual([
+        expect.stringMatching(
+          /parent\/child\.data\?_routes=routes%2Fparent\.child/
+        ),
+      ]);
+    });
   });
 
   test.describe("clientAction - critical route module", () => {
