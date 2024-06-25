@@ -117,7 +117,11 @@ function createHydratedRouter(): RemixRouter {
       ...ssrInfo.context.state,
       loaderData: { ...ssrInfo.context.state.loaderData },
     };
-    let initialMatches = matchRoutes(routes, window.location);
+    let initialMatches = matchRoutes(
+      routes,
+      window.location,
+      window.__remixContext?.basename
+    );
     if (initialMatches) {
       for (let match of initialMatches) {
         let routeId = match.route.id;
