@@ -1,5 +1,5 @@
 import type {
-  FutureConfig as RouterFutureConfig,
+  FutureConfig,
   HydrationState,
   InitialEntry,
   LazyRouteFunction,
@@ -127,7 +127,7 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
-    future?: Partial<RouterFutureConfig>;
+    future?: Partial<FutureConfig>;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;

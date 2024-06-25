@@ -8,7 +8,7 @@ import type {
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
   RouterState,
-  FutureConfig as RouterFutureConfig,
+  FutureConfig,
   To,
 } from "../router";
 import {
@@ -270,7 +270,9 @@ export function createStaticHandler(
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
-  opts: {} = {}
+  opts: {
+    future?: Partial<FutureConfig>;
+  } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
@@ -301,6 +303,7 @@ export function createStaticRouter(
     get future() {
       return {
         unstable_skipActionErrorRevalidation: false,
+        ...opts?.future,
       };
     },
     get state() {
