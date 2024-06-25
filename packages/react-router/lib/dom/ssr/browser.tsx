@@ -163,7 +163,6 @@ function createHydratedRouter(): RemixRouter {
     basename: ssrInfo.context.basename,
     future: {
       v7_fetcherPersist: ssrInfo.context.future.v3_fetcherPersist,
-      v7_partialHydration: true,
       v7_prependBasename: true,
       // Single fetch enables this underlying behavior
       unstable_skipActionErrorRevalidation: true,
@@ -254,7 +253,7 @@ export function HydratedRouter() {
         }}
       >
         <RemixErrorBoundary location={location}>
-          <RouterProvider router={router} fallbackElement={null} />
+          <RouterProvider router={router} />
         </RemixErrorBoundary>
       </FrameworkContext.Provider>
       {/*

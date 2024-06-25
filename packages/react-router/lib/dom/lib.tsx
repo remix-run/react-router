@@ -307,7 +307,6 @@ class Deferred<T> {
 }
 
 export interface RouterProviderProps {
-  fallbackElement?: React.ReactNode;
   router: RemixRouter;
 }
 
@@ -315,7 +314,6 @@ export interface RouterProviderProps {
  * Given a Remix Router instance, render the appropriate UI
  */
 export function RouterProvider({
-  fallbackElement,
   router,
 }: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
@@ -485,16 +483,6 @@ export function RouterProvider({
     }
   }, [vtContext.isTransitioning, interruption]);
 
-  React.useEffect(() => {
-    warning(
-      fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using " +
-        "`v7_partialHydration`, use a `HydrateFallback` component instead"
-    );
-    // Only log this once on initial mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   let navigator = React.useMemo((): Navigator => {
     return {
       createHref: router.createHref,
@@ -544,15 +532,11 @@ export function RouterProvider({
                 navigationType={state.historyAction}
                 navigator={navigator}
               >
-                {state.initialized || router.future.v7_partialHydration ? (
-                  <DataRoutes
-                    routes={router.routes}
-                    future={router.future}
-                    state={state}
-                  />
-                ) : (
-                  fallbackElement
-                )}
+                <DataRoutes
+                  routes={router.routes}
+                  future={router.future}
+                  state={state}
+                />
               </Router>
             </ViewTransitionContext.Provider>
           </FetchersContext.Provider>

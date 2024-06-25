@@ -313,11 +313,15 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders fallbackElement while first data fetch happens", async () => {
+  it("renders hydrateFallbackElement while first data fetch happens", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
@@ -326,9 +330,7 @@ describe("createMemoryRouter", () => {
         initialEntries: ["/foo"],
       }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       return <p>Loading...</p>;
@@ -363,7 +365,7 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders a null fallbackElement if none is provided", async () => {
+  it("renders a null fallback if none is provided", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
@@ -401,12 +403,16 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("does not render fallbackElement if no data fetch is required", async () => {
+  it("does not render hydrateFallbackElement if no data fetch is required", async () => {
     let fooDefer = createDeferred();
 
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
@@ -415,9 +421,7 @@ describe("createMemoryRouter", () => {
         initialEntries: ["/bar"],
       }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       return <p>Loading...</p>;
@@ -441,19 +445,21 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders fallbackElement within router contexts", async () => {
+  it("renders hydrateFallbackElement within router contexts", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
         </Route>
       ),
       { initialEntries: ["/foo"] }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       let location = useLocation();

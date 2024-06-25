@@ -947,10 +947,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -959,10 +956,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -1016,10 +1010,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -1028,10 +1019,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -1118,10 +1106,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/", hash: "#hash" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/", hash: "#hash" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
