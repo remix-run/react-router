@@ -41,6 +41,7 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "../config";
+import * as defineRoute from "./define-route";
 
 export async function resolveViteConfig({
   configFile,
@@ -1242,6 +1243,23 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             return `window.__remixManifest=${reactRouterManifestString};`;
           }
         }
+      },
+    },
+    {
+      name: "react-router-define-route",
+      enforce: "pre",
+      async transform(code, id, options) {
+        if (options?.ssr) return;
+
+        if (id.endsWith(BUILD_CLIENT_ROUTE_QUERY_STRING)) return;
+
+        let route = getRoute(ctx.reactRouterConfig, id);
+        if (!route && code.includes("defineRoute")) {
+          return defineRoute.assertNotImported(code);
+        }
+
+        if (!code.includes("defineRoute")) return; // temporary back compat, remove once old style routes are unsupported
+        defineRoute.transform(code);
       },
     },
     {
