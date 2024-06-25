@@ -802,7 +802,7 @@ export function _renderMatches(
   // a given HydrateFallback while we load the rest of the hydration data
   let renderFallback = false;
   let fallbackIndex = -1;
-  if (dataRouterState && future && future.v7_partialHydration) {
+  if (dataRouterState) {
     for (let i = 0; i < renderedMatches.length; i++) {
       let match = renderedMatches[i];
       // Track the deepest fallback up until the first route without data

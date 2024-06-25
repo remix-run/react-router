@@ -847,6 +847,8 @@ export function createRoutesFromChildren(
       path: element.props.path,
       loader: element.props.loader,
       action: element.props.action,
+      hydrateFallbackElement: element.props.hydrateFallbackElement,
+      HydrateFallback: element.props.HydrateFallback,
       errorElement: element.props.errorElement,
       ErrorBoundary: element.props.ErrorBoundary,
       hasErrorBoundary:

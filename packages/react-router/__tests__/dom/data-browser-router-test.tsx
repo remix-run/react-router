@@ -371,11 +371,15 @@ function testDomRouter(
       `);
     });
 
-    it("renders fallbackElement while first data fetch happens", async () => {
+    it("renders hydrateFallbackElement while first data fetch happens", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="/" element={<Outlet />}>
+          <Route
+            path="/"
+            element={<Outlet />}
+            hydrateFallbackElement={<FallbackElement />}
+          >
             <Route
               path="foo"
               loader={() => fooDefer.promise}
@@ -388,9 +392,7 @@ function testDomRouter(
           window: getWindow("/foo"),
         }
       );
-      let { container } = render(
-        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-      );
+      let { container } = render(<RouterProvider router={router} />);
 
       function FallbackElement() {
         return <p>Loading...</p>;
@@ -425,11 +427,15 @@ function testDomRouter(
       `);
     });
 
-    it("renders fallbackElement while first data fetch and lazy route load happens", async () => {
+    it("renders hydrateFallbackElement while first data fetch and lazy route load happens", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="/" element={<Outlet />}>
+          <Route
+            path="/"
+            element={<Outlet />}
+            hydrateFallbackElement={<FallbackElement />}
+          >
             <Route
               path="foo"
               lazy={async () => {
@@ -446,9 +452,7 @@ function testDomRouter(
           window: getWindow("/foo"),
         }
       );
-      let { container } = render(
-        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-      );
+      let { container } = render(<RouterProvider router={router} />);
 
       function FallbackElement() {
         return <p>Loading...</p>;
@@ -526,11 +530,15 @@ function testDomRouter(
       `);
     });
 
-    it("renders fallbackElement within router contexts", async () => {
+    it("renders hydrateFallbackElement within router contexts", async () => {
       let fooDefer = createDeferred();
       let router = createTestRouter(
         createRoutesFromElements(
-          <Route path="/" element={<Outlet />}>
+          <Route
+            path="/"
+            element={<Outlet />}
+            hydrateFallbackElement={<FallbackElement />}
+          >
             <Route
               path="foo"
               loader={() => fooDefer.promise}
@@ -540,9 +548,7 @@ function testDomRouter(
         ),
         { window: getWindow("/foo") }
       );
-      let { container } = render(
-        <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-      );
+      let { container } = render(<RouterProvider router={router} />);
 
       function FallbackElement() {
         let location = useLocation();

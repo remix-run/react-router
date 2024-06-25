@@ -65,11 +65,7 @@ export function ServerRouter({
     }
   }
 
-  let router = createStaticRouter(routes, context.staticHandlerContext, {
-    future: {
-      v7_partialHydration: true,
-    },
-  });
+  let router = createStaticRouter(routes, context.staticHandlerContext);
 
   return (
     <>

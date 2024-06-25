@@ -56,6 +56,7 @@ test("loaders work", async () => {
   let RoutesStub = createRoutesStub([
     {
       path: "/",
+      HydrateFallback: () => null,
       Component() {
         let data = useLoaderData();
         return <pre data-testid="data">Message: {data.message}</pre>;
@@ -148,6 +149,7 @@ test("can pass context values", async () => {
     [
       {
         path: "/",
+        HydrateFallback: () => null,
         Component() {
           let data = useLoaderData() as { context: string };
           return (

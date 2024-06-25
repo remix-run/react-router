@@ -165,6 +165,7 @@ function processRoutes(
       path: route.path,
       index: route.index,
       Component: route.Component,
+      HydrateFallback: route.HydrateFallback,
       ErrorBoundary: route.ErrorBoundary,
       action: action
         ? (args: ActionFunctionArgs) => action!({ ...args, context })

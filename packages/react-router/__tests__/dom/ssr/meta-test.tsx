@@ -283,6 +283,7 @@ describe("meta", () => {
             },
           ],
         }),
+        HydrateFallback: () => null,
         Component() {
           let [count, setCount] = React.useState(0);
           return (

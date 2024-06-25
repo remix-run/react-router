@@ -365,7 +365,6 @@ export type HydrationState = Partial<
  */
 export interface FutureConfig {
   v7_fetcherPersist: boolean;
-  v7_partialHydration: boolean;
   v7_prependBasename: boolean;
   unstable_skipActionErrorRevalidation: boolean;
 }
@@ -842,7 +841,6 @@ export function createRouter(init: RouterInit): Router {
   // Config driven behavior flags
   let future: FutureConfig = {
     v7_fetcherPersist: false,
-    v7_partialHydration: false,
     v7_prependBasename: false,
     unstable_skipActionErrorRevalidation: false,
     ...init.future,
@@ -891,8 +889,8 @@ export function createRouter(init: RouterInit): Router {
   } else if (!initialMatches.some((m) => m.route.loader)) {
     // If we've got no loaders to run, then we're good to go
     initialized = true;
-  } else if (future.v7_partialHydration) {
-    // If partial hydration is enabled, we're initialized so long as we were
+  } else {
+    // With "partial hydration", we're initialized so long as we were
     // provided with hydrationData for every route with a loader, and no loaders
     // were marked for explicit hydration
     let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
@@ -925,10 +923,6 @@ export function createRouter(init: RouterInit): Router {
     } else {
       initialized = initialMatches.every(isRouteInitialized);
     }
-  } else {
-    // Without partial hydration - we're initialized if we were provided any
-    // hydrationData - which is expected to be complete
-    initialized = init.hydrationData != null;
   }
 
   let router: Router;
@@ -1118,7 +1112,7 @@ export function createRouter(init: RouterInit): Router {
     // Kick off initial data load if needed.  Use Pop to avoid modifying history
     // Note we don't do any handling of lazy here.  For SPA's it'll get handled
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
-    // resolved prior to router creation since we can't go into a fallbackElement
+    // resolved prior to router creation since we can't go into a fallback
     // UI for SSR'd apps
     if (!state.initialized) {
       startNavigation(HistoryAction.Pop, state.location, {
@@ -1866,11 +1860,10 @@ export function createRouter(init: RouterInit): Router {
     // state.  If not, we need to switch to our loading state and load data,
     // preserving any new action data or existing action data (in the case of
     // a revalidation interrupting an actionReload)
-    // If we have partialHydration enabled, then don't update the state for the
-    // initial data load since it's not a "navigation"
+    // Also (with "partial hydration"), don't update the state for the initial
+    // data load since it's not a "navigation"
     let shouldUpdateNavigationState =
-      !isUninterruptedRevalidation &&
-      (!future.v7_partialHydration || !initialHydration);
+      !isUninterruptedRevalidation && !initialHydration;
 
     // When fog of war is enabled, we enter our `loading` state earlier so we
     // can discover new routes during the `loading` state.  We skip this if
@@ -1934,7 +1927,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       activeSubmission,
       location,
-      future.v7_partialHydration && initialHydration === true,
+      initialHydration === true,
       future.unstable_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
@@ -2082,8 +2075,8 @@ export function createRouter(init: RouterInit): Router {
       });
     });
 
-    // During partial hydration, preserve SSR errors for routes that don't re-run
-    if (future.v7_partialHydration && initialHydration && state.errors) {
+    // With "partial hydration", preserve SSR errors for routes that don't re-run
+    if (initialHydration && state.errors) {
       Object.entries(state.errors)
         .filter(([id]) => !matchesToLoad.some((m) => m.route.id === id))
         .forEach(([routeId, error]) => {

@@ -270,10 +270,7 @@ export function createStaticHandler(
 export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
-  opts: {
-    // Only accept future flags that impact the server render
-    future?: Partial<Pick<RouterFutureConfig, "v7_partialHydration">>;
-  } = {}
+  opts: {} = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
@@ -304,7 +301,6 @@ export function createStaticRouter(
     get future() {
       return {
         v7_fetcherPersist: false,
-        v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
         unstable_skipActionErrorRevalidation: false,
       };

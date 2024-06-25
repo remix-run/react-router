@@ -18,7 +18,7 @@ import { createDeferred, tick } from "../router/utils/utils";
 
 let didAssertMissingHydrateFallback = false;
 
-describe("v7_partialHydration", () => {
+describe("Partial Hydration Behavior", () => {
   describe("createBrowserRouter", () => {
     testPartialHydration(createBrowserRouter, ReactRouterDom_RouterProvider);
   });
@@ -49,58 +49,6 @@ function testPartialHydration(
 
   afterEach(() => {
     consoleWarn.mockRestore();
-  });
-
-  it("does not handle partial hydration by default", async () => {
-    let router = createTestRouter(
-      [
-        {
-          id: "root",
-          path: "/",
-          loader: () => "ROOT",
-          Component() {
-            let data = useLoaderData() as string;
-            return (
-              <>
-                <h1>{`Home - ${data}`}</h1>
-                <Outlet />
-              </>
-            );
-          },
-          children: [
-            {
-              id: "index",
-              index: true,
-              loader: () => "INDEX",
-              HydrateFallback: () => <p>Should not see me</p>,
-              Component() {
-                let data = useLoaderData() as string;
-                return <h2>{`Index - ${data}`}</h2>;
-              },
-            },
-          ],
-        },
-      ],
-      {
-        hydrationData: {
-          loaderData: {
-            root: "HYDRATED ROOT",
-          },
-        },
-      }
-    );
-    let { container } = render(<RouterProvider router={router} />);
-
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <h1>
-          Home - HYDRATED ROOT
-        </h1>
-        <h2>
-          Index - undefined
-        </h2>
-      </div>"
-    `);
   });
 
   it("supports partial hydration w/leaf fallback", async () => {
@@ -139,9 +87,6 @@ function testPartialHydration(
           loaderData: {
             root: "HYDRATED ROOT",
           },
-        },
-        future: {
-          v7_partialHydration: true,
         },
       }
     );
@@ -209,9 +154,6 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-        future: {
-          v7_partialHydration: true,
-        },
       }
     );
     let { container } = render(<RouterProvider router={router} />);
@@ -274,9 +216,6 @@ function testPartialHydration(
             root: "HYDRATED ROOT",
           },
         },
-        future: {
-          v7_partialHydration: true,
-        },
       }
     );
     let { container } = render(<RouterProvider router={router} />);
@@ -294,84 +233,6 @@ function testPartialHydration(
     }
 
     dfd.resolve("INDEX DATA");
-    await waitFor(() => screen.getByText(/INDEX DATA/));
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-      "<div>
-        <h1>
-          Home - HYDRATED ROOT
-        </h1>
-        <h2>
-          Index - INDEX DATA
-        </h2>
-      </div>"
-    `);
-  });
-
-  it("deprecates fallbackElement", async () => {
-    let dfd1 = createDeferred();
-    let dfd2 = createDeferred();
-    let router = createTestRouter(
-      [
-        {
-          id: "root",
-          path: "/",
-          loader: () => dfd1.promise,
-          HydrateFallback: () => <p>Root Loading...</p>,
-          Component() {
-            let data = useLoaderData() as string;
-            return (
-              <>
-                <h1>{`Home - ${data}`}</h1>
-                <Outlet />
-              </>
-            );
-          },
-          children: [
-            {
-              id: "index",
-              index: true,
-              loader: () => dfd2.promise,
-              Component() {
-                let data = useLoaderData() as string;
-                return <h2>{`Index - ${data}`}</h2>;
-              },
-            },
-          ],
-        },
-      ],
-      {
-        hydrationData: {
-          loaderData: {
-            root: "HYDRATED ROOT",
-          },
-        },
-        future: {
-          v7_partialHydration: true,
-        },
-      }
-    );
-    let { container } = render(
-      <RouterProvider
-        router={router}
-        fallbackElement={<p>fallbackElement...</p>}
-      />
-    );
-
-    expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <p>
-              Root Loading...
-            </p>
-          </div>"
-        `);
-
-    expect(consoleWarn).toHaveBeenCalledWith(
-      "`<RouterProvider fallbackElement>` is deprecated when using " +
-        "`v7_partialHydration`, use a `HydrateFallback` component instead"
-    );
-
-    dfd1.resolve("ROOT DATA");
-    dfd2.resolve("INDEX DATA");
     await waitFor(() => screen.getByText(/INDEX DATA/));
     expect(getHtml(container)).toMatchInlineSnapshot(`
       "<div>
@@ -428,9 +289,6 @@ function testPartialHydration(
           errors: {
             index: "INDEX ERROR",
           },
-        },
-        future: {
-          v7_partialHydration: true,
         },
       }
     );
@@ -490,9 +348,6 @@ function testPartialHydration(
             index: "INDEX INITIAL",
           },
         },
-        future: {
-          v7_partialHydration: true,
-        },
       }
     );
     let { container } = render(<RouterProvider router={router} />);
@@ -524,43 +379,36 @@ function testPartialHydration(
 
   it("supports partial hydration w/lazy initial routes (leaf fallback)", async () => {
     let dfd = createDeferred();
-    let router = createTestRouter(
-      [
-        {
-          path: "/",
-          Component() {
-            return (
-              <>
-                <h1>Root</h1>
-                <Outlet />
-              </>
-            );
-          },
-          children: [
-            {
-              id: "index",
-              index: true,
-              HydrateFallback: () => <p>Index Loading...</p>,
-              async lazy() {
-                await tick();
-                return {
-                  loader: () => dfd.promise,
-                  Component() {
-                    let data = useLoaderData() as string;
-                    return <h2>{`Index - ${data}`}</h2>;
-                  },
-                };
-              },
-            },
-          ],
-        },
-      ],
+    let router = createTestRouter([
       {
-        future: {
-          v7_partialHydration: true,
+        path: "/",
+        Component() {
+          return (
+            <>
+              <h1>Root</h1>
+              <Outlet />
+            </>
+          );
         },
-      }
-    );
+        children: [
+          {
+            id: "index",
+            index: true,
+            HydrateFallback: () => <p>Index Loading...</p>,
+            async lazy() {
+              await tick();
+              return {
+                loader: () => dfd.promise,
+                Component() {
+                  let data = useLoaderData() as string;
+                  return <h2>{`Index - ${data}`}</h2>;
+                },
+              };
+            },
+          },
+        ],
+      },
+    ]);
     let { container } = render(<RouterProvider router={router} />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -590,43 +438,36 @@ function testPartialHydration(
 
   it("supports partial hydration w/lazy initial routes (root fallback)", async () => {
     let dfd = createDeferred();
-    let router = createTestRouter(
-      [
-        {
-          path: "/",
-          Component() {
-            return (
-              <>
-                <h1>Root</h1>
-                <Outlet />
-              </>
-            );
-          },
-          HydrateFallback: () => <p>Loading...</p>,
-          children: [
-            {
-              id: "index",
-              index: true,
-              async lazy() {
-                await tick();
-                return {
-                  loader: () => dfd.promise,
-                  Component() {
-                    let data = useLoaderData() as string;
-                    return <h2>{`Index - ${data}`}</h2>;
-                  },
-                };
-              },
-            },
-          ],
-        },
-      ],
+    let router = createTestRouter([
       {
-        future: {
-          v7_partialHydration: true,
+        path: "/",
+        Component() {
+          return (
+            <>
+              <h1>Root</h1>
+              <Outlet />
+            </>
+          );
         },
-      }
-    );
+        HydrateFallback: () => <p>Loading...</p>,
+        children: [
+          {
+            id: "index",
+            index: true,
+            async lazy() {
+              await tick();
+              return {
+                loader: () => dfd.promise,
+                Component() {
+                  let data = useLoaderData() as string;
+                  return <h2>{`Index - ${data}`}</h2>;
+                },
+              };
+            },
+          },
+        ],
+      },
+    ]);
     let { container } = render(<RouterProvider router={router} />);
 
     expect(getHtml(container)).toMatchInlineSnapshot(`
@@ -698,9 +539,6 @@ function testPartialHydration(
           errors: {
             index: "INDEX ERROR",
           },
-        },
-        future: {
-          v7_partialHydration: true,
         },
       }
     );
