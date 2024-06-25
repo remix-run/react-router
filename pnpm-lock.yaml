@@ -501,8 +501,8 @@ importers:
         specifier: ^0.7.3
         version: 0.7.4
       turbo-stream:
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.2.0
+        version: 2.2.0
     devDependencies:
       react:
         specifier: ^18.2.0
@@ -12893,8 +12893,8 @@ packages:
       yargs: 17.7.2
     dev: false
 
-  /turbo-stream@2.0.0:
-    resolution: {integrity: sha512-h0dfgRJAoiEh2hdFCoEuOSApsUfnw87gmNuziVS/mYycuBSCTeqpdanypMlHci6CvZibF7b9kvSpbeC7/r2/KA==}
+  /turbo-stream@2.2.0:
+    resolution: {integrity: sha512-FKFg7A0To1VU4CH9YmSMON5QphK0BXjSoiC7D9yMh+mEEbXLUP9qJ4hEt1qcjKtzncs1OpcnjZO8NgrlVbZH+g==}
     dev: false
 
   /type-check@0.4.0:

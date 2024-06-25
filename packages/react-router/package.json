@@ -28,7 +28,7 @@
     "cookie": "^0.6.0",
     "react-router": "workspace:*",
     "source-map": "^0.7.3",
-    "turbo-stream": "^2.0.0"
+    "turbo-stream": "^2.2.0"
   },
   "devDependencies": {
     "react": "^18.2.0",
