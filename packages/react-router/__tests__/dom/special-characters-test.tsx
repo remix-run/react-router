@@ -581,9 +581,13 @@ describe("special character tests", () => {
       }
 
       function Child() {
+        let location = useLocation();
+        let to = location.pathname.endsWith("grandchild")
+          ? "."
+          : "./grandchild";
         return (
           <>
-            <Link to="./grandchild">Link to grandchild</Link>
+            <Link to={to}>Link to grandchild</Link>
             <Routes>
               <Route path="grandchild" element={<Grandchild />} />
             </Routes>

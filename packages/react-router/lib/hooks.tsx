@@ -18,7 +18,6 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
-  UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
   joinPaths,
@@ -46,6 +45,7 @@ import {
   RouteContext,
   RouteErrorContext,
 } from "./context";
+import { getResolveToMatches } from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -235,13 +235,11 @@ function useNavigateUnstable(): NavigateFunction {
   );
 
   let dataRouterContext = React.useContext(DataRouterContext);
-  let { basename, future, navigator } = React.useContext(NavigationContext);
+  let { basename, navigator } = React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
 
-  let routePathnamesJson = JSON.stringify(
-    getResolveToMatches(matches, future.v7_relativeSplatPath)
-  );
+  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   let activeRef = React.useRef(false);
   useIsomorphicLayoutEffect(() => {
@@ -373,12 +371,9 @@ export function useResolvedPath(
   to: To,
   { relative }: { relative?: RelativeRoutingType } = {}
 ): Path {
-  let { future } = React.useContext(NavigationContext);
   let { matches } = React.useContext(RouteContext);
   let { pathname: locationPathname } = useLocation();
-  let routePathnamesJson = JSON.stringify(
-    getResolveToMatches(matches, future.v7_relativeSplatPath)
-  );
+  let routePathnamesJson = JSON.stringify(getResolveToMatches(matches));
 
   return React.useMemo(
     () =>
@@ -988,7 +983,7 @@ export function useRouteId() {
     // etc.
   }
   ```
- 
+
   @category Hooks
  */
 export function useNavigation() {
@@ -1186,7 +1181,7 @@ export function useRouteError(): unknown {
     <SomeDescendant />
   </Await>
   ```
-  
+
   @category Hooks
  */
 export function useAsyncValue(): unknown {
@@ -1199,7 +1194,7 @@ export function useAsyncValue(): unknown {
 
   ```tsx
   import { Await, useAsyncError } from "react-router"
-  
+
   function ErrorElement() {
     const error = useAsyncError();
     return (

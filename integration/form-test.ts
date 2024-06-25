@@ -589,7 +589,7 @@ test.describe("Forms", () => {
           await app.goto("/inbox");
           let html = await app.getHtml();
           let el = getElement(html, `#${STATIC_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/inbox");
+          expect(el.attr("action")).toBe("/inbox");
         });
 
         test("no action resolves to URL including search params", async ({
@@ -599,7 +599,7 @@ test.describe("Forms", () => {
           await app.goto("/inbox?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${STATIC_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/inbox?foo=bar");
+          expect(el.attr("action")).toBe("/inbox?foo=bar");
         });
 
         test("absolute action resolves relative to the root route", async ({
@@ -609,7 +609,7 @@ test.describe("Forms", () => {
           await app.goto("/inbox");
           let html = await app.getHtml();
           let el = getElement(html, `#${STATIC_ROUTE_ABSOLUTE_ACTION}`);
-          expect(el.attr("action")).toMatch("/about");
+          expect(el.attr("action")).toBe("/about");
         });
 
         test("'.' action resolves relative to the closest route", async ({
@@ -619,7 +619,7 @@ test.describe("Forms", () => {
           await app.goto("/inbox");
           let html = await app.getHtml();
           let el = getElement(html, `#${STATIC_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/inbox");
+          expect(el.attr("action")).toBe("/inbox");
         });
 
         test("'.' excludes search params", async ({ page }) => {
@@ -627,7 +627,7 @@ test.describe("Forms", () => {
           await app.goto("/inbox?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${STATIC_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/inbox");
+          expect(el.attr("action")).toBe("/inbox");
         });
 
         test("'..' action resolves relative to the parent route", async ({
@@ -637,7 +637,7 @@ test.describe("Forms", () => {
           await app.goto("/inbox");
           let html = await app.getHtml();
           let el = getElement(html, `#${STATIC_ROUTE_PARENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/");
         });
 
         test("'..' action with more .. segments than parent routes resolves relative to the root route", async ({
@@ -647,7 +647,7 @@ test.describe("Forms", () => {
           await app.goto("/inbox");
           let html = await app.getHtml();
           let el = getElement(html, `#${STATIC_ROUTE_TOO_MANY_DOTS_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/about");
         });
       });
 
@@ -659,7 +659,7 @@ test.describe("Forms", () => {
           await app.goto("/blog/abc");
           let html = await app.getHtml();
           let el = getElement(html, `#${DYNAMIC_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog/abc");
+          expect(el.attr("action")).toBe("/blog/abc");
         });
 
         test("no action resolves to URL including search params", async ({
@@ -669,7 +669,7 @@ test.describe("Forms", () => {
           await app.goto("/blog/abc?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${DYNAMIC_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog/abc?foo=bar");
+          expect(el.attr("action")).toBe("/blog/abc?foo=bar");
         });
 
         test("absolute action resolves relative to the root route", async ({
@@ -679,7 +679,7 @@ test.describe("Forms", () => {
           await app.goto("/blog/abc");
           let html = await app.getHtml();
           let el = getElement(html, `#${DYNAMIC_ROUTE_ABSOLUTE_ACTION}`);
-          expect(el.attr("action")).toMatch("/about");
+          expect(el.attr("action")).toBe("/about");
         });
 
         test("'.' action resolves relative to the closest route", async ({
@@ -689,7 +689,7 @@ test.describe("Forms", () => {
           await app.goto("/blog/abc");
           let html = await app.getHtml();
           let el = getElement(html, `#${DYNAMIC_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog/abc");
+          expect(el.attr("action")).toBe("/blog/abc");
         });
 
         test("'.' excludes search params", async ({ page }) => {
@@ -697,7 +697,7 @@ test.describe("Forms", () => {
           await app.goto("/blog/abc?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${DYNAMIC_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog/abc");
+          expect(el.attr("action")).toBe("/blog/abc");
         });
 
         test("'..' action resolves relative to the parent route", async ({
@@ -707,7 +707,7 @@ test.describe("Forms", () => {
           await app.goto("/blog/abc");
           let html = await app.getHtml();
           let el = getElement(html, `#${DYNAMIC_ROUTE_PARENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog");
+          expect(el.attr("action")).toBe("/blog");
         });
 
         test("'..' action with more .. segments than parent routes resolves relative to the root route", async ({
@@ -717,7 +717,7 @@ test.describe("Forms", () => {
           await app.goto("/blog/abc");
           let html = await app.getHtml();
           let el = getElement(html, `#${DYNAMIC_ROUTE_TOO_MANY_DOTS_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/about");
         });
       });
 
@@ -729,7 +729,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog");
+          expect(el.attr("action")).toBe("/blog?index");
         });
 
         test("no action resolves to URL including search params", async ({
@@ -739,7 +739,7 @@ test.describe("Forms", () => {
           await app.goto("/blog?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${INDEX_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog?index&foo=bar");
+          expect(el.attr("action")).toBe("/blog?index&foo=bar");
         });
 
         test("absolute action resolves relative to the root route", async ({
@@ -749,7 +749,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${INDEX_ROUTE_ABSOLUTE_ACTION}`);
-          expect(el.attr("action")).toMatch("/about");
+          expect(el.attr("action")).toBe("/about");
         });
 
         test("'.' action resolves relative to the closest route", async ({
@@ -759,7 +759,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${INDEX_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog");
+          expect(el.attr("action")).toBe("/blog?index");
         });
 
         test("'.' excludes search params", async ({ page }) => {
@@ -767,7 +767,7 @@ test.describe("Forms", () => {
           await app.goto("/blog?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${INDEX_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog");
+          expect(el.attr("action")).toBe("/blog?index");
         });
 
         test("'..' action resolves relative to the parent route", async ({
@@ -777,7 +777,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${INDEX_ROUTE_PARENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/");
         });
 
         test("'..' action with more .. segments than parent routes resolves relative to the root route", async ({
@@ -787,7 +787,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${INDEX_ROUTE_TOO_MANY_DOTS_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/about");
         });
 
         test("handles search params correctly on GET submissions", async ({
@@ -849,7 +849,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${LAYOUT_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog");
+          expect(el.attr("action")).toBe("/blog");
         });
 
         test("no action resolves to URL including search params", async ({
@@ -859,7 +859,7 @@ test.describe("Forms", () => {
           await app.goto("/blog?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${LAYOUT_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog?foo=bar");
+          expect(el.attr("action")).toBe("/blog?foo=bar");
         });
 
         test("absolute action resolves relative to the root route", async ({
@@ -869,7 +869,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${LAYOUT_ROUTE_ABSOLUTE_ACTION}`);
-          expect(el.attr("action")).toMatch("/about");
+          expect(el.attr("action")).toBe("/about");
         });
 
         test("'.' action resolves relative to the closest route", async ({
@@ -879,7 +879,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${LAYOUT_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog");
+          expect(el.attr("action")).toBe("/blog");
         });
 
         test("'.' excludes search params", async ({ page }) => {
@@ -887,7 +887,7 @@ test.describe("Forms", () => {
           await app.goto("/blog?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${LAYOUT_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/blog");
+          expect(el.attr("action")).toBe("/blog");
         });
 
         test("'..' action resolves relative to the parent route", async ({
@@ -897,7 +897,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${LAYOUT_ROUTE_PARENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/");
         });
 
         test("'..' action with more .. segments than parent routes resolves relative to the root route", async ({
@@ -907,7 +907,7 @@ test.describe("Forms", () => {
           await app.goto("/blog");
           let html = await app.getHtml();
           let el = getElement(html, `#${LAYOUT_ROUTE_TOO_MANY_DOTS_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/about");
         });
       });
 
@@ -919,7 +919,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/projects");
+          expect(el.attr("action")).toBe("/projects/blarg");
         });
 
         test("no action resolves to URL including search params", async ({
@@ -929,7 +929,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_NO_ACTION}`);
-          expect(el.attr("action")).toMatch("/projects?foo=bar");
+          expect(el.attr("action")).toBe("/projects/blarg?foo=bar");
         });
 
         test("absolute action resolves relative to the root route", async ({
@@ -939,7 +939,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_ABSOLUTE_ACTION}`);
-          expect(el.attr("action")).toMatch("/about");
+          expect(el.attr("action")).toBe("/about");
         });
 
         test("'.' action resolves relative to the closest route", async ({
@@ -949,7 +949,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/projects");
+          expect(el.attr("action")).toBe("/projects/blarg");
         });
 
         test("'.' excludes search params", async ({ page }) => {
@@ -957,7 +957,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg?foo=bar");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_CURRENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/projects");
+          expect(el.attr("action")).toBe("/projects/blarg");
         });
 
         test("'..' action resolves relative to the parent route", async ({
@@ -967,7 +967,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_PARENT_ACTION}`);
-          expect(el.attr("action")).toMatch("/projects");
+          expect(el.attr("action")).toBe("/projects");
         });
 
         test("'..' action with more .. segments than parent routes resolves relative to the root route", async ({
@@ -977,7 +977,7 @@ test.describe("Forms", () => {
           await app.goto("/projects/blarg");
           let html = await app.getHtml();
           let el = getElement(html, `#${SPLAT_ROUTE_TOO_MANY_DOTS_ACTION}`);
-          expect(el.attr("action")).toMatch("/");
+          expect(el.attr("action")).toBe("/about");
         });
       });
     });
@@ -1123,7 +1123,7 @@ test.describe("Forms", () => {
       expect(html).toMatch("Pathless Layout Index");
 
       let el = getElement(html, `form`);
-      expect(el.attr("action")).toMatch("/pathless-layout-parent");
+      expect(el.attr("action")).toBe("/pathless-layout-parent");
 
       expect(await app.getHtml()).toMatch("Submitted - No");
       // This submission should ignore the index route and the pathless layout

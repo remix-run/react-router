@@ -2955,7 +2955,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo?a=1"
+            "/foo/bar?a=1"
           );
         });
 
@@ -2975,7 +2975,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo/bar"
           );
         });
 
@@ -2995,7 +2995,7 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
 
           expect(container.querySelector("form")?.getAttribute("action")).toBe(
-            "/foo"
+            "/foo/bar"
           );
         });
       });
@@ -3129,7 +3129,7 @@ function testDomRouter(
         let { container } = render(<RouterProvider router={router} />);
 
         expect(container.querySelector("form")?.getAttribute("action")).toBe(
-          "/inbox"
+          "/inbox/messages/1/2"
         );
       });
     });

@@ -1213,19 +1213,14 @@ export function getPathContributingMatches<
 // generate the routePathnames input for resolveTo()
 export function getResolveToMatches<
   T extends AgnosticRouteMatch = AgnosticRouteMatch
->(matches: T[], v7_relativeSplatPath: boolean) {
+>(matches: T[]) {
   let pathMatches = getPathContributingMatches(matches);
 
-  // When v7_relativeSplatPath is enabled, use the full pathname for the leaf
-  // match so we include splat values for "." links.  See:
+  // Use the full pathname for the leaf match so we include splat values for "." links
   // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
-  if (v7_relativeSplatPath) {
-    return pathMatches.map((match, idx) =>
-      idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase
-    );
-  }
-
-  return pathMatches.map((match) => match.pathnameBase);
+  return pathMatches.map((match, idx) =>
+    idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase
+  );
 }
 
 /**

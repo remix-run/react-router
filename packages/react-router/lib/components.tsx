@@ -17,7 +17,6 @@ import {
   Action as NavigationType,
   createMemoryHistory,
   createRouter,
-  UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
@@ -49,13 +48,13 @@ import {
   useRoutes,
 } from "./hooks";
 import { startTransitionSafe } from "./dom/lib";
+import { getResolveToMatches } from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
 const ENABLE_DEV_WARNINGS = true;
 
 export interface FutureConfig {
-  v7_relativeSplatPath: boolean;
   v7_startTransition: boolean;
 }
 
@@ -269,7 +268,7 @@ export function Navigate({
   // StrictMode they navigate to the same place
   let path = resolveTo(
     to,
-    getResolveToMatches(matches, future.v7_relativeSplatPath),
+    getResolveToMatches(matches),
     locationPathname,
     relative === "path"
   );
@@ -399,7 +398,7 @@ export interface RouterProps {
   navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
-  future?: Partial<Pick<FutureConfig, "v7_relativeSplatPath">>;
+  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -435,7 +434,6 @@ export function Router({
       navigator,
       static: staticProp,
       future: {
-        v7_relativeSplatPath: false,
         ...future,
       },
     }),

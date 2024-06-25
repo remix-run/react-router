@@ -143,9 +143,6 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
-                future={{
-                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-                }}
               >
                 <DataRoutes
                   routes={router.routes}
@@ -278,9 +275,7 @@ export function createStaticRouter(
   context: StaticHandlerContext,
   opts: {
     // Only accept future flags that impact the server render
-    future?: Partial<
-      Pick<RouterFutureConfig, "v7_partialHydration" | "v7_relativeSplatPath">
-    >;
+    future?: Partial<Pick<RouterFutureConfig, "v7_partialHydration">>;
   } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
@@ -315,7 +310,6 @@ export function createStaticRouter(
         v7_normalizeFormMethod: false,
         v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
-        v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
         unstable_skipActionErrorRevalidation: false,
       };
     },

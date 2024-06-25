@@ -370,7 +370,6 @@ export interface FutureConfig {
   v7_normalizeFormMethod: boolean;
   v7_partialHydration: boolean;
   v7_prependBasename: boolean;
-  v7_relativeSplatPath: boolean;
   unstable_skipActionErrorRevalidation: boolean;
 }
 
@@ -849,7 +848,6 @@ export function createRouter(init: RouterInit): Router {
     v7_normalizeFormMethod: false,
     v7_partialHydration: false,
     v7_prependBasename: false,
-    v7_relativeSplatPath: false,
     unstable_skipActionErrorRevalidation: false,
     ...init.future,
   };
@@ -1371,7 +1369,6 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       to,
-      future.v7_relativeSplatPath,
       opts?.fromRouteId,
       opts?.relative
     );
@@ -2162,7 +2159,6 @@ export function createRouter(init: RouterInit): Router {
       basename,
       future.v7_prependBasename,
       href,
-      future.v7_relativeSplatPath,
       routeId,
       opts?.relative
     );
@@ -2803,8 +2799,7 @@ export function createRouter(init: RouterInit): Router {
                 request,
                 matchesToLoad[i].route.id,
                 matches,
-                basename,
-                future.v7_relativeSplatPath
+                basename
               ),
             };
           }
@@ -3405,7 +3400,6 @@ export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
  * Future flags to toggle new feature behavior
  */
 export interface StaticHandlerFutureConfig {
-  v7_relativeSplatPath: boolean;
   v7_throwAbortReason: boolean;
 }
 
@@ -3444,7 +3438,6 @@ export function createStaticHandler(
   }
   // Config driven behavior flags
   let future: StaticHandlerFutureConfig = {
-    v7_relativeSplatPath: false,
     v7_throwAbortReason: false,
     ...(opts ? opts.future : null),
   };
@@ -4006,8 +3999,7 @@ export function createStaticHandler(
             request,
             matchesToLoad[i].route.id,
             matches,
-            basename,
-            future.v7_relativeSplatPath
+            basename
           );
         }
         if (isResponse(result.result) && isRouteRequest) {
@@ -4084,7 +4076,6 @@ function normalizeTo(
   basename: string,
   prependBasename: boolean,
   to: To | null,
-  v7_relativeSplatPath: boolean,
   fromRouteId?: string,
   relative?: RelativeRoutingType
 ) {
@@ -4109,7 +4100,7 @@ function normalizeTo(
   // Resolve the relative path
   let path = resolveTo(
     to ? to : ".",
-    getResolveToMatches(contextualMatches, v7_relativeSplatPath),
+    getResolveToMatches(contextualMatches),
     stripBasename(location.pathname, basename) || location.pathname,
     relative === "path"
   );
@@ -4975,8 +4966,7 @@ function normalizeRelativeRoutingRedirectResponse(
   request: Request,
   routeId: string,
   matches: AgnosticDataRouteMatch[],
-  basename: string,
-  v7_relativeSplatPath: boolean
+  basename: string
 ) {
   let location = response.headers.get("Location");
   invariant(
@@ -4994,8 +4984,7 @@ function normalizeRelativeRoutingRedirectResponse(
       trimmedMatches,
       basename,
       true,
-      location,
-      v7_relativeSplatPath
+      location
     );
     response.headers.set("Location", location);
   }
