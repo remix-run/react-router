@@ -1154,7 +1154,7 @@ describe("navigations", () => {
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
       ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("post");
+      expect(navigation.formMethod).toBe("POST");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
@@ -1169,7 +1169,7 @@ describe("navigations", () => {
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
       ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("post");
+      expect(navigation.formMethod).toBe("POST");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
@@ -1203,7 +1203,7 @@ describe("navigations", () => {
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
       ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("post");
+      expect(navigation.formMethod).toBe("POST");
       expect(navigation.location).toMatchObject({
         pathname: "/bar",
         search: "",
@@ -1229,7 +1229,7 @@ describe("navigations", () => {
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
       expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
-      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formMethod).toBe("GET");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
@@ -1257,7 +1257,7 @@ describe("navigations", () => {
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
       expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
-      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formMethod).toBe("GET");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location?.pathname).toBe("/bar");
 
