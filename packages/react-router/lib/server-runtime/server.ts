@@ -40,6 +40,7 @@ import {
   SingleFetchRedirectSymbol,
   ResponseStubOperationsSymbol,
   SINGLE_FETCH_REDIRECT_STATUS,
+  proxyResponseStubHeadersToHeaders,
 } from "./single-fetch";
 
 export type RequestHandler = (
@@ -473,15 +474,11 @@ async function handleResourceRequest(
       // proxy along the status/headers to a Response
       response = new Response(null, {
         status: stub.status,
-        headers: stub.headers,
+        headers: proxyResponseStubHeadersToHeaders(stub, new Headers()),
       });
     } else if (isResponse(response)) {
       // Use the response status and merge any response stub headers onto it
-      let ops = stub[ResponseStubOperationsSymbol];
-      for (let [op, ...args] of ops) {
-        // @ts-expect-error
-        response.headers[op](...args);
-      }
+      proxyResponseStubHeadersToHeaders(stub, response.headers);
     } else {
       throw new Error(
         "Expected a Response to be returned from resource route handler"
@@ -500,7 +497,7 @@ async function handleResourceRequest(
     if (isResponseStub(error)) {
       return new Response(null, {
         status: error.status,
-        headers: error.headers,
+        headers: proxyResponseStubHeadersToHeaders(error, new Headers()),
       });
     }
 
@@ -561,29 +558,4 @@ function unwrapResponse(response: Response) {
       ? null
       : response.json()
     : response.text();
-}
-
-function createRemixRedirectResponse(
-  response: Response,
-  basename: string | undefined
-) {
-  // We don't have any way to prevent a fetch request from following
-  // redirects. So we use the `X-Remix-Redirect` header to indicate the
-  // next URL, and then "follow" the redirect manually on the client.
-  let headers = new Headers(response.headers);
-  let redirectUrl = headers.get("Location")!;
-  headers.set(
-    "X-Remix-Redirect",
-    basename ? stripBasename(redirectUrl, basename) || redirectUrl : redirectUrl
-  );
-  headers.set("X-Remix-Status", String(response.status));
-  headers.delete("Location");
-  if (response.headers.get("Set-Cookie") !== null) {
-    headers.set("X-Remix-Revalidate", "yes");
-  }
-
-  return new Response(null, {
-    status: 204,
-    headers,
-  });
 }

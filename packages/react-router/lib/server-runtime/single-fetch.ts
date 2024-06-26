@@ -374,6 +374,18 @@ export function getResponseStubs() {
   });
 }
 
+export function proxyResponseStubHeadersToHeaders(
+  stub: ResponseStubImpl,
+  headers: Headers
+) {
+  for (let [op, ...args] of stub[ResponseStubOperationsSymbol]) {
+    // @ts-expect-error
+    headers[op](...args);
+  }
+
+  return headers;
+}
+
 function proxyResponseToResponseStub(
   status: number | undefined,
   headers: Headers,
