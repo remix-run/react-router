@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import { build, createProject } from "./helpers/vite";
+import { test, build, createProject, viteConfig } from "./helpers/vite";
 import dedent from "dedent";
 import stripAnsi from "strip-ansi";
 
@@ -42,9 +42,6 @@ test.describe("defineRoute", () => {
       "app/routes/_index.tsx": dedent`
         import { defineRoute } from "react-router"
         let x = defineRoute
-        export default function Route() {
-          return <h1>Hello</h1>
-        }
       `,
     });
     let result = build({ cwd });
@@ -251,4 +248,52 @@ test.describe("defineRoute", () => {
       )
     );
   });
+
+  test("build + react-router-serve succeeds", async ({ page, dev }) => {
+    let { port } = await dev(async ({ port }) => ({
+      "vite.config.ts": dedent`
+        import { vitePlugin as reactRouter } from "@react-router/dev";
+
+        export default {
+          ${await viteConfig.server({ port })}
+          plugins: [reactRouter()],
+        }
+      `,
+      "app/routes/_index.tsx": dedent`
+        import { defineRoute } from "react-router"
+        export default defineRoute({
+          Component() {
+            return <h1 data-title>Hello, world!</h1>
+          }
+        })
+      `,
+    }));
+    await page.goto(`http://localhost:${port}/`, {
+      waitUntil: "networkidle",
+    });
+    await expect(page.locator("[data-title]")).toHaveText("Hello, world!");
+    expect(page.errors).toEqual([]);
+  });
+
+  // test("build + react-router-serve succeeds", async ({
+  //   page,
+  //   reactRouterServe,
+  // }) => {
+  //   let { cwd, port } = await reactRouterServe(async () => ({
+  //     "app/routes/_index.tsx": dedent`
+  //       import { defineRoute } from "react-router"
+  //       export default defineRoute({
+  //         Component() {
+  //           return <h1 data-title>Hello, world!</h1>
+  //         }
+  //       })
+  //     `,
+  //   }));
+  //   console.log({ cwd });
+  //   await page.goto(`http://localhost:${port}/`, {
+  //     waitUntil: "networkidle",
+  //   });
+  //   await expect(page.locator("[data-title]")).toHaveText("Hello, world!");
+  //   expect(page.errors).toEqual([]);
+  // });
 });

@@ -200,7 +200,19 @@ export async function loadRouteModule(
   }
 
   try {
-    let routeModule = await import(/* webpackIgnore: true */ route.module);
+    let _routeModule = await import(/* webpackIgnore: true */ route.module);
+    let routeModule: any;
+    if (typeof _routeModule.default === "object") {
+      let { Component, serverLoader, serverAction, ...rest } =
+        _routeModule.default;
+      rest.default = Component;
+      rest.loader = serverLoader;
+      rest.action = serverAction;
+      routeModule = rest;
+    } else {
+      // temporary back compat
+      routeModule = _routeModule;
+    }
     routeModulesCache[route.id] = routeModule;
     return routeModule;
   } catch (error: unknown) {

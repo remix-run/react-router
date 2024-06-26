@@ -26,6 +26,18 @@ export function transform(code: string) {
   });
 }
 
+export function parseFields(code: string): string[] {
+  let fields: string[] = [];
+  let ast = parse(code);
+  traverse(ast, {
+    ExportDefaultDeclaration(path) {
+      let analysis = analyzeRouteExport(path);
+      fields = Object.keys(analysis);
+    },
+  });
+  return fields;
+}
+
 type Analysis = {
   params?: NodePath;
   links?: NodePath;

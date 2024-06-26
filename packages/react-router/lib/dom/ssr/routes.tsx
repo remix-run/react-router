@@ -14,7 +14,12 @@ import { prefetchStyleLinks } from "./links";
 import { RemixRootDefaultErrorBoundary } from "./errorBoundaries";
 import { RemixRootDefaultHydrateFallback } from "./fallback";
 import invariant from "./invariant";
-import { useRouteError } from "../../hooks";
+import {
+  useActionData,
+  useLoaderData,
+  useParams,
+  useRouteError,
+} from "../../hooks";
 import type { DataRouteObject } from "../../context";
 
 export interface RouteManifest<Route> {
@@ -64,7 +69,22 @@ function getRouteComponents(
   routeModule: RouteModule,
   isSpaMode: boolean
 ) {
-  let Component = getRouteModuleComponent(routeModule);
+  let ComponentNeedingProps = getRouteModuleComponent(routeModule);
+  let Component = ComponentNeedingProps
+    ? () => {
+        let params = useParams();
+        let data = useLoaderData();
+        let actionData = useActionData();
+        return (
+          <ComponentNeedingProps
+            // @ts-expect-error
+            params={params}
+            data={data}
+            actionData={actionData}
+          />
+        );
+      }
+    : undefined;
   // HydrateFallback can only exist on the root route in SPA Mode
   let HydrateFallback =
     routeModule.HydrateFallback && (!isSpaMode || route.id === "root")
