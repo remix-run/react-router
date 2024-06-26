@@ -721,8 +721,8 @@ importers:
         specifier: ^0.1.2
         version: 0.1.2
       undici:
-        specifier: ^6.10.1
-        version: 6.10.1
+        specifier: ^6.19.2
+        version: 6.19.2
     devDependencies:
       '@types/cookie-signature':
         specifier: ^1.0.3
@@ -13073,6 +13073,11 @@ packages:
   /undici@6.10.1:
     resolution: {integrity: sha512-kSzmWrOx3XBKTgPm4Tal8Hyl3yf+hzlA00SAf4goxv8LZYafKmS6gJD/7Fe5HH/DMNiFTRXvkwhLo7mUn5fuQQ==}
     engines: {node: '>=18.0'}
+    dev: false
+
+  /undici@6.19.2:
+    resolution: {integrity: sha512-JfjKqIauur3Q6biAtHJ564e3bWa8VvT+7cSiOJHFbX4Erv6CLGDpg8z+Fmg/1OI/47RA+GI2QZaF48SSaLvyBA==}
+    engines: {node: '>=18.17'}
     dev: false
 
   /unicode-canonical-property-names-ecmascript@2.0.0:
