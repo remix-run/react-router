@@ -5,7 +5,6 @@ import {
   isRouteErrorResponse,
   createStaticHandler,
   json as routerJson,
-  stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
 } from "../router";
 import type { AppLoadContext } from "./data";
@@ -38,7 +37,6 @@ import {
   singleFetchAction,
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
-  ResponseStubOperationsSymbol,
   SINGLE_FETCH_REDIRECT_STATUS,
   proxyResponseStubHeadersToHeaders,
 } from "./single-fetch";
