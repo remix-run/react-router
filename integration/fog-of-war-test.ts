@@ -1,3 +1,4 @@
+import type { Request as PlaywrightRequest } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 
 import {
@@ -613,8 +614,52 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#child2")).toMatch(`Child 2`);
     expect(manifestRequests).toEqual([
       expect.stringMatching(
-        /\/__manifest\?version=[a-z0-9]{8}&paths=%2Fparent%2Fchild2/
+        /\/__manifest\?version=[a-z0-9]{8}&p=%2Fparent%2Fchild2/
       ),
     ]);
+  });
+
+  test("skips prefetching if the URL gets too large", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+          export default function Index() {
+            return (
+              <>
+                <h1 id="index">Index</h1>
+                {/* 400 links * ~19 chars per link > our 7198 char URL limit */}
+                {...new Array(400).fill(null).map((el, i) => (
+                  <Link to={"/dummy-link-" + i}>{i}</Link>
+                ))}
+              </>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: PlaywrightRequest[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req);
+      }
+    });
+
+    await app.goto("/", true);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(manifestRequests.length).toBe(0);
+
+    await app.clickLink("/a");
+    await page.waitForSelector("#a");
+    expect(await app.getHtml("#a")).toMatch("A LOADER");
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/a"]);
   });
 });

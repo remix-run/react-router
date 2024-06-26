@@ -249,9 +249,8 @@ async function handleManifestRequest(
     notFoundPaths: string[];
   } = { patches: {}, notFoundPaths: [] };
 
-  let paths = url.searchParams.getAll("paths");
-  if (paths.length > 0) {
-    for (let path of paths) {
+  if (url.searchParams.has("p")) {
+    for (let path of url.searchParams.getAll("p")) {
       let matches = matchServerRoutes(routes, path, build.basename);
       if (matches) {
         for (let match of matches) {
@@ -262,11 +261,12 @@ async function handleManifestRequest(
         data.notFoundPaths.push(path);
       }
     }
+
     return json(data, {
       headers: {
         "Cache-Control": "public, max-age=31536000, immutable",
       },
-    }) as Response; // Override the TypedResponse stuff
+    }) as Response; // Override the TypedResponse stuff from json()
   }
 
   return new Response("Invalid Request", { status: 400 });
