@@ -35,7 +35,7 @@ function getFiles() {
 
     "app/routes/_index.tsx": js`
       export default function Index() {
-        return <h1>Index</h1>
+        return <h1 id="index">Index</h1>
       }
     `,
 
@@ -214,24 +214,36 @@ test.describe("Fog of War", () => {
   }) => {
     let fixture = await createFixture({
       files: {
-        ...getFiles(),
-        "app/routes/a.tsx": js`
+        "app/root.tsx": js`
+          import { Outlet, Scripts } from "react-router";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head> </head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/_index.tsx": js`
           import * as React from 'react';
           import { Link, Outlet, useLoaderData } from "react-router";
-          export function loader({ request }) {
-            return { message: "A LOADER" };
-          }
           export default function Index() {
-            let data = useLoaderData();
             let [discover, setDiscover] = React.useState(false)
             return (
               <>
-                <h1 id="a">A: {data.message}</h1>
-                <Link to="/a/b" discover={discover ? "render" : "none"}>/a/b</Link>
+                <Link to="/a" discover={discover ? "render" : "none"}>/a</Link>
                 <button onClick={() => setDiscover(true)}>Toggle</button>
-                <Outlet/>
               </>
             )
+          }
+        `,
+        "app/routes/a.tsx": js`
+          export default function Index() {
+            return <h1 id="a">A</h1>
           }
         `,
       },
@@ -239,24 +251,23 @@ test.describe("Fog of War", () => {
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
 
-    await app.goto("/a", true);
-    await new Promise((r) => setTimeout(r, 250));
+    await app.goto("/", true);
     expect(
       await page.evaluate(() =>
         Object.keys((window as any).__remixManifest.routes)
       )
-    ).toEqual(["root", "routes/a"]);
+    ).toEqual(["root", "routes/_index"]);
 
     await app.clickElement("button");
     await page.waitForFunction(
-      () => (window as any).__remixManifest.routes["routes/a.b"]
+      () => (window as any).__remixManifest.routes["routes/a"]
     );
 
     expect(
       await page.evaluate(() =>
         Object.keys((window as any).__remixManifest.routes)
       )
-    ).toEqual(["root", "routes/a", "routes/a.b"]);
+    ).toEqual(["root", "routes/_index", "routes/a"]);
   });
 
   test('does not prefetch links with discover="none"', async ({ page }) => {
@@ -311,5 +322,58 @@ test.describe("Fog of War", () => {
         Object.keys((window as any).__remixManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
+  });
+
+  test("prefetches `routes/_index` when SSR-ing a deep route for client-side links to '/'", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Outlet, Scripts } from "react-router";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>
+          }
+        `,
+        "app/routes/deep.tsx": js`
+          import { Link } from "react-router";
+          export default function Component() {
+            return (
+              <>
+                <h1>Deep</h1>
+                <Link to="/" discover="none">Home</Link>
+              </>
+            )
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/deep", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["routes/_index", "root", "routes/deep"]);
+
+    await app.clickLink("/");
+    await page.waitForSelector("#index");
+    expect(await app.getHtml("#index")).toMatch(`Index`);
   });
 });

@@ -30,7 +30,7 @@ import type {
 import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
 import { useLocation, useNavigation } from "../../hooks";
-import { isFogOfWarEnabled } from "./fog-of-war";
+import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 
 // TODO: Temporary shim until we figure out the way to handle typings in v7
 export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
@@ -657,16 +657,7 @@ ${matches
     enableFogOfWar
       ? // Inline a minimal manifest with the SSR matches
         `window.__remixManifest = ${JSON.stringify(
-          {
-            ...manifest,
-            routes: matches.reduce(
-              (acc, m) =>
-                Object.assign(acc, {
-                  [m.route.id]: manifest.routes[m.route.id],
-                }),
-              {}
-            ),
-          },
+          getPartialManifest(manifest, matches),
           null,
           2
         )};`

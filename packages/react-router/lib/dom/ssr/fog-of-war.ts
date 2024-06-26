@@ -31,6 +31,34 @@ export function isFogOfWarEnabled(isSpaMode: boolean) {
   return !isSpaMode;
 }
 
+export function getPartialManifest(manifest: AssetsManifest, matches: any[]) {
+  let rootIndexRoute = Object.values(manifest.routes).find(
+    (r) => r.parentId === "root" && r.index === true
+  );
+  let matchesContainsIndex =
+    rootIndexRoute && !matches.some((m) => m.route.id === rootIndexRoute!.id);
+  return {
+    ...manifest,
+    routes: {
+      // Include the root index route if we enter on a different route, otherwise
+      // we can get a false positive when client-side matching on a link back to
+      // `/` since we will match the root route
+      ...(matchesContainsIndex
+        ? {
+            [rootIndexRoute!.id]: rootIndexRoute,
+          }
+        : {}),
+      ...matches.reduce(
+        (acc, m) =>
+          Object.assign(acc, {
+            [m.route.id]: manifest.routes[m.route.id],
+          }),
+        {}
+      ),
+    },
+  };
+}
+
 export function initFogOfWar(
   manifest: AssetsManifest,
   routeModules: RouteModules,
