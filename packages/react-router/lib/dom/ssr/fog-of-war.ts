@@ -31,31 +31,37 @@ export function isFogOfWarEnabled(isSpaMode: boolean) {
   return !isSpaMode;
 }
 
-export function getPartialManifest(manifest: AssetsManifest, matches: any[]) {
-  let rootIndexRoute = Object.values(manifest.routes).find(
-    (r) => r.parentId === "root" && r.index === true
+export function getPartialManifest(manifest: AssetsManifest, router: Router) {
+  // Start with our matches for this pathname
+  let routeIds = new Set(router.state.matches.map((m) => m.route.id));
+
+  let segments = router.state.location.pathname.split("/").filter(Boolean);
+  let paths: string[] = ["/"];
+
+  // We've already matched to the last segment
+  segments.pop();
+
+  // Traverse each path for our parents and match in case they have pathless/index
+  // children we need to include in the initial manifest
+  while (segments.length > 0) {
+    paths.push(`/${segments.join("/")}`);
+    segments.pop();
+  }
+
+  paths.forEach((path) => {
+    let matches = matchRoutes(router.routes, path, router.basename);
+    if (matches) {
+      matches.forEach((m) => routeIds.add(m.route.id));
+    }
+  });
+
+  let initialRoutes = [...routeIds].reduce(
+    (acc, id) => Object.assign(acc, { [id]: manifest.routes[id] }),
+    {}
   );
-  let matchesContainsIndex =
-    rootIndexRoute && !matches.some((m) => m.route.id === rootIndexRoute!.id);
   return {
     ...manifest,
-    routes: {
-      // Include the root index route if we enter on a different route, otherwise
-      // we can get a false positive when client-side matching on a link back to
-      // `/` since we will match the root route
-      ...(matchesContainsIndex
-        ? {
-            [rootIndexRoute!.id]: rootIndexRoute,
-          }
-        : {}),
-      ...matches.reduce(
-        (acc, m) =>
-          Object.assign(acc, {
-            [m.route.id]: manifest.routes[m.route.id],
-          }),
-        {}
-      ),
-    },
+    routes: initialRoutes,
   };
 }
 

@@ -657,7 +657,7 @@ ${matches
     enableFogOfWar
       ? // Inline a minimal manifest with the SSR matches
         `window.__remixManifest = ${JSON.stringify(
-          getPartialManifest(manifest, matches),
+          getPartialManifest(manifest, router),
           null,
           2
         )};`
