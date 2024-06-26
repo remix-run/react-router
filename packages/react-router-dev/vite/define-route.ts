@@ -26,7 +26,27 @@ export function transform(code: string) {
   });
 }
 
-function analyzeRouteExport(path: NodePath<t.ExportDefaultDeclaration>) {
+type Analysis = {
+  params?: NodePath;
+  links?: NodePath;
+  HydrateFallback?: NodePath;
+
+  serverLoader?: NodePath;
+  clientLoader?: NodePath;
+  serverAction?: NodePath;
+  clientAction?: NodePath;
+
+  meta?: NodePath;
+  Component?: NodePath;
+  ErrorBoundary?: NodePath;
+
+  handle?: NodePath;
+  // TODO: shouldRevalidate
+};
+
+function analyzeRouteExport(
+  path: NodePath<t.ExportDefaultDeclaration>
+): Analysis {
   let route = path.node.declaration;
 
   // export default {...}
@@ -67,7 +87,8 @@ function analyzeRouteExport(path: NodePath<t.ExportDefaultDeclaration>) {
     );
 }
 
-function analyzeRoute(path: NodePath<t.ObjectExpression>) {
+function analyzeRoute(path: NodePath<t.ObjectExpression>): Analysis {
+  let analysis: Analysis = {};
   for (let [i, property] of path.node.properties.entries()) {
     // spread: defineRoute({ ...dynamic })
     if (!t.isObjectProperty(property) && !t.isObjectMethod(property)) {
@@ -109,11 +130,11 @@ function analyzeRoute(path: NodePath<t.ObjectExpression>) {
           );
         }
       }
-      continue;
     }
+    analysis[key as keyof Analysis] = propertyPath;
   }
 
-  throw path.buildCodeFrameError("TODO: not yet implemented");
+  return analysis;
 }
 
 export function assertNotImported(code: string): void {
