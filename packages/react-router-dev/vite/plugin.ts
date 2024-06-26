@@ -1023,11 +1023,27 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           );
 
           let routeFileName = path.basename(routeModuleId);
-          let clientExports = sourceExports
-            .filter((exportName) => CLIENT_ROUTE_EXPORTS.includes(exportName))
-            .join(", ");
+          let clientExports = sourceExports.filter((exportName) =>
+            CLIENT_ROUTE_EXPORTS.includes(exportName)
+          );
 
-          return `export { ${clientExports} } from "./${routeFileName}";`;
+          if (!code.includes("defineRoute")) {
+            // temporary back compat
+            return `export { ${clientExports.join(
+              ","
+            )} } from "./${routeFileName}";`;
+          }
+
+          let exports = clientExports
+            .map((exp) => `export const ${exp} = route.${exp}`)
+            .join("\n");
+          return [
+            `import route from "./${routeFileName}"`,
+            exports,
+            sourceExports.includes("Component")
+              ? "export default route.Component"
+              : "",
+          ].join("\n");
         }
       },
       buildStart() {
