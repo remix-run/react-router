@@ -34,8 +34,7 @@ declare global {
 
 export function installGlobals() {
   global.File = NodeFile as unknown as typeof File;
-
-  // @ts-expect-error - overriding globals
+  // @ts-ignore - this shows as an error in VSCode but is not an error via TSC so we can't use `ts-expect-error`
   global.Headers = NodeHeaders;
   // @ts-expect-error - overriding globals
   global.Request = NodeRequest;
