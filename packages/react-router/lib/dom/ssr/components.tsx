@@ -30,6 +30,7 @@ import type {
 import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
 import { useLocation, useNavigation } from "../../hooks";
+import { isFogOfWarEnabled } from "./fog-of-war";
 
 // TODO: Temporary shim until we figure out the way to handle typings in v7
 export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
@@ -71,6 +72,14 @@ export function useFrameworkContext(): FrameworkContextObject {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
+
+/**
+ * Defines the discovery behavior of the link:
+ *
+ * - "render" - default, discover the route when the link renders
+ * - "none" - don't eagerly discover, only discover if the link is clicked
+ */
+export type DiscoverBehavior = "render" | "none";
 
 /**
  * Defines the prefetching behavior of the link:
@@ -603,7 +612,7 @@ export function Scripts(props: ScriptsProps) {
     useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let navigation = useNavigation();
+  let enableFogOfWar = isFogOfWarEnabled(isSpaMode);
 
   // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
@@ -635,7 +644,7 @@ export function Scripts(props: ScriptsProps) {
           manifest.hmr?.runtime
             ? `import ${JSON.stringify(manifest.hmr.runtime)};`
             : ""
-        }import ${JSON.stringify(manifest.url)};
+        }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
 ${matches
   .map(
     (match, index) =>
@@ -644,11 +653,28 @@ ${matches
       )};`
   )
   .join("\n")}
-window.__remixRouteModules = {${matches
-          .map(
-            (match, index) => `${JSON.stringify(match.route.id)}:route${index}`
-          )
-          .join(",")}};
+  ${
+    enableFogOfWar
+      ? // Inline a minimal manifest with the SSR matches
+        `window.__remixManifest = ${JSON.stringify(
+          {
+            ...manifest,
+            routes: matches.reduce(
+              (acc, m) =>
+                Object.assign(acc, {
+                  [m.route.id]: manifest.routes[m.route.id],
+                }),
+              {}
+            ),
+          },
+          null,
+          2
+        )};`
+      : ""
+  }
+  window.__remixRouteModules = {${matches
+    .map((match, index) => `${JSON.stringify(match.route.id)}:route${index}`)
+    .join(",")}};
 
 import(${JSON.stringify(manifest.entry.module)});`;
 
@@ -675,27 +701,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  // avoid waterfall when importing the next route module
-  let nextMatches = React.useMemo(() => {
-    if (navigation.location) {
-      // FIXME: can probably use transitionManager `nextMatches`
-      let matches = matchRoutes(
-        router.routes,
-        navigation.location,
-        router.basename
-      );
-      invariant(
-        matches,
-        `No routes match path "${navigation.location.pathname}"`
-      );
-      return matches;
-    }
-
-    return [];
-  }, [navigation.location, router.routes, router.basename]);
-
   let routePreloads = matches
-    .concat(nextMatches)
     .map((match) => {
       let route = manifest.routes[match.route.id];
       return (route.imports || []).concat([route.module]);
@@ -706,11 +712,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   return isHydrated ? null : (
     <>
-      <link
-        rel="modulepreload"
-        href={manifest.url}
-        crossOrigin={props.crossOrigin}
-      />
+      {!enableFogOfWar ? (
+        <link
+          rel="modulepreload"
+          href={manifest.url}
+          crossOrigin={props.crossOrigin}
+        />
+      ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}

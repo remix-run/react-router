@@ -57,7 +57,11 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { PrefetchBehavior, ScriptsProps } from "./ssr/components";
+import type {
+  DiscoverBehavior,
+  PrefetchBehavior,
+  ScriptsProps,
+} from "./ssr/components";
 import {
   PrefetchPageLinks,
   FrameworkContext,
@@ -699,6 +703,20 @@ export { HistoryRouter as unstable_HistoryRouter };
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   /**
+    Defines the link discovery behavior
+
+    ```tsx
+    <Link /> // default ("render")
+    <Link discover="render" />
+    <Link discover="none" />
+    ```
+
+    - **render** - default, discover the route when the link renders
+    - **none** - don't eagerly discover, only discover if the link is clicked
+  */
+  discover?: DiscoverBehavior;
+
+  /**
     Defines the data and module prefetching behavior for the link.
 
     ```tsx
@@ -856,6 +874,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
     {
       onClick,
+      discover = "render",
       prefetch = "none",
       relative,
       reloadDocument,
@@ -939,6 +958,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
+        data-discover={
+          !isAbsolute && discover === "render" ? "true" : undefined
+        }
       />
     );
 

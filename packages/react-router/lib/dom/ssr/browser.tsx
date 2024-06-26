@@ -20,6 +20,7 @@ import {
 } from "./single-fetch";
 import { FrameworkContext } from "./components";
 import { RemixErrorBoundary } from "./errorBoundaries";
+import { initFogOfWar, useFogOFWarDiscovery } from "./fog-of-war";
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__remixContext"]>;
@@ -101,7 +102,6 @@ function createHydratedRouter(): RemixRouter {
     ssrInfo.manifest.routes,
     ssrInfo.routeModules,
     ssrInfo.context.state,
-    ssrInfo.context.future,
     ssrInfo.context.isSpaMode
   );
 
@@ -159,6 +159,13 @@ function createHydratedRouter(): RemixRouter {
     }
   }
 
+  let { enabled: isFogOfWarEnabled, patchRoutesOnMiss } = initFogOfWar(
+    ssrInfo.manifest,
+    ssrInfo.routeModules,
+    ssrInfo.context.isSpaMode,
+    ssrInfo.context.basename
+  );
+
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
@@ -176,6 +183,9 @@ function createHydratedRouter(): RemixRouter {
       ssrInfo.manifest,
       ssrInfo.routeModules
     ),
+    ...(isFogOfWarEnabled
+      ? { unstable_patchRoutesOnMiss: patchRoutesOnMiss }
+      : {}),
   });
   ssrInfo.router = router;
 
@@ -237,6 +247,13 @@ export function HydratedRouter() {
   }, [location]);
 
   invariant(ssrInfo, "ssrInfo unavailable for HydratedRouter");
+
+  useFogOFWarDiscovery(
+    router,
+    ssrInfo.manifest,
+    ssrInfo.routeModules,
+    ssrInfo.context.isSpaMode
+  );
 
   // We need to include a wrapper RemixErrorBoundary here in case the root error
   // boundary also throws and we need to bubble up outside of the router entirely.
