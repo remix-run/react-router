@@ -67,8 +67,23 @@ function createHydratedRouter(): RemixRouter {
     );
   }
 
-  // TODO: Do some testing to confirm it's OK to skip the hard reload check
-  // now that all route.lazy stuff is wired up
+  // Hard reload if the path we tried to load is not the current path.
+  // This is usually the result of 2 rapid back/forward clicks from an
+  // external site into a Remix app, where we initially start the load for
+  // one URL and while the JS chunks are loading a second forward click moves
+  // us to a new URL.  Avoid comparing search params because of CDNs which
+  // can be configured to ignore certain params and only pathname is relevant
+  // towards determining the route matches.
+  let initialPathname = ssrInfo.context.url;
+  let hydratedPathname = window.location.pathname;
+  if (initialPathname !== hydratedPathname && !ssrInfo.context.isSpaMode) {
+    let errorMsg =
+      `Initial URL (${initialPathname}) does not match URL at time of hydration ` +
+      `(${hydratedPathname}), reloading page...`;
+    console.error(errorMsg);
+    window.location.reload();
+    throw new Error("SSR/Client mismatch - reloading current URL");
+  }
 
   // We need to suspend until the initial state snapshot is decoded into
   // window.__remixContext.state
