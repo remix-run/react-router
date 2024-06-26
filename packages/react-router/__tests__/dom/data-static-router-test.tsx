@@ -96,7 +96,7 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
-    expect(html).toMatch('<a href="/the/other/path">');
+    expect(html).toMatch('<a href="/the/other/path" data-discover="true">');
 
     // @ts-expect-error
     expect(hooksData1.location).toEqual({
@@ -243,7 +243,7 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
-    expect(html).toMatch('<a href="/the/other/path">');
+    expect(html).toMatch('<a href="/the/other/path" data-discover="true">');
 
     // @ts-expect-error
     expect(hooksData1.location).toEqual({
@@ -355,7 +355,9 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toMatch("<h1>👋</h1>");
-    expect(html).toMatch('<a href="/base/the/other/path">');
+    expect(html).toMatch(
+      '<a href="/base/the/other/path" data-discover="true">'
+    );
 
     // @ts-expect-error
     expect(location).toEqual({
@@ -528,7 +530,9 @@ describe("A <StaticRouterProvider>", () => {
         />
       </React.StrictMode>
     );
-    expect(html).toContain('<a href="/path/with%20space">👋</a>');
+    expect(html).toContain(
+      '<a href="/path/with%20space" data-discover="true">👋</a>'
+    );
   });
 
   it("does not encode user-specified <a href> values", async () => {
@@ -551,7 +555,9 @@ describe("A <StaticRouterProvider>", () => {
         />
       </React.StrictMode>
     );
-    expect(html).toContain('<a href="/path/with space">👋</a>');
+    expect(html).toContain(
+      '<a href="/path/with space" data-discover="true">👋</a>'
+    );
   });
 
   it("encodes auto-generated <form action> values to avoid hydration errors (action=undefined)", async () => {
@@ -1259,7 +1265,7 @@ describe("A <StaticRouterProvider>", () => {
       </React.StrictMode>
     );
     expect(html).toMatch(
-      '<a href="/the/path">relative path</a>' +
+      '<a href="/the/path" data-discover="true">relative path</a>' +
         '<a href="http://localhost/the/path">absolute same-origin url</a>' +
         '<a href="https://remix.run">absolute different-origin url</a>' +
         '<a href="mailto:foo@baz.com">absolute mailto: url</a>'
