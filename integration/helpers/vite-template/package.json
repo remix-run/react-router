@@ -16,7 +16,7 @@
     "@react-router/serve": "workspace:*",
     "@vanilla-extract/css": "^1.10.0",
     "@vanilla-extract/vite-plugin": "^3.9.2",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "isbot": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

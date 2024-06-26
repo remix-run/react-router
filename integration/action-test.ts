@@ -205,7 +205,7 @@ test.describe("actions", () => {
     await page.waitForSelector(`#${REDIRECT_TARGET}`);
 
     expect(responses.length).toBe(1);
-    expect(responses[0].status()).toBe(200);
+    expect(responses[0].status()).toBe(202);
 
     expect(new URL(page.url()).pathname).toBe(`/${REDIRECT_TARGET}`);
     expect(await app.getHtml()).toMatch(PAGE_TEXT);

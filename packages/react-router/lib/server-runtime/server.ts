@@ -5,7 +5,6 @@ import {
   isRouteErrorResponse,
   createStaticHandler,
   json as routerJson,
-  stripBasename,
   UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
 } from "../router";
 import type { AppLoadContext } from "./data";
@@ -27,6 +26,7 @@ import { createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
 import type { SingleFetchResult, SingleFetchResults } from "./single-fetch";
 import {
+  convertResponseStubToErrorResponse,
   encodeViaTurboStream,
   getResponseStubs,
   getSingleFetchDataStrategy,
@@ -37,7 +37,8 @@ import {
   singleFetchAction,
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
-  ResponseStubOperationsSymbol,
+  SINGLE_FETCH_REDIRECT_STATUS,
+  proxyResponseStubHeadersToHeaders,
 } from "./single-fetch";
 
 export type RequestHandler = (
@@ -169,7 +170,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
               serverMode
             ),
             {
-              status: 200,
+              status: SINGLE_FETCH_REDIRECT_STATUS,
               headers,
             }
           );
@@ -306,6 +307,11 @@ async function handleDocumentRequest(
 
   // Sanitize errors outside of development environments
   if (context.errors) {
+    for (let [routeId, error] of Object.entries(context.errors)) {
+      if (isResponseStub(error)) {
+        context.errors[routeId] = convertResponseStubToErrorResponse(error);
+      }
+    }
     Object.values(context.errors).forEach((err) => {
       // @ts-expect-error This is "private" from users but intended for internal use
       if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
@@ -452,7 +458,7 @@ async function handleResourceRequest(
       }),
     });
 
-    if (typeof response === "object") {
+    if (typeof response === "object" && response !== null) {
       invariant(
         !(DEFERRED_SYMBOL in response),
         `You cannot return a \`defer()\` response from a Resource Route.  Did you ` +
@@ -460,17 +466,21 @@ async function handleResourceRequest(
       );
     }
 
-    invariant(
-      isResponse(response),
-      "Expected a Response to be returned from resource route handler"
-    );
-
     let stub = responseStubs[routeId];
-    // Use the response status and merge any response stub headers onto it
-    let ops = stub[ResponseStubOperationsSymbol];
-    for (let [op, ...args] of ops) {
-      // @ts-expect-error
-      response.headers[op](...args);
+    if (isResponseStub(response) || response == null) {
+      // If the stub or null was returned, then there is no body so we just
+      // proxy along the status/headers to a Response
+      response = new Response(null, {
+        status: stub.status,
+        headers: proxyResponseStubHeadersToHeaders(stub, new Headers()),
+      });
+    } else if (isResponse(response)) {
+      // Use the response status and merge any response stub headers onto it
+      proxyResponseStubHeadersToHeaders(stub, response.headers);
+    } else {
+      throw new Error(
+        "Expected a Response to be returned from resource route handler"
+      );
     }
 
     return response;
@@ -480,6 +490,13 @@ async function handleResourceRequest(
       // match identically to what Remix returns
       error.headers.set("X-Remix-Catch", "yes");
       return error;
+    }
+
+    if (isResponseStub(error)) {
+      return new Response(null, {
+        status: error.status,
+        headers: proxyResponseStubHeadersToHeaders(error, new Headers()),
+      });
     }
 
     if (isRouteErrorResponse(error)) {
@@ -539,29 +556,4 @@ function unwrapResponse(response: Response) {
       ? null
       : response.json()
     : response.text();
-}
-
-function createRemixRedirectResponse(
-  response: Response,
-  basename: string | undefined
-) {
-  // We don't have any way to prevent a fetch request from following
-  // redirects. So we use the `X-Remix-Redirect` header to indicate the
-  // next URL, and then "follow" the redirect manually on the client.
-  let headers = new Headers(response.headers);
-  let redirectUrl = headers.get("Location")!;
-  headers.set(
-    "X-Remix-Redirect",
-    basename ? stripBasename(redirectUrl, basename) || redirectUrl : redirectUrl
-  );
-  headers.set("X-Remix-Status", String(response.status));
-  headers.delete("Location");
-  if (response.headers.get("Set-Cookie") !== null) {
-    headers.set("X-Remix-Revalidate", "yes");
-  }
-
-  return new Response(null, {
-    status: 204,
-    headers,
-  });
 }

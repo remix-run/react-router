@@ -13,7 +13,7 @@
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
     "compression": "^1.7.4",
-    "express": "^4.18.2",
+    "express": "^4.19.2",
     "isbot": "^4.1.0",
     "morgan": "^1.10.0",
     "react": "^18.2.0",
