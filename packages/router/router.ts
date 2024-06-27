@@ -252,6 +252,9 @@ export interface Router {
    * @param routeId The parent route id
    * @param children The additional children routes
    */
+  patchRoutes(
+    cb: (routeId: string | null, children: AgnosticRouteObject[]) => void
+  ): void;
   patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
 
   /**
@@ -3296,6 +3299,52 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
+  // Standard implementation - patch children into a parent and `updateState`
+  function patchRoutes(
+    routeId: string,
+    children: AgnosticDataRouteObject[]
+  ): void;
+  // Batch implementation - perform multiple patches followed by a single `updateState`
+  function patchRoutes(
+    cb: (
+      patch: (routeId: string, children: AgnosticDataRouteObject[]) => void
+    ) => void
+  ): void;
+  function patchRoutes(
+    routeId:
+      | string
+      | ((
+          patch: (routeId: string, children: AgnosticDataRouteObject[]) => void
+        ) => void),
+    children?: AgnosticDataRouteObject[]
+  ): void {
+    let isNonHMR = inFlightDataRoutes == null;
+    let routesToUse = inFlightDataRoutes || dataRoutes;
+    if (typeof routeId === "function") {
+      routeId((r, c) =>
+        patchRoutesImpl(r, c, routesToUse, manifest, mapRouteProperties)
+      );
+    } else if (typeof routeId === "string" && children != null) {
+      patchRoutesImpl(
+        routeId,
+        children,
+        routesToUse,
+        manifest,
+        mapRouteProperties
+      );
+    }
+
+    // If we are not in the middle of an HMR revalidation and we changed the
+    // routes, provide a new identity and trigger a reflow via `updateState`
+    // to re-run memoized `router.routes` dependencies.
+    // HMR will already update the identity and reflow when it lands
+    // `inFlightDataRoutes` in `completeNavigation`
+    if (isNonHMR) {
+      dataRoutes = [...dataRoutes];
+      updateState({});
+    }
+  }
+
   router = {
     get basename() {
       return basename;
@@ -3327,21 +3376,7 @@ export function createRouter(init: RouterInit): Router {
     dispose,
     getBlocker,
     deleteBlocker,
-    patchRoutes(routeId, children) {
-      let isNonHMR = inFlightDataRoutes == null;
-      let routesToUse = inFlightDataRoutes || dataRoutes;
-      patchRoutes(routeId, children, routesToUse, manifest, mapRouteProperties);
-
-      // If we are not in the middle of an HMR revalidation and we changed the
-      // routes, provide a new identity and trigger a reflow via `updateState`
-      // to re-run memoized `router.routes` dependencies.
-      // HMR will already update the identity and reflow when it lands
-      // `inFlightDataRoutes` in `completeNavigation`
-      if (isNonHMR) {
-        dataRoutes = [...dataRoutes];
-        updateState({});
-      }
-    },
+    patchRoutes,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
@@ -4528,7 +4563,7 @@ async function loadLazyRouteChildren(
         matches,
         patch: (routeId, children) => {
           if (!signal.aborted) {
-            patchRoutes(
+            patchRoutesImpl(
               routeId,
               children,
               routes,
@@ -4549,7 +4584,7 @@ async function loadLazyRouteChildren(
   }
 }
 
-function patchRoutes(
+function patchRoutesImpl(
   routeId: string | null,
   children: AgnosticRouteObject[],
   routesToUse: AgnosticDataRouteObject[],
