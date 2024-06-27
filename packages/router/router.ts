@@ -249,13 +249,16 @@ export interface Router {
    * PRIVATE DO NOT USE
    *
    * Patch additional children routes into an existing parent route
-   * @param routeId The parent route id
+   * @param routeId The parent route id or a callback function accepting `patch`
+   *                to perform batch patching
    * @param children The additional children routes
    */
-  patchRoutes(
-    cb: (routeId: string | null, children: AgnosticRouteObject[]) => void
-  ): void;
   patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
+  patchRoutes(
+    cb: (
+      patch: (r: string | null, children: AgnosticRouteObject[]) => void
+    ) => void
+  ): void;
 
   /**
    * @internal
@@ -3299,34 +3302,33 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
-  // Standard implementation - patch children into a parent and `updateState`
+  // single-patch implementation:
+  //   router.patchRoutes(parentId, children);
+  //
+  // batch-patch implementation:
+  //   router.patchRoutes((patch) => {
+  //     patch(parentId1, children1);
+  //     patch(parentId2, children2);
+  //     patch(parentId3, children3);
+  //   });
   function patchRoutes(
-    routeId: string,
-    children: AgnosticDataRouteObject[]
-  ): void;
-  // Batch implementation - perform multiple patches followed by a single `updateState`
-  function patchRoutes(
-    cb: (
-      patch: (routeId: string, children: AgnosticDataRouteObject[]) => void
-    ) => void
-  ): void;
-  function patchRoutes(
-    routeId:
+    routeIdOrCb:
       | string
+      | null
       | ((
-          patch: (routeId: string, children: AgnosticDataRouteObject[]) => void
+          patch: (r: string | null, children: AgnosticRouteObject[]) => void
         ) => void),
-    children?: AgnosticDataRouteObject[]
+    children?: AgnosticRouteObject[]
   ): void {
     let isNonHMR = inFlightDataRoutes == null;
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    if (typeof routeId === "function") {
-      routeId((r, c) =>
+    if (typeof routeIdOrCb === "function") {
+      routeIdOrCb((r, c) =>
         patchRoutesImpl(r, c, routesToUse, manifest, mapRouteProperties)
       );
-    } else if (typeof routeId === "string" && children != null) {
+    } else if (typeof routeIdOrCb === "string" && children != null) {
       patchRoutesImpl(
-        routeId,
+        routeIdOrCb,
         children,
         routesToUse,
         manifest,
