@@ -835,6 +835,80 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("creates a new router.routes identity when patching routes", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "parent",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        let children = await childrenDfd.promise;
+        patch("parent", children);
+      },
+    });
+    let originalRoutes = router.routes;
+
+    router.navigate("/parent/child");
+    childrenDfd.resolve([
+      {
+        id: "child",
+        path: "child",
+      },
+    ]);
+    await tick();
+
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent",
+      "child",
+    ]);
+
+    expect(router.routes).not.toBe(originalRoutes);
+  });
+
+  it("allows patching externally/eagerly and triggers a reflow", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "parent",
+        },
+      ],
+    });
+    let spy = jest.fn();
+    let unsubscribe = router.subscribe(spy);
+    let originalRoutes = router.routes;
+    router.patchRoutes("parent", [
+      {
+        id: "child",
+        path: "child",
+      },
+    ]);
+    expect(spy).toHaveBeenCalled();
+    expect(router.routes).not.toBe(originalRoutes);
+
+    await router.navigate("/parent/child");
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent",
+      "child",
+    ]);
+
+    unsubscribe();
+  });
+
   describe("errors", () => {
     it("lazy 404s (GET navigation)", async () => {
       let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
