@@ -12,7 +12,7 @@ import type {
   unstable_DataStrategyFunction,
   Fetcher,
   FormEncType,
-  FutureConfig as RouterFutureConfig,
+  FutureConfig,
   GetScrollRestorationKeyFunction,
   HashHistory,
   History,
@@ -128,7 +128,7 @@ try {
 
 interface DOMRouterOpts {
   basename?: string;
-  future?: Partial<RouterFutureConfig>;
+  future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
   unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
@@ -2152,12 +2152,7 @@ export function useFetcher<TData = any>({
   // Registration/cleanup
   React.useEffect(() => {
     router.getFetcher(fetcherKey);
-    return () => {
-      // Tell the router we've unmounted - if v7_fetcherPersist is enabled this
-      // will not delete immediately but instead queue up a delete after the
-      // fetcher returns to an `idle` state
-      router.deleteFetcher(fetcherKey);
-    };
+    return () => router.deleteFetcher(fetcherKey);
   }, [router, fetcherKey]);
 
   // Fetcher additions

@@ -156,10 +156,8 @@ describe("redirects", () => {
       loaderData: {},
       errors: null,
     });
-    expect(t.router.state.fetchers.get("key")).toMatchObject({
-      state: "idle",
-      data: undefined,
-    });
+    // There's never any data so it just ends up being removed from state.fetchers
+    expect(t.fetchers["key"]).toBeUndefined();
   });
 
   it("supports relative routing in redirects (from child fetch loader)", async () => {

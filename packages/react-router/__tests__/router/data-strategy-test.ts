@@ -621,9 +621,7 @@ describe("router dataStrategy", () => {
 
         await A.loaders.json.resolve(json({ message: "hello json" }));
 
-        expect(t.router.state.fetchers.get(key)?.data.message).toBe(
-          "hello json"
-        );
+        expect(t.fetchers[key].data.message).toBe("hello json");
 
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -662,9 +660,7 @@ describe("router dataStrategy", () => {
         await A.lazy.json.resolve({
           loader: () => ({ message: "hello json" }),
         });
-        expect(t.router.state.fetchers.get(key)?.data.message).toBe(
-          "hello json"
-        );
+        expect(t.fetchers[key].data.message).toBe("hello json");
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
             request: expect.any(Request),
@@ -707,9 +703,7 @@ describe("router dataStrategy", () => {
 
         await A.actions.json.resolve(json({ message: "hello json" }));
 
-        expect(t.router.state.fetchers.get(key)?.data.message).toBe(
-          "hello json"
-        );
+        expect(t.fetchers[key].data.message).toBe("hello json");
 
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -752,9 +746,7 @@ describe("router dataStrategy", () => {
           action: () => ({ message: "hello json" }),
         });
 
-        expect(t.router.state.fetchers.get(key)?.data.message).toBe(
-          "hello json"
-        );
+        expect(t.fetchers[key].data.message).toBe("hello json");
 
         expect(dataStrategy).toHaveBeenCalledWith(
           expect.objectContaining({

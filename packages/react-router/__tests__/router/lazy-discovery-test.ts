@@ -1,6 +1,7 @@
 import type { AgnosticDataRouteObject, Router } from "../../lib/router/index";
 import { createMemoryHistory, createRouter } from "../../lib/router/index";
 import { ErrorResponseImpl } from "../../lib/router/utils";
+import { getFetcherData } from "./utils/data-router-setup";
 import { createDeferred, createFormData, tick } from "./utils/utils";
 
 let router: Router;
@@ -1522,6 +1523,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           patch("parent", children);
         },
       });
+      let fetcherData = getFetcherData(router);
 
       let key = "key";
       router.fetch(key, "0", "/parent/child");
@@ -1540,7 +1542,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       await tick();
 
       expect(router.getFetcher(key).state).toBe("idle");
-      expect(router.getFetcher(key).data).toBe("CHILD");
+      expect(fetcherData.get(key)).toBe("CHILD");
     });
 
     it("discovers child routes at a depth >1 (fetcher.load)", async () => {
@@ -1578,13 +1580,14 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           }
         },
       });
+      let fetcherData = getFetcherData(router);
 
       let key = "key";
       await router.fetch(key, "0", "/a/b/c");
       // Needed for now since router.fetch is not async until v7
       await new Promise((r) => setTimeout(r, 10));
       expect(router.getFetcher(key).state).toBe("idle");
-      expect(router.getFetcher(key).data).toBe("C");
+      expect(fetcherData.get(key)).toBe("C");
     });
 
     it("discovers child route at a depth of 1 (fetcher.submit)", async () => {
@@ -1607,6 +1610,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           patch("parent", children);
         },
       });
+      let fetcherData = getFetcherData(router);
 
       let key = "key";
       router.fetch(key, "0", "/parent/child", {
@@ -1628,7 +1632,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       await tick();
 
       expect(router.getFetcher(key).state).toBe("idle");
-      expect(router.getFetcher(key).data).toBe("CHILD");
+      expect(fetcherData.get(key)).toBe("CHILD");
     });
 
     it("discovers child routes at a depth >1 (fetcher.submit)", async () => {
@@ -1666,6 +1670,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           }
         },
       });
+      let fetcherData = getFetcherData(router);
 
       let key = "key";
       await router.fetch(key, "0", "/a/b/c", {
@@ -1675,7 +1680,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       // Needed for now since router.fetch is not async until v7
       await new Promise((r) => setTimeout(r, 10));
       expect(router.getFetcher(key).state).toBe("idle");
-      expect(router.getFetcher(key).data).toBe("C ACTION");
+      expect(fetcherData.get(key)).toBe("C ACTION");
     });
   });
 });

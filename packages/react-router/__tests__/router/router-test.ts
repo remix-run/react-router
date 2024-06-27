@@ -18,6 +18,7 @@ import {
 import {
   cleanup,
   createDeferred,
+  getFetcherData,
   setup,
   TASK_ROUTES,
 } from "./utils/data-router-setup";
@@ -2300,12 +2301,14 @@ describe("a router", () => {
           },
         },
       });
+      let fetcherData = getFetcherData(router);
       router.initialize();
 
       let key = "key";
       router.fetch(key, "root", "/foo");
       await fooDfd.resolve("FOO");
-      expect(router.state.fetchers.get("key")?.data).toBe("FOO");
+      await tick();
+      expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
       let newRoutes: AgnosticDataRouteObject[] = [
@@ -2342,6 +2345,7 @@ describe("a router", () => {
 
       // Resolve any loaders that should have ran (foo's loader has been removed)
       await rootDfd2.resolve("ROOT*");
+      await tick();
       expect(router.state.revalidation).toBe("idle");
 
       // Routes should be updated
@@ -2352,9 +2356,12 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({
         root: "ROOT*",
       });
+
       // Fetcher should have been revalidated but throw an error since the
       // loader was removed
-      expect(router.state.fetchers.get("key")?.data).toBe(undefined);
+      // The data remains in the UI layer in this test setup since it hasn't
+      // unmounted - but normally it would unmount and the data would be removed
+      expect(fetcherData.get("key")).toBe("FOO");
       expect(router.state.errors).toMatchInlineSnapshot(`
         {
           "root": ErrorResponseImpl {
@@ -2404,12 +2411,13 @@ describe("a router", () => {
           },
         },
       });
+      let fetcherData = getFetcherData(router);
       router.initialize();
 
       let key = "key";
       router.fetch(key, "root", "/foo");
       await fooDfd.resolve("FOO");
-      expect(router.state.fetchers.get("key")?.data).toBe("FOO");
+      expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
       let newRoutes: AgnosticDataRouteObject[] = [
@@ -2450,8 +2458,10 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({
         root: "ROOT*",
       });
-      // Fetcher should have been revalidated but theown a 404 wince the route was removed
-      expect(router.state.fetchers.get("key")?.data).toBe(undefined);
+      // Fetcher should have been revalidated but thrown a 404 wince the route was removed
+      // The data remains in the UI layer in this test setup since it hasn't
+      // unmounted - but normally it would unmount and the data would be removed
+      expect(fetcherData.get(key)).toBe("FOO");
       expect(router.state.errors).toEqual({
         root: new ErrorResponseImpl(
           404,

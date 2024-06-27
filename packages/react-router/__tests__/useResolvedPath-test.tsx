@@ -368,10 +368,7 @@ describe("useResolvedPath", () => {
   // gh-issue #11629
   it("'.' resolves to the current path including any splat paths nested in pathless routes", () => {
     let { container } = render(
-      <MemoryRouter
-        initialEntries={["/foo/bar"]}
-        future={{ v7_relativeSplatPath: true }}
-      >
+      <MemoryRouter initialEntries={["/foo/bar"]}>
         <Routes>
           <Route path="foo">
             <Route>
