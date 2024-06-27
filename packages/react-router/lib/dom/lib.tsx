@@ -57,7 +57,11 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { PrefetchBehavior, ScriptsProps } from "./ssr/components";
+import type {
+  DiscoverBehavior,
+  PrefetchBehavior,
+  ScriptsProps,
+} from "./ssr/components";
 import {
   PrefetchPageLinks,
   FrameworkContext,
@@ -699,6 +703,20 @@ export { HistoryRouter as unstable_HistoryRouter };
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   /**
+    Defines the link discovery behavior
+
+    ```tsx
+    <Link /> // default ("render")
+    <Link discover="render" />
+    <Link discover="none" />
+    ```
+
+    - **render** - default, discover the route when the link renders
+    - **none** - don't eagerly discover, only discover if the link is clicked
+  */
+  discover?: DiscoverBehavior;
+
+  /**
     Defines the data and module prefetching behavior for the link.
 
     ```tsx
@@ -856,6 +874,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
     {
       onClick,
+      discover = "render",
       prefetch = "none",
       relative,
       reloadDocument,
@@ -939,6 +958,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
+        data-discover={
+          !isAbsolute && discover === "render" ? "true" : undefined
+        }
       />
     );
 
@@ -1265,6 +1287,8 @@ export interface FetcherFormProps extends SharedFormProps {}
  * @category Types
  */
 export interface FormProps extends SharedFormProps {
+  discover?: DiscoverBehavior;
+
   /**
    * Indicates a specific fetcherKey to use when using `navigate={false}` so you
    * can pick up the fetcher's state in a different component in a {@link
@@ -1341,6 +1365,7 @@ function NewEvent() {
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
     {
+      discover = "render",
       fetcherKey,
       navigate,
       reloadDocument,
@@ -1360,6 +1385,8 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
+    let isAbsolute =
+      typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
@@ -1392,6 +1419,9 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         action={formAction}
         onSubmit={reloadDocument ? onSubmit : submitHandler}
         {...props}
+        data-discover={
+          !isAbsolute && discover === "render" ? "true" : undefined
+        }
       />
     );
   }

@@ -594,6 +594,10 @@ test.describe("route module link export", () => {
   });
 
   test.describe("script imports", () => {
+    // Disable JS for this test since we don't want it to hydrate and remove
+    // the initial <script> tags
+    test.use({ javaScriptEnabled: false });
+
     test("are added to the document", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
@@ -605,8 +609,8 @@ test.describe("route module link export", () => {
       let moduleScriptText = await moduleScript.innerText();
       expect(
         Array.from(moduleScriptText.matchAll(/import "\/assets\/manifest-/g)),
-        "invalid build manifest"
-      ).toHaveLength(1);
+        "did not expect a manifest due to fog of war"
+      ).toHaveLength(0);
       expect(
         Array.from(moduleScriptText.matchAll(/import \* as route0 from "/g)),
         "invalid route0"

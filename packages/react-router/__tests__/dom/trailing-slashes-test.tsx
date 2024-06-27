@@ -51,9 +51,11 @@ describe("trailing slashes", () => {
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
           NodeList [
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app"
             />,
           ]
@@ -83,9 +85,11 @@ describe("trailing slashes", () => {
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
           NodeList [
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app"
             />,
           ]
@@ -141,33 +145,43 @@ describe("trailing slashes", () => {
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
           NodeList [
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app/parent"
             />,
             <a
+              data-discover="true"
               href="/app/parent/"
             />,
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app"
             />,
             <a
+              data-discover="true"
               href="/app/parent/child"
             />,
             <a
+              data-discover="true"
               href="/app/parent/child/"
             />,
           ]
@@ -199,9 +213,11 @@ describe("trailing slashes", () => {
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
           NodeList [
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/"
             />,
           ]
@@ -231,9 +247,11 @@ describe("trailing slashes", () => {
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
           NodeList [
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/"
             />,
           ]
@@ -289,33 +307,43 @@ describe("trailing slashes", () => {
         expect(node.querySelectorAll("a")).toMatchInlineSnapshot(`
           NodeList [
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/parent"
             />,
             <a
+              data-discover="true"
               href="/app/parent/"
             />,
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/"
             />,
             <a
+              data-discover="true"
               href="/app/parent/child"
             />,
             <a
+              data-discover="true"
               href="/app/parent/child/"
             />,
           ]
