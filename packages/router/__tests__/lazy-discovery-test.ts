@@ -896,13 +896,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         path: "child",
       },
     ]);
-    router.patchRoutes("parent", [
-      {
-        id: "child2",
-        path: "child2",
-      },
-    ]);
-    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalled();
     expect(router.routes).not.toBe(originalRoutes);
 
     await router.navigate("/parent/child");
@@ -910,57 +904,6 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.matches.map((m) => m.route.id)).toEqual([
       "parent",
       "child",
-    ]);
-
-    unsubscribe();
-  });
-
-  it("allows patching externally/eagerly and triggers a reflow (batch API)", async () => {
-    router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
-        {
-          path: "/",
-        },
-        {
-          id: "parent",
-          path: "parent",
-        },
-      ],
-    });
-    let spy = jest.fn();
-    let unsubscribe = router.subscribe(spy);
-    let originalRoutes = router.routes;
-    router.patchRoutes((patch) => {
-      patch("parent", [
-        {
-          id: "child",
-          path: "child",
-        },
-      ]);
-      patch("parent", [
-        {
-          id: "child2",
-          path: "child2",
-        },
-      ]);
-    });
-
-    expect(spy).toHaveBeenCalledTimes(1);
-    expect(router.routes).not.toBe(originalRoutes);
-
-    await router.navigate("/parent/child");
-    expect(router.state.location.pathname).toBe("/parent/child");
-    expect(router.state.matches.map((m) => m.route.id)).toEqual([
-      "parent",
-      "child",
-    ]);
-
-    await router.navigate("/parent/child2");
-    expect(router.state.location.pathname).toBe("/parent/child2");
-    expect(router.state.matches.map((m) => m.route.id)).toEqual([
-      "parent",
-      "child2",
     ]);
 
     unsubscribe();

@@ -254,11 +254,6 @@ export interface Router {
    * @param children The additional children routes
    */
   patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
-  patchRoutes(
-    cb: (
-      patch: (r: string | null, children: AgnosticRouteObject[]) => void
-    ) => void
-  ): void;
 
   /**
    * @internal
@@ -3302,39 +3297,19 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
-  // single-patch implementation:
-  //   router.patchRoutes(parentId, children);
-  //
-  // batch-patch implementation:
-  //   router.patchRoutes((patch) => {
-  //     patch(parentId1, children1);
-  //     patch(parentId2, children2);
-  //     patch(parentId3, children3);
-  //   });
   function patchRoutes(
-    routeIdOrCb:
-      | string
-      | null
-      | ((
-          patch: (r: string | null, children: AgnosticRouteObject[]) => void
-        ) => void),
-    children?: AgnosticRouteObject[]
+    routeId: string | null,
+    children: AgnosticRouteObject[]
   ): void {
     let isNonHMR = inFlightDataRoutes == null;
     let routesToUse = inFlightDataRoutes || dataRoutes;
-    if (typeof routeIdOrCb === "function") {
-      routeIdOrCb((r, c) =>
-        patchRoutesImpl(r, c, routesToUse, manifest, mapRouteProperties)
-      );
-    } else if (typeof routeIdOrCb === "string" && children != null) {
-      patchRoutesImpl(
-        routeIdOrCb,
-        children,
-        routesToUse,
-        manifest,
-        mapRouteProperties
-      );
-    }
+    patchRoutesImpl(
+      routeId,
+      children,
+      routesToUse,
+      manifest,
+      mapRouteProperties
+    );
 
     // If we are not in the middle of an HMR revalidation and we changed the
     // routes, provide a new identity and trigger a reflow via `updateState`
