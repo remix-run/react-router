@@ -1222,6 +1222,7 @@ export function createRouter(init: RouterInit): Router {
         isMutationMethod(state.navigation.formMethod) &&
         location.state?._isRedirect !== true);
 
+    // Commit any in-flight routes at the end of the HMR revalidation "navigation"
     if (inFlightDataRoutes) {
       dataRoutes = inFlightDataRoutes;
       inFlightDataRoutes = undefined;
@@ -3204,12 +3205,14 @@ export function createRouter(init: RouterInit): Router {
         ? partialMatches[partialMatches.length - 1].route
         : null;
     while (true) {
+      let isNonHMR = inFlightDataRoutes == null;
+      let routesToUse = inFlightDataRoutes || dataRoutes;
       try {
         await loadLazyRouteChildren(
           patchRoutesOnMissImpl!,
           pathname,
           partialMatches,
-          dataRoutes || inFlightDataRoutes,
+          routesToUse,
           manifest,
           mapRouteProperties,
           pendingPatchRoutes,
@@ -3217,13 +3220,20 @@ export function createRouter(init: RouterInit): Router {
         );
       } catch (e) {
         return { type: "error", error: e, partialMatches };
+      } finally {
+        // If we are in a non-HMR scenario and we changed the routes, provide a
+        // new identify so when we `updateState` at the end of this navigation/fetch
+        // `route.routes` will be a new identify and trigger a re-run of memoized
+        // dependencies
+        if (isNonHMR) {
+          dataRoutes = [...dataRoutes];
+        }
       }
 
       if (signal.aborted) {
         return { type: "aborted" };
       }
 
-      let routesToUse = inFlightDataRoutes || dataRoutes;
       let newMatches = matchRoutes(routesToUse, pathname, basename);
       let matchedSplat = false;
       if (newMatches) {
@@ -3316,13 +3326,19 @@ export function createRouter(init: RouterInit): Router {
     getBlocker,
     deleteBlocker,
     patchRoutes(routeId, children) {
-      return patchRoutes(
-        routeId,
-        children,
-        dataRoutes || inFlightDataRoutes,
-        manifest,
-        mapRouteProperties
-      );
+      let isNonHMR = inFlightDataRoutes == null;
+      let routesToUse = inFlightDataRoutes || dataRoutes;
+      patchRoutes(routeId, children, routesToUse, manifest, mapRouteProperties);
+
+      // If we are in the middle of an HMR revalidation, we've updated
+      // `inFlightDataRoutes` in place above and the end of the revalidation
+      // will land them into `dataRoutes` with a new identity.
+      // Otherwise, update the `dataRoutes` identity and `updateState` to trigger
+      // a `<RouterProvider>` reflow since `router.routes` has been updated
+      if (isNonHMR) {
+        dataRoutes = [...dataRoutes];
+        updateState({});
+      }
     },
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
@@ -4488,7 +4504,7 @@ function shouldRevalidateLoader(
 }
 
 /**
- * Idempotent utility to execute route.children() method to lazily load route
+ * Idempotent utility to execute patchRoutesOnMiss() to lazily load route
  * definitions and update the routes/routeManifest
  */
 async function loadLazyRouteChildren(
@@ -4534,7 +4550,7 @@ async function loadLazyRouteChildren(
 function patchRoutes(
   routeId: string | null,
   children: AgnosticRouteObject[],
-  routes: AgnosticDataRouteObject[],
+  routesToUse: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction
 ) {
@@ -4559,10 +4575,10 @@ function patchRoutes(
     let dataChildren = convertRoutesToDataRoutes(
       children,
       mapRouteProperties,
-      ["patch", String(routes.length || "0")],
+      ["patch", String(routesToUse.length || "0")],
       manifest
     );
-    routes.push(...dataChildren);
+    routesToUse.push(...dataChildren);
   }
 }
 
