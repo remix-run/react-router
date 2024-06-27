@@ -1287,6 +1287,8 @@ export interface FetcherFormProps extends SharedFormProps {}
  * @category Types
  */
 export interface FormProps extends SharedFormProps {
+  discover?: DiscoverBehavior;
+
   /**
    * Indicates a specific fetcherKey to use when using `navigate={false}` so you
    * can pick up the fetcher's state in a different component in a {@link
@@ -1363,6 +1365,7 @@ function NewEvent() {
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
     {
+      discover = "render",
       fetcherKey,
       navigate,
       reloadDocument,
@@ -1382,6 +1385,8 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
+    let isAbsolute =
+      typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
@@ -1414,6 +1419,9 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         action={formAction}
         onSubmit={reloadDocument ? onSubmit : submitHandler}
         {...props}
+        data-discover={
+          !isAbsolute && discover === "render" ? "true" : undefined
+        }
       />
     );
   }

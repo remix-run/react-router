@@ -154,6 +154,99 @@ test.describe.skip("multi fetch", () => {
     });
   });
 
+  test.describe("prefetch=render (fog of war)", () => {
+    let appFixture: AppFixture;
+
+    test.afterAll(() => {
+      appFixture?.close();
+    });
+
+    test("adds prefetch tags after discovery", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          "app/root.tsx": js`
+            import * as React from "react";
+            import {
+              Link,
+              Links,
+              Meta,
+              Outlet,
+              Scripts,
+              useLoaderData,
+            } from "react-router";
+            export default function Root() {
+              let [discover, setDiscover] = React.useState(false);
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <nav id="nav">
+                      <Link
+                        to="/with-loader"
+                        discover={discover ? "render" : "none"}
+                        prefetch="render">
+                        Loader Page
+                      </Link>
+                      <br/>
+                      <button onClick={() => setDiscover(true)}>
+                        Discover Link
+                      </button>
+                    </nav>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+
+          "app/routes/_index.tsx": js`
+            export default function() {
+              return <h2 className="index">Index</h2>;
+            }
+          `,
+
+          "app/routes/with-loader.tsx": js`
+            export function loader() {
+              return { message: 'data from the loader' };
+            }
+            export default function() {
+              return <h2 className="with-loader">With Loader</h2>;
+            }
+          `,
+        },
+      });
+      appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let consoleLogs: string[] = [];
+      page.on("console", (msg) => {
+        consoleLogs.push(msg.text());
+      });
+
+      let selectors = {
+        data: "#nav link[href='/with-loader.data']",
+        route: "#nav link[href^='/build/routes/with-loader-']",
+      };
+      await app.goto("/", true);
+      expect(await app.page.$(selectors.data)).toBeNull();
+      expect(await app.page.$(selectors.route)).toBeNull();
+      expect(consoleLogs).toEqual([
+        "Tried to prefetch /with-loader but no routes matched.",
+      ]);
+
+      await app.clickElement("button");
+      await page.waitForSelector(selectors.data, { state: "attached" });
+      await page.waitForSelector(selectors.route, { state: "attached" });
+
+      // Ensure no other links in the #nav element
+      expect(await page.locator("#nav link").count()).toBe(2);
+    });
+  });
+
   test.describe("prefetch=intent (hover)", () => {
     let fixture: Fixture;
     let appFixture: AppFixture;

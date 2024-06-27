@@ -325,6 +325,102 @@ test.describe("Fog of War", () => {
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
 
+  test("prefetches initially rendered forms", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/root.tsx": js`
+          import * as React from "react";
+          import { Form, Links, Meta, Outlet, Scripts } from "react-router";
+          export default function Root() {
+            let [showLink, setShowLink] = React.useState(false);
+            return (
+              <html lang="en">
+                <head>
+                  <Meta />
+                  <Links />
+                </head>
+                <body>
+                  <Form method="post" action="/a">
+                    <button type="submit">Submit</button>
+                  </Form>
+                  <Outlet />
+                  <Scripts />
+                </body>
+              </html>
+            );
+          }
+        `,
+        "app/routes/a.tsx": js`
+          import { useActionData } from "react-router";
+          export function action() {
+            return { message: "A ACTION" };
+          }
+          export default function Index() {
+            let actionData = useActionData();
+            return <h1 id="a">A: {actionData.message}</h1>
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/", true);
+    await page.waitForFunction(
+      () => (window as any).__remixManifest.routes["routes/a"]
+    );
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/a"]);
+
+    await app.clickSubmitButton("/a");
+    await page.waitForSelector("#a");
+    expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A ACTION</h1>`);
+  });
+
+  test("prefetches forms rendered via navigations", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/routes/a.tsx": js`
+          import { Form } from "react-router";
+          export default function Component() {
+            return (
+              <Form method="post" action="/a/b">
+                <button type="submit">Submit</button>
+              </Form>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    await app.goto("/", true);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/a"]);
+
+    await app.clickLink("/a");
+    await page.waitForSelector("form");
+
+    await page.waitForFunction(
+      () => (window as any).__remixManifest.routes["routes/a.b"]
+    );
+
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
+  });
+
   test("prefetches root index child when SSR-ing a deep route", async ({
     page,
   }) => {

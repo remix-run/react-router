@@ -125,7 +125,11 @@ export function useFogOFWarDiscovery(
     }
 
     // Register a link href for patching
-    function registerPath(path: string | null) {
+    function registerElement(el: Element) {
+      let path =
+        el.tagName === "FORM"
+          ? el.getAttribute("action")
+          : el.getAttribute("href");
       if (!path) {
         return;
       }
@@ -137,7 +141,7 @@ export function useFogOFWarDiscovery(
       nextPaths.add(url.pathname);
     }
 
-    // Fetch patches for all currently rendered links
+    // Register and fetch patches for all initially-rendered links/forms
     async function fetchPatches() {
       let lazyPaths = getFogOfWarPaths(fogOfWar!, router);
       if (lazyPaths.length === 0) {
@@ -161,12 +165,12 @@ export function useFogOFWarDiscovery(
 
     // Register and fetch patches for all initially-rendered links
     document.body
-      .querySelectorAll("a[data-discover]")
-      .forEach((a) => registerPath(a.getAttribute("href")));
+      .querySelectorAll("a[data-discover], form[data-discover]")
+      .forEach((el) => registerElement(el));
 
     fetchPatches();
 
-    // Setup a MutationObserver to fetch all subsequently rendered links
+    // Setup a MutationObserver to fetch all subsequently rendered links/form
     let debouncedFetchPatches = debounce(fetchPatches, 100);
 
     function isElement(node: Node): node is Element {
@@ -174,20 +178,26 @@ export function useFogOFWarDiscovery(
     }
 
     let observer = new MutationObserver((records) => {
-      let links = new Set<Element>();
+      let elements = new Set<Element>();
       records.forEach((r) => {
         [r.target, ...r.addedNodes].forEach((node) => {
           if (!isElement(node)) return;
           if (node.tagName === "A" && node.getAttribute("data-discover")) {
-            links.add(node);
-          } else if (node.tagName !== "A") {
+            elements.add(node);
+          } else if (
+            node.tagName === "FORM" &&
+            node.getAttribute("data-discover")
+          ) {
+            elements.add(node);
+          }
+          if (node.tagName !== "A") {
             node
-              .querySelectorAll("a[data-discover]")
-              .forEach((el) => links.add(el));
+              .querySelectorAll("a[data-discover], form[data-discover]")
+              .forEach((el) => elements.add(el));
           }
         });
       });
-      links.forEach((link) => registerPath(link.getAttribute("href")));
+      elements.forEach((el) => registerElement(el));
       debouncedFetchPatches();
     });
 
@@ -195,7 +205,7 @@ export function useFogOFWarDiscovery(
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ["data-discover", "href"],
+      attributeFilter: ["data-discover", "href", "action"],
     });
 
     return () => observer.disconnect();
