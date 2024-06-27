@@ -1004,9 +1004,9 @@ export function createRouter(init: RouterInit): Router {
   // Ref-count mounted fetchers so we know when it's ok to clean them up
   let activeFetchers = new Map<string, number>();
 
-  // Fetchers that have requested a delete - they'll be officially removed after
-  // they return to idle
-  let deletedFetchers = new Set<string>();
+  // Fetchers queued for deletion because they've been removed from the UI.
+  // These will be officially deleted after they return to idle
+  let fetchersQueuedForDeletion = new Set<string>();
 
   // Store DeferredData instances for active route matches.  When a
   // route loader returns defer() we stick one in here.  Then, when a nested
@@ -1153,20 +1153,21 @@ export function createRouter(init: RouterInit): Router {
       ...newState,
     };
 
-    // Prep fetcher cleanup so we can tell the UI which fetcher data entries
-    // can be removed
-    let completedFetchers: string[] = [];
-    let deletedFetchersKeys: string[] = [];
+    // Cleanup for all fetchers that have returned to idle since we only
+    // care about in-flight fetchers
+    // - If it's been unmounted then we can completely delete it
+    // - If it's still mounted we can remove it from `state.fetchers`, but we
+    //   need to keep it around in thing like `fetchLoadMatches`, etc. since
+    //   it may be called again
+    let unmountedFetchers: string[] = [];
+    let mountedFetchers: string[] = [];
 
     state.fetchers.forEach((fetcher, key) => {
       if (fetcher.state === "idle") {
-        if (deletedFetchers.has(key)) {
-          // Unmounted from the UI and can be totally removed
-          deletedFetchersKeys.push(key);
+        if (fetchersQueuedForDeletion.has(key)) {
+          unmountedFetchers.push(key);
         } else {
-          // Returned to idle but still mounted in the UI, so semi-remains for
-          // revalidations and such
-          completedFetchers.push(key);
+          mountedFetchers.push(key);
         }
       }
     });
@@ -1176,15 +1177,15 @@ export function createRouter(init: RouterInit): Router {
     // we don't get ourselves into a loop calling the new subscriber immediately
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
-        deletedFetchers: deletedFetchersKeys,
+        deletedFetchers: unmountedFetchers,
         unstable_viewTransitionOpts: opts.viewTransitionOpts,
         unstable_flushSync: opts.flushSync === true,
       })
     );
 
-    // Remove idle fetchers from state since we only care about in-flight fetchers.
-    completedFetchers.forEach((key) => state.fetchers.delete(key));
-    deletedFetchersKeys.forEach((key) => deleteFetcher(key));
+    // Cleanup internally now that we've called our subscribers/updated state
+    unmountedFetchers.forEach((key) => deleteFetcher(key));
+    mountedFetchers.forEach((key) => state.fetchers.delete(key));
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -1925,7 +1926,7 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
-      deletedFetchers,
+      fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
       routesToUse,
@@ -2303,7 +2304,7 @@ export function createRouter(init: RouterInit): Router {
 
     // We don't want errors bubbling up to the UI or redirects processed for
     // unmounted fetchers so we just revert them to idle
-    if (deletedFetchers.has(key)) {
+    if (fetchersQueuedForDeletion.has(key)) {
       if (isRedirectResult(actionResult) || isErrorResult(actionResult)) {
         updateFetcherState(key, getDoneFetcher(undefined));
         return;
@@ -2372,7 +2373,7 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
-      deletedFetchers,
+      fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
       routesToUse,
@@ -2590,7 +2591,7 @@ export function createRouter(init: RouterInit): Router {
 
     // We don't want errors bubbling up or redirects followed for unmounted
     // fetchers, so short circuit here if it was removed from the UI
-    if (deletedFetchers.has(key)) {
+    if (fetchersQueuedForDeletion.has(key)) {
       updateFetcherState(key, getDoneFetcher(undefined));
       return;
     }
@@ -2906,8 +2907,8 @@ export function createRouter(init: RouterInit): Router {
     activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
     // If this fetcher was previously marked for deletion, unmark it since we
     // have a new instance
-    if (deletedFetchers.has(key)) {
-      deletedFetchers.delete(key);
+    if (fetchersQueuedForDeletion.has(key)) {
+      fetchersQueuedForDeletion.delete(key);
     }
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
@@ -2926,15 +2927,15 @@ export function createRouter(init: RouterInit): Router {
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
-    deletedFetchers.delete(key);
+    fetchersQueuedForDeletion.delete(key);
     state.fetchers.delete(key);
   }
 
-  function deleteFetcherAndUpdateState(key: string): void {
+  function queueFetcherForDeletion(key: string): void {
     let count = (activeFetchers.get(key) || 0) - 1;
     if (count <= 0) {
       activeFetchers.delete(key);
-      deletedFetchers.add(key);
+      fetchersQueuedForDeletion.add(key);
     } else {
       activeFetchers.set(key, count);
     }
@@ -3374,7 +3375,7 @@ export function createRouter(init: RouterInit): Router {
     createHref: (to: To) => init.history.createHref(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
-    deleteFetcher: deleteFetcherAndUpdateState,
+    deleteFetcher: queueFetcherForDeletion,
     dispose,
     getBlocker,
     deleteBlocker,
@@ -4302,7 +4303,7 @@ function getMatchesToLoad(
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
-  deletedFetchers: Set<string>,
+  fetchersQueuedForDeletion: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
@@ -4402,7 +4403,7 @@ function getMatchesToLoad(
     if (
       isInitialLoad ||
       !matches.some((m) => m.route.id === f.routeId) ||
-      deletedFetchers.has(key)
+      fetchersQueuedForDeletion.has(key)
     ) {
       return;
     }
