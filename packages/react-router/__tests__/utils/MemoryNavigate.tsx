@@ -1,4 +1,4 @@
-import type { FormMethod } from "react-router";
+import type { HTMLFormMethod } from "../../lib/router";
 import { joinPaths } from "../../lib/router";
 import * as React from "react";
 import { UNSAFE_DataRouterContext } from "../../index";
@@ -10,7 +10,7 @@ export default function MemoryNavigate({
   children,
 }: {
   to: string;
-  formMethod?: FormMethod;
+  formMethod?: HTMLFormMethod;
   formData?: FormData;
   children: React.ReactNode;
 }) {

@@ -16,7 +16,6 @@ import {
   Routes,
   createMemoryRouter,
   createRoutesFromElements,
-  defer,
   redirect,
   useActionData,
   useAsyncError,
@@ -1131,7 +1130,7 @@ describe("createMemoryRouter", () => {
           return ++count;
         },
         Component() {
-          let loaderCount = useLoaderData();
+          let loaderCount = useLoaderData() as number;
           let revalidator = useRevalidator();
           sequence.push(`render ${loaderCount}`);
           return (
@@ -2308,12 +2307,14 @@ describe("createMemoryRouter", () => {
       expect(getHtml(container)).toMatch("Yes");
     });
 
-    it("handles a `null` render-error from a defer() call", async () => {
+    it("handles a `null` render-error from a promise", async () => {
       let router = createMemoryRouter([
         {
           path: "/",
           loader() {
-            return defer({ lazy: Promise.reject(null) });
+            let promise = Promise.reject(null);
+            promise.catch(() => {});
+            return { lazy: promise };
           },
           Component() {
             let data = useLoaderData() as { lazy: Promise<unknown> };
@@ -2781,12 +2782,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2841,12 +2840,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2904,12 +2901,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -2968,12 +2963,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -3030,12 +3023,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -3095,12 +3086,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -3158,12 +3147,10 @@ describe("createMemoryRouter", () => {
       `);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -3216,12 +3203,10 @@ describe("createMemoryRouter", () => {
       expect(getAwaitRenderCount()).toBe(0);
 
       let barValueDfd = createDeferred();
-      barDefer.resolve(
-        defer({
-          critical: "CRITICAL",
-          lazy: barValueDfd.promise,
-        })
-      );
+      barDefer.resolve({
+        critical: "CRITICAL",
+        lazy: barValueDfd.promise,
+      });
       await waitFor(() => screen.getByText("idle"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div
@@ -3258,9 +3243,7 @@ describe("createMemoryRouter", () => {
           </p>
         </div>"
       `);
-      // 2 more renders by now - once for the navigation and once for the
-      // promise abort rejection
-      expect(getAwaitRenderCount()).toBe(3);
+      expect(getAwaitRenderCount()).toBe(2);
 
       // complete /baz navigation
       bazDefer.resolve(null);
@@ -3292,7 +3275,7 @@ describe("createMemoryRouter", () => {
           </h1>
         </div>"
       `);
-      expect(getAwaitRenderCount()).toBe(3);
+      expect(getAwaitRenderCount()).toBe(2);
     });
 
     it("should permit direct access to resolved values", async () => {

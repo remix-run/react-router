@@ -779,7 +779,6 @@ export function cleanup(_router?: Router) {
   // Cleanup any routers created using setup()
   if (router) {
     expect(router._internalFetchControllers.size).toBe(0);
-    expect(router._internalActiveDeferreds.size).toBe(0);
   }
   router?.dispose();
   currentRouter = null;

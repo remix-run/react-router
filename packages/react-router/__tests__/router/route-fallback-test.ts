@@ -5,13 +5,8 @@ import {
   createRouter,
 } from "../../lib/router";
 
-import {
-  deferredData,
-  trackedPromise,
-  urlMatch,
-} from "./utils/custom-matchers";
+import { urlMatch } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";
-import { tick } from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
   urlMatch(url: string);
@@ -32,8 +27,6 @@ declare global {
 }
 
 expect.extend({
-  deferredData,
-  trackedPromise,
   urlMatch,
 });
 

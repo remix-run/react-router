@@ -11,6 +11,7 @@ import { JSDOM } from "jsdom";
 import * as React from "react";
 import type { RouteObject } from "../../index";
 import {
+  Await,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   Form,
   Link,
@@ -20,11 +21,11 @@ import {
   createBrowserRouter,
   createHashRouter,
   createRoutesFromElements,
-  defer,
   isRouteErrorResponse,
   matchRoutes,
   redirect,
   useActionData,
+  useAsyncError,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -4009,7 +4010,7 @@ function testDomRouter(
               path="/"
               element={<Comp />}
               errorElement={<ErrorElement />}
-              loader={() => defer({ value: dfd.promise })}
+              loader={() => ({ value: dfd.promise })}
             />
           ),
           {
@@ -4023,17 +4024,26 @@ function testDomRouter(
           let fetcher = useFetcher();
           return (
             <>
-              <p>
-                {fetcher.state}
-                {fetcher.data ? JSON.stringify(fetcher.data.value) : null}
-              </p>
+              <p>{fetcher.state}</p>
+              {fetcher.data ? (
+                <React.Suspense fallback={<p>Loading 2...</p>}>
+                  <Await
+                    resolve={fetcher.data.value}
+                    errorElement={<ErrorElement />}
+                  >
+                    {(val) => <p>{val}</p>}
+                  </Await>
+                </React.Suspense>
+              ) : (
+                <p>Loading 1...</p>
+              )}
               <button onClick={() => fetcher.load("/")}>load</button>
             </>
           );
         }
 
         function ErrorElement() {
-          let error = useRouteError() as Error;
+          let error = useAsyncError() as Error;
           return <p>{error.message}</p>;
         }
 
@@ -4041,6 +4051,9 @@ function testDomRouter(
           "<div>
             <p>
               idle
+            </p>
+            <p>
+              Loading 1...
             </p>
             <button>
               load
@@ -4054,6 +4067,24 @@ function testDomRouter(
             <p>
               loading
             </p>
+            <p>
+              Loading 1...
+            </p>
+            <button>
+              load
+            </button>
+          </div>"
+        `);
+
+        await waitFor(() => screen.getByText("Loading 2..."));
+        expect(getHtml(container)).toMatchInlineSnapshot(`
+          "<div>
+            <p>
+              idle
+            </p>
+            <p>
+              Loading 2...
+            </p>
             <button>
               load
             </button>
@@ -4065,8 +4096,14 @@ function testDomRouter(
         expect(getHtml(container)).toMatchInlineSnapshot(`
           "<div>
             <p>
+              idle
+            </p>
+            <p>
               Kaboom!
             </p>
+            <button>
+              load
+            </button>
           </div>"
         `);
       });

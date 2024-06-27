@@ -242,12 +242,10 @@ export type {
   TrackedPromise,
   FetcherStates,
   UpperCaseFormMethod,
-  UNSAFE_DeferredData,
 } from "./lib/router";
 export {
   getStaticContextFromError,
   stripBasename,
-  UNSAFE_DEFERRED_SYMBOL,
   UNSAFE_convertRoutesToDataRoutes,
 } from "./lib/router";
 
@@ -432,10 +430,7 @@ export type {
   PageLinkDescriptor,
 } from "./lib/server-runtime/links";
 
-export type {
-  TypedDeferredData,
-  TypedResponse,
-} from "./lib/server-runtime/responses";
+export type { TypedResponse } from "./lib/server-runtime/responses";
 
 export type {
   // TODO: (v7) Clean up code paths for these exports
