@@ -2152,6 +2152,7 @@ function testDomRouter(
         "<div>
           <form
             action="/base/path"
+            data-discover="true"
             method="get"
           >
             <p>
@@ -2178,6 +2179,7 @@ function testDomRouter(
         "<div>
           <form
             action="/base/path?a=1&b=2"
+            data-discover="true"
             method="get"
           >
             <p>
@@ -2233,6 +2235,7 @@ function testDomRouter(
         "<div>
           <form
             action="/base/path"
+            data-discover="true"
             method="post"
           >
             <p>
@@ -2260,6 +2263,7 @@ function testDomRouter(
         "<div>
           <form
             action="/base/path"
+            data-discover="true"
             method="post"
           >
             <p>
@@ -2417,23 +2421,24 @@ function testDomRouter(
       fireEvent.click(screen.getByText("Submit"));
       await waitFor(() => screen.getByText("Yes"));
       expect(getHtml(container)).toMatchInlineSnapshot(`
-          "<div>
-            <form
-              action="/foo"
-              method="post"
+        "<div>
+          <form
+            action="/foo"
+            data-discover="true"
+            method="post"
+          >
+            <p>
+              Yes
+            </p>
+            <button
+              formaction="/foo/bar"
+              type="submit"
             >
-              <p>
-                Yes
-              </p>
-              <button
-                formaction="/foo/bar"
-                type="submit"
-              >
-                Submit
-              </button>
-            </form>
-          </div>"
-        `);
+              Submit
+            </button>
+          </form>
+        </div>"
+      `);
     });
 
     it("supports uppercase form method attributes", async () => {
@@ -5073,6 +5078,7 @@ function testDomRouter(
           "<div>
             <form
               action="/fetch"
+              data-discover="true"
               method="post"
             >
               <button
@@ -6726,6 +6732,7 @@ function testDomRouter(
               </p>
               <form
                 action="/base/fetch"
+                data-discover="true"
                 method="post"
               >
                 <button
@@ -6746,6 +6753,7 @@ function testDomRouter(
               </p>
               <form
                 action="/base/fetch"
+                data-discover="true"
                 method="post"
               >
                 <button
