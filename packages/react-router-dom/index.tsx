@@ -1464,11 +1464,7 @@ export function useSearchParams(
     `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
       `support the URLSearchParams API. If you need to support Internet ` +
       `Explorer 11, we recommend you load a polyfill such as ` +
-      `https://github.com/ungap/url-search-params\n\n` +
-      `If you're unsure how to load polyfills, we recommend you check out ` +
-      `https://polyfill.io/v3/ which provides some recommendations about how ` +
-      `to load polyfills only for users that need them, instead of for every ` +
-      `user.`
+      `https://github.com/ungap/url-search-params.`
   );
 
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
