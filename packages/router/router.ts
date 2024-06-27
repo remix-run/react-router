@@ -3221,10 +3221,12 @@ export function createRouter(init: RouterInit): Router {
       } catch (e) {
         return { type: "error", error: e, partialMatches };
       } finally {
-        // If we are in a non-HMR scenario and we changed the routes, provide a
-        // new identify so when we `updateState` at the end of this navigation/fetch
-        // `route.routes` will be a new identify and trigger a re-run of memoized
-        // dependencies
+        // If we are not in the middle of an HMR revalidation and we changed the
+        // routes, provide a new identity so when we `updateState` at the end of
+        // this navigation/fetch `router.routes` will be a new identity and
+        // trigger a re-run of memoized `router.routes` dependencies.
+        // HMR will already update the identity and reflow when it lands
+        // `inFlightDataRoutes` in `completeNavigation`
         if (isNonHMR) {
           dataRoutes = [...dataRoutes];
         }
@@ -3330,11 +3332,11 @@ export function createRouter(init: RouterInit): Router {
       let routesToUse = inFlightDataRoutes || dataRoutes;
       patchRoutes(routeId, children, routesToUse, manifest, mapRouteProperties);
 
-      // If we are in the middle of an HMR revalidation, we've updated
-      // `inFlightDataRoutes` in place above and the end of the revalidation
-      // will land them into `dataRoutes` with a new identity.
-      // Otherwise, update the `dataRoutes` identity and `updateState` to trigger
-      // a `<RouterProvider>` reflow since `router.routes` has been updated
+      // If we are not in the middle of an HMR revalidation and we changed the
+      // routes, provide a new identity and trigger a reflow via `updateState`
+      // to re-run memoized `router.routes` dependencies.
+      // HMR will already update the identity and reflow when it lands
+      // `inFlightDataRoutes` in `completeNavigation`
       if (isNonHMR) {
         dataRoutes = [...dataRoutes];
         updateState({});
