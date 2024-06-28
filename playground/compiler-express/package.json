@@ -6,6 +6,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "node ./server.js",
+    "setup": "pnpm i react-router@workspace",
     "start": "cross-env NODE_ENV=production node ./server.js",
     "typecheck": "tsc"
   },
