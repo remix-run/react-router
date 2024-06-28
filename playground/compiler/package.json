@@ -6,6 +6,7 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
+    "setup": "pnpm i @react-router/serve@workspace react-router@workspace",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "tsc"
   },
