@@ -5519,7 +5519,7 @@ function persistAppliedTransitions(
   }
 }
 
-export function createDeferred<T = unknown>() {
+function createDeferred<T = unknown>() {
   let resolve: (val?: any) => Promise<void>;
   let reject: (error?: Error) => Promise<void>;
   let promise = new Promise<T>((res, rej) => {
