@@ -38,8 +38,6 @@ export type {
 } from "./utils";
 
 export {
-  AbortedDeferredError,
-  defer,
   generatePath,
   getToPathname,
   isRouteErrorResponse,

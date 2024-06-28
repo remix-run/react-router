@@ -1356,11 +1356,6 @@ export interface TrackedPromise extends Promise<any> {
   _error?: any;
 }
 
-export class AbortedDeferredError extends Error {}
-
-// FIXME: Remove!
-export const defer = (data: unknown) => data;
-
 export type RedirectFunction = (
   url: string,
   init?: number | ResponseInit

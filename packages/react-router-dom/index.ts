@@ -106,7 +106,6 @@ export type {
 } from "react-router";
 
 export {
-  AbortedDeferredError,
   Await,
   MemoryRouter,
   Navigate,
@@ -120,7 +119,6 @@ export {
   createPath,
   createRoutesFromChildren,
   createRoutesFromChildren as createRoutesFromElements,
-  defer,
   generatePath,
   isRouteErrorResponse,
   json,

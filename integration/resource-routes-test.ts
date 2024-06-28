@@ -58,9 +58,7 @@ test.describe("loader in an app", async () => {
           export default () => <div data-testid="redirect-destination">You made it!</div>
         `,
         "app/routes/defer.tsx": js`
-          import { defer } from "react-router";
-
-          export let loader = () => defer({ data: 'whatever' });
+          export let loader = () => ({ data: 'whatever' });
         `,
         "app/routes/data[.]json.tsx": js`
           import { json } from "react-router";
@@ -259,8 +257,7 @@ test.describe("loader in an app", async () => {
     let res = await app.goto("/defer");
     expect(res.status()).toBe(500);
     expect(await res.text()).toMatch(
-      "You cannot return a `defer()` response from a Resource Route.  " +
-        'Did you forget to export a default UI component from the "routes/defer" route?'
+      "Error: Expected a Response to be returned from resource route handler"
     );
   });
 });

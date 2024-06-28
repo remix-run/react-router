@@ -30,10 +30,8 @@ import type {
   unstable_HandlerResult,
 } from "./lib/router";
 import {
-  AbortedDeferredError,
   Action as NavigationType,
   createPath,
-  defer,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -177,7 +175,6 @@ export type {
   unstable_PatchRoutesOnMissFunction,
 };
 export {
-  AbortedDeferredError,
   Await,
   MemoryRouter,
   Navigate,
@@ -190,7 +187,6 @@ export {
   createPath,
   createRoutesFromChildren,
   createRoutesFromChildren as createRoutesFromElements,
-  defer,
   generatePath,
   isRouteErrorResponse,
   json,
