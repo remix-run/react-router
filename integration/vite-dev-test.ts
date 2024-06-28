@@ -57,14 +57,13 @@ test.describe("Vite dev", () => {
         `,
         "app/routes/_index.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, useLoaderData } from "react-router";
 
           export function loader() {
             let deferred = new Promise((resolve) => {
               setTimeout(() => resolve(true), 1000)
             });
-            return defer({ deferred });
+            return { deferred };
           }
 
           export default function IndexRoute() {

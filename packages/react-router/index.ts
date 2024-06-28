@@ -355,7 +355,6 @@ export {
 } from "./lib/server-runtime/formData";
 // TODO: (v7) Clean up code paths for these exports
 // export {
-//   defer,
 //   json,
 //   redirect,
 //   redirectDocument,
