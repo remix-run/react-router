@@ -49,6 +49,7 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
+import { logV6DeprecationWarnings } from "./deprecations";
 
 export interface FutureConfig {
   v7_relativeSplatPath: boolean;
@@ -247,6 +248,8 @@ export function MemoryRouter({
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
+
+  React.useEffect(() => logV6DeprecationWarnings(future), []);
 
   return (
     <Router

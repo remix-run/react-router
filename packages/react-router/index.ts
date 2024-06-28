@@ -122,6 +122,7 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./lib/hooks";
+import { logV6DeprecationWarnings } from "./lib/deprecations";
 
 // Exported for backwards compatibility, but not being used internally anymore
 type Hash = string;
@@ -304,6 +305,7 @@ export function createMemoryRouter(
     unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
+  logV6DeprecationWarnings(opts?.future);
   return createRouter({
     basename: opts?.basename,
     future: {
@@ -345,4 +347,5 @@ export {
   mapRouteProperties as UNSAFE_mapRouteProperties,
   useRouteId as UNSAFE_useRouteId,
   useRoutesImpl as UNSAFE_useRoutesImpl,
+  logV6DeprecationWarnings as UNSAFE_logV6DeprecationWarnings,
 };

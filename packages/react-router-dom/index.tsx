@@ -31,6 +31,7 @@ import {
   UNSAFE_DataRouterStateContext as DataRouterStateContext,
   UNSAFE_NavigationContext as NavigationContext,
   UNSAFE_RouteContext as RouteContext,
+  UNSAFE_logV6DeprecationWarnings as logV6DeprecationWarnings,
   UNSAFE_mapRouteProperties as mapRouteProperties,
   UNSAFE_useRouteId as useRouteId,
   UNSAFE_useRoutesImpl as useRoutesImpl,
@@ -267,6 +268,7 @@ export function createBrowserRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
 ): RemixRouter {
+  logV6DeprecationWarnings(opts?.future);
   return createRouter({
     basename: opts?.basename,
     future: {
@@ -287,6 +289,7 @@ export function createHashRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
 ): RemixRouter {
+  logV6DeprecationWarnings(opts?.future);
   return createRouter({
     basename: opts?.basename,
     future: {
@@ -798,6 +801,8 @@ export function BrowserRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
+  React.useEffect(() => logV6DeprecationWarnings(future), []);
+
   return (
     <Router
       basename={basename}
@@ -849,6 +854,8 @@ export function HashRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
+  React.useEffect(() => logV6DeprecationWarnings(future), []);
+
   return (
     <Router
       basename={basename}
@@ -895,6 +902,8 @@ function HistoryRouter({
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
+
+  React.useEffect(() => logV6DeprecationWarnings(future), []);
 
   return (
     <Router
