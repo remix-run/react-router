@@ -32,7 +32,7 @@ export interface EntryRoute extends Route {
   hasErrorBoundary: boolean;
   imports?: string[];
   css?: string[];
-  module: string;
+  module?: string; // Undefined for <HydratedRouter routes>
   parentId?: string;
 }
 
