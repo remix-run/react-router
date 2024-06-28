@@ -136,7 +136,6 @@ function createHydratedRouter(propRoutes?: RouteObject[]): RemixRouter {
 
   // If the user provided their own data routes, add them to our manifest-created
   // routes here before creating the data router
-  let propRoutesError: unknown;
   if (propRoutes && propRoutes.length > 0) {
     let rootRoute = routes[0];
     if (!rootRoute.children) {
@@ -150,7 +149,8 @@ function createHydratedRouter(propRoutes?: RouteObject[]): RemixRouter {
       // If a route doesn't have a loader, add a dummy hydrating loader to stop
       // rendering at that level for hydration
     } catch (e) {
-      propRoutesError = e;
+      console.warn(e);
+      propRoutes = undefined;
     }
   }
 
@@ -264,19 +264,12 @@ function createHydratedRouter(propRoutes?: RouteObject[]): RemixRouter {
 
   // Do this after creating the router so ID's have been added to the routes
   // that we can use as keys in the manifest. `router.routes` will contain the
-  // route IDs, `props.routes` may not.
-  if (propRoutes && ssrInfo) {
-    if (propRoutesError) {
-      console.warn(propRoutesError);
-    } else {
-      let rootDataRoute = router.routes[0];
-      for (let route of rootDataRoute.children || []) {
-        addPropRoutesToRemix(
-          ssrInfo,
-          route as DataRouteObject,
-          rootDataRoute.id
-        );
-      }
+  // route IDs, `props.routes` may not.  If we encountered an error with the
+  // `propRoutes` above we'll have cleared them out so this is skipped
+  if (ssrInfo && propRoutes) {
+    let rootDataRoute = router.routes[0];
+    for (let route of rootDataRoute.children || []) {
+      addPropRoutesToRemix(ssrInfo, route as DataRouteObject, rootDataRoute.id);
     }
   }
 
