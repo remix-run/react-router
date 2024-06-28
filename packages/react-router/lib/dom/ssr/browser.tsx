@@ -4,8 +4,13 @@ import type {
   LoaderFunction,
   Router as RemixRouter,
 } from "../../router";
-import { createBrowserHistory, createRouter, matchRoutes } from "../../router";
-import type { DataRouteObject } from "../../context";
+import {
+  createBrowserHistory,
+  createRouter,
+  isRouteErrorResponse,
+  matchRoutes,
+} from "../../router";
+import type { DataRouteObject, RouteObject } from "../../context";
 
 import "../global";
 import { mapRouteProperties } from "../../components";
@@ -66,7 +71,7 @@ function initSsrInfo(): void {
   }
 }
 
-function createHydratedRouter(propRoutes?: DataRouteObject[]): RemixRouter {
+function createHydratedRouter(propRoutes?: RouteObject[]): RemixRouter {
   initSsrInfo();
 
   if (!ssrInfo) {
@@ -140,17 +145,10 @@ function createHydratedRouter(propRoutes?: DataRouteObject[]): RemixRouter {
 
     try {
       validatePropRoutes(propRoutes, rootRoute.children);
+      rootRoute.children.push(...propRoutes);
 
       // If a route doesn't have a loader, add a dummy hydrating loader to stop
       // rendering at that level for hydration
-      let hydratingLoader: LoaderFunction = () => null;
-      hydratingLoader.hydrate = true;
-      for (let route of propRoutes) {
-        if (!route.loader) {
-          route = { ...route, loader: hydratingLoader };
-        }
-        rootRoute.children.push(route);
-      }
     } catch (e) {
       propRoutesError = e;
     }
@@ -168,6 +166,8 @@ function createHydratedRouter(propRoutes?: DataRouteObject[]): RemixRouter {
       ...ssrInfo.context.state,
       loaderData: { ...ssrInfo.context.state.loaderData },
     };
+
+    let matchedPropRoute = false;
     let initialMatches = matchRoutes(
       routes,
       window.location,
@@ -178,11 +178,12 @@ function createHydratedRouter(propRoutes?: DataRouteObject[]): RemixRouter {
         let routeId = match.route.id;
         let route = ssrInfo.routeModules[routeId];
         let manifestRoute = ssrInfo.manifest.routes[routeId];
-        // Clear out the loaderData to avoid rendering the route component when the
-        // route opted into clientLoader hydration and either:
-        // * gave us a HydrateFallback
-        // * or doesn't have a server loader and we have no data to render
-        if (
+
+        if (!manifestRoute) {
+          // If this is not yet in the manifest then it must be a prop route added
+          // client-side via HydratedRouter, so there's nothing to clear out
+          matchedPropRoute = true;
+        } else if (
           route &&
           shouldHydrateRouteLoader(
             manifestRoute,
@@ -191,6 +192,10 @@ function createHydratedRouter(propRoutes?: DataRouteObject[]): RemixRouter {
           ) &&
           (route.HydrateFallback || !manifestRoute.hasLoader)
         ) {
+          // Clear out the loaderData to avoid rendering the route component when the
+          // route opted into clientLoader hydration and either:
+          // * gave us a HydrateFallback
+          // * or doesn't have a server loader and we have no data to render
           hydrationData.loaderData![routeId] = undefined;
         } else if (manifestRoute && !manifestRoute.hasLoader) {
           // Since every Remix route gets a `loader` on the client side to load
@@ -204,6 +209,24 @@ function createHydratedRouter(propRoutes?: DataRouteObject[]): RemixRouter {
     }
 
     if (hydrationData && hydrationData.errors) {
+      // If we rendered a 404 during SSR but then matched a prop route on the
+      // client, we want to clear out the 404 and let the client route render.
+      // This will cause a flicker/hydration error but will only happen in some
+      // edge cases:
+      // - During migrations from RouterProvider -> Vite Plugin
+      // - If the app is using SSR
+      // - If users actually enter the site on a client-only URL
+      if (matchedPropRoute) {
+        for (let [routeId, error] of Object.entries(hydrationData.errors)) {
+          if (isRouteErrorResponse(error) && error.status === 404) {
+            delete hydrationData.errors[routeId];
+          }
+        }
+        if (Object.keys(hydrationData.errors).length === 0) {
+          hydrationData.errors = null;
+        }
+      }
+
       // TODO: De-dup this or remove entirely in v7 where single fetch is the
       // only approach and we have already serialized or deserialized on the server
       hydrationData.errors = deserializeErrors(hydrationData.errors);
@@ -309,8 +332,8 @@ function addPropRoutesToRemix(
 }
 
 function validatePropRoutes(
-  propRoutes: DataRouteObject[],
-  rootChildren: DataRouteObject[]
+  propRoutes: RouteObject[],
+  rootChildren: RouteObject[]
 ) {
   let existingRootChildren = new Set();
   for (let child of rootChildren) {
@@ -357,7 +380,7 @@ export interface HydratedRouterProps {
    * ⚠️ If any collisions are detected from routes on the file system then a
    * warning will be logged and the `routes` prop will be ignored.
    */
-  routes?: DataRouteObject[];
+  routes?: RouteObject[];
 }
 
 /**
