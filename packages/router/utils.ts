@@ -159,7 +159,9 @@ interface DataFunctionArgs<Context> {
  * Arguments passed to loader functions
  */
 export interface LoaderFunctionArgs<Context = any>
-  extends DataFunctionArgs<Context> {}
+  extends DataFunctionArgs<Context> {
+  redirectResponse?: Response;
+}
 
 /**
  * Arguments passed to action functions

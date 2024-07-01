@@ -1480,6 +1480,7 @@ export function createRouter(init: RouterInit): Router {
       replace?: boolean;
       enableViewTransition?: boolean;
       flushSync?: boolean;
+      redirect?: RedirectResult
     }
   ): Promise<void> {
     // Abort any in-progress navigations and start a new one. Unset any ongoing
@@ -1635,7 +1636,8 @@ export function createRouter(init: RouterInit): Router {
       opts && opts.replace,
       opts && opts.initialHydration === true,
       flushSync,
-      pendingActionResult
+      pendingActionResult,
+      opts?.redirect
     );
 
     if (shortCircuited) {
@@ -1805,7 +1807,8 @@ export function createRouter(init: RouterInit): Router {
     replace?: boolean,
     initialHydration?: boolean,
     flushSync?: boolean,
-    pendingActionResult?: PendingActionResult
+    pendingActionResult?: PendingActionResult,
+    _redirect?: RedirectResult
   ): Promise<HandleLoadersResult> {
     // Figure out the right navigation we want to use for data loading
     let loadingNavigation =
@@ -1979,7 +1982,8 @@ export function createRouter(init: RouterInit): Router {
         matches,
         matchesToLoad,
         revalidatingFetchers,
-        request
+        request,
+        _redirect,
       );
 
     if (request.signal.aborted) {
@@ -2711,6 +2715,7 @@ export function createRouter(init: RouterInit): Router {
         },
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
+        redirect,
       });
     } else {
       // If we have a navigation submission, we will preserve it through the
@@ -2725,6 +2730,7 @@ export function createRouter(init: RouterInit): Router {
         fetcherSubmission,
         // Preserve this flag across redirects
         preventScrollReset: pendingPreventScrollReset,
+        redirect,
       });
     }
   }
@@ -2735,7 +2741,8 @@ export function createRouter(init: RouterInit): Router {
     type: "loader" | "action",
     request: Request,
     matchesToLoad: AgnosticDataRouteMatch[],
-    matches: AgnosticDataRouteMatch[]
+    matches: AgnosticDataRouteMatch[],
+    redirect?: RedirectResult,
   ): Promise<DataResult[]> {
     try {
       let results = await callDataStrategyImpl(
@@ -2745,7 +2752,9 @@ export function createRouter(init: RouterInit): Router {
         matchesToLoad,
         matches,
         manifest,
-        mapRouteProperties
+        mapRouteProperties,
+        undefined,
+        redirect,
       );
 
       return await Promise.all(
@@ -2783,11 +2792,12 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     matchesToLoad: AgnosticDataRouteMatch[],
     fetchersToLoad: RevalidatingFetcher[],
-    request: Request
+    request: Request,
+    redirect?: RedirectResult,
   ) {
     let [loaderResults, ...fetcherResults] = await Promise.all([
       matchesToLoad.length
-        ? callDataStrategy("loader", request, matchesToLoad, matches)
+        ? callDataStrategy("loader", request, matchesToLoad, matches, redirect)
         : [],
       ...fetchersToLoad.map((f) => {
         if (f.matches && f.match && f.controller) {
@@ -2800,7 +2810,8 @@ export function createRouter(init: RouterInit): Router {
             "loader",
             fetcherRequest,
             [f.match],
-            f.matches
+            f.matches,
+            redirect
           ).then((r) => r[0]);
         } else {
           return Promise.resolve<DataResult>({
@@ -4706,7 +4717,8 @@ async function callDataStrategyImpl(
   matches: AgnosticDataRouteMatch[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  requestContext?: unknown
+  requestContext?: unknown,
+  redirect?: RedirectResult,
 ): Promise<HandlerResult[]> {
   let routeIdsToLoad = matchesToLoad.reduce(
     (acc, m) => acc.add(m.route.id),
@@ -4734,7 +4746,8 @@ async function callDataStrategyImpl(
               manifest,
               mapRouteProperties,
               handlerOverride,
-              requestContext
+              requestContext,
+              redirect,
             )
           : Promise.resolve({ type: ResultType.data, result: undefined });
       };
@@ -4773,7 +4786,8 @@ async function callLoaderOrAction(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
-  staticContext?: unknown
+  staticContext?: unknown,
+  redirect?: RedirectResult,
 ): Promise<HandlerResult> {
   let result: HandlerResult;
   let onReject: (() => void) | undefined;
@@ -4803,6 +4817,7 @@ async function callLoaderOrAction(
           request,
           params: match.params,
           context: staticContext,
+          redirectResponse: redirect?.response,
         },
         ...(ctx !== undefined ? [ctx] : [])
       );

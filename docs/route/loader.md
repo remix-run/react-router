@@ -85,6 +85,27 @@ function loader({ request }) {
 
 Note that the APIs here are not React Router specific, but rather standard web objects: [Request][request], [URL][url], [URLSearchParams][urlsearchparams].
 
+## `redirectResponse`
+
+This is a [Fetch Response][response] instance returned from another loader when redirecting, it's set to `undefined` when no such redirect happened.
+
+```tsx
+createBrowserRouter([
+  {
+    path: "/some/authenticated/route",
+    loader: () => redirect("/auth/login", { statusText: "You need to be logged in to visit this page!" }),
+  },
+  {
+    path: "login",
+    loader: ({ redirectResponse }) => ({
+      message: redirectResponse?.statusText
+    }),
+  }
+]);
+```
+
+It is useful for passing information about the reason of a redirect to different route, allowing the route to inform the user about a certain event.
+
 ## `loader.hydrate`
 
 If you are [Server-Side Rendering][ssr] and leveraging the `future.v7_partialHydration` flag for [Partial Hydration][partialhydration], then you may wish to opt-into running a route `loader` on initial hydration _even though it has hydration data_ (for example, to let a user prime a cache with the hydration data). To force a `loader` to run on hydration in a partial hydration scenario, you can set a `hydrate` property on the `loader` function:
