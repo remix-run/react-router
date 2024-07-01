@@ -13,7 +13,6 @@ import type {
   unstable_AgnosticPatchRoutesOnMissFunction,
 } from "./router";
 import {
-  AbortedDeferredError,
   Action as NavigationType,
   createMemoryHistory,
   createRouter,
@@ -744,14 +743,6 @@ class AwaitErrorBoundary extends React.Component<
         (error: any) =>
           Object.defineProperty(resolve, "_error", { get: () => error })
       );
-    }
-
-    if (
-      status === AwaitRenderStatus.error &&
-      promise._error instanceof AbortedDeferredError
-    ) {
-      // Freeze the UI by throwing a never resolved promise
-      throw neverSettledPromise;
     }
 
     if (status === AwaitRenderStatus.error && !errorElement) {

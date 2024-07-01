@@ -15,8 +15,6 @@ const DEFERRED_ID = "DEFERRED_ID";
 const RESOLVED_DEFERRED_ID = "RESOLVED_DEFERRED_ID";
 const FALLBACK_ID = "FALLBACK_ID";
 const ERROR_ID = "ERROR_ID";
-const UNDEFINED_ERROR_ID = "UNDEFINED_ERROR_ID";
-const NEVER_SHOW_ID = "NEVER_SHOW_ID";
 const ERROR_BOUNDARY_ID = "ERROR_BOUNDARY_ID";
 const MANUAL_RESOLVED_ID = "MANUAL_RESOLVED_ID";
 const MANUAL_FALLBACK_ID = "MANUAL_FALLBACK_ID";
@@ -75,7 +73,6 @@ test.describe("non-aborted", () => {
           }
         `,
         "app/root.tsx": js`
-          import { defer } from "react-router";
           import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
           import Interactive from "~/components/interactive";
@@ -84,7 +81,7 @@ test.describe("non-aborted", () => {
             return [{ title: "New Remix App" }];
           };
 
-          export const loader = () => defer({
+          export const loader = () => ({
             id: "${ROOT_ID}",
           });
 
@@ -116,14 +113,13 @@ test.describe("non-aborted", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { defer } from "react-router";
           import { Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               id: "${INDEX_ID}",
-            });
+            };
           }
 
           export default function Index() {
@@ -148,15 +144,14 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-noscript-resolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: Promise.resolve("${RESOLVED_DEFERRED_ID}"),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -183,19 +178,18 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-noscript-unresolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: new Promise(
                 (resolve) => setTimeout(() => {
                   resolve("${RESOLVED_DEFERRED_ID}");
                 }, 10)
               ),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -222,16 +216,15 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-resolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: Promise.resolve("${RESOLVED_DEFERRED_ID}"),
               deferredUndefined: Promise.resolve(undefined),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -258,12 +251,11 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-unresolved.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: new Promise(
                 (resolve) => setTimeout(() => {
@@ -275,7 +267,7 @@ test.describe("non-aborted", () => {
                   resolve(undefined);
                 }, 10)
               ),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -302,15 +294,14 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-rejected.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: Promise.reject(new Error("${RESOLVED_DEFERRED_ID}")),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -343,24 +334,18 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-unrejected.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: new Promise(
                 (_, reject) => setTimeout(() => {
                   reject(new Error("${RESOLVED_DEFERRED_ID}"));
                 }, 10)
               ),
-              resolvedUndefined: new Promise(
-                (resolve) => setTimeout(() => {
-                  resolve(undefined);
-                }, 10)
-              ),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -386,22 +371,6 @@ test.describe("non-aborted", () => {
                     )}
                   />
                 </Suspense>
-                <Suspense>
-                  <Await
-                    resolve={resolvedUndefined}
-                    errorElement={
-                      <div id="${UNDEFINED_ERROR_ID}">
-                        error
-                        <Counter id="${UNDEFINED_ERROR_ID}" />
-                      </div>
-                    }
-                    children={(resolvedDeferredId) => (
-                      <div id="${NEVER_SHOW_ID}">
-                        {"${NEVER_SHOW_ID}"}
-                      </div>
-                    )}
-                  />
-                </Suspense>
               </div>
             );
           }
@@ -409,15 +378,14 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-rejected-no-error-element.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: Promise.reject(new Error("${RESOLVED_DEFERRED_ID}")),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -453,19 +421,18 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-script-unrejected-no-error-element.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: new Promise(
                 (_, reject) => setTimeout(() => {
                   reject(new Error("${RESOLVED_DEFERRED_ID}"));
                 }, 10)
               ),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -501,7 +468,6 @@ test.describe("non-aborted", () => {
 
         "app/routes/deferred-manual-resolve.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
@@ -516,7 +482,7 @@ test.describe("non-aborted", () => {
               global.__deferredManualResolveCache.deferreds[id] = { resolve, reject };
             });
 
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: new Promise(
                 (resolve) => setTimeout(() => {
@@ -525,7 +491,7 @@ test.describe("non-aborted", () => {
               ),
               id,
               manualValue: promise,
-            });
+            };
           }
 
           export default function Deferred() {
@@ -566,23 +532,6 @@ test.describe("non-aborted", () => {
             );
           }
         `,
-
-        "app/routes/headers.tsx": js`
-          import { defer } from "react-router";
-          export function loader() {
-            return defer({}, { headers: { "x-custom-header": "value from loader" } });
-          }
-          export function headers({ loaderHeaders }) {
-            return {
-              "x-custom-header": loaderHeaders.get("x-custom-header")
-            }
-          }
-          export default function Component() {
-            return (
-              <div>Headers</div>
-            )
-          }
-        `,
       },
     });
 
@@ -620,17 +569,18 @@ test.describe("non-aborted", () => {
     await assertConsole();
   });
 
-  test("resolved promises render in initial payload", async ({ page }) => {
+  test("resolved promises do not render in initial payload", async ({
+    page,
+  }) => {
     let response = await fixture.requestDocument("/deferred-noscript-resolved");
     let html = await response.text();
     let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).not.toContain(FALLBACK_ID);
-    expect(criticalHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
+    expect(criticalHTML).toContain(FALLBACK_ID);
+    expect(criticalHTML).not.toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
     let deferredHTML = html.slice(html.indexOf("</html>") + 7);
-    expect(deferredHTML).not.toBe("");
-    expect(deferredHTML).not.toContain('<p id="count-');
+    expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/deferred-noscript-resolved");
@@ -667,11 +617,9 @@ test.describe("non-aborted", () => {
     let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).not.toContain(FALLBACK_ID);
-    expect(criticalHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
+    expect(criticalHTML).toContain(FALLBACK_ID);
     let deferredHTML = html.slice(html.indexOf("</html>") + 7);
-    expect(deferredHTML).not.toBe("");
-    expect(deferredHTML).not.toContain('<p id="count-');
+    expect(deferredHTML).toContain(counterHtml(RESOLVED_DEFERRED_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
     let assertConsole = monitorConsole(page);
@@ -722,11 +670,9 @@ test.describe("non-aborted", () => {
     let criticalHTML = html.slice(0, html.indexOf("</html>") + 7);
     expect(criticalHTML).toContain(counterHtml(ROOT_ID, 0));
     expect(criticalHTML).toContain(counterHtml(DEFERRED_ID, 0));
-    expect(criticalHTML).not.toContain(FALLBACK_ID);
-    expect(criticalHTML).toContain(counterHtml(ERROR_ID, 0));
+    expect(criticalHTML).toContain(FALLBACK_ID);
     let deferredHTML = html.slice(html.indexOf("</html>") + 7);
-    expect(deferredHTML).not.toBe("");
-    expect(deferredHTML).not.toContain('<p id="count-');
+    expect(deferredHTML).toContain(counterHtml(ERROR_ID, 0));
 
     let app = new PlaywrightFixture(appFixture, page);
     let assertConsole = monitorConsole(page);
@@ -761,12 +707,10 @@ test.describe("non-aborted", () => {
     await page.waitForSelector(`#${ROOT_ID}`);
     await page.waitForSelector(`#${DEFERRED_ID}`);
     await page.waitForSelector(`#${ERROR_ID}`);
-    await page.waitForSelector(`#${UNDEFINED_ERROR_ID}`);
 
     await ensureInteractivity(page, ROOT_ID);
     await ensureInteractivity(page, DEFERRED_ID);
     await ensureInteractivity(page, ERROR_ID);
-    await ensureInteractivity(page, UNDEFINED_ERROR_ID);
 
     await assertConsole();
   });
@@ -926,7 +870,6 @@ test.describe("non-aborted", () => {
 
     await ensureInteractivity(page, DEFERRED_ID);
     await ensureInteractivity(page, ERROR_ID);
-    await ensureInteractivity(page, UNDEFINED_ERROR_ID);
     await ensureInteractivity(page, DEFERRED_ID, 2);
     await ensureInteractivity(page, ROOT_ID, 2);
 
@@ -963,20 +906,6 @@ test.describe("non-aborted", () => {
 
     await ensureInteractivity(page, ERROR_BOUNDARY_ID);
     await ensureInteractivity(page, ROOT_ID, 2);
-  });
-
-  test("returns headers on document requests", async ({ page }) => {
-    let response = await fixture.requestDocument("/headers");
-    expect(response.headers.get("x-custom-header")).toEqual(
-      "value from loader"
-    );
-  });
-
-  test("returns headers on data requests", async ({ page }) => {
-    let response = await fixture.requestSingleFetchData("/headers.data");
-    expect(response.headers.get("x-custom-header")).toEqual(
-      "value from loader"
-    );
   });
 });
 
@@ -1142,7 +1071,6 @@ test.describe("aborted", () => {
           }
         `,
         "app/root.tsx": js`
-          import { defer } from "react-router";
           import { Links, Meta, Outlet, Scripts, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
           import Interactive from "~/components/interactive";
@@ -1151,7 +1079,7 @@ test.describe("aborted", () => {
             return [{ title: "New Remix App" }];
           };
 
-          export const loader = () => defer({
+          export const loader = () => ({
             id: "${ROOT_ID}",
           });
 
@@ -1184,19 +1112,18 @@ test.describe("aborted", () => {
 
         "app/routes/deferred-server-aborted.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: new Promise(
                 (resolve) => setTimeout(() => {
                   resolve("${RESOLVED_DEFERRED_ID}");
                 }, 10000)
               ),
-            });
+            };
           }
 
           export default function Deferred() {
@@ -1229,19 +1156,18 @@ test.describe("aborted", () => {
 
         "app/routes/deferred-server-aborted-no-error-element.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "react-router";
           import { Await, Link, useLoaderData } from "react-router";
           import Counter from "~/components/counter";
 
           export function loader() {
-            return defer({
+            return {
               deferredId: "${DEFERRED_ID}",
               resolvedId: new Promise(
                 (resolve) => setTimeout(() => {
                   resolve("${RESOLVED_DEFERRED_ID}");
                 }, 10000)
               ),
-            });
+            };
           }
 
           export default function Deferred() {

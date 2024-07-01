@@ -1,6 +1,5 @@
 import type { ErrorResponse, StaticHandler } from "../router";
 import {
-  UNSAFE_DEFERRED_SYMBOL as DEFERRED_SYMBOL,
   getStaticContextFromError,
   isRouteErrorResponse,
   createStaticHandler,
@@ -306,8 +305,6 @@ async function handleSingleFetchRequest(
   resultHeaders.set("X-Remix-Response", "yes");
   resultHeaders.set("Content-Type", "text/x-turbo");
 
-  // Note: Deferred data is already just Promises, so we don't have to mess
-  // `activeDeferreds` or anything :)
   return new Response(
     encodeViaTurboStream(
       result,
@@ -510,14 +507,6 @@ async function handleResourceRequest(
         responseStubs,
       }),
     });
-
-    if (typeof response === "object" && response !== null) {
-      invariant(
-        !(DEFERRED_SYMBOL in response),
-        `You cannot return a \`defer()\` response from a Resource Route.  Did you ` +
-          `forget to export a default UI component from the "${routeId}" route?`
-      );
-    }
 
     let stub = responseStubs[routeId];
     if (isResponseStub(response) || response == null) {
