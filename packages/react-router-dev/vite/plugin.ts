@@ -1009,11 +1009,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               sourceExports.includes("default")
                 ? `
                   import { createElement } from "react";
+                  import { useParams, useLoaderData, useActionData } from "react-router";
 
                   import { default as Component } from "./${routeFileName}";
 
                   export default function Route() {
-                    return createElement(Component)
+                    let params = useParams();
+                    let loaderData = useLoaderData();
+                    let actionData = useActionData();
+                    return createElement(Component, { params, loaderData, actionData });
                   }
                 `
                 : ""
