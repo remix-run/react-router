@@ -1,5 +1,5 @@
 import type { FutureConfig as RouterFutureConfig } from "@remix-run/router";
-import { FutureConfig as RenderFutureConfig } from "./components";
+import type { FutureConfig as RenderFutureConfig } from "./components";
 
 const alreadyWarned: { [key: string]: boolean } = {};
 

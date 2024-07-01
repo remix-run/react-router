@@ -801,7 +801,7 @@ export function BrowserRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future), []);
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
@@ -854,7 +854,7 @@ export function HashRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future), []);
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
@@ -903,7 +903,7 @@ function HistoryRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future), []);
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
