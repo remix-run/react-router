@@ -4,6 +4,7 @@ import type { AppLoadContext, EntryContext } from "react-router";
 import { createReadableStreamFromReadable } from "@react-router/node";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
+import type { RenderToPipeableStreamOptions } from "react-dom/server";
 import { renderToPipeableStream } from "react-dom/server";
 
 const ABORT_DELAY = 5_000;
@@ -15,15 +16,17 @@ export default function handleRequest(
   remixContext: EntryContext,
   loadContext: AppLoadContext
 ) {
-  let userAgent = request.headers.get("user-agent");
-
-  // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
-  // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
-  let prohibitOutOfOrderStreaming =
-    (userAgent && isbot(userAgent)) || remixContext.isSpaMode;
-
   return new Promise((resolve, reject) => {
     let shellRendered = false;
+    let userAgent = request.headers.get("user-agent");
+
+    // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
+    // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
+    let readyOption: keyof RenderToPipeableStreamOptions =
+      (userAgent && isbot(userAgent)) || remixContext.isSpaMode
+        ? "onAllReady"
+        : "onShellReady";
+
     const { pipe, abort } = renderToPipeableStream(
       <ServerRouter
         context={remixContext}
@@ -31,41 +34,21 @@ export default function handleRequest(
         abortDelay={ABORT_DELAY}
       />,
       {
-        onShellReady() {
-          if (!prohibitOutOfOrderStreaming) {
-            shellRendered = true;
-            const body = new PassThrough();
-            const stream = createReadableStreamFromReadable(body);
+        [readyOption]() {
+          shellRendered = true;
+          const body = new PassThrough();
+          const stream = createReadableStreamFromReadable(body);
 
-            responseHeaders.set("Content-Type", "text/html");
+          responseHeaders.set("Content-Type", "text/html");
 
-            resolve(
-              new Response(stream, {
-                headers: responseHeaders,
-                status: responseStatusCode,
-              })
-            );
+          resolve(
+            new Response(stream, {
+              headers: responseHeaders,
+              status: responseStatusCode,
+            })
+          );
 
-            pipe(body);
-          }
-        },
-        onAllReady() {
-          if (prohibitOutOfOrderStreaming) {
-            shellRendered = true;
-            const body = new PassThrough();
-            const stream = createReadableStreamFromReadable(body);
-
-            responseHeaders.set("Content-Type", "text/html");
-
-            resolve(
-              new Response(stream, {
-                headers: responseHeaders,
-                status: responseStatusCode,
-              })
-            );
-
-            pipe(body);
-          }
+          pipe(body);
         },
         onShellError(error: unknown) {
           reject(error);
