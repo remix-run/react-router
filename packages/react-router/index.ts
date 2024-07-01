@@ -30,10 +30,8 @@ import type {
   unstable_HandlerResult,
 } from "./lib/router";
 import {
-  AbortedDeferredError,
   Action as NavigationType,
   createPath,
-  defer,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -177,7 +175,6 @@ export type {
   unstable_PatchRoutesOnMissFunction,
 };
 export {
-  AbortedDeferredError,
   Await,
   MemoryRouter,
   Navigate,
@@ -190,7 +187,6 @@ export {
   createPath,
   createRoutesFromChildren,
   createRoutesFromChildren as createRoutesFromElements,
-  defer,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -242,12 +238,10 @@ export type {
   TrackedPromise,
   FetcherStates,
   UpperCaseFormMethod,
-  UNSAFE_DeferredData,
 } from "./lib/router";
 export {
   getStaticContextFromError,
   stripBasename,
-  UNSAFE_DEFERRED_SYMBOL,
   UNSAFE_convertRoutesToDataRoutes,
 } from "./lib/router";
 
@@ -361,7 +355,6 @@ export {
 } from "./lib/server-runtime/formData";
 // TODO: (v7) Clean up code paths for these exports
 // export {
-//   defer,
 //   json,
 //   redirect,
 //   redirectDocument,
@@ -432,10 +425,7 @@ export type {
   PageLinkDescriptor,
 } from "./lib/server-runtime/links";
 
-export type {
-  TypedDeferredData,
-  TypedResponse,
-} from "./lib/server-runtime/responses";
+export type { TypedResponse } from "./lib/server-runtime/responses";
 
 export type {
   // TODO: (v7) Clean up code paths for these exports

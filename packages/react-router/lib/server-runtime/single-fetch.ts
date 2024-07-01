@@ -17,7 +17,7 @@ import {
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
-import { isDeferredData, isRedirectStatusCode, isResponse } from "./responses";
+import { isRedirectStatusCode, isResponse } from "./responses";
 
 const ResponseStubActionSymbol = Symbol("ResponseStubAction");
 
@@ -96,12 +96,6 @@ export function getSingleFetchDataStrategy(
           proxyResponseToResponseStub(
             result.result.status,
             result.result.headers,
-            responseStub
-          );
-        } else if (isDeferredData(result.result) && result.result.init) {
-          proxyResponseToResponseStub(
-            result.result.init.status,
-            new Headers(result.result.init.headers),
             responseStub
           );
         }

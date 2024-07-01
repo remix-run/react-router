@@ -72,7 +72,6 @@ export type {
   InitialEntry,
   StaticHandler,
   TrackedPromise,
-  UNSAFE_DeferredData,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -107,7 +106,6 @@ export type {
 } from "react-router";
 
 export {
-  AbortedDeferredError,
   Await,
   MemoryRouter,
   Navigate,
@@ -121,7 +119,6 @@ export {
   createPath,
   createRoutesFromChildren,
   createRoutesFromChildren as createRoutesFromElements,
-  defer,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -155,7 +152,6 @@ export {
   useRoutes,
   getStaticContextFromError,
   stripBasename,
-  UNSAFE_DEFERRED_SYMBOL,
   UNSAFE_convertRoutesToDataRoutes,
   createBrowserRouter,
   createHashRouter,

@@ -79,17 +79,17 @@ const routeFiles = {
 
   "app/routes/defer.tsx": js`
     import * as React from 'react';
-    import { defer, Await, useAsyncError, useLoaderData, useRouteError } from "react-router";
+    import { Await, useAsyncError, useLoaderData, useRouteError } from "react-router";
 
     export function loader({ request }) {
       if (new URL(request.url).searchParams.has('loader')) {
-        return defer({
+        return {
           lazy: Promise.reject(new Error("REJECTED")),
-        })
+        };
       }
-      return defer({
+      return {
         lazy: Promise.resolve("RESOLVED"),
-      })
+      };
     }
 
     export default function Component() {

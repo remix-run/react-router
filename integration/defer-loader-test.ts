@@ -28,23 +28,23 @@ test.describe("deferred loaders", () => {
         `,
 
         "app/routes/redirect.tsx": js`
-          import { defer } from "react-router";
-          export function loader() {
-            return defer({food: "pizza"}, { status: 301, headers: { Location: "/?redirected" } });
+          export function loader({ response }) {
+            response.status = 301;
+            response.headers.set("Location", "/?redirected");
+            return { food: "pizza" };
           }
           export default function Redirect() {return null;}
         `,
 
         "app/routes/direct-promise-access.tsx": js`
           import * as React from "react";
-          import { defer } from "react-router";
           import { useLoaderData, Link, Await } from "react-router";
           export function loader() {
-            return defer({
+            return {
               bar: new Promise(async (resolve, reject) => {
                 resolve("hamburger");
               }),
-            });
+            };
           }
           let count = 0;
           export default function Index() {
