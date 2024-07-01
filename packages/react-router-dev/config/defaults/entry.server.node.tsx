@@ -13,7 +13,7 @@ export default function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext,
+  routerContext: EntryContext,
   loadContext: AppLoadContext
 ) {
   return new Promise((resolve, reject) => {
@@ -23,13 +23,13 @@ export default function handleRequest(
     // Ensure requests from bots and SPA Mode renders wait for all content to load before responding
     // https://react.dev/reference/react-dom/server/renderToPipeableStream#waiting-for-all-content-to-load-for-crawlers-and-static-generation
     let readyOption: keyof RenderToPipeableStreamOptions =
-      (userAgent && isbot(userAgent)) || remixContext.isSpaMode
+      (userAgent && isbot(userAgent)) || routerContext.isSpaMode
         ? "onAllReady"
         : "onShellReady";
 
     const { pipe, abort } = renderToPipeableStream(
       <ServerRouter
-        context={remixContext}
+        context={routerContext}
         url={request.url}
         abortDelay={ABORT_DELAY}
       />,
