@@ -311,6 +311,25 @@ const getRouteModuleExports = async (
   routeFile: string,
   readRouteFile?: () => string | Promise<string>
 ): Promise<string[]> => {
+  let routePath = path.resolve(ctx.reactRouterConfig.appDirectory, routeFile);
+  let code = await (readRouteFile?.() ?? fse.readFile(routePath, "utf-8"));
+  if (!code.includes("defineRoute")) {
+    return _getRouteModuleExports(
+      viteChildCompiler,
+      ctx,
+      routeFile,
+      readRouteFile
+    );
+  }
+  return defineRoute.parseFields(code);
+};
+
+const _getRouteModuleExports = async (
+  viteChildCompiler: Vite.ViteDevServer | null,
+  ctx: ReactRouterPluginContext,
+  routeFile: string,
+  readRouteFile?: () => string | Promise<string>
+): Promise<string[]> => {
   if (!viteChildCompiler) {
     throw new Error("Vite child compiler not found");
   }
