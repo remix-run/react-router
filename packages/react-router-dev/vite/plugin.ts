@@ -1014,15 +1014,43 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           );
 
           let routeFileName = path.basename(routeModuleId);
+
+          if (!code.includes("defineRoute")) {
+            let reexports = sourceExports
+              .filter(
+                (exportName) =>
+                  (options?.ssr &&
+                    SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
+                  CLIENT_ROUTE_EXPORTS.includes(exportName)
+              )
+              .join(", ");
+            return `export { ${reexports} } from "./${routeFileName}";`;
+          }
+
           let reexports = sourceExports
             .filter(
               (exportName) =>
-                (options?.ssr &&
+                !["Component", "serverLoader", "serverAction"].includes(
+                  exportName
+                ) &&
+                ((options?.ssr &&
                   SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-                CLIENT_ROUTE_EXPORTS.includes(exportName)
+                  CLIENT_ROUTE_EXPORTS.includes(exportName))
             )
-            .join(", ");
-          return `export { ${reexports} } from "./${routeFileName}";`;
+            .map((reexport) => `export const ${reexport} = route.${reexport};`);
+
+          let content = `import route from "./${routeFileName}";`;
+          if (sourceExports.includes("Component")) {
+            content += `\nexport default route.Component;`;
+          }
+          if (sourceExports.includes("serverLoader")) {
+            content += `\nexport const loader = route.serverLoader;`;
+          }
+          if (sourceExports.includes("serverAction")) {
+            content += `\nexport const action = route.serverAction;`;
+          }
+          content += "\n" + reexports.join("\n");
+          return content;
         }
       },
       buildStart() {
