@@ -31,7 +31,7 @@ function createRoute(path: string) {
   return {
     [`app/routes/${path}`]: js`
       ${ROUTE_FILE_COMMENT}
-      import { Outlet } from "react-router-dom";
+      import { Outlet } from "react-router";
       import { useState, useEffect } from "react";
 
       export default function Route() {
@@ -77,7 +77,7 @@ const TEST_ROUTES = [
 const files = {
   "app/root.tsx": js`
     ${ROUTE_FILE_COMMENT}
-    import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+    import { Links, Meta, Outlet, Scripts } from "react-router";
 
     export default function Root() {
       return (

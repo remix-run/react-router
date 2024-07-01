@@ -59,8 +59,8 @@ test.beforeAll(async () => {
     ////////////////////////////////////////////////////////////////////////////
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "@react-router/node";
-        import { useLoaderData, Link } from "react-router-dom";
+        import { json } from "react-router";
+        import { useLoaderData, Link } from "react-router";
 
         export function loader() {
           return json("pizza");

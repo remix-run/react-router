@@ -13,7 +13,6 @@
     "playground": "node ./scripts/playground.js",
     "prerelease": "pnpm build",
     "release": "changeset publish",
-    "size": "filesize",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "typecheck": "pnpm run --recursive --parallel typecheck",
@@ -42,7 +41,6 @@
     "jsdom": "22.1.0"
   },
   "dependencies": {
-    "@ampproject/filesize": "^4.3.0",
     "@babel/core": "^7.22.9",
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@babel/plugin-proposal-optional-chaining": "^7.21.0",
@@ -122,20 +120,12 @@
     "unified": "^10.1.2",
     "unist-util-remove": "^3.1.0",
     "vite": "^5.1.0",
-    "vite-env-only": "^2.0.0",
+    "vite-env-only": "^3.0.1",
     "vite-tsconfig-paths": "^4.2.2",
     "wait-on": "^7.0.1"
   },
   "engines": {
-    "node": ">=14.0.0"
-  },
-  "filesize": {
-    "packages/react-router/dist/react-router.production.min.js": {
-      "none": "120 kB"
-    },
-    "packages/react-router/dist/umd/react-router.production.min.js": {
-      "none": "125 kB"
-    }
+    "node": ">=18.0.0"
   },
   "pnpm": {
     "patchedDependencies": {

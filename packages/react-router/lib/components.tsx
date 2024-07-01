@@ -1,5 +1,5 @@
 import type {
-  FutureConfig as RouterFutureConfig,
+  FutureConfig,
   HydrationState,
   InitialEntry,
   LazyRouteFunction,
@@ -7,18 +7,16 @@ import type {
   MemoryHistory,
   RelativeRoutingType,
   Router as RemixRouter,
-  RouterState,
-  RouterSubscriber,
   To,
   TrackedPromise,
   unstable_DataStrategyFunction,
+  unstable_AgnosticPatchRoutesOnMissFunction,
 } from "./router";
 import {
   AbortedDeferredError,
   Action as NavigationType,
   createMemoryHistory,
   createRouter,
-  UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
@@ -28,7 +26,6 @@ import {
 import * as React from "react";
 
 import type {
-  DataRouteObject,
   IndexRouteObject,
   Navigator,
   NonIndexRouteObject,
@@ -37,8 +34,6 @@ import type {
 } from "./context";
 import {
   AwaitContext,
-  DataRouterContext,
-  DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -51,17 +46,12 @@ import {
   useNavigate,
   useOutlet,
   useRoutes,
-  useRoutesImpl,
 } from "./hooks";
+import { getResolveToMatches } from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
 const ENABLE_DEV_WARNINGS = true;
-
-export interface FutureConfig {
-  v7_relativeSplatPath: boolean;
-  v7_startTransition: boolean;
-}
 
 /**
  * @private
@@ -127,6 +117,9 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
+export interface unstable_PatchRoutesOnMissFunction
+  extends unstable_AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
+
 /**
  * @category Routers
  */
@@ -134,19 +127,17 @@ export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
     basename?: string;
-    future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
+    future?: Partial<FutureConfig>;
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
     unstable_dataStrategy?: unstable_DataStrategyFunction;
+    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: {
-      ...opts?.future,
-      v7_prependBasename: true,
-    },
+    future: opts?.future,
     history: createMemoryHistory({
       initialEntries: opts?.initialEntries,
       initialIndex: opts?.initialIndex,
@@ -155,159 +146,8 @@ export function createMemoryRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
   }).initialize();
-}
-
-/**
- * @category Types
- */
-export interface RouterProviderProps {
-  fallbackElement?: React.ReactNode;
-  router: RemixRouter;
-  // Only accept future flags relevant to rendering behavior
-  // routing flags should be accessed via router.future
-  future?: Partial<Pick<FutureConfig, "v7_startTransition">>;
-}
-
-/**
-  Webpack + React 17 fails to compile on any of the following because webpack
-  complains that `startTransition` doesn't exist in `React`:
-  * import { startTransition } from "react"
-  * import * as React from from "react";
-    "startTransition" in React ? React.startTransition(() => setState()) : setState()
-  * import * as React from from "react";
-    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
-
-  Moving it to a constant such as the following solves the Webpack/React 17 issue:
-  * import * as React from from "react";
-    const START_TRANSITION = "startTransition";
-    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
-
-  However, that introduces webpack/terser minification issues in production builds
-  in React 18 where minification/obfuscation ends up removing the call of
-  React.startTransition entirely from the first half of the ternary.  Grabbing
-  this exported reference once up front resolves that issue.
-
-  See https://github.com/remix-run/react-router/issues/10579
-*/
-const START_TRANSITION = "startTransition";
-const startTransitionImpl = React[START_TRANSITION];
-
-/**
- * Given a Remix Router instance, render the appropriate UI
- *
- * @category Router Components
- */
-export function RouterProvider({
-  fallbackElement,
-  router,
-  future,
-}: RouterProviderProps): React.ReactElement {
-  let [state, setStateImpl] = React.useState(router.state);
-  let { v7_startTransition } = future || {};
-
-  let setState = React.useCallback<RouterSubscriber>(
-    (newState: RouterState) => {
-      if (v7_startTransition && startTransitionImpl) {
-        startTransitionImpl(() => setStateImpl(newState));
-      } else {
-        setStateImpl(newState);
-      }
-    },
-    [setStateImpl, v7_startTransition]
-  );
-
-  // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
-  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
-
-  React.useEffect(() => {
-    warning(
-      fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using " +
-        "`v7_partialHydration`, use a `HydrateFallback` component instead"
-    );
-    // Only log this once on initial mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      encodeLocation: router.encodeLocation,
-      go: (n) => router.navigate(n),
-      push: (to, state, opts) =>
-        router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-      replace: (to, state, opts) =>
-        router.navigate(to, {
-          replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-    };
-  }, [router]);
-
-  let basename = router.basename || "/";
-
-  let dataRouterContext = React.useMemo(
-    () => ({
-      router,
-      navigator,
-      static: false,
-      basename,
-    }),
-    [router, navigator, basename]
-  );
-
-  // The fragment and {null} here are important!  We need them to keep React 18's
-  // useId happy when we are server-rendering since we may have a <script> here
-  // containing the hydrated server-side staticContext (from StaticRouterProvider).
-  // useId relies on the component tree structure to generate deterministic id's
-  // so we need to ensure it remains the same on the client even though
-  // we don't need the <script> tag
-  return (
-    <>
-      <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <Router
-            basename={basename}
-            location={state.location}
-            navigationType={state.historyAction}
-            navigator={navigator}
-            future={{
-              v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-            }}
-          >
-            {state.initialized || router.future.v7_partialHydration ? (
-              <DataRoutes
-                routes={router.routes}
-                future={router.future}
-                state={state}
-              />
-            ) : (
-              fallbackElement
-            )}
-          </Router>
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>
-      {null}
-    </>
-  );
-}
-
-function DataRoutes({
-  routes,
-  future,
-  state,
-}: {
-  routes: DataRouteObject[];
-  future: RemixRouter["future"];
-  state: RouterState;
-}): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, future);
 }
 
 /**
@@ -318,7 +158,6 @@ export interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -331,7 +170,6 @@ export function MemoryRouter({
   children,
   initialEntries,
   initialIndex,
-  future,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -347,14 +185,11 @@ export function MemoryRouter({
     action: history.action,
     location: history.location,
   });
-  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
-        : setStateImpl(newState);
+      React.startTransition(() => setStateImpl(newState));
     },
-    [setStateImpl, v7_startTransition]
+    [setStateImpl]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -366,7 +201,6 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      future={future}
     />
   );
 }
@@ -403,7 +237,7 @@ export function Navigate({
     `<Navigate> may be used only in the context of a <Router> component.`
   );
 
-  let { future, static: isStatic } = React.useContext(NavigationContext);
+  let { static: isStatic } = React.useContext(NavigationContext);
 
   warning(
     !isStatic,
@@ -420,7 +254,7 @@ export function Navigate({
   // StrictMode they navigate to the same place
   let path = resolveTo(
     to,
-    getResolveToMatches(matches, future.v7_relativeSplatPath),
+    getResolveToMatches(matches),
     locationPathname,
     relative === "path"
   );
@@ -464,7 +298,7 @@ export interface OutletProps {
     );
   }
   ```
- 
+
   @category Components
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
@@ -550,7 +384,6 @@ export interface RouterProps {
   navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
-  future?: Partial<Pick<FutureConfig, "v7_relativeSplatPath">>;
 }
 
 /**
@@ -569,7 +402,6 @@ export function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
-  future,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
@@ -585,12 +417,9 @@ export function Router({
       basename,
       navigator,
       static: staticProp,
-      future: {
-        v7_relativeSplatPath: false,
-        ...future,
-      },
+      future: {},
     }),
-    [basename, future, navigator, staticProp]
+    [basename, navigator, staticProp]
   );
 
   if (typeof locationProp === "string") {
@@ -1015,6 +844,8 @@ export function createRoutesFromChildren(
       path: element.props.path,
       loader: element.props.loader,
       action: element.props.action,
+      hydrateFallbackElement: element.props.hydrateFallbackElement,
+      HydrateFallback: element.props.HydrateFallback,
       errorElement: element.props.errorElement,
       ErrorBoundary: element.props.ErrorBoundary,
       hasErrorBoundary:

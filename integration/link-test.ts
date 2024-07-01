@@ -88,7 +88,7 @@ test.describe("route module link export", () => {
             Scripts,
             useRouteError,
             isRouteErrorResponse
-          } from "react-router-dom";
+          } from "react-router";
           import resetHref from "./reset.css?url";
           import stylesHref from "./app.css?url";
           import favicon from "./favicon.ico";
@@ -193,7 +193,7 @@ test.describe("route module link export", () => {
 
         "app/routes/_index.tsx": js`
           import { useEffect } from "react";
-          import { Link } from "react-router-dom";
+          import { Link } from "react-router";
 
           export default function Index() {
             return (
@@ -226,7 +226,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/links.tsx": js`
-          import { useLoaderData, Link } from "react-router-dom";
+          import { useLoaderData, Link } from "react-router";
           import redTextHref from "~/redText.css?url";
           import blueTextHref from "~/blueText.css?url";
           import guitar from "~/guitar.jpg";
@@ -275,7 +275,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/responsive-image-preload.tsx": js`
-          import { Link } from "react-router-dom";
+          import { Link } from "react-router";
           import guitar600 from "~/guitar-600.jpg";
           import guitar900 from "~/guitar-900.jpg";
 
@@ -308,8 +308,8 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.tsx": js`
-          import { json } from "@react-router/node";
-          import { Link, Outlet, useLoaderData, useNavigation } from "react-router-dom";
+          import { json } from "react-router";
+          import { Link, Outlet, useLoaderData, useNavigation } from "react-router";
           import stylesHref from "~/gists.css?url";
           export function links() {
             return [{ rel: "stylesheet", href: stylesHref }];
@@ -359,8 +359,8 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists.$username.tsx": js`
-          import { json, redirect } from "@react-router/node";
-          import { Link, useLoaderData, useParams } from "react-router-dom";
+          import { json, redirect } from "react-router";
+          import { Link, useLoaderData, useParams } from "react-router";
           export async function loader({ params }) {
             let { username } = params;
             if (username === "mjijackson") {
@@ -417,7 +417,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/gists._index.tsx": js`
-          import { useLoaderData } from "react-router-dom";
+          import { useLoaderData } from "react-router";
           export async function loader() {
             return ${JSON.stringify(fakeGists)};
           }
@@ -458,7 +458,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/resources.theme-css.tsx": js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
           export async function loader({ request }) {
             return new Response(":root { --nc-tx-1: #ffffff; --nc-tx-2: #eeeeee; }",
               {
@@ -473,7 +473,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/parent.tsx": js`
-          import { Outlet } from "react-router-dom";
+          import { Outlet } from "react-router";
 
           export function links() {
             return [
@@ -491,7 +491,7 @@ test.describe("route module link export", () => {
         `,
 
         "app/routes/parent.child.tsx": js`
-          import { Outlet } from "react-router-dom";
+          import { Outlet } from "react-router";
 
           export function loader() {
             throw new Response(null, { status: 404 });
@@ -594,6 +594,10 @@ test.describe("route module link export", () => {
   });
 
   test.describe("script imports", () => {
+    // Disable JS for this test since we don't want it to hydrate and remove
+    // the initial <script> tags
+    test.use({ javaScriptEnabled: false });
+
     test("are added to the document", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
@@ -605,8 +609,8 @@ test.describe("route module link export", () => {
       let moduleScriptText = await moduleScript.innerText();
       expect(
         Array.from(moduleScriptText.matchAll(/import "\/assets\/manifest-/g)),
-        "invalid build manifest"
-      ).toHaveLength(1);
+        "did not expect a manifest due to fog of war"
+      ).toHaveLength(0);
       expect(
         Array.from(moduleScriptText.matchAll(/import \* as route0 from "/g)),
         "invalid route0"

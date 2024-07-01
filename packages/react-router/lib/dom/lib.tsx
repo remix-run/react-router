@@ -1,11 +1,18 @@
 import * as React from "react";
+
+// TODO: This static import doesn't allow us to work quite right in a pure-react
+// app that doesn't even have react-dom as a dependency.  Let's look into using
+// an export map for `react-router/dom   that would provide the `flushSync` method
+// to the memory `<RouterProvider>` via a prop.  And then
+// `import { RouterProvider } from 'react-router/memory'` // memory use case
+// `import { RouterProvider } from 'react-router/dom'` // DOM use case
 import * as ReactDOM from "react-dom";
 import type {
   BrowserHistory,
   unstable_DataStrategyFunction,
   Fetcher,
   FormEncType,
-  FutureConfig as RouterFutureConfig,
+  FutureConfig,
   GetScrollRestorationKeyFunction,
   HashHistory,
   History,
@@ -36,7 +43,12 @@ import {
 } from "../router";
 
 import "./global";
-import type { SubmitOptions, URLSearchParamsInit, SubmitTarget } from "./dom";
+import type {
+  SubmitOptions,
+  URLSearchParamsInit,
+  SubmitTarget,
+  FetcherSubmitOptions,
+} from "./dom";
 import {
   createSearchParams,
   defaultMethod,
@@ -45,17 +57,18 @@ import {
   shouldProcessLinkClick,
 } from "./dom";
 
-import type { PrefetchBehavior, ScriptsProps } from "./ssr/components";
+import type {
+  DiscoverBehavior,
+  PrefetchBehavior,
+  ScriptsProps,
+} from "./ssr/components";
 import {
   PrefetchPageLinks,
-  RemixContext,
+  FrameworkContext,
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import type {
-  RouterProviderProps,
-  FutureConfig as RenderFutureConfig,
-} from "../components";
+import type { unstable_PatchRoutesOnMissFunction } from "../components";
 import { Router, mapRouteProperties } from "../components";
 import type {
   Navigator,
@@ -115,9 +128,10 @@ try {
 
 interface DOMRouterOpts {
   basename?: string;
-  future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
+  future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   window?: Window;
 }
 
@@ -130,15 +144,13 @@ export function createBrowserRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: {
-      ...opts?.future,
-      v7_prependBasename: true,
-    },
+    future: opts?.future,
     history: createBrowserHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -152,15 +164,13 @@ export function createHashRouter(
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
-    future: {
-      ...opts?.future,
-      v7_prependBasename: true,
-    },
+    future: opts?.future,
     history: createHashHistory({ window: opts?.window }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -262,50 +272,6 @@ export { FetchersContext as UNSAFE_FetchersContext };
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-  Webpack + React 17 fails to compile on any of the following because webpack
-  complains that `startTransition` doesn't exist in `React`:
-  * import { startTransition } from "react"
-  * import * as React from from "react";
-    "startTransition" in React ? React.startTransition(() => setState()) : setState()
-  * import * as React from from "react";
-    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
-
-  Moving it to a constant such as the following solves the Webpack/React 17 issue:
-  * import * as React from from "react";
-    const START_TRANSITION = "startTransition";
-    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
-
-  However, that introduces webpack/terser minification issues in production builds
-  in React 18 where minification/obfuscation ends up removing the call of
-  React.startTransition entirely from the first half of the ternary.  Grabbing
-  this exported reference once up front resolves that issue.
-
-  See https://github.com/remix-run/react-router/issues/10579
-*/
-const START_TRANSITION = "startTransition";
-const startTransitionImpl = React[START_TRANSITION];
-const FLUSH_SYNC = "flushSync";
-const flushSyncImpl = ReactDOM[FLUSH_SYNC];
-const USE_ID = "useId";
-const useIdImpl = React[USE_ID];
-
-function startTransitionSafe(cb: () => void) {
-  if (startTransitionImpl) {
-    startTransitionImpl(cb);
-  } else {
-    cb();
-  }
-}
-
-function flushSyncSafe(cb: () => void) {
-  if (flushSyncImpl) {
-    flushSyncImpl(cb);
-  } else {
-    cb();
-  }
-}
-
 export interface ViewTransition {
   finished: Promise<void>;
   ready: Promise<void>;
@@ -338,13 +304,15 @@ class Deferred<T> {
   }
 }
 
+export interface RouterProviderProps {
+  router: RemixRouter;
+}
+
 /**
  * Given a Remix Router instance, render the appropriate UI
  */
 export function RouterProvider({
-  fallbackElement,
   router,
-  future,
 }: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
   let [pendingState, setPendingState] = React.useState<RouterState>();
@@ -359,18 +327,6 @@ export function RouterProvider({
     nextLocation: Location;
   }>();
   let fetcherData = React.useRef<Map<string, any>>(new Map());
-  let { v7_startTransition } = future || {};
-
-  let optInStartTransition = React.useCallback(
-    (cb: () => void) => {
-      if (v7_startTransition) {
-        startTransitionSafe(cb);
-      } else {
-        cb();
-      }
-    },
-    [v7_startTransition]
-  );
 
   let setState = React.useCallback<RouterSubscriber>(
     (
@@ -397,9 +353,9 @@ export function RouterProvider({
       // just update and be done with it
       if (!viewTransitionOpts || isViewTransitionUnavailable) {
         if (flushSync) {
-          flushSyncSafe(() => setStateImpl(newState));
+          ReactDOM.flushSync(() => setStateImpl(newState));
         } else {
-          optInStartTransition(() => setStateImpl(newState));
+          React.startTransition(() => setStateImpl(newState));
         }
         return;
       }
@@ -407,7 +363,7 @@ export function RouterProvider({
       // flushSync + startViewTransition
       if (flushSync) {
         // Flush through the context to mark DOM elements as transition=ing
-        flushSyncSafe(() => {
+        ReactDOM.flushSync(() => {
           // Cancel any pending transitions
           if (transition) {
             renderDfd && renderDfd.resolve();
@@ -423,12 +379,12 @@ export function RouterProvider({
 
         // Update the DOM
         let t = router.window!.document.startViewTransition(() => {
-          flushSyncSafe(() => setStateImpl(newState));
+          ReactDOM.flushSync(() => setStateImpl(newState));
         });
 
         // Clean up after the animation completes
         t.finished.finally(() => {
-          flushSyncSafe(() => {
+          ReactDOM.flushSync(() => {
             setRenderDfd(undefined);
             setTransition(undefined);
             setPendingState(undefined);
@@ -436,7 +392,7 @@ export function RouterProvider({
           });
         });
 
-        flushSyncSafe(() => setTransition(t));
+        ReactDOM.flushSync(() => setTransition(t));
         return;
       }
 
@@ -462,7 +418,7 @@ export function RouterProvider({
         });
       }
     },
-    [router.window, transition, renderDfd, fetcherData, optInStartTransition]
+    [router.window, transition, renderDfd, fetcherData]
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -485,7 +441,7 @@ export function RouterProvider({
       let newState = pendingState;
       let renderPromise = renderDfd.promise;
       let transition = router.window.document.startViewTransition(async () => {
-        optInStartTransition(() => setStateImpl(newState));
+        React.startTransition(() => setStateImpl(newState));
         await renderPromise;
       });
       transition.finished.finally(() => {
@@ -496,7 +452,7 @@ export function RouterProvider({
       });
       setTransition(transition);
     }
-  }, [optInStartTransition, pendingState, renderDfd, router.window]);
+  }, [pendingState, renderDfd, router.window]);
 
   // When the new location finally renders and is committed to the DOM, this
   // effect will run to resolve the transition
@@ -524,16 +480,6 @@ export function RouterProvider({
       setInterruption(undefined);
     }
   }, [vtContext.isTransitioning, interruption]);
-
-  React.useEffect(() => {
-    warning(
-      fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using " +
-        "`v7_partialHydration`, use a `HydrateFallback` component instead"
-    );
-    // Only log this once on initial mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   let navigator = React.useMemo((): Navigator => {
     return {
@@ -583,19 +529,12 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
-                future={{
-                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-                }}
               >
-                {state.initialized || router.future.v7_partialHydration ? (
-                  <DataRoutes
-                    routes={router.routes}
-                    future={router.future}
-                    state={state}
-                  />
-                ) : (
-                  fallbackElement
-                )}
+                <DataRoutes
+                  routes={router.routes}
+                  future={router.future}
+                  state={state}
+                />
               </Router>
             </ViewTransitionContext.Provider>
           </FetchersContext.Provider>
@@ -624,7 +563,6 @@ function DataRoutes({
 export interface BrowserRouterProps {
   basename?: string;
   children?: React.ReactNode;
-  future?: Partial<RenderFutureConfig>;
   window?: Window;
 }
 
@@ -636,7 +574,6 @@ export interface BrowserRouterProps {
 export function BrowserRouter({
   basename,
   children,
-  future,
   window,
 }: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
@@ -649,14 +586,11 @@ export function BrowserRouter({
     action: history.action,
     location: history.location,
   });
-  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
-        : setStateImpl(newState);
+      React.startTransition(() => setStateImpl(newState));
     },
-    [setStateImpl, v7_startTransition]
+    [setStateImpl]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -668,7 +602,6 @@ export function BrowserRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      future={future}
     />
   );
 }
@@ -679,7 +612,6 @@ export function BrowserRouter({
 export interface HashRouterProps {
   basename?: string;
   children?: React.ReactNode;
-  future?: Partial<RenderFutureConfig>;
   window?: Window;
 }
 
@@ -689,12 +621,7 @@ export interface HashRouterProps {
  *
  * @category Router Components
  */
-export function HashRouter({
-  basename,
-  children,
-  future,
-  window,
-}: HashRouterProps) {
+export function HashRouter({ basename, children, window }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window, v5Compat: true });
@@ -705,14 +632,11 @@ export function HashRouter({
     action: history.action,
     location: history.location,
   });
-  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
-        : setStateImpl(newState);
+      React.startTransition(() => setStateImpl(newState));
     },
-    [setStateImpl, v7_startTransition]
+    [setStateImpl]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -724,7 +648,6 @@ export function HashRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      future={future}
     />
   );
 }
@@ -735,7 +658,6 @@ export function HashRouter({
 export interface HistoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
-  future?: RenderFutureConfig;
   history: History;
 }
 
@@ -747,24 +669,16 @@ export interface HistoryRouterProps {
  *
  * @category Router Components
  */
-function HistoryRouter({
-  basename,
-  children,
-  future,
-  history,
-}: HistoryRouterProps) {
+function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
   });
-  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
-        : setStateImpl(newState);
+      React.startTransition(() => setStateImpl(newState));
     },
-    [setStateImpl, v7_startTransition]
+    [setStateImpl]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -776,7 +690,6 @@ function HistoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      future={future}
     />
   );
 }
@@ -789,6 +702,20 @@ export { HistoryRouter as unstable_HistoryRouter };
  */
 export interface LinkProps
   extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+  /**
+    Defines the link discovery behavior
+
+    ```tsx
+    <Link /> // default ("render")
+    <Link discover="render" />
+    <Link discover="none" />
+    ```
+
+    - **render** - default, discover the route when the link renders
+    - **none** - don't eagerly discover, only discover if the link is clicked
+  */
+  discover?: DiscoverBehavior;
+
   /**
     Defines the data and module prefetching behavior for the link.
 
@@ -947,6 +874,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
     {
       onClick,
+      discover = "render",
       prefetch = "none",
       relative,
       reloadDocument,
@@ -1030,6 +958,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         onClick={isExternal || reloadDocument ? onClick : handleClick}
         ref={mergeRefs(forwardedRef, prefetchRef)}
         target={target}
+        data-discover={
+          !isAbsolute && discover === "render" ? "true" : undefined
+        }
       />
     );
 
@@ -1158,7 +1089,7 @@ export interface NavLinkProps
 
 /**
   Wraps {@link Link | `<Link>`} with additional props for styling active and pending states.
-  
+
   - Automatically applies classes to the link based on its active and pending states, see {@link NavLinkProps.className}.
   - Automatically applies `aria-current="page"` to the link when the link is active. See [`aria-current`](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current) on MDN.
 
@@ -1299,8 +1230,10 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 );
 NavLink.displayName = "NavLink";
 
-export interface FetcherFormProps
-  extends React.FormHTMLAttributes<HTMLFormElement> {
+/**
+ * Form props shared by navigations and fetchers
+ */
+interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * The HTTP verb to use when the form is submitted. Supports "get", "post",
    * "put", "delete", and "patch".
@@ -1344,9 +1277,18 @@ export interface FetcherFormProps
 }
 
 /**
+ * Form props available to fetchers
  * @category Types
  */
-export interface FormProps extends FetcherFormProps {
+export interface FetcherFormProps extends SharedFormProps {}
+
+/**
+ * Form props available to navigations
+ * @category Types
+ */
+export interface FormProps extends SharedFormProps {
+  discover?: DiscoverBehavior;
+
   /**
    * Indicates a specific fetcherKey to use when using `navigate={false}` so you
    * can pick up the fetcher's state in a different component in a {@link
@@ -1423,6 +1365,7 @@ function NewEvent() {
 export const Form = React.forwardRef<HTMLFormElement, FormProps>(
   (
     {
+      discover = "render",
       fetcherKey,
       navigate,
       reloadDocument,
@@ -1442,6 +1385,8 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
     let formAction = useFormAction(action, { relative });
     let formMethod: HTMLFormMethod =
       method.toLowerCase() === "get" ? "get" : "post";
+    let isAbsolute =
+      typeof action === "string" && ABSOLUTE_URL_REGEX.test(action);
 
     let submitHandler: React.FormEventHandler<HTMLFormElement> = (event) => {
       onSubmit && onSubmit(event);
@@ -1474,6 +1419,9 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         action={formAction}
         onSubmit={reloadDocument ? onSubmit : submitHandler}
         {...props}
+        data-discover={
+          !isAbsolute && discover === "render" ? "true" : undefined
+        }
       />
     );
   }
@@ -1529,7 +1477,7 @@ export function ScrollRestoration({
   storageKey,
   ...props
 }: ScrollRestorationProps) {
-  let remixContext = React.useContext(RemixContext);
+  let remixContext = React.useContext(FrameworkContext);
   let { basename } = React.useContext(NavigationContext);
   let location = useLocation();
   let matches = useMatches();
@@ -1722,11 +1670,7 @@ export function useSearchParams(
     `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
       `support the URLSearchParams API. If you need to support Internet ` +
       `Explorer 11, we recommend you load a polyfill such as ` +
-      `https://github.com/ungap/url-search-params\n\n` +
-      `If you're unsure how to load polyfills, we recommend you check out ` +
-      `https://polyfill.io/v3/ which provides some recommendations about how ` +
-      `to load polyfills only for users that need them, instead of for every ` +
-      `user.`
+      `https://github.com/ungap/url-search-params.`
   );
 
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
@@ -1891,17 +1835,8 @@ export interface FetcherSubmitFunction {
     target: SubmitTarget,
 
     // Fetchers cannot replace or set state because they are not navigation events
-    options?: Omit<SubmitOptions, "replace" | "state">
+    options?: FetcherSubmitOptions
   ): Promise<void>;
-}
-
-function validateClientSideSubmission() {
-  if (typeof document === "undefined") {
-    throw new Error(
-      "You are calling submit during the server render. " +
-        "Try calling submit within a `useEffect` or callback instead."
-    );
-  }
 }
 
 let fetcherId = 0;
@@ -1934,8 +1869,6 @@ export function useSubmit(): SubmitFunction {
 
   return React.useCallback<SubmitFunction>(
     async (target, options = {}) => {
-      validateClientSideSubmission();
-
       let { action, method, encType, formData, body } = getFormSubmissionInfo(
         target,
         basename
@@ -2117,7 +2050,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
 
   /**
     Loads data from a route. Useful for loading data imperatively inside of user events outside of a normal button or form, like a combobox or search input.
-      
+
     ```tsx
     let fetcher = useFetcher()
 
@@ -2144,7 +2077,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
 
 /**
   Useful for creating complex, dynamic user interfaces that require multiple, concurrent data interactions without causing a navigation.
-  
+
   Fetchers track their own, independent state and can be used to load data, submit forms, and generally interact with loaders and actions.
 
   ```tsx
@@ -2210,26 +2143,16 @@ export function useFetcher<TData = any>({
   );
 
   // Fetcher key handling
-  // OK to call conditionally to feature detect `useId`
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  let defaultKey = useIdImpl ? useIdImpl() : "";
+  let defaultKey = React.useId();
   let [fetcherKey, setFetcherKey] = React.useState<string>(key || defaultKey);
   if (key && key !== fetcherKey) {
     setFetcherKey(key);
-  } else if (!fetcherKey) {
-    // We will only fall through here when `useId` is not available
-    setFetcherKey(getUniqueFetcherId());
   }
 
   // Registration/cleanup
   React.useEffect(() => {
     router.getFetcher(fetcherKey);
-    return () => {
-      // Tell the router we've unmounted - if v7_fetcherPersist is enabled this
-      // will not delete immediately but instead queue up a delete after the
-      // fetcher returns to an `idle` state
-      router.deleteFetcher(fetcherKey);
-    };
+    return () => router.deleteFetcher(fetcherKey);
   }, [router, fetcherKey]);
 
   // Fetcher additions

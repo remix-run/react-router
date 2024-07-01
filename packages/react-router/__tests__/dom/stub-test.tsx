@@ -9,24 +9,24 @@ import {
   useLoaderData,
   useMatches,
   json,
-  createRemixStub,
+  createRoutesStub,
 } from "../../index";
 
 test("renders a route", () => {
-  let RemixStub = createRemixStub([
+  let RoutesStub = createRoutesStub([
     {
       path: "/",
       Component: () => <div>HOME</div>,
     },
   ]);
 
-  render(<RemixStub />);
+  render(<RoutesStub />);
 
   expect(screen.getByText("HOME")).toBeInTheDocument();
 });
 
 test("renders a nested route", () => {
-  let RemixStub = createRemixStub([
+  let RoutesStub = createRoutesStub([
     {
       Component() {
         return (
@@ -45,7 +45,7 @@ test("renders a nested route", () => {
     },
   ]);
 
-  render(<RemixStub />);
+  render(<RoutesStub />);
 
   expect(screen.getByText("ROOT")).toBeInTheDocument();
   expect(screen.getByText("INDEX")).toBeInTheDocument();
@@ -53,9 +53,10 @@ test("renders a nested route", () => {
 
 // eslint-disable-next-line jest/expect-expect
 test("loaders work", async () => {
-  let RemixStub = createRemixStub([
+  let RoutesStub = createRoutesStub([
     {
       path: "/",
+      HydrateFallback: () => null,
       Component() {
         let data = useLoaderData();
         return <pre data-testid="data">Message: {data.message}</pre>;
@@ -66,14 +67,14 @@ test("loaders work", async () => {
     },
   ]);
 
-  render(<RemixStub />);
+  render(<RoutesStub />);
 
   await waitFor(() => screen.findByText("Message: hello"));
 });
 
 // eslint-disable-next-line jest/expect-expect
 test("actions work", async () => {
-  let RemixStub = createRemixStub([
+  let RoutesStub = createRoutesStub([
     {
       path: "/",
       Component() {
@@ -91,7 +92,7 @@ test("actions work", async () => {
     },
   ]);
 
-  render(<RemixStub />);
+  render(<RoutesStub />);
 
   user.click(screen.getByText("Submit"));
   await waitFor(() => screen.findByText("Message: hello"));
@@ -100,7 +101,7 @@ test("actions work", async () => {
 // eslint-disable-next-line jest/expect-expect
 test("fetchers work", async () => {
   let count = 0;
-  let RemixStub = createRemixStub([
+  let RoutesStub = createRoutesStub([
     {
       path: "/",
       Component() {
@@ -120,7 +121,7 @@ test("fetchers work", async () => {
     },
   ]);
 
-  render(<RemixStub />);
+  render(<RoutesStub />);
 
   user.click(screen.getByText("idle 0"));
   await waitFor(() => screen.findByText("idle 1"));
@@ -135,7 +136,7 @@ test("can pass a predefined loader", () => {
     return json({ hi: "there" });
   }
 
-  createRemixStub([
+  createRoutesStub([
     {
       path: "/example",
       loader,
@@ -144,10 +145,11 @@ test("can pass a predefined loader", () => {
 });
 
 test("can pass context values", async () => {
-  let RemixStub = createRemixStub(
+  let RoutesStub = createRoutesStub(
     [
       {
         path: "/",
+        HydrateFallback: () => null,
         Component() {
           let data = useLoaderData() as { context: string };
           return (
@@ -177,7 +179,7 @@ test("can pass context values", async () => {
     { context: "hello" }
   );
 
-  render(<RemixStub initialEntries={["/hello"]} />);
+  render(<RoutesStub initialEntries={["/hello"]} />);
 
   expect(await screen.findByTestId("root")).toHaveTextContent(
     /context: hello/i
@@ -188,7 +190,7 @@ test("can pass context values", async () => {
 });
 
 test("all routes have ids", () => {
-  let RemixStub = createRemixStub([
+  let RoutesStub = createRoutesStub([
     {
       Component() {
         return (
@@ -218,7 +220,7 @@ test("all routes have ids", () => {
     },
   ]);
 
-  render(<RemixStub />);
+  render(<RoutesStub />);
 
   let matchesTextContent = screen.getByTestId("matches").textContent;
 

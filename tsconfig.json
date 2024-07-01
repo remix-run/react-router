@@ -3,10 +3,9 @@
   "references": [
     { "path": "packages/react-router" },
     { "path": "packages/react-router-dom" },
-    { "path": "packages/remix-dev" },
-    { "path": "packages/remix-express" },
-    { "path": "packages/remix-node" },
-    { "path": "packages/remix-serve" },
-    { "path": "packages/remix-server-runtime" }
+    { "path": "packages/react-router-dev" },
+    { "path": "packages/react-router-express" },
+    { "path": "packages/react-router-node" },
+    { "path": "packages/react-router-serve" }
   ]
 }

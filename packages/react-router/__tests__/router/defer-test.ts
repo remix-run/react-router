@@ -6,7 +6,12 @@ import {
   defer,
 } from "../../lib/router";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
-import { cleanup, createDeferred, setup } from "./utils/data-router-setup";
+import {
+  cleanup,
+  createDeferred,
+  getFetcherData,
+  setup,
+} from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
@@ -1377,13 +1382,13 @@ describe("deferred data", () => {
         lazy: dfd.promise,
       })
     );
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "loading",
       data: undefined,
     });
 
     await dfd.resolve("2");
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "idle",
       data: {
         critical: "1",
@@ -1401,7 +1406,7 @@ describe("deferred data", () => {
         lazy: dfd2.promise,
       })
     );
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "idle",
       data: {
         critical: "1",
@@ -1410,7 +1415,7 @@ describe("deferred data", () => {
     });
 
     await dfd2.resolve("4");
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "idle",
       data: {
         critical: "3",
@@ -1479,7 +1484,7 @@ describe("deferred data", () => {
         lazy: dfd1.promise,
       })
     );
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "loading",
       data: undefined,
     });
@@ -1494,7 +1499,7 @@ describe("deferred data", () => {
         lazy: dfd2.promise,
       })
     );
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "loading",
       data: undefined,
     });
@@ -1504,7 +1509,7 @@ describe("deferred data", () => {
     await dfd2.resolve("4");
     await loaderPromise1;
     await loaderPromise2;
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "idle",
       data: {
         critical: "3",
@@ -1582,7 +1587,7 @@ describe("deferred data", () => {
     });
 
     await B.actions.b.resolve("ACTION");
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "loading",
       data: "ACTION",
     });
@@ -1628,7 +1633,7 @@ describe("deferred data", () => {
         lazy: expect.trackedPromise("Yep!"),
       },
     });
-    expect(t.router.state.fetchers.get(key)).toMatchObject({
+    expect(t.fetchers[key]).toMatchObject({
       state: "idle",
       data: "ACTION",
     });
@@ -1657,6 +1662,7 @@ describe("deferred data", () => {
         },
       },
     });
+    let fetcherData = getFetcherData(router);
 
     // navigate to root, kicking off a reload of the root loader
     let key = "key";
@@ -1667,10 +1673,8 @@ describe("deferred data", () => {
     expect(router.state.loaderData).toEqual({
       root: { value: -1 },
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "loading",
-      data: undefined,
-    });
+    expect(router.getFetcher(key).state).toBe("loading");
+    expect(fetcherData.get(key)).toBe(undefined);
 
     // Interrupt with a revalidation
     router.revalidate();
@@ -1683,10 +1687,8 @@ describe("deferred data", () => {
     expect(router.state.loaderData).toEqual({
       root: { value: -1 },
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "loading",
-      data: undefined,
-    });
+    expect(router.getFetcher(key).state).toBe("loading");
+    expect(fetcherData.get(key)).toBe(undefined);
 
     // New deferreds should complete the revalidation
     dfds[2].resolve(2);
@@ -1696,10 +1698,8 @@ describe("deferred data", () => {
     expect(router.state.loaderData).toEqual({
       root: { value: expect.trackedPromise(2) },
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: { value: 3 },
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toEqual({ value: 3 });
 
     // Assert that both the route loader and fetcher loader were aborted
     expect(signals[0].aborted).toBe(true); // initial route

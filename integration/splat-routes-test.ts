@@ -18,7 +18,7 @@ test.describe("rendering", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export default function Root() {
             return (
@@ -55,7 +55,7 @@ test.describe("rendering", () => {
         `,
 
         "app/routes/nested.tsx": js`
-          import { Outlet } from "react-router-dom";
+          import { Outlet } from "react-router";
           export default function() {
             return (
               <div>

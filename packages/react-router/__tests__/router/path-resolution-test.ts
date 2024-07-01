@@ -138,7 +138,7 @@ describe("path resolution", () => {
             path: "*",
           },
         ],
-        "/foo",
+        "/foo/bar",
         false
       );
     });
@@ -521,7 +521,6 @@ describe("path resolution", () => {
   it("handles pathless relative routing when a basename is present", () => {
     let router = createRouter({
       routes: [{ path: "/path" }],
-      future: { v7_prependBasename: true },
       history: createMemoryHistory({ initialEntries: ["/base/path"] }),
       basename: "/base",
     }).initialize();

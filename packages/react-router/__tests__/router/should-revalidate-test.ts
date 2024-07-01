@@ -2,7 +2,7 @@ import { createMemoryHistory, createRouter, redirect } from "../../lib/router";
 import type { ShouldRevalidateFunctionArgs } from "../../lib/router";
 import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
 import { urlMatch } from "./utils/custom-matchers";
-import { cleanup } from "./utils/data-router-setup";
+import { cleanup, getFetcherData } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 
 interface CustomMatchers {
@@ -256,7 +256,7 @@ describe("shouldRevalidate", () => {
       nextParams: {},
       nextUrl: expect.urlMatch("http://localhost/child"),
       defaultShouldRevalidate: true,
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/child",
       formEncType: "application/x-www-form-urlencoded",
       actionResult: "ACTION",
@@ -310,7 +310,7 @@ describe("shouldRevalidate", () => {
       nextParams: {},
       nextUrl: expect.urlMatch("http://localhost/"),
       defaultShouldRevalidate: true,
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/child",
       formEncType: "application/x-www-form-urlencoded",
       actionResult: undefined,
@@ -364,7 +364,7 @@ describe("shouldRevalidate", () => {
       nextParams: {},
       nextUrl: expect.urlMatch("http://localhost/child"),
       defaultShouldRevalidate: true,
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/child",
       formEncType: "application/x-www-form-urlencoded",
       actionResult: "ACTION",
@@ -406,7 +406,7 @@ describe("shouldRevalidate", () => {
     // @ts-expect-error
     let arg = shouldRevalidate.mock.calls[0][0];
     let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/",
       formEncType: "application/json",
       text: undefined,
@@ -448,7 +448,7 @@ describe("shouldRevalidate", () => {
     // @ts-expect-error
     let arg = shouldRevalidate.mock.calls[0][0];
     let expectedArg: Partial<ShouldRevalidateFunctionArgs> = {
-      formMethod: "post",
+      formMethod: "POST",
       formAction: "/",
       formEncType: "text/plain",
       text: "hello world",
@@ -593,16 +593,15 @@ describe("shouldRevalidate", () => {
         },
       ],
     });
+    let fetcherData = getFetcherData(router);
     router.initialize();
     await tick();
 
     let key = "key";
     router.fetch(key, "root", "/fetch");
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe("FETCH 1");
     expect(shouldRevalidate.mock.calls.length).toBe(0);
 
     // Normal navigations should trigger fetcher shouldRevalidate with
@@ -617,10 +616,8 @@ describe("shouldRevalidate", () => {
       nextUrl: expect.urlMatch("http://localhost/child"),
       defaultShouldRevalidate: false,
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe("FETCH 1");
 
     router.navigate("/");
     await tick();
@@ -632,10 +629,8 @@ describe("shouldRevalidate", () => {
       nextUrl: expect.urlMatch("http://localhost/"),
       defaultShouldRevalidate: false,
     });
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe("FETCH 1");
 
     // Submission navigations should trigger fetcher shouldRevalidate with
     // defaultShouldRevalidate=true
@@ -644,10 +639,8 @@ describe("shouldRevalidate", () => {
       formData: createFormData({}),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe("FETCH 1");
     expect(shouldRevalidate.mock.calls.length).toBe(3);
     expect(shouldRevalidate.mock.calls[2][0]).toMatchObject({
       currentParams: {},
@@ -657,7 +650,7 @@ describe("shouldRevalidate", () => {
       formAction: "/child",
       formData: createFormData({}),
       formEncType: "application/x-www-form-urlencoded",
-      formMethod: "post",
+      formMethod: "POST",
       defaultShouldRevalidate: true,
     });
 
@@ -691,6 +684,7 @@ describe("shouldRevalidate", () => {
         },
       ],
     });
+    let fetcherData = getFetcherData(router);
     router.initialize();
     await tick();
 
@@ -700,10 +694,8 @@ describe("shouldRevalidate", () => {
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH",
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe("FETCH");
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
@@ -715,7 +707,7 @@ describe("shouldRevalidate", () => {
         "formAction": "/fetch",
         "formData": FormData {},
         "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "post",
+        "formMethod": "POST",
         "json": undefined,
         "nextParams": {},
         "nextUrl": "http://localhost/",
@@ -755,6 +747,7 @@ describe("shouldRevalidate", () => {
         },
       ],
     });
+    let fetcherData = getFetcherData(router);
     router.initialize();
     await tick();
 
@@ -764,10 +757,8 @@ describe("shouldRevalidate", () => {
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: undefined,
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe(undefined);
 
     let arg = shouldRevalidate.mock.calls[0][0];
     expect(arg).toMatchInlineSnapshot(`
@@ -779,7 +770,7 @@ describe("shouldRevalidate", () => {
         "formAction": "/fetch",
         "formData": FormData {},
         "formEncType": "application/x-www-form-urlencoded",
-        "formMethod": "post",
+        "formMethod": "POST",
         "json": undefined,
         "nextParams": {},
         "nextUrl": "http://localhost/",
@@ -871,6 +862,7 @@ describe("shouldRevalidate", () => {
         },
       },
     });
+    let fetcherData = getFetcherData(router);
     router.initialize();
     await tick();
 
@@ -881,10 +873,8 @@ describe("shouldRevalidate", () => {
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 1",
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe("FETCH 1");
     expect(router.state.loaderData).toMatchObject({
       index: "INDEX",
     });
@@ -894,10 +884,8 @@ describe("shouldRevalidate", () => {
       formData: createFormData({ key: "value" }),
     });
     await tick();
-    expect(router.state.fetchers.get(key)).toMatchObject({
-      state: "idle",
-      data: "FETCH 2",
-    });
+    expect(router.getFetcher(key).state).toBe("idle");
+    expect(fetcherData.get(key)).toBe("FETCH 2");
     expect(router.state.loaderData).toMatchObject({
       index: "INDEX",
     });

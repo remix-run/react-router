@@ -160,7 +160,7 @@ describe("scroll restoration", () => {
         }
       );
 
-      let nav1 = await t.navigate("/base/tasks");
+      let nav1 = await t.navigate("/tasks");
       await nav1.loaders.tasks.resolve("TASKS");
       expect(pathname).toBe("/base/tasks");
       expect(t.router.state.restoreScrollPosition).toBe(100);

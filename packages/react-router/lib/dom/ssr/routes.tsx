@@ -179,7 +179,6 @@ export function createClientRoutesWithHMRRevalidationOptOut(
     manifest,
     routeModulesCache,
     initialState,
-    future,
     isSpaMode,
     "",
     groupRoutesByParentId(manifest),
@@ -227,8 +226,7 @@ function noActionDefinedError(
 export function createClientRoutes(
   manifest: RouteManifest<EntryRoute>,
   routeModulesCache: RouteModules,
-  initialState: HydrationState,
-  future: FutureConfig,
+  initialState: HydrationState | null,
   isSpaMode: boolean,
   parentId: string = "",
   routesByParentId: Record<
@@ -472,7 +470,6 @@ export function createClientRoutes(
       manifest,
       routeModulesCache,
       initialState,
-      future,
       isSpaMode,
       route.id,
       routesByParentId,

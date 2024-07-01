@@ -18,8 +18,8 @@ test.beforeAll(async () => {
     "vite.config.js": await viteConfig.basic({ port }),
     "server.mjs": EXPRESS_SERVER({ port, loadContext: { value: "value" } }),
     "app/routes/_index.tsx": String.raw`
-      import { json } from "@react-router/node";
-      import { useLoaderData } from "react-router-dom";
+      import { json } from "react-router";
+      import { useLoaderData } from "react-router";
 
       export const loader = ({ context }) => {
         return json({ context })

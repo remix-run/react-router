@@ -19,7 +19,6 @@ export type {
   unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
-  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
@@ -78,7 +77,6 @@ export type {
   FormMethod,
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
-  V7_FormMethod,
   BrowserRouterProps,
   HashRouterProps,
   HistoryRouterProps,
@@ -104,8 +102,8 @@ export type {
   MetaArgs,
   MetaDescriptor,
   MetaFunction,
-  RemixServerProps,
-  RemixStubProps,
+  ServerRouterProps,
+  RoutesTestStubProps,
 } from "react-router";
 
 export {
@@ -190,8 +188,8 @@ export {
   Links,
   Scripts,
   PrefetchPageLinks,
-  RemixServer,
-  createRemixStub,
+  ServerRouter,
+  createRoutesStub,
 } from "react-router";
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -212,7 +210,7 @@ export type {
   UNSAFE_RouteModules,
   UNSAFE_FutureConfig,
   UNSAFE_AssetsManifest,
-  UNSAFE_RemixContextObject,
+  UNSAFE_FrameworkContextObject,
   UNSAFE_EntryRoute,
   UNSAFE_RouteManifest,
   UNSAFE_SingleFetchRedirectResult,
@@ -231,7 +229,7 @@ export {
   UNSAFE_useRouteId,
   UNSAFE_useRoutesImpl,
   UNSAFE_ErrorResponseImpl,
-  UNSAFE_RemixContext,
+  UNSAFE_FrameworkContext as UNSAFE_RemixContext,
   UNSAFE_decodeViaTurboStream,
   UNSAFE_SingleFetchRedirectSymbol,
 } from "react-router";

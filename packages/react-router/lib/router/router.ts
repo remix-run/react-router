@@ -33,8 +33,7 @@ import type {
   Submission,
   SuccessResult,
   UIMatch,
-  V7_FormMethod,
-  V7_MutationFormMethod,
+  AgnosticPatchRoutesOnMissFunction,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -47,6 +46,7 @@ import {
   isRouteErrorResponse,
   joinPaths,
   matchRoutes,
+  matchRoutesImpl,
   resolveTo,
   stripBasename,
 } from "./utils";
@@ -244,6 +244,17 @@ export interface Router {
 
   /**
    * @private
+   * PRIVATE DO NOT USE
+   *
+   * Patch additional children routes into an existing parent route
+   * @param routeId The parent route id or a callback function accepting `patch`
+   *                to perform batch patching
+   * @param children The additional children routes
+   */
+  patchRoutes(routeId: string | null, children: AgnosticRouteObject[]): void;
+
+  /**
+   * @private
    * PRIVATE - DO NOT USE
    *
    * HMR needs to pass in-flight route updates to React Router
@@ -354,11 +365,6 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  v7_fetcherPersist: boolean;
-  v7_normalizeFormMethod: boolean;
-  v7_partialHydration: boolean;
-  v7_prependBasename: boolean;
-  v7_relativeSplatPath: boolean;
   unstable_skipActionErrorRevalidation: boolean;
 }
 
@@ -377,6 +383,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
+  unstable_patchRoutesOnMiss?: AgnosticPatchRoutesOnMissFunction;
   unstable_dataStrategy?: DataStrategyFunction;
 }
 
@@ -678,6 +685,10 @@ type PendingActionResult = [string, SuccessResult | ErrorResult];
 
 interface HandleActionResult extends ShortCircuitable {
   /**
+   * Route matches which may have been updated from fog of war discovery
+   */
+  matches?: RouterState["matches"];
+  /**
    * Tuple for the returned or thrown value from the current action.  The routeId
    * is the action route for success and the bubbled boundary route for errors.
    */
@@ -685,6 +696,10 @@ interface HandleActionResult extends ShortCircuitable {
 }
 
 interface HandleLoadersResult extends ShortCircuitable {
+  /**
+   * Route matches which may have been updated from fog of war discovery
+   */
+  matches?: RouterState["matches"];
   /**
    * loaderData returned from the current set of loaders
    */
@@ -715,17 +730,17 @@ interface RevalidatingFetcher extends FetchLoadMatch {
 }
 
 const validMutationMethodsArr: MutationFormMethod[] = [
-  "post",
-  "put",
-  "patch",
-  "delete",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
 ];
 const validMutationMethods = new Set<MutationFormMethod>(
   validMutationMethodsArr
 );
 
 const validRequestMethodsArr: FormMethod[] = [
-  "get",
+  "GET",
   ...validMutationMethodsArr,
 ];
 const validRequestMethods = new Set<FormMethod>(validRequestMethodsArr);
@@ -789,7 +804,6 @@ export function createRouter(init: RouterInit): Router {
     typeof routerWindow !== "undefined" &&
     typeof routerWindow.document !== "undefined" &&
     typeof routerWindow.document.createElement !== "undefined";
-  const isServer = !isBrowser;
 
   invariant(
     init.routes.length > 0,
@@ -821,13 +835,10 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
+  let patchRoutesOnMissImpl = init.unstable_patchRoutesOnMiss;
+
   // Config driven behavior flags
   let future: FutureConfig = {
-    v7_fetcherPersist: false,
-    v7_normalizeFormMethod: false,
-    v7_partialHydration: false,
-    v7_prependBasename: false,
-    v7_relativeSplatPath: false,
     unstable_skipActionErrorRevalidation: false,
     ...init.future,
   };
@@ -852,7 +863,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialErrors: RouteData | null = null;
 
-  if (initialMatches == null) {
+  if (initialMatches == null && !patchRoutesOnMissImpl) {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the error boundary to take over
     let error = getInternalRouterError(404, {
@@ -864,17 +875,19 @@ export function createRouter(init: RouterInit): Router {
   }
 
   let initialized: boolean;
-  let hasLazyRoutes = initialMatches.some((m) => m.route.lazy);
-  let hasLoaders = initialMatches.some((m) => m.route.loader);
-  if (hasLazyRoutes) {
+  if (!initialMatches) {
+    // We need to run patchRoutesOnMiss in initialize()
+    initialized = false;
+    initialMatches = [];
+  } else if (initialMatches.some((m) => m.route.lazy)) {
     // All initialMatches need to be loaded before we're ready.  If we have lazy
     // functions around still then we'll need to run them in initialize()
     initialized = false;
-  } else if (!hasLoaders) {
+  } else if (!initialMatches.some((m) => m.route.loader)) {
     // If we've got no loaders to run, then we're good to go
     initialized = true;
-  } else if (future.v7_partialHydration) {
-    // If partial hydration is enabled, we're initialized so long as we were
+  } else {
+    // With "partial hydration", we're initialized so long as we were
     // provided with hydrationData for every route with a loader, and no loaders
     // were marked for explicit hydration
     let loaderData = init.hydrationData ? init.hydrationData.loaderData : null;
@@ -907,10 +920,6 @@ export function createRouter(init: RouterInit): Router {
     } else {
       initialized = initialMatches.every(isRouteInitialized);
     }
-  } else {
-    // Without partial hydration - we're initialized if we were provided any
-    // hydrationData - which is expected to be complete
-    initialized = init.hydrationData != null;
   }
 
   let router: Router;
@@ -995,9 +1004,9 @@ export function createRouter(init: RouterInit): Router {
   // Ref-count mounted fetchers so we know when it's ok to clean them up
   let activeFetchers = new Map<string, number>();
 
-  // Fetchers that have requested a delete when using v7_fetcherPersist,
-  // they'll be officially removed after they return to idle
-  let deletedFetchers = new Set<string>();
+  // Fetchers queued for deletion because they've been removed from the UI.
+  // These will be officially deleted after they return to idle
+  let fetchersQueuedForDeletion = new Set<string>();
 
   // Store DeferredData instances for active route matches.  When a
   // route loader returns defer() we stick one in here.  Then, when a nested
@@ -1008,6 +1017,13 @@ export function createRouter(init: RouterInit): Router {
   // Store blocker functions in a separate Map outside of router state since
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
+
+  // Map of pending patchRoutesOnMiss() promises (keyed by path/matches) so
+  // that we only kick them off once for a given combo
+  let pendingPatchRoutes = new Map<
+    string,
+    ReturnType<AgnosticPatchRoutesOnMissFunction>
+  >();
 
   // Flag to ignore the next history update, so we can revert the URL change on
   // a POP navigation that was blocked by the user without touching router state
@@ -1093,7 +1109,7 @@ export function createRouter(init: RouterInit): Router {
     // Kick off initial data load if needed.  Use Pop to avoid modifying history
     // Note we don't do any handling of lazy here.  For SPA's it'll get handled
     // in the normal navigation flow.  For SSR it's expected that lazy modules are
-    // resolved prior to router creation since we can't go into a fallbackElement
+    // resolved prior to router creation since we can't go into a fallback
     // UI for SSR'd apps
     if (!state.initialized) {
       startNavigation(HistoryAction.Pop, state.location, {
@@ -1137,42 +1153,39 @@ export function createRouter(init: RouterInit): Router {
       ...newState,
     };
 
-    // Prep fetcher cleanup so we can tell the UI which fetcher data entries
-    // can be removed
-    let completedFetchers: string[] = [];
-    let deletedFetchersKeys: string[] = [];
+    // Cleanup for all fetchers that have returned to idle since we only
+    // care about in-flight fetchers
+    // - If it's been unmounted then we can completely delete it
+    // - If it's still mounted we can remove it from `state.fetchers`, but we
+    //   need to keep it around in thing like `fetchLoadMatches`, etc. since
+    //   it may be called again
+    let unmountedFetchers: string[] = [];
+    let mountedFetchers: string[] = [];
 
-    if (future.v7_fetcherPersist) {
-      state.fetchers.forEach((fetcher, key) => {
-        if (fetcher.state === "idle") {
-          if (deletedFetchers.has(key)) {
-            // Unmounted from the UI and can be totally removed
-            deletedFetchersKeys.push(key);
-          } else {
-            // Returned to idle but still mounted in the UI, so semi-remains for
-            // revalidations and such
-            completedFetchers.push(key);
-          }
+    state.fetchers.forEach((fetcher, key) => {
+      if (fetcher.state === "idle") {
+        if (fetchersQueuedForDeletion.has(key)) {
+          unmountedFetchers.push(key);
+        } else {
+          mountedFetchers.push(key);
         }
-      });
-    }
+      }
+    });
 
     // Iterate over a local copy so that if flushSync is used and we end up
     // removing and adding a new subscriber due to the useCallback dependencies,
     // we don't get ourselves into a loop calling the new subscriber immediately
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
-        deletedFetchers: deletedFetchersKeys,
+        deletedFetchers: unmountedFetchers,
         unstable_viewTransitionOpts: opts.viewTransitionOpts,
         unstable_flushSync: opts.flushSync === true,
       })
     );
 
-    // Remove idle fetchers from state since we only care about in-flight fetchers.
-    if (future.v7_fetcherPersist) {
-      completedFetchers.forEach((key) => state.fetchers.delete(key));
-      deletedFetchersKeys.forEach((key) => deleteFetcher(key));
-    }
+    // Cleanup internally now that we've called our subscribers/updated state
+    unmountedFetchers.forEach((key) => deleteFetcher(key));
+    mountedFetchers.forEach((key) => state.fetchers.delete(key));
   }
 
   // Complete a navigation returning the state.navigation back to the IDLE_NAVIGATION
@@ -1239,6 +1252,7 @@ export function createRouter(init: RouterInit): Router {
         isMutationMethod(state.navigation.formMethod) &&
         location.state?._isRedirect !== true);
 
+    // Commit any in-flight routes at the end of the HMR revalidation "navigation"
     if (inFlightDataRoutes) {
       dataRoutes = inFlightDataRoutes;
       inFlightDataRoutes = undefined;
@@ -1338,14 +1352,11 @@ export function createRouter(init: RouterInit): Router {
       state.location,
       state.matches,
       basename,
-      future.v7_prependBasename,
       to,
-      future.v7_relativeSplatPath,
       opts?.fromRouteId,
       opts?.relative
     );
     let { path, submission, error } = normalizeNavigateOptions(
-      future.v7_normalizeFormMethod,
       false,
       normalizedPath,
       opts
@@ -1524,13 +1535,16 @@ export function createRouter(init: RouterInit): Router {
     let matches = matchRoutes(routesToUse, location, basename);
     let flushSync = (opts && opts.flushSync) === true;
 
+    let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
+    if (fogOfWar.active && fogOfWar.matches) {
+      matches = fogOfWar.matches;
+    }
+
     // Short circuit with a 404 on the root error boundary if we match nothing
     if (!matches) {
-      let error = getInternalRouterError(404, { pathname: location.pathname });
-      let { matches: notFoundMatches, route } =
-        getShortCircuitMatches(routesToUse);
-      // Cancel all pending deferred on 404s since we don't keep any routes
-      cancelActiveDeferreds();
+      let { error, notFoundMatches, route } = handleNavigational404(
+        location.pathname
+      );
       completeNavigation(
         location,
         {
@@ -1591,6 +1605,7 @@ export function createRouter(init: RouterInit): Router {
         location,
         opts.submission,
         matches,
+        fogOfWar.active,
         { replace: opts.replace, flushSync }
       );
 
@@ -1598,9 +1613,34 @@ export function createRouter(init: RouterInit): Router {
         return;
       }
 
+      // If we received a 404 from handleAction, it's because we couldn't lazily
+      // discover the destination route so we don't want to call loaders
+      if (actionResult.pendingActionResult) {
+        let [routeId, result] = actionResult.pendingActionResult;
+        if (
+          isErrorResult(result) &&
+          isRouteErrorResponse(result.error) &&
+          result.error.status === 404
+        ) {
+          pendingNavigationController = null;
+
+          completeNavigation(location, {
+            matches: actionResult.matches,
+            loaderData: {},
+            errors: {
+              [routeId]: result.error,
+            },
+          });
+          return;
+        }
+      }
+
+      matches = actionResult.matches || matches;
       pendingActionResult = actionResult.pendingActionResult;
       loadingNavigation = getLoadingNavigation(location, opts.submission);
       flushSync = false;
+      // No need to do fog of war matching again on loader execution
+      fogOfWar.active = false;
 
       // Create a GET request for the loaders
       request = createClientSideRequest(
@@ -1611,10 +1651,16 @@ export function createRouter(init: RouterInit): Router {
     }
 
     // Call loaders
-    let { shortCircuited, loaderData, errors } = await handleLoaders(
+    let {
+      shortCircuited,
+      matches: updatedMatches,
+      loaderData,
+      errors,
+    } = await handleLoaders(
       request,
       location,
       matches,
+      fogOfWar.active,
       loadingNavigation,
       opts && opts.submission,
       opts && opts.fetcherSubmission,
@@ -1634,7 +1680,7 @@ export function createRouter(init: RouterInit): Router {
     pendingNavigationController = null;
 
     completeNavigation(location, {
-      matches,
+      matches: updatedMatches || matches,
       ...getActionDataForCommit(pendingActionResult),
       loaderData,
       errors,
@@ -1648,6 +1694,7 @@ export function createRouter(init: RouterInit): Router {
     location: Location,
     submission: Submission,
     matches: AgnosticDataRouteMatch[],
+    isFogOfWar: boolean,
     opts: { replace?: boolean; flushSync?: boolean } = {}
   ): Promise<HandleActionResult> {
     interruptActiveLoads();
@@ -1655,6 +1702,48 @@ export function createRouter(init: RouterInit): Router {
     // Put us in a submitting state
     let navigation = getSubmittingNavigation(location, submission);
     updateState({ navigation }, { flushSync: opts.flushSync === true });
+
+    if (isFogOfWar) {
+      let discoverResult = await discoverRoutes(
+        matches,
+        location.pathname,
+        request.signal
+      );
+      if (discoverResult.type === "aborted") {
+        return { shortCircuited: true };
+      } else if (discoverResult.type === "error") {
+        let { error, notFoundMatches, route } = handleDiscoverRouteError(
+          location.pathname,
+          discoverResult
+        );
+        return {
+          matches: notFoundMatches,
+          pendingActionResult: [
+            route.id,
+            {
+              type: ResultType.error,
+              error,
+            },
+          ],
+        };
+      } else if (!discoverResult.matches) {
+        let { notFoundMatches, error, route } = handleNavigational404(
+          location.pathname
+        );
+        return {
+          matches: notFoundMatches,
+          pendingActionResult: [
+            route.id,
+            {
+              type: ResultType.error,
+              error,
+            },
+          ],
+        };
+      } else {
+        matches = discoverResult.matches;
+      }
+    }
 
     // Call our action and get the result
     let result: DataResult;
@@ -1714,20 +1803,23 @@ export function createRouter(init: RouterInit): Router {
       // to call and will commit it when we complete the navigation
       let boundaryMatch = findNearestBoundary(matches, actionMatch.route.id);
 
-      // By default, all submissions are REPLACE navigations, but if the
-      // action threw an error that'll be rendered in an errorElement, we fall
-      // back to PUSH so that the user can use the back button to get back to
-      // the pre-submission form location to try again
+      // By default, all submissions to the current location are REPLACE
+      // navigations, but if the action threw an error that'll be rendered in
+      // an errorElement, we fall back to PUSH so that the user can use the
+      // back button to get back to the pre-submission form location to try
+      // again
       if ((opts && opts.replace) !== true) {
         pendingAction = HistoryAction.Push;
       }
 
       return {
+        matches,
         pendingActionResult: [boundaryMatch.route.id, result],
       };
     }
 
     return {
+      matches,
       pendingActionResult: [actionMatch.route.id, result],
     };
   }
@@ -1738,6 +1830,7 @@ export function createRouter(init: RouterInit): Router {
     request: Request,
     location: Location,
     matches: AgnosticDataRouteMatch[],
+    isFogOfWar: boolean,
     overrideNavigation?: Navigation,
     submission?: Submission,
     fetcherSubmission?: Submission,
@@ -1757,6 +1850,70 @@ export function createRouter(init: RouterInit): Router {
       fetcherSubmission ||
       getSubmissionFromNavigation(loadingNavigation);
 
+    // If this is an uninterrupted revalidation, we remain in our current idle
+    // state.  If not, we need to switch to our loading state and load data,
+    // preserving any new action data or existing action data (in the case of
+    // a revalidation interrupting an actionReload)
+    // Also (with "partial hydration"), don't update the state for the initial
+    // data load since it's not a "navigation"
+    let shouldUpdateNavigationState =
+      !isUninterruptedRevalidation && !initialHydration;
+
+    // When fog of war is enabled, we enter our `loading` state earlier so we
+    // can discover new routes during the `loading` state.  We skip this if
+    // we've already run actions since we would have done our matching already.
+    // If the children() function threw then, we want to proceed with the
+    // partial matches it discovered.
+    if (isFogOfWar) {
+      if (shouldUpdateNavigationState) {
+        let actionData = getUpdatedActionData(pendingActionResult);
+        updateState(
+          {
+            navigation: loadingNavigation,
+            ...(actionData !== undefined ? { actionData } : {}),
+          },
+          {
+            flushSync,
+          }
+        );
+      }
+
+      let discoverResult = await discoverRoutes(
+        matches,
+        location.pathname,
+        request.signal
+      );
+
+      if (discoverResult.type === "aborted") {
+        return { shortCircuited: true };
+      } else if (discoverResult.type === "error") {
+        let { error, notFoundMatches, route } = handleDiscoverRouteError(
+          location.pathname,
+          discoverResult
+        );
+        return {
+          matches: notFoundMatches,
+          loaderData: {},
+          errors: {
+            [route.id]: error,
+          },
+        };
+      } else if (!discoverResult.matches) {
+        let { error, notFoundMatches, route } = handleNavigational404(
+          location.pathname
+        );
+        return {
+          matches: notFoundMatches,
+          loaderData: {},
+          errors: {
+            [route.id]: error,
+          },
+        };
+      } else {
+        matches = discoverResult.matches;
+      }
+    }
+
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let [matchesToLoad, revalidatingFetchers] = getMatchesToLoad(
       init.history,
@@ -1764,12 +1921,12 @@ export function createRouter(init: RouterInit): Router {
       matches,
       activeSubmission,
       location,
-      future.v7_partialHydration && initialHydration === true,
+      initialHydration === true,
       future.unstable_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
-      deletedFetchers,
+      fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
       routesToUse,
@@ -1809,53 +1966,20 @@ export function createRouter(init: RouterInit): Router {
       return { shortCircuited: true };
     }
 
-    // If this is an uninterrupted revalidation, we remain in our current idle
-    // state.  If not, we need to switch to our loading state and load data,
-    // preserving any new action data or existing action data (in the case of
-    // a revalidation interrupting an actionReload)
-    // If we have partialHydration enabled, then don't update the state for the
-    // initial data load since it's not a "navigation"
-    if (
-      !isUninterruptedRevalidation &&
-      (!future.v7_partialHydration || !initialHydration)
-    ) {
-      revalidatingFetchers.forEach((rf) => {
-        let fetcher = state.fetchers.get(rf.key);
-        let revalidatingFetcher = getLoadingFetcher(
-          undefined,
-          fetcher ? fetcher.data : undefined
-        );
-        state.fetchers.set(rf.key, revalidatingFetcher);
-      });
-
-      let actionData: Record<string, RouteData> | null | undefined;
-      if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
-        // This is cast to `any` currently because `RouteData`uses any and it
-        // would be a breaking change to use any.
-        // TODO: v7 - change `RouteData` to use `unknown` instead of `any`
-        actionData = {
-          [pendingActionResult[0]]: pendingActionResult[1].data as any,
-        };
-      } else if (state.actionData) {
-        if (Object.keys(state.actionData).length === 0) {
-          actionData = null;
-        } else {
-          actionData = state.actionData;
+    if (shouldUpdateNavigationState) {
+      let updates: Partial<RouterState> = {};
+      if (!isFogOfWar) {
+        // Only update navigation/actionNData if we didn't already do it above
+        updates.navigation = loadingNavigation;
+        let actionData = getUpdatedActionData(pendingActionResult);
+        if (actionData !== undefined) {
+          updates.actionData = actionData;
         }
       }
-
-      updateState(
-        {
-          navigation: loadingNavigation,
-          ...(actionData !== undefined ? { actionData } : {}),
-          ...(revalidatingFetchers.length > 0
-            ? { fetchers: new Map(state.fetchers) }
-            : {}),
-        },
-        {
-          flushSync,
-        }
-      );
+      if (revalidatingFetchers.length > 0) {
+        updates.fetchers = getUpdatedRevalidatingFetchers(revalidatingFetchers);
+      }
+      updateState(updates, { flushSync });
     }
 
     revalidatingFetchers.forEach((rf) => {
@@ -1945,8 +2069,8 @@ export function createRouter(init: RouterInit): Router {
       });
     });
 
-    // During partial hydration, preserve SSR errors for routes that don't re-run
-    if (future.v7_partialHydration && initialHydration && state.errors) {
+    // With "partial hydration", preserve SSR errors for routes that don't re-run
+    if (initialHydration && state.errors) {
       Object.entries(state.errors)
         .filter(([id]) => !matchesToLoad.some((m) => m.route.id === id))
         .forEach(([routeId, error]) => {
@@ -1960,10 +2084,44 @@ export function createRouter(init: RouterInit): Router {
       updatedFetchers || didAbortFetchLoads || revalidatingFetchers.length > 0;
 
     return {
+      matches,
       loaderData,
       errors,
       ...(shouldUpdateFetchers ? { fetchers: new Map(state.fetchers) } : {}),
     };
+  }
+
+  function getUpdatedActionData(
+    pendingActionResult: PendingActionResult | undefined
+  ): Record<string, RouteData> | null | undefined {
+    if (pendingActionResult && !isErrorResult(pendingActionResult[1])) {
+      // This is cast to `any` currently because `RouteData`uses any and it
+      // would be a breaking change to use any.
+      // TODO: v7 - change `RouteData` to use `unknown` instead of `any`
+      return {
+        [pendingActionResult[0]]: pendingActionResult[1].data as any,
+      };
+    } else if (state.actionData) {
+      if (Object.keys(state.actionData).length === 0) {
+        return null;
+      } else {
+        return state.actionData;
+      }
+    }
+  }
+
+  function getUpdatedRevalidatingFetchers(
+    revalidatingFetchers: RevalidatingFetcher[]
+  ) {
+    revalidatingFetchers.forEach((rf) => {
+      let fetcher = state.fetchers.get(rf.key);
+      let revalidatingFetcher = getLoadingFetcher(
+        undefined,
+        fetcher ? fetcher.data : undefined
+      );
+      state.fetchers.set(rf.key, revalidatingFetcher);
+    });
+    return new Map(state.fetchers);
   }
 
   // Trigger a fetcher load/submit for the given fetcher key
@@ -1973,14 +2131,6 @@ export function createRouter(init: RouterInit): Router {
     href: string | null,
     opts?: RouterFetchOptions
   ) {
-    if (isServer) {
-      throw new Error(
-        "router.fetch() was called during the server render, but it shouldn't be. " +
-          "You are likely calling a useFetcher() method in the body of your component. " +
-          "Try moving it to a useEffect or a callback."
-      );
-    }
-
     if (fetchControllers.has(key)) abortFetcher(key);
     let flushSync = (opts && opts.unstable_flushSync) === true;
 
@@ -1989,13 +2139,16 @@ export function createRouter(init: RouterInit): Router {
       state.location,
       state.matches,
       basename,
-      future.v7_prependBasename,
       href,
-      future.v7_relativeSplatPath,
       routeId,
       opts?.relative
     );
     let matches = matchRoutes(routesToUse, normalizedPath, basename);
+
+    let fogOfWar = checkFogOfWar(matches, routesToUse, normalizedPath);
+    if (fogOfWar.active && fogOfWar.matches) {
+      matches = fogOfWar.matches;
+    }
 
     if (!matches) {
       setFetcherError(
@@ -2008,7 +2161,6 @@ export function createRouter(init: RouterInit): Router {
     }
 
     let { path, submission, error } = normalizeNavigateOptions(
-      future.v7_normalizeFormMethod,
       true,
       normalizedPath,
       opts
@@ -2030,6 +2182,7 @@ export function createRouter(init: RouterInit): Router {
         path,
         match,
         matches,
+        fogOfWar.active,
         flushSync,
         submission
       );
@@ -2045,6 +2198,7 @@ export function createRouter(init: RouterInit): Router {
       path,
       match,
       matches,
+      fogOfWar.active,
       flushSync,
       submission
     );
@@ -2058,19 +2212,27 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     requestMatches: AgnosticDataRouteMatch[],
+    isFogOfWar: boolean,
     flushSync: boolean,
     submission: Submission
   ) {
     interruptActiveLoads();
     fetchLoadMatches.delete(key);
 
-    if (!match.route.action && !match.route.lazy) {
-      let error = getInternalRouterError(405, {
-        method: submission.formMethod,
-        pathname: path,
-        routeId: routeId,
-      });
-      setFetcherError(key, routeId, error, { flushSync });
+    function detectAndHandle405Error(m: AgnosticDataRouteMatch) {
+      if (!m.route.action && !m.route.lazy) {
+        let error = getInternalRouterError(405, {
+          method: submission.formMethod,
+          pathname: path,
+          routeId: routeId,
+        });
+        setFetcherError(key, routeId, error, { flushSync });
+        return true;
+      }
+      return false;
+    }
+
+    if (!isFogOfWar && detectAndHandle405Error(match)) {
       return;
     }
 
@@ -2080,7 +2242,6 @@ export function createRouter(init: RouterInit): Router {
       flushSync,
     });
 
-    // Call the action for the fetcher
     let abortController = new AbortController();
     let fetchRequest = createClientSideRequest(
       init.history,
@@ -2088,6 +2249,39 @@ export function createRouter(init: RouterInit): Router {
       abortController.signal,
       submission
     );
+
+    if (isFogOfWar) {
+      let discoverResult = await discoverRoutes(
+        requestMatches,
+        path,
+        fetchRequest.signal
+      );
+
+      if (discoverResult.type === "aborted") {
+        return;
+      } else if (discoverResult.type === "error") {
+        let { error } = handleDiscoverRouteError(path, discoverResult);
+        setFetcherError(key, routeId, error, { flushSync });
+        return;
+      } else if (!discoverResult.matches) {
+        setFetcherError(
+          key,
+          routeId,
+          getInternalRouterError(404, { pathname: path }),
+          { flushSync }
+        );
+        return;
+      } else {
+        requestMatches = discoverResult.matches;
+        match = getTargetMatch(requestMatches, path);
+
+        if (detectAndHandle405Error(match)) {
+          return;
+        }
+      }
+    }
+
+    // Call the action for the fetcher
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
@@ -2108,10 +2302,9 @@ export function createRouter(init: RouterInit): Router {
       return;
     }
 
-    // When using v7_fetcherPersist, we don't want errors bubbling up to the UI
-    // or redirects processed for unmounted fetchers so we just revert them to
-    // idle
-    if (future.v7_fetcherPersist && deletedFetchers.has(key)) {
+    // We don't want errors bubbling up to the UI or redirects processed for
+    // unmounted fetchers so we just revert them to idle
+    if (fetchersQueuedForDeletion.has(key)) {
       if (isRedirectResult(actionResult) || isErrorResult(actionResult)) {
         updateFetcherState(key, getDoneFetcher(undefined));
         return;
@@ -2180,7 +2373,7 @@ export function createRouter(init: RouterInit): Router {
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
-      deletedFetchers,
+      fetchersQueuedForDeletion,
       fetchLoadMatches,
       fetchRedirectIds,
       routesToUse,
@@ -2316,6 +2509,7 @@ export function createRouter(init: RouterInit): Router {
     path: string,
     match: AgnosticDataRouteMatch,
     matches: AgnosticDataRouteMatch[],
+    isFogOfWar: boolean,
     flushSync: boolean,
     submission?: Submission
   ) {
@@ -2329,13 +2523,41 @@ export function createRouter(init: RouterInit): Router {
       { flushSync }
     );
 
-    // Call the loader for this fetcher route match
     let abortController = new AbortController();
     let fetchRequest = createClientSideRequest(
       init.history,
       path,
       abortController.signal
     );
+
+    if (isFogOfWar) {
+      let discoverResult = await discoverRoutes(
+        matches,
+        path,
+        fetchRequest.signal
+      );
+
+      if (discoverResult.type === "aborted") {
+        return;
+      } else if (discoverResult.type === "error") {
+        let { error } = handleDiscoverRouteError(path, discoverResult);
+        setFetcherError(key, routeId, error, { flushSync });
+        return;
+      } else if (!discoverResult.matches) {
+        setFetcherError(
+          key,
+          routeId,
+          getInternalRouterError(404, { pathname: path }),
+          { flushSync }
+        );
+        return;
+      } else {
+        matches = discoverResult.matches;
+        match = getTargetMatch(matches, path);
+      }
+    }
+
+    // Call the loader for this fetcher route match
     fetchControllers.set(key, abortController);
 
     let originatingLoadId = incrementingLoadId;
@@ -2369,7 +2591,7 @@ export function createRouter(init: RouterInit): Router {
 
     // We don't want errors bubbling up or redirects followed for unmounted
     // fetchers, so short circuit here if it was removed from the UI
-    if (deletedFetchers.has(key)) {
+    if (fetchersQueuedForDeletion.has(key)) {
       updateFetcherState(key, getDoneFetcher(undefined));
       return;
     }
@@ -2556,8 +2778,7 @@ export function createRouter(init: RouterInit): Router {
                 request,
                 matchesToLoad[i].route.id,
                 matches,
-                basename,
-                future.v7_relativeSplatPath
+                basename
               ),
             };
           }
@@ -2683,13 +2904,11 @@ export function createRouter(init: RouterInit): Router {
   }
 
   function getFetcher<TData = any>(key: string): Fetcher<TData> {
-    if (future.v7_fetcherPersist) {
-      activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
-      // If this fetcher was previously marked for deletion, unmark it since we
-      // have a new instance
-      if (deletedFetchers.has(key)) {
-        deletedFetchers.delete(key);
-      }
+    activeFetchers.set(key, (activeFetchers.get(key) || 0) + 1);
+    // If this fetcher was previously marked for deletion, unmark it since we
+    // have a new instance
+    if (fetchersQueuedForDeletion.has(key)) {
+      fetchersQueuedForDeletion.delete(key);
     }
     return state.fetchers.get(key) || IDLE_FETCHER;
   }
@@ -2708,21 +2927,17 @@ export function createRouter(init: RouterInit): Router {
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
-    deletedFetchers.delete(key);
+    fetchersQueuedForDeletion.delete(key);
     state.fetchers.delete(key);
   }
 
-  function deleteFetcherAndUpdateState(key: string): void {
-    if (future.v7_fetcherPersist) {
-      let count = (activeFetchers.get(key) || 0) - 1;
-      if (count <= 0) {
-        activeFetchers.delete(key);
-        deletedFetchers.add(key);
-      } else {
-        activeFetchers.set(key, count);
-      }
+  function queueFetcherForDeletion(key: string): void {
+    let count = (activeFetchers.get(key) || 0) - 1;
+    if (count <= 0) {
+      activeFetchers.delete(key);
+      fetchersQueuedForDeletion.add(key);
     } else {
-      deleteFetcher(key);
+      activeFetchers.set(key, count);
     }
     updateState({ fetchers: new Map(state.fetchers) });
   }
@@ -2846,6 +3061,35 @@ export function createRouter(init: RouterInit): Router {
     }
   }
 
+  function handleNavigational404(pathname: string) {
+    let error = getInternalRouterError(404, { pathname });
+    let routesToUse = inFlightDataRoutes || dataRoutes;
+    let { matches, route } = getShortCircuitMatches(routesToUse);
+
+    // Cancel all pending deferred on 404s since we don't keep any routes
+    cancelActiveDeferreds();
+
+    return { notFoundMatches: matches, route, error };
+  }
+
+  function handleDiscoverRouteError(
+    pathname: string,
+    discoverResult: DiscoverRoutesErrorResult
+  ) {
+    let matches = discoverResult.partialMatches;
+    let route = matches[matches.length - 1].route;
+    let error = getInternalRouterError(400, {
+      type: "route-discovery",
+      routeId: route.id,
+      pathname,
+      message:
+        discoverResult.error != null && "message" in discoverResult.error
+          ? discoverResult.error
+          : String(discoverResult.error),
+    });
+    return { notFoundMatches: matches, route, error };
+  }
+
   function cancelActiveDeferreds(
     predicate?: (routeId: string) => boolean
   ): string[] {
@@ -2927,6 +3171,148 @@ export function createRouter(init: RouterInit): Router {
     return null;
   }
 
+  function checkFogOfWar(
+    matches: AgnosticDataRouteMatch[] | null,
+    routesToUse: AgnosticDataRouteObject[],
+    pathname: string
+  ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
+    if (patchRoutesOnMissImpl) {
+      if (!matches) {
+        let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+          routesToUse,
+          pathname,
+          basename,
+          true
+        );
+
+        return { active: true, matches: fogMatches || [] };
+      } else {
+        let leafRoute = matches[matches.length - 1].route;
+        if (leafRoute.path === "*") {
+          // If we matched a splat, it might only be because we haven't yet fetched
+          // the children that would match with a higher score, so let's fetch
+          // around and find out
+          let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+            routesToUse,
+            pathname,
+            basename,
+            true
+          );
+          return { active: true, matches: partialMatches };
+        }
+      }
+    }
+
+    return { active: false, matches: null };
+  }
+
+  type DiscoverRoutesSuccessResult = {
+    type: "success";
+    matches: AgnosticDataRouteMatch[] | null;
+  };
+  type DiscoverRoutesErrorResult = {
+    type: "error";
+    error: any;
+    partialMatches: AgnosticDataRouteMatch[];
+  };
+  type DiscoverRoutesAbortedResult = { type: "aborted" };
+  type DiscoverRoutesResult =
+    | DiscoverRoutesSuccessResult
+    | DiscoverRoutesErrorResult
+    | DiscoverRoutesAbortedResult;
+
+  async function discoverRoutes(
+    matches: AgnosticDataRouteMatch[],
+    pathname: string,
+    signal: AbortSignal
+  ): Promise<DiscoverRoutesResult> {
+    let partialMatches: AgnosticDataRouteMatch[] | null = matches;
+    let route =
+      partialMatches.length > 0
+        ? partialMatches[partialMatches.length - 1].route
+        : null;
+    while (true) {
+      let isNonHMR = inFlightDataRoutes == null;
+      let routesToUse = inFlightDataRoutes || dataRoutes;
+      try {
+        await loadLazyRouteChildren(
+          patchRoutesOnMissImpl!,
+          pathname,
+          partialMatches,
+          routesToUse,
+          manifest,
+          mapRouteProperties,
+          pendingPatchRoutes,
+          signal
+        );
+      } catch (e) {
+        return { type: "error", error: e, partialMatches };
+      } finally {
+        // If we are not in the middle of an HMR revalidation and we changed the
+        // routes, provide a new identity so when we `updateState` at the end of
+        // this navigation/fetch `router.routes` will be a new identity and
+        // trigger a re-run of memoized `router.routes` dependencies.
+        // HMR will already update the identity and reflow when it lands
+        // `inFlightDataRoutes` in `completeNavigation`
+        if (isNonHMR) {
+          dataRoutes = [...dataRoutes];
+        }
+      }
+
+      if (signal.aborted) {
+        return { type: "aborted" };
+      }
+
+      let newMatches = matchRoutes(routesToUse, pathname, basename);
+      let matchedSplat = false;
+      if (newMatches) {
+        let leafRoute = newMatches[newMatches.length - 1].route;
+
+        if (leafRoute.index) {
+          // If we found an index route, we can stop
+          return { type: "success", matches: newMatches };
+        }
+
+        if (leafRoute.path && leafRoute.path.length > 0) {
+          if (leafRoute.path === "*") {
+            // If we found a splat route, we can't be sure there's not a
+            // higher-scoring route down some partial matches trail so we need
+            // to check that out
+            matchedSplat = true;
+          } else {
+            // If we found a non-splat route, we can stop
+            return { type: "success", matches: newMatches };
+          }
+        }
+      }
+
+      let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
+        routesToUse,
+        pathname,
+        basename,
+        true
+      );
+
+      // If we are no longer partially matching anything, this was either a
+      // legit splat match above, or it's a 404.  Also avoid loops if the
+      // second pass results in the same partial matches
+      if (
+        !newPartialMatches ||
+        partialMatches.map((m) => m.route.id).join("-") ===
+          newPartialMatches.map((m) => m.route.id).join("-")
+      ) {
+        return { type: "success", matches: matchedSplat ? newMatches : null };
+      }
+
+      partialMatches = newPartialMatches;
+      route = partialMatches[partialMatches.length - 1].route;
+      if (route.path === "*") {
+        // The splat is still our most accurate partial, so run with it
+        return { type: "success", matches: partialMatches };
+      }
+    }
+  }
+
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
     manifest = {};
     inFlightDataRoutes = convertRoutesToDataRoutes(
@@ -2935,6 +3321,31 @@ export function createRouter(init: RouterInit): Router {
       undefined,
       manifest
     );
+  }
+
+  function patchRoutes(
+    routeId: string | null,
+    children: AgnosticRouteObject[]
+  ): void {
+    let isNonHMR = inFlightDataRoutes == null;
+    let routesToUse = inFlightDataRoutes || dataRoutes;
+    patchRoutesImpl(
+      routeId,
+      children,
+      routesToUse,
+      manifest,
+      mapRouteProperties
+    );
+
+    // If we are not in the middle of an HMR revalidation and we changed the
+    // routes, provide a new identity and trigger a reflow via `updateState`
+    // to re-run memoized `router.routes` dependencies.
+    // HMR will already update the identity and reflow when it lands
+    // `inFlightDataRoutes` in `completeNavigation`
+    if (isNonHMR) {
+      dataRoutes = [...dataRoutes];
+      updateState({});
+    }
   }
 
   router = {
@@ -2964,10 +3375,11 @@ export function createRouter(init: RouterInit): Router {
     createHref: (to: To) => init.history.createHref(to),
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
-    deleteFetcher: deleteFetcherAndUpdateState,
+    deleteFetcher: queueFetcherForDeletion,
     dispose,
     getBlocker,
     deleteBlocker,
+    patchRoutes,
     _internalFetchControllers: fetchControllers,
     _internalActiveDeferreds: activeDeferreds,
     // TODO: Remove setRoutes, it's temporary to avoid dealing with
@@ -2985,14 +3397,6 @@ export function createRouter(init: RouterInit): Router {
 
 export const UNSAFE_DEFERRED_SYMBOL = Symbol("deferred");
 
-/**
- * Future flags to toggle new feature behavior
- */
-export interface StaticHandlerFutureConfig {
-  v7_relativeSplatPath: boolean;
-  v7_throwAbortReason: boolean;
-}
-
 export interface CreateStaticHandlerOptions {
   basename?: string;
   /**
@@ -3000,7 +3404,7 @@ export interface CreateStaticHandlerOptions {
    */
   detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
-  future?: Partial<StaticHandlerFutureConfig>;
+  future?: {};
 }
 
 export function createStaticHandler(
@@ -3027,10 +3431,8 @@ export function createStaticHandler(
     mapRouteProperties = defaultMapRouteProperties;
   }
   // Config driven behavior flags
-  let future: StaticHandlerFutureConfig = {
-    v7_relativeSplatPath: false,
-    v7_throwAbortReason: false,
-    ...(opts ? opts.future : null),
+  let future = {
+    ...opts?.future,
   };
 
   let dataRoutes = convertRoutesToDataRoutes(
@@ -3259,7 +3661,7 @@ export function createStaticHandler(
     );
 
     try {
-      if (isMutationMethod(request.method.toLowerCase())) {
+      if (isMutationMethod(request.method)) {
         let result = await submit(
           request,
           matches,
@@ -3343,7 +3745,7 @@ export function createStaticHandler(
       result = results[0];
 
       if (request.signal.aborted) {
-        throwStaticHandlerAbortedError(request, isRouteRequest, future);
+        throwStaticHandlerAbortedError(request, isRouteRequest);
       }
     }
 
@@ -3524,7 +3926,7 @@ export function createStaticHandler(
     );
 
     if (request.signal.aborted) {
-      throwStaticHandlerAbortedError(request, isRouteRequest, future);
+      throwStaticHandlerAbortedError(request, isRouteRequest);
     }
 
     // Process and commit output from loaders
@@ -3590,8 +3992,7 @@ export function createStaticHandler(
             request,
             matchesToLoad[i].route.id,
             matches,
-            basename,
-            future.v7_relativeSplatPath
+            basename
           );
         }
         if (isResponse(result.result) && isRouteRequest) {
@@ -3641,15 +4042,16 @@ export function getStaticContextFromError(
 
 function throwStaticHandlerAbortedError(
   request: Request,
-  isRouteRequest: boolean,
-  future: StaticHandlerFutureConfig
+  isRouteRequest: boolean
 ) {
-  if (future.v7_throwAbortReason && request.signal.reason !== undefined) {
+  if (request.signal.reason !== undefined) {
     throw request.signal.reason;
   }
 
   let method = isRouteRequest ? "queryRoute" : "query";
-  throw new Error(`${method}() call aborted: ${request.method} ${request.url}`);
+  throw new Error(
+    `${method}() call aborted without an \`AbortSignal.reason\`: ${request.method} ${request.url}`
+  );
 }
 
 function isSubmissionNavigation(
@@ -3666,9 +4068,7 @@ function normalizeTo(
   location: Path,
   matches: AgnosticDataRouteMatch[],
   basename: string,
-  prependBasename: boolean,
   to: To | null,
-  v7_relativeSplatPath: boolean,
   fromRouteId?: string,
   relative?: RelativeRoutingType
 ) {
@@ -3693,7 +4093,7 @@ function normalizeTo(
   // Resolve the relative path
   let path = resolveTo(
     to ? to : ".",
-    getResolveToMatches(contextualMatches, v7_relativeSplatPath),
+    getResolveToMatches(contextualMatches),
     stripBasename(location.pathname, basename) || location.pathname,
     relative === "path"
   );
@@ -3722,7 +4122,7 @@ function normalizeTo(
   // this is a root navigation, then just use the raw basename which allows
   // the basename to have full control over the presence of a trailing slash
   // on root actions
-  if (prependBasename && basename !== "/") {
+  if (basename !== "/") {
     path.pathname =
       path.pathname === "/" ? basename : joinPaths([basename, path.pathname]);
   }
@@ -3733,7 +4133,6 @@ function normalizeTo(
 // Normalize navigation options by converting formMethod=GET formData objects to
 // URLSearchParams so they behave identically to links with query params
 function normalizeNavigateOptions(
-  normalizeFormMethod: boolean,
   isFetcher: boolean,
   path: string,
   opts?: BaseNavigateOrFetchOptions
@@ -3761,9 +4160,7 @@ function normalizeNavigateOptions(
 
   // Create a Submission on non-GET navigations
   let rawFormMethod = opts.formMethod || "get";
-  let formMethod = normalizeFormMethod
-    ? (rawFormMethod.toUpperCase() as V7_FormMethod)
-    : (rawFormMethod.toLowerCase() as FormMethod);
+  let formMethod = rawFormMethod.toUpperCase() as FormMethod;
   let formAction = stripHashFromPath(path);
 
   if (opts.body !== undefined) {
@@ -3906,7 +4303,7 @@ function getMatchesToLoad(
   isRevalidationRequired: boolean,
   cancelledDeferredRoutes: string[],
   cancelledFetcherLoads: string[],
-  deletedFetchers: Set<string>,
+  fetchersQueuedForDeletion: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
   routesToUse: AgnosticDataRouteObject[],
@@ -4001,13 +4398,12 @@ function getMatchesToLoad(
   fetchLoadMatches.forEach((f, key) => {
     // Don't revalidate:
     //  - on initial load (shouldn't be any fetchers then anyway)
-    //  - if fetcher won't be present in the subsequent render
-    //    - no longer matches the URL (v7_fetcherPersist=false)
-    //    - was unmounted but persisted due to v7_fetcherPersist=true
+    //  - if fetcher no longer matches the URL
+    //  - if fetcher was unmounted
     if (
       isInitialLoad ||
       !matches.some((m) => m.route.id === f.routeId) ||
-      deletedFetchers.has(key)
+      fetchersQueuedForDeletion.has(key)
     ) {
       return;
     }
@@ -4131,6 +4527,85 @@ function shouldRevalidateLoader(
   }
 
   return arg.defaultShouldRevalidate;
+}
+
+/**
+ * Idempotent utility to execute patchRoutesOnMiss() to lazily load route
+ * definitions and update the routes/routeManifest
+ */
+async function loadLazyRouteChildren(
+  patchRoutesOnMissImpl: AgnosticPatchRoutesOnMissFunction,
+  path: string,
+  matches: AgnosticDataRouteMatch[],
+  routes: AgnosticDataRouteObject[],
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction,
+  pendingRouteChildren: Map<string, ReturnType<typeof patchRoutesOnMissImpl>>,
+  signal: AbortSignal
+) {
+  let key = [path, ...matches.map((m) => m.route.id)].join("-");
+  try {
+    let pending = pendingRouteChildren.get(key);
+    if (!pending) {
+      pending = patchRoutesOnMissImpl({
+        path,
+        matches,
+        patch: (routeId, children) => {
+          if (!signal.aborted) {
+            patchRoutesImpl(
+              routeId,
+              children,
+              routes,
+              manifest,
+              mapRouteProperties
+            );
+          }
+        },
+      });
+      pendingRouteChildren.set(key, pending);
+    }
+
+    if (pending && isPromise<AgnosticRouteObject[]>(pending)) {
+      await pending;
+    }
+  } finally {
+    pendingRouteChildren.delete(key);
+  }
+}
+
+function patchRoutesImpl(
+  routeId: string | null,
+  children: AgnosticRouteObject[],
+  routesToUse: AgnosticDataRouteObject[],
+  manifest: RouteManifest,
+  mapRouteProperties: MapRoutePropertiesFunction
+) {
+  if (routeId) {
+    let route = manifest[routeId];
+    invariant(
+      route,
+      `No route found to patch children into: routeId = ${routeId}`
+    );
+    let dataChildren = convertRoutesToDataRoutes(
+      children,
+      mapRouteProperties,
+      [routeId, "patch", String(route.children?.length || "0")],
+      manifest
+    );
+    if (route.children) {
+      route.children.push(...dataChildren);
+    } else {
+      route.children = dataChildren;
+    }
+  } else {
+    let dataChildren = convertRoutesToDataRoutes(
+      children,
+      mapRouteProperties,
+      ["patch", String(routesToUse.length || "0")],
+      manifest
+    );
+    routesToUse.push(...dataChildren);
+  }
 }
 
 /**
@@ -4398,13 +4873,6 @@ async function callLoaderOrAction(
     } else {
       result = await runHandler(handler);
     }
-
-    invariant(
-      result.result !== undefined,
-      `You defined ${type === "action" ? "an action" : "a loader"} for route ` +
-        `"${match.route.id}" but didn't return anything from your \`${type}\` ` +
-        `function. Please return a value or \`null\`.`
-    );
   } catch (e) {
     // We should already be catching and converting normal handler executions to
     // HandlerResults and returning them, so anything that throws here is an
@@ -4487,8 +4955,7 @@ function normalizeRelativeRoutingRedirectResponse(
   request: Request,
   routeId: string,
   matches: AgnosticDataRouteMatch[],
-  basename: string,
-  v7_relativeSplatPath: boolean
+  basename: string
 ) {
   let location = response.headers.get("Location");
   invariant(
@@ -4505,9 +4972,7 @@ function normalizeRelativeRoutingRedirectResponse(
       new URL(request.url),
       trimmedMatches,
       basename,
-      true,
-      location,
-      v7_relativeSplatPath
+      location
     );
     response.headers.set("Location", location);
   }
@@ -4868,11 +5333,13 @@ function getInternalRouterError(
     routeId,
     method,
     type,
+    message,
   }: {
     pathname?: string;
     routeId?: string;
     method?: string;
-    type?: "defer-action" | "invalid-body";
+    type?: "defer-action" | "invalid-body" | "route-discovery";
+    message?: string;
   } = {}
 ) {
   let statusText = "Unknown Server Error";
@@ -4880,7 +5347,11 @@ function getInternalRouterError(
 
   if (status === 400) {
     statusText = "Bad Request";
-    if (method && pathname && routeId) {
+    if (type === "route-discovery") {
+      errorMessage =
+        `Unable to match URL "${pathname}" - the \`children()\` function for ` +
+        `route \`${routeId}\` threw the following error:\n${message}`;
+    } else if (method && pathname && routeId) {
       errorMessage =
         `You made a ${method} request to "${pathname}" but ` +
         `did not provide a \`loader\` for route "${routeId}", ` +
@@ -4954,6 +5425,10 @@ function isHashChangeOnly(a: Location, b: Location): boolean {
   return false;
 }
 
+function isPromise<T = unknown>(val: unknown): val is Promise<T> {
+  return typeof val === "object" && val != null && "then" in val;
+}
+
 function isHandlerResult(result: unknown): result is HandlerResult {
   return (
     result != null &&
@@ -5014,14 +5489,12 @@ function isRedirectResponse(result: any): result is Response {
   return status >= 300 && status <= 399 && location != null;
 }
 
-function isValidMethod(method: string): method is FormMethod | V7_FormMethod {
-  return validRequestMethods.has(method.toLowerCase() as FormMethod);
+function isValidMethod(method: string): method is FormMethod {
+  return validRequestMethods.has(method.toUpperCase() as FormMethod);
 }
 
-function isMutationMethod(
-  method: string
-): method is MutationFormMethod | V7_MutationFormMethod {
-  return validMutationMethods.has(method.toLowerCase() as MutationFormMethod);
+function isMutationMethod(method: string): method is MutationFormMethod {
+  return validMutationMethods.has(method.toUpperCase() as MutationFormMethod);
 }
 
 async function resolveDeferredResults(

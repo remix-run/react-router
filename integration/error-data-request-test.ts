@@ -21,7 +21,7 @@ test.describe("ErrorBoundary", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export default function Root() {
             return (
@@ -40,7 +40,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { Link, Form } from "react-router-dom";
+          import { Link, Form } from "react-router";
 
           export default function () {
             return <h1>Index</h1>
@@ -58,7 +58,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/loader-return-json.jsx`]: js`
-          import { json } from "@react-router/server-runtime";
+          import { json } from "react-router";
 
           export async function loader() {
             return json({ ok: true });
@@ -80,7 +80,7 @@ test.describe("ErrorBoundary", () => {
         `,
 
         [`app/routes/action-return-json.jsx`]: js`
-          import { json } from "@react-router/server-runtime";
+          import { json } from "react-router";
 
           export async function action() {
             return json({ ok: true });

@@ -1,11 +1,11 @@
 name: PR (Full)
 
-# PRs touching remix-dev will also run on Windows and OSX
+# PRs touching react-router-dev will also run on Windows and OSX
 
 on:
   pull_request:
     paths:
-      - "packages/remix-dev/**"
+      - "packages/react-router-dev/**"
       - "!**/*.md"
 
 concurrency:

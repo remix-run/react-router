@@ -30,8 +30,8 @@ test.describe("ErrorBoundary (thrown responses)", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-            import { json } from "@react-router/node";
-            import { Links, Meta, Outlet, Scripts, useMatches } from "react-router-dom";
+            import { json } from "react-router";
+            import { Links, Meta, Outlet, Scripts, useMatches } from "react-router";
 
             export function loader() {
               return json({ data: "ROOT LOADER" });
@@ -68,7 +68,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         "app/routes/_index.tsx": js`
-            import { Link, Form } from "react-router-dom";
+            import { Link, Form } from "react-router";
             export default function() {
               return (
                 <div>
@@ -94,7 +94,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         [`app/routes${HAS_BOUNDARY_ACTION_FILE}.jsx`]: js`
-            import { Form } from "react-router-dom";
+            import { Form } from "react-router";
             export async function action() {
               throw new Response("", { status: 401 })
             }
@@ -113,7 +113,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         [`app/routes${NO_BOUNDARY_ACTION_FILE}.jsx`]: js`
-            import { Form } from "react-router-dom";
+            import { Form } from "react-router";
             export function action() {
               throw new Response("", { status: 401 })
             }
@@ -129,7 +129,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         [`app/routes${HAS_BOUNDARY_LOADER_FILE}.jsx`]: js`
-            import { useRouteError } from "react-router-dom";
+            import { useRouteError } from "react-router";
             export function loader() {
               throw new Response("", { status: 401 })
             }
@@ -166,7 +166,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         "app/routes/action.tsx": js`
-            import { Outlet, useLoaderData } from "react-router-dom";
+            import { Outlet, useLoaderData } from "react-router";
 
             export function loader() {
               return "PARENT";
@@ -183,7 +183,7 @@ test.describe("ErrorBoundary (thrown responses)", () => {
           `,
 
         "app/routes/action.child-catch.tsx": js`
-            import { Form, useLoaderData, useRouteError } from "react-router-dom";
+            import { Form, useLoaderData, useRouteError } from "react-router";
 
             export function loader() {
               return "CHILD";

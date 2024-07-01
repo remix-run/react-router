@@ -121,9 +121,9 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
-  future: {
-    v7_relativeSplatPath: boolean;
-  };
+  // TODO: Re-introduce a singular `FutureConfig` once we land our first
+  // future.unstable_ or future.v8_ flag
+  future: {};
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(

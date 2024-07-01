@@ -35,7 +35,7 @@ test.describe("Vite dev", () => {
           });
         `,
         "app/root.tsx": js`
-          import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+          import { Links, Meta, Outlet, Scripts } from "react-router";
 
           export default function Root() {
             return (
@@ -57,8 +57,8 @@ test.describe("Vite dev", () => {
         `,
         "app/routes/_index.tsx": js`
           import { Suspense } from "react";
-          import { defer } from "@react-router/node";
-          import { Await, useLoaderData } from "react-router-dom";
+          import { defer } from "react-router";
+          import { Await, useLoaderData } from "react-router";
 
           export function loader() {
             let deferred = new Promise((resolve) => {
@@ -83,7 +83,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/set-cookies.tsx": js`
-          import { LoaderFunction } from "@react-router/node";
+          import { LoaderFunction } from "react-router";
 
           export const loader: LoaderFunction = () => {
             const headers = new Headers();
@@ -114,8 +114,8 @@ test.describe("Vite dev", () => {
           };
         `,
         "app/routes/get-cookies.tsx": js`
-          import { json, LoaderFunctionArgs } from "@react-router/node";
-          import { useLoaderData } from "react-router-dom"
+          import { json, LoaderFunctionArgs } from "react-router";
+          import { useLoaderData } from "react-router"
 
           export const loader = ({ request }: LoaderFunctionArgs) => json({cookies: request.headers.get("Cookie")});
 
@@ -140,8 +140,8 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/mdx.mdx": js`
-          import { json } from "@react-router/node";
-          import { useLoaderData } from "react-router-dom";
+          import { json } from "react-router";
+          import { useLoaderData } from "react-router";
 
           export const loader = () => {
             return json({
@@ -163,8 +163,8 @@ test.describe("Vite dev", () => {
         `,
         "app/routes/dotenv.tsx": js`
           import { useState, useEffect } from "react";
-          import { json } from "@react-router/node";
-          import { useLoaderData } from "react-router-dom";
+          import { json } from "react-router";
+          import { useLoaderData } from "react-router";
 
           export const loader = () => {
             return json({
@@ -191,8 +191,8 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/error-stacktrace.tsx": js`
-          import type { LoaderFunction, MetaFunction } from "@react-router/node";
-          import { Link, useLocation } from "react-router-dom";
+          import type { LoaderFunction, MetaFunction } from "react-router";
+          import { Link, useLocation } from "react-router";
 
           export const loader: LoaderFunction = ({ request }) => {
             if (request.url.includes("crash-loader")) {
@@ -224,7 +224,7 @@ test.describe("Vite dev", () => {
           }
         `,
         "app/routes/known-route-exports.tsx": js`
-          import { useMatches } from "react-router-dom";
+          import { useMatches } from "react-router";
 
           export const meta = () => [{
             title: "HMR meta: 0"

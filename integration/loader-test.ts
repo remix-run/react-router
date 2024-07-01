@@ -18,8 +18,8 @@ test.describe("loader", () => {
     fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-            import { json } from "@react-router/node";
-            import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+            import { json } from "react-router";
+            import { Links, Meta, Outlet, Scripts } from "react-router";
 
             export const loader = () => json("${ROOT_DATA}");
 
@@ -40,7 +40,7 @@ test.describe("loader", () => {
           `,
 
         "app/routes/_index.tsx": js`
-            import { json } from "@react-router/node";
+            import { json } from "react-router";
 
             export function loader() {
               return "${INDEX_DATA}"
@@ -75,7 +75,7 @@ test.describe("loader in an app", () => {
       await createFixture({
         files: {
           "app/root.tsx": js`
-            import { Outlet } from 'react-router-dom'
+            import { Outlet } from "react-router"
 
             export default function Root() {
               return (
@@ -89,7 +89,7 @@ test.describe("loader in an app", () => {
             }
           `,
           "app/routes/redirect.tsx": js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router";
             export const loader = () => redirect("/redirect-target");
             export default () => <div>Yo</div>
           `,
@@ -103,7 +103,7 @@ test.describe("loader in an app", () => {
           `,
 
           "app/routes/fetch-target.tsx": js`
-            import { json } from "@react-router/node";
+            import { json } from "react-router";
 
             export function loader() {
               return json({ message: "${FETCH_TARGET_TEXT}" })

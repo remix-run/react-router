@@ -170,8 +170,7 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      // Node 18 and 20 output different errors here
-      // Node 18 and 20 output different errors here
+      // Node 16/18 versus 20 output different errors here :/
       let expected = process.version.startsWith("v18")
         ? "Unexpected token } in JSON at position 15"
         : "Unexpected non-whitespace character after JSON at position 15";
@@ -207,7 +206,7 @@ describe("navigations", () => {
       );
       expect(t.router.state.loaderData).toEqual({});
 
-      // Node 18 and 20 output different errors here
+      // Node 16/18 versus 20 output different errors here :/
       let expected = process.version.startsWith("v18")
         ? "Unexpected token } in JSON at position 15"
         : "Unexpected non-whitespace character after JSON at position 15";
@@ -1153,7 +1152,7 @@ describe("navigations", () => {
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
       ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("post");
+      expect(navigation.formMethod).toBe("POST");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
@@ -1168,7 +1167,7 @@ describe("navigations", () => {
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
       ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("post");
+      expect(navigation.formMethod).toBe("POST");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
@@ -1202,7 +1201,7 @@ describe("navigations", () => {
         // @ts-expect-error
         new URLSearchParams(navigation.formData).toString()
       ).toBe("gosh=dang");
-      expect(navigation.formMethod).toBe("post");
+      expect(navigation.formMethod).toBe("POST");
       expect(navigation.location).toMatchObject({
         pathname: "/bar",
         search: "",
@@ -1228,7 +1227,7 @@ describe("navigations", () => {
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
       expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
-      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formMethod).toBe("GET");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location).toMatchObject({
         pathname: "/foo",
@@ -1256,7 +1255,7 @@ describe("navigations", () => {
       let navigation = t.router.state.navigation;
       expect(navigation.state).toBe("loading");
       expect(navigation.formData).toEqual(createFormData({ gosh: "dang" }));
-      expect(navigation.formMethod).toBe("get");
+      expect(navigation.formMethod).toBe("GET");
       expect(navigation.formEncType).toBe("application/x-www-form-urlencoded");
       expect(navigation.location?.pathname).toBe("/bar");
 

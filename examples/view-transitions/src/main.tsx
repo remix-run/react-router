@@ -246,13 +246,7 @@ function NavImage({ src, idx }: { src: string; idx: number }) {
 const rootElement = document.getElementById("root") as HTMLElement;
 ReactDOMClient.createRoot(rootElement).render(
   <React.StrictMode>
-    <RouterProvider
-      router={router}
-      future={{
-        // Wrap all state updates in React.startTransition()
-        v7_startTransition: true,
-      }}
-    />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 

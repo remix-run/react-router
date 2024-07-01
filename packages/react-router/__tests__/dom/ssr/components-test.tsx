@@ -10,9 +10,9 @@ import {
   RouterProvider,
 } from "../../../index";
 import { HydratedRouter } from "../../../lib/dom/ssr/browser";
-import { RemixContext } from "../../../lib/dom/ssr/components";
+import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
-import { RemixServer } from "../../../lib/dom/ssr/server";
+import { ServerRouter } from "../../../lib/dom/ssr/server";
 import "@testing-library/jest-dom/extend-expect";
 
 const setIntentEvents = ["focus", "mouseEnter", "touchStart"] as const;
@@ -70,9 +70,9 @@ function itPrefetchesPageLinks<
         });
 
         let { container, unmount } = render(
-          <RemixContext.Provider value={context}>
+          <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </RemixContext.Provider>
+          </FrameworkContext.Provider>
         );
 
         fireEvent[event](container.firstChild);
@@ -122,9 +122,9 @@ function itPrefetchesPageLinks<
         });
 
         let { container, unmount } = render(
-          <RemixContext.Provider value={context}>
+          <FrameworkContext.Provider value={context}>
             <RouterProvider router={router} />
-          </RemixContext.Provider>
+          </FrameworkContext.Provider>
         );
 
         fireEvent[event](container.firstChild);
@@ -148,7 +148,7 @@ describe("<NavLink />", () => {
   itPrefetchesPageLinks(NavLink);
 });
 
-describe("<RemixServer>", () => {
+describe("<ServerRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
     let staticHandlerContext = await createStaticHandler([{ path: "/" }]).query(
       new Request("http://localhost/")
@@ -204,7 +204,7 @@ describe("<RemixServer>", () => {
     jest.spyOn(console, "error");
 
     let { container } = render(
-      <RemixServer context={context} url="http://localhost/" />
+      <ServerRouter context={context} url="http://localhost/" />
     );
 
     expect(console.warn).toHaveBeenCalledWith(

@@ -48,7 +48,6 @@ import {
 
 import type {
   AwaitProps,
-  FutureConfig,
   IndexRouteProps,
   LayoutRouteProps,
   MemoryRouterProps,
@@ -57,8 +56,8 @@ import type {
   PathRouteProps,
   RouteProps,
   RouterProps,
-  RouterProviderProps,
   RoutesProps,
+  unstable_PatchRoutesOnMissFunction,
 } from "./lib/components";
 import {
   Await,
@@ -67,7 +66,6 @@ import {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createRoutesFromChildren,
   renderMatches,
@@ -135,7 +133,6 @@ export type {
   unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
-  FutureConfig,
   Hash,
   IndexRouteObject,
   IndexRouteProps,
@@ -168,7 +165,6 @@ export type {
   RouteObject,
   RouteProps,
   RouterProps,
-  RouterProviderProps,
   RoutesProps,
   Search,
   ShouldRevalidateFunction,
@@ -178,6 +174,7 @@ export type {
   Blocker,
   BlockerFunction,
   unstable_HandlerResult,
+  unstable_PatchRoutesOnMissFunction,
 };
 export {
   AbortedDeferredError,
@@ -188,7 +185,6 @@ export {
   Outlet,
   Route,
   Router,
-  RouterProvider,
   Routes,
   createMemoryRouter,
   createPath,
@@ -262,7 +258,6 @@ export type {
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
   Submission,
-  V7_FormMethod,
 } from "./lib/router";
 
 export type {
@@ -279,6 +274,7 @@ export type {
   SubmitFunction,
   FetcherSubmitFunction,
   FetcherWithComponents,
+  RouterProviderProps,
 } from "./lib/dom/lib";
 export {
   createBrowserRouter,
@@ -293,6 +289,7 @@ export {
   unstable_HistoryRouter,
   NavLink,
   Form,
+  RouterProvider,
   ScrollRestoration,
   useLinkClickHandler,
   useSearchParams,
@@ -330,6 +327,7 @@ export {
   PrefetchPageLinks,
 } from "./lib/dom/ssr/components";
 export type { ScriptsProps } from "./lib/dom/ssr/components";
+export type { EntryContext } from "./lib/dom/ssr/entry";
 export type {
   HtmlLinkDescriptor,
   LinkDescriptor,
@@ -345,10 +343,127 @@ export type {
   MetaFunction,
   LinksFunction,
 } from "./lib/dom/ssr/routeModules";
-export type { RemixServerProps } from "./lib/dom/ssr/server";
-export { RemixServer } from "./lib/dom/ssr/server";
-export type { RemixStubProps } from "./lib/dom/ssr/create-remix-stub";
-export { createRemixStub } from "./lib/dom/ssr/create-remix-stub";
+export type { ServerRouterProps } from "./lib/dom/ssr/server";
+export { ServerRouter } from "./lib/dom/ssr/server";
+export type { RoutesTestStubProps } from "./lib/dom/ssr/routes-test-stub";
+export { createRoutesStub } from "./lib/dom/ssr/routes-test-stub";
+export {
+  defineRoute,
+  type Match,
+  type MetaMatch,
+} from "./lib/router/define-route";
+
+// Expose old @remix-run/server-runtime API, minus duplicate APIs
+export { createCookieFactory, isCookie } from "./lib/server-runtime/cookies";
+export {
+  composeUploadHandlers as unstable_composeUploadHandlers,
+  parseMultipartFormData as unstable_parseMultipartFormData,
+} from "./lib/server-runtime/formData";
+// TODO: (v7) Clean up code paths for these exports
+// export {
+//   defer,
+//   json,
+//   redirect,
+//   redirectDocument,
+// } from "./lib/server-runtime/responses";
+export { createRequestHandler } from "./lib/server-runtime/server";
+export {
+  createSession,
+  createSessionStorageFactory,
+  isSession,
+} from "./lib/server-runtime/sessions";
+export { createCookieSessionStorageFactory } from "./lib/server-runtime/sessions/cookieStorage";
+export { createMemorySessionStorageFactory } from "./lib/server-runtime/sessions/memoryStorage";
+export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./lib/server-runtime/upload/memoryUploadHandler";
+export { MaxPartSizeExceededError } from "./lib/server-runtime/upload/errors";
+export { setDevServerHooks as unstable_setDevServerHooks } from "./lib/server-runtime/dev";
+
+export type {
+  CreateCookieFunction,
+  IsCookieFunction,
+} from "./lib/server-runtime/cookies";
+// TODO: (v7) Clean up code paths for these exports
+// export type {
+//   JsonFunction,
+//   RedirectFunction,
+// } from "./lib/server-runtime/responses";
+export type { CreateRequestHandlerFunction } from "./lib/server-runtime/server";
+export type {
+  CreateSessionFunction,
+  CreateSessionStorageFunction,
+  IsSessionFunction,
+} from "./lib/server-runtime/sessions";
+export type { CreateCookieSessionStorageFunction } from "./lib/server-runtime/sessions/cookieStorage";
+export type { CreateMemorySessionStorageFunction } from "./lib/server-runtime/sessions/memoryStorage";
+
+export type {
+  HandleDataRequestFunction,
+  HandleDocumentRequestFunction,
+  HandleErrorFunction,
+  ServerBuild,
+  ServerEntryModule,
+} from "./lib/server-runtime/build";
+
+export type {
+  UploadHandlerPart,
+  UploadHandler,
+} from "./lib/server-runtime/formData";
+export type {
+  MemoryUploadHandlerOptions,
+  MemoryUploadHandlerFilterArgs,
+} from "./lib/server-runtime/upload/memoryUploadHandler";
+
+export type {
+  Cookie,
+  CookieOptions,
+  CookieParseOptions,
+  CookieSerializeOptions,
+  CookieSignatureOptions,
+} from "./lib/server-runtime/cookies";
+
+export type { SignFunction, UnsignFunction } from "./lib/server-runtime/crypto";
+
+export type { AppLoadContext } from "./lib/server-runtime/data";
+
+export type {
+  // TODO: (v7) Clean up code paths for these exports
+  // HtmlLinkDescriptor,
+  // LinkDescriptor,
+  PageLinkDescriptor,
+} from "./lib/server-runtime/links";
+
+export type {
+  TypedDeferredData,
+  TypedResponse,
+} from "./lib/server-runtime/responses";
+
+export type {
+  // TODO: (v7) Clean up code paths for these exports
+  // ActionFunction,
+  // ActionFunctionArgs,
+  // LinksFunction,
+  // LoaderFunction,
+  // LoaderFunctionArgs,
+  // ServerRuntimeMetaArgs,
+  // ServerRuntimeMetaDescriptor,
+  // ServerRuntimeMetaFunction,
+  DataFunctionArgs,
+  HeadersArgs,
+  HeadersFunction,
+} from "./lib/server-runtime/routeModules";
+
+export type { RequestHandler } from "./lib/server-runtime/server";
+
+export type {
+  Session,
+  SessionData,
+  SessionIdStorageStrategy,
+  SessionStorage,
+  FlashSessionData,
+} from "./lib/server-runtime/sessions";
+
+// Private exports for internal use
+export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
@@ -377,7 +492,7 @@ export {
 };
 
 /** @internal */
-export { RemixContext as UNSAFE_RemixContext } from "./lib/dom/ssr/components";
+export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
 
 /** @internal */
 export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
@@ -386,7 +501,7 @@ export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeMod
 export type {
   FutureConfig as UNSAFE_FutureConfig,
   AssetsManifest as UNSAFE_AssetsManifest,
-  RemixContextObject as UNSAFE_RemixContextObject,
+  FrameworkContextObject as UNSAFE_FrameworkContextObject,
 } from "./lib/dom/ssr/entry";
 
 /** @internal */

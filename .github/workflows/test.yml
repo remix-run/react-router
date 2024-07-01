@@ -65,6 +65,3 @@ jobs:
 
       - name: 🧪 Run tests
         run: pnpm test
-
-      - name: Check bundle size
-        run: pnpm size

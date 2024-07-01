@@ -33,14 +33,14 @@ test.describe("set-cookie revalidation", () => {
           `,
 
         "app/root.tsx": js`
-            import { json } from "@react-router/node";
+            import { json } from "react-router";
             import {
               Links,
               Meta,
               Outlet,
               Scripts,
               useLoaderData,
-            } from "react-router-dom";
+            } from "react-router";
 
             import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 
@@ -75,7 +75,7 @@ test.describe("set-cookie revalidation", () => {
           `,
 
         "app/routes/_index.tsx": js`
-            import { Link } from "react-router-dom";
+            import { Link } from "react-router";
 
             export default function Index() {
               return (
@@ -93,7 +93,7 @@ test.describe("set-cookie revalidation", () => {
           `,
 
         "app/routes/protected.tsx": js`
-            import { redirect } from "@react-router/node";
+            import { redirect } from "react-router";
 
             import { sessionStorage, MESSAGE_KEY } from "~/session.server";
 

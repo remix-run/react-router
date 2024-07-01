@@ -44,14 +44,14 @@ export const viteConfig = {
 
     return dedent`
       import { vitePlugin as reactRouter } from "@react-router/dev";
-      import envOnly from "vite-env-only";
+      import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
       export default {
         ${await viteConfig.server(args)}
         plugins: [
           reactRouter(${JSON.stringify(pluginOptions)}),
-          envOnly(),
+          envOnlyMacros(),
           tsconfigPaths()
         ],
       };

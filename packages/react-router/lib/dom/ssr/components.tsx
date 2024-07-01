@@ -10,7 +10,7 @@ import {
   type RouterState,
 } from "../../router";
 
-import type { RemixContextObject } from "./entry";
+import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
 import {
   getKeyedLinksForMatches,
@@ -30,6 +30,7 @@ import type {
 import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
 import { useLocation, useNavigation } from "../../hooks";
+import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 
 // TODO: Temporary shim until we figure out the way to handle typings in v7
 export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
@@ -53,21 +54,32 @@ function useDataRouterStateContext() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// RemixContext
+// FrameworkContext
 
-export const RemixContext = React.createContext<RemixContextObject | undefined>(
-  undefined
-);
-RemixContext.displayName = "Remix";
+export const FrameworkContext = React.createContext<
+  FrameworkContextObject | undefined
+>(undefined);
+FrameworkContext.displayName = "FrameworkContext";
 
-export function useRemixContext(): RemixContextObject {
-  let context = React.useContext(RemixContext);
-  invariant(context, "You must render this element inside a <Remix> element");
+export function useFrameworkContext(): FrameworkContextObject {
+  let context = React.useContext(FrameworkContext);
+  invariant(
+    context,
+    "You must render this element inside a <HydratedRouter> element"
+  );
   return context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Public API
+
+/**
+ * Defines the discovery behavior of the link:
+ *
+ * - "render" - default, discover the route when the link renders
+ * - "none" - don't eagerly discover, only discover if the link is clicked
+ */
+export type DiscoverBehavior = "render" | "none";
 
 /**
  * Defines the prefetching behavior of the link:
@@ -91,7 +103,7 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
   prefetch: PrefetchBehavior,
   theirElementProps: PrefetchHandlers
 ): [boolean, React.RefObject<T>, PrefetchHandlers] {
-  let remixContext = React.useContext(RemixContext);
+  let frameworkContext = React.useContext(FrameworkContext);
   let [maybePrefetch, setMaybePrefetch] = React.useState(false);
   let [shouldPrefetch, setShouldPrefetch] = React.useState(false);
   let { onFocus, onBlur, onMouseEnter, onMouseLeave, onTouchStart } =
@@ -139,8 +151,8 @@ export function usePrefetchBehavior<T extends HTMLAnchorElement>(
     setShouldPrefetch(false);
   };
 
-  // No prefetching if not using Remix-style SSR
-  if (!remixContext) {
+  // No prefetching if not using SSR
+  if (!frameworkContext) {
     return [false, ref, {}];
   }
 
@@ -219,7 +231,8 @@ function getActiveMatches(
   @category Components
  */
 export function Links() {
-  let { isSpaMode, manifest, routeModules, criticalCss } = useRemixContext();
+  let { isSpaMode, manifest, routeModules, criticalCss } =
+    useFrameworkContext();
   let { errors, matches: routerMatches } = useDataRouterStateContext();
 
   let matches = getActiveMatches(routerMatches, errors, isSpaMode);
@@ -279,7 +292,7 @@ export function PrefetchPageLinks({
 }
 
 function useKeyedPrefetchLinks(matches: AgnosticDataRouteMatch[]) {
-  let { manifest, routeModules } = useRemixContext();
+  let { manifest, routeModules } = useFrameworkContext();
 
   let [keyedPrefetchLinks, setKeyedPrefetchLinks] = React.useState<
     KeyedHtmlLinkDescriptor[]
@@ -312,7 +325,7 @@ function PrefetchPageLinksImpl({
   matches: AgnosticDataRouteMatch[];
 }) {
   let location = useLocation();
-  let { manifest, routeModules } = useRemixContext();
+  let { manifest, routeModules } = useFrameworkContext();
   let { matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
@@ -412,7 +425,7 @@ function PrefetchPageLinksImpl({
   @category Components
  */
 export function Meta() {
-  let { isSpaMode, routeModules } = useRemixContext();
+  let { isSpaMode, routeModules } = useFrameworkContext();
   let {
     errors,
     matches: routerMatches,
@@ -545,7 +558,7 @@ function isValidMetaTag(tagName: unknown): tagName is "meta" | "link" {
 }
 
 /**
- * Tracks whether Remix has finished hydrating or not, so scripts can be skipped
+ * Tracks whether hydration is finished, so scripts can be skipped
  * during client-side updates.
  */
 let isHydrated = false;
@@ -596,12 +609,12 @@ export type ScriptsProps = Omit<
  */
 export function Scripts(props: ScriptsProps) {
   let { manifest, serverHandoffString, isSpaMode, renderMeta } =
-    useRemixContext();
+    useFrameworkContext();
   let { router, static: isStatic, staticContext } = useDataRouterContext();
   let { matches: routerMatches } = useDataRouterStateContext();
-  let navigation = useNavigation();
+  let enableFogOfWar = isFogOfWarEnabled(isSpaMode);
 
-  // Let <RemixServer> know that we hydrated and we should render the single
+  // Let <ServerRouter> know that we hydrated and we should render the single
   // fetch streaming scripts
   if (renderMeta) {
     renderMeta.didRenderScripts = true;
@@ -631,7 +644,7 @@ export function Scripts(props: ScriptsProps) {
           manifest.hmr?.runtime
             ? `import ${JSON.stringify(manifest.hmr.runtime)};`
             : ""
-        }import ${JSON.stringify(manifest.url)};
+        }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
 ${matches
   .map(
     (match, index) =>
@@ -640,11 +653,19 @@ ${matches
       )};`
   )
   .join("\n")}
-window.__remixRouteModules = {${matches
-          .map(
-            (match, index) => `${JSON.stringify(match.route.id)}:route${index}`
-          )
-          .join(",")}};
+  ${
+    enableFogOfWar
+      ? // Inline a minimal manifest with the SSR matches
+        `window.__remixManifest = ${JSON.stringify(
+          getPartialManifest(manifest, router),
+          null,
+          2
+        )};`
+      : ""
+  }
+  window.__remixRouteModules = {${matches
+    .map((match, index) => `${JSON.stringify(match.route.id)}:route${index}`)
+    .join(",")}};
 
 import(${JSON.stringify(manifest.entry.module)});`;
 
@@ -671,27 +692,7 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  // avoid waterfall when importing the next route module
-  let nextMatches = React.useMemo(() => {
-    if (navigation.location) {
-      // FIXME: can probably use transitionManager `nextMatches`
-      let matches = matchRoutes(
-        router.routes,
-        navigation.location,
-        router.basename
-      );
-      invariant(
-        matches,
-        `No routes match path "${navigation.location.pathname}"`
-      );
-      return matches;
-    }
-
-    return [];
-  }, [navigation.location, router.routes, router.basename]);
-
   let routePreloads = matches
-    .concat(nextMatches)
     .map((match) => {
       let route = manifest.routes[match.route.id];
       return (route.imports || []).concat([route.module]);
@@ -702,11 +703,13 @@ import(${JSON.stringify(manifest.entry.module)});`;
 
   return isHydrated ? null : (
     <>
-      <link
-        rel="modulepreload"
-        href={manifest.url}
-        crossOrigin={props.crossOrigin}
-      />
+      {!enableFogOfWar ? (
+        <link
+          rel="modulepreload"
+          href={manifest.url}
+          crossOrigin={props.crossOrigin}
+        />
+      ) : null}
       <link
         rel="modulepreload"
         href={manifest.entry.module}

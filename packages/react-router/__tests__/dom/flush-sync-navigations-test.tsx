@@ -48,9 +48,7 @@ describe("flushSync", () => {
         window: getWindowImpl("/"),
       }
     );
-    render(
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    );
+    render(<RouterProvider router={router} />);
 
     // This isn't the best way to test this but it seems that startTransition is
     // performing sync updates in the test/JSDOM/whatever environment which is
@@ -127,9 +125,7 @@ describe("flushSync", () => {
         window: getWindowImpl("/"),
       }
     );
-    render(
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    );
+    render(<RouterProvider router={router} />);
 
     // This isn't the best way to test this but it seems that startTransition is
     // performing sync updates in the test/JSDOM/whatever environment which is
@@ -191,9 +187,7 @@ describe("flushSync", () => {
         window: getWindowImpl("/"),
       }
     );
-    render(
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    );
+    render(<RouterProvider router={router} />);
 
     // This isn't the best way to test this but it seems that startTransition is
     // performing sync updates in the test/JSDOM/whatever environment which is
@@ -256,9 +250,7 @@ describe("flushSync", () => {
         window: getWindowImpl("/"),
       }
     );
-    render(
-      <RouterProvider router={router} future={{ v7_startTransition: true }} />
-    );
+    render(<RouterProvider router={router} />);
 
     // This isn't the best way to test this but it seems that startTransition is
     // performing sync updates in the test/JSDOM/whatever environment which is

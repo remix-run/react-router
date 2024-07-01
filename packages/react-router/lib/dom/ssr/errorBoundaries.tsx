@@ -1,11 +1,12 @@
 import * as React from "react";
 
-import { Scripts, useRemixContext } from "./components";
+import { Scripts, useFrameworkContext } from "./components";
 import type { Location } from "../../router/history";
 import { isRouteErrorResponse } from "../../router/utils";
 
 type RemixErrorBoundaryProps = React.PropsWithChildren<{
   location: Location;
+  isOutsideRemixApp?: boolean;
   error?: Error;
 }>;
 
@@ -53,7 +54,12 @@ export class RemixErrorBoundary extends React.Component<
 
   render() {
     if (this.state.error) {
-      return <RemixRootDefaultErrorBoundary error={this.state.error} />;
+      return (
+        <RemixRootDefaultErrorBoundary
+          error={this.state.error}
+          isOutsideRemixApp={true}
+        />
+      );
     } else {
       return this.props.children;
     }
@@ -63,7 +69,13 @@ export class RemixErrorBoundary extends React.Component<
 /**
  * When app's don't provide a root level ErrorBoundary, we default to this.
  */
-export function RemixRootDefaultErrorBoundary({ error }: { error: unknown }) {
+export function RemixRootDefaultErrorBoundary({
+  error,
+  isOutsideRemixApp,
+}: {
+  error: unknown;
+  isOutsideRemixApp?: boolean;
+}) {
   console.error(error);
 
   let heyDeveloper = (
@@ -103,7 +115,10 @@ export function RemixRootDefaultErrorBoundary({ error }: { error: unknown }) {
   }
 
   return (
-    <BoundaryShell title="Application Error!">
+    <BoundaryShell
+      title="Application Error!"
+      isOutsideRemixApp={isOutsideRemixApp}
+    >
       <h1 style={{ fontSize: "24px" }}>Application Error</h1>
       <pre
         style={{
@@ -123,15 +138,33 @@ export function RemixRootDefaultErrorBoundary({ error }: { error: unknown }) {
 export function BoundaryShell({
   title,
   renderScripts,
+  isOutsideRemixApp,
   children,
 }: {
   title: string;
   renderScripts?: boolean;
+  isOutsideRemixApp?: boolean;
   children: React.ReactNode | React.ReactNode[];
 }) {
-  let { routeModules } = useRemixContext();
+  let { routeModules } = useFrameworkContext();
 
-  if (routeModules.root?.Layout) {
+  // Generally speaking, when the root route has a Layout we want to use that
+  // as the app shell instead of the default `BoundaryShell` wrapper markup below.
+  // This is true for `loader`/`action` errors, most render errors, and
+  // `HydrateFallback` scenarios.
+
+  // However, render errors thrown from the `Layout` present a bit of an issue
+  // because if the `Layout` itself throws during the `ErrorBoundary` pass and
+  // we bubble outside the `RouterProvider` to the wrapping `RemixErrorBoundary`,
+  // by returning only `children` here we'll be trying to append a `<div>` to
+  // the `document` and the DOM will throw, putting React into an error/hydration
+  // loop.
+
+  // Instead, if we're ever rendering from the outermost `RemixErrorBoundary`
+  // during hydration that wraps `RouterProvider`, then we can't trust the
+  // `Layout` and should fallback to the default app shell so we're always
+  // returning an `<html>` document.
+  if (routeModules.root?.Layout && !isOutsideRemixApp) {
     return children;
   }
 
