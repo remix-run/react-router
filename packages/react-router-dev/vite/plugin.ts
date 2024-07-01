@@ -42,6 +42,7 @@ import {
   resolvePublicPath,
 } from "../config";
 import * as defineRoute from "./define-route";
+import exp from "node:constants";
 
 export async function resolveViteConfig({
   configFile,
@@ -997,12 +998,28 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           let reexports = sourceExports
             .filter(
               (exportName) =>
-                (options?.ssr &&
+                exportName !== "default" &&
+                ((options?.ssr &&
                   SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-                CLIENT_ROUTE_EXPORTS.includes(exportName)
+                  CLIENT_ROUTE_EXPORTS.includes(exportName))
             )
             .join(", ");
-          return `export { ${reexports} } from "./${routeFileName}";`;
+          return `
+            ${
+              sourceExports.includes("default")
+                ? `
+                  import { createElement } from "react";
+
+                  import { default as Component } from "./${routeFileName}";
+
+                  export default function Route() {
+                    return createElement(Component)
+                  }
+                `
+                : ""
+            }
+            export { ${reexports} } from "./${routeFileName}";
+          `;
         }
       },
       buildStart() {
