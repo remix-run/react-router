@@ -439,7 +439,7 @@ const router = createBrowserRouter(
 );
 ```
 
-In the above example, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By calling `patch`, it the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
+In the above example, if the user clicks a link to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By calling `patch`, the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
 **Patching new root-level routes**
 
