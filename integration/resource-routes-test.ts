@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { UNSAFE_ServerMode as ServerMode } from "@react-router/server-runtime";
+import { UNSAFE_ServerMode as ServerMode } from "react-router";
 import {
   createAppFixture,
   createFixture,
@@ -22,7 +22,7 @@ test.describe("loader in an app", async () => {
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
-          import { Form, Link } from "react-router-dom";
+          import { Form, Link } from "react-router";
 
           export default () => (
             <>
@@ -42,12 +42,12 @@ test.describe("loader in an app", async () => {
           export default () => <div data-testid="redirected">You were redirected</div>;
         `,
         "app/routes/redirect.tsx": js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
 
           export let loader = () => redirect("/redirected");
         `,
         "app/routes/redirect-to.tsx": js`
-          import { redirect } from "@react-router/node";
+          import { redirect } from "react-router";
 
           export let action = async ({ request }) => {
             let formData = await request.formData();
@@ -58,17 +58,17 @@ test.describe("loader in an app", async () => {
           export default () => <div data-testid="redirect-destination">You made it!</div>
         `,
         "app/routes/defer.tsx": js`
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
 
           export let loader = () => defer({ data: 'whatever' });
         `,
         "app/routes/data[.]json.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router";
           export let loader = () => json({hello: "world"});
         `,
         "app/assets/icon.svg": SVG_CONTENTS,
         "app/routes/[manifest.webmanifest].tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router";
           import iconUrl from "~/assets/icon.svg";
           export  function loader() {
             return json(
@@ -110,14 +110,14 @@ test.describe("loader in an app", async () => {
           }
         `,
         "app/routes/no-action.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router";
           export let loader = () => {
             return json({ ok: true });
           }
         `,
         "app/routes/$.tsx": js`
-          import { json } from "@react-router/node";
-          import { useRouteError } from "react-router-dom";
+          import { json } from "react-router";
+          import { useRouteError } from "react-router";
           export function loader({ request }) {
             throw json({ message: new URL(request.url).pathname + ' not found' }, {
               status: 404
@@ -278,11 +278,11 @@ test.describe("Development server", async () => {
       {
         files: {
           "app/routes/_index.tsx": js`
-            import { Link } from "react-router-dom";
+            import { Link } from "react-router";
             export default () => <Link to="/child">Child</Link>;
           `,
           "app/routes/_main.tsx": js`
-            import { useRouteError } from "react-router-dom";
+            import { useRouteError } from "react-router";
             export function ErrorBoundary() {
               return <pre>{useRouteError().message}</pre>;
             }

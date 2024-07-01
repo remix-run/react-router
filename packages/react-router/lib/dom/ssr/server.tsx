@@ -2,13 +2,13 @@ import type { ReactElement } from "react";
 import * as React from "react";
 
 import { createStaticRouter, StaticRouterProvider } from "../server";
-import { RemixContext } from "./components";
+import { FrameworkContext } from "./components";
 import type { EntryContext } from "./entry";
 import { RemixErrorBoundary } from "./errorBoundaries";
 import { createServerRoutes, shouldHydrateRouteLoader } from "./routes";
 import { StreamTransfer } from "./single-fetch";
 
-export interface RemixServerProps {
+export interface ServerRouterProps {
   context: EntryContext;
   url: string | URL;
   abortDelay?: number;
@@ -22,12 +22,12 @@ export interface RemixServerProps {
  *
  * @category Components
  */
-export function RemixServer({
+export function ServerRouter({
   context,
   url,
   abortDelay,
   nonce,
-}: RemixServerProps): ReactElement {
+}: ServerRouterProps): ReactElement {
   if (typeof url === "string") {
     url = new URL(url);
   }
@@ -65,16 +65,11 @@ export function RemixServer({
     }
   }
 
-  let router = createStaticRouter(routes, context.staticHandlerContext, {
-    future: {
-      v7_partialHydration: true,
-      v7_relativeSplatPath: context.future.v3_relativeSplatPath,
-    },
-  });
+  let router = createStaticRouter(routes, context.staticHandlerContext);
 
   return (
     <>
-      <RemixContext.Provider
+      <FrameworkContext.Provider
         value={{
           manifest,
           routeModules,
@@ -94,7 +89,7 @@ export function RemixServer({
             hydrate={false}
           />
         </RemixErrorBoundary>
-      </RemixContext.Provider>
+      </FrameworkContext.Provider>
       {context.serverHandoffStream ? (
         <React.Suspense>
           <StreamTransfer

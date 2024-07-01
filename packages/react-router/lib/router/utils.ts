@@ -82,18 +82,11 @@ export type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 export type HTMLFormMethod = LowerCaseFormMethod | UpperCaseFormMethod;
 
 /**
- * Active navigation/fetcher form methods are exposed in lowercase on the
- * RouterState
+ * Active navigation/fetcher form methods are exposed in uppercase on the
+ * RouterState. This is to align with the normalization done via fetch().
  */
-export type FormMethod = LowerCaseFormMethod;
-export type MutationFormMethod = Exclude<FormMethod, "get">;
-
-/**
- * In v7, active navigation/fetcher form methods are exposed in uppercase on the
- * RouterState.  This is to align with the normalization done via fetch().
- */
-export type V7_FormMethod = UpperCaseFormMethod;
-export type V7_MutationFormMethod = Exclude<V7_FormMethod, "GET">;
+export type FormMethod = UpperCaseFormMethod;
+export type MutationFormMethod = Exclude<FormMethod, "GET">;
 
 export type FormEncType =
   | "application/x-www-form-urlencoded"
@@ -116,7 +109,7 @@ type JsonValue = JsonPrimitive | JsonObject | JsonArray;
  */
 export type Submission =
   | {
-      formMethod: FormMethod | V7_FormMethod;
+      formMethod: FormMethod;
       formAction: string;
       formEncType: FormEncType;
       formData: FormData;
@@ -124,7 +117,7 @@ export type Submission =
       text: undefined;
     }
   | {
-      formMethod: FormMethod | V7_FormMethod;
+      formMethod: FormMethod;
       formAction: string;
       formEncType: FormEncType;
       formData: undefined;
@@ -132,7 +125,7 @@ export type Submission =
       text: undefined;
     }
   | {
-      formMethod: FormMethod | V7_FormMethod;
+      formMethod: FormMethod;
       formAction: string;
       formEncType: FormEncType;
       formData: undefined;
@@ -253,6 +246,16 @@ export interface DataStrategyFunctionArgs<Context = any>
 
 export interface DataStrategyFunction {
   (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
+}
+
+export interface AgnosticPatchRoutesOnMissFunction<
+  M extends AgnosticRouteMatch = AgnosticRouteMatch
+> {
+  (opts: {
+    path: string;
+    matches: M[];
+    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void;
+  }): void | Promise<void>;
 }
 
 /**
@@ -444,11 +447,11 @@ function isIndexRoute(
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   mapRouteProperties: MapRoutePropertiesFunction,
-  parentPath: number[] = [],
+  parentPath: string[] = [],
   manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
-    let treePath = [...parentPath, index];
+    let treePath = [...parentPath, String(index)];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
       route.index !== true || !route.children,
@@ -503,6 +506,17 @@ export function matchRoutes<
   locationArg: Partial<Location> | string,
   basename = "/"
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
+  return matchRoutesImpl(routes, locationArg, basename, false);
+}
+
+export function matchRoutesImpl<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
+  routes: RouteObjectType[],
+  locationArg: Partial<Location> | string,
+  basename: string,
+  allowPartial: boolean
+): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -524,7 +538,11 @@ export function matchRoutes<
     // should be a safe operation.  This avoids needing matchRoutes to be
     // history-aware.
     let decoded = decodePath(pathname);
-    matches = matchRouteBranch<string, RouteObjectType>(branches[i], decoded);
+    matches = matchRouteBranch<string, RouteObjectType>(
+      branches[i],
+      decoded,
+      allowPartial
+    );
   }
 
   return matches;
@@ -615,7 +633,6 @@ function flattenRoutes<
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
       );
-
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 
@@ -768,7 +785,8 @@ function matchRouteBranch<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
-  pathname: string
+  pathname: string,
+  allowPartial = false
 ): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
@@ -787,11 +805,29 @@ function matchRouteBranch<
       remainingPathname
     );
 
-    if (!match) return null;
+    let route = meta.route;
+
+    if (
+      !match &&
+      end &&
+      allowPartial &&
+      !routesMeta[routesMeta.length - 1].route.index
+    ) {
+      match = matchPath(
+        {
+          path: meta.relativePath,
+          caseSensitive: meta.caseSensitive,
+          end: false,
+        },
+        remainingPathname
+      );
+    }
+
+    if (!match) {
+      return null;
+    }
 
     Object.assign(matchedParams, match.params);
-
-    let route = meta.route;
 
     matches.push({
       // TODO: Can this as be avoided?
@@ -1170,19 +1206,14 @@ export function getPathContributingMatches<
 // generate the routePathnames input for resolveTo()
 export function getResolveToMatches<
   T extends AgnosticRouteMatch = AgnosticRouteMatch
->(matches: T[], v7_relativeSplatPath: boolean) {
+>(matches: T[]) {
   let pathMatches = getPathContributingMatches(matches);
 
-  // When v7_relativeSplatPath is enabled, use the full pathname for the leaf
-  // match so we include splat values for "." links.  See:
+  // Use the full pathname for the leaf match so we include splat values for "." links
   // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
-  if (v7_relativeSplatPath) {
-    return pathMatches.map((match, idx) =>
-      idx === matches.length - 1 ? match.pathname : match.pathnameBase
-    );
-  }
-
-  return pathMatches.map((match) => match.pathnameBase);
+  return pathMatches.map((match, idx) =>
+    idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase
+  );
 }
 
 /**

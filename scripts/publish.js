@@ -89,20 +89,18 @@ async function run() {
     // 3. Ensure build versions match the release version
     await ensureBuildVersion("react-router", version);
     await ensureBuildVersion("react-router-dom", version);
-    await ensureBuildVersion("remix-dev", version);
-    await ensureBuildVersion("remix-express", version);
-    await ensureBuildVersion("remix-node", version);
-    await ensureBuildVersion("remix-serve", version);
-    await ensureBuildVersion("remix-server-runtime", version);
+    await ensureBuildVersion("react-router-dev", version);
+    await ensureBuildVersion("react-router-express", version);
+    await ensureBuildVersion("react-router-node", version);
+    await ensureBuildVersion("react-router-serve", version);
 
     // 4. Publish to npm
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
-    publishBuild("remix-dev", tag);
-    publishBuild("remix-express", tag);
-    publishBuild("remix-node", tag);
-    publishBuild("remix-serve", tag);
-    publishBuild("remix-server-runtime", tag);
+    publishBuild("react-router-dev", tag);
+    publishBuild("react-router-express", tag);
+    publishBuild("react-router-node", tag);
+    publishBuild("react-router-serve", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);

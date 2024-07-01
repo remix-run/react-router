@@ -17,8 +17,8 @@ test.describe("useMatches", () => {
       files: {
         "app/root.tsx": js`
           import * as React from 'react';
-          import { json } from "@react-router/node";
-          import { Link, Links, Meta, Outlet, Scripts, useMatches } from "react-router-dom";
+          import { json } from "react-router";
+          import { Link, Links, Meta, Outlet, Scripts, useMatches } from "react-router";
           export const handle = { stuff: "root handle"};
           export const loader = () => json("ROOT");
           export default function Root() {
@@ -47,7 +47,7 @@ test.describe("useMatches", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router";
           export const handle = { stuff: "index handle"};
           export const loader = () => json("INDEX");
           export default function Index() {
@@ -56,7 +56,7 @@ test.describe("useMatches", () => {
         `,
 
         "app/routes/about.tsx": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router";
           export const handle = { stuff: "about handle"};
           export const loader = async () => {
             await new Promise(r => setTimeout(r, 100));
@@ -69,7 +69,7 @@ test.describe("useMatches", () => {
 
         "app/routes/count.tsx": js`
           import * as React from 'react';
-          import { useMatches } from "react-router-dom";
+          import { useMatches } from "react-router";
           export default function Count() {
             let matches = useMatches();
             let [count, setCount] = React.useState(0);

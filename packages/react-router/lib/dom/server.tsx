@@ -8,7 +8,7 @@ import type {
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   UNSAFE_RouteManifest as RouteManifest,
   RouterState,
-  FutureConfig as RouterFutureConfig,
+  FutureConfig,
   To,
 } from "../router";
 import {
@@ -28,7 +28,7 @@ import {
   UNSAFE_FetchersContext as FetchersContext,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
 } from "./lib";
-import { Router, mapRouteProperties, type FutureConfig } from "../components";
+import { Router, mapRouteProperties } from "../components";
 import type { DataRouteObject, RouteObject } from "../context";
 import { DataRouterContext, DataRouterStateContext } from "../context";
 import { useRoutesImpl } from "../hooks";
@@ -37,7 +37,6 @@ export interface StaticRouterProps {
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
-  future?: Partial<FutureConfig>;
 }
 
 /**
@@ -50,7 +49,6 @@ export function StaticRouter({
   basename,
   children,
   location: locationProp = "/",
-  future,
 }: StaticRouterProps) {
   if (typeof locationProp === "string") {
     locationProp = parsePath(locationProp);
@@ -73,7 +71,6 @@ export function StaticRouter({
       location={location}
       navigationType={action}
       navigator={staticNavigator}
-      future={future}
       static={true}
     />
   );
@@ -143,9 +140,6 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
-                future={{
-                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-                }}
               >
                 <DataRoutes
                   routes={router.routes}
@@ -277,10 +271,7 @@ export function createStaticRouter(
   routes: RouteObject[],
   context: StaticHandlerContext,
   opts: {
-    // Only accept future flags that impact the server render
-    future?: Partial<
-      Pick<RouterFutureConfig, "v7_partialHydration" | "v7_relativeSplatPath">
-    >;
+    future?: Partial<FutureConfig>;
   } = {}
 ): RemixRouter {
   let manifest: RouteManifest = {};
@@ -311,12 +302,8 @@ export function createStaticRouter(
     },
     get future() {
       return {
-        v7_fetcherPersist: false,
-        v7_normalizeFormMethod: false,
-        v7_partialHydration: opts.future?.v7_partialHydration === true,
-        v7_prependBasename: false,
-        v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
         unstable_skipActionErrorRevalidation: false,
+        ...opts?.future,
       };
     },
     get state() {
@@ -376,6 +363,9 @@ export function createStaticRouter(
     },
     deleteBlocker() {
       throw msg("deleteBlocker");
+    },
+    patchRoutes() {
+      throw msg("patchRoutes");
     },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),

@@ -16,7 +16,7 @@ test.describe("Revalidation", () => {
       await createFixture({
         files: {
           "app/root.tsx": js`
-              import { Link, Outlet, Scripts, useNavigation } from "react-router-dom";
+              import { Link, Outlet, Scripts, useNavigation } from "react-router";
 
               export default function Component() {
                 let navigation = useNavigation();
@@ -46,8 +46,8 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.tsx": js`
-              import { json } from "@react-router/node";
-              import { Outlet, useLoaderData } from "react-router-dom";
+              import { json } from "react-router";
+              import { Outlet, useLoaderData } from "react-router";
 
               export async function loader({ request }) {
                 let header = request.headers.get('Cookie') || '';
@@ -86,8 +86,8 @@ test.describe("Revalidation", () => {
             `,
 
           "app/routes/parent.child.tsx": js`
-              import { json } from "@react-router/node";
-              import { Form, useLoaderData, useRevalidator } from "react-router-dom";
+              import { json } from "react-router";
+              import { Form, useLoaderData, useRevalidator } from "react-router";
 
               export async function action() {
                 return json({ action: 'data' })

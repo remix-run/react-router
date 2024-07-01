@@ -16,7 +16,7 @@ test.describe("deferred loaders", () => {
     fixture = await createFixture({
       files: {
         "app/routes/_index.tsx": js`
-          import { useLoaderData, Link } from "react-router-dom";
+          import { useLoaderData, Link } from "react-router";
           export default function Index() {
             return (
               <div>
@@ -28,7 +28,7 @@ test.describe("deferred loaders", () => {
         `,
 
         "app/routes/redirect.tsx": js`
-          import { defer } from "@react-router/node";
+          import { defer } from "react-router";
           export function loader() {
             return defer({food: "pizza"}, { status: 301, headers: { Location: "/?redirected" } });
           }
@@ -37,8 +37,8 @@ test.describe("deferred loaders", () => {
 
         "app/routes/direct-promise-access.tsx": js`
           import * as React from "react";
-          import { defer } from "@react-router/node";
-          import { useLoaderData, Link, Await } from "react-router-dom";
+          import { defer } from "react-router";
+          import { useLoaderData, Link, Await } from "react-router";
           export function loader() {
             return defer({
               bar: new Promise(async (resolve, reject) => {

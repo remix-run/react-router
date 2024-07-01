@@ -23,8 +23,10 @@ test.describe("file-uploads", () => {
             import * as url from "node:url";
             import {
               unstable_composeUploadHandlers as composeUploadHandlers,
-              unstable_createFileUploadHandler as createFileUploadHandler,
               unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+            } from "react-router";
+            import {
+              unstable_createFileUploadHandler as createFileUploadHandler,
             } from "@react-router/node";
 
             const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -44,8 +46,8 @@ test.describe("file-uploads", () => {
         "app/routes/file-upload.tsx": js`
             import {
               unstable_parseMultipartFormData as parseMultipartFormData,
-            } from "@react-router/node";
-            import { Form, useActionData } from "react-router-dom";
+            } from "react-router";
+            import { Form, useActionData } from "react-router";
             import { uploadHandler } from "~/fileUploadHandler";
 
             export let action = async ({ request }) => {

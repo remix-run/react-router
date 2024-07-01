@@ -7,7 +7,6 @@ import type {
   InitialEntry,
   Router,
   RouterNavigateOptions,
-  FutureConfig,
 } from "../../../lib/router";
 import {
   createMemoryHistory,
@@ -15,6 +14,7 @@ import {
   matchRoutes,
   redirect,
   parsePath,
+  IDLE_FETCHER,
 } from "../../../lib/router";
 
 // Private API
@@ -143,7 +143,6 @@ type SetupOpts = {
   initialIndex?: number;
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
-  future?: Partial<FutureConfig>;
 };
 
 // We use a slightly modified version of createDeferred here that includes the
@@ -171,13 +170,33 @@ export function createDeferred() {
   };
 }
 
+export function getFetcherData(router: Router) {
+  let fetcherData = new Map<string, unknown>();
+  router.subscribe((state, { deletedFetchers }) => {
+    deletedFetchers.forEach((k) => {
+      fetcherData.delete(k);
+    });
+    state.fetchers.forEach((fetcher, key) => {
+      if (
+        fetcher.data !== undefined &&
+        // action fetch
+        ((fetcher.formMethod !== "GET" && fetcher.state === "loading") ||
+          // normal fetch
+          fetcher.state === "idle")
+      ) {
+        fetcherData.set(key, fetcher.data);
+      }
+    });
+  });
+  return fetcherData;
+}
+
 export function setup({
   routes,
   basename,
   initialEntries,
   initialIndex,
   hydrationData,
-  future,
   dataStrategy,
 }: SetupOpts) {
   let guid = 0;
@@ -318,10 +337,12 @@ export function setup({
     history,
     routes: enhanceRoutes(routes),
     hydrationData,
-    future,
     window: testWindow,
     unstable_dataStrategy: dataStrategy,
-  }).initialize();
+  });
+
+  let fetcherData = getFetcherData(currentRouter);
+  currentRouter.initialize();
 
   function getRouteHelpers(
     routeId: string,
@@ -509,7 +530,7 @@ export function setup({
     // Otherwise we should only need a loader for the leaf match
     let activeLoaderMatches = [match];
     // @ts-expect-error
-    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
+    if (opts?.formMethod != null && opts.formMethod.toUpperCase() !== "GET") {
       if (currentRouter.state.navigation?.location) {
         let matches = matchRoutes(
           inFlightRoutes || currentRouter.routes,
@@ -547,7 +568,10 @@ export function setup({
       navigationId,
       get fetcher() {
         invariant(currentRouter, "No currentRouter available");
-        return currentRouter.getFetcher(key);
+        return {
+          ...currentRouter.getFetcher(key),
+          data: fetcherData.get(key),
+        };
       },
       lazy: lazyHelpers,
       loaders: loaderHelpers,
@@ -574,7 +598,7 @@ export function setup({
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
-    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
+    if (opts?.formMethod != null && opts.formMethod.toUpperCase() !== "GET") {
       activeActionType = "navigation";
       activeActionNavigationId = navigationId;
       // Assume happy path and mark this navigations loaders as active.  Even if
@@ -610,15 +634,7 @@ export function setup({
       return helpers;
     }
 
-    let navHref = href;
-    if (currentRouter.basename) {
-      navHref = stripBasename(navHref, currentRouter.basename) as string;
-      invariant(
-        navHref,
-        "href passed to t.navigate() should start with basename"
-      );
-    }
-    helpers = getNavigationHelpers(navHref, navigationId);
+    helpers = getNavigationHelpers(href, navigationId);
     shims?.forEach((routeId) =>
       shimHelper(helpers.loaders, "navigation", "loader", routeId)
     );
@@ -664,7 +680,7 @@ export function setup({
     invariant(currentRouter, "No currentRouter available");
 
     // @ts-expect-error
-    if (opts?.formMethod != null && opts.formMethod.toLowerCase() !== "get") {
+    if (opts?.formMethod != null && opts.formMethod.toUpperCase() !== "GET") {
       activeActionType = "fetch";
       activeActionFetchId = navigationId;
     } else {
@@ -697,7 +713,7 @@ export function setup({
       // start a new navigation so don't increment here
       navigationId =
         currentRouter.state.navigation.state === "submitting" &&
-        currentRouter.state.navigation.formMethod !== "get"
+        currentRouter.state.navigation.formMethod !== "GET"
           ? guid
           : ++guid;
       activeLoaderType = "navigation";
@@ -730,6 +746,24 @@ export function setup({
     window: testWindow,
     history,
     router: currentRouter,
+    get fetchers() {
+      let fetchers = {};
+      currentRouter?.state.fetchers.forEach((f, key) => {
+        fetchers[key] = {
+          ...f,
+          data: fetcherData.get(key),
+        };
+      });
+      fetcherData.forEach((data, key) => {
+        if (!fetchers[key]) {
+          fetchers[key] = {
+            ...IDLE_FETCHER,
+            data: fetcherData.get(key),
+          };
+        }
+      });
+      return fetchers;
+    },
     navigate,
     fetch,
     revalidate,

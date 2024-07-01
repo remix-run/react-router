@@ -538,6 +538,7 @@ describe("special character tests", () => {
       expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
         "<div>
           <a
+            data-discover="true"
             href="/parent/child/%20%20param%20%20/grandchild"
           >
             Link to grandchild
@@ -551,6 +552,7 @@ describe("special character tests", () => {
       expect(getHtml(ctx.container)).toMatchInlineSnapshot(`
         "<div>
           <a
+            data-discover="true"
             href="/parent/child/%20%20param%20%20/grandchild"
           >
             Link to grandchild
@@ -581,9 +583,13 @@ describe("special character tests", () => {
       }
 
       function Child() {
+        let location = useLocation();
+        let to = location.pathname.endsWith("grandchild")
+          ? "."
+          : "./grandchild";
         return (
           <>
-            <Link to="./grandchild">Link to grandchild</Link>
+            <Link to={to}>Link to grandchild</Link>
             <Routes>
               <Route path="grandchild" element={<Grandchild />} />
             </Routes>

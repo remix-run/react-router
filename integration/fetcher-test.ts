@@ -23,14 +23,14 @@ test.describe("useFetcher", () => {
     fixture = await createFixture({
       files: {
         "app/routes/resource-route-action-only.ts": js`
-          import { json } from "@react-router/node";
+          import { json } from "react-router";
           export function action() {
             return new Response("${CHEESESTEAK}");
           }
         `,
 
         "app/routes/fetcher-action-only-call.tsx": js`
-          import { useFetcher } from "react-router-dom";
+          import { useFetcher } from "react-router";
 
           export default function FetcherActionOnlyCall() {
             let fetcher = useFetcher();
@@ -61,7 +61,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/_index.tsx": js`
-          import { useFetcher } from "react-router-dom";
+          import { useFetcher } from "react-router";
           export default function Index() {
             let fetcher = useFetcher();
             return (
@@ -90,7 +90,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/parent.tsx": js`
-          import { Outlet } from "react-router-dom";
+          import { Outlet } from "react-router";
 
           export function action() {
             return new Response("${PARENT_LAYOUT_ACTION}");
@@ -106,7 +106,7 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/parent._index.tsx": js`
-          import { useFetcher } from "react-router-dom";
+          import { useFetcher } from "react-router";
 
           export function action() {
             return new Response("${PARENT_INDEX_ACTION}");
@@ -149,8 +149,8 @@ test.describe("useFetcher", () => {
         `,
 
         "app/routes/fetcher-echo.tsx": js`
-          import { json } from "@react-router/node";
-          import { useFetcher } from "react-router-dom";
+          import { json } from "react-router";
+          import { useFetcher } from "react-router";
 
           export async function action({ request }) {
             await new Promise(r => setTimeout(r, 1000));
@@ -441,7 +441,7 @@ test.describe("fetcher aborts and adjacent forms", () => {
             useFetcher,
             useLoaderData,
             useNavigation
-          } from "react-router-dom";
+          } from "react-router";
 
           export async function loader({ request }) {
             // 1 second timeout on data

@@ -14,8 +14,8 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "@react-router/node";
-        import { useLoaderData } from "react-router-dom";
+        import { json } from "react-router";
+        import { useLoaderData } from "react-router";
         export async function loader() {
           const resp = await fetch('https://reqres.in/api/users?page=2');
           return (resp instanceof Response) ? 'is an instance of global Response' : 'is not an instance of global Response';

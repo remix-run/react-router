@@ -4,7 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createFixture, js } from "./helpers/create-fixture.js";
 
 let ROOT_FILE_CONTENTS = js`
-  import { Outlet, Scripts } from "react-router-dom";
+  import { Outlet, Scripts } from "react-router";
 
   export default function App() {
     return (
@@ -19,7 +19,7 @@ let ROOT_FILE_CONTENTS = js`
 `;
 
 let LAYOUT_FILE_CONTENTS = js`
-  import { Outlet } from "react-router-dom";
+  import { Outlet } from "react-router";
 
   export default function Layout() {
     return <Outlet />

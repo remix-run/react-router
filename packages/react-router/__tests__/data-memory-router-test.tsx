@@ -40,7 +40,6 @@ import urlDataStrategy from "./router/utils/urlDataStrategy";
 import { createDeferred } from "./router/utils/utils";
 import MemoryNavigate from "./utils/MemoryNavigate";
 import getHtml from "./utils/getHtml";
-import { RouterProvider as DomRouterProvider } from "../lib/dom/lib";
 
 describe("createMemoryRouter", () => {
   let consoleWarn: jest.SpyInstance;
@@ -314,11 +313,15 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders fallbackElement while first data fetch happens", async () => {
+  it("renders hydrateFallbackElement while first data fetch happens", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
@@ -327,9 +330,7 @@ describe("createMemoryRouter", () => {
         initialEntries: ["/foo"],
       }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       return <p>Loading...</p>;
@@ -364,7 +365,7 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders a null fallbackElement if none is provided", async () => {
+  it("renders a null fallback if none is provided", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
@@ -402,12 +403,16 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("does not render fallbackElement if no data fetch is required", async () => {
+  it("does not render hydrateFallbackElement if no data fetch is required", async () => {
     let fooDefer = createDeferred();
 
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
           <Route path="bar" element={<Bar />} />
         </Route>
@@ -416,9 +421,7 @@ describe("createMemoryRouter", () => {
         initialEntries: ["/bar"],
       }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       return <p>Loading...</p>;
@@ -442,19 +445,21 @@ describe("createMemoryRouter", () => {
     `);
   });
 
-  it("renders fallbackElement within router contexts", async () => {
+  it("renders hydrateFallbackElement within router contexts", async () => {
     let fooDefer = createDeferred();
     let router = createMemoryRouter(
       createRoutesFromElements(
-        <Route path="/" element={<Outlet />}>
+        <Route
+          path="/"
+          element={<Outlet />}
+          hydrateFallbackElement={<FallbackElement />}
+        >
           <Route path="foo" loader={() => fooDefer.promise} element={<Foo />} />
         </Route>
       ),
       { initialEntries: ["/foo"] }
     );
-    let { container } = render(
-      <RouterProvider router={router} fallbackElement={<FallbackElement />} />
-    );
+    let { container } = render(<RouterProvider router={router} />);
 
     function FallbackElement() {
       let location = useLocation();
@@ -1193,9 +1198,7 @@ describe("createMemoryRouter", () => {
       },
     ]);
 
-    // TODO: Fetchers only supported in DomRouterProvider at the moment, but
-    // that should be fixed once we align the two
-    render(<DomRouterProvider router={router} />);
+    render(<RouterProvider router={router} />);
 
     await waitFor(() => screen.getByText("Fetch (1, empty)"));
     fireEvent.click(screen.getByText("Fetch (1, empty)"));
@@ -1251,9 +1254,7 @@ describe("createMemoryRouter", () => {
       },
     ]);
 
-    // TODO: Fetchers only supported in DomRouterProvider at the moment, but
-    // that should be fixed once we align the two
-    render(<DomRouterProvider router={router} />);
+    render(<RouterProvider router={router} />);
 
     await waitFor(() => screen.getByText("Fetch (1, empty)"));
     fireEvent.click(screen.getByText("Fetch (1, empty)"));
@@ -3371,7 +3372,6 @@ describe("createMemoryRouter", () => {
         </React.Suspense>
       );
 
-      console.log(getHtml(container));
       expect(getHtml(container)).toMatchInlineSnapshot(`
         "<div>
           <p>

@@ -18,6 +18,7 @@ import {
 import {
   cleanup,
   createDeferred,
+  getFetcherData,
   setup,
   TASK_ROUTES,
 } from "./utils/data-router-setup";
@@ -555,7 +556,7 @@ describe("a router", () => {
       expect(t.history.action).toEqual("POP");
       expect(t.history.location.pathname).toEqual("/base/name");
 
-      await t.navigate("/base/name/tasks");
+      await t.navigate("/tasks");
       expect(t.router.state).toMatchObject({
         location: {
           pathname: "/base/name/tasks",
@@ -565,7 +566,7 @@ describe("a router", () => {
       expect(t.history.action).toEqual("PUSH");
       expect(t.history.location.pathname).toEqual("/base/name/tasks");
 
-      await t.navigate("/base/name/tasks/1");
+      await t.navigate("/tasks/1");
       expect(t.router.state).toMatchObject({
         location: {
           pathname: "/base/name/tasks/1",
@@ -690,7 +691,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "value" })
       );
@@ -710,7 +711,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=value",
       });
-      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "value" })
       );
@@ -730,7 +731,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=2",
       });
-      expect(t.router.state.navigation.formMethod).toBe("get");
+      expect(t.router.state.navigation.formMethod).toBe("GET");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "2" })
       );
@@ -750,7 +751,7 @@ describe("a router", () => {
         pathname: "/tasks",
         search: "?key=1",
       });
-      expect(t.router.state.navigation.formMethod).toBe("post");
+      expect(t.router.state.navigation.formMethod).toBe("POST");
       expect(t.router.state.navigation.formData).toEqual(
         createFormData({ key: "2" })
       );
@@ -947,10 +948,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -959,10 +957,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -1016,10 +1011,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -1028,10 +1020,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/child" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/child" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -1118,10 +1107,7 @@ describe("a router", () => {
         historyAction: "POP",
         location: expect.objectContaining({ pathname: "/", hash: "#hash" }),
         initialized: false,
-        navigation: {
-          state: "loading",
-          location: { pathname: "/", hash: "#hash" },
-        },
+        navigation: IDLE_NAVIGATION,
       });
       expect(router.state.loaderData).toEqual({});
 
@@ -1987,7 +1973,7 @@ describe("a router", () => {
       router.dispose();
     });
 
-    it("throws an error if actions/loaders return undefined", async () => {
+    it("allows returning undefined from actions/loaders", async () => {
       let t = setup({
         routes: [
           {
@@ -2008,12 +1994,10 @@ describe("a router", () => {
         location: {
           pathname: "/path",
         },
-        errors: {
-          path: new Error(
-            'You defined a loader for route "path" but didn\'t return anything ' +
-              "from your `loader` function. Please return a value or `null`."
-          ),
+        loaderData: {
+          path: undefined,
         },
+        errors: null,
       });
 
       await t.navigate("/");
@@ -2029,16 +2013,18 @@ describe("a router", () => {
         formData: createFormData({}),
       });
       await nav3.actions.path.resolve(undefined);
+      await nav3.loaders.path.resolve("PATH");
       expect(t.router.state).toMatchObject({
         location: {
           pathname: "/path",
         },
-        errors: {
-          path: new Error(
-            'You defined an action for route "path" but didn\'t return anything ' +
-              "from your `action` function. Please return a value or `null`."
-          ),
+        actionData: {
+          path: undefined,
         },
+        loaderData: {
+          path: "PATH",
+        },
+        errors: null,
       });
     });
   });
@@ -2315,12 +2301,14 @@ describe("a router", () => {
           },
         },
       });
+      let fetcherData = getFetcherData(router);
       router.initialize();
 
       let key = "key";
       router.fetch(key, "root", "/foo");
       await fooDfd.resolve("FOO");
-      expect(router.state.fetchers.get("key")?.data).toBe("FOO");
+      await tick();
+      expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
       let newRoutes: AgnosticDataRouteObject[] = [
@@ -2357,6 +2345,7 @@ describe("a router", () => {
 
       // Resolve any loaders that should have ran (foo's loader has been removed)
       await rootDfd2.resolve("ROOT*");
+      await tick();
       expect(router.state.revalidation).toBe("idle");
 
       // Routes should be updated
@@ -2367,9 +2356,12 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({
         root: "ROOT*",
       });
+
       // Fetcher should have been revalidated but throw an error since the
       // loader was removed
-      expect(router.state.fetchers.get("key")?.data).toBe(undefined);
+      // The data remains in the UI layer in this test setup since it hasn't
+      // unmounted - but normally it would unmount and the data would be removed
+      expect(fetcherData.get("key")).toBe("FOO");
       expect(router.state.errors).toMatchInlineSnapshot(`
         {
           "root": ErrorResponseImpl {
@@ -2419,12 +2411,13 @@ describe("a router", () => {
           },
         },
       });
+      let fetcherData = getFetcherData(router);
       router.initialize();
 
       let key = "key";
       router.fetch(key, "root", "/foo");
       await fooDfd.resolve("FOO");
-      expect(router.state.fetchers.get("key")?.data).toBe("FOO");
+      expect(fetcherData.get(key)).toBe("FOO");
 
       let rootDfd2 = createDeferred();
       let newRoutes: AgnosticDataRouteObject[] = [
@@ -2465,8 +2458,10 @@ describe("a router", () => {
       expect(router.state.loaderData).toEqual({
         root: "ROOT*",
       });
-      // Fetcher should have been revalidated but theown a 404 wince the route was removed
-      expect(router.state.fetchers.get("key")?.data).toBe(undefined);
+      // Fetcher should have been revalidated but thrown a 404 wince the route was removed
+      // The data remains in the UI layer in this test setup since it hasn't
+      // unmounted - but normally it would unmount and the data would be removed
+      expect(fetcherData.get(key)).toBe("FOO");
       expect(router.state.errors).toEqual({
         root: new ErrorResponseImpl(
           404,

@@ -40,3 +40,8 @@ if (!globalThis.TransformStream) {
   const { TransformStream } = require("node:stream/web");
   globalThis.TransformStream = TransformStream;
 }
+
+if (!globalThis.File) {
+  const { File } = require("undici");
+  globalThis.File = File;
+}

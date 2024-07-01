@@ -45,7 +45,7 @@ const files = {
   "app/entry.client.tsx": js`
     import "./entry.client.css";
 
-    import { HydratedRouter } from "react-router-dom";
+    import { HydratedRouter } from "react-router";
     import { startTransition, StrictMode } from "react";
     import { hydrateRoot } from "react-dom/client";
 
@@ -59,7 +59,7 @@ const files = {
     });
   `,
   "app/root.tsx": js`
-    import { Links, Meta, Outlet, Scripts } from "react-router-dom";
+    import { Links, Meta, Outlet, Scripts } from "react-router";
 
     export default function Root() {
       return (

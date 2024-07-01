@@ -15,8 +15,8 @@ test.beforeAll(async () => {
   fixture = await createFixture({
     files: {
       "app/routes/_index.tsx": js`
-        import { json } from "@react-router/node";
-        import { useActionData, useLoaderData, Form } from "react-router-dom";
+        import { json } from "react-router";
+        import { useActionData, useLoaderData, Form } from "react-router";
 
         export async function action ({ request }) {
           // New event loop causes express request to close

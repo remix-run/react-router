@@ -101,43 +101,6 @@ describe("lazily loaded route modules", () => {
       });
       expect(router.state.matches[0].route).toMatchObject(route);
     });
-
-    it("fetches lazy route modules and executes loaders with v7_partialHydration enabled", async () => {
-      let dfd = createDeferred();
-      let router = createRouter({
-        routes: [
-          {
-            path: "/lazy",
-            lazy: () => dfd.promise,
-          },
-        ],
-        history: createMemoryHistory({ initialEntries: ["/lazy"] }),
-        future: {
-          v7_partialHydration: true,
-        },
-      });
-
-      expect(router.state.initialized).toBe(false);
-
-      router.initialize();
-
-      let loaderDfd = createDeferred();
-      let route = {
-        Component: () => null,
-        loader: () => loaderDfd.promise,
-      };
-      await dfd.resolve(route);
-      expect(router.state.initialized).toBe(false);
-
-      await loaderDfd.resolve("LOADER");
-      expect(router.state.location.pathname).toBe("/lazy");
-      expect(router.state.navigation.state).toBe("idle");
-      expect(router.state.initialized).toBe(true);
-      expect(router.state.loaderData).toEqual({
-        "0": "LOADER",
-      });
-      expect(router.state.matches[0].route).toMatchObject(route);
-    });
   });
 
   describe("happy path", () => {
@@ -216,8 +179,8 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
 
       await loaderDfd.resolve("LAZY LOADER");
-      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY LOADER");
+      expect(t.fetchers[key].state).toBe("idle");
+      expect(t.fetchers[key].data).toBe("LAZY LOADER");
     });
 
     it("fetches lazy route modules on fetcher.submit", async () => {
@@ -237,8 +200,8 @@ describe("lazily loaded route modules", () => {
       expect(t.router.state.fetchers.get(key)?.state).toBe("submitting");
 
       await actionDfd.resolve("LAZY ACTION");
-      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY ACTION");
+      expect(t.fetchers[key]?.state).toBe("idle");
+      expect(t.fetchers[key]?.data).toBe("LAZY ACTION");
     });
 
     it("fetches lazy route modules on staticHandler.query()", async () => {
@@ -671,8 +634,8 @@ describe("lazily loaded route modules", () => {
       await loaderDfdA.resolve("LAZY LOADER A");
       await loaderDfdB.resolve("LAZY LOADER B");
 
-      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY LOADER B");
+      expect(t.fetchers[key].state).toBe("idle");
+      expect(t.fetchers[key].data).toBe("LAZY LOADER B");
       expect(lazyLoaderStubA).not.toHaveBeenCalled();
       expect(lazyloaderStubB).toHaveBeenCalledTimes(2);
     });
@@ -712,8 +675,8 @@ describe("lazily loaded route modules", () => {
       await actionDfdA.resolve("LAZY ACTION A");
       await actionDfdB.resolve("LAZY ACTION B");
 
-      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY ACTION B");
+      expect(t.fetchers[key].state).toBe("idle");
+      expect(t.fetchers[key].data).toBe("LAZY ACTION B");
       expect(lazyActionStubA).not.toHaveBeenCalled();
       expect(lazyActionStubB).toHaveBeenCalledTimes(2);
     });
@@ -832,13 +795,13 @@ describe("lazily loaded route modules", () => {
       await A.lazy.lazy.resolve({
         loader: lazyLoaderStubA,
       });
-      expect(t.router.state.fetchers.get(key)?.state).toBe("loading");
+      expect(t.fetchers[key].state).toBe("loading");
 
       await loaderDfdA.resolve("LAZY LOADER A");
       await loaderDfdB.resolve("LAZY LOADER B");
 
-      expect(t.router.state.fetchers.get(key)?.state).toBe("idle");
-      expect(t.router.state.fetchers.get(key)?.data).toBe("LAZY LOADER B");
+      expect(t.fetchers[key].state).toBe("idle");
+      expect(t.fetchers[key].data).toBe("LAZY LOADER B");
       expect(lazyLoaderStubA).not.toHaveBeenCalled();
       expect(lazyLoaderStubB).toHaveBeenCalledTimes(2);
     });

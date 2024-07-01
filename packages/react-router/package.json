@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.23.1",
+  "version": "6.24.0",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -31,15 +31,20 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "turbo-stream": "^2.0.0"
+    "@types/cookie": "^0.6.0",
+    "@web3-storage/multipart-parser": "^1.0.0",
+    "cookie": "^0.6.0",
+    "react-router": "workspace:*",
+    "source-map": "^0.7.3",
+    "turbo-stream": "^2.2.0"
   },
   "devDependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "peerDependencies": {
-    "react": ">=16.8",
-    "react-dom": ">=16.8"
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "peerDependenciesMeta": {
     "react-dom": {
@@ -53,6 +58,6 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   }
 }
