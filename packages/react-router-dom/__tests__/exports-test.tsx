@@ -2,6 +2,7 @@ import * as ReactRouter from "react-router";
 import * as ReactRouterDOM from "react-router-dom";
 
 let nonReExportedKeys = new Set([
+  "UNSAFE_logV6DeprecationWarnings",
   "UNSAFE_mapRouteProperties",
   "UNSAFE_useRoutesImpl",
 ]);

@@ -2,6 +2,7 @@ import * as ReactRouter from "react-router";
 import * as ReactRouterNative from "react-router-native";
 
 let nonReExportedKeys = new Set([
+  "UNSAFE_logV6DeprecationWarnings",
   "UNSAFE_mapRouteProperties",
   "UNSAFE_useRoutesImpl",
   "UNSAFE_ViewTransitionContext",
