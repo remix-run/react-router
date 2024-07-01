@@ -499,7 +499,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           resolveFileUrl(
             ctx,
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          )
+          ) + ROUTE_ENTRY_QUERY_STRING
         )};`;
       })
       .join("\n")}
@@ -979,13 +979,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         });
         await viteChildCompiler.pluginContainer.buildStart({});
       },
-      async transform(code, id) {
+      async transform(code, id, options) {
         if (isCssModulesFile(id)) {
           cssModulesManifest[id] = code;
         }
 
         if (isRouteEntry(id)) {
           let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
+
           let sourceExports = await getRouteModuleExports(
             viteChildCompiler,
             ctx,
@@ -993,11 +994,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           );
 
           let routeFileName = path.basename(routeModuleId);
-          let clientExports = sourceExports
-            .filter((exportName) => CLIENT_ROUTE_EXPORTS.includes(exportName))
+          let reexports = sourceExports
+            .filter(
+              (exportName) =>
+                (options?.ssr &&
+                  SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
+                CLIENT_ROUTE_EXPORTS.includes(exportName)
+            )
             .join(", ");
-
-          return `export { ${clientExports} } from "./${routeFileName}";`;
+          return `export { ${reexports} } from "./${routeFileName}";`;
         }
       },
       buildStart() {
