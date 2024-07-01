@@ -248,7 +248,7 @@ function getStatelessNavigator() {
 
 type CreateStaticHandlerOptions = Omit<
   RouterCreateStaticHandlerOptions,
-  "detectErrorBoundary" | "mapRouteProperties"
+  "mapRouteProperties"
 >;
 
 /**

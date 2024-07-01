@@ -15,7 +15,6 @@ import type {
   DataResult,
   DataStrategyFunction,
   DataStrategyFunctionArgs,
-  DetectErrorBoundaryFunction,
   ErrorResult,
   FormEncType,
   FormMethod,
@@ -365,10 +364,6 @@ export interface RouterInit {
   routes: AgnosticRouteObject[];
   history: History;
   basename?: string;
-  /**
-   * @deprecated Use `mapRouteProperties` instead
-   */
-  detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
@@ -799,18 +794,7 @@ export function createRouter(init: RouterInit): Router {
     "You must provide a non-empty routes array to createRouter"
   );
 
-  let mapRouteProperties: MapRoutePropertiesFunction;
-  if (init.mapRouteProperties) {
-    mapRouteProperties = init.mapRouteProperties;
-  } else if (init.detectErrorBoundary) {
-    // If they are still using the deprecated version, wrap it with the new API
-    let detectErrorBoundary = init.detectErrorBoundary;
-    mapRouteProperties = (route) => ({
-      hasErrorBoundary: detectErrorBoundary(route),
-    });
-  } else {
-    mapRouteProperties = defaultMapRouteProperties;
-  }
+  let mapRouteProperties = init.mapRouteProperties || defaultMapRouteProperties;
 
   // Routes keyed by ID
   let manifest: RouteManifest = {};
@@ -3287,10 +3271,6 @@ export function createRouter(init: RouterInit): Router {
 
 export interface CreateStaticHandlerOptions {
   basename?: string;
-  /**
-   * @deprecated Use `mapRouteProperties` instead
-   */
-  detectErrorBoundary?: DetectErrorBoundaryFunction;
   mapRouteProperties?: MapRoutePropertiesFunction;
   future?: {};
 }
@@ -3306,22 +3286,8 @@ export function createStaticHandler(
 
   let manifest: RouteManifest = {};
   let basename = (opts ? opts.basename : null) || "/";
-  let mapRouteProperties: MapRoutePropertiesFunction;
-  if (opts?.mapRouteProperties) {
-    mapRouteProperties = opts.mapRouteProperties;
-  } else if (opts?.detectErrorBoundary) {
-    // If they are still using the deprecated version, wrap it with the new API
-    let detectErrorBoundary = opts.detectErrorBoundary;
-    mapRouteProperties = (route) => ({
-      hasErrorBoundary: detectErrorBoundary(route),
-    });
-  } else {
-    mapRouteProperties = defaultMapRouteProperties;
-  }
-  // Config driven behavior flags
-  let future = {
-    ...opts?.future,
-  };
+  let mapRouteProperties =
+    opts?.mapRouteProperties || defaultMapRouteProperties;
 
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
@@ -4536,10 +4502,9 @@ async function loadLazyRouteModule(
   // updates and remove the `lazy` function so we don't resolve the lazy
   // route again.
   Object.assign(routeToUpdate, {
-    // To keep things framework agnostic, we use the provided
-    // `mapRouteProperties` (or wrapped `detectErrorBoundary`) function to
-    // set the framework-aware properties (`element`/`hasErrorBoundary`) since
-    // the logic will differ between frameworks.
+    // To keep things framework agnostic, we use the provided `mapRouteProperties`
+    // function to set the framework-aware properties (`element`/`hasErrorBoundary`)
+    // since the logic will differ between frameworks.
     ...mapRouteProperties(routeToUpdate),
     lazy: undefined,
   });

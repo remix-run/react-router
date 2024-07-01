@@ -204,16 +204,6 @@ export interface ShouldRevalidateFunction {
   (args: ShouldRevalidateFunctionArgs): boolean;
 }
 
-/**
- * Function provided by the framework-aware layers to set `hasErrorBoundary`
- * from the framework-aware `errorElement` prop
- *
- * @deprecated Use `mapRouteProperties` instead
- */
-export interface DetectErrorBoundaryFunction {
-  (route: AgnosticRouteObject): boolean;
-}
-
 export interface DataStrategyMatch
   extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
   shouldLoad: boolean;
