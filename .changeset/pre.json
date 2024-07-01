@@ -8,5 +8,11 @@
     "react-router-native": "6.24.0",
     "@remix-run/router": "1.17.0"
   },
-  "changesets": []
+  "changesets": [
+    "flat-seals-hunt",
+    "lovely-apples-help",
+    "rich-bees-invent",
+    "six-pianos-serve",
+    "thirty-swans-fail"
+  ]
 }

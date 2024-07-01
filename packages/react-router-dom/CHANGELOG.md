@@ -1,5 +1,15 @@
 # `react-router-dom`
 
+## 6.24.1-pre.0
+
+### Patch Changes
+
+- Remove `polyfill.io` reference from warning message because the domain was sold and has since been determined to serve malware. See https://sansec.io/research/polyfill-supply-chain-attack. ([#11741](https://github.com/remix-run/react-router/pull/11741))
+- Export `NavLinkRenderProps` type for easier typing of custom `NavLink` callback ([#11553](https://github.com/remix-run/react-router/pull/11553))
+- Updated dependencies:
+  - `@remix-run/router@1.17.1-pre.0`
+  - `react-router@6.24.1-pre.0`
+
 ## 6.24.0
 
 ### Minor Changes
