@@ -54,6 +54,7 @@ import type {
   RouterState,
   RouterSubscriber,
   BlockerFunction,
+  HashType
 } from "@remix-run/router";
 import {
   createRouter,
@@ -285,7 +286,7 @@ export function createBrowserRouter(
 
 export function createHashRouter(
   routes: RouteObject[],
-  opts?: DOMRouterOpts
+  opts?: DOMRouterOpts & { hashType?: HashType; }
 ): RemixRouter {
   return createRouter({
     basename: opts?.basename,
@@ -293,7 +294,7 @@ export function createHashRouter(
       ...opts?.future,
       v7_prependBasename: true,
     },
-    history: createHashHistory({ window: opts?.window }),
+    history: createHashHistory({ window: opts?.window, hashType: opts?.hashType }),
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
@@ -815,6 +816,7 @@ export interface HashRouterProps {
   children?: React.ReactNode;
   future?: Partial<FutureConfig>;
   window?: Window;
+  hashType?: HashType;
 }
 
 /**
@@ -826,10 +828,11 @@ export function HashRouter({
   children,
   future,
   window,
+  hashType = 'slash'
 }: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
-    historyRef.current = createHashHistory({ window, v5Compat: true });
+    historyRef.current = createHashHistory({ window, v5Compat: true, hashType: hashType });
   }
 
   let history = historyRef.current;

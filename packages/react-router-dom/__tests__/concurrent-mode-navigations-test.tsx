@@ -212,6 +212,41 @@ describe("Handles concurrent mode features during navigations", () => {
 
       await assertNavigation(container, resolve, resolveLazy);
     });
+    // eslint-disable-next-line jest/expect-expect
+    it("HashRouter with noslash", async () => {
+      let { Home, About, LazyComponent, resolve, resolveLazy } =
+        getComponents();
+
+      let { container } = render(
+        <HashRouter
+          window={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+          hashType="noslash"
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/about"
+              element={
+                <React.Suspense fallback={<p>Loading...</p>}>
+                  <About />
+                </React.Suspense>
+              }
+            />
+            <Route
+              path="/lazy"
+              element={
+                <React.Suspense fallback={<p>Loading Lazy Component...</p>}>
+                  <LazyComponent />
+                </React.Suspense>
+              }
+            />
+          </Routes>
+        </HashRouter>
+      );
+
+      await assertNavigation(container, resolve, resolveLazy);
+    });
 
     // eslint-disable-next-line jest/expect-expect
     it("RouterProvider", async () => {
@@ -289,7 +324,6 @@ describe("Handles concurrent mode features during navigations", () => {
       await waitFor(() => screen.getByText("Lazy"));
       expect(getHtml(container)).toMatch("Lazy");
     }
-
     // eslint-disable-next-line jest/expect-expect
     it("MemoryRouter", async () => {
       let { Home, About, resolve, LazyComponent, resolveLazy } =
@@ -303,6 +337,28 @@ describe("Handles concurrent mode features during navigations", () => {
             <Route path="/lazy" element={<LazyComponent />} />
           </Routes>
         </MemoryRouter>
+      );
+
+      await assertNavigation(container, resolve, resolveLazy);
+    });
+
+    // eslint-disable-next-line jest/expect-expect
+    it("HashRouter with noslash", async () => {
+      let { Home, About, resolve, LazyComponent, resolveLazy } =
+        getComponents();
+
+      let { container } = render(
+        <HashRouter
+          window-={getWindowImpl("/", true)}
+          future={{ v7_startTransition: true }}
+          hashType="noslash"
+        >
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/lazy" element={<LazyComponent />} />
+          </Routes>
+        </HashRouter>
       );
 
       await assertNavigation(container, resolve, resolveLazy);

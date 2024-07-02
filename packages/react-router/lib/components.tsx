@@ -9,6 +9,7 @@ import type {
   RouterSubscriber,
   To,
   TrackedPromise,
+  HashType,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -398,6 +399,7 @@ export interface RouterProps {
   navigator: Navigator;
   static?: boolean;
   future?: Partial<Pick<FutureConfig, "v7_relativeSplatPath">>;
+  hashType?: HashType;
 }
 
 /**
