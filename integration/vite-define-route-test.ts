@@ -1,11 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { expect } from "@playwright/test";
 
-import { build, createProject } from "./helpers/vite";
+import type { Files } from "./helpers/vite";
+import { test, build, createProject, viteConfig } from "./helpers/vite";
 import dedent from "dedent";
 import stripAnsi from "strip-ansi";
-
-// TODO: passing test for object literal
-// TODO: passing test for `defineRoute`
 
 test.describe("defineRoute", () => {
   test("fails when used outside of route modules", async () => {
@@ -250,5 +248,43 @@ test.describe("defineRoute", () => {
         `
       )
     );
+  });
+
+  test.describe("passes with `defineRoute`", () => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.ts": dedent`
+        import { vitePlugin as reactRouter } from "@react-router/dev";
+        export default {
+          ${await viteConfig.server({ port })}
+          plugins: [reactRouter()],
+        }
+      `,
+      "app/routes/_index.tsx": dedent`
+        import { defineRoute } from "react-router"
+        export default defineRoute({
+          Component() {
+            return <h1 data-title>Hello, world!</h1>
+          }
+        })
+      `,
+    });
+
+    test("react-router dev", async ({ page, dev }) => {
+      let { port } = await dev(files);
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+      await expect(page.locator("[data-title]")).toHaveText("Hello, world!");
+      expect(page.errors).toEqual([]);
+    });
+
+    test("build + react-router-serve", async ({ page, reactRouterServe }) => {
+      let { port } = await reactRouterServe(files);
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+      await expect(page.locator("[data-title]")).toHaveText("Hello, world!");
+      expect(page.errors).toEqual([]);
+    });
   });
 });

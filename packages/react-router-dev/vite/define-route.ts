@@ -2,31 +2,52 @@ import * as babel from "@babel/core";
 import type { Binding, NodePath } from "@babel/traverse";
 
 import { parse as _parse, t, traverse } from "./babel";
+import type { ParseResult } from "@babel/parser";
 
 export function transform(code: string) {
   let ast = parse(code);
+  assertDefineRouteOnlyAfterExportDefault(ast);
   traverse(ast, {
-    Identifier(path) {
-      if (!isDefineRoute(path)) return;
-      if (t.isImportSpecifier(path.parent)) return;
-      if (!t.isCallExpression(path.parent)) {
-        throw path.buildCodeFrameError(
-          "`defineRoute` must be a function call immediately after `export default`"
-        );
-      }
-      if (!t.isExportDefaultDeclaration(path.parentPath.parent)) {
-        throw path.buildCodeFrameError(
-          "`defineRoute` must be a function call immediately after `export default`"
-        );
-      }
-    },
     ExportDefaultDeclaration(path) {
       analyzeRouteExport(path);
     },
   });
 }
 
-function analyzeRouteExport(path: NodePath<t.ExportDefaultDeclaration>) {
+export function parseFields(code: string): string[] {
+  let fields: string[] = [];
+  let ast = parse(code);
+  assertDefineRouteOnlyAfterExportDefault(ast);
+  traverse(ast, {
+    ExportDefaultDeclaration(path) {
+      let analysis = analyzeRouteExport(path);
+      fields = Object.keys(analysis);
+    },
+  });
+  return fields;
+}
+
+type Analysis = {
+  params?: NodePath;
+  links?: NodePath;
+  HydrateFallback?: NodePath;
+
+  serverLoader?: NodePath;
+  clientLoader?: NodePath;
+  serverAction?: NodePath;
+  clientAction?: NodePath;
+
+  meta?: NodePath;
+  Component?: NodePath;
+  ErrorBoundary?: NodePath;
+
+  handle?: NodePath;
+  // TODO: shouldRevalidate
+};
+
+function analyzeRouteExport(
+  path: NodePath<t.ExportDefaultDeclaration>
+): Analysis {
   let route = path.node.declaration;
 
   // export default {...}
@@ -67,7 +88,8 @@ function analyzeRouteExport(path: NodePath<t.ExportDefaultDeclaration>) {
     );
 }
 
-function analyzeRoute(path: NodePath<t.ObjectExpression>) {
+function analyzeRoute(path: NodePath<t.ObjectExpression>): Analysis {
+  let analysis: Analysis = {};
   for (let [i, property] of path.node.properties.entries()) {
     // spread: defineRoute({ ...dynamic })
     if (!t.isObjectProperty(property) && !t.isObjectMethod(property)) {
@@ -109,11 +131,10 @@ function analyzeRoute(path: NodePath<t.ObjectExpression>) {
           );
         }
       }
-      continue;
     }
+    analysis[key as keyof Analysis] = propertyPath;
   }
-
-  throw path.buildCodeFrameError("TODO: not yet implemented");
+  return analysis;
 }
 
 export function assertNotImported(code: string): void {
@@ -143,6 +164,27 @@ function parse(source: string) {
   new babel.File({ filename: undefined }, { code: source, ast });
 
   return ast;
+}
+
+function assertDefineRouteOnlyAfterExportDefault(
+  ast: ParseResult<babel.types.File>
+) {
+  traverse(ast, {
+    Identifier(path) {
+      if (!isDefineRoute(path)) return;
+      if (t.isImportSpecifier(path.parent)) return;
+      if (!t.isCallExpression(path.parent)) {
+        throw path.buildCodeFrameError(
+          "`defineRoute` must be a function call immediately after `export default`"
+        );
+      }
+      if (!t.isExportDefaultDeclaration(path.parentPath.parent)) {
+        throw path.buildCodeFrameError(
+          "`defineRoute` must be a function call immediately after `export default`"
+        );
+      }
+    },
+  });
 }
 
 function isDefineRoute(path: NodePath): boolean {
