@@ -260,10 +260,13 @@ test.describe("defineRoute", () => {
         }
       `,
       "app/routes/_index.tsx": dedent`
-        import { defineRoute } from "react-router"
+        import { defineRoute } from "react-router";
         export default defineRoute({
-          Component() {
-            return <h1 data-title>Hello, world!</h1>
+          serverLoader() {
+            return { planet: "world" }
+          },
+          Component({ loaderData }) {
+            return <h1 data-title>Hello, {loaderData.planet}!</h1>
           }
         })
       `,

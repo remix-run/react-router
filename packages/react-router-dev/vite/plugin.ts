@@ -1007,69 +1007,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         });
         await viteChildCompiler.pluginContainer.buildStart({});
       },
-      async transform(code, id, options) {
+      async transform(code, id) {
         if (isCssModulesFile(id)) {
           cssModulesManifest[id] = code;
-        }
-
-        if (isRouteEntry(id)) {
-          let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
-
-          let routeFileName = path.basename(routeModuleId);
-
-          if (!code.includes("defineRoute")) {
-            let sourceExports = await getRouteModuleExports(
-              viteChildCompiler,
-              ctx,
-              routeModuleId
-            );
-
-            let reexports = sourceExports
-              .filter(
-                (exportName) =>
-                  (options?.ssr &&
-                    SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-                  CLIENT_ROUTE_EXPORTS.includes(exportName)
-              )
-              .join(", ");
-            return `export { ${reexports} } from "./${routeFileName}";`;
-          }
-
-          let renameFields = ["Component", "serverLoader", "serverAction"];
-          let fields = defineRoute.parseFields(code);
-          let reexports = fields
-            .filter((exportName) => !renameFields.includes(exportName))
-            .filter(
-              (exportName) =>
-                (options?.ssr &&
-                  SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-                CLIENT_ROUTE_EXPORTS.includes(exportName)
-            )
-            .map((reexport) => `export const ${reexport} = route.${reexport};`);
-
-          let content = `import route from "./${routeFileName}";`;
-          if (fields.includes("Component")) {
-            content +=
-              `\n` +
-              [
-                `import { createElement } from "react";`,
-                `import { useParams, useLoaderData, useActionData } from "react-router";`,
-                `export default function Route() {`,
-                `  let params = useParams();`,
-                `  let loaderData = useLoaderData();`,
-                `  let actionData = useActionData();`,
-                `  return createElement(route.Component, { params, loaderData, actionData });`,
-                `}`,
-              ].join("\n");
-          }
-          if (options?.ssr && fields.includes("serverLoader")) {
-            content += `\nexport const loader = route.serverLoader;`;
-          }
-          if (options?.ssr && fields.includes("serverAction")) {
-            content += `\nexport const action = route.serverAction;`;
-          }
-          content += "\n" + reexports.join("\n");
-          return content;
         }
       },
       buildStart() {
@@ -1280,6 +1220,70 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       },
       async buildEnd() {
         await viteChildCompiler?.close();
+      },
+    },
+    {
+      name: "react-router-route-entry",
+      enforce: "pre",
+      async transform(code, id, options) {
+        if (!isRouteEntry(id)) return;
+        let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
+
+        let routeFileName = path.basename(routeModuleId);
+
+        if (!code.includes("defineRoute")) {
+          let sourceExports = await getRouteModuleExports(
+            viteChildCompiler,
+            ctx,
+            routeModuleId
+          );
+
+          let reexports = sourceExports
+            .filter(
+              (exportName) =>
+                (options?.ssr &&
+                  SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
+                CLIENT_ROUTE_EXPORTS.includes(exportName)
+            )
+            .join(", ");
+          return `export { ${reexports} } from "./${routeFileName}";`;
+        }
+
+        let renameFields = ["Component", "serverLoader", "serverAction"];
+        let fields = defineRoute.parseFields(code);
+        let reexports = fields
+          .filter((exportName) => !renameFields.includes(exportName))
+          .filter(
+            (exportName) =>
+              (options?.ssr &&
+                SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
+              CLIENT_ROUTE_EXPORTS.includes(exportName)
+          )
+          .map((reexport) => `export const ${reexport} = route.${reexport};`);
+
+        let content = `import route from "./${routeFileName}";`;
+        if (fields.includes("Component")) {
+          content +=
+            `\n` +
+            [
+              `import { createElement } from "react";`,
+              `import { useParams, useLoaderData, useActionData } from "react-router";`,
+              `export default function Route() {`,
+              `  let params = useParams();`,
+              `  let loaderData = useLoaderData();`,
+              `  let actionData = useActionData();`,
+              `  return createElement(route.Component, { params, loaderData, actionData });`,
+              `}`,
+            ].join("\n");
+        }
+        if (options?.ssr && fields.includes("serverLoader")) {
+          content += `\nexport const loader = route.serverLoader;`;
+        }
+        if (options?.ssr && fields.includes("serverAction")) {
+          content += `\nexport const action = route.serverAction;`;
+        }
+        content += "\n" + reexports.join("\n");
+        return content;
       },
     },
     {
