@@ -1326,6 +1326,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       enforce: "pre",
       async transform(code, id, options) {
         if (options?.ssr) return;
+        if (!code.includes("defineRoute")) return; // temporary back compat, remove once old style routes are unsupported
 
         if (id.endsWith(ROUTE_ENTRY_QUERY_STRING)) return;
 
@@ -1334,8 +1335,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           return defineRoute.assertNotImported(code);
         }
 
-        if (!code.includes("defineRoute")) return; // temporary back compat, remove once old style routes are unsupported
-        defineRoute.transform(code);
+        return defineRoute.transform(code, id, options);
       },
     },
     {
