@@ -27,7 +27,7 @@ module.exports = function rollup() {
       },
       input: `${SOURCE_DIR}/cli.ts`,
       output: {
-        banner: createBanner(name, version, { executable: true }),
+        banner: createBanner(name, version),
         dir: OUTPUT_DIR,
         format: "cjs",
       },

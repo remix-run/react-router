@@ -15,7 +15,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "bin": {
-    "react-router": "dist/cli.js"
+    "react-router": "bin.js"
   },
   "scripts": {
     "tsc": "tsc"
@@ -91,6 +91,7 @@
   },
   "files": [
     "dist/",
+    "bin.js",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"
