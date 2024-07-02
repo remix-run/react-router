@@ -23,7 +23,7 @@ module.exports = function rollup() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/index.js`,
+        file: `${OUTPUT_DIR}/index.mjs`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router DOM", version),
