@@ -43,7 +43,6 @@ async function copyPlayground() {
       chalk.green`To start playground, run:`,
       "",
       `cd ${relativeDestDir}`,
-      "pnpm setup",
       "pnpm dev",
     ].join("\n")
   );
