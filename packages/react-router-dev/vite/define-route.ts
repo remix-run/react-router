@@ -1,17 +1,39 @@
 import * as babel from "@babel/core";
 import type { Binding, NodePath } from "@babel/traverse";
-
-import { parse as _parse, t, traverse } from "./babel";
 import type { ParseResult } from "@babel/parser";
+import {
+  deadCodeElimination,
+  findReferencedIdentifiers,
+} from "babel-dead-code-elimination";
 
-export function transform(code: string) {
+import { generate, parse as _parse, t, traverse } from "./babel";
+
+export function transform(
+  code: string,
+  id: string,
+  options: { ssr?: boolean } = {}
+) {
+  if (options?.ssr) return code;
+
   let ast = parse(code);
+  let refs = findReferencedIdentifiers(ast);
+
+  let markedForRemoval: NodePath<t.Node>[] = [];
   assertDefineRouteOnlyAfterExportDefault(ast);
   traverse(ast, {
     ExportDefaultDeclaration(path) {
-      analyzeRouteExport(path);
+      let analysis = analyzeRouteExport(path);
+      for (let [key, fieldPath] of Object.entries(analysis)) {
+        if (["headers", "serverLoader", "serverAction"].includes(key)) {
+          if (!fieldPath) continue;
+          markedForRemoval.push(fieldPath);
+        }
+      }
     },
   });
+  markedForRemoval.forEach((path) => path.remove());
+  deadCodeElimination(ast, refs);
+  return generate(ast, { sourceMaps: true, sourceFileName: id }, code);
 }
 
 export function parseFields(code: string): string[] {
