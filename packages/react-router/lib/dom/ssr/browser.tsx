@@ -1,13 +1,27 @@
 import * as React from "react";
-import type { HydrationState, Router as RemixRouter } from "../../router";
-import { createBrowserHistory, createRouter, matchRoutes } from "../../router";
+import type {
+  HydrationState,
+  LoaderFunction,
+  Router as RemixRouter,
+} from "../../router";
+import {
+  createBrowserHistory,
+  createRouter,
+  isRouteErrorResponse,
+  matchRoutes,
+} from "../../router";
+import type { DataRouteObject, RouteObject } from "../../context";
 
 import "../global";
 import { mapRouteProperties } from "../../components";
 import { RouterProvider } from "../lib";
 import type { AssetsManifest } from "./entry";
 import { deserializeErrors } from "./errors";
-import type { RouteModules } from "./routeModules";
+import type {
+  ClientActionFunction,
+  ClientLoaderFunction,
+  RouteModules,
+} from "./routeModules";
 import invariant from "./invariant";
 import {
   createClientRoutes,
@@ -57,7 +71,7 @@ function initSsrInfo(): void {
   }
 }
 
-function createHydratedRouter(): RemixRouter {
+function createHydratedRouter(propRoutes?: RouteObject[]): RemixRouter {
   initSsrInfo();
 
   if (!ssrInfo) {
@@ -120,6 +134,26 @@ function createHydratedRouter(): RemixRouter {
     ssrInfo.context.isSpaMode
   );
 
+  // If the user provided their own data routes, add them to our manifest-created
+  // routes here before creating the data router
+  if (propRoutes && propRoutes.length > 0) {
+    let rootRoute = routes[0];
+    if (!rootRoute.children) {
+      rootRoute.children = [];
+    }
+
+    try {
+      validatePropRoutes(propRoutes, rootRoute.children);
+      rootRoute.children.push(...propRoutes);
+
+      // If a route doesn't have a loader, add a dummy hydrating loader to stop
+      // rendering at that level for hydration
+    } catch (e) {
+      console.warn(e);
+      propRoutes = undefined;
+    }
+  }
+
   let hydrationData: HydrationState | undefined = undefined;
   if (!ssrInfo.context.isSpaMode) {
     // Create a shallow clone of `loaderData` we can mutate for partial hydration.
@@ -132,6 +166,8 @@ function createHydratedRouter(): RemixRouter {
       ...ssrInfo.context.state,
       loaderData: { ...ssrInfo.context.state.loaderData },
     };
+
+    let matchedPropRoute = false;
     let initialMatches = matchRoutes(
       routes,
       window.location,
@@ -142,11 +178,12 @@ function createHydratedRouter(): RemixRouter {
         let routeId = match.route.id;
         let route = ssrInfo.routeModules[routeId];
         let manifestRoute = ssrInfo.manifest.routes[routeId];
-        // Clear out the loaderData to avoid rendering the route component when the
-        // route opted into clientLoader hydration and either:
-        // * gave us a HydrateFallback
-        // * or doesn't have a server loader and we have no data to render
-        if (
+
+        if (!manifestRoute) {
+          // If this is not yet in the manifest then it must be a prop route added
+          // client-side via HydratedRouter, so there's nothing to clear out
+          matchedPropRoute = true;
+        } else if (
           route &&
           shouldHydrateRouteLoader(
             manifestRoute,
@@ -155,6 +192,10 @@ function createHydratedRouter(): RemixRouter {
           ) &&
           (route.HydrateFallback || !manifestRoute.hasLoader)
         ) {
+          // Clear out the loaderData to avoid rendering the route component when the
+          // route opted into clientLoader hydration and either:
+          // * gave us a HydrateFallback
+          // * or doesn't have a server loader and we have no data to render
           hydrationData.loaderData![routeId] = undefined;
         } else if (manifestRoute && !manifestRoute.hasLoader) {
           // Since every Remix route gets a `loader` on the client side to load
@@ -168,6 +209,24 @@ function createHydratedRouter(): RemixRouter {
     }
 
     if (hydrationData && hydrationData.errors) {
+      // If we rendered a 404 during SSR but then matched a prop route on the
+      // client, we want to clear out the 404 and let the client route render.
+      // This will cause a flicker/hydration error but will only happen in some
+      // edge cases:
+      // - During migrations from RouterProvider -> Vite Plugin
+      // - If the app is using SSR
+      // - If users actually enter the site on a client-only URL
+      if (matchedPropRoute) {
+        for (let [routeId, error] of Object.entries(hydrationData.errors)) {
+          if (isRouteErrorResponse(error) && error.status === 404) {
+            delete hydrationData.errors[routeId];
+          }
+        }
+        if (Object.keys(hydrationData.errors).length === 0) {
+          hydrationData.errors = null;
+        }
+      }
+
       // TODO: De-dup this or remove entirely in v7 where single fetch is the
       // only approach and we have already serialized or deserialized on the server
       hydrationData.errors = deserializeErrors(hydrationData.errors);
@@ -203,6 +262,17 @@ function createHydratedRouter(): RemixRouter {
   });
   ssrInfo.router = router;
 
+  // Do this after creating the router so ID's have been added to the routes
+  // that we can use as keys in the manifest. `router.routes` will contain the
+  // route IDs, `props.routes` may not.  If we encountered an error with the
+  // `propRoutes` above we'll have cleared them out so this is skipped
+  if (ssrInfo && propRoutes) {
+    let rootDataRoute = router.routes[0];
+    for (let route of rootDataRoute.children || []) {
+      addPropRoutesToRemix(ssrInfo, route as DataRouteObject, rootDataRoute.id);
+    }
+  }
+
   // We can call initialize() immediately if the router doesn't have any
   // loaders to run on hydration
   if (router.state.initialized) {
@@ -217,12 +287,104 @@ function createHydratedRouter(): RemixRouter {
   return router;
 }
 
+function addPropRoutesToRemix(
+  ssrInfo: SSRInfo,
+  route: DataRouteObject,
+  parentId: string
+) {
+  if (!ssrInfo.manifest.routes[route.id]) {
+    ssrInfo.manifest.routes[route.id] = {
+      index: route.index,
+      caseSensitive: route.caseSensitive,
+      id: route.id,
+      path: route.path,
+      parentId,
+      hasAction: false,
+      hasLoader: false,
+      hasClientAction: route.action != null,
+      hasClientLoader: route.loader != null,
+      hasErrorBoundary: route.hasErrorBoundary === true,
+      imports: [],
+      css: [],
+      module: undefined,
+    };
+    ssrInfo.routeModules[route.id] = {
+      ...route,
+      clientAction: route.action as ClientActionFunction,
+      clientLoader: route.loader as ClientLoaderFunction,
+      default: route.Component || (() => null),
+      HydrateFallback: route.HydrateFallback || undefined,
+      ErrorBoundary: route.ErrorBoundary || undefined,
+    };
+  }
+  if (route.children) {
+    for (let child of route.children) {
+      addPropRoutesToRemix(ssrInfo, child, route.id);
+    }
+  }
+}
+
+function validatePropRoutes(
+  propRoutes: RouteObject[],
+  rootChildren: RouteObject[]
+) {
+  let existingRootChildren = new Set();
+  for (let child of rootChildren) {
+    if (child.index) {
+      existingRootChildren.add("_index");
+    } else if (child.path) {
+      existingRootChildren.add(child.path);
+    }
+  }
+
+  for (let route of propRoutes) {
+    if (route.index && existingRootChildren.has("_index")) {
+      throw new Error(
+        `Cannot add a duplicate child index route to the root route via ` +
+          `the \`HydratedRouter\` \`routes\` prop.  The \`routes\` prop ` +
+          `will be ignored.`
+      );
+    }
+
+    if (route.path && existingRootChildren.has(route.path.replace(/^\//, ""))) {
+      throw new Error(
+        `Cannot add a duplicate child route with path \`${route.path}\` to ` +
+          `the root route via the \`HydratedRouter\` \`routes\` prop.  The ` +
+          `\`routes\` prop will be ignored.`
+      );
+    }
+  }
+}
+
+export interface HydratedRouterProps {
+  /**
+   *  Optional prop that can be used with "SPA Mode" when using the Vite plugin
+   * if you have not yet moved your routes to use the file-based routing
+   * convention or the `routes` config in the Vite plugin. The routes passed via
+   * this prop will be appended as additional children of your root route.
+   *
+   * Routes defined this way are strictly client-side, so your `loader`/`action`
+   * will be internally converted to Remix `clientLoader`/`clientAction`'s.
+   *
+   * ⚠️ This is not intended to be used as a primary method of defining routes,
+   * and is intended to be used as a migration path from a React Router
+   * `RouterProvider` application.
+   *
+   * ⚠️ If any collisions are detected from routes on the file system then a
+   * warning will be logged and the `routes` prop will be ignored.
+   */
+  routes?: RouteObject[];
+}
+
 /**
+ * Top-level component of your React Router application when using the Vite plugin.
+ * Renders from the root component down for the matched routes.
+ *
  * @category Router Components
  */
-export function HydratedRouter() {
+export function HydratedRouter(props: HydratedRouterProps): React.ReactElement {
   if (!router) {
-    router = createHydratedRouter();
+    router = createHydratedRouter(props.routes);
   }
 
   // Critical CSS can become stale after code changes, e.g. styles might be
