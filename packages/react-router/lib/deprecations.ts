@@ -55,14 +55,13 @@ export function logV6DeprecationWarnings(
     );
   }
 
-  // TODO: Uncomment once this stabilizes
-  // if (future?.unstable_skipActionErrorRevalidation) {
-  //   logDeprecation(
-  //     "unstable_skipActionErrorRevalidation",
-  //     "The revalidation behavior after 4xx/5xx action responses is changing in v7",
-  //     "https://reactrouter.com/en/v7/upgrading/future#v7_skipactionerrorrevalidation",
-  //   );
-  // }
+  if (future?.v7_skipActionErrorRevalidation) {
+    logDeprecation(
+      "v7_skipActionErrorRevalidation",
+      "The revalidation behavior after 4xx/5xx action responses is changing in v7",
+      "https://reactrouter.com/en/v7/upgrading/future#v7_skipactionerrorrevalidation"
+    );
+  }
 
   if (future?.v7_startTransition) {
     logDeprecation(
