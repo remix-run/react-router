@@ -1221,7 +1221,7 @@ export function getResolveToMatches<
   // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
   if (v7_relativeSplatPath) {
     return pathMatches.map((match, idx) =>
-      idx === matches.length - 1 ? match.pathname : match.pathnameBase
+      idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase
     );
   }
 

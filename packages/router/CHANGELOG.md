@@ -1,5 +1,12 @@
 # `@remix-run/router`
 
+## 1.17.1
+
+### Patch Changes
+
+- Fog of War (unstable): Trigger a new `router.routes` identity/reflow during route patching ([#11740](https://github.com/remix-run/react-router/pull/11740))
+- Fog of War (unstable): Fix initial matching when a splat route matches ([#11759](https://github.com/remix-run/react-router/pull/11759))
+
 ## 1.17.0
 
 ### Minor Changes
