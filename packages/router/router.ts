@@ -372,7 +372,7 @@ export interface FutureConfig {
   v7_partialHydration: boolean;
   v7_prependBasename: boolean;
   v7_relativeSplatPath: boolean;
-  unstable_skipActionErrorRevalidation: boolean;
+  v7_skipActionErrorRevalidation: boolean;
 }
 
 /**
@@ -806,7 +806,7 @@ export function createRouter(init: RouterInit): Router {
     v7_partialHydration: false,
     v7_prependBasename: false,
     v7_relativeSplatPath: false,
-    unstable_skipActionErrorRevalidation: false,
+    v7_skipActionErrorRevalidation: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -1891,7 +1891,7 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission,
       location,
       future.v7_partialHydration && initialHydration === true,
-      future.unstable_skipActionErrorRevalidation,
+      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -2350,7 +2350,7 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       false,
-      future.unstable_skipActionErrorRevalidation,
+      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledDeferredRoutes,
       cancelledFetcherLoads,
@@ -4384,7 +4384,7 @@ function getMatchesToLoad(
       nextParams: nextRouteMatch.params,
       ...submission,
       actionResult,
-      unstable_actionStatus: actionStatus,
+      actionStatus,
       defaultShouldRevalidate: shouldSkipRevalidation
         ? false
         : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
@@ -4463,7 +4463,7 @@ function getMatchesToLoad(
         nextParams: matches[matches.length - 1].params,
         ...submission,
         actionResult,
-        unstable_actionStatus: actionStatus,
+        actionStatus,
         defaultShouldRevalidate: shouldSkipRevalidation
           ? false
           : isRevalidationRequired,

@@ -210,7 +210,7 @@ export interface ShouldRevalidateFunctionArgs {
   text?: Submission["text"];
   formData?: Submission["formData"];
   json?: Submission["json"];
-  unstable_actionStatus?: number;
+  actionStatus?: number;
   actionResult?: any;
   defaultShouldRevalidate: boolean;
 }
