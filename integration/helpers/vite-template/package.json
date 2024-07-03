@@ -5,9 +5,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/@react-router/dev/dist/cli.js dev",
-    "build": "node ./node_modules/@react-router/dev/dist/cli.js build",
-    "start": "node ./node_modules/@react-router/serve/dist/cli.js ./build/server/index.js",
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
