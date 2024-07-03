@@ -12,7 +12,7 @@
   "dependencies": {
     "@react-router/node": "workspace:*",
     "@react-router/serve": "workspace:*",
-    "isbot": "^4.1.0",
+    "isbot": "^5.1.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "workspace:*"

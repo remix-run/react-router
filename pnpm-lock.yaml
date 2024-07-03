@@ -184,8 +184,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       isbot:
-        specifier: ^4.1.0
-        version: 4.4.0
+        specifier: ^5.1.11
+        version: 5.1.11
       jest:
         specifier: ^29.6.4
         version: 29.7.0
@@ -316,8 +316,8 @@ importers:
         specifier: 8.0.3
         version: 8.0.3
       isbot:
-        specifier: ^4.1.0
-        version: 4.4.0
+        specifier: ^5.1.11
+        version: 5.1.11
       npm-run-all:
         specifier: ^4.1.5
         version: 4.1.5
@@ -382,8 +382,8 @@ importers:
         specifier: ^4.19.2
         version: 4.19.2
       isbot:
-        specifier: ^4.1.0
-        version: 4.4.0
+        specifier: ^5.1.11
+        version: 5.1.11
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -443,8 +443,8 @@ importers:
         specifier: ^4.19.2
         version: 4.19.2
       isbot:
-        specifier: ^4.1.0
-        version: 4.4.0
+        specifier: ^5.1.11
+        version: 5.1.11
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -789,8 +789,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/react-router-serve
       isbot:
-        specifier: ^4.1.0
-        version: 4.4.0
+        specifier: ^5.1.11
+        version: 5.1.11
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -835,8 +835,8 @@ importers:
         specifier: ^4.19.2
         version: 4.19.2
       isbot:
-        specifier: ^4.1.0
-        version: 4.4.0
+        specifier: ^5.1.11
+        version: 5.1.11
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -9107,8 +9107,8 @@ packages:
     resolution: {integrity: sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==}
     dev: false
 
-  /isbot@4.4.0:
-    resolution: {integrity: sha512-8ZvOWUA68kyJO4hHJdWjyreq7TYNWTS9y15IzeqVdKxR9pPr3P/3r9AHcoIv9M0Rllkao5qWz2v1lmcyKIVCzQ==}
+  /isbot@5.1.11:
+    resolution: {integrity: sha512-Asuou7OsKVbATgXlrlqdeSRw4fYnD6CNcc0IXy1f5m1AImL2S6IP0xRcRRzjGjoARbegvnBnju9kk5z/Itf70Q==}
     engines: {node: '>=18'}
     dev: false
 
