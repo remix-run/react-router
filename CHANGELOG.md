@@ -195,7 +195,7 @@ Date: YYYY-MM-DD
 
 ## v6.24.1
 
-Date: 2024-07-02
+Date: 2024-07-03
 
 ### Patch Changes
 
@@ -204,7 +204,7 @@ Date: 2024-07-02
 - Export `NavLinkRenderProps` type for easier typing of custom `NavLink` callback ([#11553](https://github.com/remix-run/react-router/pull/11553))
 - When using `future.v7_relativeSplatPath`, properly resolve relative paths in splat routes that are children of pathless routes ([#11633](https://github.com/remix-run/react-router/pull/11633))
 - Fog of War (unstable): Trigger a new `router.routes` identity/reflow during route patching ([#11740](https://github.com/remix-run/react-router/pull/11740))
-- Fog of War (unstable): Fix initial matching in when a splat route matches ([#11759](https://github.com/remix-run/react-router/pull/11759))
+- Fog of War (unstable): Fix initial matching when a splat route matches ([#11759](https://github.com/remix-run/react-router/pull/11759))
 
 **Full Changelog**: [`v6.24.0...v6.24.1`](https://github.com/remix-run/react-router/compare/react-router@6.24.0...react-router@6.24.1)
 
