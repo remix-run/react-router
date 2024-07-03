@@ -847,6 +847,20 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
+  // If the user provided a patchRoutesOnMiss implementation and our initial
+  // match is a splat route, clear them out so we run through lazy discovery
+  // on hydration in case there's a more accurate lazy route match
+  if (initialMatches && patchRoutesOnMissImpl) {
+    let fogOfWar = checkFogOfWar(
+      initialMatches,
+      dataRoutes,
+      init.history.location.pathname
+    );
+    if (fogOfWar.active) {
+      initialMatches = null;
+    }
+  }
+
   let initialized: boolean;
   if (!initialMatches) {
     // We need to run patchRoutesOnMiss in initialize()
@@ -3063,7 +3077,10 @@ export function createRouter(init: RouterInit): Router {
         return { active: true, matches: fogMatches || [] };
       } else {
         let leafRoute = matches[matches.length - 1].route;
-        if (leafRoute.path === "*") {
+        if (
+          leafRoute.path &&
+          (leafRoute.path === "*" || leafRoute.path.endsWith("/*"))
+        ) {
           // If we matched a splat, it might only be because we haven't yet fetched
           // the children that would match with a higher score, so let's fetch
           // around and find out
