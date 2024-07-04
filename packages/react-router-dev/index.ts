@@ -7,4 +7,5 @@ export type {
   ServerBundlesFunction,
   VitePluginConfig,
 } from "./config";
+export { routes } from "./config/routes";
 export { vitePlugin } from "./vite";

@@ -1,6 +1,110 @@
 import * as path from "node:path";
 
 /**
+ * A route tree exported from the routes config file
+ */
+export interface RouteConfig {
+  /**
+   * The unique id for this route.
+   */
+  id?: string;
+
+  /**
+   * The path this route uses to match on the URL pathname.
+   */
+  path?: string;
+
+  /**
+   * The index route for this route.
+   */
+  index?:
+    | string
+    | {
+        /**
+         * The unique id for the index route.
+         */
+        id?: string;
+
+        /**
+         * The path to the entry point for the index route, relative to
+         * `config.appDirectory`.
+         */
+        file: string;
+      };
+
+  /**
+   * Should be `true` if the `path` is case-sensitive. Defaults to `false`.
+   */
+  caseSensitive?: boolean;
+
+  /**
+   * The path to the entry point for this route, relative to
+   * `config.appDirectory`.
+   */
+  file: string;
+
+  /**
+   * The child routes.
+   */
+  children?: RouteConfig[];
+}
+
+export function routes(
+  routeConfig: RouteConfig | (() => RouteConfig) | (() => Promise<RouteConfig>)
+): RouteConfig | Promise<RouteConfig> {
+  return typeof routeConfig === "function" ? routeConfig() : routeConfig;
+}
+
+export function routeConfigToRouteManifest(
+  routeConfig: RouteConfig
+): RouteManifest {
+  let routeManifest: RouteManifest = {};
+
+  function resolveRouteId(node: RouteConfig): string {
+    return node.id || createRouteId(node.file);
+  }
+
+  function walk(node: RouteConfig, parentId: string | null) {
+    let id = resolveRouteId(node);
+    let manifestItem: ConfigRoute = {
+      id,
+      parentId: parentId ?? undefined,
+      file: node.file,
+      path: node.path,
+      caseSensitive: node.caseSensitive,
+    };
+
+    if (node.index) {
+      let indexNode =
+        typeof node.index === "string"
+          ? // Support string shorthands
+            { file: node.index }
+          : node.index;
+
+      let indexId = resolveRouteId(indexNode);
+      routeManifest[indexId] = {
+        id: indexId,
+        index: true,
+        parentId: id,
+        file: indexNode.file,
+      };
+    }
+
+    routeManifest[id] = manifestItem;
+
+    if (node.children) {
+      for (let child of node.children) {
+        walk(child, id);
+      }
+    }
+  }
+
+  walk(routeConfig, null);
+
+  return routeManifest;
+}
+
+/**
  * A route that was created using `defineRoutes` or created conventionally from
  * looking at the files on the filesystem.
  */

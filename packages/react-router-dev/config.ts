@@ -11,7 +11,9 @@ import {
   type RouteManifest,
   type ConfigRoute,
   type DefineRoutesFunction,
+  type RouteConfig,
   defineRoutes,
+  routeConfigToRouteManifest,
 } from "./config/routes";
 import { flatRoutes } from "./config/flatRoutes";
 import { detectPackageManager } from "./cli/detectPackageManager";
@@ -314,16 +316,20 @@ export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.base ?? "/";
 }
 
+let initialRouteConfigValid = false;
+
 export async function resolveReactRouterConfig({
   rootDirectory,
   reactRouterUserConfig,
   viteUserConfig,
   viteCommand,
+  routesConfigCompiler,
 }: {
   rootDirectory: string;
   reactRouterUserConfig: VitePluginConfig;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
+  routesConfigCompiler: Vite.ViteDevServer;
 }) {
   let presets: VitePluginConfig[] = (
     await Promise.all(
@@ -424,19 +430,39 @@ export async function resolveReactRouterConfig({
     throw new Error(`Missing "root" route file in ${appDirectory}`);
   }
 
-  let routes: RouteManifest = {
-    root: { path: "", id: "root", file: rootRouteFile },
-  };
-  if (fse.existsSync(path.resolve(appDirectory, "routes"))) {
-    let fileRoutes = flatRoutes(appDirectory, ignoredRouteFiles);
-    for (let route of Object.values(fileRoutes)) {
-      routes[route.id] = { ...route, parentId: route.parentId || "root" };
+  let routes: RouteManifest;
+
+  let routesConfigFile = findEntry(appDirectory, "routes");
+  if (routesConfigFile) {
+    try {
+      let routeConfig: RouteConfig = (
+        await routesConfigCompiler.ssrLoadModule(
+          path.join(appDirectory, routesConfigFile)
+        )
+      ).default;
+
+      routes = routeConfigToRouteManifest(routeConfig);
+      initialRouteConfigValid = true;
+    } catch (error) {
+      // Ensure the dev server doesn't stop if routes config file becomes invalid
+      if (!initialRouteConfigValid) throw error;
+      routes = {};
     }
-  }
-  if (userRoutesFunction) {
-    let userRoutes = await userRoutesFunction(defineRoutes);
-    for (let route of Object.values(userRoutes)) {
-      routes[route.id] = { ...route, parentId: route.parentId || "root" };
+  } else {
+    routes = {
+      root: { path: "", id: "root", file: rootRouteFile },
+    };
+    if (fse.existsSync(path.resolve(appDirectory, "routes"))) {
+      let fileRoutes = flatRoutes(appDirectory, ignoredRouteFiles);
+      for (let route of Object.values(fileRoutes)) {
+        routes[route.id] = { ...route, parentId: route.parentId || "root" };
+      }
+    }
+    if (userRoutesFunction) {
+      let userRoutes = await userRoutesFunction(defineRoutes);
+      for (let route of Object.values(userRoutes)) {
+        routes[route.id] = { ...route, parentId: route.parentId || "root" };
+      }
     }
   }
 

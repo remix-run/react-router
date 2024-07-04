@@ -444,6 +444,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   let viteConfig: Vite.ResolvedConfig | undefined;
   let cssModulesManifest: Record<string, string> = {};
   let viteChildCompiler: Vite.ViteDevServer | null = null;
+  let routesConfigCompiler: Vite.ViteDevServer | null = null;
+
+  let ssrExternals = isInReactRouterMonorepo()
+    ? [
+        // This is only needed within this repo because these packages
+        // are linked to a directory outside of node_modules so Vite
+        // treats them as internal code by default.
+        "react-router",
+        "react-router-dom",
+        "@react-router/dev",
+        "@react-router/express",
+        "@react-router/node",
+        "@react-router/serve",
+      ]
+    : undefined;
 
   // This is initialized by `updatePluginContext` during Vite's `config`
   // hook, so most of the code can assume this defined without null check.
@@ -456,11 +471,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     let rootDirectory =
       viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
+    invariant(routesConfigCompiler);
     let reactRouterConfig = await resolveReactRouterConfig({
       rootDirectory,
       reactRouterUserConfig,
       viteUserConfig,
       viteCommand,
+      routesConfigCompiler,
     });
 
     let { entryClientFilePath, entryServerFilePath } = await resolveEntryFiles({
@@ -749,6 +766,22 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         viteConfigEnv = _viteConfigEnv;
         viteCommand = viteConfigEnv.command;
 
+        routesConfigCompiler = await vite.createServer({
+          mode: viteConfigEnv.mode,
+          server: {
+            watch: viteCommand === "build" ? null : undefined,
+            preTransformRequests: false,
+            hmr: false,
+          },
+          ssr: {
+            external: ssrExternals,
+          },
+          configFile: false,
+          envFile: false,
+          plugins: [],
+        });
+        await routesConfigCompiler.pluginContainer.buildStart({});
+
         await updatePluginContext();
 
         Object.assign(
@@ -794,19 +827,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               : "custom",
 
           ssr: {
-            external: isInReactRouterMonorepo()
-              ? [
-                  // This is only needed within this repo because these packages
-                  // are linked to a directory outside of node_modules so Vite
-                  // treats them as internal code by default.
-                  "react-router",
-                  "react-router-dom",
-                  "@react-router/dev",
-                  "@react-router/express",
-                  "@react-router/node",
-                  "@react-router/serve",
-                ]
-              : undefined,
+            external: ssrExternals,
           },
           optimizeDeps: {
             include: [
@@ -1120,7 +1141,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             eventName === "change" &&
             normalizePath(filepath) === normalizePath(viteConfig.configFile);
 
-          if (appFileAddedOrRemoved || viteConfigChanged) {
+          let routesConfigModuleGraphChanged = Boolean(
+            routesConfigCompiler?.moduleGraph.getModuleById(filepath)
+          );
+
+          if (
+            appFileAddedOrRemoved ||
+            viteConfigChanged ||
+            routesConfigModuleGraphChanged
+          ) {
             let lastReactRouterConfig = ctx.reactRouterConfig;
 
             await updatePluginContext();
