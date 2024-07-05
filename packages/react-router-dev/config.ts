@@ -11,11 +11,12 @@ import {
   type RouteManifest,
   type ConfigRoute,
   type DefineRoutesFunction,
-  type RouteConfig,
+  type RouteConfigExport,
   defineRoutes,
   routeConfigToRouteManifest,
 } from "./config/routes";
 import { flatRoutes } from "./config/flatRoutes";
+import { findEntry } from "./config/findEntry";
 import { detectPackageManager } from "./cli/detectPackageManager";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
@@ -435,13 +436,18 @@ export async function resolveReactRouterConfig({
   let routesConfigFile = findEntry(appDirectory, "routes");
   if (routesConfigFile) {
     try {
-      let routeConfig: RouteConfig = (
+      let routeConfigExport: RouteConfigExport = (
         await routesConfigCompiler.ssrLoadModule(
           path.join(appDirectory, routesConfigFile)
         )
       ).default;
 
-      routes = routeConfigToRouteManifest(routeConfig);
+      routes = routeConfigToRouteManifest(
+        typeof routeConfigExport === "function"
+          ? await routeConfigExport({ appDirectory })
+          : routeConfigExport
+      );
+
       initialRouteConfigValid = true;
     } catch (error) {
       // Ensure the dev server doesn't stop if routes config file becomes invalid
@@ -556,15 +562,4 @@ export async function resolveEntryFiles({
     : path.resolve(defaultsDirectory, entryServerFile);
 
   return { entryClientFilePath, entryServerFilePath };
-}
-
-const entryExts = [".js", ".jsx", ".ts", ".tsx"];
-
-function findEntry(dir: string, basename: string): string | undefined {
-  for (let ext of entryExts) {
-    let file = path.resolve(dir, basename + ext);
-    if (fse.existsSync(file)) return path.relative(dir, file);
-  }
-
-  return undefined;
 }
