@@ -1,4 +1,6 @@
 import * as path from "node:path";
+import { findEntry } from "./findEntry";
+import { flatRoutes } from "./flatRoutes";
 
 /**
  * A route tree exported from the routes config file
@@ -36,10 +38,38 @@ export interface RouteConfig {
   children?: RouteConfig[];
 }
 
+type RouteConfigFunction = (args: {
+  appDirectory: string;
+}) => RouteConfig | Promise<RouteConfig>;
+
+export type RouteConfigExport = RouteConfig | RouteConfigFunction;
+
 export function routes(
-  routeConfig: RouteConfig | (() => RouteConfig) | (() => Promise<RouteConfig>)
-): RouteConfig | Promise<RouteConfig> {
-  return typeof routeConfig === "function" ? routeConfig() : routeConfig;
+  routeConfig: RouteConfig | RouteConfigFunction
+): RouteConfig | Promise<RouteConfig> | RouteConfigFunction {
+  return typeof routeConfig === "function"
+    ? (args) => routeConfig(args)
+    : routeConfig;
+}
+
+export function fileSystemRoutes({
+  ignoredFilePatterns,
+  prefix,
+}: {
+  ignoredFilePatterns?: string[];
+  prefix?: string;
+} = {}) {
+  return routes(({ appDirectory }) => {
+    let rootRouteFile = findEntry(appDirectory, "root");
+    if (!rootRouteFile) {
+      throw new Error(`Missing "root" route file in ${appDirectory}`);
+    }
+
+    return routeManifestToRouteConfig({
+      root: { path: "", id: "root", file: rootRouteFile },
+      ...flatRoutes(appDirectory, ignoredFilePatterns, prefix),
+    });
+  });
 }
 
 export function routeConfigToRouteManifest(
@@ -74,6 +104,48 @@ export function routeConfigToRouteManifest(
   walk(routeConfig, null);
 
   return routeManifest;
+}
+
+export function routeManifestToRouteConfig(
+  routeManifest: RouteManifest
+): RouteConfig {
+  let routeConfigs: { [id: string]: RouteConfig } = {};
+
+  for (let [id, route] of Object.entries(routeManifest)) {
+    routeConfigs[id] = {
+      id: route.id,
+      index: route.index,
+      file: route.file,
+      path: route.path,
+      caseSensitive: route.caseSensitive,
+    };
+  }
+
+  let rootConfig: RouteConfig | null = null;
+
+  for (let [id, config] of Object.entries(routeConfigs)) {
+    let manifestItem = routeManifest[id];
+
+    if (!manifestItem.parentId) {
+      if (rootConfig) {
+        throw new Error("Route manifest must have a single root route");
+      }
+      rootConfig = config;
+    } else {
+      let parentConfig = routeConfigs[manifestItem.parentId];
+      if (!parentConfig.children) {
+        parentConfig.children = [];
+      }
+      parentConfig.children.push(config);
+      rootConfig = config;
+    }
+  }
+
+  if (!rootConfig) {
+    throw new Error("Route manifest must have a root route");
+  }
+
+  return rootConfig;
 }
 
 /**
