@@ -5045,6 +5045,12 @@ function createClientSideRequest(
     ) {
       // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
       init.body = convertFormDataToSearchParams(submission.formData);
+    } else if (
+      formEncType === "multipart/form-data" &&
+      submission.formData &&
+      submission.formData.keys().next().done
+    ) {
+      init.body = null;
     } else {
       // Content-Type is inferred (https://fetch.spec.whatwg.org/#dom-request)
       init.body = submission.formData;
