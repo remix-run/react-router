@@ -15,22 +15,9 @@ export interface RouteConfig {
   path?: string;
 
   /**
-   * The index route for this route.
+   * Should be `true` if it is an index route. This disallows child routes.
    */
-  index?:
-    | string
-    | {
-        /**
-         * The unique id for the index route.
-         */
-        id?: string;
-
-        /**
-         * The path to the entry point for the index route, relative to
-         * `config.appDirectory`.
-         */
-        file: string;
-      };
+  index?: boolean;
 
   /**
    * Should be `true` if the `path` is case-sensitive. Defaults to `false`.
@@ -71,24 +58,9 @@ export function routeConfigToRouteManifest(
       parentId: parentId ?? undefined,
       file: node.file,
       path: node.path,
+      index: node.index,
       caseSensitive: node.caseSensitive,
     };
-
-    if (node.index) {
-      let indexNode =
-        typeof node.index === "string"
-          ? // Support string shorthands
-            { file: node.index }
-          : node.index;
-
-      let indexId = resolveRouteId(indexNode);
-      routeManifest[indexId] = {
-        id: indexId,
-        index: true,
-        parentId: id,
-        file: indexNode.file,
-      };
-    }
 
     routeManifest[id] = manifestItem;
 
