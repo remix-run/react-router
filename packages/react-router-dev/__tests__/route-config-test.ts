@@ -1,22 +1,16 @@
-import {
-  type RouteConfig,
-  type RouteManifest,
-  routeConfigToRouteManifest,
-  routeManifestToRouteConfig,
-} from "../config/routes";
+import { dataRoutes } from "../config/routes";
 
 describe("route config", () => {
-  describe("routeConfigToRouteManifest", () => {
-    it("converts a simple root route with an index", () => {
-      const routeConfig: RouteConfig = [
-        {
-          file: "app/index.tsx",
-          index: true,
-        },
-      ];
-
-      const manifest: RouteManifest = routeConfigToRouteManifest(routeConfig);
-      expect(manifest).toMatchInlineSnapshot(`
+  describe("dataRoutes", () => {
+    it("converts a simple index route", () => {
+      expect(
+        dataRoutes([
+          {
+            file: "app/index.tsx",
+            index: true,
+          },
+        ])
+      ).toMatchInlineSnapshot(`
         {
           "app/index": {
             "caseSensitive": undefined,
@@ -31,27 +25,26 @@ describe("route config", () => {
     });
 
     it("handles nested routes with layout", () => {
-      const routeConfig: RouteConfig = [
-        {
-          id: "layout",
-          file: "app/layout.tsx",
-          children: [
-            {
-              id: "child1",
-              path: "child1",
-              file: "app/child1.tsx",
-            },
-            {
-              id: "child2",
-              path: "child2",
-              file: "app/child2.tsx",
-            },
-          ],
-        },
-      ];
-
-      const manifest: RouteManifest = routeConfigToRouteManifest(routeConfig);
-      expect(manifest).toMatchInlineSnapshot(`
+      expect(
+        dataRoutes([
+          {
+            id: "layout",
+            file: "app/layout.tsx",
+            children: [
+              {
+                id: "child1",
+                path: "child1",
+                file: "app/child1.tsx",
+              },
+              {
+                id: "child2",
+                path: "child2",
+                file: "app/child2.tsx",
+              },
+            ],
+          },
+        ])
+      ).toMatchInlineSnapshot(`
         {
           "child1": {
             "caseSensitive": undefined,
@@ -78,83 +71,6 @@ describe("route config", () => {
             "path": undefined,
           },
         }
-      `);
-    });
-  });
-
-  describe("routeManifestToRouteConfig", () => {
-    it("reconstructs a simple root route with an index", () => {
-      const manifest: RouteManifest = {
-        index: {
-          id: "index",
-          parentId: "root",
-          file: "app/index.tsx",
-          index: true,
-        },
-      };
-
-      const config = routeManifestToRouteConfig(manifest);
-      expect(config).toMatchInlineSnapshot(`
-        [
-          {
-            "caseSensitive": undefined,
-            "file": "app/index.tsx",
-            "id": "index",
-            "index": true,
-            "path": undefined,
-          },
-        ]
-      `);
-    });
-
-    it("reconstructs nested routes with layout", () => {
-      const manifest: RouteManifest = {
-        layout: {
-          id: "layout",
-          parentId: "root",
-          file: "app/layout.tsx",
-        },
-        child1: {
-          id: "child1",
-          path: "child1",
-          parentId: "layout",
-          file: "app/child1.tsx",
-        },
-        child2: {
-          id: "child2",
-          path: "child2",
-          parentId: "layout",
-          file: "app/child2.tsx",
-        },
-      };
-
-      const config = routeManifestToRouteConfig(manifest);
-      expect(config).toMatchInlineSnapshot(`
-        [
-          {
-            "caseSensitive": undefined,
-            "children": [
-              {
-                "caseSensitive": undefined,
-                "file": "app/child1.tsx",
-                "id": "child1",
-                "index": undefined,
-                "path": "child1",
-              },
-              {
-                "caseSensitive": undefined,
-                "file": "app/child2.tsx",
-                "id": "child2",
-                "index": undefined,
-                "path": "child2",
-              },
-            ],
-            "file": "app/layout.tsx",
-            "id": "layout",
-            "index": undefined,
-            "path": undefined,
-          },
-        ]
       `);
     });
   });

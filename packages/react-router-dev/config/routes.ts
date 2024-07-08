@@ -1,11 +1,11 @@
 import * as path from "node:path";
-import { findEntry } from "./findEntry";
+import * as fs from "node:fs";
 import { flatRoutes } from "./flatRoutes";
 
 /**
  * A route exported from the routes config file
  */
-export interface RouteConfigItem {
+export interface DataRoute {
   /**
    * The unique id for this route.
    */
@@ -35,116 +35,75 @@ export interface RouteConfigItem {
   /**
    * The child routes.
    */
-  children?: RouteConfigItem[];
+  children?: DataRoute[];
 }
 
-export type RouteConfig = RouteConfigItem[];
-
-type RouteConfigFunction = (args: {
+type DynamicRouteManifest = (args: {
   appDirectory: string;
-}) => RouteConfig | Promise<RouteConfig>;
+}) => RouteManifest | Promise<RouteManifest>;
 
-export type RouteConfigExport = RouteConfig | RouteConfigFunction;
+export type RouteConfig =
+  | RouteManifest
+  | DynamicRouteManifest
+  | Array<RouteManifest | DynamicRouteManifest>;
 
-export function routes(
-  routeConfig: RouteConfig | RouteConfigFunction
-): RouteConfig | Promise<RouteConfig> | RouteConfigFunction {
-  return typeof routeConfig === "function"
-    ? (args) => routeConfig(args)
-    : routeConfig;
+export function defineRoutesConfig(routeConfig: RouteConfig) {
+  return routeConfig;
 }
 
-export function fileSystemRoutes({
-  ignoredFilePatterns,
-  prefix,
-}: {
-  ignoredFilePatterns?: string[];
-  prefix?: string;
-} = {}) {
-  return routes(({ appDirectory }) => {
-    let rootRouteFile = findEntry(appDirectory, "root");
-    if (!rootRouteFile) {
-      throw new Error(`Missing "root" route file in ${appDirectory}`);
-    }
-
-    return routeManifestToRouteConfig(
-      flatRoutes(appDirectory, ignoredFilePatterns, prefix)
-    );
-  });
+export function dataRoutes(dataRoutes: DataRoute[]): RouteManifest {
+  return dataRoutesToRouteManifest(dataRoutes);
 }
 
-export function routeConfigToRouteManifest(
-  routeConfig: RouteConfig,
+function dataRoutesToRouteManifest(
+  routes: DataRoute[],
   rootId = "root"
 ): RouteManifest {
   let routeManifest: RouteManifest = {};
 
-  function resolveRouteId(node: RouteConfigItem): string {
-    return node.id || createRouteId(node.file);
-  }
-
-  function walk(node: RouteConfigItem, parentId: string | null) {
-    let id = resolveRouteId(node);
+  function walk(route: DataRoute, parentId: string) {
+    let id = route.id || createRouteId(route.file);
     let manifestItem: ConfigRoute = {
       id,
-      parentId: parentId ?? rootId,
-      file: node.file,
-      path: node.path,
-      index: node.index,
-      caseSensitive: node.caseSensitive,
+      parentId,
+      file: route.file,
+      path: route.path,
+      index: route.index,
+      caseSensitive: route.caseSensitive,
     };
 
     routeManifest[id] = manifestItem;
 
-    if (node.children) {
-      for (let child of node.children) {
+    if (route.children) {
+      for (let child of route.children) {
         walk(child, id);
       }
     }
   }
 
-  for (let node of routeConfig) {
-    walk(node, null);
+  for (let route of routes) {
+    walk(route, rootId);
   }
 
   return routeManifest;
 }
 
-export function routeManifestToRouteConfig(
-  routeManifest: RouteManifest,
-  rootId: string = "root"
-): RouteConfigItem[] {
-  let routeConfigs: {
-    [id: string]: RouteConfigItem;
-  } = {};
-
-  for (let [id, route] of Object.entries(routeManifest)) {
-    routeConfigs[id] = {
-      id: route.id,
-      index: route.index,
-      file: route.file,
-      path: route.path,
-      caseSensitive: route.caseSensitive,
-    };
-  }
-
-  // Placeholder root config to hold all the top-level routes
-  let rootConfig: RouteConfigItem = { id: rootId, file: "" };
-
-  for (let [id, config] of Object.entries(routeConfigs)) {
-    let manifestItem = routeManifest[id];
-
-    let parentConfig =
-      !manifestItem.parentId || manifestItem.parentId === rootId
-        ? rootConfig
-        : routeConfigs[manifestItem.parentId];
-    if (!parentConfig.children) {
-      parentConfig.children = [];
+export function fsRoutes({
+  ignoredFilePatterns,
+  rootDirectory = "routes",
+}: {
+  ignoredFilePatterns?: string[];
+  rootDirectory?: string;
+} = {}): DynamicRouteManifest {
+  return ({ appDirectory }) => {
+    if (!fs.existsSync(path.resolve(appDirectory, rootDirectory))) {
+      throw new Error(
+        `Could not find the routes root directory: ${rootDirectory}. Did you forget to create it?`
+      );
     }
-    parentConfig.children.push(config);
-  }
 
-  return rootConfig.children || [];
+    return flatRoutes(appDirectory, ignoredFilePatterns, rootDirectory);
+  };
 }
 
 /**

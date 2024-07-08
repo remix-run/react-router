@@ -11,12 +11,10 @@ import {
   type RouteManifest,
   type ConfigRoute,
   type DefineRoutesFunction,
-  type RouteConfigExport,
+  type RouteConfig,
   defineRoutes,
-  routeConfigToRouteManifest,
 } from "./config/routes";
 import { flatRoutes } from "./config/flatRoutes";
-import { findEntry } from "./config/findEntry";
 import { detectPackageManager } from "./cli/detectPackageManager";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
@@ -428,30 +426,37 @@ export async function resolveReactRouterConfig({
 
   let rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
-    throw new Error(`Missing "root" route file in ${appDirectory}`);
+    throw new Error(
+      `Could not find a root route module in the app directory: ${appDirectory}`
+    );
   }
 
   let routes: RouteManifest = {
     root: { path: "", id: "root", file: rootRouteFile },
   };
 
-  let routesConfigFile = findEntry(appDirectory, "routes");
-  if (routesConfigFile) {
+  let routeConfigFile = findEntry(appDirectory, "routes");
+  if (routeConfigFile) {
     try {
-      let routeConfigExport: RouteConfigExport = (
+      let routeConfig: RouteConfig = (
         await routesConfigCompiler.ssrLoadModule(
-          path.join(appDirectory, routesConfigFile)
+          path.join(appDirectory, routeConfigFile)
         )
       ).default;
 
-      Object.assign(
-        routes,
-        routeConfigToRouteManifest(
-          typeof routeConfigExport === "function"
-            ? await routeConfigExport({ appDirectory })
-            : routeConfigExport
+      let unresolvedManifests = Array.isArray(routeConfig)
+        ? routeConfig
+        : [routeConfig];
+
+      let resolvedManifests = await Promise.all(
+        unresolvedManifests.map(async (manifest) =>
+          typeof manifest === "function"
+            ? await manifest({ appDirectory })
+            : manifest
         )
       );
+
+      Object.assign(routes, ...resolvedManifests);
 
       initialRouteConfigValid = true;
     } catch (error) {
@@ -563,4 +568,15 @@ export async function resolveEntryFiles({
     : path.resolve(defaultsDirectory, entryServerFile);
 
   return { entryClientFilePath, entryServerFilePath };
+}
+
+const entryExts = [".js", ".jsx", ".ts", ".tsx"];
+
+function findEntry(dir: string, basename: string): string | undefined {
+  for (let ext of entryExts) {
+    let file = path.resolve(dir, basename + ext);
+    if (fse.existsSync(file)) return path.relative(dir, file);
+  }
+
+  return undefined;
 }
