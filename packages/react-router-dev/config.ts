@@ -569,6 +569,7 @@ export async function resolveEntryFiles({
 
   return { entryClientFilePath, entryServerFilePath };
 }
+
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 
 function findEntry(dir: string, basename: string): string | undefined {
