@@ -431,7 +431,9 @@ export async function resolveReactRouterConfig({
     throw new Error(`Missing "root" route file in ${appDirectory}`);
   }
 
-  let routes: RouteManifest;
+  let routes: RouteManifest = {
+    root: { path: "", id: "root", file: rootRouteFile },
+  };
 
   let routesConfigFile = findEntry(appDirectory, "routes");
   if (routesConfigFile) {
@@ -442,22 +444,21 @@ export async function resolveReactRouterConfig({
         )
       ).default;
 
-      routes = routeConfigToRouteManifest(
-        typeof routeConfigExport === "function"
-          ? await routeConfigExport({ appDirectory })
-          : routeConfigExport
+      Object.assign(
+        routes,
+        routeConfigToRouteManifest(
+          typeof routeConfigExport === "function"
+            ? await routeConfigExport({ appDirectory })
+            : routeConfigExport
+        )
       );
 
       initialRouteConfigValid = true;
     } catch (error) {
       // Ensure the dev server doesn't stop if routes config file becomes invalid
       if (!initialRouteConfigValid) throw error;
-      routes = {};
     }
   } else {
-    routes = {
-      root: { path: "", id: "root", file: rootRouteFile },
-    };
     if (fse.existsSync(path.resolve(appDirectory, "routes"))) {
       let fileRoutes = flatRoutes(appDirectory, ignoredRouteFiles);
       for (let route of Object.values(fileRoutes)) {
