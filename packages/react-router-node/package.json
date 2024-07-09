@@ -16,11 +16,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
     "./install": {
       "types": "./dist/install.d.ts",
-      "default": "./dist/install.js"
+      "import": "./dist/install.mjs",
+      "require": "./dist/install.js"
     },
     "./package.json": "./package.json"
   },
