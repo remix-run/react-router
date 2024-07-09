@@ -27,7 +27,8 @@
     "./package.json": "./package.json"
   },
   "sideEffects": [
-    "./dist/install.js"
+    "./dist/install.js",
+    "./dist/install.mjs"
   ],
   "scripts": {
     "tsc": "tsc"
