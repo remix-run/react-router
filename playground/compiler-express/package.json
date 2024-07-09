@@ -6,7 +6,6 @@
   "scripts": {
     "build": "react-router build",
     "dev": "node ./server.js",
-    "setup": "pnpm i react-router@workspace",
     "start": "cross-env NODE_ENV=production node ./server.js",
     "typecheck": "tsc"
   },
@@ -15,7 +14,7 @@
     "@react-router/node": "workspace:*",
     "compression": "^1.7.4",
     "express": "^4.19.2",
-    "isbot": "^4.1.0",
+    "isbot": "^5.1.11",
     "morgan": "^1.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

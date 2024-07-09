@@ -15,7 +15,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "react-router-serve": "dist/cli.js"
+    "react-router-serve": "bin.js"
   },
   "scripts": {
     "tsc": "tsc"
@@ -43,6 +43,7 @@
   },
   "files": [
     "dist/",
+    "bin.js",
     "CHANGELOG.md",
     "LICENSE.md",
     "README.md"

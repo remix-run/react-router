@@ -6,14 +6,13 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "setup": "pnpm i @react-router/serve@workspace react-router@workspace",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
     "@react-router/node": "workspace:*",
     "@react-router/serve": "workspace:*",
-    "isbot": "^4.1.0",
+    "isbot": "^5.1.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "workspace:*"

@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.24.1
+
+### Patch Changes
+
+- When using `future.v7_relativeSplatPath`, properly resolve relative paths in splat routes that are children of pathless routes ([#11633](https://github.com/remix-run/react-router/pull/11633))
+- Updated dependencies:
+  - `@remix-run/router@1.17.1`
+
 ## 6.24.0
 
 ### Minor Changes

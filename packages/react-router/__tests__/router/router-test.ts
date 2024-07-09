@@ -10,11 +10,7 @@ import type {
 } from "../../lib/router";
 import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
 
-import {
-  deferredData,
-  trackedPromise,
-  urlMatch,
-} from "./utils/custom-matchers";
+import { urlMatch } from "./utils/custom-matchers";
 import {
   cleanup,
   createDeferred,
@@ -25,13 +21,7 @@ import {
 import { createFormData, tick } from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
-  urlMatch(url: string);
-  trackedPromise(data?: any, error?: any, aborted?: boolean): R;
-  deferredData(
-    done: boolean,
-    status?: number,
-    headers?: Record<string, string>
-  ): R;
+  urlMatch(url: string): R;
 }
 
 declare global {
@@ -43,8 +33,6 @@ declare global {
 }
 
 expect.extend({
-  deferredData,
-  trackedPromise,
   urlMatch,
 });
 

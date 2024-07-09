@@ -542,6 +542,34 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
   });
 
+  it("de-prioritizes splat routes in favor of looking for better async matches (splat/*)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "splat",
+          path: "/splat/*",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/splat/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/splat/static");
+    expect(router.state.location.pathname).toBe("/splat/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
   it("matches splats when other paths don't pan out", async () => {
     router = createRouter({
       history: createMemoryHistory(),
@@ -627,6 +655,39 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       "parent",
       "child",
     ]);
+  });
+
+  it("discovers routes during initial hydration when a splat route matches", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/test"] }),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          path: "*",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ path, patch, matches }) {
+        let children = await childrenDfd.promise;
+        patch(null, children);
+      },
+    });
+    router.initialize();
+    expect(router.state.initialized).toBe(false);
+
+    childrenDfd.resolve([
+      {
+        id: "test",
+        path: "/test",
+      },
+    ]);
+    await tick();
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.location.pathname).toBe("/test");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["test"]);
   });
 
   it("discovers new root routes", async () => {
@@ -738,7 +799,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     let childLoaderDfd = createDeferred();
 
     router = createRouter({
-      history: createMemoryHistory(),
+      history: createMemoryHistory({ initialEntries: ["/other"] }),
       routes: [
         {
           id: "other",

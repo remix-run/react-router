@@ -1,11 +1,11 @@
-import { test, expect } from "@playwright/test";
+import path from "node:path";
+import { expect } from "@playwright/test";
 
-import { build, createProject } from "./helpers/vite";
+import type { Files } from "./helpers/vite";
+import { test, build, createProject, viteConfig, grep } from "./helpers/vite";
 import dedent from "dedent";
 import stripAnsi from "strip-ansi";
-
-// TODO: passing test for object literal
-// TODO: passing test for `defineRoute`
+import getPort from "get-port";
 
 test.describe("defineRoute", () => {
   test("fails when used outside of route modules", async () => {
@@ -250,5 +250,66 @@ test.describe("defineRoute", () => {
         `
       )
     );
+  });
+
+  test.describe("passes with `defineRoute`", () => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.ts": dedent`
+        import { vitePlugin as reactRouter } from "@react-router/dev";
+        export default {
+          ${await viteConfig.server({ port })}
+          plugins: [reactRouter()],
+        }
+      `,
+      "app/server-only.ts": dedent`
+        export const SERVER_ONLY = "SERVER_ONLY";
+      `,
+      "app/routes/_index.tsx": dedent`
+        import { defineRoute } from "react-router"
+        import { SERVER_ONLY } from "../server-only"
+        export default defineRoute({
+          serverLoader() {
+            console.log(SERVER_ONLY)
+            return { planet: "world" }
+          },
+          serverAction() {
+            console.log(SERVER_ONLY)
+            return null
+          },
+          Component({ loaderData }) {
+            return <h1 data-title>Hello, {loaderData.planet}!</h1>
+          }
+        })
+      `,
+    });
+
+    test("removes server-only code", async () => {
+      let port = await getPort();
+      let cwd = await createProject(await files({ port }));
+
+      let { status } = build({ cwd });
+      expect(status).toBe(0);
+
+      let client = path.join(cwd, "build/client");
+      expect(grep(client, /SERVER_ONLY/).length).toBe(0);
+    });
+
+    test("react-router dev", async ({ page, dev }) => {
+      let { port } = await dev(files);
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+      await expect(page.locator("[data-title]")).toHaveText("Hello, world!");
+      expect(page.errors).toEqual([]);
+    });
+
+    test("build + react-router-serve", async ({ page, reactRouterServe }) => {
+      let { port } = await reactRouterServe(files);
+      await page.goto(`http://localhost:${port}/`, {
+        waitUntil: "networkidle",
+      });
+      await expect(page.locator("[data-title]")).toHaveText("Hello, world!");
+      expect(page.errors).toEqual([]);
+    });
   });
 });

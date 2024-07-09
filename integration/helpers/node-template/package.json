@@ -5,9 +5,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "build": "node ./node_modules/@react-router/dev/dist/cli.js build",
-    "dev": "node ./node_modules/@react-router/dev/dist/cli.js dev",
-    "start": "node ./node_modules/@react-router/serve/dist/cli.js ./build/index.js",
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -15,7 +15,7 @@
     "@react-router/node": "workspace:*",
     "@react-router/serve": "workspace:*",
     "express": "^4.19.2",
-    "isbot": "^4.1.0",
+    "isbot": "^5.1.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "workspace:*"

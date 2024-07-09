@@ -318,13 +318,13 @@ test.describe("Client Data", () => {
           }),
           "app/routes/parent.child.tsx": js`
             import * as React from 'react';
-            import { defer, json } from "react-router"
+            import { json } from "react-router"
             import { Await, useLoaderData } from "react-router"
             export function loader() {
-              return defer({
+              return {
                 message: 'Child Server Loader',
                 lazy: new Promise(r => setTimeout(() => r("Child Deferred Data"), 1000)),
-              });
+              };
             }
             export async function clientLoader({ serverLoader }) {
               let data = await serverLoader();
