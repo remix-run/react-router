@@ -1,4 +1,5 @@
 import type * as Vite from "vite";
+import type { ViteNodeRunner } from "vite-node/client";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import fse from "fs-extra";
@@ -322,13 +323,13 @@ export async function resolveReactRouterConfig({
   reactRouterUserConfig,
   viteUserConfig,
   viteCommand,
-  routesConfigCompiler,
+  viteNodeRunner,
 }: {
   rootDirectory: string;
   reactRouterUserConfig: VitePluginConfig;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
-  routesConfigCompiler: Vite.ViteDevServer;
+  viteNodeRunner: ViteNodeRunner;
 }) {
   let presets: VitePluginConfig[] = (
     await Promise.all(
@@ -439,7 +440,7 @@ export async function resolveReactRouterConfig({
   if (routeConfigFile) {
     try {
       let routeConfig: RouteConfig = (
-        await routesConfigCompiler.ssrLoadModule(
+        await viteNodeRunner.executeFile(
           path.join(appDirectory, routeConfigFile)
         )
       ).default;
@@ -459,9 +460,23 @@ export async function resolveReactRouterConfig({
       Object.assign(routes, ...resolvedManifests);
 
       initialRouteConfigValid = true;
-    } catch (error) {
-      // Ensure the dev server doesn't stop if routes config file becomes invalid
-      if (!initialRouteConfigValid) throw error;
+    } catch (error: any) {
+      console.log(
+        [
+          colors.red("Error executing " + routeConfigFile + ": ") +
+            path.relative(appDirectory, error.loc.file) +
+            ":" +
+            error.loc.line,
+          error.frame.trim?.(),
+        ]
+          .filter(Boolean)
+          .join("\n")
+      );
+
+      // Bail out if this is the first run, otherwise keep the dev server running
+      if (!initialRouteConfigValid) {
+        process.exit(1);
+      }
     }
   } else {
     if (fse.existsSync(path.resolve(appDirectory, "routes"))) {

@@ -591,6 +591,9 @@ importers:
       typescript:
         specifier: ^5.1.0
         version: 5.4.5
+      vite-node:
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.26)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -5716,7 +5719,7 @@ packages:
       mlly: 1.6.1
       outdent: 0.8.0
       vite: 5.1.3(@types/node@18.19.26)
-      vite-node: 1.4.0
+      vite-node: 1.6.0(@types/node@18.19.26)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -13356,8 +13359,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /vite-node@1.4.0:
-    resolution: {integrity: sha512-VZDAseqjrHgNd4Kh8icYHWzTKSCZMhia7GyHfhtzLW33fZlG9SwsB6CEhgyVOWkJfJ2pFLrp/Gj1FSfAiqH9Lw==}
+  /vite-node@1.6.0(@types/node@18.19.26):
+    resolution: {integrity: sha512-de6HJgzC+TFzOu0NTC4RAIsyf/DY/ibWDYQUcuEA84EMHhcefTUGkjFHKKEJhQN4A+6I0u++kr3l36ZF2d7XRw==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     dependencies:
