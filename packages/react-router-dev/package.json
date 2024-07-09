@@ -45,7 +45,8 @@
     "prettier": "^2.7.1",
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
-    "set-cookie-parser": "^2.6.0"
+    "set-cookie-parser": "^2.6.0",
+    "vite-node": "^1.6.0"
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",
