@@ -1075,7 +1075,7 @@ function compilePath(
   return [matcher, params];
 }
 
-function decodePath(value: string) {
+export function decodePath(value: string) {
   try {
     return value
       .split("/")
