@@ -1680,14 +1680,14 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { error, notFoundMatches, route } = handleDiscoverRouteError(
+        let { boundaryId, error } = handleDiscoverRouteError(
           location.pathname,
           discoverResult
         );
         return {
-          matches: notFoundMatches,
+          matches: discoverResult.partialMatches,
           pendingActionResult: [
-            route.id,
+            boundaryId,
             {
               type: ResultType.error,
               error,
@@ -1856,15 +1856,15 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { error, notFoundMatches, route } = handleDiscoverRouteError(
+        let { boundaryId, error } = handleDiscoverRouteError(
           location.pathname,
           discoverResult
         );
         return {
-          matches: notFoundMatches,
+          matches: discoverResult.partialMatches,
           loaderData: {},
           errors: {
-            [route.id]: error,
+            [boundaryId]: error,
           },
         };
       } else if (!discoverResult.matches) {
@@ -3064,18 +3064,17 @@ export function createRouter(init: RouterInit): Router {
     pathname: string,
     discoverResult: DiscoverRoutesErrorResult
   ) {
-    let matches = discoverResult.partialMatches;
-    let route = matches[matches.length - 1].route;
-    let error = getInternalRouterError(400, {
-      type: "route-discovery",
-      routeId: route.id,
-      pathname,
-      message:
-        discoverResult.error != null && "message" in discoverResult.error
-          ? discoverResult.error
-          : String(discoverResult.error),
-    });
-    return { notFoundMatches: matches, route, error };
+    return {
+      boundaryId: findNearestBoundary(discoverResult.partialMatches).route.id,
+      error: getInternalRouterError(400, {
+        type: "route-discovery",
+        pathname,
+        message:
+          discoverResult.error != null && "message" in discoverResult.error
+            ? discoverResult.error
+            : String(discoverResult.error),
+      }),
+    };
   }
 
   function cancelActiveDeferreds(
@@ -5364,8 +5363,8 @@ function getInternalRouterError(
     statusText = "Bad Request";
     if (type === "route-discovery") {
       errorMessage =
-        `Unable to match URL "${pathname}" - the \`children()\` function for ` +
-        `route \`${routeId}\` threw the following error:\n${message}`;
+        `Unable to match URL "${pathname}" - the \`unstable_patchRoutesOnMiss()\` ` +
+        `function threw the following error:\n${message}`;
     } else if (method && pathname && routeId) {
       errorMessage =
         `You made a ${method} request to "${pathname}" but ` +
