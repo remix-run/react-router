@@ -656,7 +656,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
-  it("discovers routes during initial hydration when a splat route matches", async () => {
+  it("discovers routes during initial SPA renders when a splat route matches", async () => {
     let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
 
     router = createRouter({
@@ -669,7 +669,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "*",
         },
       ],
-      async unstable_patchRoutesOnMiss({ path, patch, matches }) {
+      async unstable_patchRoutesOnMiss({ patch }) {
         let children = await childrenDfd.promise;
         patch(null, children);
       },
@@ -687,6 +687,37 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.initialized).toBe(true);
     expect(router.state.location.pathname).toBe("/test");
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["test"]);
+  });
+
+  it("does not discover routes during initial SSR hydration when a splat route matches", async () => {
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/test"] }),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "splat",
+          loader: () => "SPLAT 2",
+          path: "*",
+        },
+      ],
+      hydrationData: {
+        loaderData: {
+          splat: "SPLAT 1",
+        },
+      },
+      async unstable_patchRoutesOnMiss() {
+        throw new Error("Should not be called");
+      },
+    });
+    router.initialize();
+
+    await tick();
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.location.pathname).toBe("/test");
+    expect(router.state.loaderData.splat).toBe("SPLAT 1");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
   });
 
   it("discovers new root routes", async () => {

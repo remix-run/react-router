@@ -841,10 +841,13 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // If the user provided a patchRoutesOnMiss implementation and our initial
-  // match is a splat route, clear them out so we run through lazy discovery
-  // on hydration in case there's a more accurate lazy route match
-  if (initialMatches && patchRoutesOnMissImpl) {
+  // In SPA apps, if the user provided a patchRoutesOnMiss implementation and
+  // our initial match is a splat route, clear them out so we run through lazy
+  // discovery on hydration in case there's a more accurate lazy route match.
+  // In SSR apps (with `hydrationData`), we expect that the server will send
+  // up the proper matched routes so we don't want to run lazy discovery on
+  // initial hydration and want to hydrate into the splat route.
+  if (initialMatches && patchRoutesOnMissImpl && !init.hydrationData) {
     let fogOfWar = checkFogOfWar(
       initialMatches,
       dataRoutes,
