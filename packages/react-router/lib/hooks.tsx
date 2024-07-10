@@ -18,6 +18,7 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
+  UNSAFE_decodePath as decodePath,
   UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
@@ -141,7 +142,7 @@ export function useMatch<
 
   let { pathname } = useLocation();
   return React.useMemo(
-    () => matchPath<ParamKey, Path>(pattern, pathname),
+    () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
     [pathname, pattern]
   );
 }
