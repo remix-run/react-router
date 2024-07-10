@@ -45,7 +45,7 @@ import {
   RouteContext,
   RouteErrorContext,
 } from "./context";
-import { getResolveToMatches } from "./router/utils";
+import { decodePath, getResolveToMatches } from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -167,7 +167,7 @@ export function useMatch<
 
   let { pathname } = useLocation();
   return React.useMemo(
-    () => matchPath<ParamKey, Path>(pattern, pathname),
+    () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
     [pathname, pattern]
   );
 }

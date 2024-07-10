@@ -302,7 +302,7 @@ export function createStaticRouter(
     },
     get future() {
       return {
-        unstable_skipActionErrorRevalidation: false,
+        v7_skipActionErrorRevalidation: false,
         ...opts?.future,
       };
     },

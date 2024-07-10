@@ -354,7 +354,7 @@ export type HydrationState = Partial<
  * Future flags to toggle new feature behavior
  */
 export interface FutureConfig {
-  unstable_skipActionErrorRevalidation: boolean;
+  v7_skipActionErrorRevalidation: boolean;
 }
 
 /**
@@ -812,7 +812,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    unstable_skipActionErrorRevalidation: false,
+    v7_skipActionErrorRevalidation: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -847,10 +847,13 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // If the user provided a patchRoutesOnMiss implementation and our initial
-  // match is a splat route, clear them out so we run through lazy discovery
-  // on hydration in case there's a more accurate lazy route match
-  if (initialMatches && patchRoutesOnMissImpl) {
+  // In SPA apps, if the user provided a patchRoutesOnMiss implementation and
+  // our initial match is a splat route, clear them out so we run through lazy
+  // discovery on hydration in case there's a more accurate lazy route match.
+  // In SSR apps (with `hydrationData`), we expect that the server will send
+  // up the proper matched routes so we don't want to run lazy discovery on
+  // initial hydration and want to hydrate into the splat route.
+  if (initialMatches && patchRoutesOnMissImpl && !init.hydrationData) {
     let fogOfWar = checkFogOfWar(
       initialMatches,
       dataRoutes,
@@ -1688,14 +1691,14 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { error, notFoundMatches, route } = handleDiscoverRouteError(
+        let { boundaryId, error } = handleDiscoverRouteError(
           location.pathname,
           discoverResult
         );
         return {
-          matches: notFoundMatches,
+          matches: discoverResult.partialMatches,
           pendingActionResult: [
-            route.id,
+            boundaryId,
             {
               type: ResultType.error,
               error,
@@ -1859,15 +1862,15 @@ export function createRouter(init: RouterInit): Router {
       if (discoverResult.type === "aborted") {
         return { shortCircuited: true };
       } else if (discoverResult.type === "error") {
-        let { error, notFoundMatches, route } = handleDiscoverRouteError(
+        let { boundaryId, error } = handleDiscoverRouteError(
           location.pathname,
           discoverResult
         );
         return {
-          matches: notFoundMatches,
+          matches: discoverResult.partialMatches,
           loaderData: {},
           errors: {
-            [route.id]: error,
+            [boundaryId]: error,
           },
         };
       } else if (!discoverResult.matches) {
@@ -1894,7 +1897,7 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission,
       location,
       initialHydration === true,
-      future.unstable_skipActionErrorRevalidation,
+      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledFetcherLoads,
       fetchersQueuedForDeletion,
@@ -2314,7 +2317,7 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       false,
-      future.unstable_skipActionErrorRevalidation,
+      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledFetcherLoads,
       fetchersQueuedForDeletion,
@@ -2982,18 +2985,17 @@ export function createRouter(init: RouterInit): Router {
     pathname: string,
     discoverResult: DiscoverRoutesErrorResult
   ) {
-    let matches = discoverResult.partialMatches;
-    let route = matches[matches.length - 1].route;
-    let error = getInternalRouterError(400, {
-      type: "route-discovery",
-      routeId: route.id,
-      pathname,
-      message:
-        discoverResult.error != null && "message" in discoverResult.error
-          ? discoverResult.error
-          : String(discoverResult.error),
-    });
-    return { notFoundMatches: matches, route, error };
+    return {
+      boundaryId: findNearestBoundary(discoverResult.partialMatches).route.id,
+      error: getInternalRouterError(400, {
+        type: "route-discovery",
+        pathname,
+        message:
+          discoverResult.error != null && "message" in discoverResult.error
+            ? discoverResult.error
+            : String(discoverResult.error),
+      }),
+    };
   }
 
   // Opt in to capturing and reporting scroll positions during navigations,
@@ -4222,7 +4224,7 @@ function getMatchesToLoad(
       nextParams: nextRouteMatch.params,
       ...submission,
       actionResult,
-      unstable_actionStatus: actionStatus,
+      actionStatus,
       defaultShouldRevalidate: shouldSkipRevalidation
         ? false
         : // Forced revalidation due to submission, useRevalidator, or X-Remix-Revalidate
@@ -4300,7 +4302,7 @@ function getMatchesToLoad(
         nextParams: matches[matches.length - 1].params,
         ...submission,
         actionResult,
-        unstable_actionStatus: actionStatus,
+        actionStatus,
         defaultShouldRevalidate: shouldSkipRevalidation
           ? false
           : isRevalidationRequired,
@@ -5157,8 +5159,8 @@ function getInternalRouterError(
     statusText = "Bad Request";
     if (type === "route-discovery") {
       errorMessage =
-        `Unable to match URL "${pathname}" - the \`children()\` function for ` +
-        `route \`${routeId}\` threw the following error:\n${message}`;
+        `Unable to match URL "${pathname}" - the \`unstable_patchRoutesOnMiss()\` ` +
+        `function threw the following error:\n${message}`;
     } else if (method && pathname && routeId) {
       errorMessage =
         `You made a ${method} request to "${pathname}" but ` +

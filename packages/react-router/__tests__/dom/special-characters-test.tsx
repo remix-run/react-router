@@ -15,6 +15,7 @@ import {
   HashRouter,
   MemoryRouter,
   Link,
+  Outlet,
   Routes,
   Route,
   RouterProvider,
@@ -23,6 +24,7 @@ import {
   createMemoryRouter,
   createRoutesFromElements,
   useLocation,
+  useMatch,
   useNavigate,
   useParams,
 } from "../../index";
@@ -971,6 +973,51 @@ describe("special character tests", () => {
         expect(ctx.container.innerHTML).toMatchInlineSnapshot(
           `"<pre>{"pathname":"/with%20space","search":"","hash":""}</pre>"`
         );
+      });
+
+      it("properly decodes params in useMatch", () => {
+        let testWindow = getWindow("/user/bücherwurm");
+
+        let router = createBrowserRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                let match = useMatch("/user/:username");
+                return (
+                  <>
+                    <pre>{JSON.stringify(match, null, 2)}</pre>
+                    <Outlet />
+                  </>
+                );
+              },
+              children: [
+                {
+                  path: "user/:username",
+                  element: null,
+                },
+              ],
+            },
+          ],
+          { window: testWindow }
+        );
+        let ctx = render(<RouterProvider router={router} />);
+
+        expect(testWindow.location.pathname).toBe("/user/b%C3%BCcherwurm");
+        expect(ctx.container.innerHTML).toMatchInlineSnapshot(`
+          "<pre>{
+            "params": {
+              "username": "bücherwurm"
+            },
+            "pathname": "/user/bücherwurm",
+            "pathnameBase": "/user/bücherwurm",
+            "pattern": {
+              "path": "/user/:username",
+              "caseSensitive": false,
+              "end": true
+            }
+          }</pre>"
+        `);
       });
     });
 
