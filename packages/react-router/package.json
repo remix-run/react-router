@@ -20,8 +20,16 @@
   "sideEffects": false,
   "main": "./dist/main.js",
   "unpkg": "./dist/umd/react-router.production.min.js",
-  "module": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/main.js"
+    },
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "@types/cookie": "^0.6.0",
     "@web3-storage/multipart-parser": "^1.0.0",

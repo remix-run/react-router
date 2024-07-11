@@ -11,6 +11,9 @@
     "directory": "packages/react-router-serve"
   },
   "license": "MIT",
+  "exports": {
+    "./package.json": "./package.json"
+  },
   "bin": {
     "react-router-serve": "bin.js"
   },
