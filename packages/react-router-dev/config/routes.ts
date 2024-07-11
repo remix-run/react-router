@@ -114,6 +114,11 @@ function dataRoutesToRouteManifest(
       caseSensitive: route.caseSensitive,
     };
 
+    if (routeManifest.hasOwnProperty(id)) {
+      throw new Error(
+        `Unable to define routes with duplicate route id: "${id}"`
+      );
+    }
     routeManifest[id] = manifestItem;
 
     if (route.children) {
