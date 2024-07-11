@@ -18,15 +18,20 @@ test.describe("flat routes", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "vite.config.js": `
+        "vite.config.js": js`
           import { defineConfig } from "vite";
           import { vitePlugin as reactRouter } from "@react-router/dev";
 
           export default defineConfig({
-            plugins: [reactRouter({
-              ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
-            })],
+            plugins: [reactRouter()],
           });
+        `,
+        "app/routes.ts": `
+          import { defineRoutes, fsRoutes } from "@react-router/dev";
+
+          export default defineRoutes(fsRoutes({
+            ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
+          }));        
         `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";

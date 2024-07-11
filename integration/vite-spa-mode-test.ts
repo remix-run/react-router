@@ -502,6 +502,11 @@ test.describe("SPA Mode", () => {
               })],
             });
           `,
+          "src/routes.ts": js`
+            import { defineRoutes, fsRoutes } from "@react-router/dev";
+
+            export default defineRoutes(fsRoutes());
+          `,
           "src/root.tsx": js`
             import {
               Meta,
@@ -584,6 +589,11 @@ test.describe("SPA Mode", () => {
                 ssr: false,
               })],
             });
+          `,
+          "src/routes.ts": js`
+            import { defineRoutes, fsRoutes } from "@react-router/dev";
+
+            export default defineRoutes(fsRoutes());
           `,
           "src/root.tsx": js`
             import {

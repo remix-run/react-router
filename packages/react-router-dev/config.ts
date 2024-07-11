@@ -11,11 +11,8 @@ import PackageJson from "@npmcli/package-json";
 import {
   type RouteManifest,
   type ConfigRoute,
-  type DefineRoutesFunction,
   type RouteConfig,
-  defineRoutes,
 } from "./config/routes";
-import { flatRoutes } from "./config/flatRoutes";
 import { detectPackageManager } from "./cli/detectPackageManager";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
@@ -96,27 +93,9 @@ export type VitePluginConfig = {
   appDirectory?: string;
 
   /**
-   * A function for defining custom routes, in addition to those already defined
-   * using the filesystem convention in `app/routes`. Both sets of routes will
-   * be merged.
-   */
-  routes?: (
-    defineRoutes: DefineRoutesFunction
-  ) =>
-    | ReturnType<DefineRoutesFunction>
-    | Promise<ReturnType<DefineRoutesFunction>>;
-
-  /**
    * The output format of the server build. Defaults to "esm".
    */
   serverModuleFormat?: ServerModuleFormat;
-
-  /**
-   * A list of filenames or a glob patterns to match files in the `app/routes`
-   * directory that Remix will ignore. Matching files will not be recognized as
-   * routes.
-   */
-  ignoredRouteFiles?: string[];
 
   /**
    * Enabled future flags
@@ -255,34 +234,9 @@ let mergeReactRouterConfig = (
             },
           }
         : {}),
-      ...(mergeRequired("ignoredRouteFiles")
-        ? {
-            ignoredRouteFiles: Array.from(
-              new Set([
-                ...(configA.ignoredRouteFiles ?? []),
-                ...(configB.ignoredRouteFiles ?? []),
-              ])
-            ),
-          }
-        : {}),
       ...(mergeRequired("presets")
         ? {
             presets: [...(configA.presets ?? []), ...(configB.presets ?? [])],
-          }
-        : {}),
-      ...(mergeRequired("routes")
-        ? {
-            routes: async (...args) => {
-              let [routesA, routesB] = await Promise.all([
-                configA.routes?.(...args),
-                configB.routes?.(...args),
-              ]);
-
-              return {
-                ...routesA,
-                ...routesB,
-              };
-            },
           }
         : {}),
     };
@@ -370,8 +324,6 @@ export async function resolveReactRouterConfig({
     buildDirectory: userBuildDirectory,
     buildEnd,
     future: userFuture,
-    ignoredRouteFiles,
-    routes: userRoutesFunction,
     prerender: prerenderConfig,
     serverBuildFile,
     serverBundles,
@@ -437,59 +389,56 @@ export async function resolveReactRouterConfig({
   };
 
   let routeConfigFile = findEntry(appDirectory, "routes");
-  if (routeConfigFile) {
-    try {
-      let routeConfig: RouteConfig = (
-        await viteNodeRunner.executeFile(
-          path.join(appDirectory, routeConfigFile)
-        )
-      ).default;
+  if (!routeConfigFile) {
+    throw new Error(
+      `Could not find a routes config file in the app directory: ${appDirectory}`
+    );
+  }
 
-      let unresolvedManifests = Array.isArray(routeConfig)
-        ? routeConfig
-        : [routeConfig];
+  try {
+    let routeConfig: RouteConfig = (
+      await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
+    ).default;
 
-      let resolvedManifests = await Promise.all(
-        unresolvedManifests.map(async (manifest) =>
-          typeof manifest === "function"
-            ? await manifest({ appDirectory })
-            : manifest
-        )
-      );
+    let unresolvedManifests = Array.isArray(routeConfig)
+      ? routeConfig
+      : [routeConfig];
 
-      Object.assign(routes, ...resolvedManifests);
+    let resolvedManifests = await Promise.all(
+      unresolvedManifests.map(async (manifest) =>
+        typeof manifest === "function"
+          ? await manifest({ appDirectory })
+          : manifest
+      )
+    );
 
-      initialRouteConfigValid = true;
-    } catch (error: any) {
+    Object.assign(routes, ...resolvedManifests);
+
+    initialRouteConfigValid = true;
+  } catch (error: any) {
+    if (error.loc?.file && error.frame) {
       console.log(
         [
           colors.red("Error executing " + routeConfigFile + ": ") +
-            path.relative(appDirectory, error.loc.file) +
+            path.relative(appDirectory, error.loc?.file) +
             ":" +
-            error.loc.line,
-          error.frame.trim?.(),
+            error.loc?.line,
+          error.frame?.trim?.(),
         ]
           .filter(Boolean)
           .join("\n")
       );
+    } else {
+      console.log(
+        [colors.red("Error executing " + routeConfigFile), error.stack].join(
+          "\n"
+        )
+      );
+    }
 
-      // Bail out if this is the first run, otherwise keep the dev server running
-      if (!initialRouteConfigValid) {
-        process.exit(1);
-      }
-    }
-  } else {
-    if (fse.existsSync(path.resolve(appDirectory, "routes"))) {
-      let fileRoutes = flatRoutes(appDirectory, ignoredRouteFiles);
-      for (let route of Object.values(fileRoutes)) {
-        routes[route.id] = { ...route, parentId: route.parentId || "root" };
-      }
-    }
-    if (userRoutesFunction) {
-      let userRoutes = await userRoutesFunction(defineRoutes);
-      for (let route of Object.values(userRoutes)) {
-        routes[route.id] = { ...route, parentId: route.parentId || "root" };
-      }
+    // Bail out if this is the first run, otherwise keep the dev server running
+    if (!initialRouteConfigValid) {
+      process.exit(1);
     }
   }
 
