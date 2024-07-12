@@ -8,5 +8,10 @@
     "react-router-native": "6.24.1",
     "@remix-run/router": "1.17.1"
   },
-  "changesets": []
+  "changesets": [
+    "big-trainers-cough",
+    "clever-emus-leave",
+    "gold-snakes-build",
+    "wicked-ducks-heal"
+  ]
 }
