@@ -1,4 +1,4 @@
-import { dataRoutes } from "../config/routes";
+import { dataRoutes, dataRouteHelpers } from "../config/routes";
 
 describe("dataRoutes", () => {
   it("returns an array of routes", () => {
@@ -61,11 +61,96 @@ describe("dataRoutes", () => {
     `);
   });
 
+  it("returns an array of routes using helpers", () => {
+    let routes = dataRoutes(({ route, index, layout }) => [
+      route("/", "routes/home.js"),
+      layout("routes/authenticated.js", [
+        route("inbox", "routes/inbox.js", [
+          index("routes/inbox/index.js"),
+          route(":messageId", "routes/inbox/$messageId.js"),
+        ]),
+        route("outbox", "routes/outbox.js", [
+          index("routes/outbox/index.js"),
+          route(":messageId", "routes/outbox/$messageId.js"),
+        ]),
+      ]),
+    ]);
+
+    expect(routes).toMatchInlineSnapshot(`
+      {
+        "routes/authenticated": {
+          "caseSensitive": undefined,
+          "file": "routes/authenticated.js",
+          "id": "routes/authenticated",
+          "index": undefined,
+          "parentId": "root",
+          "path": undefined,
+        },
+        "routes/home": {
+          "caseSensitive": undefined,
+          "file": "routes/home.js",
+          "id": "routes/home",
+          "index": undefined,
+          "parentId": "root",
+          "path": "/",
+        },
+        "routes/inbox": {
+          "caseSensitive": undefined,
+          "file": "routes/inbox.js",
+          "id": "routes/inbox",
+          "index": undefined,
+          "parentId": "routes/authenticated",
+          "path": "inbox",
+        },
+        "routes/inbox/$messageId": {
+          "caseSensitive": undefined,
+          "file": "routes/inbox/$messageId.js",
+          "id": "routes/inbox/$messageId",
+          "index": undefined,
+          "parentId": "routes/inbox",
+          "path": ":messageId",
+        },
+        "routes/inbox/index": {
+          "caseSensitive": undefined,
+          "file": "routes/inbox/index.js",
+          "id": "routes/inbox/index",
+          "index": true,
+          "parentId": "routes/inbox",
+          "path": undefined,
+        },
+        "routes/outbox": {
+          "caseSensitive": undefined,
+          "file": "routes/outbox.js",
+          "id": "routes/outbox",
+          "index": undefined,
+          "parentId": "routes/authenticated",
+          "path": "outbox",
+        },
+        "routes/outbox/$messageId": {
+          "caseSensitive": undefined,
+          "file": "routes/outbox/$messageId.js",
+          "id": "routes/outbox/$messageId",
+          "index": undefined,
+          "parentId": "routes/outbox",
+          "path": ":messageId",
+        },
+        "routes/outbox/index": {
+          "caseSensitive": undefined,
+          "file": "routes/outbox/index.js",
+          "id": "routes/outbox/index",
+          "index": true,
+          "parentId": "routes/outbox",
+          "path": undefined,
+        },
+      }
+    `);
+  });
+
   it("allows multiple routes with the same route module", () => {
-    let routes = dataRoutes([
-      { path: "/user/:id", file: "routes/_index.tsx", id: "user-by-id" },
-      { path: "/user", file: "routes/_index.tsx", id: "user" },
-      { path: "/other", file: "routes/other-route.tsx" },
+    let routes = dataRoutes(({ route }) => [
+      route("/user/:id", "routes/_index.tsx", { id: "user-by-id" }),
+      route("/user", "routes/_index.tsx", { id: "user" }),
+      route("/other", "routes/other-route.tsx"),
     ]);
 
     expect(routes).toMatchInlineSnapshot(`
@@ -101,10 +186,10 @@ describe("dataRoutes", () => {
   it("throws an error on route id collisions", () => {
     // Two conflicting custom id's
     let defineNonUniqueRoutes = () => {
-      dataRoutes([
-        { path: "/user/:id", file: "routes/user.tsx", id: "user" },
-        { path: "/user", file: "routes/user.tsx", id: "user" },
-        { path: "/other", file: "routes/other-route.tsx" },
+      dataRoutes(({ route }) => [
+        route("/user/:id", "routes/user.tsx", { id: "user" }),
+        route("/user", "routes/user.tsx", { id: "user" }),
+        route("/other", "routes/other-route.tsx"),
       ]);
     };
 
@@ -114,9 +199,9 @@ describe("dataRoutes", () => {
 
     // Custom id conflicting with a later-defined auto-generated id
     defineNonUniqueRoutes = () => {
-      dataRoutes([
-        { path: "/user/:id", file: "routes/user.tsx", id: "routes/user" },
-        { path: "/user", file: "routes/user.tsx" },
+      dataRoutes(({ route }) => [
+        route("/user/:id", "routes/user.tsx", { id: "routes/user" }),
+        route("/user", "routes/user.tsx"),
       ]);
     };
 
@@ -126,14 +211,218 @@ describe("dataRoutes", () => {
 
     // Custom id conflicting with an earlier-defined auto-generated id
     defineNonUniqueRoutes = () => {
-      dataRoutes([
-        { path: "/user", file: "routes/user.tsx" },
-        { path: "/user/:id", file: "routes/user.tsx", id: "routes/user" },
+      dataRoutes(({ route }) => [
+        route("/user", "routes/user.tsx"),
+        route("/user/:id", "routes/user.tsx", { id: "routes/user" }),
       ]);
     };
 
     expect(defineNonUniqueRoutes).toThrowErrorMatchingInlineSnapshot(
       `"Unable to define routes with duplicate route id: "routes/user""`
     );
+  });
+
+  describe("route helpers", () => {
+    const r = dataRouteHelpers;
+
+    describe("route", () => {
+      it("supports basic routes", () => {
+        const route = r.route("path", "file.tsx");
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": undefined,
+            "file": "file.tsx",
+            "path": "path",
+          }
+        `);
+      });
+
+      it("supports children", () => {
+        const route = r.route("path", "file.tsx", [
+          r.route("child", "child.tsx"),
+        ]);
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": [
+              {
+                "children": undefined,
+                "file": "child.tsx",
+                "path": "child",
+              },
+            ],
+            "file": "file.tsx",
+            "path": "path",
+          }
+        `);
+      });
+
+      it("supports custom IDs", () => {
+        const route = r.route("path", "file.tsx", { id: "custom-id" });
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": undefined,
+            "file": "file.tsx",
+            "id": "custom-id",
+            "path": "path",
+          }
+        `);
+      });
+
+      it("supports custom IDs with children", () => {
+        const route = r.route("path", "file.tsx", { id: "custom-id" }, [
+          r.route("child", "child.tsx"),
+        ]);
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": [
+              {
+                "children": undefined,
+                "file": "child.tsx",
+                "path": "child",
+              },
+            ],
+            "file": "file.tsx",
+            "id": "custom-id",
+            "path": "path",
+          }
+        `);
+      });
+
+      it("supports case sensitive routes", () => {
+        const route = r.route("path", "file.tsx", { caseSensitive: true });
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "caseSensitive": true,
+            "children": undefined,
+            "file": "file.tsx",
+            "path": "path",
+          }
+        `);
+      });
+
+      it("supports pathless index", () => {
+        const route = r.route(null, "file.tsx", { index: true });
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": undefined,
+            "file": "file.tsx",
+            "index": true,
+            "path": undefined,
+          }
+        `);
+      });
+
+      it("ignores unsupported options", () => {
+        // @ts-expect-error asd
+        const route = r.route(null, "file.tsx", {
+          index: true,
+          unsupportedOption: 123,
+        });
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": undefined,
+            "file": "file.tsx",
+            "index": true,
+            "path": undefined,
+          }
+        `);
+      });
+    });
+
+    describe("index", () => {
+      it("supports basic routes", () => {
+        const route = r.index("file.tsx");
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "file": "file.tsx",
+            "index": true,
+          }
+        `);
+      });
+
+      it("supports custom IDs", () => {
+        const route = r.index("file.tsx", { id: "custom-id" });
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "file": "file.tsx",
+            "id": "custom-id",
+            "index": true,
+          }
+        `);
+      });
+
+      it("ignores unsupported options", () => {
+        const route = r.index("file.tsx", {
+          id: "custom-id",
+          // @ts-expect-error
+          unsupportedOption: 123,
+        });
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "file": "file.tsx",
+            "id": "custom-id",
+            "index": true,
+          }
+        `);
+      });
+    });
+
+    describe("layout", () => {
+      it("supports basic routes", () => {
+        const route = r.layout("layout.tsx");
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": undefined,
+            "file": "layout.tsx",
+          }
+        `);
+      });
+
+      it("supports children", () => {
+        const route = r.layout("layout.tsx", [r.route("path", "file.tsx")]);
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": [
+              {
+                "children": undefined,
+                "file": "file.tsx",
+                "path": "path",
+              },
+            ],
+            "file": "layout.tsx",
+          }
+        `);
+      });
+
+      it("supports custom IDs", () => {
+        const route = r.layout("layout.tsx", { id: "custom-id" });
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": undefined,
+            "file": "layout.tsx",
+            "id": "custom-id",
+          }
+        `);
+      });
+
+      it("supports custom IDs with children", () => {
+        const route = r.layout("layout.tsx", { id: "custom-id" }, [
+          r.route("path", "file.tsx"),
+        ]);
+        expect(route).toMatchInlineSnapshot(`
+          {
+            "children": [
+              {
+                "children": undefined,
+                "file": "file.tsx",
+                "path": "path",
+              },
+            ],
+            "file": "layout.tsx",
+            "id": "custom-id",
+          }
+        `);
+      });
+    });
   });
 });
