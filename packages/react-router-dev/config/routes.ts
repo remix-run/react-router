@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
+import pick from "lodash/pick";
 import { flatRoutes } from "./flatRoutes";
 
 export type RouteConfig =
@@ -93,8 +94,116 @@ export interface DataRoute {
   children?: DataRoute[];
 }
 
-export function dataRoutes(dataRoutes: DataRoute[]): RouteManifest {
-  return dataRoutesToRouteManifest(dataRoutes);
+type CreateRoutePath = string | null | undefined;
+
+type RequireAtLeastOne<T> = {
+  [K in keyof T]-?: Required<Pick<T, K>> &
+    Partial<Pick<T, Exclude<keyof T, K>>>;
+}[keyof T];
+
+const createRouteOptionKeys = [
+  "id",
+  "index",
+  "caseSensitive",
+] as const satisfies Array<keyof DataRoute>;
+type CreateRouteOptions = Pick<
+  DataRoute,
+  (typeof createRouteOptionKeys)[number]
+>;
+function createRoute(
+  path: CreateRoutePath,
+  file: string,
+  children?: DataRoute[]
+): DataRoute;
+function createRoute(
+  path: CreateRoutePath,
+  file: string,
+  options: RequireAtLeastOne<CreateRouteOptions>,
+  children?: DataRoute[]
+): DataRoute;
+function createRoute(
+  path: CreateRoutePath,
+  file: string,
+  optionsOrChildren: CreateRouteOptions | DataRoute[] | undefined,
+  children?: DataRoute[]
+): DataRoute {
+  let options: CreateRouteOptions = {};
+
+  if (Array.isArray(optionsOrChildren) || !optionsOrChildren) {
+    children = optionsOrChildren;
+  } else {
+    options = optionsOrChildren;
+  }
+
+  return {
+    file,
+    children,
+    path: path ?? undefined,
+    ...pick(options, createRouteOptionKeys),
+  };
+}
+
+const createIndexOptionKeys = ["id"] as const satisfies Array<keyof DataRoute>;
+type CreateIndexOptions = Pick<
+  DataRoute,
+  (typeof createIndexOptionKeys)[number]
+>;
+function createIndex(
+  file: string,
+  options?: RequireAtLeastOne<CreateIndexOptions>
+): DataRoute {
+  return {
+    file,
+    index: true,
+    ...pick(options, createIndexOptionKeys),
+  };
+}
+
+const createLayoutOptionKeys = ["id"] as const satisfies Array<keyof DataRoute>;
+type CreateLayoutOptions = Pick<
+  DataRoute,
+  (typeof createLayoutOptionKeys)[number]
+>;
+function createLayout(file: string, children?: DataRoute[]): DataRoute;
+function createLayout(
+  file: string,
+  options: RequireAtLeastOne<CreateLayoutOptions>,
+  children?: DataRoute[]
+): DataRoute;
+function createLayout(
+  file: string,
+  optionsOrChildren: CreateLayoutOptions | DataRoute[] | undefined,
+  children?: DataRoute[]
+): DataRoute {
+  let options: CreateLayoutOptions = {};
+
+  if (Array.isArray(optionsOrChildren) || !optionsOrChildren) {
+    children = optionsOrChildren;
+  } else {
+    options = optionsOrChildren;
+  }
+
+  return {
+    file,
+    children,
+    ...pick(options, createLayoutOptionKeys),
+  };
+}
+
+export const dataRouteHelpers = {
+  route: createRoute,
+  index: createIndex,
+  layout: createLayout,
+};
+
+type DataRoutesFunction = (r: typeof dataRouteHelpers) => DataRoute[];
+
+export function dataRoutes(
+  dataRoutes: DataRoute[] | DataRoutesFunction
+): RouteManifest {
+  return dataRoutesToRouteManifest(
+    typeof dataRoutes === "function" ? dataRoutes(dataRouteHelpers) : dataRoutes
+  );
 }
 
 function dataRoutesToRouteManifest(
