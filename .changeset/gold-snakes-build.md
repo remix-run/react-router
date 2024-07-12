@@ -1,5 +1,7 @@
 ---
 "@remix-run/router": minor
+"react-router": minor
+"react-router-dom": minor
 ---
 
 Stabilize `future.unstable_skipActionErrorRevalidation` as `future.v7_skipActionErrorRevalidation`
