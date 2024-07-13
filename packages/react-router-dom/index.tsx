@@ -480,6 +480,10 @@ class Deferred<T> {
   }
 }
 
+function DEBUG(...args: any[]) {
+  // console.log(...args);
+}
+
 /**
  * Given a Remix Router instance, render the appropriate UI
  */
@@ -489,12 +493,15 @@ export function RouterProvider({
   future,
 }: RouterProviderProps): React.ReactElement {
   let [state, setStateImpl] = React.useState(router.state);
-  let [pendingState, setPendingState] = React.useState<RouterState>();
+  // let [pendingState, setPendingState] = React.useState<RouterState>();
+  let pendingStateRef = React.useRef<RouterState | null>(null);
   let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
     isTransitioning: false,
   });
-  let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
-  let [transition, setTransition] = React.useState<ViewTransition>();
+  // let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
+  let renderDfdRef = React.useRef<Deferred<void> | null>(null);
+  // let [transition, setTransition] = React.useState<ViewTransition>();
+  let transitionRef = React.useRef<ViewTransition | null>(null);
   let [interruption, setInterruption] = React.useState<{
     state: RouterState;
     currentLocation: Location;
@@ -551,9 +558,9 @@ export function RouterProvider({
         // Flush through the context to mark DOM elements as transition=ing
         flushSyncSafe(() => {
           // Cancel any pending transitions
-          if (transition) {
-            renderDfd && renderDfd.resolve();
-            transition.skipTransition();
+          if (transitionRef.current) {
+            renderDfdRef.current?.resolve();
+            transitionRef.current.skipTransition();
           }
           setVtContext({
             isTransitioning: true,
@@ -571,31 +578,32 @@ export function RouterProvider({
         // Clean up after the animation completes
         t.finished.finally(() => {
           flushSyncSafe(() => {
-            setRenderDfd(undefined);
-            setTransition(undefined);
-            setPendingState(undefined);
+            renderDfdRef.current = null;
+            transitionRef.current = null;
+            pendingStateRef.current = null;
             setVtContext({ isTransitioning: false });
           });
         });
 
-        flushSyncSafe(() => setTransition(t));
+        flushSyncSafe(() => (transitionRef.current = t));
         return;
       }
 
       // startTransition + startViewTransition
-      if (transition) {
+      if (transitionRef.current) {
         // Interrupting an in-progress transition, cancel and let everything flush
         // out, and then kick off a new transition from the interruption state
-        renderDfd && renderDfd.resolve();
-        transition.skipTransition();
+        renderDfdRef.current?.resolve();
+        transitionRef.current.skipTransition();
         setInterruption({
           state: newState,
           currentLocation: viewTransitionOpts.currentLocation,
           nextLocation: viewTransitionOpts.nextLocation,
         });
       } else {
+        DEBUG("Setting pending state and VT context");
         // Completed navigation update with opted-in view transitions, let 'er rip
-        setPendingState(newState);
+        pendingStateRef.current = newState;
         setVtContext({
           isTransitioning: true,
           flushSync: false,
@@ -604,7 +612,7 @@ export function RouterProvider({
         });
       }
     },
-    [router.window, transition, renderDfd, fetcherData, optInStartTransition]
+    [router.window, fetcherData, optInStartTransition]
   );
 
   // Need to use a layout effect here so we are subscribed early enough to
@@ -615,7 +623,8 @@ export function RouterProvider({
   // eventual "completed" render
   React.useEffect(() => {
     if (vtContext.isTransitioning && !vtContext.flushSync) {
-      setRenderDfd(new Deferred<void>());
+      DEBUG("VT context flushed, creating render dfd");
+      renderDfdRef.current = new Deferred<void>();
     }
   }, [vtContext]);
 
@@ -623,40 +632,54 @@ export function RouterProvider({
   // DOM and then wait on the Deferred to resolve (indicating the DOM update has
   // happened)
   React.useEffect(() => {
-    if (renderDfd && pendingState && router.window) {
-      let newState = pendingState;
-      let renderPromise = renderDfd.promise;
+    if (
+      vtContext.isTransitioning &&
+      !vtContext.flushSync &&
+      renderDfdRef.current &&
+      pendingStateRef.current &&
+      router.window
+    ) {
+      DEBUG("pendingState flushed, calling startViewTransition");
+      let newState = pendingStateRef.current;
+      let renderPromise = renderDfdRef.current.promise;
       let transition = router.window.document.startViewTransition(async () => {
-        optInStartTransition(() => setStateImpl(newState));
+        DEBUG("calling React.startTransition and awaiting render");
+        optInStartTransition(() => {
+          DEBUG("setting state inside React.startTransitio");
+          setStateImpl(newState);
+        });
         await renderPromise;
       });
       transition.finished.finally(() => {
-        setRenderDfd(undefined);
-        setTransition(undefined);
-        setPendingState(undefined);
+        DEBUG("view transition finished, resetting VT Context");
+        renderDfdRef.current = null;
+        transitionRef.current = null;
+        pendingStateRef.current = null;
         setVtContext({ isTransitioning: false });
       });
-      setTransition(transition);
+      DEBUG("setting transition");
+      transitionRef.current = transition;
     }
-  }, [optInStartTransition, pendingState, renderDfd, router.window]);
+  }, [optInStartTransition, router.window, vtContext]);
 
   // When the new location finally renders and is committed to the DOM, this
   // effect will run to resolve the transition
   React.useEffect(() => {
     if (
-      renderDfd &&
-      pendingState &&
-      state.location.key === pendingState.location.key
+      renderDfdRef.current &&
+      pendingStateRef.current &&
+      state.location.key === pendingStateRef.current.location.key
     ) {
-      renderDfd.resolve();
+      DEBUG("pendingState flushed, resolving render");
+      renderDfdRef.current.resolve();
     }
-  }, [renderDfd, transition, state.location, pendingState]);
+  }, [state.location]);
 
   // If we get interrupted with a new navigation during a transition, we skip
   // the active transition, let it cleanup, then kick it off again here
   React.useEffect(() => {
     if (!vtContext.isTransitioning && interruption) {
-      setPendingState(interruption.state);
+      pendingStateRef.current = interruption.state;
       setVtContext({
         isTransitioning: true,
         flushSync: false,
