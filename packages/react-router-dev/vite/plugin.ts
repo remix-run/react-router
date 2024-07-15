@@ -809,6 +809,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                   // treats them as internal code by default.
                   "react-router",
                   "react-router-dom",
+                  "@react-router/cloudflare",
                   "@react-router/dev",
                   "@react-router/express",
                   "@react-router/node",
