@@ -31,7 +31,7 @@
   },
   "peerDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
-    "react-router": "*",
+    "react-router": "workspace:^",
     "typescript": "^5.1.0"
   },
   "peerDependenciesMeta": {
