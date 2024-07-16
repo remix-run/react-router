@@ -4,6 +4,7 @@ const path = require("path");
 module.exports = function rollup(options) {
   return [
     "react-router",
+    "react-router-architect",
     "react-router-cloudflare",
     "react-router-dom",
     "react-router-dev",
