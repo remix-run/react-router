@@ -1584,7 +1584,7 @@ export const defer: DeferFunction = (data, init = {}) => {
 
 export type RedirectFunction = (
   url: string,
-  init?: number | (ResponseInit & { replace?: boolean })
+  init?: number | ResponseInit
 ) => Response;
 
 /**
@@ -1602,9 +1602,6 @@ export const redirect: RedirectFunction = (url, init = 302) => {
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
 
-  if (typeof init === "object" && init.replace)
-    headers.set("X-Remix-Redirect-Replace", "true");
-
   return new Response(null, {
     ...responseInit,
     headers,
@@ -1619,6 +1616,18 @@ export const redirect: RedirectFunction = (url, init = 302) => {
 export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
   response.headers.set("X-Remix-Reload-Document", "true");
+  return response;
+};
+
+/**
+ * A redirect response that will perform a `history.replaceState` instead of a
+ * `history.pushState` for client-side navigation redirects.
+ * Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ */
+export const replace: RedirectFunction = (url, init) => {
+  let response = redirect(url, init);
+  response.headers.set("X-Remix-Replace", "true");
   return response;
 };
 

@@ -1,11 +1,7 @@
 ---
 "@remix-run/router": minor
+"react-router": minor
+"react-router-dom": minor
 ---
 
-`redirect` now accepts a `replace` option in the same way as `navigate`.
-
-```ts
-loader: () => {
-  return redirect("/", { replace: true });
-};
-```
+Add a new `replace(url, init?)` alternative to `redirect(url, init?)` that performs a `history.replaceState` instead of a `history.pushState` on client-side navigation redirects
