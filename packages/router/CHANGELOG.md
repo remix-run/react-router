@@ -1,6 +1,6 @@
 # `@remix-run/router`
 
-## 1.18.0-pre.0
+## 1.18.0
 
 ### Minor Changes
 
@@ -13,7 +13,7 @@
 ### Patch Changes
 
 - Fix bubbling of errors thrown from `unstable_patchRoutesOnMiss` ([#11786](https://github.com/remix-run/react-router/pull/11786))
-- Fix fog of war hydration in SSR apps that matched a splat route on the server ([#11790](https://github.com/remix-run/react-router/pull/11790))
+- Fix hydration in SSR apps using `unstable_patchRoutesOnMiss` that matched a splat route on the server ([#11790](https://github.com/remix-run/react-router/pull/11790))
 
 ## 1.17.1
 
