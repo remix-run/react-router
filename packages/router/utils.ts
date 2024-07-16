@@ -210,7 +210,7 @@ export interface ShouldRevalidateFunctionArgs {
   text?: Submission["text"];
   formData?: Submission["formData"];
   json?: Submission["json"];
-  unstable_actionStatus?: number;
+  actionStatus?: number;
   actionResult?: any;
   defaultShouldRevalidate: boolean;
 }
@@ -1075,7 +1075,7 @@ function compilePath(
   return [matcher, params];
 }
 
-function decodePath(value: string) {
+export function decodePath(value: string) {
   try {
     return value
       .split("/")
