@@ -478,24 +478,16 @@ let router = createBrowserRouter(
       path: "/",
       Component: Home,
     },
-    {
-      id: "dashboard",
-      path: "/dashboard",
-    },
-    {
-      id: "account",
-      path: "/account",
-    },
   ],
   {
     async unstable_patchRoutesOnMiss({ path, patch }) {
       if (path.startsWith("/dashboard")) {
         let children = await import("./dashboard");
-        patch("dashboard", children);
+        patch(null, children);
       }
       if (path.startsWith("/account")) {
         let children = await import("./account");
-        patch("account", children);
+        patch(null, children);
       }
     },
   }
@@ -507,32 +499,52 @@ let router = createBrowserRouter(
 If you don't wish to perform your own pseudo-matching, you can leverage the partial `matches` array and the `handle` field on a route to keep the children definitions co-located:
 
 ```jsx
-let router = createBrowserRouter([
+let router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      Component: Home,
+    },
+    {
+      path: "/dashboard",
+      children: [
+        {
+          // If we want to include /dashboard in the critical routes, we need to
+          // also include it's index route since patchRoutesOnMiss will not be
+          // called on a navigation to `/dashboard` because it will have successfully
+          // matched the `/dashboard` parent route
+          index: true,
+          // ...
+        },
+      ],
+      handle: {
+        lazyChildren: () => import("./dashboard"),
+      },
+    },
+    {
+      path: "/account",
+      children: [
+        {
+          index: true,
+          // ...
+        },
+      ],
+      handle: {
+        lazyChildren: () => import("./account"),
+      },
+    },
+  ],
   {
-    path: "/",
-    Component: Home,
-  },
-  {
-    path: "/dashboard",
-    handle: {
-      lazyChildren: () => import('./dashboard');
-    }
-  },
-  {
-    path: "/account",
-    handle: {
-      lazyChildren: () => import('./account');
-    }
-  },
-], {
-  async unstable_patchRoutesOnMiss({ matches, patch }) {
-    let leafRoute = matches[matches.length - 1]?.route;
-    if (leafRoute?.handle?.lazyChildren) {
-      let children = await leafRoute.handle.lazyChildren();
-      patch(leafRoute.id, children);
-    }
+    async unstable_patchRoutesOnMiss({ matches, patch }) {
+      let leafRoute = matches[matches.length - 1]?.route;
+      if (leafRoute?.handle?.lazyChildren) {
+        let children =
+          await leafRoute.handle.lazyChildren();
+        patch(leafRoute.id, children);
+      }
+    },
   }
-});
+);
 ```
 
 ## `opts.window`
