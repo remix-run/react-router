@@ -21,7 +21,12 @@ const { EXAMPLES_DIR } = require("./constants");
  * @param {string} [prereleaseId]
  * @returns {string}
  */
-function getNextVersion(currentVersion, givenVersion, prereleaseId) {
+function getNextVersion(
+  currentVersion,
+  givenVersion,
+  prereleaseId,
+  isExperimental
+) {
   invariant(
     givenVersion != null,
     `Missing next version. Usage: node version.js [nextVersion]`
@@ -34,14 +39,9 @@ function getNextVersion(currentVersion, givenVersion, prereleaseId) {
     );
   }
 
-  let nextVersion;
-  if (givenVersion === "experimental") {
-    let hash = execSync(`git rev-parse --short HEAD`).toString().trim();
-    nextVersion = `0.0.0-experimental-${hash}`;
-  } else {
-    // @ts-ignore
-    nextVersion = semver.inc(currentVersion, givenVersion, prereleaseId);
-  }
+  let nextVersion = isExperimental
+    ? givenVersion
+    : semver.inc(currentVersion, givenVersion, prereleaseId);
 
   invariant(nextVersion != null, `Invalid version specifier: ${givenVersion}`);
 
@@ -53,7 +53,7 @@ async function run() {
     let args = process.argv.slice(2);
     let givenVersion = args[0];
     let prereleaseId = args[1];
-    let isExperimental = givenVersion === "experimental";
+    let isExperimental = givenVersion.includes("0.0.0-experimental");
 
     // 0. Make sure the working directory is clean
     ensureCleanWorkingDirectory();
@@ -63,7 +63,12 @@ async function run() {
     let currentVersion = await getPackageVersion("react-router");
     let version = semver.valid(givenVersion);
     if (version == null) {
-      version = getNextVersion(currentVersion, givenVersion, prereleaseId);
+      version = getNextVersion(
+        currentVersion,
+        givenVersion,
+        prereleaseId,
+        isExperimental
+      );
     }
 
     // We will only bump the router version if this is an experimental

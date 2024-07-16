@@ -13,9 +13,9 @@
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "changeset": "changeset",
-    "version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
+    "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
-    "version:experimental": "node ./scripts/version experimental",
+    "version": "node ./scripts/version",
     "watch": "rollup -c -w"
   },
   "jest": {
