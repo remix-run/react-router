@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.18.1-pre.0
+
+### Patch Changes
+
+- Temporary test changeset ([`b8a4cdb6a`](https://github.com/remix-run/react-router/commit/b8a4cdb6a36821cd967c4a040a9325e9cc68a6f6))
+
 ## 1.18.0
 
 ### Minor Changes
