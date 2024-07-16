@@ -1,6 +1,6 @@
 # `react-router`
 
-## 6.25.0-pre.0
+## 6.25.0
 
 ### Minor Changes
 
@@ -14,7 +14,7 @@
 
 - Fix regression and properly decode paths inside `useMatch` so matches/params reflect decoded params ([#11789](https://github.com/remix-run/react-router/pull/11789))
 - Updated dependencies:
-  - `@remix-run/router@1.18.0-pre.0`
+  - `@remix-run/router@1.18.0`
 
 ## 6.24.1
 
