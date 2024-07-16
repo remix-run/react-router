@@ -69,10 +69,12 @@ async function run() {
     // We will only bump the router version if this is an experimental
     let routerVersion = currentRouterVersion;
 
-    // 2. Confirm the next version number
-    let answer = await prompt(
-      `Are you sure you want to bump version ${currentVersion} to ${version}? [Yn] `
-    );
+    // 2. Confirm the next version number (skip prompt on experimental CI releases)
+    let answer = isExperimental
+      ? true
+      : await prompt(
+          `Are you sure you want to bump version ${currentVersion} to ${version}? [Yn] `
+        );
 
     if (answer === false) return 0;
 
