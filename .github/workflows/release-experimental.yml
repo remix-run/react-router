@@ -44,7 +44,7 @@ jobs:
           SHORT_SHA=$(git rev-parse --short HEAD)
           NEXT_VERSION=0.0.0-experimental-${SHORT_SHA}
           git checkout -b experimental/${NEXT_VERSION}
-          pnpm run version:experimental
+          pnpm run version ${NEXT_VERSION}
           git push origin --tags
 
       - name: 🏗 Build
