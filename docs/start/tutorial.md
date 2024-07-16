@@ -25,7 +25,8 @@ We'll be using [Vite][vite] for our bundler and dev server for this tutorial. Yo
 npm create vite@latest name-of-your-project -- --template react
 # follow prompts
 cd <your new project directory>
-npm install react-router-dom localforage match-sorter sort-by
+npm install react-router-dom # always need this!
+npm install localforage match-sorter sort-by # only for this tutorial.
 npm run dev
 ```
 
@@ -270,7 +271,7 @@ export default function Contact() {
   const contact = {
     first: "Your",
     last: "Name",
-    avatar: "https://placekitten.com/g/200/200",
+    avatar: "https://robohash.org/you.png?size=200x200",
     twitter: "your_handle",
     notes: "Some notes",
     favorite: true,
@@ -281,7 +282,10 @@ export default function Contact() {
       <div>
         <img
           key={contact.avatar}
-          src={contact.avatar || null}
+          src={
+            contact.avatar ||
+            `https://robohash.org/${contact.id}.png?size=200x200`
+          }
         />
       </div>
 
@@ -336,8 +340,7 @@ export default function Contact() {
 }
 
 function Favorite({ contact }) {
-  // yes, this is a `let` for later
-  let favorite = contact.favorite;
+  const favorite = contact.favorite;
   return (
     <Form method="post">
       <button
@@ -768,14 +771,14 @@ export default function EditContact() {
           aria-label="First name"
           type="text"
           name="first"
-          defaultValue={contact.first}
+          defaultValue={contact?.first}
         />
         <input
           placeholder="Last"
           aria-label="Last name"
           type="text"
           name="last"
-          defaultValue={contact.last}
+          defaultValue={contact?.last}
         />
       </p>
       <label>
@@ -784,7 +787,7 @@ export default function EditContact() {
           type="text"
           name="twitter"
           placeholder="@jack"
-          defaultValue={contact.twitter}
+          defaultValue={contact?.twitter}
         />
       </label>
       <label>
@@ -794,14 +797,14 @@ export default function EditContact() {
           aria-label="Avatar URL"
           type="text"
           name="avatar"
-          defaultValue={contact.avatar}
+          defaultValue={contact?.avatar}
         />
       </label>
       <label>
         <span>Notes</span>
         <textarea
           name="notes"
-          defaultValue={contact.notes}
+          defaultValue={contact?.notes}
           rows={6}
         />
       </label>
@@ -1717,7 +1720,7 @@ import {
 
 function Favorite({ contact }) {
   const fetcher = useFetcher();
-  let favorite = contact.favorite;
+  const favorite = contact.favorite;
 
   return (
     <fetcher.Form method="post">
@@ -1746,7 +1749,7 @@ Might want to take a look at that form while we're here. As always, our form has
 import { getContact, updateContact } from "../contacts";
 
 export async function action({ request, params }) {
-  let formData = await request.formData();
+  const formData = await request.formData();
   return updateContact(params.contactId, {
     favorite: formData.get("favorite") === "true",
   });
@@ -1813,10 +1816,9 @@ The fetcher knows the form data being submitted to the action, so it's available
 function Favorite({ contact }) {
   const fetcher = useFetcher();
 
-  let favorite = contact.favorite;
-  if (fetcher.formData) {
-    favorite = fetcher.formData.get("favorite") === "true";
-  }
+  const favorite = fetcher.formData
+    ? fetcher.formData.get("favorite") === "true"
+    : contact.favorite;
 
   return (
     <fetcher.Form method="post">

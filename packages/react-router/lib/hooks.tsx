@@ -18,6 +18,7 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
+  UNSAFE_decodePath as decodePath,
   UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
@@ -141,7 +142,7 @@ export function useMatch<
 
   let { pathname } = useLocation();
   return React.useMemo(
-    () => matchPath<ParamKey, Path>(pattern, pathname),
+    () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
     [pathname, pattern]
   );
 }
@@ -422,10 +423,27 @@ export function useRoutesImpl(
   }
 
   let pathname = location.pathname || "/";
-  let remainingPathname =
-    parentPathnameBase === "/"
-      ? pathname
-      : pathname.slice(parentPathnameBase.length) || "/";
+
+  let remainingPathname = pathname;
+  if (parentPathnameBase !== "/") {
+    // Determine the remaining pathname by removing the # of URL segments the
+    // parentPathnameBase has, instead of removing based on character count.
+    // This is because we can't guarantee that incoming/outgoing encodings/
+    // decodings will match exactly.
+    // We decode paths before matching on a per-segment basis with
+    // decodeURIComponent(), but we re-encode pathnames via `new URL()` so they
+    // match what `window.location.pathname` would reflect.  Those don't 100%
+    // align when it comes to encoded URI characters such as % and &.
+    //
+    // So we may end up with:
+    //   pathname:           "/descendant/a%25b/match"
+    //   parentPathnameBase: "/descendant/a%b"
+    //
+    // And the direct substring removal approach won't work :/
+    let parentSegments = parentPathnameBase.replace(/^\//, "").split("/");
+    let segments = pathname.replace(/^\//, "").split("/");
+    remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
+  }
 
   let matches = matchRoutes(routes, { pathname: remainingPathname });
 
@@ -438,7 +456,8 @@ export function useRoutesImpl(
     warning(
       matches == null ||
         matches[matches.length - 1].route.element !== undefined ||
-        matches[matches.length - 1].route.Component !== undefined,
+        matches[matches.length - 1].route.Component !== undefined ||
+        matches[matches.length - 1].route.lazy !== undefined,
       `Matched leaf route at location "${location.pathname}${location.search}${location.hash}" ` +
         `does not have an element or Component. This means it will render an <Outlet /> with a ` +
         `null value by default resulting in an "empty" page.`
@@ -679,7 +698,7 @@ export function _renderMatches(
   let errors = dataRouterState?.errors;
   if (errors != null) {
     let errorIndex = renderedMatches.findIndex(
-      (m) => m.route.id && errors?.[m.route.id]
+      (m) => m.route.id && errors?.[m.route.id] !== undefined
     );
     invariant(
       errorIndex >= 0,
@@ -704,23 +723,25 @@ export function _renderMatches(
       if (match.route.HydrateFallback || match.route.hydrateFallbackElement) {
         fallbackIndex = i;
       }
-      if (
-        match.route.loader &&
-        match.route.id &&
-        dataRouterState.loaderData[match.route.id] === undefined &&
-        (!dataRouterState.errors ||
-          dataRouterState.errors[match.route.id] === undefined)
-      ) {
-        // We found the first route without data/errors which means it's loader
-        // still needs to run.  Flag that we need to render a fallback and
-        // render up until the appropriate fallback
-        renderFallback = true;
-        if (fallbackIndex >= 0) {
-          renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
-        } else {
-          renderedMatches = [renderedMatches[0]];
+
+      if (match.route.id) {
+        let { loaderData, errors } = dataRouterState;
+        let needsToRunLoader =
+          match.route.loader &&
+          loaderData[match.route.id] === undefined &&
+          (!errors || errors[match.route.id] === undefined);
+        if (match.route.lazy || needsToRunLoader) {
+          // We found the first route that's not ready to render (waiting on
+          // lazy, or has a loader that hasn't run yet).  Flag that we need to
+          // render a fallback and render up until the appropriate fallback
+          renderFallback = true;
+          if (fallbackIndex >= 0) {
+            renderedMatches = renderedMatches.slice(0, fallbackIndex + 1);
+          } else {
+            renderedMatches = [renderedMatches[0]];
+          }
+          break;
         }
-        break;
       }
     }
   }

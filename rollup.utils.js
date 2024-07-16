@@ -1,5 +1,7 @@
 const path = require("path");
 const fse = require("fs-extra");
+const { version } = require("./packages/react-router/package.json");
+const majorVersion = version.split(".").shift();
 
 const PRETTY = !!process.env.PRETTY;
 
@@ -62,8 +64,88 @@ function createBanner(packageName, version) {
  */`;
 }
 
+// Babel plugin to replace `const REACT_ROUTER_VERSION = "0.0.0";` with the
+// current version at build time, so we can set it on `window.__reactRouterVersion`
+// for consumption by the Core Web Vitals Technology Report
+function babelPluginReplaceVersionPlaceholder() {
+  return function (babel) {
+    var t = babel.types;
+
+    const KIND = "const";
+    const NAME = "REACT_ROUTER_VERSION";
+    const PLACEHOLDER = "0";
+
+    return {
+      visitor: {
+        VariableDeclaration: {
+          enter: function (path) {
+            // Only operate on top-level variables
+            if (!path.parentPath.isProgram()) {
+              return;
+            }
+
+            // Skip for experimental releases
+            if (version.startsWith("0.0.0")) {
+              return;
+            }
+
+            let { kind, declarations } = path.node;
+            if (
+              kind === KIND &&
+              declarations.length === 1 &&
+              declarations[0].id.name === NAME &&
+              declarations[0].init?.value === PLACEHOLDER
+            ) {
+              path.replaceWith(
+                t.variableDeclaration(KIND, [
+                  t.variableDeclarator(
+                    t.identifier(NAME),
+                    t.stringLiteral(majorVersion)
+                  ),
+                ])
+              );
+            }
+          },
+        },
+      },
+    };
+  };
+}
+
+// Post-build plugin to validate that the version placeholder was replaced
+function validateReplacedVersion() {
+  return {
+    name: "validate-replaced-version",
+    writeBundle(_, bundle) {
+      Object.entries(bundle).forEach(([filename, contents]) => {
+        if (!filename.endsWith(".js") || filename === "server.js") {
+          return;
+        }
+
+        let requiredStrs = filename.endsWith(".min.js")
+          ? [`{window.__reactRouterVersion="${majorVersion}"}`]
+          : [
+              `const REACT_ROUTER_VERSION = "${majorVersion}";`,
+              `window.__reactRouterVersion = REACT_ROUTER_VERSION;`,
+            ];
+
+        requiredStrs.forEach((str) => {
+          if (!contents.code.includes(str)) {
+            throw new Error(
+              `Expected ${filename} to include \`${str}\` but it did not`
+            );
+          }
+        });
+      });
+    },
+  };
+}
+
+// rollup.config.js
 module.exports = {
   getBuildDirectories,
   createBanner,
+  babelPluginReplaceVersionPlaceholder,
+  validateReplacedVersion,
   PRETTY,
 };

@@ -1,5 +1,14 @@
+/**
+ * @jest-environment node
+ */
+
+import urlDataStrategy from "./utils/urlDataStrategy";
 import type { StaticHandler, StaticHandlerContext } from "../router";
-import { UNSAFE_DEFERRED_SYMBOL, createStaticHandler } from "../router";
+import {
+  UNSAFE_DEFERRED_SYMBOL,
+  createStaticHandler,
+  getStaticContextFromError,
+} from "../router";
 import {
   ErrorResponseImpl,
   defer,
@@ -9,7 +18,12 @@ import {
 } from "../utils";
 import { deferredData, trackedPromise } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";
-import { createRequest, createSubmitRequest } from "./utils/utils";
+import {
+  createRequest,
+  createSubmitRequest,
+  invariant,
+  sleep,
+} from "./utils/utils";
 
 interface CustomMatchers<R = jest.Expect> {
   trackedPromise(data?: any, error?: any, aborted?: boolean): R;
@@ -121,6 +135,14 @@ describe("ssr", () => {
       id: "redirect",
       path: "/redirect",
       loader: () => redirect("/"),
+    },
+    {
+      id: "custom",
+      path: "/custom",
+      loader: () =>
+        new Response(new URLSearchParams([["foo", "bar"]]).toString(), {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        }),
     },
   ];
 
@@ -282,6 +304,74 @@ describe("ssr", () => {
         activeDeferreds: {
           deferred: expect.deferredData(true),
         },
+      });
+    });
+
+    it("should support route.lazy", async () => {
+      let { query } = createStaticHandler([
+        {
+          id: "root",
+          path: "/",
+          async lazy() {
+            await sleep(100);
+            return {
+              async loader() {
+                await sleep(100);
+                return "ROOT LOADER";
+              },
+            };
+          },
+        },
+        {
+          id: "parent",
+          path: "/parent",
+          async lazy() {
+            await sleep(100);
+            return {
+              async loader() {
+                await sleep(100);
+                return "PARENT LOADER";
+              },
+            };
+          },
+          children: [
+            {
+              id: "child",
+              path: "child",
+              async lazy() {
+                await sleep(100);
+                return {
+                  async loader() {
+                    await sleep(100);
+                    return "CHILD LOADER";
+                  },
+                };
+              },
+            },
+          ],
+        },
+      ]);
+
+      let context = await query(createRequest("/"));
+      expect(context).toMatchObject({
+        loaderData: {
+          root: "ROOT LOADER",
+        },
+        errors: null,
+        location: { pathname: "/" },
+        matches: [{ route: { id: "root" } }],
+      });
+
+      context = await query(createRequest("/parent/child"));
+      expect(context).toMatchObject({
+        actionData: null,
+        loaderData: {
+          parent: "PARENT LOADER",
+          child: "CHILD LOADER",
+        },
+        errors: null,
+        location: { pathname: "/parent/child" },
+        matches: [{ route: { id: "parent" } }, { route: { id: "child" } }],
       });
     });
 
@@ -598,6 +688,33 @@ describe("ssr", () => {
       });
     });
 
+    it("should skip bubbling loader errors when skipLoaderErrorBubbling is passed", async () => {
+      let routes = [
+        {
+          id: "root",
+          path: "/",
+          hasErrorBoundary: true,
+          children: [
+            {
+              id: "child",
+              path: "child",
+              loader: () => Promise.reject("CHILD"),
+            },
+          ],
+        },
+      ];
+
+      let { query } = createStaticHandler(routes);
+      let context;
+
+      context = await query(createRequest("/child"), {
+        skipLoaderErrorBubbling: true,
+      });
+      expect(context.errors).toEqual({
+        child: "CHILD",
+      });
+    });
+
     it("should handle aborted load requests", async () => {
       let dfd = createDeferred();
       let controller = new AbortController();
@@ -650,6 +767,106 @@ describe("ssr", () => {
       expect(e).toMatchInlineSnapshot(
         `[Error: query() call aborted: POST http://localhost/path?key=value]`
       );
+    });
+
+    it("should handle aborted load requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { query } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let contextPromise = query(request);
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await contextPromise;
+      } catch (_e) {
+        e = _e;
+      }
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted submit requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { query } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            action: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createSubmitRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let contextPromise = query(request);
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await contextPromise;
+      } catch (_e) {
+        e = _e;
+      }
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted requests (v7_throwAbortReason=true + custom reason)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { query } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let contextPromise = query(request);
+        // Note this works in Node 18+ - but it does not work if using the
+        // `abort-controller` polyfill which doesn't yet support a custom `reason`
+        // See: https://github.com/mysticatea/abort-controller/issues/33
+        controller.abort(new Error("Oh no!"));
+        // This should resolve even though we never resolved the loader
+        await contextPromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(Error);
+      expect(e.message).toBe("Oh no!");
     });
 
     it("should assign signals to requests by default (per the", async () => {
@@ -789,6 +1006,52 @@ describe("ssr", () => {
       expect(childLoaderRequest.url).toBe("http://localhost/child");
       expect(childLoaderRequest.headers.get("test")).toBe("value");
       // Can't re-read body here since it's the same request as the root
+    });
+
+    it("should send proper arguments to loaders after an action errors", async () => {
+      let actionStub = jest.fn(() => Promise.reject("ACTION ERROR"));
+      let rootLoaderStub = jest.fn(() => "ROOT");
+      let childLoaderStub = jest.fn(() => "CHILD");
+      let { query } = createStaticHandler([
+        {
+          id: "root",
+          path: "/",
+          loader: rootLoaderStub,
+          children: [
+            {
+              id: "child",
+              path: "child",
+              action: actionStub,
+              loader: childLoaderStub,
+              hasErrorBoundary: true,
+            },
+          ],
+        },
+      ]);
+      await query(
+        createSubmitRequest("/child", {
+          headers: {
+            test: "value",
+          },
+        })
+      );
+
+      // @ts-expect-error
+      let actionRequest = actionStub.mock.calls[0][0]?.request;
+      expect(actionRequest.method).toBe("POST");
+      expect(actionRequest.url).toBe("http://localhost/child");
+      expect(actionRequest.headers.get("Content-Type")).toBe(
+        "application/x-www-form-urlencoded;charset=UTF-8"
+      );
+      expect((await actionRequest.formData()).get("key")).toBe("value");
+
+      // @ts-expect-error
+      let rootLoaderRequest = rootLoaderStub.mock.calls[0][0]?.request;
+      expect(rootLoaderRequest.method).toBe("GET");
+      expect(rootLoaderRequest.url).toBe("http://localhost/child");
+      expect(rootLoaderRequest.headers.get("test")).toBe("value");
+      expect(await rootLoaderRequest.text()).toBe("");
+      expect(childLoaderStub).not.toHaveBeenCalled();
     });
 
     it("should support a requestContext passed to loaders and actions", async () => {
@@ -1279,6 +1542,80 @@ describe("ssr", () => {
         expect(Array.from(context.actionHeaders.child.entries())).toEqual([
           ["one", "1"],
         ]);
+      });
+    });
+
+    describe("getStaticContextFromError", () => {
+      it("should provide a context for a second-pass render for a thrown error", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context = await query(createRequest("/"));
+        expect(context).toMatchObject({
+          errors: null,
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 200,
+        });
+
+        let error = new Error("💥");
+        invariant(!(context instanceof Response), "Uh oh");
+        context = getStaticContextFromError(SSR_ROUTES, context, error);
+        expect(context).toMatchObject({
+          errors: {
+            index: error,
+          },
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 500,
+        });
+      });
+
+      it("should accept a thrown response from entry.server", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+        let context = await query(createRequest("/"));
+        expect(context).toMatchObject({
+          errors: null,
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 200,
+        });
+
+        let errorResponse = new ErrorResponseImpl(400, "Bad Request", "Oops!");
+        invariant(!(context instanceof Response), "Uh oh");
+        context = getStaticContextFromError(SSR_ROUTES, context, errorResponse);
+        expect(context).toMatchObject({
+          errors: {
+            index: errorResponse,
+          },
+          loaderData: {
+            index: "INDEX LOADER",
+          },
+          statusCode: 400,
+        });
+      });
+    });
+
+    describe("router dataStrategy", () => {
+      it("should support document load navigations with custom dataStrategy", async () => {
+        let { query } = createStaticHandler(SSR_ROUTES);
+
+        let context = await query(createRequest("/custom"), {
+          unstable_dataStrategy: urlDataStrategy,
+        });
+        expect(context).toMatchObject({
+          actionData: null,
+          loaderData: {
+            custom: expect.any(URLSearchParams),
+          },
+          errors: null,
+          location: { pathname: "/custom" },
+          matches: [{ route: { id: "custom" } }],
+        });
+        expect(
+          (context as StaticHandlerContext).loaderData.custom.get("foo")
+        ).toEqual("bar");
       });
     });
   });
@@ -1951,6 +2288,106 @@ describe("ssr", () => {
       );
     });
 
+    it("should handle aborted load requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { queryRoute } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let statePromise = queryRoute(request, { routeId: "root" });
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await statePromise;
+      } catch (_e) {
+        e = _e;
+      }
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted submit requests (v7_throwAbortReason=true)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { queryRoute } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            action: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createSubmitRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let statePromise = queryRoute(request, { routeId: "root" });
+        controller.abort();
+        // This should resolve even though we never resolved the loader
+        await statePromise;
+      } catch (_e) {
+        e = _e;
+      }
+      // DOMException added in node 17
+      if (process.versions.node.split(".").map(Number)[0] >= 17) {
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(e).toBeInstanceOf(DOMException);
+      }
+      expect(e.name).toBe("AbortError");
+      expect(e.message).toBe("This operation was aborted");
+    });
+
+    it("should handle aborted load requests (v7_throwAbortReason=true + custom reason)", async () => {
+      let dfd = createDeferred();
+      let controller = new AbortController();
+      let { queryRoute } = createStaticHandler(
+        [
+          {
+            id: "root",
+            path: "/path",
+            loader: () => dfd.promise,
+          },
+        ],
+        { future: { v7_throwAbortReason: true } }
+      );
+      let request = createRequest("/path?key=value", {
+        signal: controller.signal,
+      });
+      let e;
+      try {
+        let statePromise = queryRoute(request, { routeId: "root" });
+        // Note this works in Node 18+ - but it does not work if using the
+        // `abort-controller` polyfill which doesn't yet support a custom `reason`
+        // See: https://github.com/mysticatea/abort-controller/issues/33
+        controller.abort(new Error("Oh no!"));
+        // This should resolve even though we never resolved the loader
+        await statePromise;
+      } catch (_e) {
+        e = _e;
+      }
+      expect(e).toBeInstanceOf(Error);
+      expect(e.message).toBe("Oh no!");
+    });
+
     it("should assign signals to requests by default (per the spec)", async () => {
       let { queryRoute } = createStaticHandler(SSR_ROUTES);
       let request = createRequest("/", { signal: undefined });
@@ -2190,6 +2627,19 @@ describe("ssr", () => {
       });
 
       /* eslint-enable jest/no-conditional-expect */
+    });
+
+    describe("router dataStrategy", () => {
+      it("should apply a custom data strategy", async () => {
+        let { queryRoute } = createStaticHandler(SSR_ROUTES);
+        let data;
+
+        data = await queryRoute(createRequest("/custom"), {
+          unstable_dataStrategy: urlDataStrategy,
+        });
+        expect(data).toBeInstanceOf(URLSearchParams);
+        expect((data as URLSearchParams).get("foo")).toBe("bar");
+      });
     });
   });
 });

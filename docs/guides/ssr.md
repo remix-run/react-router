@@ -66,7 +66,7 @@ const app = express();
 let handler = createStaticHandler(routes);
 
 app.get("*", async (req, res) => {
-  let fetchRequest = createFetchRequest(req);
+  let fetchRequest = createFetchRequest(req, res);
   let context = await handler.query(fetchRequest);
 
   // We'll tackle rendering next...
@@ -81,13 +81,13 @@ const listener = app.listen(3000, () => {
 Note we have to first convert the incoming Express request into a Fetch request, which is what the static handler methods operate on. The `createFetchRequest` method is specific to an Express request and in this example is extracted from the `@remix-run/express` adapter:
 
 ```js filename=request.js
-module.exports = function createFetchRequest(req) {
+module.exports = function createFetchRequest(req, res) {
   let origin = `${req.protocol}://${req.get("host")}`;
   // Note: This had to take originalUrl into account for presumably vite's proxying
   let url = new URL(req.originalUrl || req.url, origin);
 
   let controller = new AbortController();
-  req.on("close", () => controller.abort());
+  res.on("close", () => controller.abort());
 
   let headers = new Headers();
 
@@ -121,7 +121,7 @@ Once we've loaded our data by executing all of the matched route loaders for the
 
 ```js filename=server.jsx lines=[5-16]
 app.get("*", async (req, res) => {
-  let fetchRequest = createFetchRequest(req);
+  let fetchRequest = createFetchRequest(req, res);
   let context = await handler.query(fetchRequest);
 
   let router = createStaticRouter(
@@ -138,6 +138,8 @@ app.get("*", async (req, res) => {
   res.send("<!DOCTYPE html>" + html);
 });
 ```
+
+<docs-info>We use [`renderToString`][rendertostring] here for simplicity since we've already loaded our data in `handler.query` and we're not using any streaming features in this simple example. If you need to support streaming features, you would need to use [`renderToPipeableStream`][rendertopipeablestream].<br/><br/>If you wish to support [`defer`][defer], you will also need to manage serializing the server-side Promises over the wire to the client (hint, just use [Remix][remix] where this is handled for you via the `Scripts` component 😉).</docs-info>
 
 Once we've sent the HTML back to the browser, we'll need to "hydrate" the application on the client using `createBrowserRouter()` and `<RouterProvider>`:
 
@@ -179,7 +181,7 @@ If any loaders redirect, `handler.query` will return the `Response` directly so 
 
 ```js filename=server.jsx lines=[5-10]
 app.get("*", async (req, res) => {
-  let fetchRequest = createFetchRequest(req);
+  let fetchRequest = createFetchRequest(req, res);
   let context = await handler.query(fetchRequest);
 
   if (
@@ -280,6 +282,8 @@ app.get("*", (req, res) => {
 app.listen(3000);
 ```
 
+<docs-info>We use [`renderToString`][rendertostring] here for simplicity since we're not using any streaming features in this simple example. If you need to support streaming features, you would need to use [`renderToPipeableStream`][rendertopipeablestream].</docs-info>
+
 And finally, you'll need a similar file to "hydrate" the app with your JavaScript bundle that includes the very same `App` component. Note the use of `BrowserRouter` instead of `StaticRouter`.
 
 ```js filename=client.entry.js
@@ -320,3 +324,6 @@ Again, we recommend you give [Remix](https://remix.run) a look. It's the best wa
 [hydration]: https://react.dev/reference/react-dom/client/hydrateRoot
 [hydrate-false]: ../routers/static-router-provider#hydrate
 [partialhydration]: ../routers/create-browser-router#partial-hydration-data
+[rendertostring]: https://react.dev/reference/react-dom/server/renderToString
+[rendertopipeablestream]: https://react.dev/reference/react-dom/server/renderToPipeableStream
+[defer]: https://reactrouter.com/en/main/utils/defer

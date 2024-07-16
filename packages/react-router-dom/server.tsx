@@ -66,7 +66,7 @@ export function StaticRouter({
     pathname: locationProp.pathname || "/",
     search: locationProp.search || "",
     hash: locationProp.hash || "",
-    state: locationProp.state || null,
+    state: locationProp.state != null ? locationProp.state : null,
     key: locationProp.key || "default",
   };
 
@@ -114,9 +114,6 @@ export function StaticRouterProvider({
     static: true,
     staticContext: context,
     basename: context.basename || "/",
-    future: {
-      v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-    },
   };
 
   let fetchersContext = new Map();
@@ -151,6 +148,9 @@ export function StaticRouterProvider({
                 navigationType={state.historyAction}
                 navigator={dataRouterContext.navigator}
                 static={dataRouterContext.static}
+                future={{
+                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+                }}
               >
                 <DataRoutes
                   routes={router.routes}
@@ -315,6 +315,7 @@ export function createStaticRouter(
         v7_partialHydration: opts.future?.v7_partialHydration === true,
         v7_prependBasename: false,
         v7_relativeSplatPath: opts.future?.v7_relativeSplatPath === true,
+        v7_skipActionErrorRevalidation: false,
       };
     },
     get state() {
@@ -375,6 +376,9 @@ export function createStaticRouter(
     deleteBlocker() {
       throw msg("deleteBlocker");
     },
+    patchRoutes() {
+      throw msg("patchRoutes");
+    },
     _internalFetchControllers: new Map(),
     _internalActiveDeferreds: new Map(),
     _internalSetRoutes() {
@@ -389,6 +393,10 @@ function createHref(to: To) {
 
 function encodeLocation(to: To): Path {
   let href = typeof to === "string" ? to : createPath(to);
+  // Treating this as a full URL will strip any trailing spaces so we need to
+  // pre-encode them since they might be part of a matching splat param from
+  // an ancestor route
+  href = href.replace(/ $/, "%20");
   let encoded = ABSOLUTE_URL_REGEX.test(href)
     ? new URL(href)
     : new URL(href, "http://localhost");

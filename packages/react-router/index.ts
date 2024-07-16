@@ -4,6 +4,9 @@ import type {
   ActionFunctionArgs,
   Blocker,
   BlockerFunction,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
   HydrationState,
@@ -28,6 +31,8 @@ import type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
+  unstable_HandlerResult,
+  unstable_AgnosticPatchRoutesOnMissFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -130,6 +135,9 @@ export type {
   AwaitProps,
   DataRouteMatch,
   DataRouteObject,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -171,8 +179,9 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  Blocker as unstable_Blocker,
-  BlockerFunction as unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
+  unstable_HandlerResult,
 };
 export {
   AbortedDeferredError,
@@ -280,6 +289,9 @@ function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
+export interface unstable_PatchRoutesOnMissFunction
+  extends unstable_AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
+
 export function createMemoryRouter(
   routes: RouteObject[],
   opts?: {
@@ -288,6 +300,8 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
+    unstable_dataStrategy?: unstable_DataStrategyFunction;
+    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -303,6 +317,8 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
   }).initialize();
 }
 

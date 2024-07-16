@@ -33,12 +33,15 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          cache: yarn
+          cache: pnpm
           check-latest: true
           node-version: ${{ matrix.node }}
 
@@ -49,16 +52,16 @@ jobs:
           echo "::remove-matcher owner=eslint-stylish::"
 
       - name: 📥 Install deps
-        run: yarn --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: 🏗 Build
-        run: yarn build
+        run: pnpm build
 
       - name: 🔬 Lint
-        run: yarn lint
+        run: pnpm lint
 
       - name: 🧪 Run tests
-        run: yarn test
+        run: pnpm test
 
       - name: Check bundle size
-        run: yarn size
+        run: pnpm size

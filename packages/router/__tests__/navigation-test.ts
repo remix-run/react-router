@@ -114,6 +114,24 @@ describe("navigations", () => {
       });
     });
 
+    // See: https://github.com/remix-run/react-router/issues/11145
+    it("does not attempt to deserialize empty json responses", async () => {
+      let t = initializeTest();
+      let A = await t.navigate("/foo");
+      await A.loaders.foo.resolve(
+        new Response(null, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      );
+      expect(t.router.state.errors).toBeNull();
+      expect(t.router.state.loaderData).toMatchObject({
+        root: "ROOT",
+        foo: null,
+      });
+    });
+
     it("unwraps non-redirect text Responses", async () => {
       let t = initializeTest();
       let A = await t.navigate("/foo");
@@ -151,11 +169,13 @@ describe("navigations", () => {
         })
       );
       expect(t.router.state.loaderData).toEqual({});
-      expect(t.router.state.errors).toMatchInlineSnapshot(`
-        {
-          "foo": [SyntaxError: Unexpected token } in JSON at position 15],
-        }
-      `);
+
+      // Node 16/18 versus 20 output different errors here :/
+      let expected =
+        process.version.startsWith("v16") || process.version.startsWith("v18")
+          ? "Unexpected token } in JSON at position 15"
+          : "Unexpected non-whitespace character after JSON at position 15";
+      expect(t.router.state.errors?.foo).toEqual(new SyntaxError(expected));
     });
 
     it("bubbles errors when unwrapping Responses", async () => {
@@ -186,11 +206,13 @@ describe("navigations", () => {
         })
       );
       expect(t.router.state.loaderData).toEqual({});
-      expect(t.router.state.errors).toMatchInlineSnapshot(`
-        {
-          "root": [SyntaxError: Unexpected token } in JSON at position 15],
-        }
-      `);
+
+      // Node 16/18 versus 20 output different errors here :/
+      let expected =
+        process.version.startsWith("v16") || process.version.startsWith("v18")
+          ? "Unexpected token } in JSON at position 15"
+          : "Unexpected non-whitespace character after JSON at position 15";
+      expect(t.router.state.errors?.root).toEqual(new SyntaxError(expected));
     });
 
     it("does not fetch unchanging layout data", async () => {

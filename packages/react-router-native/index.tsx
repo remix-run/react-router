@@ -23,10 +23,13 @@ export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
-  unstable_Blocker,
-  unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -68,6 +71,7 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
+  unstable_HandlerResult,
 } from "react-router";
 export {
   AbortedDeferredError,

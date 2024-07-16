@@ -20,7 +20,7 @@ export enum ResultType {
  */
 export interface SuccessResult {
   type: ResultType.data;
-  data: any;
+  data: unknown;
   statusCode?: number;
   headers?: Headers;
 }
@@ -40,11 +40,8 @@ export interface DeferredResult {
  */
 export interface RedirectResult {
   type: ResultType.redirect;
-  status: number;
-  location: string;
-  revalidate: boolean;
-  reloadDocument?: boolean;
-  replace?: boolean;
+  // We keep the raw Response for redirects so we can return it verbatim
+  response: Response;
 }
 
 /**
@@ -52,7 +49,8 @@ export interface RedirectResult {
  */
 export interface ErrorResult {
   type: ResultType.error;
-  error: any;
+  error: unknown;
+  statusCode?: number;
   headers?: Headers;
 }
 
@@ -64,6 +62,15 @@ export type DataResult =
   | DeferredResult
   | RedirectResult
   | ErrorResult;
+
+/**
+ * Result from a loader or action called via dataStrategy
+ */
+export interface HandlerResult {
+  type: "data" | "error";
+  result: unknown; // data, Error, Response, DeferredData
+  status?: number;
+}
 
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
@@ -167,22 +174,26 @@ export interface ActionFunctionArgs<Context = any>
  */
 type DataFunctionValue = Response | NonNullable<unknown> | null;
 
+type DataFunctionReturnValue = Promise<DataFunctionValue> | DataFunctionValue;
+
 /**
  * Route loader function signature
  */
 export type LoaderFunction<Context = any> = {
-  (args: LoaderFunctionArgs<Context>):
-    | Promise<DataFunctionValue>
-    | DataFunctionValue;
+  (
+    args: LoaderFunctionArgs<Context>,
+    handlerCtx?: unknown
+  ): DataFunctionReturnValue;
 } & { hydrate?: boolean };
 
 /**
  * Route action function signature
  */
 export interface ActionFunction<Context = any> {
-  (args: ActionFunctionArgs<Context>):
-    | Promise<DataFunctionValue>
-    | DataFunctionValue;
+  (
+    args: ActionFunctionArgs<Context>,
+    handlerCtx?: unknown
+  ): DataFunctionReturnValue;
 }
 
 /**
@@ -199,6 +210,7 @@ export interface ShouldRevalidateFunctionArgs {
   text?: Submission["text"];
   formData?: Submission["formData"];
   json?: Submission["json"];
+  actionStatus?: number;
   actionResult?: any;
   defaultShouldRevalidate: boolean;
 }
@@ -222,6 +234,35 @@ export interface ShouldRevalidateFunction {
  */
 export interface DetectErrorBoundaryFunction {
   (route: AgnosticRouteObject): boolean;
+}
+
+export interface DataStrategyMatch
+  extends AgnosticRouteMatch<string, AgnosticDataRouteObject> {
+  shouldLoad: boolean;
+  resolve: (
+    handlerOverride?: (
+      handler: (ctx?: unknown) => DataFunctionReturnValue
+    ) => Promise<HandlerResult>
+  ) => Promise<HandlerResult>;
+}
+
+export interface DataStrategyFunctionArgs<Context = any>
+  extends DataFunctionArgs<Context> {
+  matches: DataStrategyMatch[];
+}
+
+export interface DataStrategyFunction {
+  (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
+}
+
+export interface AgnosticPatchRoutesOnMissFunction<
+  M extends AgnosticRouteMatch = AgnosticRouteMatch
+> {
+  (opts: {
+    path: string;
+    matches: M[];
+    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void;
+  }): void | Promise<void>;
 }
 
 /**
@@ -278,8 +319,8 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
-  loader?: LoaderFunction;
-  action?: ActionFunction;
+  loader?: LoaderFunction | boolean;
+  action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
   shouldRevalidate?: ShouldRevalidateFunction;
   handle?: any;
@@ -413,11 +454,11 @@ function isIndexRoute(
 export function convertRoutesToDataRoutes(
   routes: AgnosticRouteObject[],
   mapRouteProperties: MapRoutePropertiesFunction,
-  parentPath: number[] = [],
+  parentPath: string[] = [],
   manifest: RouteManifest = {}
 ): AgnosticDataRouteObject[] {
   return routes.map((route, index) => {
-    let treePath = [...parentPath, index];
+    let treePath = [...parentPath, String(index)];
     let id = typeof route.id === "string" ? route.id : treePath.join("-");
     invariant(
       route.index !== true || !route.children,
@@ -472,6 +513,17 @@ export function matchRoutes<
   locationArg: Partial<Location> | string,
   basename = "/"
 ): AgnosticRouteMatch<string, RouteObjectType>[] | null {
+  return matchRoutesImpl(routes, locationArg, basename, false);
+}
+
+export function matchRoutesImpl<
+  RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
+>(
+  routes: RouteObjectType[],
+  locationArg: Partial<Location> | string,
+  basename: string,
+  allowPartial: boolean
+): AgnosticRouteMatch<string, RouteObjectType>[] | null {
   let location =
     typeof locationArg === "string" ? parsePath(locationArg) : locationArg;
 
@@ -486,15 +538,17 @@ export function matchRoutes<
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
+    // Incoming pathnames are generally encoded from either window.location
+    // or from router.navigate, but we want to match against the unencoded
+    // paths in the route definitions.  Memory router locations won't be
+    // encoded here but there also shouldn't be anything to decode so this
+    // should be a safe operation.  This avoids needing matchRoutes to be
+    // history-aware.
+    let decoded = decodePath(pathname);
     matches = matchRouteBranch<string, RouteObjectType>(
       branches[i],
-      // Incoming pathnames are generally encoded from either window.location
-      // or from router.navigate, but we want to match against the unencoded
-      // paths in the route definitions.  Memory router locations won't be
-      // encoded here but there also shouldn't be anything to decode so this
-      // should be a safe operation.  This avoids needing matchRoutes to be
-      // history-aware.
-      safelyDecodeURI(pathname)
+      decoded,
+      allowPartial
     );
   }
 
@@ -586,7 +640,6 @@ function flattenRoutes<
         `Index routes must not have child routes. Please remove ` +
           `all child routes from route path "${path}".`
       );
-
       flattenRoutes(route.children, branches, routesMeta, path);
     }
 
@@ -686,7 +739,7 @@ function rankRouteBranches(branches: RouteBranch[]): void {
   );
 }
 
-const paramRe = /^:\w+$/;
+const paramRe = /^:[\w-]+$/;
 const dynamicSegmentValue = 3;
 const indexRouteValue = 2;
 const emptySegmentValue = 1;
@@ -739,7 +792,8 @@ function matchRouteBranch<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
   branch: RouteBranch<RouteObjectType>,
-  pathname: string
+  pathname: string,
+  allowPartial = false
 ): AgnosticRouteMatch<ParamKey, RouteObjectType>[] | null {
   let { routesMeta } = branch;
 
@@ -758,11 +812,29 @@ function matchRouteBranch<
       remainingPathname
     );
 
-    if (!match) return null;
+    let route = meta.route;
+
+    if (
+      !match &&
+      end &&
+      allowPartial &&
+      !routesMeta[routesMeta.length - 1].route.index
+    ) {
+      match = matchPath(
+        {
+          path: meta.relativePath,
+          caseSensitive: meta.caseSensitive,
+          end: false,
+        },
+        remainingPathname
+      );
+    }
+
+    if (!match) {
+      return null;
+    }
 
     Object.assign(matchedParams, match.params);
-
-    let route = meta.route;
 
     matches.push({
       // TODO: Can this as be avoided?
@@ -823,7 +895,7 @@ export function generatePath<Path extends string>(
         return stringify(params[star]);
       }
 
-      const keyMatch = segment.match(/^:(\w+)(\??)$/);
+      const keyMatch = segment.match(/^:([\w-]+)(\??)$/);
       if (keyMatch) {
         const [, key, optional] = keyMatch;
         let param = params[key as PathParam<Path>];
@@ -931,7 +1003,7 @@ export function matchPath<
       if (isOptional && !value) {
         memo[paramName] = undefined;
       } else {
-        memo[paramName] = safelyDecodeURIComponent(value || "", paramName);
+        memo[paramName] = (value || "").replace(/%2F/g, "/");
       }
       return memo;
     },
@@ -968,10 +1040,13 @@ function compilePath(
       .replace(/\/*\*?$/, "") // Ignore trailing / and /*, we'll handle it below
       .replace(/^\/*/, "/") // Make sure it has a leading /
       .replace(/[\\.*+^${}|()[\]]/g, "\\$&") // Escape special regex chars
-      .replace(/\/:(\w+)(\?)?/g, (_: string, paramName: string, isOptional) => {
-        params.push({ paramName, isOptional: isOptional != null });
-        return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
-      });
+      .replace(
+        /\/:([\w-]+)(\?)?/g,
+        (_: string, paramName: string, isOptional) => {
+          params.push({ paramName, isOptional: isOptional != null });
+          return isOptional ? "/?([^\\/]+)?" : "/([^\\/]+)";
+        }
+      );
 
   if (path.endsWith("*")) {
     params.push({ paramName: "*" });
@@ -1000,30 +1075,18 @@ function compilePath(
   return [matcher, params];
 }
 
-function safelyDecodeURI(value: string) {
+export function decodePath(value: string) {
   try {
-    return decodeURI(value);
+    return value
+      .split("/")
+      .map((v) => decodeURIComponent(v).replace(/\//g, "%2F"))
+      .join("/");
   } catch (error) {
     warning(
       false,
       `The URL path "${value}" could not be decoded because it is is a ` +
         `malformed URL segment. This is probably due to a bad percent ` +
         `encoding (${error}).`
-    );
-
-    return value;
-  }
-}
-
-function safelyDecodeURIComponent(value: string, paramName: string) {
-  try {
-    return decodeURIComponent(value);
-  } catch (error) {
-    warning(
-      false,
-      `The value for the URL param "${paramName}" will not be decoded because` +
-        ` the string "${value}" is a malformed URL segment. This is probably` +
-        ` due to a bad percent encoding (${error}).`
     );
 
     return value;
@@ -1158,7 +1221,7 @@ export function getResolveToMatches<
   // https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329
   if (v7_relativeSplatPath) {
     return pathMatches.map((match, idx) =>
-      idx === matches.length - 1 ? match.pathname : match.pathnameBase
+      idx === pathMatches.length - 1 ? match.pathname : match.pathnameBase
     );
   }
 
@@ -1210,37 +1273,16 @@ export function resolveTo(
   // to the current location's pathname and *not* the route pathname.
   if (toPathname == null) {
     from = locationPathname;
-  } else if (isPathRelative) {
-    let fromSegments =
-      routePathnames.length === 0
-        ? []
-        : routePathnames[routePathnames.length - 1]
-            .replace(/^\//, "")
-            .split("/");
-
-    if (toPathname.startsWith("..")) {
-      let toSegments = toPathname.split("/");
-
-      // With relative="path", each leading .. segment means "go up one URL segment"
-      while (toSegments[0] === "..") {
-        toSegments.shift();
-        fromSegments.pop();
-      }
-
-      to.pathname = toSegments.join("/");
-    }
-
-    from = "/" + fromSegments.join("/");
   } else {
     let routePathnameIndex = routePathnames.length - 1;
 
-    if (toPathname.startsWith("..")) {
+    // With relative="route" (the default), each leading .. segment means
+    // "go up one route" instead of "go up one URL segment".  This is a key
+    // difference from how <a href> works and a major reason we call this a
+    // "to" value instead of a "href".
+    if (!isPathRelative && toPathname.startsWith("..")) {
       let toSegments = toPathname.split("/");
 
-      // With relative="route" (the default), each leading .. segment means
-      // "go up one route" instead of "go up one URL segment".  This is a key
-      // difference from how <a href> works and a major reason we call this a
-      // "to" value instead of a "href".
       while (toSegments[0] === "..") {
         toSegments.shift();
         routePathnameIndex -= 1;
@@ -1249,8 +1291,6 @@ export function resolveTo(
       to.pathname = toSegments.join("/");
     }
 
-    // If there are more ".." segments than parent routes, resolve relative to
-    // the root / URL.
     from = routePathnameIndex >= 0 ? routePathnames[routePathnameIndex] : "/";
   }
 

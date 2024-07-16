@@ -93,6 +93,27 @@ function EditContact() {
 }
 ```
 
+Please note that `relative: "path"` only impacts the resolution of a relative path. It does not change the "starting" location for that relative path resolution. This resolution is always relative to the current location in the Route hierarchy (i.e., the route `useNavigate` is called in).
+
+If you wish to use path-relative routing against the current URL instead of the route hierarchy, you can do that with the current [`location`][use-location] and the `URL` constructor (note the trailing slash behavior):
+
+```js
+// Assume the current URL is https://remix.run/docs/en/main/start/quickstart
+let location = useLocation();
+
+// Without trailing slashes
+new URL(".", window.origin + location.pathname);
+// 'https://remix.run/docs/en/main/start/'
+new URL("..", window.origin + location.pathname);
+// 'https://remix.run/docs/en/main/'
+
+// With trailing slashes:
+new URL(".", window.origin + location.pathname + "/");
+// 'https://remix.run/docs/en/main/start/quickstart/'
+new URL("..", window.origin + location.pathname + "/");
+// 'https://remix.run/docs/en/main/start/'
+```
+
 ## `options.unstable_flushSync`
 
 The `unstable_flushSync` option tells React Router DOM to wrap the initial state update for this navigation in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.

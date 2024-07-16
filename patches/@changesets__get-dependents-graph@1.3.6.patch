@@ -1,7 +1,7 @@
-diff --git a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js
-index 94dde7b..70407b0 100644
---- a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js
-+++ b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.dev.js
+diff --git a/dist/get-dependents-graph.cjs.dev.js b/dist/get-dependents-graph.cjs.dev.js
+index 94dde7b0aa903cf4aa099acfd2fc62f6243264d9..70407b017dd86b0363af989663ff83e1ba34a925 100644
+--- a/dist/get-dependents-graph.cjs.dev.js
++++ b/dist/get-dependents-graph.cjs.dev.js
 @@ -10,8 +10,14 @@ function _interopDefault (e) { return e && e.__esModule ? e : { 'default': e };
  var Range__default = /*#__PURE__*/_interopDefault(Range);
  var chalk__default = /*#__PURE__*/_interopDefault(chalk);
@@ -19,10 +19,10 @@ index 94dde7b..70407b0 100644
  
  const getAllDependencies = config => {
    const allDependencies = new Map();
-diff --git a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js
-index 39b2dfe..dc0fed7 100644
---- a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js
-+++ b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.cjs.prod.js
+diff --git a/dist/get-dependents-graph.cjs.prod.js b/dist/get-dependents-graph.cjs.prod.js
+index 39b2dfe0c15d052f4e342a81626c4012a695867b..dc0fed7320dd1157b3f020c06d46530547070cda 100644
+--- a/dist/get-dependents-graph.cjs.prod.js
++++ b/dist/get-dependents-graph.cjs.prod.js
 @@ -14,7 +14,7 @@ function _interopDefault(e) {
  
  var Range__default = _interopDefault(Range), chalk__default = _interopDefault(chalk);
@@ -32,10 +32,10 @@ index 39b2dfe..dc0fed7 100644
    const allDependencies = new Map;
    for (const type of DEPENDENCY_TYPES) {
      const deps = config[type];
-diff --git a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js
-index 5f29582..1e4b750 100644
---- a/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js
-+++ b/node_modules/@changesets/get-dependents-graph/dist/get-dependents-graph.esm.js
+diff --git a/dist/get-dependents-graph.esm.js b/dist/get-dependents-graph.esm.js
+index 5f29582339d3a6a45ff882caf843ecf8a9d6c99d..1e4b7509e48cff7a2c702922ee5a6987e33959e0 100644
+--- a/dist/get-dependents-graph.esm.js
++++ b/dist/get-dependents-graph.esm.js
 @@ -2,7 +2,7 @@ import Range from 'semver/classes/range';
  import chalk from 'chalk';
  

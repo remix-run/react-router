@@ -419,7 +419,7 @@ function User() {
 }
 ```
 
-Instead of rending your component, remix will render the nearest [catch boundary][remix-catchboundary] instead.
+Instead of rendering your component, remix will render the nearest [catch boundary][remix-catchboundary] instead.
 
 [remix]: https://remix.run
 [remix-catchboundary]: https://remix.run/docs/en/v1/api/conventions#catchboundary

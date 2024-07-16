@@ -15,6 +15,7 @@ import type {
   RouteObject,
   RouterProviderProps,
   To,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 import {
   Router,
@@ -36,6 +37,9 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -69,6 +73,7 @@ import type {
   ParamKeyValuePair,
   URLSearchParamsInit,
   SubmitTarget,
+  FetcherSubmitOptions,
 } from "./dom";
 import {
   createSearchParams,
@@ -83,6 +88,9 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -91,15 +99,15 @@ export type {
   URLSearchParamsInit,
   V7_FormMethod,
 };
-export { createSearchParams };
+export { createSearchParams, ErrorResponseImpl as UNSAFE_ErrorResponseImpl };
 
 // Note: Keep in sync with react-router exports!
 export type {
   ActionFunction,
   ActionFunctionArgs,
   AwaitProps,
-  unstable_Blocker,
-  unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
   ErrorResponse,
@@ -143,6 +151,8 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
+  unstable_HandlerResult,
+  unstable_PatchRoutesOnMissFunction,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -218,9 +228,26 @@ export {
 
 declare global {
   var __staticRouterHydrationData: HydrationState | undefined;
+  var __reactRouterVersion: string;
   interface Document {
     startViewTransition(cb: () => Promise<void> | void): ViewTransition;
   }
+}
+
+// HEY YOU! DON'T TOUCH THIS VARIABLE!
+//
+// It is replaced with the proper version at build time via a babel plugin in
+// the rollup config.
+//
+// Export a global property onto the window for React Router detection by the
+// Core Web Vitals Technology Report.  This way they can configure the `wappalyzer`
+// to detect and properly classify live websites as being built with React Router:
+// https://github.com/HTTPArchive/wappalyzer/blob/main/src/technologies/r.json
+const REACT_ROUTER_VERSION = "0";
+try {
+  window.__reactRouterVersion = REACT_ROUTER_VERSION;
+} catch (e) {
+  // no-op
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,6 +258,8 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
+  unstable_dataStrategy?: unstable_DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
   window?: Window;
 }
 
@@ -248,6 +277,8 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -266,6 +297,8 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
     window: opts?.window,
   }).initialize();
 }
@@ -396,6 +429,8 @@ const START_TRANSITION = "startTransition";
 const startTransitionImpl = React[START_TRANSITION];
 const FLUSH_SYNC = "flushSync";
 const flushSyncImpl = ReactDOM[FLUSH_SYNC];
+const USE_ID = "useId";
+const useIdImpl = React[USE_ID];
 
 function startTransitionSafe(cb: () => void) {
   if (startTransitionImpl) {
@@ -497,6 +532,7 @@ export function RouterProvider({
 
       let isViewTransitionUnavailable =
         router.window == null ||
+        router.window.document == null ||
         typeof router.window.document.startViewTransition !== "function";
 
       // If this isn't a view transition or it's not available in this browser,
@@ -634,7 +670,8 @@ export function RouterProvider({
   React.useEffect(() => {
     warning(
       fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using `v7_partialHydration`"
+      "`<RouterProvider fallbackElement>` is deprecated when using " +
+        "`v7_partialHydration`, use a `HydrateFallback` component instead"
     );
     // Only log this once on initial mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -667,9 +704,6 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
-      future: {
-        v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-      },
     }),
     [router, navigator, basename]
   );
@@ -691,8 +725,11 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
+                future={{
+                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+                }}
               >
-                {state.initialized ? (
+                {state.initialized || router.future.v7_partialHydration ? (
                   <DataRoutes
                     routes={router.routes}
                     future={router.future}
@@ -987,7 +1024,7 @@ if (__DEV__) {
   Link.displayName = "Link";
 }
 
-type NavLinkRenderProps = {
+export type NavLinkRenderProps = {
   isActive: boolean;
   isPending: boolean;
   isTransitioning: boolean;
@@ -1025,7 +1062,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let path = useResolvedPath(to, { relative: rest.relative });
     let location = useLocation();
     let routerState = React.useContext(DataRouterStateContext);
-    let { navigator } = React.useContext(NavigationContext);
+    let { navigator, basename } = React.useContext(NavigationContext);
     let isTransitioning =
       routerState != null &&
       // Conditional usage is OK here because the usage of a data router is static
@@ -1048,6 +1085,11 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ? nextLocationPathname.toLowerCase()
         : null;
       toPathname = toPathname.toLowerCase();
+    }
+
+    if (nextLocationPathname && basename) {
+      nextLocationPathname =
+        stripBasename(nextLocationPathname, basename) || nextLocationPathname;
     }
 
     // If the `to` has a trailing slash, look at that exact spot.  Otherwise,
@@ -1122,8 +1164,10 @@ if (__DEV__) {
   NavLink.displayName = "NavLink";
 }
 
-export interface FetcherFormProps
-  extends React.FormHTMLAttributes<HTMLFormElement> {
+/**
+ * Form props shared by navigations and fetchers
+ */
+interface SharedFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
   /**
    * The HTTP verb to use when the form is submit. Supports "get", "post",
    * "put", "delete", "patch".
@@ -1164,7 +1208,15 @@ export interface FetcherFormProps
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
 }
 
-export interface FormProps extends FetcherFormProps {
+/**
+ * Form props available to fetchers
+ */
+export interface FetcherFormProps extends SharedFormProps {}
+
+/**
+ * Form props available to navigations
+ */
+export interface FormProps extends SharedFormProps {
   /**
    * Indicate a specific fetcherKey to use when using navigate=false
    */
@@ -1412,11 +1464,7 @@ export function useSearchParams(
     `You cannot use the \`useSearchParams\` hook in a browser that does not ` +
       `support the URLSearchParams API. If you need to support Internet ` +
       `Explorer 11, we recommend you load a polyfill such as ` +
-      `https://github.com/ungap/url-search-params\n\n` +
-      `If you're unsure how to load polyfills, we recommend you check out ` +
-      `https://polyfill.io/v3/ which provides some recommendations about how ` +
-      `to load polyfills only for users that need them, instead of for every ` +
-      `user.`
+      `https://github.com/ungap/url-search-params.`
   );
 
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
@@ -1487,7 +1535,7 @@ export interface FetcherSubmitFunction {
   (
     target: SubmitTarget,
     // Fetchers cannot replace or set state because they are not navigation events
-    options?: Omit<SubmitOptions, "replace" | "state">
+    options?: FetcherSubmitOptions
   ): void;
 }
 
@@ -1633,10 +1681,14 @@ export function useFetcher<TData = any>({
   );
 
   // Fetcher key handling
-  let [fetcherKey, setFetcherKey] = React.useState<string>(key || "");
+  // OK to call conditionally to feature detect `useId`
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  let defaultKey = useIdImpl ? useIdImpl() : "";
+  let [fetcherKey, setFetcherKey] = React.useState<string>(key || defaultKey);
   if (key && key !== fetcherKey) {
     setFetcherKey(key);
   } else if (!fetcherKey) {
+    // We will only fall through here when `useId` is not available
     setFetcherKey(getUniqueFetcherId());
   }
 

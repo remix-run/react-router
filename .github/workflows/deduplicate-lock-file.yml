@@ -1,11 +1,11 @@
-name: ⚙️ Deduplicate yarn.lock
+name: ⚙️ Deduplicate lock file
 
 on:
   push:
     branches:
       - dev
     paths:
-      - ./yarn.lock
+      - ./pnpm-lock.yaml
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,16 +18,19 @@ jobs:
 
     steps:
       - name: ⬇️ Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: "yarn"
+          cache: "pnpm"
 
-      - name: ⚙️ Dedupe yarn.lock
-        run: npx yarn-deduplicate && rm -rf ./node_modules && yarn
+      - name: ⚙️ Dedupe lock file
+        run: pnpm dedupe && rm -rf ./node_modules && pnpm install
 
       - name: 💪 Commit
         run: |
@@ -38,6 +41,6 @@ jobs:
             echo "💿 no deduplication needed"
             exit 0
           fi
-          git commit -m "chore: deduplicate `yarn.lock`"
+          git commit -m "chore: deduplicate `pnpm-lock.yaml`"
           git push
           echo "💿 https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"

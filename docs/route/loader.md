@@ -47,7 +47,7 @@ createBrowserRouter([
 ]);
 ```
 
-Note that the `:teamId` in the path is parsed as provided as `params.teamId` by the same name.
+Note that the `:teamId` in the path is parsed and provided as `params.teamId` by the same name.
 
 ## `request`
 
@@ -87,7 +87,7 @@ Note that the APIs here are not React Router specific, but rather standard web o
 
 ## `loader.hydrate`
 
-If you are [Server-Side Rendering][ssr] and leveraging the `fututre.v7_partialHydration` flag for [Partial Hydration][partialhydration], then you may wish to opt-into running a route `loader` on initial hydration _even though it has hydration data_ (for example, to let a user prime a cache with the hydration data). To force a `loader` to run on hydration in a partial hydration scenario, you can set a `hydrate` property on the `loader` function:
+If you are [Server-Side Rendering][ssr] and leveraging the `future.v7_partialHydration` flag for [Partial Hydration][partialhydration], then you may wish to opt-into running a route `loader` on initial hydration _even though it has hydration data_ (for example, to let a user prime a cache with the hydration data). To force a `loader` to run on hydration in a partial hydration scenario, you can set a `hydrate` property on the `loader` function:
 
 ## Returning Responses
 
@@ -178,5 +178,5 @@ For more details, read the [`errorElement`][errorelement] documentation.
 [json]: ../fetch/json
 [errorelement]: ./error-element
 [pickingarouter]: ../routers/picking-a-router
-[ssr]: ../guides/ssr.md
+[ssr]: ../guides/ssr
 [partialhydration]: ../routers/create-browser-router#partial-hydration-data

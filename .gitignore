@@ -1,3 +1,4 @@
+.DS_Store
 npm-debug.log
 
 /docs/api/
@@ -5,6 +6,7 @@ npm-debug.log
 node_modules/
 
 /examples/*/yarn.lock
+/examples/*/pnpm-lock.yaml
 /examples/*/dist
 /tutorial/dist
 

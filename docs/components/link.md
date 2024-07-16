@@ -67,7 +67,7 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 
 ## `relative`
 
-By default, links are relative to the route hierarchy (`relative="route"`), so `..` will go up one `Route` level. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing. You can opt into this behavior with `relative="path"`:
+By default, links are relative to the route hierarchy (`relative="route"`), so `..` will go up one `Route` level from the current contextual route. Occasionally, you may find that you have matching URL patterns that do not make sense to be nested, and you'd prefer to use relative _path_ routing from the current contextual route path. You can opt into this behavior with `relative="path"`:
 
 ```jsx
 // Contact and EditContact do not share additional UI layout
@@ -81,13 +81,35 @@ By default, links are relative to the route hierarchy (`relative="route"`), so `
 
 function EditContact() {
   // Since Contact is not a parent of EditContact we need to go up one level
-  // in the path, instead of one level in the Route hierarchy
+  // in the current contextual route path, instead of one level in the Route
+  // hierarchy
   return (
     <Link to=".." relative="path">
       Cancel
     </Link>
   );
 }
+```
+
+Please note that `relative: "path"` only impacts the resolution of a relative path. It does not change the "starting" location for that relative path resolution. This resolution is always relative to the current location in the Route hierarchy (i.e., the route `Link` is rendered in).
+
+If you wish to use path-relative routing against the current URL instead of the route hierarchy, you can do that with the current [`location`][use-location] and the `URL` constructor (note the trailing slash behavior):
+
+```js
+// Assume the current URL is https://remix.run/docs/en/main/start/quickstart
+let location = useLocation();
+
+// Without trailing slashes
+new URL(".", window.origin + location.pathname);
+// 'https://remix.run/docs/en/main/start/'
+new URL("..", window.origin + location.pathname);
+// 'https://remix.run/docs/en/main/'
+
+// With trailing slashes:
+new URL(".", window.origin + location.pathname + "/");
+// 'https://remix.run/docs/en/main/start/quickstart/'
+new URL("..", window.origin + location.pathname + "/");
+// 'https://remix.run/docs/en/main/start/'
 ```
 
 ## `preventScrollReset`
@@ -204,3 +226,4 @@ function ImageLink(to) {
 [picking-a-router]: ../routers/picking-a-router
 [navlink]: ./nav-link
 [relativesplatpath]: ../hooks/use-resolved-path#splat-paths
+[use-location]: ../hooks/use-location

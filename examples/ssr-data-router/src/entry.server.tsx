@@ -8,9 +8,12 @@ import {
 } from "react-router-dom/server";
 import { routes } from "./App";
 
-export async function render(request: express.Request) {
+export async function render(
+  request: express.Request,
+  response: express.Response
+) {
   let { query, dataRoutes } = createStaticHandler(routes);
-  let remixRequest = createFetchRequest(request);
+  let remixRequest = createFetchRequest(request, response);
   let context = await query(remixRequest);
 
   if (context instanceof Response) {
@@ -29,13 +32,16 @@ export async function render(request: express.Request) {
   );
 }
 
-export function createFetchRequest(req: express.Request): Request {
+export function createFetchRequest(
+  req: express.Request,
+  res: express.Response
+): Request {
   let origin = `${req.protocol}://${req.get("host")}`;
   // Note: This had to take originalUrl into account for presumably vite's proxying
   let url = new URL(req.originalUrl || req.url, origin);
 
   let controller = new AbortController();
-  req.on("close", () => controller.abort());
+  res.on("close", () => controller.abort());
 
   let headers = new Headers();
 

@@ -1,32 +1,21 @@
 {
   "name": "@remix-run/react-router",
   "private": true,
-  "workspaces": {
-    "packages": [
-      "packages/react-router",
-      "packages/react-router-dom",
-      "packages/react-router-dom-v5-compat",
-      "packages/react-router-native",
-      "packages/router"
-    ]
-  },
   "scripts": {
     "build": "rollup -c",
     "clean": "git clean -fdX .",
     "format": "prettier --ignore-path .eslintignore --write .",
     "format:check": "prettier --ignore-path .eslintignore --check .",
-    "postinstall": "patch-package",
     "lint": "eslint --cache .",
-    "prerelease": "yarn build",
+    "prerelease": "pnpm build",
     "release": "changeset publish",
     "size": "filesize",
     "test": "jest",
     "test:inspect": "node --inspect-brk ./node_modules/.bin/jest",
     "changeset": "changeset",
-    "version": "changeset version",
+    "changeset:version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
-    "postversion": "node scripts/postversion.mjs",
-    "version:experimental": "node ./scripts/version experimental",
+    "version": "node ./scripts/version",
     "watch": "rollup -c -w"
   },
   "jest": {
@@ -37,6 +26,7 @@
       "default"
     ]
   },
+  "packageManager": "pnpm@8.10.5",
   "resolutions": {
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
@@ -50,6 +40,7 @@
     "@babel/preset-react": "^7.22.5",
     "@babel/preset-typescript": "^7.22.5",
     "@changesets/cli": "^2.26.2",
+    "@manypkg/get-packages": "1.1.3",
     "@octokit/core": "^4.2.4",
     "@octokit/graphql": "^4.8.0",
     "@octokit/plugin-paginate-rest": "^2.21.3",
@@ -90,12 +81,14 @@
     "jest": "^29.6.2",
     "jest-environment-jsdom": "^29.6.2",
     "jsonfile": "^6.1.0",
-    "patch-package": "^6.5.1",
     "prettier": "^2.8.8",
     "prompt-confirm": "^2.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-test-renderer": "^18.2.0",
+    "remark-gfm": "3.0.1",
+    "remark-parse": "^10.0.1",
+    "remark-stringify": "^10.0.2",
     "rollup": "^2.79.1",
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-extensions": "^0.1.0",
@@ -103,26 +96,33 @@
     "rollup-plugin-terser": "^7.0.2",
     "semver": "^7.5.4",
     "type-fest": "^2.19.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "unified": "^10.1.2",
+    "unist-util-remove": "^3.1.0"
   },
   "engines": {
     "node": ">=14.0.0"
   },
   "filesize": {
     "packages/router/dist/router.umd.min.js": {
-      "none": "50.1 kB"
+      "none": "56.4 kB"
     },
     "packages/react-router/dist/react-router.production.min.js": {
-      "none": "14.6 kB"
+      "none": "14.9 kB"
     },
     "packages/react-router/dist/umd/react-router.production.min.js": {
-      "none": "17.0 kB"
+      "none": "17.3 kB"
     },
     "packages/react-router-dom/dist/react-router-dom.production.min.js": {
-      "none": "16.8 kB"
+      "none": "17.2 kB"
     },
     "packages/react-router-dom/dist/umd/react-router-dom.production.min.js": {
-      "none": "23.0 kB"
+      "none": "23.6 kB"
+    }
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "@changesets/get-dependents-graph@1.3.6": "patches/@changesets__get-dependents-graph@1.3.6.patch"
     }
   }
 }

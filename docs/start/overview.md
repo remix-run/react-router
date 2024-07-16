@@ -383,7 +383,7 @@ See:
 
 Instead of waiting for the data for the next page, you can [`defer`][defer] data so the UI flips over to the next screen with placeholder UI immediately while the data loads.
 
-```jsx lines=[12,22-29,32-35,42]
+```jsx lines=[12,22-29,32-35]
 <Route
   path="issue/:issueId"
   element={<Issue />}

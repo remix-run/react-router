@@ -9,7 +9,9 @@ title: createRoutesFromElements
 ```jsx
 import {
   createBrowserRouter,
+  createRoutesFromElements,
   RouterProvider,
+  Route,
 } from "react-router-dom";
 
 // You can do this:

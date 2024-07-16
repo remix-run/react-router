@@ -51,6 +51,9 @@ export type {
   ActionFunctionArgs,
   AwaitProps,
   BrowserRouterProps,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
   DataRouteMatch,
   DataRouteObject,
   ErrorResponse,
@@ -107,8 +110,9 @@ export type {
   To,
   URLSearchParamsInit,
   UIMatch,
-  unstable_Blocker,
-  unstable_BlockerFunction,
+  Blocker,
+  BlockerFunction,
+  unstable_HandlerResult,
 } from "./react-router-dom";
 export {
   AbortedDeferredError,
