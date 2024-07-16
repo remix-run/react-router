@@ -3,18 +3,24 @@ const path = require("path");
 
 module.exports = function rollup(options) {
   return [
-    "router",
     "react-router",
+    "react-router-architect",
+    "react-router-cloudflare",
     "react-router-dom",
-    "react-router-dom-v5-compat",
-    "react-router-native",
+    "react-router-dev",
+    "react-router-express",
+    "react-router-node",
+    "react-router-serve",
   ]
     .flatMap((dir) => {
-      // if (dir !== "router") return null;
       let configPath = path.join("packages", dir, "rollup.config.js");
       try {
         fs.readFileSync(configPath);
       } catch (e) {
+        console.error(
+          "⚠️ Skipping build for package directory without rollup.config.js:",
+          dir
+        );
         return null;
       }
       let packageBuild = require(`.${path.sep}${configPath}`);

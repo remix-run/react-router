@@ -1,34 +1,39 @@
+/* eslint-disable import/no-nodejs-modules */
 const path = require("path");
 const babel = require("@rollup/plugin-babel").default;
 const copy = require("rollup-plugin-copy");
-const extensions = require("rollup-plugin-extensions");
+const nodeResolve = require("@rollup/plugin-node-resolve").default;
 const prettier = require("rollup-plugin-prettier");
 const replace = require("@rollup/plugin-replace");
 const { terser } = require("rollup-plugin-terser");
 const typescript = require("@rollup/plugin-typescript");
 const {
+  babelPluginReplaceVersionPlaceholder,
   createBanner,
+  isBareModuleId,
   getBuildDirectories,
+  validateReplacedVersion,
   PRETTY,
+  WATCH,
 } = require("../../rollup.utils");
 const { name, version } = require("./package.json");
 
 module.exports = function rollup() {
-  const { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
+  const { SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(name);
 
   // JS modules for bundlers
   const modules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/index.js`,
+        file: `${OUTPUT_DIR}/index.mjs`,
         format: "esm",
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -37,15 +42,23 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
         }),
+        typescript({
+          // eslint-disable-next-line no-restricted-globals
+          tsconfig: path.join(__dirname, "tsconfig.json"),
+          exclude: ["__tests__"],
+          noEmitOnError: !WATCH,
+        }),
         copy({
-          targets: [
-            { src: path.join(ROOT_DIR, "LICENSE.md"), dest: SOURCE_DIR },
-          ],
+          targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
           verbose: true,
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];
@@ -60,9 +73,9 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -71,18 +84,17 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
-        }),
-        typescript({
-          tsconfig: path.join(__dirname, "tsconfig.json"),
-          exclude: ["__tests__"],
-          noEmitOnError: true,
         }),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
@@ -93,9 +105,9 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -116,14 +128,17 @@ module.exports = function rollup() {
             ],
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
+        validateReplacedVersion(),
         terser({ ecma: 8, safari10: true }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
@@ -139,14 +154,13 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: {
-          "@remix-run/router": "RemixRouter",
           react: "React",
         },
         name: "ReactRouter",
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -155,13 +169,17 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("development") },
         }),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
     {
@@ -172,14 +190,13 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner: createBanner("React Router", version),
         globals: {
-          "@remix-run/router": "RemixRouter",
           react: "React",
         },
         name: "ReactRouter",
       },
-      external: ["@remix-run/router", "react"],
+      external: (id) => isBareModuleId(id),
       plugins: [
-        extensions({ extensions: [".tsx", ".ts"] }),
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
         babel({
           babelHelpers: "bundled",
           exclude: /node_modules/,
@@ -188,15 +205,18 @@ module.exports = function rollup() {
             "@babel/preset-react",
             "@babel/preset-typescript",
           ],
-          plugins: ["babel-plugin-dev-expression"],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
           extensions: [".ts", ".tsx"],
         }),
         replace({
           preventAssignment: true,
           values: { "process.env.NODE_ENV": JSON.stringify("production") },
         }),
-        // compiler(),
         terser(),
+        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
   ];

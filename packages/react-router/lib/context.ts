@@ -12,7 +12,7 @@ import type {
   StaticHandlerContext,
   To,
   TrackedPromise,
-} from "@remix-run/router";
+} from "./router";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
@@ -80,21 +80,15 @@ export interface DataRouterContextObject
 
 export const DataRouterContext =
   React.createContext<DataRouterContextObject | null>(null);
-if (__DEV__) {
-  DataRouterContext.displayName = "DataRouter";
-}
+DataRouterContext.displayName = "DataRouter";
 
 export const DataRouterStateContext = React.createContext<
   Router["state"] | null
 >(null);
-if (__DEV__) {
-  DataRouterStateContext.displayName = "DataRouterState";
-}
+DataRouterStateContext.displayName = "DataRouterState";
 
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
-if (__DEV__) {
-  AwaitContext.displayName = "Await";
-}
+AwaitContext.displayName = "Await";
 
 export interface NavigateOptions {
   replace?: boolean;
@@ -127,18 +121,15 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
-  future: {
-    v7_relativeSplatPath: boolean;
-  };
+  // TODO: Re-introduce a singular `FutureConfig` once we land our first
+  // future.unstable_ or future.v8_ flag
+  future: {};
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(
   null!
 );
-
-if (__DEV__) {
-  NavigationContext.displayName = "Navigation";
-}
+NavigationContext.displayName = "Navigation";
 
 interface LocationContextObject {
   location: Location;
@@ -148,10 +139,7 @@ interface LocationContextObject {
 export const LocationContext = React.createContext<LocationContextObject>(
   null!
 );
-
-if (__DEV__) {
-  LocationContext.displayName = "Location";
-}
+LocationContext.displayName = "Location";
 
 export interface RouteContextObject {
   outlet: React.ReactElement | null;
@@ -164,13 +152,7 @@ export const RouteContext = React.createContext<RouteContextObject>({
   matches: [],
   isDataRoute: false,
 });
-
-if (__DEV__) {
-  RouteContext.displayName = "Route";
-}
+RouteContext.displayName = "Route";
 
 export const RouteErrorContext = React.createContext<any>(null);
-
-if (__DEV__) {
-  RouteErrorContext.displayName = "RouteError";
-}
+RouteErrorContext.displayName = "RouteError";

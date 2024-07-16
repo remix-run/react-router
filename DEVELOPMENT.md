@@ -74,10 +74,12 @@ Hotfix releases follow the same process as standard releases above, but the `rel
 
 ### Experimental releases
 
-Experimental releases and hot-fixes do not need to be branched off of `dev`. Experimental releases can be branched from anywhere as they are not intended for general use.
+Experimental releases use a [manually-triggered Github Actions workflow](./.github/workflows/release-experimental.yml) and can be built from any existing branch. to build and publish an experimental release:
 
-- Create a new branch for the release: `git checkout -b release-experimental`
-- Make whatever changes you need and commit them: `git add . && git commit "experimental changes!"`
-- Update version numbers and create a release tag: `pnpm run version:experimental`
-- Push to GitHub: `git push origin --follow-tags`
-- The CI workflow should automatically trigger from the experimental tag to publish the release to npm
+- Commit your changes to a branch
+- Push the branch to github
+- Go to the Github Actions UI for the [release-experimental.yml workflow](https://github.com/remix-run/react-router/actions/workflows/release-experimental.yml)
+- Click the `Run workflow` dropdown
+- Leave the `Use workflow from` dropdown as `main`
+- Enter your feature branch in the `branch` input
+- Click the `Run workflow` button
