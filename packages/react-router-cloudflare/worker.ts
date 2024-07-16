@@ -60,8 +60,9 @@ export function createRequestHandler<Env = any>({
           ...cloudflare,
           cf: cloudflare.request.cf!,
           ctx: {
-            waitUntil: cloudflare.waitUntil,
-            passThroughOnException: cloudflare.passThroughOnException,
+            waitUntil: cloudflare.waitUntil.bind(cloudflare),
+            passThroughOnException:
+              cloudflare.passThroughOnException.bind(cloudflare),
           },
           caches,
         },
