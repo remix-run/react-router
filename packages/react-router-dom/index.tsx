@@ -177,6 +177,7 @@ export {
   parsePath,
   redirect,
   redirectDocument,
+  replace,
   renderMatches,
   resolvePath,
   useActionData,

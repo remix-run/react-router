@@ -49,6 +49,7 @@ import {
   parsePath,
   redirect,
   redirectDocument,
+  replace,
   resolvePath,
   UNSAFE_warning as warning,
 } from "@remix-run/router";
@@ -206,6 +207,7 @@ export {
   parsePath,
   redirect,
   redirectDocument,
+  replace,
   renderMatches,
   resolvePath,
   useBlocker,
