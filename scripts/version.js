@@ -165,7 +165,7 @@ async function run() {
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));
 
-    if (givenVersion !== "experimental") {
+    if (!isExperimental) {
       console.log(
         chalk.red(
           `  🚨 @remix-run/router isn't handled by this script, do it manually!`
