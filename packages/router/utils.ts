@@ -44,6 +44,7 @@ export interface RedirectResult {
   location: string;
   revalidate: boolean;
   reloadDocument?: boolean;
+  replace?: boolean;
 }
 
 /**
@@ -1543,7 +1544,7 @@ export const defer: DeferFunction = (data, init = {}) => {
 
 export type RedirectFunction = (
   url: string,
-  init?: number | ResponseInit
+  init?: number | (ResponseInit & { replace?: boolean })
 ) => Response;
 
 /**
@@ -1560,6 +1561,9 @@ export const redirect: RedirectFunction = (url, init = 302) => {
 
   let headers = new Headers(responseInit.headers);
   headers.set("Location", url);
+
+  if (typeof init === "object" && init.replace)
+    headers.set("X-Remix-Redirect-Replace", "true");
 
   return new Response(null, {
     ...responseInit,
