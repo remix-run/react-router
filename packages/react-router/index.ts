@@ -231,6 +231,8 @@ export {
   useRoutes,
 };
 
+// TODO: Temporary change to test the release process off the v6 branch
+
 function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
     // Note: this check also occurs in createRoutesFromChildren so update
