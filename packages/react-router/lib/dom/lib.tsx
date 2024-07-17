@@ -530,7 +530,7 @@ export function RouterProvider({
                 navigationType={state.historyAction}
                 navigator={navigator}
               >
-                <DataRoutes
+                <MemoizedDataRoutes
                   routes={router.routes}
                   future={router.future}
                   state={state}
@@ -544,6 +544,9 @@ export function RouterProvider({
     </>
   );
 }
+
+// Memoize to avoid re-renders when updating `ViewTransitionContext`
+const MemoizedDataRoutes = React.memo(DataRoutes);
 
 function DataRoutes({
   routes,
