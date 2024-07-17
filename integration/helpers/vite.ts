@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
+import { createRequire } from "node:module";
 import fse from "fs-extra";
 import stripIndent from "strip-indent";
 import waitOn from "wait-on";
@@ -13,6 +14,8 @@ import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
 import type { VitePluginConfig } from "@react-router/dev";
+
+const require = createRequire(import.meta.url);
 
 const reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
@@ -194,9 +197,9 @@ export const wranglerPagesDev = async ({
   port: number;
 }) => {
   let nodeBin = process.argv[0];
-
-  // grab wrangler bin from remix-run/remix root node_modules since its not copied into integration project's node_modules
-  let wranglerBin = path.resolve("node_modules/wrangler/bin/wrangler.js");
+  let wranglerBin = require.resolve("wrangler/bin/wrangler.js", {
+    paths: [cwd],
+  });
 
   let proc = spawn(
     nodeBin,

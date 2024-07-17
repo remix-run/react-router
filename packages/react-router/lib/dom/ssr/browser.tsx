@@ -189,7 +189,7 @@ function createHydratedRouter(): RemixRouter {
     basename: ssrInfo.context.basename,
     future: {
       // Single fetch enables this underlying behavior
-      unstable_skipActionErrorRevalidation: true,
+      v7_skipActionErrorRevalidation: true,
     },
     hydrationData,
     mapRouteProperties,

@@ -500,13 +500,13 @@ export async function resolveEntryFiles({
 
     if (!deps["isbot"]) {
       console.log(
-        "adding `isbot` to your package.json, you should commit this change"
+        "adding `isbot@5` to your package.json, you should commit this change"
       );
 
       pkgJson.update({
         dependencies: {
           ...pkgJson.content.dependencies,
-          isbot: "^4",
+          isbot: "^5",
         },
       });
 

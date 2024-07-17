@@ -5,9 +5,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/@react-router/dev/dist/cli.js dev",
-    "build": "node ./node_modules/@react-router/dev/dist/cli.js build",
-    "start": "node ./node_modules/@react-router/serve/dist/cli.js ./build/server/index.js",
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "start": "react-router-serve ./build/server/index.js",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -17,7 +17,7 @@
     "@vanilla-extract/css": "^1.10.0",
     "@vanilla-extract/vite-plugin": "^3.9.2",
     "express": "^4.19.2",
-    "isbot": "^4.1.0",
+    "isbot": "^5.1.11",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router": "workspace:*",

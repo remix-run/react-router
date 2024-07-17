@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.24.0",
+  "version": "6.25.0",
   "description": "Declarative routing for React web applications",
   "keywords": [
     "react",
@@ -20,8 +20,16 @@
   "sideEffects": false,
   "main": "./dist/main.js",
   "unpkg": "./dist/umd/react-router-dom.production.min.js",
-  "module": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/main.js"
+    },
+    "./package.json": "./package.json"
+  },
   "dependencies": {
     "react-router": "workspace:*"
   },

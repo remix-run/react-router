@@ -21,14 +21,17 @@ module.exports = function rollup() {
     "react-router-node"
   );
 
+  const input = [`${SOURCE_DIR}/index.ts`, `${SOURCE_DIR}/install.ts`];
+
   return [
     {
+      input,
       external: (id) => isBareModuleId(id),
-      input: `${SOURCE_DIR}/index.ts`,
       output: {
         banner: createBanner(name, version),
         dir: OUTPUT_DIR,
-        format: "cjs",
+        entryFileNames: "[name].mjs",
+        format: "esm",
         preserveModules: true,
         exports: "named",
       },
@@ -48,6 +51,26 @@ module.exports = function rollup() {
         copy({
           targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }],
         }),
+      ],
+    },
+    {
+      input,
+      external: (id) => isBareModuleId(id),
+      output: {
+        banner: createBanner(name, version),
+        dir: OUTPUT_DIR,
+        format: "cjs",
+        preserveModules: true,
+        exports: "named",
+      },
+      plugins: [
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          extensions: [".ts", ".tsx"],
+          ...remixBabelConfig,
+        }),
+        nodeResolve({ extensions: [".ts", ".tsx"] }),
       ],
     },
   ];

@@ -8,4 +8,4 @@ export type {
   VitePluginConfig,
 } from "./config";
 export { defineRoutes, dataRoutes, fsRoutes } from "./config/routes";
-export { vitePlugin } from "./vite";
+export { vitePlugin, cloudflareDevProxyVitePlugin } from "./vite";

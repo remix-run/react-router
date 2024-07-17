@@ -2097,6 +2097,7 @@ describe("fetchers", () => {
       expect(shouldRevalidate.mock.calls[0][0]).toMatchInlineSnapshot(`
         {
           "actionResult": null,
+          "actionStatus": undefined,
           "currentParams": {
             "a": "one",
           },
@@ -2113,7 +2114,6 @@ describe("fetchers", () => {
           },
           "nextUrl": "http://localhost/two/three",
           "text": undefined,
-          "unstable_actionStatus": undefined,
         }
       `);
 

@@ -368,7 +368,7 @@ describe("shouldRevalidate", () => {
       formAction: "/child",
       formEncType: "application/x-www-form-urlencoded",
       actionResult: "ACTION",
-      unstable_actionStatus: 201,
+      actionStatus: 201,
     };
     expect(arg).toMatchObject(expectedArg);
     // @ts-expect-error
@@ -701,6 +701,7 @@ describe("shouldRevalidate", () => {
     expect(arg).toMatchInlineSnapshot(`
       {
         "actionResult": "FETCH",
+        "actionStatus": undefined,
         "currentParams": {},
         "currentUrl": "http://localhost/",
         "defaultShouldRevalidate": true,
@@ -712,7 +713,6 @@ describe("shouldRevalidate", () => {
         "nextParams": {},
         "nextUrl": "http://localhost/",
         "text": undefined,
-        "unstable_actionStatus": undefined,
       }
     `);
     expect(Object.fromEntries(arg.formData)).toEqual({ key: "value" });
@@ -764,6 +764,7 @@ describe("shouldRevalidate", () => {
     expect(arg).toMatchInlineSnapshot(`
       {
         "actionResult": undefined,
+        "actionStatus": undefined,
         "currentParams": {},
         "currentUrl": "http://localhost/",
         "defaultShouldRevalidate": true,
@@ -775,7 +776,6 @@ describe("shouldRevalidate", () => {
         "nextParams": {},
         "nextUrl": "http://localhost/",
         "text": undefined,
-        "unstable_actionStatus": undefined,
       }
     `);
 
@@ -1202,7 +1202,7 @@ describe("shouldRevalidate", () => {
             root: "ROOT",
           },
         },
-        future: { unstable_skipActionErrorRevalidation: true },
+        future: { v7_skipActionErrorRevalidation: true },
       });
       router.initialize();
 
@@ -1270,7 +1270,7 @@ describe("shouldRevalidate", () => {
             root: "ROOT",
           },
         },
-        future: { unstable_skipActionErrorRevalidation: true },
+        future: { v7_skipActionErrorRevalidation: true },
       });
       router.initialize();
 
