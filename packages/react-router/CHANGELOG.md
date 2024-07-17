@@ -1,5 +1,9 @@
 # `react-router`
 
+## 6.25.1
+
+No significant changes to this package were made in this release. [See the repo `CHANGELOG.md`](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md) for an overview of all changes in v6.25.1.
+
 ## 6.25.0
 
 ### Minor Changes
