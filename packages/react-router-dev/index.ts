@@ -7,5 +7,5 @@ export type {
   ServerBundlesFunction,
   VitePluginConfig,
 } from "./config";
-export { defineRoutes, dataRoutes, fsRoutes } from "./config/routes";
+export { defineRoutes, configRoutes, fileRoutes } from "./config/routes";
 export { vitePlugin, cloudflareDevProxyVitePlugin } from "./vite";

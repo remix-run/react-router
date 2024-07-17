@@ -27,9 +27,9 @@ test.describe("flat routes", () => {
           });
         `,
         "app/routes.ts": `
-          import { defineRoutes, fsRoutes } from "@react-router/dev";
+          import { defineRoutes, fileRoutes } from "@react-router/dev";
 
-          export default defineRoutes(fsRoutes({
+          export default defineRoutes(fileRoutes({
             ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
           }));        
         `,

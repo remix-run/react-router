@@ -26,7 +26,7 @@ import {
 import jsesc from "jsesc";
 import colors from "picocolors";
 
-import { type ConfigRoute, type RouteManifest } from "../config/routes";
+import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
 import { findConfig } from "../config/findConfig";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
@@ -171,7 +171,7 @@ let hmrRuntimeId = VirtualModule.id("hmr-runtime");
 let injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
 
 const resolveRelativeRouteFilePath = (
-  route: ConfigRoute,
+  route: RouteManifestEntry,
   reactRouterConfig: ResolvedVitePluginConfig
 ) => {
   let vite = importViteEsmSync();
@@ -1753,7 +1753,7 @@ if (import.meta.hot && !inWebWorker) {
 function getRoute(
   pluginConfig: ResolvedVitePluginConfig,
   file: string
-): ConfigRoute | undefined {
+): RouteManifestEntry | undefined {
   let vite = importViteEsmSync();
   let routePath = vite.normalizePath(
     path.relative(pluginConfig.appDirectory, file)
@@ -1767,7 +1767,7 @@ function getRoute(
 async function getRouteMetadata(
   ctx: ReactRouterPluginContext,
   viteChildCompiler: Vite.ViteDevServer | null,
-  route: ConfigRoute,
+  route: RouteManifestEntry,
   readRouteFile?: () => string | Promise<string>
 ) {
   let sourceExports = await getRouteModuleExports(

@@ -10,7 +10,7 @@ import PackageJson from "@npmcli/package-json";
 
 import {
   type RouteManifest,
-  type ConfigRoute,
+  type RouteManifestEntry,
   type RouteConfig,
 } from "./config/routes";
 import { detectPackageManager } from "./cli/detectPackageManager";
@@ -39,11 +39,14 @@ const branchRouteProperties = [
   "path",
   "file",
   "index",
-] as const satisfies ReadonlyArray<keyof ConfigRoute>;
-type BranchRoute = Pick<ConfigRoute, (typeof branchRouteProperties)[number]>;
+] as const satisfies ReadonlyArray<keyof RouteManifestEntry>;
+type BranchRoute = Pick<
+  RouteManifestEntry,
+  (typeof branchRouteProperties)[number]
+>;
 
 export const configRouteToBranchRoute = (
-  configRoute: ConfigRoute
+  configRoute: RouteManifestEntry
 ): BranchRoute => pick(configRoute, branchRouteProperties);
 
 export type ServerBundlesFunction = (args: {

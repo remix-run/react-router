@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { makeRe } from "minimatch";
 
-import type { ConfigRoute, RouteManifest } from "./routes";
+import type { RouteManifestEntry, RouteManifest } from "./routes";
 import { normalizeSlashes } from "./routes";
 import { findConfig } from "./findConfig";
 
@@ -130,10 +130,10 @@ export function flatRoutesUniversal(
   routes: string[],
   prefix: string = "routes"
 ): RouteManifest {
-  let urlConflicts = new Map<string, ConfigRoute[]>();
+  let urlConflicts = new Map<string, RouteManifestEntry[]>();
   let routeManifest: RouteManifest = {};
   let prefixLookup = new PrefixLookupTrie();
-  let uniqueRoutes = new Map<string, ConfigRoute>();
+  let uniqueRoutes = new Map<string, RouteManifestEntry>();
   let routeIdConflicts = new Map<string, string[]>();
 
   // id -> file
@@ -193,7 +193,7 @@ export function flatRoutesUniversal(
   }
 
   // path creation
-  let parentChildrenMap = new Map<string, ConfigRoute[]>();
+  let parentChildrenMap = new Map<string, RouteManifestEntry[]>();
   for (let [routeId] of sortedRouteIds) {
     let config = routeManifest[routeId];
     if (!config.parentId) continue;
