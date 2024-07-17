@@ -8,5 +8,7 @@
     "react-router-native": "6.25.0",
     "@remix-run/router": "1.18.0"
   },
-  "changesets": []
+  "changesets": [
+    "fuzzy-worms-applaud"
+  ]
 }

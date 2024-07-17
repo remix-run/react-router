@@ -1,5 +1,13 @@
 # `react-router-dom`
 
+## 6.25.1-pre.0
+
+### Patch Changes
+
+- Memoize some `RouterProvider` internals to reduce uneccesary re-renders ([#11803](https://github.com/remix-run/react-router/pull/11803))
+- Updated dependencies:
+  - `react-router@6.25.1-pre.0`
+
 ## 6.25.0
 
 ### Minor Changes
