@@ -1,5 +1,20 @@
 # `@remix-run/router`
 
+## 1.18.0
+
+### Minor Changes
+
+- Stabilize `future.unstable_skipActionErrorRevalidation` as `future.v7_skipActionErrorRevalidation` ([#11769](https://github.com/remix-run/react-router/pull/11769))
+
+  - When this flag is enabled, actions will not automatically trigger a revalidation if they return/throw a `Response` with a `4xx`/`5xx` status code
+  - You may still opt-into revalidation via `shouldRevalidate`
+  - This also changes `shouldRevalidate`'s `unstable_actionStatus` parameter to `actionStatus`
+
+### Patch Changes
+
+- Fix bubbling of errors thrown from `unstable_patchRoutesOnMiss` ([#11786](https://github.com/remix-run/react-router/pull/11786))
+- Fix hydration in SSR apps using `unstable_patchRoutesOnMiss` that matched a splat route on the server ([#11790](https://github.com/remix-run/react-router/pull/11790))
+
 ## 1.17.1
 
 ### Patch Changes
