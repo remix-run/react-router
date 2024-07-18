@@ -1202,7 +1202,6 @@ describe("shouldRevalidate", () => {
             root: "ROOT",
           },
         },
-        future: { v7_skipActionErrorRevalidation: true },
       });
       router.initialize();
 
@@ -1270,7 +1269,6 @@ describe("shouldRevalidate", () => {
             root: "ROOT",
           },
         },
-        future: { v7_skipActionErrorRevalidation: true },
       });
       router.initialize();
 
