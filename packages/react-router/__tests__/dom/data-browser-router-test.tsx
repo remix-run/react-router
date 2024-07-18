@@ -1,4 +1,4 @@
-import type { ErrorResponse, Fetcher } from "react-router";
+import type { ErrorResponse, Fetcher, RouterState } from "react-router";
 import "@testing-library/jest-dom";
 import {
   act,
@@ -38,7 +38,7 @@ import {
 } from "../../index";
 
 import getHtml from "../utils/getHtml";
-import { createDeferred } from "../router/utils/utils";
+import { createDeferred, tick } from "../router/utils/utils";
 
 testDomRouter("<DataBrowserRouter>", createBrowserRouter, (url) =>
   getWindowImpl(url, false)
@@ -7439,6 +7439,81 @@ function testDomRouter(
         fireEvent.click(screen.getByText("/d"));
         await waitFor(() => screen.getByText("D"));
         expect(spy).toHaveBeenCalledTimes(2);
+      });
+
+      it("Does not cause extra re-renders due to ViewTransitionContext updates", async () => {
+        let testWindow = getWindow("/");
+        testWindow.document.startViewTransition = (cb) => {
+          cb();
+          return {
+            ready: Promise.resolve(),
+            finished: Promise.resolve(),
+            updateCallbackDone: Promise.resolve(),
+            skipTransition: () => {},
+          };
+        };
+
+        let renders: RouterState[] = [];
+        let router = createTestRouter(
+          [
+            {
+              path: "/",
+              Component() {
+                return (
+                  <>
+                    <Link to="/page" unstable_viewTransition>
+                      /page
+                    </Link>
+                    <Outlet />
+                  </>
+                );
+              },
+              children: [
+                {
+                  index: true,
+                  async loader() {
+                    await tick();
+                    return "INDEX";
+                  },
+                  Component() {
+                    renders.push(useLocation(), useNavigation());
+                    return <h1>{useLoaderData()}</h1>;
+                  },
+                },
+                {
+                  path: "page",
+                  async loader() {
+                    await tick();
+                    return "PAGE";
+                  },
+                  Component() {
+                    renders.push(useLocation(), useNavigation());
+                    return <h1>{useLoaderData()}</h1>;
+                  },
+                },
+              ],
+            },
+          ],
+          { window: testWindow }
+        );
+        render(<RouterProvider router={router} />);
+        await waitFor(() => screen.getByText("INDEX"));
+
+        renders = [];
+        fireEvent.click(screen.getByText("/page"));
+        await waitFor(() => screen.getByText("PAGE"));
+
+        expect(renders).toMatchObject([
+          // Re-render of current location with navigation.state = "loading"
+          { pathname: "/" },
+          {
+            state: "loading",
+            location: { pathname: "/page" },
+          },
+          // Render of new location with navigation.state = "idle"
+          { pathname: "/page" },
+          { state: "idle" },
+        ]);
       });
     });
   });
