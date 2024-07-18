@@ -1619,6 +1619,18 @@ export const redirectDocument: RedirectFunction = (url, init) => {
   return response;
 };
 
+/**
+ * A redirect response that will perform a `history.replaceState` instead of a
+ * `history.pushState` for client-side navigation redirects.
+ * Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ */
+export const replace: RedirectFunction = (url, init) => {
+  let response = redirect(url, init);
+  response.headers.set("X-Remix-Replace", "true");
+  return response;
+};
+
 export type ErrorResponse = {
   status: number;
   statusText: string;

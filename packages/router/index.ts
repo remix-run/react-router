@@ -48,6 +48,7 @@ export {
   normalizePathname,
   redirect,
   redirectDocument,
+  replace,
   resolvePath,
   resolveTo,
   stripBasename,

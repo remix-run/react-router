@@ -2683,7 +2683,9 @@ export function createRouter(init: RouterInit): Router {
     pendingNavigationController = null;
 
     let redirectHistoryAction =
-      replace === true ? HistoryAction.Replace : HistoryAction.Push;
+      replace === true || redirect.response.headers.has("X-Remix-Replace")
+        ? HistoryAction.Replace
+        : HistoryAction.Push;
 
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation

@@ -1,7 +1,13 @@
-import { IDLE_NAVIGATION } from "../index";
+import {
+  IDLE_NAVIGATION,
+  createBrowserHistory,
+  createMemoryHistory,
+  createRouter,
+} from "../index";
+import { replace } from "../utils";
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, setup } from "./utils/data-router-setup";
-import { createFormData } from "./utils/utils";
+import { createFormData, tick } from "./utils/utils";
 
 describe("redirects", () => {
   afterEach(() => cleanup());
@@ -638,6 +644,70 @@ describe("redirects", () => {
       navigation: IDLE_NAVIGATION,
       loaderData: {
         loader: "LOADER 3",
+      },
+    });
+  });
+
+  it("supports replace() redirects", async () => {
+    let router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          path: "/a",
+        },
+        {
+          path: "/b",
+          loader: () => replace("/c"),
+        },
+        {
+          path: "/c",
+        },
+      ],
+    });
+    router.initialize();
+    await tick();
+
+    // ['/']
+    expect(router.state).toMatchObject({
+      historyAction: "POP",
+      location: {
+        pathname: "/",
+        state: null,
+      },
+    });
+
+    // Push /a: ['/', '/a']
+    await router.navigate("/a");
+    expect(router.state).toMatchObject({
+      historyAction: "PUSH",
+      location: {
+        pathname: "/a",
+        state: null,
+      },
+    });
+
+    // Push /b which calls replace('/c'): ['/', '/c']
+    await router.navigate("/b");
+    expect(router.state).toMatchObject({
+      historyAction: "REPLACE",
+      location: {
+        pathname: "/c",
+        state: {
+          _isRedirect: true,
+        },
+      },
+    });
+
+    // Pop: ['/']
+    await router.navigate(-1);
+    expect(router.state).toMatchObject({
+      historyAction: "POP",
+      location: {
+        pathname: "/",
+        state: null,
       },
     });
   });
