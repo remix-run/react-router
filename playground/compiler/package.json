@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
+    "@react-router/remix-v2-routes": "workspace:*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "typescript": "^5.1.6",

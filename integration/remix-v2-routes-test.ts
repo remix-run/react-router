@@ -13,7 +13,7 @@ import {
 let fixture: Fixture;
 let appFixture: AppFixture;
 
-test.describe("flat routes", () => {
+test.describe("remix v2 routes", () => {
   let IGNORED_ROUTE = "ignore-me-pls";
   test.beforeAll(async () => {
     fixture = await createFixture({
@@ -27,11 +27,11 @@ test.describe("flat routes", () => {
           });
         `,
         "app/routes.ts": `
-          import { defineRoutes, fileRoutes } from "@react-router/dev";
+          import { remixRoutes } from "@react-router/remix-v2-routes";
 
-          export default defineRoutes(fileRoutes({
+          export default remixRoutes({
             ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
-          }));        
+          });        
         `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";

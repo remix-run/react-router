@@ -503,9 +503,9 @@ test.describe("SPA Mode", () => {
             });
           `,
           "src/routes.ts": js`
-            import { defineRoutes, fileRoutes } from "@react-router/dev";
+            import { remixRoutes } from "@react-router/remix-v2-routes";
 
-            export default defineRoutes(fileRoutes());
+            export default remixRoutes();
           `,
           "src/root.tsx": js`
             import {
@@ -591,9 +591,9 @@ test.describe("SPA Mode", () => {
             });
           `,
           "src/routes.ts": js`
-            import { defineRoutes, fileRoutes } from "@react-router/dev";
+            import { remixRoutes } from "@react-router/remix-v2-routes";
 
-            export default defineRoutes(fileRoutes());
+            export default remixRoutes();
           `,
           "src/root.tsx": js`
             import {

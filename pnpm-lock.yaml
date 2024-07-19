@@ -397,6 +397,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -449,6 +452,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -504,6 +510,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -835,6 +844,18 @@ importers:
         specifier: ^5.1.6
         version: 5.4.5
 
+  packages/react-router-remix-v2-routes:
+    devDependencies:
+      '@react-router/dev':
+        specifier: workspace:*
+        version: link:../react-router-dev
+      minimatch:
+        specifier: ^9.0.0
+        version: 9.0.3
+      typescript:
+        specifier: ^5.1.6
+        version: 5.4.5
+
   packages/react-router-serve:
     dependencies:
       '@react-router/express':
@@ -899,6 +920,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
