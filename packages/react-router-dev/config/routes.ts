@@ -1,16 +1,10 @@
 import * as path from "node:path";
-import * as fs from "node:fs";
 import pick from "lodash/pick";
-import { flatRoutes } from "./flatRoutes";
 
 export type RouteConfig =
   | RouteManifest
-  | DynamicRouteManifest
-  | Array<RouteManifest | DynamicRouteManifest>;
-
-export function defineRoutes(...routeConfigs: RouteConfig[]): RouteConfig {
-  return routeConfigs.flat();
-}
+  | RouteManifestFunction
+  | Array<RouteManifest | RouteManifestFunction>;
 
 export interface RouteManifestEntry {
   /**
@@ -51,7 +45,7 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-type DynamicRouteManifest = (args: {
+export type RouteManifestFunction = (args: {
   appDirectory: string;
 }) => RouteManifest | Promise<RouteManifest>;
 
@@ -191,21 +185,19 @@ function createLayout(
   };
 }
 
-export const configRouteHelpers = {
+export const defineRouteHelpers = {
   route: createRoute,
   index: createIndex,
   layout: createLayout,
 };
 
-type ConfigRoutesFunction = (r: typeof configRouteHelpers) => ConfigRoute[];
+type ConfigRoutesFunction = (r: typeof defineRouteHelpers) => ConfigRoute[];
 
-export function configRoutes(
-  configRoutes: ConfigRoute[] | ConfigRoutesFunction
+export function defineRoutes(
+  routes: ConfigRoute[] | ConfigRoutesFunction
 ): RouteManifest {
   return configRoutesToRouteManifest(
-    typeof configRoutes === "function"
-      ? configRoutes(configRouteHelpers)
-      : configRoutes
+    typeof routes === "function" ? routes(defineRouteHelpers) : routes
   );
 }
 
@@ -247,27 +239,11 @@ function configRoutesToRouteManifest(
   return routeManifest;
 }
 
-export function fileRoutes({
-  ignoredRouteFiles,
-  rootDirectory = "routes",
-}: {
-  ignoredRouteFiles?: string[];
-  rootDirectory?: string;
-} = {}): DynamicRouteManifest {
-  return ({ appDirectory }) => {
-    if (!fs.existsSync(path.resolve(appDirectory, rootDirectory))) {
-      return {};
-    }
-
-    return flatRoutes(appDirectory, ignoredRouteFiles, rootDirectory);
-  };
-}
-
-export function createRouteId(file: string) {
+function createRouteId(file: string) {
   return normalizeSlashes(stripFileExtension(file));
 }
 
-export function normalizeSlashes(file: string) {
+function normalizeSlashes(file: string) {
   return file.split(path.win32.sep).join("/");
 }
 

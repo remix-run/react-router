@@ -47,7 +47,6 @@
     "gunzip-maybe": "^1.4.2",
     "jsesc": "3.0.2",
     "lodash": "^4.17.21",
-    "minimatch": "^9.0.0",
     "picocolors": "^1.0.0",
     "picomatch": "^2.3.1",
     "prettier": "^2.7.1",

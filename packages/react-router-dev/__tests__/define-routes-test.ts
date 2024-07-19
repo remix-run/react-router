@@ -1,8 +1,8 @@
-import { configRoutes, configRouteHelpers } from "../config/routes";
+import { defineRoutes, defineRouteHelpers } from "../config/routes";
 
-describe("configRoutes", () => {
+describe("defineRoutes", () => {
   it("returns an array of routes", () => {
-    let routes = configRoutes([
+    let routes = defineRoutes([
       { path: "/", file: "routes/home.js" },
       {
         path: "inbox",
@@ -62,7 +62,7 @@ describe("configRoutes", () => {
   });
 
   it("returns an array of routes using helpers", () => {
-    let routes = configRoutes(({ route, index, layout }) => [
+    let routes = defineRoutes(({ route, index, layout }) => [
       route("/", "routes/home.js"),
       layout("routes/authenticated.js", [
         route("inbox", "routes/inbox.js", [
@@ -147,7 +147,7 @@ describe("configRoutes", () => {
   });
 
   it("allows multiple routes with the same route module", () => {
-    let routes = configRoutes(({ route }) => [
+    let routes = defineRoutes(({ route }) => [
       route("/user/:id", "routes/_index.tsx", { id: "user-by-id" }),
       route("/user", "routes/_index.tsx", { id: "user" }),
       route("/other", "routes/other-route.tsx"),
@@ -186,7 +186,7 @@ describe("configRoutes", () => {
   it("throws an error on route id collisions", () => {
     // Two conflicting custom id's
     let defineNonUniqueRoutes = () => {
-      configRoutes(({ route }) => [
+      defineRoutes(({ route }) => [
         route("/user/:id", "routes/user.tsx", { id: "user" }),
         route("/user", "routes/user.tsx", { id: "user" }),
         route("/other", "routes/other-route.tsx"),
@@ -199,7 +199,7 @@ describe("configRoutes", () => {
 
     // Custom id conflicting with a later-defined auto-generated id
     defineNonUniqueRoutes = () => {
-      configRoutes(({ route }) => [
+      defineRoutes(({ route }) => [
         route("/user/:id", "routes/user.tsx", { id: "routes/user" }),
         route("/user", "routes/user.tsx"),
       ]);
@@ -211,7 +211,7 @@ describe("configRoutes", () => {
 
     // Custom id conflicting with an earlier-defined auto-generated id
     defineNonUniqueRoutes = () => {
-      configRoutes(({ route }) => [
+      defineRoutes(({ route }) => [
         route("/user", "routes/user.tsx"),
         route("/user/:id", "routes/user.tsx", { id: "routes/user" }),
       ]);
@@ -223,7 +223,7 @@ describe("configRoutes", () => {
   });
 
   describe("route helpers", () => {
-    const r = configRouteHelpers;
+    const r = defineRouteHelpers;
 
     describe("route", () => {
       it("supports basic routes", () => {

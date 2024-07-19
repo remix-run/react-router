@@ -27,7 +27,6 @@ import jsesc from "jsesc";
 import colors from "picocolors";
 
 import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
-import { findConfig } from "../config/findConfig";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
 import type { NodeRequestHandler } from "./node-adapter";
@@ -1670,6 +1669,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     },
   ];
 };
+
+function findConfig(
+  dir: string,
+  basename: string,
+  extensions: string[]
+): string | undefined {
+  for (let ext of extensions) {
+    let name = basename + ext;
+    let file = path.join(dir, name);
+    if (fse.existsSync(file)) return file;
+  }
+
+  return undefined;
+}
 
 function isInReactRouterMonorepo() {
   // We use '@react-router/node' for this check since it's a

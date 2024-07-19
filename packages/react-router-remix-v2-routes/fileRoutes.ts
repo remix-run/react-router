@@ -1,10 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { RouteManifest, RouteManifestEntry } from "@react-router/dev";
 import { makeRe } from "minimatch";
-
-import type { RouteManifestEntry, RouteManifest } from "./routes";
-import { normalizeSlashes } from "./routes";
-import { findConfig } from "./findConfig";
 
 export const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
 
@@ -72,7 +69,7 @@ class PrefixLookupTrie {
   }
 }
 
-export function flatRoutes(
+export function fileRoutes(
   appDirectory: string,
   ignoredFilePatterns: string[] = [],
   prefix = "routes"
@@ -82,7 +79,7 @@ export function flatRoutes(
     .filter((re: any): re is RegExp => !!re);
   let routesDir = path.join(appDirectory, prefix);
 
-  let rootRoute = findConfig(appDirectory, "root", routeModuleExts);
+  let rootRoute = findFile(appDirectory, "root", routeModuleExts);
 
   if (!rootRoute) {
     throw new Error(
@@ -121,11 +118,11 @@ export function flatRoutes(
     if (route) routes.push(route);
   }
 
-  let routeManifest = flatRoutesUniversal(appDirectory, routes, prefix);
+  let routeManifest = fileRoutesUniversal(appDirectory, routes, prefix);
   return routeManifest;
 }
 
-export function flatRoutesUniversal(
+export function fileRoutesUniversal(
   appDirectory: string,
   routes: string[],
   prefix: string = "routes"
@@ -317,8 +314,8 @@ function findRouteModuleForFolder(
   let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
   if (isIgnored) return null;
 
-  let routeRouteModule = findConfig(filepath, "route", routeModuleExts);
-  let routeIndexModule = findConfig(filepath, "index", routeModuleExts);
+  let routeRouteModule = findFile(filepath, "route", routeModuleExts);
+  let routeIndexModule = findFile(filepath, "index", routeModuleExts);
 
   // if both a route and index module exist, throw a conflict error
   // preferring the route module over the index module
@@ -547,4 +544,22 @@ export function getRouteIdConflictErrorMessage(
 export function isSegmentSeparator(checkChar: string | undefined) {
   if (!checkChar) return false;
   return ["/", ".", path.win32.sep].includes(checkChar);
+}
+
+export function normalizeSlashes(file: string) {
+  return file.split(path.win32.sep).join("/");
+}
+
+function findFile(
+  dir: string,
+  basename: string,
+  extensions: string[]
+): string | undefined {
+  for (let ext of extensions) {
+    let name = basename + ext;
+    let file = path.join(dir, name);
+    if (fs.existsSync(file)) return file;
+  }
+
+  return undefined;
 }
