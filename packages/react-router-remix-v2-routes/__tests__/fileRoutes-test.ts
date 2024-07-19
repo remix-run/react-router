@@ -6,12 +6,12 @@ import {
   getRoutePathConflictErrorMessage,
   getRouteIdConflictErrorMessage,
   getRouteSegments,
-  normalizeSlashes,
 } from "../fileRoutes";
+import { normalizeSlashes } from "../normalizeSlashes";
 
 let APP_DIR = path.join("test", "root", "app");
 
-describe("flatRoutes", () => {
+describe("fileRoutes", () => {
   describe("creates proper route paths", () => {
     let tests: [string, string | undefined][] = [
       ["routes.$", "routes/*"],

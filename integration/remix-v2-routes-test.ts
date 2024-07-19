@@ -14,7 +14,6 @@ let fixture: Fixture;
 let appFixture: AppFixture;
 
 test.describe("remix v2 routes", () => {
-  let IGNORED_ROUTE = "ignore-me-pls";
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
@@ -26,11 +25,18 @@ test.describe("remix v2 routes", () => {
             plugins: [reactRouter()],
           });
         `,
-        "app/routes.ts": `
+        "app/routes.ts": js`
           import { remixRoutes } from "@react-router/remix-v2-routes";
 
           export default remixRoutes({
-            ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
+            ignoredRouteFiles: ["**/ignored-route.*"],
+            routes: async (defineRoutes) => {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+
+              return defineRoutes((route) => {
+                route("/custom/route", "custom-route.tsx")
+              });
+            }
           });        
         `,
         "app/root.tsx": js`
@@ -79,6 +85,12 @@ test.describe("remix v2 routes", () => {
           }
         `,
 
+        "app/custom-route.tsx": js`
+          export default function () {
+            return <h2>Custom Route</h2>;
+          }
+        `,
+
         "app/routes/.dotfile": `
           DOTFILE SHOULD BE IGNORED
         `,
@@ -112,7 +124,7 @@ test.describe("remix v2 routes", () => {
           }
         `,
 
-        [`app/routes/${IGNORED_ROUTE}.jsx`]: js`
+        [`app/routes/ignored-route.jsx`]: js`
           export default function () {
             return <h2>i should 404</h2>;
           }
@@ -174,6 +186,15 @@ test.describe("remix v2 routes", () => {
 </div>`);
     });
 
+    test("renders matching routes (custom route)", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/custom/route");
+      expect(await app.getHtml("#content")).toBe(`<div id="content">
+  <h1>Root</h1>
+  <h2>Custom Route</h2>
+</div>`);
+    });
+
     test("renders matching routes (route with escaped leading dot)", async ({
       page,
     }) => {
@@ -197,7 +218,7 @@ test.describe("remix v2 routes", () => {
   }
 
   test("allows ignoredRouteFiles to be configured", async () => {
-    let response = await fixture.requestDocument("/" + IGNORED_ROUTE);
+    let response = await fixture.requestDocument("/ignored-route");
 
     expect(response.status).toBe(404);
   });

@@ -3,6 +3,8 @@ import path from "node:path";
 import type { RouteManifest, RouteManifestEntry } from "@react-router/dev";
 import { makeRe } from "minimatch";
 
+import { normalizeSlashes } from "./normalizeSlashes";
+
 export const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
 
 export let paramPrefixChar = "$" as const;
@@ -544,10 +546,6 @@ export function getRouteIdConflictErrorMessage(
 export function isSegmentSeparator(checkChar: string | undefined) {
   if (!checkChar) return false;
   return ["/", ".", path.win32.sep].includes(checkChar);
-}
-
-export function normalizeSlashes(file: string) {
-  return file.split(path.win32.sep).join("/");
 }
 
 function findFile(
