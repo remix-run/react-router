@@ -668,9 +668,6 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
-      minimatch:
-        specifier: ^9.0.0
-        version: 9.0.3
       picocolors:
         specifier: ^1.0.0
         version: 1.0.0
