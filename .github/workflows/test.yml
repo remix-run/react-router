@@ -26,8 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         node:
-          - 16
           - 18
+          - 20
 
     runs-on: ubuntu-latest
 
@@ -41,9 +41,9 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v4
         with:
+          node-version: ${{ matrix.node }}
           cache: pnpm
           check-latest: true
-          node-version: ${{ matrix.node }}
 
       - name: Disable GitHub Actions Annotations
         run: |
@@ -57,11 +57,11 @@ jobs:
       - name: 🏗 Build
         run: pnpm build
 
+      - name: 🔍 Typecheck
+        run: pnpm typecheck
+
       - name: 🔬 Lint
         run: pnpm lint
 
       - name: 🧪 Run tests
         run: pnpm test
-
-      - name: Check bundle size
-        run: pnpm size

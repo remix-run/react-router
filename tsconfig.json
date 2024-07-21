@@ -2,9 +2,12 @@
   "files": [],
   "references": [
     { "path": "packages/react-router" },
+    { "path": "packages/react-router-architect" },
+    { "path": "packages/react-router-cloudflare" },
     { "path": "packages/react-router-dom" },
-    { "path": "packages/react-router-dom-v5-compat" },
-    { "path": "packages/react-router-native" },
-    { "path": "packages/router" }
+    { "path": "packages/react-router-dev" },
+    { "path": "packages/react-router-express" },
+    { "path": "packages/react-router-node" },
+    { "path": "packages/react-router-serve" }
   ]
 }

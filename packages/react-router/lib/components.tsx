@@ -1,30 +1,30 @@
 import type {
+  FutureConfig,
+  HydrationState,
   InitialEntry,
   LazyRouteFunction,
   Location,
   MemoryHistory,
   RelativeRoutingType,
   Router as RemixRouter,
-  RouterState,
-  RouterSubscriber,
   To,
   TrackedPromise,
-} from "@remix-run/router";
+  unstable_DataStrategyFunction,
+  unstable_AgnosticPatchRoutesOnMissFunction,
+} from "./router";
 import {
-  AbortedDeferredError,
   Action as NavigationType,
   createMemoryHistory,
-  UNSAFE_getResolveToMatches as getResolveToMatches,
+  createRouter,
   UNSAFE_invariant as invariant,
   parsePath,
   resolveTo,
   stripBasename,
   UNSAFE_warning as warning,
-} from "@remix-run/router";
+} from "./router";
 import * as React from "react";
 
 import type {
-  DataRouteObject,
   IndexRouteObject,
   Navigator,
   NonIndexRouteObject,
@@ -33,8 +33,6 @@ import type {
 } from "./context";
 import {
   AwaitContext,
-  DataRouterContext,
-  DataRouterStateContext,
   LocationContext,
   NavigationContext,
   RouteContext,
@@ -47,180 +45,130 @@ import {
   useNavigate,
   useOutlet,
   useRoutes,
-  useRoutesImpl,
 } from "./hooks";
+import { getResolveToMatches } from "./router/utils";
 
-export interface FutureConfig {
-  v7_relativeSplatPath: boolean;
-  v7_startTransition: boolean;
-}
-
-export interface RouterProviderProps {
-  fallbackElement?: React.ReactNode;
-  router: RemixRouter;
-  // Only accept future flags relevant to rendering behavior
-  // routing flags should be accessed via router.future
-  future?: Partial<Pick<FutureConfig, "v7_startTransition">>;
-}
+// TODO: Let's get this back to using an import map and development/production
+// condition once we get the rollup build replaced
+const ENABLE_DEV_WARNINGS = true;
 
 /**
-  Webpack + React 17 fails to compile on any of the following because webpack
-  complains that `startTransition` doesn't exist in `React`:
-  * import { startTransition } from "react"
-  * import * as React from from "react";
-    "startTransition" in React ? React.startTransition(() => setState()) : setState()
-  * import * as React from from "react";
-    "startTransition" in React ? React["startTransition"](() => setState()) : setState()
-
-  Moving it to a constant such as the following solves the Webpack/React 17 issue:
-  * import * as React from from "react";
-    const START_TRANSITION = "startTransition";
-    START_TRANSITION in React ? React[START_TRANSITION](() => setState()) : setState()
-
-  However, that introduces webpack/terser minification issues in production builds
-  in React 18 where minification/obfuscation ends up removing the call of
-  React.startTransition entirely from the first half of the ternary.  Grabbing
-  this exported reference once up front resolves that issue.
-
-  See https://github.com/remix-run/react-router/issues/10579
-*/
-const START_TRANSITION = "startTransition";
-const startTransitionImpl = React[START_TRANSITION];
-
-/**
- * Given a Remix Router instance, render the appropriate UI
+ * @private
  */
-export function RouterProvider({
-  fallbackElement,
-  router,
-  future,
-}: RouterProviderProps): React.ReactElement {
-  let [state, setStateImpl] = React.useState(router.state);
-  let { v7_startTransition } = future || {};
+export function mapRouteProperties(route: RouteObject) {
+  let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
+    // Note: this check also occurs in createRoutesFromChildren so update
+    // there if you change this -- please and thank you!
+    hasErrorBoundary:
+      route.hasErrorBoundary ||
+      route.ErrorBoundary != null ||
+      route.errorElement != null,
+  };
 
-  let setState = React.useCallback<RouterSubscriber>(
-    (newState: RouterState) => {
-      if (v7_startTransition && startTransitionImpl) {
-        startTransitionImpl(() => setStateImpl(newState));
-      } else {
-        setStateImpl(newState);
+  if (route.Component) {
+    if (ENABLE_DEV_WARNINGS) {
+      if (route.element) {
+        warning(
+          false,
+          "You should not include both `Component` and `element` on your route - " +
+            "`Component` will be used."
+        );
       }
-    },
-    [setStateImpl, v7_startTransition]
-  );
+    }
+    Object.assign(updates, {
+      element: React.createElement(route.Component),
+      Component: undefined,
+    });
+  }
 
-  // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
-  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+  if (route.HydrateFallback) {
+    if (ENABLE_DEV_WARNINGS) {
+      if (route.hydrateFallbackElement) {
+        warning(
+          false,
+          "You should not include both `HydrateFallback` and `hydrateFallbackElement` on your route - " +
+            "`HydrateFallback` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      hydrateFallbackElement: React.createElement(route.HydrateFallback),
+      HydrateFallback: undefined,
+    });
+  }
 
-  React.useEffect(() => {
-    warning(
-      fallbackElement == null || !router.future.v7_partialHydration,
-      "`<RouterProvider fallbackElement>` is deprecated when using " +
-        "`v7_partialHydration`, use a `HydrateFallback` component instead"
-    );
-    // Only log this once on initial mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (route.ErrorBoundary) {
+    if (ENABLE_DEV_WARNINGS) {
+      if (route.errorElement) {
+        warning(
+          false,
+          "You should not include both `ErrorBoundary` and `errorElement` on your route - " +
+            "`ErrorBoundary` will be used."
+        );
+      }
+    }
+    Object.assign(updates, {
+      errorElement: React.createElement(route.ErrorBoundary),
+      ErrorBoundary: undefined,
+    });
+  }
 
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      encodeLocation: router.encodeLocation,
-      go: (n) => router.navigate(n),
-      push: (to, state, opts) =>
-        router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-      replace: (to, state, opts) =>
-        router.navigate(to, {
-          replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-    };
-  }, [router]);
+  return updates;
+}
 
-  let basename = router.basename || "/";
+export interface unstable_PatchRoutesOnMissFunction
+  extends unstable_AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
 
-  let dataRouterContext = React.useMemo(
-    () => ({
-      router,
-      navigator,
-      static: false,
-      basename,
+/**
+ * @category Routers
+ */
+export function createMemoryRouter(
+  routes: RouteObject[],
+  opts?: {
+    basename?: string;
+    future?: Partial<FutureConfig>;
+    hydrationData?: HydrationState;
+    initialEntries?: InitialEntry[];
+    initialIndex?: number;
+    unstable_dataStrategy?: unstable_DataStrategyFunction;
+    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+  }
+): RemixRouter {
+  return createRouter({
+    basename: opts?.basename,
+    future: opts?.future,
+    history: createMemoryHistory({
+      initialEntries: opts?.initialEntries,
+      initialIndex: opts?.initialIndex,
     }),
-    [router, navigator, basename]
-  );
-
-  // The fragment and {null} here are important!  We need them to keep React 18's
-  // useId happy when we are server-rendering since we may have a <script> here
-  // containing the hydrated server-side staticContext (from StaticRouterProvider).
-  // useId relies on the component tree structure to generate deterministic id's
-  // so we need to ensure it remains the same on the client even though
-  // we don't need the <script> tag
-  return (
-    <>
-      <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <Router
-            basename={basename}
-            location={state.location}
-            navigationType={state.historyAction}
-            navigator={navigator}
-            future={{
-              v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-            }}
-          >
-            {state.initialized || router.future.v7_partialHydration ? (
-              <DataRoutes
-                routes={router.routes}
-                future={router.future}
-                state={state}
-              />
-            ) : (
-              fallbackElement
-            )}
-          </Router>
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>
-      {null}
-    </>
-  );
+    hydrationData: opts?.hydrationData,
+    routes,
+    mapRouteProperties,
+    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+  }).initialize();
 }
 
-function DataRoutes({
-  routes,
-  future,
-  state,
-}: {
-  routes: DataRouteObject[];
-  future: RemixRouter["future"];
-  state: RouterState;
-}): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, future);
-}
-
+/**
+ * @category Types
+ */
 export interface MemoryRouterProps {
   basename?: string;
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  future?: Partial<FutureConfig>;
 }
 
 /**
  * A `<Router>` that stores all entries in memory.
  *
- * @see https://reactrouter.com/router-components/memory-router
+ * @category Router Components
  */
 export function MemoryRouter({
   basename,
   children,
   initialEntries,
   initialIndex,
-  future,
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
@@ -236,14 +184,11 @@ export function MemoryRouter({
     action: history.action,
     location: history.location,
   });
-  let { v7_startTransition } = future || {};
   let setState = React.useCallback(
     (newState: { action: NavigationType; location: Location }) => {
-      v7_startTransition && startTransitionImpl
-        ? startTransitionImpl(() => setStateImpl(newState))
-        : setStateImpl(newState);
+      React.startTransition(() => setStateImpl(newState));
     },
-    [setStateImpl, v7_startTransition]
+    [setStateImpl]
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
@@ -255,11 +200,13 @@ export function MemoryRouter({
       location={state.location}
       navigationType={state.action}
       navigator={history}
-      future={future}
     />
   );
 }
 
+/**
+ * @category Types
+ */
 export interface NavigateProps {
   to: To;
   replace?: boolean;
@@ -268,13 +215,13 @@ export interface NavigateProps {
 }
 
 /**
- * Changes the current location.
+ * A component-based version of {@link useNavigate} to use in a [`React.Component
+ * Class`](https://reactjs.org/docs/react-component.html) where hooks are not
+ * able to be used.
  *
- * Note: This API is mostly useful in React.Component subclasses that are not
- * able to use hooks. In functional components, we recommend you use the
- * `useNavigate` hook instead.
+ * It's recommended to avoid using this component in favor of {@link useNavigate}
  *
- * @see https://reactrouter.com/components/navigate
+ * @category Components
  */
 export function Navigate({
   to,
@@ -289,7 +236,7 @@ export function Navigate({
     `<Navigate> may be used only in the context of a <Router> component.`
   );
 
-  let { future, static: isStatic } = React.useContext(NavigationContext);
+  let { static: isStatic } = React.useContext(NavigationContext);
 
   warning(
     !isStatic,
@@ -306,33 +253,60 @@ export function Navigate({
   // StrictMode they navigate to the same place
   let path = resolveTo(
     to,
-    getResolveToMatches(matches, future.v7_relativeSplatPath),
+    getResolveToMatches(matches),
     locationPathname,
     relative === "path"
   );
   let jsonPath = JSON.stringify(path);
 
-  React.useEffect(
-    () => navigate(JSON.parse(jsonPath), { replace, state, relative }),
-    [navigate, jsonPath, relative, replace, state]
-  );
+  React.useEffect(() => {
+    navigate(JSON.parse(jsonPath), { replace, state, relative });
+  }, [navigate, jsonPath, relative, replace, state]);
 
   return null;
 }
 
+/**
+ * @category Types
+ */
 export interface OutletProps {
+  /**
+    Provides a context value to the element tree below the outlet. Use when the parent route needs to provide values to child routes.
+
+    ```tsx
+    <Outlet context={myContextValue} />
+    ```
+
+    Access the context with {@link useOutletContext}.
+   */
   context?: unknown;
 }
 
 /**
- * Renders the child route's element, if there is one.
- *
- * @see https://reactrouter.com/components/outlet
+  Renders the matching child route of a parent route or nothing if no child route matches.
+
+  ```tsx
+  import { Outlet } from "react-router"
+
+  export default function SomeParent() {
+    return (
+      <div>
+        <h1>Parent Content</h1>
+        <Outlet />
+      </div>
+    );
+  }
+  ```
+
+  @category Components
  */
 export function Outlet(props: OutletProps): React.ReactElement | null {
   return useOutlet(props.context);
 }
 
+/**
+ * @category Types
+ */
 export interface PathRouteProps {
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   path?: NonIndexRouteObject["path"];
@@ -353,8 +327,14 @@ export interface PathRouteProps {
   ErrorBoundary?: React.ComponentType | null;
 }
 
+/**
+ * @category Types
+ */
 export interface LayoutRouteProps extends PathRouteProps {}
 
+/**
+ * @category Types
+ */
 export interface IndexRouteProps {
   caseSensitive?: IndexRouteObject["caseSensitive"];
   path?: IndexRouteObject["path"];
@@ -378,9 +358,12 @@ export interface IndexRouteProps {
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;
 
 /**
- * Declares an element that should be rendered at a certain URL path.
+ * Configures an element to render when a pattern matches the current location.
+ * It must be rendered within a {@link Routes} element. Note that these routes
+ * do not participate in data loading, actions, code splitting, or any other
+ * route module features.
  *
- * @see https://reactrouter.com/components/route
+ * @category Components
  */
 export function Route(_props: RouteProps): React.ReactElement | null {
   invariant(
@@ -390,6 +373,9 @@ export function Route(_props: RouteProps): React.ReactElement | null {
   );
 }
 
+/**
+ * @category Types
+ */
 export interface RouterProps {
   basename?: string;
   children?: React.ReactNode;
@@ -397,7 +383,6 @@ export interface RouterProps {
   navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
-  future?: Partial<Pick<FutureConfig, "v7_relativeSplatPath">>;
 }
 
 /**
@@ -407,7 +392,7 @@ export interface RouterProps {
  * router that is more specific to your environment such as a `<BrowserRouter>`
  * in web browsers or a `<StaticRouter>` for server rendering.
  *
- * @see https://reactrouter.com/router-components/router
+ * @category Components
  */
 export function Router({
   basename: basenameProp = "/",
@@ -416,7 +401,6 @@ export function Router({
   navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
-  future,
 }: RouterProps): React.ReactElement | null {
   invariant(
     !useInRouterContext(),
@@ -432,12 +416,9 @@ export function Router({
       basename,
       navigator,
       static: staticProp,
-      future: {
-        v7_relativeSplatPath: false,
-        ...future,
-      },
+      future: {},
     }),
-    [basename, future, navigator, staticProp]
+    [basename, navigator, staticProp]
   );
 
   if (typeof locationProp === "string") {
@@ -489,16 +470,37 @@ export function Router({
   );
 }
 
+/**
+ * @category Types
+ */
 export interface RoutesProps {
+  /**
+   * Nested {@link Route} elements
+   */
   children?: React.ReactNode;
+
+  /**
+   * The location to match against. Defaults to the current location.
+   */
   location?: Partial<Location> | string;
 }
 
 /**
- * A container for a nested tree of `<Route>` elements that renders the branch
- * that best matches the current location.
- *
- * @see https://reactrouter.com/components/routes
+ Renders a branch of {@link Route | `<Routes>`} that best matches the current
+ location. Note that these routes do not participate in data loading, actions,
+ code splitting, or any other route module features.
+
+ ```tsx
+ import { Routes, Route } from "react-router"
+
+<Routes>
+  <Route index element={<StepOne />} />
+  <Route path="step-2" element={<StepTwo />} />
+  <Route path="step-3" element={<StepThree />}>
+</Routes>
+ ```
+
+ @category Components
  */
 export function Routes({
   children,
@@ -511,16 +513,152 @@ export interface AwaitResolveRenderFunction {
   (data: Awaited<any>): React.ReactNode;
 }
 
+/**
+ * @category Types
+ */
 export interface AwaitProps {
+  /**
+  When using a function, the resolved value is provided as the parameter.
+
+  ```tsx [2]
+  <Await resolve={reviewsPromise}>
+    {(resolvedReviews) => <Reviews items={resolvedReviews} />}
+  </Await>
+  ```
+
+  When using React elements, {@link useAsyncValue} will provide the
+  resolved value:
+
+  ```tsx [2]
+  <Await resolve={reviewsPromise}>
+    <Reviews />
+  </Await>
+
+  function Reviews() {
+    const resolvedReviews = useAsyncValue()
+    return <div>...</div>
+  }
+  ```
+  */
   children: React.ReactNode | AwaitResolveRenderFunction;
+
+  /**
+  The error element renders instead of the children when the promise rejects.
+
+  ```tsx
+  <Await
+    errorElement={<div>Oops</div>}
+    resolve={reviewsPromise}
+  >
+    <Reviews />
+  </Await>
+  ```
+
+  To provide a more contextual error, you can use the {@link useAsyncError} in a
+  child component
+
+  ```tsx
+  <Await
+    errorElement={<ReviewsError />}
+    resolve={reviewsPromise}
+  >
+    <Reviews />
+  </Await>
+
+  function ReviewsError() {
+    const error = useAsyncError()
+    return <div>Error loading reviews: {error.message}</div>
+  }
+  ```
+
+  If you do not provide an errorElement, the rejected value will bubble up to
+  the nearest route-level {@link NonIndexRouteObject#ErrorBoundary | ErrorBoundary} and be accessible
+  via {@link useRouteError} hook.
+  */
   errorElement?: React.ReactNode;
+
+  /**
+  Takes a promise returned from a {@link LoaderFunction | loader} value to be resolved and rendered.
+
+  ```jsx
+  import { useLoaderData, Await } from "react-router"
+
+  export async function loader() {
+    let reviews = getReviews() // not awaited
+    let book = await getBook()
+    return {
+      book,
+      reviews, // this is a promise
+    }
+  }
+
+  export default function Book() {
+    const {
+      book,
+      reviews, // this is the same promise
+    } = useLoaderData()
+
+    return (
+      <div>
+        <h1>{book.title}</h1>
+        <p>{book.description}</p>
+        <React.Suspense fallback={<ReviewsSkeleton />}>
+          <Await
+            // and is the promise we pass to Await
+            resolve={reviews}
+          >
+            <Reviews />
+          </Await>
+        </React.Suspense>
+      </div>
+    );
+  }
+  ```
+   */
   resolve: TrackedPromise | any;
 }
 
 /**
- * Component to use for rendering lazily loaded data from returning defer()
- * in a loader function
- */
+Used to render promise values with automatic error handling.
+
+```tsx
+import { Await, useLoaderData } from "react-router";
+
+export function loader() {
+  // not awaited
+  const reviews = getReviews()
+  // awaited (blocks the transition)
+  const book = await fetch("/api/book").then((res) => res.json())
+  return { book, reviews }
+}
+
+function Book() {
+  const { book, reviews } = useLoaderData();
+  return (
+    <div>
+      <h1>{book.title}</h1>
+      <p>{book.description}</p>
+      <React.Suspense fallback={<ReviewsSkeleton />}>
+        <Await
+          resolve={reviews}
+          errorElement={
+            <div>Could not load reviews 😬</div>
+          }
+          children={(resolvedReviews) => (
+            <Reviews items={resolvedReviews} />
+          )}
+        />
+      </React.Suspense>
+    </div>
+  );
+}
+```
+
+**Note:** `<Await>` expects to be rendered inside of a `<React.Suspense>`
+
+@category Components
+
+*/
 export function Await({ children, errorElement, resolve }: AwaitProps) {
   return (
     <AwaitErrorBoundary resolve={resolve} errorElement={errorElement}>
@@ -607,14 +745,6 @@ class AwaitErrorBoundary extends React.Component<
       );
     }
 
-    if (
-      status === AwaitRenderStatus.error &&
-      promise._error instanceof AbortedDeferredError
-    ) {
-      // Freeze the UI by throwing a never resolved promise
-      throw neverSettledPromise;
-    }
-
     if (status === AwaitRenderStatus.error && !errorElement) {
       // No errorElement, throw to the nearest route-level error boundary
       throw promise._error;
@@ -658,7 +788,7 @@ function ResolveAwait({
  * either a `<Route>` element or an array of them. Used internally by
  * `<Routes>` to create a route config from its children.
  *
- * @see https://reactrouter.com/utils/create-routes-from-children
+ * @category Utils
  */
 export function createRoutesFromChildren(
   children: React.ReactNode,
@@ -705,9 +835,12 @@ export function createRoutesFromChildren(
       path: element.props.path,
       loader: element.props.loader,
       action: element.props.action,
+      hydrateFallbackElement: element.props.hydrateFallbackElement,
+      HydrateFallback: element.props.HydrateFallback,
       errorElement: element.props.errorElement,
       ErrorBoundary: element.props.ErrorBoundary,
       hasErrorBoundary:
+        element.props.hasErrorBoundary === true ||
         element.props.ErrorBoundary != null ||
         element.props.errorElement != null,
       shouldRevalidate: element.props.shouldRevalidate,
@@ -730,6 +863,8 @@ export function createRoutesFromChildren(
 
 /**
  * Renders the result of `matchRoutes()` into a React element.
+ *
+ * @category Utils
  */
 export function renderMatches(
   matches: RouteMatch[] | null

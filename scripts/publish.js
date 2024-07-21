@@ -43,7 +43,7 @@ async function ensureBuildVersion(packageName, version) {
 function publishBuild(packageName, tag) {
   let buildDir = path.join(rootDir, "packages", packageName);
   let args = ["--access public", `--tag ${tag}`];
-  if (tag === "experimental") {
+  if (tag === "experimental" || tag === "nightly") {
     args.push(`--no-git-checks`);
   } else {
     args.push("--publish-branch release-next");
@@ -77,6 +77,8 @@ async function run() {
     // 2. Determine the appropriate npm tag to use
     let tag = version.includes("experimental")
       ? "experimental"
+      : version.includes("nightly")
+      ? "nightly"
       : semver.prerelease(version) == null
       ? "latest"
       : "pre";
@@ -85,22 +87,20 @@ async function run() {
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
 
     // 3. Ensure build versions match the release version
-    if (version.includes("experimental")) {
-      // FIXME: @remix-run/router is versioned differently and is only handled
-      // for experimental releases here
-      await ensureBuildVersion("router", version);
-    }
     await ensureBuildVersion("react-router", version);
     await ensureBuildVersion("react-router-dom", version);
-    await ensureBuildVersion("react-router-dom-v5-compat", version);
-    await ensureBuildVersion("react-router-native", version);
+    await ensureBuildVersion("react-router-dev", version);
+    await ensureBuildVersion("react-router-express", version);
+    await ensureBuildVersion("react-router-node", version);
+    await ensureBuildVersion("react-router-serve", version);
 
     // 4. Publish to npm
-    publishBuild("router", tag);
     publishBuild("react-router", tag);
     publishBuild("react-router-dom", tag);
-    publishBuild("react-router-dom-v5-compat", tag);
-    publishBuild("react-router-native", tag);
+    publishBuild("react-router-dev", tag);
+    publishBuild("react-router-express", tag);
+    publishBuild("react-router-node", tag);
+    publishBuild("react-router-serve", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);

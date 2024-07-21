@@ -4,12 +4,12 @@ const { version } = require("./packages/react-router/package.json");
 const majorVersion = version.split(".").shift();
 
 const PRETTY = !!process.env.PRETTY;
+const WATCH = !!process.env.ROLLUP_WATCH;
 
 /**
  * Determine the relevant directories for a rollup build, relative to the
- * current working directory and taking LOCAL_BUILD_DIRECTORY into account
+ * root directory and taking LOCAL_BUILD_DIRECTORY into account
  *
- * ROOT_DIR     Root directory for the react-router repo
  * SOURCE_DIR   Source package directory we will read input files from
  * OUTPUT_DIR   Destination directory to write rollup output to
  *
@@ -17,18 +17,11 @@ const PRETTY = !!process.env.PRETTY;
  * @param {string} [folderName] folder name (i.e., router). Defaults to package name
  */
 function getBuildDirectories(packageName, folderName) {
-  let ROOT_DIR = __dirname;
   let SOURCE_DIR = folderName
-    ? path.join(__dirname, "packages", folderName)
-    : path.join(__dirname, "packages", ...packageName.split("/"));
+    ? path.posix.join("packages", folderName)
+    : path.posix.join("packages", ...packageName.split("/"));
 
-  // Update if we're not running from root
-  if (process.cwd() !== __dirname) {
-    ROOT_DIR = path.dirname(path.dirname(process.cwd()));
-    SOURCE_DIR = process.cwd();
-  }
-
-  let OUTPUT_DIR = path.join(SOURCE_DIR, "dist");
+  let OUTPUT_DIR = path.posix.join(SOURCE_DIR, "dist");
 
   if (process.env.LOCAL_BUILD_DIRECTORY) {
     try {
@@ -48,7 +41,7 @@ function getBuildDirectories(packageName, folderName) {
     }
   }
 
-  return { ROOT_DIR, SOURCE_DIR, OUTPUT_DIR };
+  return { SOURCE_DIR, OUTPUT_DIR };
 }
 
 function createBanner(packageName, version) {
@@ -123,7 +116,7 @@ function validateReplacedVersion() {
         }
 
         let requiredStrs = filename.endsWith(".min.js")
-          ? [`{window.__reactRouterVersion="${majorVersion}"}`]
+          ? [`(window.__reactRouterVersion="${majorVersion}")`]
           : [
               `const REACT_ROUTER_VERSION = "${majorVersion}";`,
               `window.__reactRouterVersion = REACT_ROUTER_VERSION;`,
@@ -141,11 +134,42 @@ function validateReplacedVersion() {
   };
 }
 
+/**
+ * @param {string} id
+ */
+function isBareModuleId(id) {
+  return !id.startsWith(".") && !path.isAbsolute(id);
+}
+
+const remixBabelConfig = {
+  presets: [
+    ["@babel/preset-env", { targets: { node: "18" } }],
+    "@babel/preset-react",
+    "@babel/preset-typescript",
+  ],
+  plugins: [
+    "@babel/plugin-proposal-export-namespace-from",
+    "@babel/plugin-proposal-optional-chaining",
+    // Strip console.debug calls unless REACT_ROUTER_DEBUG=true
+    ...(process.env.REACT_ROUTER_DEBUG === "true"
+      ? []
+      : [
+          [
+            "transform-remove-console",
+            { exclude: ["error", "warn", "log", "info"] },
+          ],
+        ]),
+  ],
+};
+
 // rollup.config.js
 module.exports = {
   getBuildDirectories,
   createBanner,
   babelPluginReplaceVersionPlaceholder,
   validateReplacedVersion,
+  isBareModuleId,
+  remixBabelConfig,
   PRETTY,
+  WATCH,
 };
