@@ -14,6 +14,7 @@ import {
   type RouteConfig,
 } from "./config/routes";
 import { detectPackageManager } from "./cli/detectPackageManager";
+import { importViteEsmSync } from "./vite/import-vite-esm-sync";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof VitePluginConfig
@@ -273,7 +274,7 @@ export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.base ?? "/";
 }
 
-let initialRouteConfigValid = false;
+let prevRouteConfigState: "success" | "error" | null = null;
 
 export async function resolveReactRouterConfig({
   rootDirectory,
@@ -288,6 +289,10 @@ export async function resolveReactRouterConfig({
   viteCommand: Vite.ConfigEnv["command"];
   viteNodeRunner: ViteNodeRunner;
 }) {
+  let logger = importViteEsmSync().createLogger(viteUserConfig.logLevel, {
+    prefix: "[react-router]",
+  });
+
   let presets: VitePluginConfig[] = (
     await Promise.all(
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
@@ -417,32 +422,46 @@ export async function resolveReactRouterConfig({
 
     Object.assign(routes, ...resolvedManifests);
 
-    initialRouteConfigValid = true;
-  } catch (error: any) {
-    if (error.loc?.file && error.frame) {
-      console.log(
-        [
-          colors.red("Error executing " + routeConfigFile + ": ") +
-            path.relative(appDirectory, error.loc?.file) +
-            ":" +
-            error.loc?.line,
-          error.frame?.trim?.(),
-        ]
-          .filter(Boolean)
-          .join("\n")
-      );
-    } else {
-      console.log(
-        [colors.red("Error executing " + routeConfigFile), error.stack].join(
-          "\n"
-        )
-      );
+    if (prevRouteConfigState === "error") {
+      logger.info(colors.green("route config fixed."), {
+        clear: true,
+        timestamp: true,
+      });
     }
 
+    prevRouteConfigState = "success";
+  } catch (error: any) {
+    logger.error(
+      [
+        colors.red("route config failed to evaluate."),
+        "",
+        error.loc?.file && error.loc?.column && error.frame
+          ? [
+              path.relative(appDirectory, error.loc.file) +
+                ":" +
+                error.loc.line +
+                ":" +
+                error.loc.column,
+              error.frame.trim?.(),
+            ]
+          : error.stack,
+      ]
+        .flat()
+        .join("\n"),
+      {
+        error,
+        timestamp: true,
+        // Clear the terminal if this isn't the first run
+        clear: prevRouteConfigState !== null,
+      }
+    );
+
     // Bail out if this is the first run, otherwise keep the dev server running
-    if (!initialRouteConfigValid) {
+    if (!prevRouteConfigState) {
       process.exit(1);
     }
+
+    prevRouteConfigState = "error";
   }
 
   let future: FutureConfig = {
