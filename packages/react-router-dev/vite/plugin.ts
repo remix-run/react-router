@@ -480,7 +480,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   let ctx: ReactRouterPluginContext;
 
   /** Mutates `ctx` as a side-effect */
-  let updatePluginContext = async (): Promise<void> => {
+  let updatePluginContext = async ({
+    routesConfigChanged = false,
+  }: {
+    routesConfigChanged?: boolean;
+  } = {}): Promise<void> => {
     let rootDirectory =
       viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
@@ -488,6 +492,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     let reactRouterConfig = await resolveReactRouterConfig({
       rootDirectory,
       reactRouterUserConfig,
+      routesConfigChanged,
       viteUserConfig,
       viteCommand,
       viteNodeRunner,
@@ -1125,11 +1130,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             eventName === "change" &&
             normalizePath(filepath) === normalizePath(viteConfig.configFile);
 
-          let routesConfigModuleGraphChanged = Boolean(
+          let routesConfigChanged = Boolean(
             routeConfigViteServer?.moduleGraph.getModuleById(filepath)
           );
 
-          if (routesConfigModuleGraphChanged) {
+          if (routesConfigChanged) {
             routeConfigViteServer?.moduleGraph.invalidateAll();
             viteNodeRunner?.moduleCache.clear();
           }
@@ -1137,11 +1142,11 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           if (
             appFileAddedOrRemoved ||
             viteConfigChanged ||
-            routesConfigModuleGraphChanged
+            routesConfigChanged
           ) {
             let lastReactRouterConfig = ctx.reactRouterConfig;
 
-            await updatePluginContext();
+            await updatePluginContext({ routesConfigChanged });
 
             if (!isEqualJson(lastReactRouterConfig, ctx.reactRouterConfig)) {
               invalidateVirtualModules(viteDevServer);
