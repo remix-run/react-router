@@ -274,22 +274,26 @@ export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.base ?? "/";
 }
 
-let prevRouteConfigState: "success" | "error" | null = null;
+let isFirstLoad = true;
 
 export async function resolveReactRouterConfig({
   rootDirectory,
   reactRouterUserConfig,
+  routesConfigChanged,
   viteUserConfig,
   viteCommand,
   viteNodeRunner,
 }: {
   rootDirectory: string;
   reactRouterUserConfig: VitePluginConfig;
+  routesConfigChanged: boolean;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
   viteNodeRunner: ViteNodeRunner;
 }) {
-  let logger = importViteEsmSync().createLogger(viteUserConfig.logLevel, {
+  let vite = importViteEsmSync();
+
+  let logger = vite.createLogger(viteUserConfig.logLevel, {
     prefix: "[react-router]",
   });
 
@@ -361,10 +365,13 @@ export async function resolveReactRouterConfig({
     } else if (typeof prerenderConfig === "function") {
       prerender = await prerenderConfig();
     } else {
-      throw new Error(
-        "The `prerender` config must be an array of string paths, or a function " +
-          "returning an array of string paths"
+      logger.error(
+        colors.red(
+          "The `prerender` config must be an array of string paths, or a function " +
+            "returning an array of string paths"
+        )
       );
+      process.exit(1);
     }
   }
 
@@ -378,18 +385,28 @@ export async function resolveReactRouterConfig({
     !viteUserConfig.server?.middlewareMode &&
     !basename.startsWith(publicPath)
   ) {
-    throw new Error(
-      "When using the React Router `basename` and the Vite `base` config, " +
-        "the `basename` config must begin with `base` for the default " +
-        "Vite dev server."
+    logger.error(
+      colors.red(
+        "When using the React Router `basename` and the Vite `base` config, " +
+          "the `basename` config must begin with `base` for the default " +
+          "Vite dev server."
+      )
     );
+    process.exit(1);
   }
 
   let rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
-    throw new Error(
-      `Could not find a root route module in the app directory: ${appDirectory}`
+    let rootRouteDisplayPath = path.relative(
+      rootDirectory,
+      path.join(appDirectory, "root.tsx")
     );
+    logger.error(
+      colors.red(
+        `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`
+      )
+    );
+    process.exit(1);
   }
 
   let routes: RouteManifest = {
@@ -398,9 +415,16 @@ export async function resolveReactRouterConfig({
 
   let routeConfigFile = findEntry(appDirectory, "routes");
   if (!routeConfigFile) {
-    throw new Error(
-      `Could not find a routes config file in the app directory: ${appDirectory}`
+    let routesConfigDisplayPath = path.relative(
+      rootDirectory,
+      path.join(appDirectory, "routes.ts")
     );
+    logger.error(
+      colors.red(
+        `Could not find a routes config file at "${routesConfigDisplayPath}"`
+      )
+    );
+    process.exit(1);
   }
 
   try {
@@ -422,18 +446,16 @@ export async function resolveReactRouterConfig({
 
     Object.assign(routes, ...resolvedManifests);
 
-    if (prevRouteConfigState === "error") {
-      logger.info(colors.green("route config fixed."), {
+    if (routesConfigChanged) {
+      logger.info(colors.green("Route config changed."), {
         clear: true,
         timestamp: true,
       });
     }
-
-    prevRouteConfigState = "success";
   } catch (error: any) {
     logger.error(
       [
-        colors.red("route config failed to evaluate."),
+        colors.red("Route config is invalid."),
         "",
         error.loc?.file && error.loc?.column && error.frame
           ? [
@@ -450,18 +472,15 @@ export async function resolveReactRouterConfig({
         .join("\n"),
       {
         error,
-        timestamp: true,
-        // Clear the terminal if this isn't the first run
-        clear: prevRouteConfigState !== null,
+        clear: !isFirstLoad,
+        timestamp: !isFirstLoad,
       }
     );
 
-    // Bail out if this is the first run, otherwise keep the dev server running
-    if (!prevRouteConfigState) {
+    // Bail if this is the first time loading config, otherwise keep the dev server running
+    if (isFirstLoad) {
       process.exit(1);
     }
-
-    prevRouteConfigState = "error";
   }
 
   let future: FutureConfig = {
@@ -487,6 +506,8 @@ export async function resolveReactRouterConfig({
   for (let preset of reactRouterUserConfig.presets ?? []) {
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
+
+  isFirstLoad = false;
 
   return reactRouterConfig;
 }
