@@ -1836,32 +1836,39 @@ async function handlePrerender(
     );
   }
 
-  async function prerenderData(
-    handler: RequestHandler,
-    prerenderPath: string,
-    clientBuildDirectory: string,
-    reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
-    viteConfig: Vite.ResolvedConfig,
-    requestInit: RequestInit
-  ) {
-    let normalizedPath = `${reactRouterConfig.basename}${
-      prerenderPath === "/"
-        ? "/_root.data"
-        : `${prerenderPath.replace(/\/$/, "")}.data`
-    }`.replace(/\/\/+/g, "/");
-    let request = new Request(`http://localhost${normalizedPath}`, requestInit);
-    let response = await handler(request);
-    let data = await response.text();
+  await prerenderManifest(
+    build,
+    clientBuildDirectory,
+    reactRouterConfig,
+    viteConfig
+  );
+}
 
-    validatePrerenderedResponse(response, data, "Prerender", normalizedPath);
+async function prerenderData(
+  handler: RequestHandler,
+  prerenderPath: string,
+  clientBuildDirectory: string,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  viteConfig: Vite.ResolvedConfig,
+  requestInit: RequestInit
+) {
+  let normalizedPath = `${reactRouterConfig.basename}${
+    prerenderPath === "/"
+      ? "/_root.data"
+      : `${prerenderPath.replace(/\/$/, "")}.data`
+  }`.replace(/\/\/+/g, "/");
+  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
+  let response = await handler(request);
+  let data = await response.text();
 
-    // Write out the .data file
-    let outdir = path.relative(process.cwd(), clientBuildDirectory);
-    let outfile = path.join(outdir, normalizedPath.split("/").join(path.sep));
-    await fse.ensureDir(path.dirname(outfile));
-    await fse.outputFile(outfile, data);
-    viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
-  }
+  validatePrerenderedResponse(response, data, "Prerender", normalizedPath);
+
+  // Write out the .data file
+  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  await fse.ensureDir(path.dirname(outfile));
+  await fse.outputFile(outfile, data);
+  viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
 
 async function prerenderRoute(
@@ -1891,6 +1898,27 @@ async function prerenderRoute(
   let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, html);
+  viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
+}
+
+async function prerenderManifest(
+  build: ServerBuild,
+  clientBuildDirectory: string,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  viteConfig: Vite.ResolvedConfig
+) {
+  let normalizedPath = `${reactRouterConfig.basename}/__manifest`.replace(
+    /\/\/+/g,
+    "/"
+  );
+  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  await fse.ensureDir(path.dirname(outfile));
+  let manifestData = JSON.stringify({
+    notFoundPaths: [],
+    patches: build.assets.routes,
+  });
+  await fse.outputFile(outfile, manifestData);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
 
