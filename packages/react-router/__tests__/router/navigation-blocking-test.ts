@@ -1,5 +1,9 @@
 import type { Router } from "../../lib/router";
-import { createMemoryHistory, createRouter } from "../../lib/router";
+import {
+  createBrowserHistory,
+  createMemoryHistory,
+  createRouter,
+} from "../../lib/router";
 import { waitFor } from "@testing-library/react";
 
 const LOADER_LATENCY_MS = 100;
@@ -464,6 +468,41 @@ describe("navigation blocking", () => {
         router.getBlocker("KEY", fn);
         await router.navigate(-1);
         router.getBlocker("KEY", fn).proceed?.();
+        await waitFor(() =>
+          expect(router.state.location.pathname).toBe("/about")
+        );
+      });
+    });
+
+    describe("proceeds from blocked state using browser history", () => {
+      let fn = () => true;
+
+      // we want to navigate so that `/about` is the previous entry in the
+      // stack here since it has a loader that won't resolve immediately
+      beforeEach(async () => {
+        const history = createBrowserHistory();
+
+        router = createRouter({
+          history,
+          routes,
+        });
+
+        router.initialize();
+
+        await router.navigate("/");
+        await router.navigate("/about");
+        await router.navigate("/contact");
+      });
+
+      it("proceeds after quick block of back navigation", async () => {
+        router.getBlocker("KEY", fn);
+
+        await router.navigate(-1); // This does not really wait for the navigation to happen
+        await waitFor(
+          () => expect(router.getBlocker("KEY", fn).state).toBe("blocked"),
+          { interval: 1 }
+        ); // This awaits the navigation
+        router.getBlocker("KEY", fn).proceed!();
         await waitFor(() =>
           expect(router.state.location.pathname).toBe("/about")
         );
