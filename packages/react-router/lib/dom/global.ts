@@ -8,12 +8,12 @@ import type {
 import type { RouteModules } from "./ssr/routeModules";
 
 export type WindowRemixContext = {
-  url: string;
   basename?: string;
   state: HydrationState;
   criticalCss?: string;
   future: RemixFutureConfig;
   isSpaMode: boolean;
+  ssrMatches: string[];
   stream: ReadableStream<Uint8Array> | undefined;
   streamController: ReadableStreamDefaultController<Uint8Array>;
   // The number of active deferred keys rendered on the server

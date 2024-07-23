@@ -11,7 +11,6 @@ import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { EntryContext } from "../dom/ssr/entry";
 import { createEntryRouteModules } from "./entry";
 import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
-import invariant from "./invariant";
 import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
@@ -385,11 +384,11 @@ async function handleDocumentRequest(
     staticHandlerContext: context,
     criticalCss,
     serverHandoffString: createServerHandoffString({
-      url: context.location.pathname,
       basename: build.basename,
       criticalCss,
       future: build.future,
       isSpaMode: build.isSpaMode,
+      ssrMatches: context.matches.map((m) => m.route.id),
     }),
     serverHandoffStream: encodeViaTurboStream(
       state,
@@ -457,10 +456,10 @@ async function handleDocumentRequest(
       ...entryContext,
       staticHandlerContext: context,
       serverHandoffString: createServerHandoffString({
-        url: context.location.pathname,
         basename: build.basename,
         future: build.future,
         isSpaMode: build.isSpaMode,
+        ssrMatches: context.matches.map((m) => m.route.id),
       }),
       serverHandoffStream: encodeViaTurboStream(
         state,
