@@ -4949,6 +4949,14 @@ async function convertHandlerResultToDataResult(
 
   if (type === ResultType.error) {
     if (isDataWithResponseInit(result)) {
+      if (result.data instanceof Error) {
+        return {
+          type: ResultType.error,
+          error: result.data,
+          statusCode: result.init?.status,
+        };
+      }
+
       // Convert thrown unstable_data() to ErrorResponse instances
       result = new UNSAFE_ErrorResponseImpl(
         result.init?.status || 500,
