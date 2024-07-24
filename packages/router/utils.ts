@@ -1385,21 +1385,16 @@ export class DataWithResponseInit<D> {
   }
 }
 
-export type DataWithResponseInitFunction = <D>(
-  data: D,
-  init?: number | ResponseInit
-) => DataWithResponseInit<D>;
-
 /**
  * Create "responses" that contain `status`/`headers` without forcing
  * serialization into an actual `Response` - used by Remix single fetch
  */
-export const data: DataWithResponseInitFunction = (data, init) => {
+export function data<D>(data: D, init?: number | ResponseInit) {
   return new DataWithResponseInit(
     data,
     typeof init === "number" ? { status: init } : init
   );
-};
+}
 
 export interface TrackedPromise extends Promise<any> {
   _tracked?: boolean;

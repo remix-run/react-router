@@ -9,7 +9,6 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
-  DataWithResponseInitFunction as unstable_DataFunction,
   DataStrategyFunction as unstable_DataStrategyFunction,
   DataStrategyFunctionArgs as unstable_DataStrategyFunctionArgs,
   DataStrategyMatch as unstable_DataStrategyMatch,
