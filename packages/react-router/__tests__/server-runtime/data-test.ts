@@ -23,10 +23,6 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
-      future: {
-        v3_fetcherPersist: false,
-        v3_relativeSplatPath: false,
-      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);
