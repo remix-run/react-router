@@ -1116,19 +1116,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         });
 
         // Invalidate virtual modules and update cached plugin config via file watcher
-        viteDevServer.watcher.on("all", async (eventName, filepath) => {
+        viteDevServer.watcher.on("all", async (eventName, rawFilepath) => {
           let { normalizePath } = importViteEsmSync();
+          let filepath = normalizePath(rawFilepath);
 
           let appFileAddedOrRemoved =
             (eventName === "add" || eventName === "unlink") &&
-            normalizePath(filepath).startsWith(
+            filepath.startsWith(
               normalizePath(ctx.reactRouterConfig.appDirectory)
             );
 
           invariant(viteConfig?.configFile);
           let viteConfigChanged =
             eventName === "change" &&
-            normalizePath(filepath) === normalizePath(viteConfig.configFile);
+            filepath === normalizePath(viteConfig.configFile);
 
           let routesConfigChanged = Boolean(
             routeConfigViteServer?.moduleGraph.getModuleById(filepath)
