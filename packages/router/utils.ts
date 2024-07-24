@@ -68,8 +68,7 @@ export type DataResult =
  */
 export interface HandlerResult {
   type: "data" | "error";
-  result: unknown; // data, Error, Response, DeferredData
-  status?: number;
+  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -1373,6 +1372,33 @@ export const json: JsonFunction = (data, init = {}) => {
     ...responseInit,
     headers,
   });
+};
+
+export class DataWithResponseInit<D> {
+  type: string = "DataWithResponseInit";
+  data: D;
+  init: ResponseInit | null;
+
+  constructor(data: D, init?: ResponseInit) {
+    this.data = data;
+    this.init = init || null;
+  }
+}
+
+export type DataWithResponseInitFunction = <D>(
+  data: D,
+  init?: number | ResponseInit
+) => DataWithResponseInit<D>;
+
+/**
+ * Create "responses" that contain `status`/`headers` without forcing
+ * serialization into an actual `Response` - used by Remix single fetch
+ */
+export const data: DataWithResponseInitFunction = (data, init) => {
+  return new DataWithResponseInit(
+    data,
+    typeof init === "number" ? { status: init } : init
+  );
 };
 
 export interface TrackedPromise extends Promise<any> {
