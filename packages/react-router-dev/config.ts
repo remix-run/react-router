@@ -275,6 +275,7 @@ export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
 }
 
 let isFirstLoad = true;
+let lastValidRoutes: RouteManifest = {};
 
 export async function resolveReactRouterConfig({
   rootDirectory,
@@ -446,6 +447,8 @@ export async function resolveReactRouterConfig({
 
     Object.assign(routes, ...resolvedManifests);
 
+    lastValidRoutes = routes;
+
     if (routesConfigChanged) {
       logger.info(colors.green("Route config changed."), {
         clear: true,
@@ -481,6 +484,9 @@ export async function resolveReactRouterConfig({
     if (isFirstLoad) {
       process.exit(1);
     }
+
+    // Keep dev server running with the last valid routes to allow for correction
+    routes = lastValidRoutes;
   }
 
   let future: FutureConfig = {
