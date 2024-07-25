@@ -628,9 +628,11 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     router.initialize();
 
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.length).toBe(0);
 
     loaderDfd.resolve("PARENT");
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.length).toBe(0);
 
     childrenDfd.resolve([
       {
@@ -640,6 +642,66 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       },
     ]);
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.length).toBe(0);
+
+    childLoaderDfd.resolve("CHILD");
+    await tick();
+
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.loaderData).toEqual({
+      parent: "PARENT",
+      child: "CHILD",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent",
+      "child",
+    ]);
+  });
+
+  it("discovers routes during initial hydration (w/v7_partialHydration)", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let loaderDfd = createDeferred();
+    let childLoaderDfd = createDeferred();
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/parent/child"] }),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "parent",
+          loader: () => loaderDfd.promise,
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        let children = await childrenDfd.promise;
+        patch("parent", children);
+      },
+      future: {
+        v7_partialHydration: true,
+      },
+    });
+    router.initialize();
+
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+
+    loaderDfd.resolve("PARENT");
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+
+    childrenDfd.resolve([
+      {
+        id: "child",
+        path: "child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
 
     childLoaderDfd.resolve("CHILD");
     await tick();
@@ -1624,6 +1686,67 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         errors: null,
       });
       expect(router.state.matches.length).toBe(0);
+
+      await tick();
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          parent: new ErrorResponseImpl(
+            400,
+            "Bad Request",
+            new Error(
+              'Unable to match URL "/parent/child/grandchild" - the ' +
+                "`unstable_patchRoutesOnMiss()` function threw the following " +
+                "error:\nError: broke!"
+            ),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
+    });
+
+    it("bubbles errors thrown from patchRoutesOnMiss() during hydration (w/v7_partialHydration)", async () => {
+      router = createRouter({
+        history: createMemoryHistory({
+          initialEntries: ["/parent/child/grandchild"],
+        }),
+        routes: [
+          {
+            id: "parent",
+            path: "parent",
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+              },
+            ],
+          },
+        ],
+        async unstable_patchRoutesOnMiss() {
+          await tick();
+          throw new Error("broke!");
+        },
+        future: {
+          v7_partialHydration: true,
+        },
+      }).initialize();
+
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        initialized: false,
+        errors: null,
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
 
       await tick();
       expect(router.state).toMatchObject({
