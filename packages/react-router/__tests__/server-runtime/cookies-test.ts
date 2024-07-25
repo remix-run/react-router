@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import { createCookie, isCookie } from "../../lib/server-runtime/cookies";
 
 function getCookieFromSetCookie(setCookie: string): string {

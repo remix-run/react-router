@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import { createSession, isSession } from "../../lib/server-runtime/sessions";
 import { createCookieSessionStorage } from "../../lib/server-runtime/sessions/cookieStorage";
 import { createMemorySessionStorage } from "../../lib/server-runtime/sessions/memoryStorage";

@@ -46,8 +46,7 @@ if (!globalThis.File) {
   globalThis.File = File;
 }
 
-if (!globalThis.crypto?.subtle) {
-  Object.defineProperty(globalThis, "crypto", {
-    value: require("node:crypto").webcrypto,
-  });
+if (!globalThis.crypto) {
+  const { webcrypto } = require("node:crypto");
+  globalThis.crypto = webcrypto;
 }
