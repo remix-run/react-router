@@ -338,6 +338,15 @@ export type {
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
+export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+
+/** @internal */
+export {
+  decodeViaTurboStream as UNSAFE_decodeViaTurboStream,
+  SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
+} from "./lib/dom/ssr/single-fetch";
+
+/** @internal */
 export {
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
