@@ -1,4 +1,3 @@
-import { UNSAFE_ErrorResponseImpl } from ".";
 import type { History, Location, Path, To } from "./history";
 import {
   Action as HistoryAction,
@@ -4958,7 +4957,7 @@ async function convertHandlerResultToDataResult(
       }
 
       // Convert thrown unstable_data() to ErrorResponse instances
-      result = new UNSAFE_ErrorResponseImpl(
+      result = new ErrorResponseImpl(
         result.init?.status || 500,
         undefined,
         result.data
