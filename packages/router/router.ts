@@ -36,6 +36,7 @@ import type {
   V7_FormMethod,
   V7_MutationFormMethod,
   AgnosticPatchRoutesOnMissFunction,
+  DataWithResponseInit,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -4906,7 +4907,7 @@ async function callLoaderOrAction(
 async function convertHandlerResultToDataResult(
   handlerResult: HandlerResult
 ): Promise<DataResult> {
-  let { result, type, status } = handlerResult;
+  let { result, type } = handlerResult;
 
   if (isResponse(result)) {
     let data: any;
@@ -4946,10 +4947,26 @@ async function convertHandlerResultToDataResult(
   }
 
   if (type === ResultType.error) {
+    if (isDataWithResponseInit(result)) {
+      if (result.data instanceof Error) {
+        return {
+          type: ResultType.error,
+          error: result.data,
+          statusCode: result.init?.status,
+        };
+      }
+
+      // Convert thrown unstable_data() to ErrorResponse instances
+      result = new ErrorResponseImpl(
+        result.init?.status || 500,
+        undefined,
+        result.data
+      );
+    }
     return {
       type: ResultType.error,
       error: result,
-      statusCode: isRouteErrorResponse(result) ? result.status : status,
+      statusCode: isRouteErrorResponse(result) ? result.status : undefined,
     };
   }
 
@@ -4962,7 +4979,18 @@ async function convertHandlerResultToDataResult(
     };
   }
 
-  return { type: ResultType.data, data: result, statusCode: status };
+  if (isDataWithResponseInit(result)) {
+    return {
+      type: ResultType.data,
+      data: result.data,
+      statusCode: result.init?.status,
+      headers: result.init?.headers
+        ? new Headers(result.init.headers)
+        : undefined,
+    };
+  }
+
+  return { type: ResultType.data, data: result };
 }
 
 // Support relative routing in internal redirects
@@ -5474,6 +5502,19 @@ function isErrorResult(result: DataResult): result is ErrorResult {
 
 function isRedirectResult(result?: DataResult): result is RedirectResult {
   return (result && result.type) === ResultType.redirect;
+}
+
+export function isDataWithResponseInit(
+  value: any
+): value is DataWithResponseInit<unknown> {
+  return (
+    typeof value === "object" &&
+    value != null &&
+    "type" in value &&
+    "data" in value &&
+    "init" in value &&
+    value.type === "DataWithResponseInit"
+  );
 }
 
 export function isDeferredData(value: any): value is DeferredData {
