@@ -2,6 +2,7 @@ import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
 import { parse, serialize } from "cookie";
 
 import type { SignFunction, UnsignFunction } from "./crypto";
+import { sign, unsign } from "./crypto";
 import { warnOnce } from "./warnings";
 
 export type { CookieParseOptions, CookieSerializeOptions };
@@ -74,10 +75,8 @@ export type CreateCookieFunction = (
 
 /**
  * Creates a logical container for managing a browser cookie from the server.
- *
- * @see https://remix.run/utils/cookies#createcookie
  */
-export const createCookieFactory =
+const createCookieFactory =
   ({
     sign,
     unsign,
@@ -128,6 +127,8 @@ export const createCookieFactory =
       },
     };
   };
+
+export const createCookie = createCookieFactory({ sign, unsign });
 
 export type IsCookieFunction = (object: any) => object is Cookie;
 

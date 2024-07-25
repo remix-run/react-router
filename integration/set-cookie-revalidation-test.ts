@@ -18,7 +18,7 @@ test.describe("set-cookie revalidation", () => {
     fixture = await createFixture({
       files: {
         "app/session.server.ts": js`
-            import { createCookieSessionStorage } from "@react-router/node";
+            import { createCookieSessionStorage } from "react-router";
 
             export let MESSAGE_KEY = "message";
 
@@ -33,8 +33,8 @@ test.describe("set-cookie revalidation", () => {
           `,
 
         "app/root.tsx": js`
-            import { json } from "react-router";
             import {
+              json,
               Links,
               Meta,
               Outlet,

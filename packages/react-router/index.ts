@@ -348,7 +348,7 @@ export {
 } from "./lib/router/define-route";
 
 // Expose old @remix-run/server-runtime API, minus duplicate APIs
-export { createCookieFactory, isCookie } from "./lib/server-runtime/cookies";
+export { createCookie, isCookie } from "./lib/server-runtime/cookies";
 export {
   composeUploadHandlers as unstable_composeUploadHandlers,
   parseMultipartFormData as unstable_parseMultipartFormData,
@@ -362,11 +362,11 @@ export {
 export { createRequestHandler } from "./lib/server-runtime/server";
 export {
   createSession,
-  createSessionStorageFactory,
+  createSessionStorage,
   isSession,
 } from "./lib/server-runtime/sessions";
-export { createCookieSessionStorageFactory } from "./lib/server-runtime/sessions/cookieStorage";
-export { createMemorySessionStorageFactory } from "./lib/server-runtime/sessions/memoryStorage";
+export { createCookieSessionStorage } from "./lib/server-runtime/sessions/cookieStorage";
+export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memoryStorage";
 export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./lib/server-runtime/upload/memoryUploadHandler";
 export { MaxPartSizeExceededError } from "./lib/server-runtime/upload/errors";
 export { setDevServerHooks as unstable_setDevServerHooks } from "./lib/server-runtime/dev";
@@ -386,8 +386,6 @@ export type {
   CreateSessionStorageFunction,
   IsSessionFunction,
 } from "./lib/server-runtime/sessions";
-export type { CreateCookieSessionStorageFunction } from "./lib/server-runtime/sessions/cookieStorage";
-export type { CreateMemorySessionStorageFunction } from "./lib/server-runtime/sessions/memoryStorage";
 
 export type {
   HandleDataRequestFunction,
@@ -413,8 +411,6 @@ export type {
   CookieSerializeOptions,
   CookieSignatureOptions,
 } from "./lib/server-runtime/cookies";
-
-export type { SignFunction, UnsignFunction } from "./lib/server-runtime/crypto";
 
 export type { AppLoadContext } from "./lib/server-runtime/data";
 

@@ -45,3 +45,9 @@ if (!globalThis.File) {
   const { File } = require("undici");
   globalThis.File = File;
 }
+
+if (!globalThis.crypto?.subtle) {
+  Object.defineProperty(globalThis, "crypto", {
+    value: require("node:crypto").webcrypto,
+  });
+}

@@ -1,5 +1,5 @@
 import type { CreateCookieFunction } from "../cookies";
-import { isCookie } from "../cookies";
+import { createCookie, isCookie } from "../cookies";
 import type {
   SessionStorage,
   SessionIdStorageStrategy,
@@ -15,7 +15,7 @@ interface CookieSessionStorageOptions {
   cookie?: SessionIdStorageStrategy["cookie"];
 }
 
-export type CreateCookieSessionStorageFunction = <
+type CreateCookieSessionStorageFunction = <
   Data = SessionData,
   FlashData = Data
 >(
@@ -30,10 +30,8 @@ export type CreateCookieSessionStorageFunction = <
  * needed, and can help to simplify some load-balanced scenarios. However, it
  * also has the limitation that serialized session data may not exceed the
  * browser's maximum cookie size. Trade-offs!
- *
- * @see https://remix.run/utils/sessions#createcookiesessionstorage
  */
-export const createCookieSessionStorageFactory =
+const createCookieSessionStorageFactory =
   (createCookie: CreateCookieFunction): CreateCookieSessionStorageFunction =>
   ({ cookie: cookieArg } = {}) => {
     let cookie = isCookie(cookieArg)
@@ -67,3 +65,6 @@ export const createCookieSessionStorageFactory =
       },
     };
   };
+
+export const createCookieSessionStorage =
+  createCookieSessionStorageFactory(createCookie);

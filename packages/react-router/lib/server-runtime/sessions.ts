@@ -1,7 +1,7 @@
 import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
 
 import type { Cookie, CookieOptions, CreateCookieFunction } from "./cookies";
-import { isCookie } from "./cookies";
+import { createCookie, isCookie } from "./cookies";
 import { warnOnce } from "./warnings";
 
 /**
@@ -254,13 +254,8 @@ export type CreateSessionStorageFunction = <
 
 /**
  * Creates a SessionStorage object using a SessionIdStorageStrategy.
- *
- * Note: This is a low-level API that should only be used if none of the
- * existing session storage options meet your requirements.
- *
- * @see https://remix.run/utils/sessions#createsessionstorage
  */
-export const createSessionStorageFactory =
+const createSessionStorageFactory =
   (createCookie: CreateCookieFunction): CreateSessionStorageFunction =>
   ({ cookie: cookieArg, createData, readData, updateData, deleteData }) => {
     let cookie = isCookie(cookieArg)
@@ -302,6 +297,8 @@ export const createSessionStorageFactory =
       },
     };
   };
+
+export const createSessionStorage = createSessionStorageFactory(createCookie);
 
 export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
   warnOnce(

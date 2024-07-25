@@ -5,6 +5,7 @@ import type {
   CreateSessionStorageFunction,
   FlashSessionData,
 } from "../sessions";
+import { createSessionStorage } from "../sessions";
 
 interface MemorySessionStorageOptions {
   /**
@@ -14,7 +15,7 @@ interface MemorySessionStorageOptions {
   cookie?: SessionIdStorageStrategy["cookie"];
 }
 
-export type CreateMemorySessionStorageFunction = <
+type CreateMemorySessionStorageFunction = <
   Data = SessionData,
   FlashData = Data
 >(
@@ -27,10 +28,8 @@ export type CreateMemorySessionStorageFunction = <
  *
  * Note: This storage does not scale beyond a single process, so it is not
  * suitable for most production scenarios.
- *
- * @see https://remix.run/utils/sessions#creatememorysessionstorage
  */
-export const createMemorySessionStorageFactory =
+const createMemorySessionStorageFactory =
   (
     createSessionStorage: CreateSessionStorageFunction
   ): CreateMemorySessionStorageFunction =>
@@ -71,3 +70,6 @@ export const createMemorySessionStorageFactory =
       },
     });
   };
+
+export const createMemorySessionStorage =
+  createMemorySessionStorageFactory(createSessionStorage);
