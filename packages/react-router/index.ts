@@ -3,7 +3,7 @@ export type { InitialEntry, Location, Path, To } from "./lib/router/history";
 export type {
   HydrationState,
   StaticHandler,
-  FetcherStates,
+  GetScrollPositionFunction,
   GetScrollRestorationKeyFunction,
   StaticHandlerContext,
   Fetcher,
@@ -12,6 +12,13 @@ export type {
   RelativeRoutingType,
   Blocker,
   BlockerFunction,
+  Router as RemixRouter,
+  RouterState,
+  RouterInit,
+  RouterSubscriber,
+  RouterNavigateOptions,
+  RouterFetchOptions,
+  RevalidationState,
 } from "./lib/router/router";
 export type {
   ActionFunction,
@@ -22,8 +29,9 @@ export type {
   ErrorResponse,
   FormEncType,
   FormMethod,
+  HandlerResult as unstable_HandlerResult,
+  HTMLFormMethod,
   JsonFunction,
-  Submission,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -36,7 +44,6 @@ export type {
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
   UIMatch,
-  HandlerResult as unstable_HandlerResult,
 } from "./lib/router/utils";
 
 export {
@@ -44,6 +51,11 @@ export {
   createPath,
   parsePath,
 } from "./lib/router/history";
+export {
+  IDLE_NAVIGATION,
+  IDLE_FETCHER,
+  IDLE_BLOCKER,
+} from "./lib/router/router";
 export {
   generatePath,
   isRouteErrorResponse,
@@ -140,9 +152,7 @@ export {
   BrowserRouter,
   HashRouter,
   Link,
-  UNSAFE_ViewTransitionContext,
-  UNSAFE_FetchersContext,
-  unstable_HistoryRouter,
+  HistoryRouter as unstable_HistoryRouter,
   NavLink,
   Form,
   RouterProvider,
@@ -153,12 +163,12 @@ export {
   useFormAction,
   useFetcher,
   useFetchers,
-  UNSAFE_useScrollRestoration,
   useBeforeUnload,
-  unstable_usePrompt,
-  unstable_useViewTransitionState,
+  usePrompt as unstable_usePrompt,
+  useViewTransitionState as unstable_useViewTransitionState,
 } from "./lib/dom/lib";
 export type {
+  FetcherSubmitOptions,
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
@@ -314,9 +324,6 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
-// Private exports for internal use
-export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
-
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -338,3 +345,16 @@ export {
   NavigationContext as UNSAFE_NavigationContext,
   RouteContext as UNSAFE_RouteContext,
 } from "./lib/context";
+
+/** @internal */
+export {
+  ViewTransitionContext as UNSAFE_ViewTransitionContext,
+  FetchersContext as UNSAFE_FetchersContext,
+  useScrollRestoration as UNSAFE_useScrollRestoration,
+} from "./lib/dom/lib";
+
+/** @internal */
+export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
+
+/** @internal */
+export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";

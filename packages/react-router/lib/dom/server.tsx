@@ -26,10 +26,7 @@ import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
-import {
-  UNSAFE_FetchersContext as FetchersContext,
-  UNSAFE_ViewTransitionContext as ViewTransitionContext,
-} from "./lib";
+import { FetchersContext, ViewTransitionContext } from "./lib";
 import { Router, mapRouteProperties } from "../components";
 import type { DataRouteObject, RouteObject } from "../context";
 import { DataRouterContext, DataRouterStateContext } from "../context";

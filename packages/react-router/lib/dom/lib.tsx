@@ -257,20 +257,19 @@ type ViewTransitionContextObject =
       nextLocation: Location;
     };
 
-const ViewTransitionContext = React.createContext<ViewTransitionContextObject>({
-  isTransitioning: false,
-});
+export const ViewTransitionContext =
+  React.createContext<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
 ViewTransitionContext.displayName = "ViewTransition";
-
-export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 
 // TODO: (v7) Change the useFetcher data from `any` to `unknown`
 type FetchersContextObject = Map<string, any>;
 
-const FetchersContext = React.createContext<FetchersContextObject>(new Map());
+export const FetchersContext = React.createContext<FetchersContextObject>(
+  new Map()
+);
 FetchersContext.displayName = "Fetchers";
-
-export { FetchersContext as UNSAFE_FetchersContext };
 
 //#endregion
 
@@ -676,9 +675,14 @@ export interface HistoryRouterProps {
  * two versions of the history library to your bundles unless you use the same
  * version of the history library that React Router uses internally.
  *
+ * @name unstable_HistoryRouter
  * @category Router Components
  */
-function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
+export function HistoryRouter({
+  basename,
+  children,
+  history,
+}: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
@@ -703,8 +707,6 @@ function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
   );
 }
 HistoryRouter.displayName = "unstable_HistoryRouter";
-
-export { HistoryRouter as unstable_HistoryRouter };
 
 /**
  * @category Types
@@ -2271,7 +2273,7 @@ function getScrollRestorationKey(
 /**
  * When rendered inside a RouterProvider, will restore scroll positions on navigations
  */
-function useScrollRestoration({
+export function useScrollRestoration({
   getKey,
   storageKey,
 }: {
@@ -2383,8 +2385,6 @@ function useScrollRestoration({
   }
 }
 
-export { useScrollRestoration as UNSAFE_useScrollRestoration };
-
 /**
  * Setup a callback to be fired on the window's `beforeunload` event.
  *
@@ -2460,8 +2460,9 @@ function usePageHide(
   ```
 
   @category Hooks
+  @name unstable_usePrompt
  */
-function usePrompt({
+export function usePrompt({
   when,
   message,
 }: {
@@ -2491,14 +2492,13 @@ function usePrompt({
   }, [blocker, when]);
 }
 
-export { usePrompt as unstable_usePrompt };
-
 /**
   This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via {@link LinkProps.unstable_viewTransition} (or the `Form`, `submit`, or `navigate` call)
 
   @category Hooks
+  @name unstable_useViewTransitionState
  */
-function useViewTransitionState(
+export function useViewTransitionState(
   to: To,
   opts: { relative?: RelativeRoutingType } = {}
 ) {
@@ -2543,7 +2543,5 @@ function useViewTransitionState(
     matchPath(path.pathname, currentPath) != null
   );
 }
-
-export { useViewTransitionState as unstable_useViewTransitionState };
 
 //#endregion
