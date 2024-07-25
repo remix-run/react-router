@@ -47,6 +47,9 @@ export function installGlobals() {
   global.fetch = nodeFetch;
   // @ts-expect-error - overriding globals
   global.FormData = NodeFormData;
-  // @ts-expect-error - overriding globals
-  global.crypto = nodeWebCrypto;
+
+  if (!global.crypto) {
+    // @ts-expect-error - overriding globals
+    global.crypto = nodeWebCrypto;
+  }
 }
