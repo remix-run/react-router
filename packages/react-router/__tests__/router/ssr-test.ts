@@ -3,17 +3,20 @@
  */
 
 import urlDataStrategy from "./utils/urlDataStrategy";
-import type { StaticHandler, StaticHandlerContext } from "../../lib/router";
+import type {
+  StaticHandler,
+  StaticHandlerContext,
+} from "../../lib/router/router";
 import {
   createStaticHandler,
   getStaticContextFromError,
-} from "../../lib/router";
+} from "../../lib/router/router";
 import {
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
+  ErrorResponseImpl,
   isRouteErrorResponse,
   json,
   redirect,
-} from "../../lib/router";
+} from "../../lib/router/utils";
 import { createDeferred } from "./utils/data-router-setup";
 import {
   createRequest,

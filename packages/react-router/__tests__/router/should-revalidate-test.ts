@@ -1,6 +1,7 @@
-import { createMemoryHistory, createRouter, redirect } from "../../lib/router";
-import type { ShouldRevalidateFunctionArgs } from "../../lib/router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter } from "../../lib/router/router";
+import { ErrorResponseImpl, redirect } from "../../lib/router/utils";
+import type { ShouldRevalidateFunctionArgs } from "../../lib/router/utils";
 import { urlMatch } from "./utils/custom-matchers";
 import { cleanup, getFetcherData } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
@@ -25,7 +26,7 @@ describe("shouldRevalidate", () => {
   afterEach(() => cleanup());
 
   it("provides a default implementation", async () => {
-    let rootLoader = jest.fn((args) => "ROOT");
+    let rootLoader = jest.fn((...args) => "ROOT");
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -123,9 +124,9 @@ describe("shouldRevalidate", () => {
   });
 
   it("delegates to the route if it should reload or not", async () => {
-    let rootLoader = jest.fn((args) => "ROOT");
-    let childLoader = jest.fn((args) => "CHILD");
-    let paramsLoader = jest.fn((args) => "PARAMS");
+    let rootLoader = jest.fn((...args) => "ROOT");
+    let childLoader = jest.fn((...args) => "CHILD");
+    let paramsLoader = jest.fn((...args) => "PARAMS");
     let shouldRevalidate = jest.fn((args) => false);
 
     let history = createMemoryHistory();
@@ -462,7 +463,7 @@ describe("shouldRevalidate", () => {
   });
 
   it("provides the default implementation to the route function", async () => {
-    let rootLoader = jest.fn((args) => "ROOT");
+    let rootLoader = jest.fn((...args) => "ROOT");
 
     let history = createMemoryHistory();
     let router = createRouter({
@@ -563,7 +564,7 @@ describe("shouldRevalidate", () => {
 
   it("applies to fetcher loads", async () => {
     let count = 0;
-    let fetchLoader = jest.fn((args) => `FETCH ${++count}`);
+    let fetchLoader = jest.fn((...args) => `FETCH ${++count}`);
     let shouldRevalidate = jest.fn((args) => false);
 
     let history = createMemoryHistory();

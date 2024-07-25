@@ -405,7 +405,7 @@ export function getRouteSegments(routeId: string): [string[], string[]] {
           rawRouteSegment += char;
           break;
         }
-        if (!routeSegment && char == paramPrefixChar) {
+        if (!routeSegment && char === paramPrefixChar) {
           if (index === routeId.length) {
             routeSegment += "*";
             rawRouteSegment += char;

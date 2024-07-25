@@ -1,29 +1,31 @@
 import * as React from "react";
+
+import type { Location, Path, To } from "../router/history";
+import {
+  Action as HistoryAction,
+  createPath,
+  invariant,
+  parsePath,
+} from "../router/history";
 import type {
-  Location,
-  Path,
-  RevalidationState,
-  Router as RemixRouter,
-  StaticHandlerContext,
-  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
-  UNSAFE_RouteManifest as RouteManifest,
-  RouterState,
   FutureConfig,
-  To,
-} from "../router";
+  Router as RemixRouter,
+  RevalidationState,
+  CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
+  RouterState,
+  StaticHandlerContext,
+} from "../router/router";
 import {
   IDLE_BLOCKER,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-  Action,
-  UNSAFE_invariant as invariant,
-  createPath,
-  parsePath,
-  isRouteErrorResponse,
   createStaticHandler as routerCreateStaticHandler,
-  UNSAFE_convertRoutesToDataRoutes as convertRoutesToDataRoutes,
-} from "../router";
-
+} from "../router/router";
+import type { RouteManifest } from "../router/utils";
+import {
+  convertRoutesToDataRoutes,
+  isRouteErrorResponse,
+} from "../router/utils";
 import {
   UNSAFE_FetchersContext as FetchersContext,
   UNSAFE_ViewTransitionContext as ViewTransitionContext,
@@ -54,7 +56,7 @@ export function StaticRouter({
     locationProp = parsePath(locationProp);
   }
 
-  let action = Action.Pop;
+  let action = HistoryAction.Pop;
   let location: Location = {
     pathname: locationProp.pathname || "/",
     search: locationProp.search || "",
@@ -307,7 +309,7 @@ export function createStaticRouter(
     },
     get state() {
       return {
-        historyAction: Action.Pop,
+        historyAction: HistoryAction.Pop,
         location: context.location,
         matches,
         loaderData: context.loaderData,

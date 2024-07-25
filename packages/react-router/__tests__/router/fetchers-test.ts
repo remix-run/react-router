@@ -1,12 +1,12 @@
 /* eslint-disable jest/valid-title */
-import type { HydrationState } from "../../lib/router";
+import type { HydrationState } from "../../lib/router/router";
+import { createMemoryHistory } from "../../lib/router/history";
 import {
-  createMemoryHistory,
   createRouter,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "../../lib/router";
+} from "../../lib/router/router";
+import { ErrorResponseImpl } from "../../lib/router/utils";
 
 import {
   cleanup,

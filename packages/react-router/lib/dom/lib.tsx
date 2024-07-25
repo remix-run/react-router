@@ -7,40 +7,46 @@ import * as React from "react";
 // `import { RouterProvider } from 'react-router/memory'` // memory use case
 // `import { RouterProvider } from 'react-router/dom'` // DOM use case
 import * as ReactDOM from "react-dom";
+
 import type {
   BrowserHistory,
-  unstable_DataStrategyFunction,
-  Fetcher,
-  FormEncType,
-  FutureConfig,
-  GetScrollRestorationKeyFunction,
   HashHistory,
   History,
-  HTMLFormMethod,
+  Action as NavigationType,
+  Location,
+  To,
+} from "../router/history";
+import {
+  createBrowserHistory,
+  createHashHistory,
+  createPath,
+  invariant,
+  warning,
+} from "../router/history";
+import type {
+  BlockerFunction,
+  Fetcher,
+  FutureConfig,
+  GetScrollRestorationKeyFunction,
   HydrationState,
+  RelativeRoutingType,
   Router as RemixRouter,
   RouterState,
   RouterSubscriber,
-  BlockerFunction,
-  Location,
-  Action as NavigationType,
-  RelativeRoutingType,
-  To,
+} from "../router/router";
+import { IDLE_FETCHER, createRouter } from "../router/router";
+import type {
+  DataStrategyFunction,
+  FormEncType,
+  HTMLFormMethod,
   UIMatch,
-} from "../router";
+} from "../router/utils";
 import {
-  createRouter,
-  createBrowserHistory,
-  createHashHistory,
+  ErrorResponseImpl,
   joinPaths,
-  stripBasename,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-  UNSAFE_invariant as invariant,
-  UNSAFE_warning as warning,
   matchPath,
-  IDLE_FETCHER,
-  createPath,
-} from "../router";
+  stripBasename,
+} from "../router/utils";
 
 import "./global";
 import type {
@@ -68,7 +74,7 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import type { unstable_PatchRoutesOnMissFunction } from "../components";
+import type { PatchRoutesOnMissFunction } from "../components";
 import { Router, mapRouteProperties } from "../components";
 import type {
   Navigator,
@@ -130,8 +136,8 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: unstable_DataStrategyFunction;
-  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+  unstable_dataStrategy?: DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
   window?: Window;
 }
 

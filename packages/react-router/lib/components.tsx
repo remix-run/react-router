@@ -1,28 +1,32 @@
+import * as React from "react";
+
+import type {
+  InitialEntry,
+  Location,
+  MemoryHistory,
+  To,
+} from "./router/history";
+import {
+  Action as HistoryAction,
+  createMemoryHistory,
+  invariant,
+  parsePath,
+  warning,
+} from "./router/history";
 import type {
   FutureConfig,
   HydrationState,
-  InitialEntry,
-  LazyRouteFunction,
-  Location,
-  MemoryHistory,
   RelativeRoutingType,
   Router as RemixRouter,
-  To,
+} from "./router/router";
+import { createRouter } from "./router/router";
+import type {
+  AgnosticPatchRoutesOnMissFunction,
+  DataStrategyFunction,
+  LazyRouteFunction,
   TrackedPromise,
-  unstable_DataStrategyFunction,
-  unstable_AgnosticPatchRoutesOnMissFunction,
-} from "./router";
-import {
-  Action as NavigationType,
-  createMemoryHistory,
-  createRouter,
-  UNSAFE_invariant as invariant,
-  parsePath,
-  resolveTo,
-  stripBasename,
-  UNSAFE_warning as warning,
-} from "./router";
-import * as React from "react";
+} from "./router/utils";
+import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
 
 import type {
   IndexRouteObject,
@@ -46,7 +50,6 @@ import {
   useOutlet,
   useRoutes,
 } from "./hooks";
-import { getResolveToMatches } from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -116,8 +119,8 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
-export interface unstable_PatchRoutesOnMissFunction
-  extends unstable_AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
+export interface PatchRoutesOnMissFunction
+  extends AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
 
 /**
  * @category Routers
@@ -130,8 +133,8 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
-    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+    unstable_dataStrategy?: DataStrategyFunction;
+    unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -185,7 +188,7 @@ export function MemoryRouter({
     location: history.location,
   });
   let setState = React.useCallback(
-    (newState: { action: NavigationType; location: Location }) => {
+    (newState: { action: HistoryAction; location: Location }) => {
       React.startTransition(() => setStateImpl(newState));
     },
     [setStateImpl]
@@ -380,7 +383,7 @@ export interface RouterProps {
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
-  navigationType?: NavigationType;
+  navigationType?: HistoryAction;
   navigator: Navigator;
   static?: boolean;
 }
@@ -398,7 +401,7 @@ export function Router({
   basename: basenameProp = "/",
   children = null,
   location: locationProp,
-  navigationType = NavigationType.Pop,
+  navigationType = HistoryAction.Pop,
   navigator,
   static: staticProp = false,
 }: RouterProps): React.ReactElement | null {
@@ -681,8 +684,6 @@ enum AwaitRenderStatus {
   success,
   error,
 }
-
-const neverSettledPromise = new Promise(() => {});
 
 class AwaitErrorBoundary extends React.Component<
   AwaitErrorBoundaryProps,

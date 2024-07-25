@@ -1,5 +1,5 @@
 import { createMemoryRouter } from "../../lib/components";
-import { IDLE_NAVIGATION } from "../../lib/router";
+import { IDLE_NAVIGATION } from "../../lib/router/router";
 import {
   cleanup,
   setup,

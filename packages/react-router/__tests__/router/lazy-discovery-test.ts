@@ -1,5 +1,7 @@
-import type { AgnosticDataRouteObject, Router } from "../../lib/router/index";
-import { createMemoryHistory, createRouter } from "../../lib/router/index";
+import type { Router } from "../../lib/router/router";
+import type { AgnosticDataRouteObject } from "../../lib/router/utils";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter } from "../../lib/router/router";
 import { ErrorResponseImpl } from "../../lib/router/utils";
 import { getFetcherData } from "./utils/data-router-setup";
 import { createDeferred, createFormData, tick } from "./utils/utils";

@@ -1,5 +1,4 @@
-import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router";
-
+import { decodeViaTurboStream } from "../../lib/dom/ssr/single-fetch";
 import type { ServerBuild } from "../../lib/server-runtime/build";
 import { createRequestHandler } from "../../lib/server-runtime/server";
 

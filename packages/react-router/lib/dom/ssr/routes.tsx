@@ -1,12 +1,12 @@
 import * as React from "react";
+
+import type { HydrationState } from "../../router/router";
 import type {
   ActionFunctionArgs,
-  HydrationState,
   LoaderFunctionArgs,
   ShouldRevalidateFunction,
-} from "../../router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponse } from "../../router";
-
+} from "../../router/utils";
+import { ErrorResponseImpl } from "../../router/utils";
 import type { RouteModule, RouteModules } from "./routeModules";
 import { loadRouteModule } from "./routeModules";
 import type { FutureConfig } from "./entry";
@@ -195,7 +195,7 @@ function preventInvalidServerHandlerCall(
     let fn = type === "action" ? "serverAction()" : "serverLoader()";
     let msg = `You cannot call ${fn} in SPA Mode (routeId: "${route.id}")`;
     console.error(msg);
-    throw new ErrorResponse(400, "Bad Request", new Error(msg), true);
+    throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
 
   let fn = type === "action" ? "serverAction()" : "serverLoader()";
@@ -207,7 +207,7 @@ function preventInvalidServerHandlerCall(
     (type === "action" && !route.hasAction)
   ) {
     console.error(msg);
-    throw new ErrorResponse(400, "Bad Request", new Error(msg), true);
+    throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
 }
 
@@ -220,7 +220,7 @@ function noActionDefinedError(
     `Route "${routeId}" does not have ${article} ${type}, but you are trying to ` +
     `submit to it. To fix this, please add ${article} \`${type}\` function to the route`;
   console.error(msg);
-  throw new ErrorResponse(405, "Method Not Allowed", new Error(msg), true);
+  throw new ErrorResponseImpl(405, "Method Not Allowed", new Error(msg), true);
 }
 
 export function createClientRoutes(

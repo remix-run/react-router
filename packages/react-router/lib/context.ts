@@ -1,18 +1,22 @@
 import * as React from "react";
 import type {
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
-  AgnosticRouteMatch,
   History,
-  LazyRouteFunction,
+  Action as HistoryAction,
   Location,
-  Action as NavigationType,
+  To,
+} from "./router/history";
+import type {
   RelativeRoutingType,
   Router,
   StaticHandlerContext,
-  To,
+} from "./router/router";
+import type {
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticRouteMatch,
+  LazyRouteFunction,
   TrackedPromise,
-} from "./router";
+} from "./router/utils";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
@@ -133,7 +137,7 @@ NavigationContext.displayName = "Navigation";
 
 interface LocationContextObject {
   location: Location;
-  navigationType: NavigationType;
+  navigationType: HistoryAction;
 }
 
 export const LocationContext = React.createContext<LocationContextObject>(
