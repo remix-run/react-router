@@ -17,7 +17,7 @@ import {
 } from "./context";
 import type { Location, Path, To } from "./router/history";
 import {
-  Action as HistoryAction,
+  Action as NavigationType,
   invariant,
   parsePath,
   warning,
@@ -145,7 +145,7 @@ export function useLocation(): Location {
  *
  * @category Hooks
  */
-export function useNavigationType(): HistoryAction {
+export function useNavigationType(): NavigationType {
   return React.useContext(LocationContext).navigationType;
 }
 
@@ -596,7 +596,7 @@ export function useRoutesImpl(
             key: "default",
             ...location,
           },
-          navigationType: HistoryAction.Pop,
+          navigationType: NavigationType.Pop,
         }}
       >
         {renderedMatches}

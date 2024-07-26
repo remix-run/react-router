@@ -1,7 +1,7 @@
 import * as React from "react";
 import type {
   History,
-  Action as HistoryAction,
+  Action as NavigationType,
   Location,
   To,
 } from "./router/history";
@@ -137,7 +137,7 @@ NavigationContext.displayName = "Navigation";
 
 interface LocationContextObject {
   location: Location;
-  navigationType: HistoryAction;
+  navigationType: NavigationType;
 }
 
 export const LocationContext = React.createContext<LocationContextObject>(

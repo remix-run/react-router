@@ -2,7 +2,7 @@ import * as React from "react";
 
 import type { Location, Path, To } from "../router/history";
 import {
-  Action as HistoryAction,
+  Action as NavigationType,
   createPath,
   invariant,
   parsePath,
@@ -53,7 +53,7 @@ export function StaticRouter({
     locationProp = parsePath(locationProp);
   }
 
-  let action = HistoryAction.Pop;
+  let action = NavigationType.Pop;
   let location: Location = {
     pathname: locationProp.pathname || "/",
     search: locationProp.search || "",
@@ -306,7 +306,7 @@ export function createStaticRouter(
     },
     get state() {
       return {
-        historyAction: HistoryAction.Pop,
+        historyAction: NavigationType.Pop,
         location: context.location,
         matches,
         loaderData: context.loaderData,

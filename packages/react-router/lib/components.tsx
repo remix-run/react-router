@@ -7,7 +7,7 @@ import type {
   To,
 } from "./router/history";
 import {
-  Action as HistoryAction,
+  Action as NavigationType,
   createMemoryHistory,
   invariant,
   parsePath,
@@ -188,7 +188,7 @@ export function MemoryRouter({
     location: history.location,
   });
   let setState = React.useCallback(
-    (newState: { action: HistoryAction; location: Location }) => {
+    (newState: { action: NavigationType; location: Location }) => {
       React.startTransition(() => setStateImpl(newState));
     },
     [setStateImpl]
@@ -383,7 +383,7 @@ export interface RouterProps {
   basename?: string;
   children?: React.ReactNode;
   location: Partial<Location> | string;
-  navigationType?: HistoryAction;
+  navigationType?: NavigationType;
   navigator: Navigator;
   static?: boolean;
 }
@@ -401,7 +401,7 @@ export function Router({
   basename: basenameProp = "/",
   children = null,
   location: locationProp,
-  navigationType = HistoryAction.Pop,
+  navigationType = NavigationType.Pop,
   navigator,
   static: staticProp = false,
 }: RouterProps): React.ReactElement | null {

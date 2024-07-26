@@ -1,6 +1,6 @@
 import type { History, Location, Path, To } from "./history";
 import {
-  Action as HistoryAction,
+  Action as NavigationType,
   createLocation,
   createPath,
   invariant,
@@ -276,7 +276,7 @@ export interface RouterState {
   /**
    * The action of the most recent navigation
    */
-  historyAction: HistoryAction;
+  historyAction: NavigationType;
 
   /**
    * The current location reflected by the router
@@ -652,7 +652,7 @@ export type Blocker = BlockerUnblocked | BlockerBlocked | BlockerProceeding;
 export type BlockerFunction = (args: {
   currentLocation: Location;
   nextLocation: Location;
-  historyAction: HistoryAction;
+  historyAction: NavigationType;
 }) => boolean;
 
 interface ShortCircuitable {
@@ -929,7 +929,7 @@ export function createRouter(init: RouterInit): Router {
 
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
-  let pendingAction: HistoryAction = HistoryAction.Pop;
+  let pendingAction: NavigationType = NavigationType.Pop;
 
   // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
@@ -1089,7 +1089,7 @@ export function createRouter(init: RouterInit): Router {
     // resolved prior to router creation since we can't go into a fallback
     // UI for SSR'd apps
     if (!state.initialized) {
-      startNavigation(HistoryAction.Pop, state.location, {
+      startNavigation(NavigationType.Pop, state.location, {
         initialHydration: true,
       });
     }
@@ -1237,18 +1237,18 @@ export function createRouter(init: RouterInit): Router {
 
     if (isUninterruptedRevalidation) {
       // If this was an uninterrupted revalidation then do not touch history
-    } else if (pendingAction === HistoryAction.Pop) {
+    } else if (pendingAction === NavigationType.Pop) {
       // Do nothing for POP - URL has already been updated
-    } else if (pendingAction === HistoryAction.Push) {
+    } else if (pendingAction === NavigationType.Push) {
       init.history.push(location, location.state);
-    } else if (pendingAction === HistoryAction.Replace) {
+    } else if (pendingAction === NavigationType.Replace) {
       init.history.replace(location, location.state);
     }
 
     let viewTransitionOpts: ViewTransitionOpts | undefined;
 
     // On POP, enable transitions if they were enabled on the original navigation
-    if (pendingAction === HistoryAction.Pop) {
+    if (pendingAction === NavigationType.Pop) {
       // Forward takes precedence so they behave like the original navigation
       let priorPaths = appliedViewTransitions.get(state.location.pathname);
       if (priorPaths && priorPaths.has(location.pathname)) {
@@ -1303,7 +1303,7 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Reset stateful navigation vars
-    pendingAction = HistoryAction.Pop;
+    pendingAction = NavigationType.Pop;
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
@@ -1353,10 +1353,10 @@ export function createRouter(init: RouterInit): Router {
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
-    let historyAction = HistoryAction.Push;
+    let historyAction = NavigationType.Push;
 
     if (userReplace === true) {
-      historyAction = HistoryAction.Replace;
+      historyAction = NavigationType.Replace;
     } else if (userReplace === false) {
       // no-op
     } else if (
@@ -1368,7 +1368,7 @@ export function createRouter(init: RouterInit): Router {
       // users don't have to double-click the back button to get to the prior
       // location.  If the user redirects to a different location from the
       // action/loader this will be ignored and the redirect will be a PUSH
-      historyAction = HistoryAction.Replace;
+      historyAction = NavigationType.Replace;
     }
 
     let preventScrollReset =
@@ -1475,7 +1475,7 @@ export function createRouter(init: RouterInit): Router {
   // overrideNavigation which will override the normalLoad in the case of a redirect
   // navigation
   async function startNavigation(
-    historyAction: HistoryAction,
+    historyAction: NavigationType,
     location: Location,
     opts?: {
       initialHydration?: boolean;
@@ -1781,7 +1781,7 @@ export function createRouter(init: RouterInit): Router {
       // back button to get back to the pre-submission form location to try
       // again
       if ((opts && opts.replace) !== true) {
-        pendingAction = HistoryAction.Push;
+        pendingAction = NavigationType.Push;
       }
 
       return {
@@ -2627,8 +2627,8 @@ export function createRouter(init: RouterInit): Router {
     // redirect until the action/loaders have settled
     pendingNavigationController = null;
 
-    let redirectHistoryAction =
-      replace === true ? HistoryAction.Replace : HistoryAction.Push;
+    let redirectNavigationType =
+      replace === true ? NavigationType.Replace : NavigationType.Push;
 
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
@@ -2652,7 +2652,7 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission &&
       isMutationMethod(activeSubmission.formMethod)
     ) {
-      await startNavigation(redirectHistoryAction, redirectLocation, {
+      await startNavigation(redirectNavigationType, redirectLocation, {
         submission: {
           ...activeSubmission,
           formAction: location,
@@ -2667,7 +2667,7 @@ export function createRouter(init: RouterInit): Router {
         redirectLocation,
         submission
       );
-      await startNavigation(redirectHistoryAction, redirectLocation, {
+      await startNavigation(redirectNavigationType, redirectLocation, {
         overrideNavigation,
         // Send fetcher submissions through for shouldRevalidate
         fetcherSubmission,
@@ -2939,7 +2939,7 @@ export function createRouter(init: RouterInit): Router {
   }: {
     currentLocation: Location;
     nextLocation: Location;
-    historyAction: HistoryAction;
+    historyAction: NavigationType;
   }): string | undefined {
     if (blockerFunctions.size === 0) {
       return;
