@@ -437,9 +437,7 @@ let deepFreeze = (o: any) => {
   return o;
 };
 
-export type ReactRouterVitePlugin = (
-  config?: VitePluginConfig
-) => Vite.Plugin[];
+type ReactRouterVitePlugin = (config?: VitePluginConfig) => Vite.Plugin[];
 export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   let reactRouterUserConfig = _config ?? {};
 
