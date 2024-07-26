@@ -247,6 +247,9 @@ export interface SessionIdStorageStrategy<
 
 /**
  * Creates a SessionStorage object using a SessionIdStorageStrategy.
+ *
+ * Note: This is a low-level API that should only be used if none of the
+ * existing session storage options meet your requirements.
  */
 export function createSessionStorage<Data = SessionData, FlashData = Data>({
   cookie: cookieArg,
