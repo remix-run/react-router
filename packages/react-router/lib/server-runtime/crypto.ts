@@ -1,13 +1,6 @@
-export type SignFunction = (value: string, secret: string) => Promise<string>;
-
-export type UnsignFunction = (
-  cookie: string,
-  secret: string
-) => Promise<string | false>;
-
 const encoder = new TextEncoder();
 
-export const sign: SignFunction = async (value, secret) => {
+export const sign = async (value: string, secret: string): Promise<string> => {
   let data = encoder.encode(value);
   let key = await createKey(secret, ["sign"]);
   let signature = await crypto.subtle.sign("HMAC", key, data);
@@ -19,7 +12,10 @@ export const sign: SignFunction = async (value, secret) => {
   return value + "." + hash;
 };
 
-export const unsign: UnsignFunction = async (cookie, secret) => {
+export const unsign = async (
+  cookie: string,
+  secret: string
+): Promise<string | false> => {
   let index = cookie.lastIndexOf(".");
   let value = cookie.slice(0, index);
   let hash = cookie.slice(index + 1);

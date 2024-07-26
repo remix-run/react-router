@@ -371,21 +371,14 @@ export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from 
 export { MaxPartSizeExceededError } from "./lib/server-runtime/upload/errors";
 export { setDevServerHooks as unstable_setDevServerHooks } from "./lib/server-runtime/dev";
 
-export type {
-  CreateCookieFunction,
-  IsCookieFunction,
-} from "./lib/server-runtime/cookies";
+export type { IsCookieFunction } from "./lib/server-runtime/cookies";
 // TODO: (v7) Clean up code paths for these exports
 // export type {
 //   JsonFunction,
 //   RedirectFunction,
 // } from "./lib/server-runtime/responses";
 export type { CreateRequestHandlerFunction } from "./lib/server-runtime/server";
-export type {
-  CreateSessionFunction,
-  CreateSessionStorageFunction,
-  IsSessionFunction,
-} from "./lib/server-runtime/sessions";
+export type { IsSessionFunction } from "./lib/server-runtime/sessions";
 
 export type {
   HandleDataRequestFunction,

@@ -1,6 +1,6 @@
 import type { CookieParseOptions, CookieSerializeOptions } from "cookie";
 
-import type { Cookie, CookieOptions, CreateCookieFunction } from "./cookies";
+import type { Cookie, CookieOptions } from "./cookies";
 import { createCookie, isCookie } from "./cookies";
 import { warnOnce } from "./warnings";
 
@@ -245,60 +245,55 @@ export interface SessionIdStorageStrategy<
   deleteData: (id: string) => Promise<void>;
 }
 
-export type CreateSessionStorageFunction = <
-  Data = SessionData,
-  FlashData = Data
->(
-  strategy: SessionIdStorageStrategy<Data, FlashData>
-) => SessionStorage<Data, FlashData>;
-
 /**
  * Creates a SessionStorage object using a SessionIdStorageStrategy.
  */
-const createSessionStorageFactory =
-  (createCookie: CreateCookieFunction): CreateSessionStorageFunction =>
-  ({ cookie: cookieArg, createData, readData, updateData, deleteData }) => {
-    let cookie = isCookie(cookieArg)
-      ? cookieArg
-      : createCookie(cookieArg?.name || "__session", cookieArg);
+export function createSessionStorage<Data = SessionData, FlashData = Data>({
+  cookie: cookieArg,
+  createData,
+  readData,
+  updateData,
+  deleteData,
+}: SessionIdStorageStrategy<Data, FlashData>): SessionStorage<Data, FlashData> {
+  let cookie = isCookie(cookieArg)
+    ? cookieArg
+    : createCookie(cookieArg?.name || "__session", cookieArg);
 
-    warnOnceAboutSigningSessionCookie(cookie);
+  warnOnceAboutSigningSessionCookie(cookie);
 
-    return {
-      async getSession(cookieHeader, options) {
-        let id = cookieHeader && (await cookie.parse(cookieHeader, options));
-        let data = id && (await readData(id));
-        return createSession(data || {}, id || "");
-      },
-      async commitSession(session, options) {
-        let { id, data } = session;
-        let expires =
-          options?.maxAge != null
-            ? new Date(Date.now() + options.maxAge * 1000)
-            : options?.expires != null
-            ? options.expires
-            : cookie.expires;
+  return {
+    async getSession(cookieHeader, options) {
+      let id = cookieHeader && (await cookie.parse(cookieHeader, options));
+      let data = id && (await readData(id));
+      return createSession(data || {}, id || "");
+    },
+    async commitSession(session, options) {
+      let { id, data } = session;
+      let expires =
+        options?.maxAge != null
+          ? new Date(Date.now() + options.maxAge * 1000)
+          : options?.expires != null
+          ? options.expires
+          : cookie.expires;
 
-        if (id) {
-          await updateData(id, data, expires);
-        } else {
-          id = await createData(data, expires);
-        }
+      if (id) {
+        await updateData(id, data, expires);
+      } else {
+        id = await createData(data, expires);
+      }
 
-        return cookie.serialize(id, options);
-      },
-      async destroySession(session, options) {
-        await deleteData(session.id);
-        return cookie.serialize("", {
-          ...options,
-          maxAge: undefined,
-          expires: new Date(0),
-        });
-      },
-    };
+      return cookie.serialize(id, options);
+    },
+    async destroySession(session, options) {
+      await deleteData(session.id);
+      return cookie.serialize("", {
+        ...options,
+        maxAge: undefined,
+        expires: new Date(0),
+      });
+    },
   };
-
-export const createSessionStorage = createSessionStorageFactory(createCookie);
+}
 
 export function warnOnceAboutSigningSessionCookie(cookie: Cookie) {
   warnOnce(
