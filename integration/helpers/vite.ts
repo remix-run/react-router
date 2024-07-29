@@ -358,7 +358,7 @@ async function waitForServer(
 
   await waitOn({
     resources: [`http://localhost:${args.port}${args.basename ?? "/"}`],
-    timeout: 10000,
+    timeout: 20000,
   }).catch((err) => {
     let stdout = devStdout();
     let stderr = devStderr();
