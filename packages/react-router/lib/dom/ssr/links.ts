@@ -1,5 +1,6 @@
-import type { AgnosticDataRouteMatch, Location } from "../../router";
-import { parsePath } from "../../router";
+import type { Location } from "../../router/history";
+import { parsePath } from "../../router/history";
+import type { AgnosticDataRouteMatch } from "../../router/utils";
 
 import type { AssetsManifest } from "./entry";
 import type { RouteModules, RouteModule } from "./routeModules";

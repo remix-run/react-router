@@ -1,8 +1,7 @@
 import * as React from "react";
-
-import type { Router } from "../../router";
-import { matchRoutes } from "../../router";
-import type { unstable_PatchRoutesOnMissFunction } from "../../components";
+import type { PatchRoutesOnMissFunction } from "../../components";
+import type { Router as RemixRouter } from "../../router/router";
+import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import { createClientRoutes } from "./routes";
@@ -34,7 +33,10 @@ export function isFogOfWarEnabled(isSpaMode: boolean) {
   return !isSpaMode;
 }
 
-export function getPartialManifest(manifest: AssetsManifest, router: Router) {
+export function getPartialManifest(
+  manifest: AssetsManifest,
+  router: RemixRouter
+) {
   // Start with our matches for this pathname
   let routeIds = new Set(router.state.matches.map((m) => m.route.id));
 
@@ -75,7 +77,7 @@ export function initFogOfWar(
   basename: string | undefined
 ): {
   enabled: boolean;
-  patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+  patchRoutesOnMiss?: PatchRoutesOnMissFunction;
 } {
   if (!isFogOfWarEnabled(isSpaMode)) {
     return { enabled: false };
@@ -110,7 +112,7 @@ export function initFogOfWar(
 }
 
 export function useFogOFWarDiscovery(
-  router: Router,
+  router: RemixRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   isSpaMode: boolean
@@ -143,7 +145,7 @@ export function useFogOFWarDiscovery(
 
     // Register and fetch patches for all initially-rendered links/forms
     async function fetchPatches() {
-      let lazyPaths = getFogOfWarPaths(fogOfWar!, router);
+      let lazyPaths = getFogOfWarPaths(fogOfWar!);
       if (lazyPaths.length === 0) {
         return;
       }
@@ -212,7 +214,7 @@ export function useFogOFWarDiscovery(
   }, [isSpaMode, manifest, routeModules, router]);
 }
 
-function getFogOfWarPaths(fogOfWar: FogOfWarInfo, router: Router) {
+function getFogOfWarPaths(fogOfWar: FogOfWarInfo) {
   let { knownGoodPaths, known404Paths, nextPaths } = fogOfWar;
   return Array.from(nextPaths.keys()).filter((path) => {
     if (knownGoodPaths.has(path)) {
@@ -236,7 +238,7 @@ export async function fetchAndApplyManifestPatches(
   routeModules: RouteModules,
   isSpaMode: boolean,
   basename: string | undefined,
-  patchRoutes: Router["patchRoutes"]
+  patchRoutes: RemixRouter["patchRoutes"]
 ): Promise<void> {
   let { nextPaths, knownGoodPaths, known404Paths } = _fogOfWar;
   let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(

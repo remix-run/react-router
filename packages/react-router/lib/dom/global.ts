@@ -1,5 +1,4 @@
-import type { HydrationState, Router as RemixRouter } from "../router";
-
+import type { HydrationState, Router as RemixRouter } from "../router/router";
 import type { ViewTransition } from "./lib";
 import type {
   AssetsManifest,

@@ -1,6 +1,12 @@
 import * as React from "react";
-import type { HydrationState, Router as RemixRouter } from "../../router";
-import { createBrowserHistory, createRouter, matchRoutes } from "../../router";
+
+import { createBrowserHistory } from "../../router/history";
+import type {
+  HydrationState,
+  Router as RemixRouter,
+} from "../../router/router";
+import { createRouter } from "../../router/router";
+import { matchRoutes } from "../../router/utils";
 
 import "../global";
 import { mapRouteProperties } from "../../components";

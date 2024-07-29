@@ -1,5 +1,6 @@
-import type { Router } from "../../lib/router";
-import { createMemoryHistory, createRouter } from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import type { Router } from "../../lib/router/router";
+import { createRouter } from "../../lib/router/router";
 
 const LOADER_LATENCY_MS = 100;
 const routes = [

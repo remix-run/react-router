@@ -7,40 +7,46 @@ import * as React from "react";
 // `import { RouterProvider } from 'react-router/memory'` // memory use case
 // `import { RouterProvider } from 'react-router/dom'` // DOM use case
 import * as ReactDOM from "react-dom";
+
 import type {
   BrowserHistory,
-  unstable_DataStrategyFunction,
-  Fetcher,
-  FormEncType,
-  FutureConfig,
-  GetScrollRestorationKeyFunction,
   HashHistory,
   History,
-  HTMLFormMethod,
+  Action as NavigationType,
+  Location,
+  To,
+} from "../router/history";
+import {
+  createBrowserHistory,
+  createHashHistory,
+  createPath,
+  invariant,
+  warning,
+} from "../router/history";
+import type {
+  BlockerFunction,
+  Fetcher,
+  FutureConfig,
+  GetScrollRestorationKeyFunction,
   HydrationState,
+  RelativeRoutingType,
   Router as RemixRouter,
   RouterState,
   RouterSubscriber,
-  BlockerFunction,
-  Location,
-  Action as NavigationType,
-  RelativeRoutingType,
-  To,
+} from "../router/router";
+import { IDLE_FETCHER, createRouter } from "../router/router";
+import type {
+  DataStrategyFunction,
+  FormEncType,
+  HTMLFormMethod,
   UIMatch,
-} from "../router";
+} from "../router/utils";
 import {
-  createRouter,
-  createBrowserHistory,
-  createHashHistory,
+  ErrorResponseImpl,
   joinPaths,
-  stripBasename,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-  UNSAFE_invariant as invariant,
-  UNSAFE_warning as warning,
   matchPath,
-  IDLE_FETCHER,
-  createPath,
-} from "../router";
+  stripBasename,
+} from "../router/utils";
 
 import "./global";
 import type {
@@ -68,7 +74,7 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import type { unstable_PatchRoutesOnMissFunction } from "../components";
+import type { PatchRoutesOnMissFunction } from "../components";
 import { Router, mapRouteProperties } from "../components";
 import type {
   Navigator,
@@ -130,8 +136,8 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: unstable_DataStrategyFunction;
-  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+  unstable_dataStrategy?: DataStrategyFunction;
+  unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
   window?: Window;
 }
 
@@ -251,20 +257,19 @@ type ViewTransitionContextObject =
       nextLocation: Location;
     };
 
-const ViewTransitionContext = React.createContext<ViewTransitionContextObject>({
-  isTransitioning: false,
-});
+export const ViewTransitionContext =
+  React.createContext<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
 ViewTransitionContext.displayName = "ViewTransition";
-
-export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
 
 // TODO: (v7) Change the useFetcher data from `any` to `unknown`
 type FetchersContextObject = Map<string, any>;
 
-const FetchersContext = React.createContext<FetchersContextObject>(new Map());
+export const FetchersContext = React.createContext<FetchersContextObject>(
+  new Map()
+);
 FetchersContext.displayName = "Fetchers";
-
-export { FetchersContext as UNSAFE_FetchersContext };
 
 //#endregion
 
@@ -670,9 +675,14 @@ export interface HistoryRouterProps {
  * two versions of the history library to your bundles unless you use the same
  * version of the history library that React Router uses internally.
  *
+ * @name unstable_HistoryRouter
  * @category Router Components
  */
-function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
+export function HistoryRouter({
+  basename,
+  children,
+  history,
+}: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
@@ -697,8 +707,6 @@ function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
   );
 }
 HistoryRouter.displayName = "unstable_HistoryRouter";
-
-export { HistoryRouter as unstable_HistoryRouter };
 
 /**
  * @category Types
@@ -2265,7 +2273,7 @@ function getScrollRestorationKey(
 /**
  * When rendered inside a RouterProvider, will restore scroll positions on navigations
  */
-function useScrollRestoration({
+export function useScrollRestoration({
   getKey,
   storageKey,
 }: {
@@ -2377,8 +2385,6 @@ function useScrollRestoration({
   }
 }
 
-export { useScrollRestoration as UNSAFE_useScrollRestoration };
-
 /**
  * Setup a callback to be fired on the window's `beforeunload` event.
  *
@@ -2454,8 +2460,9 @@ function usePageHide(
   ```
 
   @category Hooks
+  @name unstable_usePrompt
  */
-function usePrompt({
+export function usePrompt({
   when,
   message,
 }: {
@@ -2485,14 +2492,13 @@ function usePrompt({
   }, [blocker, when]);
 }
 
-export { usePrompt as unstable_usePrompt };
-
 /**
   This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via {@link LinkProps.unstable_viewTransition} (or the `Form`, `submit`, or `navigate` call)
 
   @category Hooks
+  @name unstable_useViewTransitionState
  */
-function useViewTransitionState(
+export function useViewTransitionState(
   to: To,
   opts: { relative?: RelativeRoutingType } = {}
 ) {
@@ -2537,7 +2543,5 @@ function useViewTransitionState(
     matchPath(path.pathname, currentPath) != null
   );
 }
-
-export { useViewTransitionState as unstable_useViewTransitionState };
 
 //#endregion

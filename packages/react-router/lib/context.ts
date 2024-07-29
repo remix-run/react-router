@@ -1,18 +1,22 @@
 import * as React from "react";
 import type {
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
-  AgnosticRouteMatch,
   History,
-  LazyRouteFunction,
-  Location,
   Action as NavigationType,
+  Location,
+  To,
+} from "./router/history";
+import type {
   RelativeRoutingType,
   Router,
   StaticHandlerContext,
-  To,
+} from "./router/router";
+import type {
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticRouteMatch,
+  LazyRouteFunction,
   TrackedPromise,
-} from "./router";
+} from "./router/utils";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router

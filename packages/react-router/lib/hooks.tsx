@@ -1,35 +1,5 @@
 import * as React from "react";
 import type {
-  Blocker,
-  BlockerFunction,
-  Location,
-  ParamParseKey,
-  Params,
-  Path,
-  PathMatch,
-  PathPattern,
-  RelativeRoutingType,
-  Router as RemixRouter,
-  RevalidationState,
-  To,
-  UIMatch,
-} from "./router";
-import {
-  IDLE_BLOCKER,
-  Action as NavigationType,
-  UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
-  UNSAFE_invariant as invariant,
-  isRouteErrorResponse,
-  joinPaths,
-  matchPath,
-  matchRoutes,
-  parsePath,
-  resolveTo,
-  stripBasename,
-  UNSAFE_warning as warning,
-} from "./router";
-
-import type {
   DataRouteMatch,
   NavigateOptions,
   RouteContextObject,
@@ -45,7 +15,39 @@ import {
   RouteContext,
   RouteErrorContext,
 } from "./context";
-import { decodePath, getResolveToMatches } from "./router/utils";
+import type { Location, Path, To } from "./router/history";
+import {
+  Action as NavigationType,
+  invariant,
+  parsePath,
+  warning,
+} from "./router/history";
+import type {
+  Blocker,
+  BlockerFunction,
+  RelativeRoutingType,
+  Router as RemixRouter,
+  RevalidationState,
+} from "./router/router";
+import { IDLE_BLOCKER } from "./router/router";
+import type {
+  ParamParseKey,
+  Params,
+  PathMatch,
+  PathPattern,
+  UIMatch,
+} from "./router/utils";
+import {
+  convertRouteMatchToUiMatch,
+  decodePath,
+  getResolveToMatches,
+  isRouteErrorResponse,
+  joinPaths,
+  matchPath,
+  matchRoutes,
+  resolveTo,
+  stripBasename,
+} from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
