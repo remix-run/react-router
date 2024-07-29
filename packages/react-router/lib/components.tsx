@@ -231,11 +231,6 @@ export function RouterProvider({
         }
       });
 
-      let isViewTransitionUnavailable =
-        router.window == null ||
-        router.window.document == null ||
-        typeof router.window.document.startViewTransition !== "function";
-
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
         "You provided the `unstable_flushSync` option to a router update, " +
@@ -246,9 +241,21 @@ export function RouterProvider({
           "`unstable_flushSync` option."
       );
 
+      let isViewTransitionAvailable =
+        router.window != null &&
+        router.window.document != null &&
+        typeof router.window.document.startViewTransition === "function";
+
+      warnOnce(
+        viewTransitionOpts == null || isViewTransitionAvailable,
+        "You provided the `unstable_viewTransition` option to a router update, " +
+          "but you do not appear to be running in a DOM environment as " +
+          "`window.startViewTransition` is not available."
+      );
+
       // If this isn't a view transition or it's not available in this browser,
       // just update and be done with it
-      if (!viewTransitionOpts || isViewTransitionUnavailable) {
+      if (!viewTransitionOpts || !isViewTransitionAvailable) {
         if (reactDomFlushSyncImpl && flushSync) {
           reactDomFlushSyncImpl(() => setStateImpl(newState));
         } else {
