@@ -273,6 +273,8 @@ export interface Router {
  * reflect the the "old" location unless otherwise noted.
  */
 export interface RouterState {
+  // TODO: (v7) should we consider renaming this `navigationType` to align with
+  // `useNavigationType` at some point?
   /**
    * The action of the most recent navigation
    */
