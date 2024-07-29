@@ -60,6 +60,7 @@ import {
   useRoutesImpl,
 } from "./hooks";
 import type { ViewTransition } from "./dom/global";
+import { warnOnce } from "./server-runtime/warnings";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -234,6 +235,16 @@ export function RouterProvider({
         router.window == null ||
         router.window.document == null ||
         typeof router.window.document.startViewTransition !== "function";
+
+      warnOnce(
+        flushSync === false || reactDomFlushSyncImpl != null,
+        "You provided the `unstable_flushSync` option to a router update, " +
+          "but you are not using the `<RouterProvider>` from `react-router/dom` " +
+          "so `ReactDOM.flushSync()` is unavailable.  Please update your app " +
+          'to `import { RouterProvider } from "react-router/dom"` and ensure ' +
+          "you have `react-dom` installed as a dependency to use the " +
+          "`unstable_flushSync` option."
+      );
 
       // If this isn't a view transition or it's not available in this browser,
       // just update and be done with it
