@@ -32,6 +32,7 @@ import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
 import { resolveFileUrl } from "./resolve-file-url";
+import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 import {
@@ -702,7 +703,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         path: route.path,
         index: route.index,
         caseSensitive: route.caseSensitive,
-        module: path.posix.join(
+        module: combineURLs(
           ctx.publicPath,
           `${resolveFileUrl(
             ctx,
@@ -720,18 +721,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
     return {
       version: String(Math.random()),
-      url: path.posix.join(
-        ctx.publicPath,
-        VirtualModule.url(browserManifestId)
-      ),
+      url: combineURLs(ctx.publicPath, VirtualModule.url(browserManifestId)),
       hmr: {
-        runtime: path.posix.join(
+        runtime: combineURLs(
           ctx.publicPath,
           VirtualModule.url(injectHmrRuntimeId)
         ),
       },
       entry: {
-        module: path.posix.join(
+        module: combineURLs(
           ctx.publicPath,
           resolveFileUrl(ctx, ctx.entryClientFilePath)
         ),
@@ -1721,7 +1719,7 @@ async function getRouteMetadata(
     path: route.path,
     index: route.index,
     caseSensitive: route.caseSensitive,
-    url: path.posix.join(
+    url: combineURLs(
       ctx.publicPath,
       "/" +
         path.relative(
@@ -1729,7 +1727,7 @@ async function getRouteMetadata(
           resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
         )
     ),
-    module: path.posix.join(
+    module: combineURLs(
       ctx.publicPath,
       `${resolveFileUrl(
         ctx,
