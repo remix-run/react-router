@@ -8,6 +8,7 @@ overrides:
   '@types/react': ^18.2.18
   '@types/react-dom': ^18.2.7
   jsdom: 22.1.0
+  '@cloudflare/workerd-windows-64': 1.20240614.0
 
 patchedDependencies:
   '@changesets/assemble-release-plan@5.2.4':
@@ -3954,8 +3955,8 @@ packages:
     requiresBuild: true
     optional: true
 
-  /@cloudflare/workerd-windows-64@1.20240701.0:
-    resolution: {integrity: sha512-6IPGITRAeS67j3BH1rN4iwYWDt47SqJG7KlZJ5bB4UaNAia4mvMBSy/p2p4vA89bbXoDRjMtEvRu7Robu6O7hQ==}
+  /@cloudflare/workerd-windows-64@1.20240614.0:
+    resolution: {integrity: sha512-T2ZvRGC3g7zbfXXiMURpu7ruX+gNu3Yz3S7zBOVNPi8SrHfeokxfyAzrk6Rr/kb+gjG2FCemTx3x6/mkG5KRFg==}
     engines: {node: '>=16'}
     cpu: [x64]
     os: [win32]
@@ -14354,7 +14355,7 @@ packages:
       '@cloudflare/workerd-darwin-arm64': 1.20240701.0
       '@cloudflare/workerd-linux-64': 1.20240701.0
       '@cloudflare/workerd-linux-arm64': 1.20240701.0
-      '@cloudflare/workerd-windows-64': 1.20240701.0
+      '@cloudflare/workerd-windows-64': 1.20240614.0
 
   /wrangler@3.64.0(@cloudflare/workers-types@4.20240712.0):
     resolution: {integrity: sha512-q2VQADJXzuOkXs9KIfPSx7UCZHBoxsqSNbJDLkc2pHpGmsyNQXsJRqjMoTg/Kls7O3K9A7EGnzGr7+Io2vE6AQ==}
