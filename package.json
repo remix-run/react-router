@@ -133,7 +133,7 @@
       "@changesets/assemble-release-plan@5.2.4": "patches/@changesets__assemble-release-plan@5.2.4.patch"
     },
     "overrides": {
-      "@cloudflare/workerd-windows-64": "1.20240614.0"
+      "workerd": "1.20240614.0"
     }
   }
 }
