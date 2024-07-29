@@ -1,7 +1,7 @@
 {
   "name": "@react-router/dev",
   "version": "2.9.0-pre.0",
-  "description": "Dev tools and CLI for React Router",
+  "description": "Dev tools and CLI for React Router.",
   "homepage": "https://reactrouter.com",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
