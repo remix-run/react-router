@@ -5,6 +5,7 @@ name: PR (Full)
 on:
   pull_request:
     paths:
+      - "pnpm-lock.yaml"
       - "packages/react-router-dev/**"
       - "!**/*.md"
 
