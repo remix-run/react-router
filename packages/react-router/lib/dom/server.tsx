@@ -302,7 +302,6 @@ export function createStaticRouter(
     },
     get future() {
       return {
-        v7_skipActionErrorRevalidation: false,
         ...opts?.future,
       };
     },

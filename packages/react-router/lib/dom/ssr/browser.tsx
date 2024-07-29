@@ -187,10 +187,6 @@ function createHydratedRouter(): RemixRouter {
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
-    future: {
-      // Single fetch enables this underlying behavior
-      v7_skipActionErrorRevalidation: true,
-    },
     hydrationData,
     mapRouteProperties,
     unstable_dataStrategy: getSingleFetchDataStrategy(

@@ -353,9 +353,7 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {
-  v7_skipActionErrorRevalidation: boolean;
-}
+export interface FutureConfig {}
 
 /**
  * Initialization options for createRouter
@@ -812,7 +810,6 @@ export function createRouter(init: RouterInit): Router {
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    v7_skipActionErrorRevalidation: false,
     ...init.future,
   };
   // Cleanup function for history
@@ -1897,7 +1894,6 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission,
       location,
       initialHydration === true,
-      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledFetcherLoads,
       fetchersQueuedForDeletion,
@@ -2317,7 +2313,6 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       false,
-      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledFetcherLoads,
       fetchersQueuedForDeletion,
@@ -4147,7 +4142,6 @@ function getMatchesToLoad(
   submission: Submission | undefined,
   location: Location,
   isInitialLoad: boolean,
-  skipActionErrorRevalidation: boolean,
   isRevalidationRequired: boolean,
   cancelledFetcherLoads: string[],
   fetchersQueuedForDeletion: Set<string>,
@@ -4180,8 +4174,7 @@ function getMatchesToLoad(
   let actionStatus = pendingActionResult
     ? pendingActionResult[1].statusCode
     : undefined;
-  let shouldSkipRevalidation =
-    skipActionErrorRevalidation && actionStatus && actionStatus >= 400;
+  let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
     let { route } = match;
