@@ -1,5 +1,21 @@
 # `react-router-dom`
 
+## 6.26.0-pre.0
+
+### Minor Changes
+
+- Add a new `replace(url, init?)` alternative to `redirect(url, init?)` that performs a `history.replaceState` instead of a `history.pushState` on client-side navigation redirects ([#11811](https://github.com/remix-run/react-router/pull/11811))
+
+### Patch Changes
+
+- Fix initial hydration behavior when using `future.v7_partialHydration` along with `unstable_patchRoutesOnMiss` ([#11838](https://github.com/remix-run/react-router/pull/11838))
+
+  - During initial hydration, `router.state.matches` will now include any partial matches so that we can render ancestor `HydrateFallback` components
+
+- Updated dependencies:
+  - `@remix-run/router@1.19.0-pre.0`
+  - `react-router@6.26.0-pre.0`
+
 ## 6.25.1
 
 ### Patch Changes
