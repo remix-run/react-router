@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - "pnpm-lock.yaml"
+      - "integration/**"
       - "packages/react-router-dev/**"
       - "!**/*.md"
 
