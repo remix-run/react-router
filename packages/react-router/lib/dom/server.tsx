@@ -26,10 +26,14 @@ import {
   convertRoutesToDataRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
-import { FetchersContext, ViewTransitionContext } from "./lib";
 import { Router, mapRouteProperties } from "../components";
 import type { DataRouteObject, RouteObject } from "../context";
-import { DataRouterContext, DataRouterStateContext } from "../context";
+import {
+  DataRouterContext,
+  DataRouterStateContext,
+  FetchersContext,
+  ViewTransitionContext,
+} from "../context";
 import { useRoutesImpl } from "../hooks";
 
 export interface StaticRouterProps {

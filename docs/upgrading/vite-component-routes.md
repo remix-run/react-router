@@ -130,7 +130,7 @@ You would rename it to `entry.client.tsx` and have it look like this:
 import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { HydratedRouter } from "react-router";
+import { HydratedRouter } from "react-router/dom";
 
 ReactDOM.hydrateRoot(
   document,

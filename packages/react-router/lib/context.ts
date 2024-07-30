@@ -91,6 +91,31 @@ export const DataRouterStateContext = React.createContext<
 >(null);
 DataRouterStateContext.displayName = "DataRouterState";
 
+export type ViewTransitionContextObject =
+  | {
+      isTransitioning: false;
+    }
+  | {
+      isTransitioning: true;
+      flushSync: boolean;
+      currentLocation: Location;
+      nextLocation: Location;
+    };
+
+export const ViewTransitionContext =
+  React.createContext<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
+ViewTransitionContext.displayName = "ViewTransition";
+
+// TODO: (v7) Change the useFetcher data from `any` to `unknown`
+export type FetchersContextObject = Map<string, any>;
+
+export const FetchersContext = React.createContext<FetchersContextObject>(
+  new Map()
+);
+FetchersContext.displayName = "Fetchers";
+
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 AwaitContext.displayName = "Await";
 

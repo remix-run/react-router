@@ -88,6 +88,7 @@ export type {
   PathRouteProps,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
   PatchRoutesOnMissFunction as unstable_PatchRoutesOnMissFunction,
 } from "./lib/components";
@@ -99,6 +100,7 @@ export {
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
   createMemoryRouter,
   createRoutesFromChildren,
@@ -144,7 +146,6 @@ export type {
   SubmitFunction,
   FetcherSubmitFunction,
   FetcherWithComponents,
-  RouterProviderProps,
 } from "./lib/dom/lib";
 export {
   createBrowserRouter,
@@ -155,7 +156,6 @@ export {
   HistoryRouter as unstable_HistoryRouter,
   NavLink,
   Form,
-  RouterProvider,
   ScrollRestoration,
   useLinkClickHandler,
   useSearchParams,
@@ -185,7 +185,6 @@ export {
   StaticRouter,
   StaticRouterProvider,
 } from "./lib/dom/server";
-export { HydratedRouter } from "./lib/dom/ssr/browser";
 export {
   Meta,
   Links,
@@ -338,7 +337,61 @@ export type {
 ///////////////////////////////////////////////////////////////////////////////
 
 /** @internal */
+export {
+  createBrowserHistory as UNSAFE_createBrowserHistory,
+  invariant as UNSAFE_invariant,
+} from "./lib/router/history";
+
+/** @internal */
+export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
+
+/** @internal */
 export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+
+/** @internal */
+export {
+  DataRouterContext as UNSAFE_DataRouterContext,
+  DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  FetchersContext as UNSAFE_FetchersContext,
+  LocationContext as UNSAFE_LocationContext,
+  NavigationContext as UNSAFE_NavigationContext,
+  RouteContext as UNSAFE_RouteContext,
+  ViewTransitionContext as UNSAFE_ViewTransitionContext,
+} from "./lib/context";
+
+/** @internal */
+export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/components";
+
+/** @internal */
+export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
+
+/** @internal */
+export type { AssetsManifest as UNSAFE_AssetsManifest } from "./lib/dom/ssr/entry";
+
+/** @internal */
+export { deserializeErrors as UNSAFE_deserializeErrors } from "./lib/dom/ssr/errors";
+
+/** @internal */
+export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/errorBoundaries";
+
+/** @internal */
+export {
+  initFogOfWar as UNSAFE_initFogOfWar,
+  useFogOFWarDiscovery as UNSAFE_useFogOFWarDiscovery,
+} from "./lib/dom/ssr/fog-of-war";
+
+/** @internal */
+export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
+
+/** @internal */
+export {
+  createClientRoutes as UNSAFE_createClientRoutes,
+  createClientRoutesWithHMRRevalidationOptOut as UNSAFE_createClientRoutesWithHMRRevalidationOptOut,
+  shouldHydrateRouteLoader as UNSAFE_shouldHydrateRouteLoader,
+} from "./lib/dom/ssr/routes";
+
+/** @internal */
+export { getSingleFetchDataStrategy as UNSAFE_getSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
 export {
@@ -347,23 +400,7 @@ export {
 } from "./lib/dom/ssr/single-fetch";
 
 /** @internal */
-export {
-  DataRouterContext as UNSAFE_DataRouterContext,
-  DataRouterStateContext as UNSAFE_DataRouterStateContext,
-  LocationContext as UNSAFE_LocationContext,
-  NavigationContext as UNSAFE_NavigationContext,
-  RouteContext as UNSAFE_RouteContext,
-} from "./lib/context";
-
-/** @internal */
-export {
-  ViewTransitionContext as UNSAFE_ViewTransitionContext,
-  FetchersContext as UNSAFE_FetchersContext,
-  useScrollRestoration as UNSAFE_useScrollRestoration,
-} from "./lib/dom/lib";
-
-/** @internal */
-export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
-
-/** @internal */
 export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
+
+/** @internal */
+export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";
