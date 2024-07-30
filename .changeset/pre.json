@@ -8,5 +8,10 @@
     "react-router-native": "6.25.1",
     "@remix-run/router": "1.18.0"
   },
-  "changesets": []
+  "changesets": [
+    "fifty-rockets-hide",
+    "five-bottles-press",
+    "hip-poets-provide",
+    "sour-dryers-walk"
+  ]
 }
