@@ -133,13 +133,11 @@ const files: Files = async ({ port }) => ({
 });
 
 test("vite dev", async ({ page, dev }) => {
-  test.slow();
   let { port } = await dev(files, "vite-cloudflare-template");
   await workflow({ page, port });
 });
 
 test("wrangler pages dev", async ({ page, wranglerPagesDev }) => {
-  test.slow();
   let { port } = await wranglerPagesDev(files);
   await workflow({ page, port });
 });
