@@ -100,7 +100,7 @@ test.describe("Fog of War", () => {
       files: {
         ...getFiles(),
         "app/entry.client.tsx": js`
-          import { HydratedRouter } from "react-router";
+          import { HydratedRouter } from "react-router/dom";
           import { startTransition, StrictMode } from "react";
           import { hydrateRoot } from "react-dom/client";
           startTransition(() => {
