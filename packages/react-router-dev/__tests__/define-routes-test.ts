@@ -2,7 +2,7 @@ import { defineRoutes, defineRouteHelpers } from "../config/routes";
 
 describe("defineRoutes", () => {
   it("returns an array of routes", () => {
-    let routes = defineRoutes([
+    let { routes } = defineRoutes([
       { path: "/", file: "routes/home.js" },
       {
         path: "inbox",
@@ -62,7 +62,7 @@ describe("defineRoutes", () => {
   });
 
   it("returns an array of routes using helpers", () => {
-    let routes = defineRoutes(({ route, index, layout }) => [
+    let { routes } = defineRoutes(({ route, index, layout }) => [
       route("/", "routes/home.js"),
       layout("routes/authenticated.js", [
         route("inbox", "routes/inbox.js", [
@@ -147,7 +147,7 @@ describe("defineRoutes", () => {
   });
 
   it("allows multiple routes with the same route module", () => {
-    let routes = defineRoutes(({ route }) => [
+    let { routes } = defineRoutes(({ route }) => [
       route("/user/:id", "routes/_index.tsx", { id: "user-by-id" }),
       route("/user", "routes/_index.tsx", { id: "user" }),
       route("/other", "routes/other-route.tsx"),

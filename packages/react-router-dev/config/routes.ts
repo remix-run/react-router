@@ -1,11 +1,6 @@
 import * as path from "node:path";
 import pick from "lodash/pick";
 
-export type RouteConfig =
-  | RouteManifest
-  | RouteManifestFunction
-  | Array<RouteManifest | RouteManifestFunction>;
-
 export interface RouteManifestEntry {
   /**
    * The path this route uses to match on the URL pathname.
@@ -45,9 +40,13 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type RouteManifestFunction = (args: {
+export type RouteConfigOptions = { routes: RouteManifest };
+type DynamicRouteConfigOptions = (args: {
   appDirectory: string;
-}) => RouteManifest | Promise<RouteManifest>;
+}) => RouteConfigOptions | Promise<RouteConfigOptions>;
+
+export type RouteConfigEntry = RouteConfigOptions | DynamicRouteConfigOptions;
+export type RouteConfig = RouteConfigEntry | RouteConfigEntry[];
 
 /**
  * A route exported from the routes config file
@@ -195,10 +194,12 @@ type ConfigRoutesFunction = (r: typeof defineRouteHelpers) => ConfigRoute[];
 
 export function defineRoutes(
   routes: ConfigRoute[] | ConfigRoutesFunction
-): RouteManifest {
-  return configRoutesToRouteManifest(
-    typeof routes === "function" ? routes(defineRouteHelpers) : routes
-  );
+): RouteConfigOptions {
+  return {
+    routes: configRoutesToRouteManifest(
+      typeof routes === "function" ? routes(defineRouteHelpers) : routes
+    ),
+  };
 }
 
 function configRoutesToRouteManifest(

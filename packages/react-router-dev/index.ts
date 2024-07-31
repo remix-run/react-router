@@ -10,7 +10,6 @@ export type {
 export type {
   RouteConfig,
   RouteManifest,
-  RouteManifestFunction,
   RouteManifestEntry,
 } from "./config/routes";
 export { defineRoutes } from "./config/routes";
