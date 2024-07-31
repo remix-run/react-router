@@ -1,5 +1,11 @@
 # `@remix-run/router`
 
+## 1.19.0-pre.1
+
+### Patch Changes
+
+- [REMOVE] Export DataWithResponseInit for Remix usage ([#11859](https://github.com/remix-run/react-router/pull/11859))
+
 ## 1.19.0-pre.0
 
 ### Minor Changes
