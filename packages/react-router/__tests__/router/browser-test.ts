@@ -2,8 +2,10 @@
 
 import { JSDOM } from "jsdom";
 
-import type { BrowserHistory } from "../../lib/router";
-import { createBrowserHistory } from "../../lib/router";
+import {
+  type BrowserHistory,
+  createBrowserHistory,
+} from "../../lib/router/history";
 
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";
 import Listen from "./TestSequences/Listen";

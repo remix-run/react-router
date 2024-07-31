@@ -1,20 +1,16 @@
 import * as React from "react";
-import type {
-  unstable_DataStrategyFunction as DataStrategyFunction,
-  unstable_HandlerResult as HandlerResult,
-} from "../../router";
-import {
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-  redirect,
-} from "../../router";
 import { decode } from "turbo-stream";
-
+import type {
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  HandlerResult,
+} from "../../router/utils";
+import { ErrorResponseImpl, redirect } from "../../router/utils";
 import { createRequestInit } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
-import type { DataStrategyFunctionArgs } from "../../router/utils";
 import type { DataRouteObject } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");

@@ -332,7 +332,6 @@ export async function resolveReactRouterConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
-    future: userFuture,
     prerender: prerenderConfig,
     serverBuildFile,
     serverBundles,

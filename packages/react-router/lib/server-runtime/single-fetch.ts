@@ -1,13 +1,11 @@
 import { encode } from "turbo-stream";
 
-import {
-  type StaticHandler,
-  type unstable_DataStrategyFunctionArgs as DataStrategyFunctionArgs,
-  type unstable_DataStrategyFunction as DataStrategyFunction,
-  type StaticHandlerContext,
-  isRouteErrorResponse,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "../router";
+import type { StaticHandler, StaticHandlerContext } from "../router/router";
+import type {
+  DataStrategyFunctionArgs,
+  DataStrategyFunction,
+} from "../router/utils";
+import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
 import {
   type SingleFetchRedirectResult,
   type SingleFetchResult,

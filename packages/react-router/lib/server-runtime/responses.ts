@@ -2,7 +2,7 @@ import {
   json as routerJson,
   redirect as routerRedirect,
   redirectDocument as routerRedirectDocument,
-} from "../router";
+} from "../router/utils";
 
 export type JsonFunction = <Data>(
   data: Data,

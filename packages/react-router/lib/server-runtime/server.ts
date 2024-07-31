@@ -1,17 +1,19 @@
-import type { ErrorResponse, StaticHandler } from "../router";
+import type { StaticHandler } from "../router/router";
+import type { ErrorResponse } from "../router/utils";
+import {
+  isRouteErrorResponse,
+  json as routerJson,
+  ErrorResponseImpl,
+} from "../router/utils";
 import {
   getStaticContextFromError,
-  isRouteErrorResponse,
   createStaticHandler,
-  json as routerJson,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "../router";
+} from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { EntryContext } from "../dom/ssr/entry";
 import { createEntryRouteModules } from "./entry";
 import { sanitizeErrors, serializeError, serializeErrors } from "./errors";
-import invariant from "./invariant";
 import { ServerMode, isServerMode } from "./mode";
 import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";

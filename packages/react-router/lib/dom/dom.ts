@@ -1,9 +1,7 @@
-import type {
-  FormEncType,
-  HTMLFormMethod,
-  RelativeRoutingType,
-} from "../router";
-import { stripBasename, UNSAFE_warning as warning } from "../router";
+import { warning } from "../router/history";
+import type { RelativeRoutingType } from "../router/router";
+import type { FormEncType, HTMLFormMethod } from "../router/utils";
+import { stripBasename } from "../router/utils";
 
 export const defaultMethod: HTMLFormMethod = "get";
 const defaultEncType: FormEncType = "application/x-www-form-urlencoded";

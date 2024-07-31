@@ -1,8 +1,8 @@
 import type {
-  unstable_DataStrategyFunction as DataStrategyFunction,
-  unstable_DataStrategyMatch as DataStrategyMatch,
-} from "../../lib/router";
-import { json } from "../../lib/router";
+  DataStrategyFunction,
+  DataStrategyMatch,
+} from "../../lib/router/utils";
+import { json } from "../../lib/router/utils";
 import { createDeferred, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
 

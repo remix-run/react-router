@@ -1,4 +1,5 @@
-import { type StaticHandlerContext, isRouteErrorResponse } from "../router";
+import type { StaticHandlerContext } from "../router/router";
+import { isRouteErrorResponse } from "../router/utils";
 
 import { ServerMode } from "./mode";
 

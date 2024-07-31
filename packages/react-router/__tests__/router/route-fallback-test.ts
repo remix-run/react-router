@@ -1,9 +1,7 @@
-import type { LoaderFunction, Router } from "../../lib/router";
-import {
-  IDLE_NAVIGATION,
-  createMemoryHistory,
-  createRouter,
-} from "../../lib/router";
+import type { LoaderFunction } from "../../lib/router/utils";
+import type { Router } from "../../lib/router/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
 
 import { urlMatch } from "./utils/custom-matchers";
 import { createDeferred } from "./utils/data-router-setup";

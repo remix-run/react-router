@@ -322,7 +322,7 @@ test.describe("SPA Mode", () => {
             </html>
           `,
           "app/entry.client.tsx": js`
-            import { HydratedRouter } from "react-router";
+            import { HydratedRouter } from "react-router/dom";
             import { startTransition, StrictMode } from "react";
             import { hydrateRoot } from "react-dom/client";
 

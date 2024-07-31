@@ -1,12 +1,12 @@
+import type { Location } from "../router/history";
 import type {
   ActionFunction as RRActionFunction,
   ActionFunctionArgs as RRActionFunctionArgs,
   AgnosticRouteMatch,
   LoaderFunction as RRLoaderFunction,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
-  Location,
   Params,
-} from "../router";
+} from "../router/utils";
 import type { AppData, AppLoadContext } from "./data";
 import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "../dom/ssr/components";

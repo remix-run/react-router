@@ -19,10 +19,9 @@ import type {
   FutureConfig,
   FrameworkContextObject,
 } from "./entry";
-import { Outlet, createMemoryRouter } from "../../components";
+import { Outlet, RouterProvider, createMemoryRouter } from "../../components";
 import type { EntryRoute } from "./routes";
 import { FrameworkContext } from "./components";
-import { RouterProvider } from "../lib";
 
 interface StubIndexRouteObject
   extends Omit<

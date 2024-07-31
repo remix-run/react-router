@@ -287,8 +287,8 @@ test.describe("Vite base / React Router basename / express dev", async () => {
   });
 
   test("works when base and basename are different", async ({ page }) => {
-    await setup({ base: "/mybase/", basename: "/mybase/app/" });
-    await workflowDev({ page, cwd, port, basename: "/mybase/app/" });
+    await setup({ base: "/mybase/", basename: "/mybase/dashboard/" });
+    await workflowDev({ page, cwd, port, basename: "/mybase/dashboard/" });
   });
 
   test("works when basename does not start with base", async ({ page }) => {
@@ -361,9 +361,9 @@ async function workflowDev({
 
   let isAssetRequest = (url: string) =>
     /\.[jt]sx?/.test(url) ||
-    /@id\/__x00__virtual:/.test(url) ||
-    /@vite\/client/.test(url) ||
-    /node_modules\/vite\/dist\/client\/env/.test(url);
+    /\/@id\/__x00__virtual:/.test(url) ||
+    /\/@vite\/client/.test(url) ||
+    /\/@fs\//.test(url);
 
   // verify client asset requests are all under base
   expect(
@@ -413,8 +413,8 @@ test.describe("Vite base / React Router basename / vite build", () => {
   });
 
   test("works when base and basename are different", async ({ page }) => {
-    await setup({ base: "/mybase/", basename: "/mybase/app/" });
-    await workflowBuild({ page, port, basename: "/mybase/app/" });
+    await setup({ base: "/mybase/", basename: "/mybase/dashboard/" });
+    await workflowBuild({ page, port, basename: "/mybase/dashboard/" });
   });
 
   test("works when basename does not start with base", async ({ page }) => {

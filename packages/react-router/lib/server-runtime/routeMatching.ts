@@ -1,5 +1,5 @@
-import type { Params, AgnosticRouteObject } from "../router";
-import { matchRoutes } from "../router";
+import type { Params, AgnosticRouteObject } from "../router/utils";
+import { matchRoutes } from "../router/utils";
 import type { ServerRoute } from "./routes";
 
 export interface RouteMatch<Route> {

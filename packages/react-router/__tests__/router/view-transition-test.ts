@@ -1,4 +1,4 @@
-import { IDLE_NAVIGATION } from "../../lib/router";
+import { IDLE_NAVIGATION } from "../../lib/router/router";
 import { cleanup, setup } from "./utils/data-router-setup";
 
 describe("view transitions", () => {

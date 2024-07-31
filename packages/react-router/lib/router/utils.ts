@@ -1278,18 +1278,6 @@ export function resolveTo(
 /**
  * @private
  */
-export function getToPathname(to: To): string | undefined {
-  // Empty strings should be treated the same as / paths
-  return to === "" || (to as Path).pathname === ""
-    ? "/"
-    : typeof to === "string"
-    ? parsePath(to).pathname
-    : to.pathname;
-}
-
-/**
- * @private
- */
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
