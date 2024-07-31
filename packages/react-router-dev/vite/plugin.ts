@@ -574,6 +574,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     return new Set(filePaths);
   };
 
+  let hasDependency = (name: string) => {
+    try {
+      return Boolean(require.resolve(name, { paths: [ctx.rootDirectory] }));
+    } catch (err) {
+      return false;
+    }
+  };
+
   let getViteManifestAssetPaths = (
     viteManifest: Vite.Manifest
   ): Set<string> => {
@@ -826,8 +834,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               // Pre-bundle router dependencies to avoid router duplicates.
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
-              "react-router-dom",
-            ],
+              // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
+              hasDependency("react-router-dom") && "react-router-dom",
+            ].filter(Boolean),
           },
           esbuild: {
             jsx: "automatic",
