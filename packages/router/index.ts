@@ -33,6 +33,7 @@ export type {
   TrackedPromise,
   UIMatch,
   V7_FormMethod,
+  DataWithResponseInit as UNSAFE_DataWithResponseInit,
 } from "./utils";
 
 export {
