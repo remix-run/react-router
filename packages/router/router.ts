@@ -3194,13 +3194,16 @@ export function createRouter(init: RouterInit): Router {
         return { active: true, matches: fogMatches || [] };
       } else {
         let leafRoute = matches[matches.length - 1].route;
-        if (
+        let matchedSplat =
           leafRoute.path &&
-          (leafRoute.path === "*" || leafRoute.path.endsWith("/*"))
-        ) {
-          // If we matched a splat, it might only be because we haven't yet fetched
-          // the children that would match with a higher score, so let's fetch
-          // around and find out
+          (leafRoute.path === "*" || leafRoute.path.endsWith("/*"));
+        let matchedDynamic = matches.some(
+          (m) => m.route.path && m.route.path.startsWith(":")
+        );
+        if (matchedDynamic || matchedSplat) {
+          // If we matched a slug or splat, it might only be because we haven't
+          // yet discovered other routes that would match with a higher score,
+          // so let's fetch around and find out
           let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
             routesToUse,
             pathname,
