@@ -26,6 +26,7 @@ export type {
   DataStrategyFunction as unstable_DataStrategyFunction,
   DataStrategyFunctionArgs as unstable_DataStrategyFunctionArgs,
   DataStrategyMatch as unstable_DataStrategyMatch,
+  DataWithResponseInit as UNSAFE_DataWithResponseInit,
   ErrorResponse,
   FormEncType,
   FormMethod,
