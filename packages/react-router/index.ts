@@ -57,6 +57,7 @@ export {
   IDLE_BLOCKER,
 } from "./lib/router/router";
 export {
+  data as unstable_data,
   generatePath,
   isRouteErrorResponse,
   json,
