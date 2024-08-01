@@ -100,21 +100,21 @@ test.describe("redirects", () => {
         `,
 
         "app/routes/replace.a.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router";
           export default function () {
             return <><h1 id="a">A</h1><Link to="/replace/b">Go to B</Link></>;
           }
         `,
 
         "app/routes/replace.b.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router";
           export default function () {
             return <><h1 id="b">B</h1><Link to="/replace/c">Go to C</Link></>
           }
         `,
 
         "app/routes/replace.c.tsx": js`
-          import { replace } from "@remix-run/node";
+          import { replace } from "react-router";
           export const loader = () => replace("/replace/d");
           export default function () {
             return <h1 id="c">C</h1>
