@@ -12,7 +12,7 @@ import type { UIMatch } from "./utils";
 type MaybePromise<T> = T | Promise<T>;
 type Pretty<T> = { [K in keyof T]: T[K] } & {};
 
-type Serializable =
+export type Serializable =
   | undefined
   | null
   | boolean
@@ -34,17 +34,11 @@ type Data = MaybePromise<
   Exclude<Serializable, undefined | Promise<Serializable>>
 >;
 
-export type ResponseStub = {
-  status: number | undefined;
-  headers: Headers;
-};
-
 // loader
 type LoaderArgs<Param extends string> = {
   context: AppLoadContext;
   request: Request;
   params: Params<Param>;
-  response: ResponseStub;
 };
 
 // action
@@ -52,7 +46,6 @@ type ActionArgs<Param extends string> = {
   context: AppLoadContext;
   request: Request;
   params: Params<Param>;
-  response: ResponseStub;
 };
 
 // prettier-ignore

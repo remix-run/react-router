@@ -5,8 +5,13 @@ import type {
   DataStrategyFunctionArgs,
   HandlerResult,
 } from "../../router/utils";
-import { ErrorResponseImpl, redirect } from "../../router/utils";
-import { createRequestInit } from "./data";
+import {
+  ErrorResponseImpl,
+  isRouteErrorResponse,
+  redirect,
+  data,
+} from "../../router/utils";
+import { createRequestInit, isResponse } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";
@@ -20,6 +25,7 @@ export type SingleFetchRedirectResult = {
   status: number;
   revalidate: boolean;
   reload: boolean;
+  replace: boolean;
 };
 
 export type SingleFetchResult =
@@ -149,16 +155,18 @@ function singleFetchActionStrategy(
           actionStatus = status;
           return unwrapSingleFetchResult(data as SingleFetchResult, m.route.id);
         });
-        return {
-          type: "data",
-          result,
-          // status: actionStatus,
-        };
+        return { type: "data", result };
       });
+
+      if (isResponse(result.result) || isRouteErrorResponse(result.result)) {
+        return result;
+      }
+
+      // For non-responses, proxy along the statusCode via unstable_data()
+      // (most notably for skipping action error revalidation)
       return {
-        ...result,
-        // Proxy along the action HTTP response status for thrown errors
-        status: actionStatus,
+        type: result.type,
+        result: data(result.result, actionStatus),
       };
     })
   );
@@ -297,7 +305,13 @@ export function singleFetchUrl(reqUrl: URL | string) {
             : window.location.origin
         )
       : reqUrl;
-  url.pathname = `${url.pathname === "/" ? "_root" : url.pathname}.data`;
+
+  if (url.pathname === "/") {
+    url.pathname = "_root.data";
+  } else {
+    url.pathname = `${url.pathname.replace(/\/$/, "")}.data`;
+  }
+
   return url;
 }
 
@@ -389,6 +403,9 @@ function unwrapSingleFetchResult(result: SingleFetchResult, routeId: string) {
     }
     if (result.reload) {
       headers["X-Remix-Reload-Document"] = "yes";
+    }
+    if (result.replace) {
+      headers["X-Remix-Replace"] = "yes";
     }
     return redirect(result.redirect, { status: result.status, headers });
   } else if ("data" in result) {

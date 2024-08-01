@@ -2,6 +2,7 @@ import {
   json as routerJson,
   redirect as routerRedirect,
   redirectDocument as routerRedirectDocument,
+  replace as routerReplace,
 } from "../router/utils";
 
 export type JsonFunction = <Data>(
@@ -49,6 +50,16 @@ export const redirect: RedirectFunction = (url, init = 302) => {
  */
 export const redirectDocument: RedirectFunction = (url, init = 302) => {
   return routerRedirectDocument(url, init) as TypedResponse<never>;
+};
+
+/**
+ * A redirect response. Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ *
+ * @see https://remix.run/utils/redirect
+ */
+export const replace: RedirectFunction = (url, init = 302) => {
+  return routerReplace(url, init) as TypedResponse<never>;
 };
 
 export function isResponse(value: any): value is Response {
