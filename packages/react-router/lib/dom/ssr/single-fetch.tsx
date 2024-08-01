@@ -152,7 +152,7 @@ function singleFetchActionStrategy(
         return {
           type: "data",
           result,
-          status: actionStatus,
+          // status: actionStatus,
         };
       });
       return {
