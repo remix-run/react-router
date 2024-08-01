@@ -1,12 +1,6 @@
 # `@remix-run/router`
 
-## 1.19.0-pre.1
-
-### Patch Changes
-
-- [REMOVE] Export DataWithResponseInit for Remix usage ([#11859](https://github.com/remix-run/react-router/pull/11859))
-
-## 1.19.0-pre.0
+## 1.19.0
 
 ### Minor Changes
 
@@ -33,6 +27,8 @@
 - Fix initial hydration behavior when using `future.v7_partialHydration` along with `unstable_patchRoutesOnMiss` ([#11838](https://github.com/remix-run/react-router/pull/11838))
 
   - During initial hydration, `router.state.matches` will now include any partial matches so that we can render ancestor `HydrateFallback` components
+
+- \[REMOVE] Export DataWithResponseInit for Remix usage ([#11859](https://github.com/remix-run/react-router/pull/11859))
 
 ## 1.18.0
 

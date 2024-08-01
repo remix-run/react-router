@@ -1,14 +1,6 @@
 # `react-router-dom`
 
-## 6.26.0-pre.1
-
-### Patch Changes
-
-- Updated dependencies:
-  - `@remix-run/router@1.19.0-pre.1`
-  - `react-router@6.26.0-pre.1`
-
-## 6.26.0-pre.0
+## 6.26.0
 
 ### Minor Changes
 
@@ -21,8 +13,8 @@
   - During initial hydration, `router.state.matches` will now include any partial matches so that we can render ancestor `HydrateFallback` components
 
 - Updated dependencies:
-  - `@remix-run/router@1.19.0-pre.0`
-  - `react-router@6.26.0-pre.0`
+  - `@remix-run/router@1.19.0`
+  - `react-router@6.26.0`
 
 ## 6.25.1
 
