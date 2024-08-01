@@ -473,6 +473,7 @@ export function getSingleFetchRedirect(
       // TODO(v3): Consider removing or making this official public API
       headers.has("X-Remix-Revalidate") || headers.has("Set-Cookie"),
     reload: headers.has("X-Remix-Reload-Document"),
+    replace: headers.has("X-Remix-Replace"),
   };
 }
 
