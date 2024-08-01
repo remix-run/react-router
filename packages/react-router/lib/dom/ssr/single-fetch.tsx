@@ -298,7 +298,13 @@ export function singleFetchUrl(reqUrl: URL | string) {
             : window.location.origin
         )
       : reqUrl;
-  url.pathname = `${url.pathname === "/" ? "_root" : url.pathname}.data`;
+
+  if (url.pathname === "/") {
+    url.pathname = "_root.data";
+  } else {
+    url.pathname = `${url.pathname.replace(/\/$/, "")}.data`;
+  }
+
   return url;
 }
 
