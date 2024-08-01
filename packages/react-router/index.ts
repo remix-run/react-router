@@ -64,6 +64,7 @@ export {
   matchRoutes,
   redirect,
   redirectDocument,
+  replace,
   resolvePath,
 } from "./lib/router/utils";
 
