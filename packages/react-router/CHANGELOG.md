@@ -1,5 +1,18 @@
 # `react-router`
 
+## 6.26.0
+
+### Minor Changes
+
+- Add a new `replace(url, init?)` alternative to `redirect(url, init?)` that performs a `history.replaceState` instead of a `history.pushState` on client-side navigation redirects ([#11811](https://github.com/remix-run/react-router/pull/11811))
+
+### Patch Changes
+
+- Fix initial hydration behavior when using `future.v7_partialHydration` along with `unstable_patchRoutesOnMiss` ([#11838](https://github.com/remix-run/react-router/pull/11838))
+  - During initial hydration, `router.state.matches` will now include any partial matches so that we can render ancestor `HydrateFallback` components
+- Updated dependencies:
+  - `@remix-run/router@1.19.0`
+
 ## 6.25.1
 
 No significant changes to this package were made in this release. [See the repo `CHANGELOG.md`](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md) for an overview of all changes in v6.25.1.
@@ -9,7 +22,6 @@ No significant changes to this package were made in this release. [See the repo 
 ### Minor Changes
 
 - Stabilize `future.unstable_skipActionErrorRevalidation` as `future.v7_skipActionErrorRevalidation` ([#11769](https://github.com/remix-run/react-router/pull/11769))
-
   - When this flag is enabled, actions will not automatically trigger a revalidation if they return/throw a `Response` with a `4xx`/`5xx` status code
   - You may still opt-into revalidation via `shouldRevalidate`
   - This also changes `shouldRevalidate`'s `unstable_actionStatus` parameter to `actionStatus`
@@ -33,7 +45,6 @@ No significant changes to this package were made in this release. [See the repo 
 ### Minor Changes
 
 - Add support for Lazy Route Discovery (a.k.a. Fog of War) ([#11626](https://github.com/remix-run/react-router/pull/11626))
-
   - RFC: <https://github.com/remix-run/react-router/discussions/11113>
   - `unstable_patchRoutesOnMiss` docs: <https://reactrouter.com/en/main/routers/create-browser-router>
 

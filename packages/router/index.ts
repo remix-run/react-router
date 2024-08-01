@@ -33,10 +33,12 @@ export type {
   TrackedPromise,
   UIMatch,
   V7_FormMethod,
+  DataWithResponseInit as UNSAFE_DataWithResponseInit,
 } from "./utils";
 
 export {
   AbortedDeferredError,
+  data as unstable_data,
   defer,
   generatePath,
   getToPathname,
@@ -48,6 +50,7 @@ export {
   normalizePathname,
   redirect,
   redirectDocument,
+  replace,
   resolvePath,
   resolveTo,
   stripBasename,

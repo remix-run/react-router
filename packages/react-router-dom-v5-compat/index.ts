@@ -154,6 +154,7 @@ export {
   parsePath,
   redirect,
   redirectDocument,
+  replace,
   renderMatches,
   resolvePath,
   unstable_HistoryRouter,

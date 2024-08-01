@@ -68,8 +68,7 @@ export type DataResult =
  */
 export interface HandlerResult {
   type: "data" | "error";
-  result: unknown; // data, Error, Response, DeferredData
-  status?: number;
+  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -1375,6 +1374,28 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
+export class DataWithResponseInit<D> {
+  type: string = "DataWithResponseInit";
+  data: D;
+  init: ResponseInit | null;
+
+  constructor(data: D, init?: ResponseInit) {
+    this.data = data;
+    this.init = init || null;
+  }
+}
+
+/**
+ * Create "responses" that contain `status`/`headers` without forcing
+ * serialization into an actual `Response` - used by Remix single fetch
+ */
+export function data<D>(data: D, init?: number | ResponseInit) {
+  return new DataWithResponseInit(
+    data,
+    typeof init === "number" ? { status: init } : init
+  );
+}
+
 export interface TrackedPromise extends Promise<any> {
   _tracked?: boolean;
   _data?: any;
@@ -1616,6 +1637,18 @@ export const redirect: RedirectFunction = (url, init = 302) => {
 export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
   response.headers.set("X-Remix-Reload-Document", "true");
+  return response;
+};
+
+/**
+ * A redirect response that will perform a `history.replaceState` instead of a
+ * `history.pushState` for client-side navigation redirects.
+ * Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ */
+export const replace: RedirectFunction = (url, init) => {
+  let response = redirect(url, init);
+  response.headers.set("X-Remix-Replace", "true");
   return response;
 };
 
