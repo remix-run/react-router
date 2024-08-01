@@ -631,9 +631,11 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     router.initialize();
 
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
 
     loaderDfd.resolve("PARENT");
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
 
     childrenDfd.resolve([
       {
@@ -643,10 +645,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       },
     ]);
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
 
     childLoaderDfd.resolve("CHILD");
     await tick();
-
     expect(router.state.initialized).toBe(true);
     expect(router.state.location.pathname).toBe("/parent/child");
     expect(router.state.loaderData).toEqual({
@@ -1626,7 +1628,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         initialized: false,
         errors: null,
       });
-      expect(router.state.matches.length).toBe(0);
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
 
       await tick();
       expect(router.state).toMatchObject({
