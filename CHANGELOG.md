@@ -205,7 +205,7 @@ Date: YYYY-MM-DD
 
 ## v6.26.0
 
-Date: 2024-07-31
+Date: 2024-08-01
 
 ### Minor Changes
 
