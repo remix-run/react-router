@@ -5,8 +5,13 @@ import type {
   DataStrategyFunctionArgs,
   HandlerResult,
 } from "../../router/utils";
-import { ErrorResponseImpl, redirect } from "../../router/utils";
-import { createRequestInit } from "./data";
+import {
+  ErrorResponseImpl,
+  isRouteErrorResponse,
+  redirect,
+  data,
+} from "../../router/utils";
+import { createRequestInit, isResponse } from "./data";
 import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";
@@ -150,16 +155,18 @@ function singleFetchActionStrategy(
           actionStatus = status;
           return unwrapSingleFetchResult(data as SingleFetchResult, m.route.id);
         });
-        return {
-          type: "data",
-          result,
-          // status: actionStatus,
-        };
+        return { type: "data", result };
       });
+
+      if (isResponse(result.result) || isRouteErrorResponse(result.result)) {
+        return result;
+      }
+
+      // For non-responses, proxy along the statusCode via unstable_data()
+      // (most notably for skipping action error revalidation)
       return {
-        ...result,
-        // Proxy along the action HTTP response status for thrown errors
-        status: actionStatus,
+        type: result.type,
+        result: data(result.result, actionStatus),
       };
     })
   );

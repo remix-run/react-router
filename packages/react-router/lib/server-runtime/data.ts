@@ -4,7 +4,6 @@ import type {
   LoaderFunction,
   LoaderFunctionArgs,
 } from "./routeModules";
-import type { ResponseStub } from "./single-fetch";
 
 /**
  * An object of unknown type for route loaders and actions provided by the
@@ -27,20 +26,17 @@ export async function callRouteAction({
   params,
   request,
   routeId,
-  response,
 }: {
   request: Request;
   action: ActionFunction;
   params: ActionFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
-  response: ResponseStub;
 }) {
   let result = await action({
     request: stripDataParam(stripIndexParam(request)),
     context: loadContext,
     params,
-    response,
   });
 
   if (result === undefined) {
@@ -59,20 +55,17 @@ export async function callRouteLoader({
   params,
   request,
   routeId,
-  response,
 }: {
   request: Request;
   loader: LoaderFunction;
   params: LoaderFunctionArgs["params"];
   loadContext: AppLoadContext;
   routeId: string;
-  response: ResponseStub;
 }) {
   let result = await loader({
     request: stripDataParam(stripIndexParam(request)),
     context: loadContext,
     params,
-    response,
   });
 
   if (result === undefined) {

@@ -1,11 +1,15 @@
 import { encode } from "turbo-stream";
 
-import type { StaticHandler, StaticHandlerContext } from "../router/router";
+import type { StaticHandler } from "../router/router";
 import type {
   DataStrategyFunctionArgs,
   DataStrategyFunction,
 } from "../router/utils";
-import { isRouteErrorResponse, ErrorResponseImpl } from "../router/utils";
+import {
+  isRouteErrorResponse,
+  ErrorResponseImpl,
+  data as routerData,
+} from "../router/utils";
 import {
   type SingleFetchRedirectResult,
   type SingleFetchResult,
@@ -16,34 +20,12 @@ import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
 import { isRedirectStatusCode, isResponse } from "./responses";
-
-const ResponseStubActionSymbol = Symbol("ResponseStubAction");
+import { getDocumentHeaders } from "./headers";
+import type { ServerBuild } from "./build";
+import type { Serializable } from "../router/define-route";
 
 export type { SingleFetchResult, SingleFetchResults };
 export { SingleFetchRedirectSymbol };
-
-export type DataStrategyCtx = {
-  response: ResponseStub;
-};
-
-export const ResponseStubOperationsSymbol = Symbol("ResponseStubOperations");
-export type ResponseStubOperation = [
-  "set" | "append" | "delete",
-  string,
-  string?
-];
-/**
- * A stubbed response to let you set the status/headers of your response from
- * loader/action functions
- */
-export type ResponseStub = {
-  status: number | undefined;
-  headers: Headers;
-};
-
-export type ResponseStubImpl = ResponseStub & {
-  [ResponseStubOperationsSymbol]: ResponseStubOperation[];
-};
 
 // We can't use a 3xx status or else the `fetch()` would follow the redirect.
 // We need to communicate the redirect back as data so we can act on it in the
@@ -52,13 +34,13 @@ export type ResponseStubImpl = ResponseStub & {
 // the user control cache behavior via Cache-Control
 export const SINGLE_FETCH_REDIRECT_STATUS = 202;
 
-export function getSingleFetchDataStrategy(
-  responseStubs: ReturnType<typeof getResponseStubs>,
-  {
-    isActionDataRequest,
-    loadRouteIds,
-  }: { isActionDataRequest?: boolean; loadRouteIds?: string[] } = {}
-): DataStrategyFunction {
+export function getSingleFetchDataStrategy({
+  isActionDataRequest,
+  loadRouteIds,
+}: {
+  isActionDataRequest?: boolean;
+  loadRouteIds?: string[];
+} = {}): DataStrategyFunction {
   return async ({ request, matches }: DataStrategyFunctionArgs) => {
     // Don't call loaders on action data requests
     if (isActionDataRequest && request.method === "GET") {
@@ -71,57 +53,12 @@ export function getSingleFetchDataStrategy(
 
     let results = await Promise.all(
       matches.map(async (match) => {
-        let responseStub: ResponseStubImpl | undefined;
-        if (request.method !== "GET") {
-          responseStub = responseStubs[ResponseStubActionSymbol];
-        } else {
-          responseStub = responseStubs[match.route.id];
-        }
-
         let result = await match.resolve(async (handler) => {
-          // Cast `ResponseStubImpl -> ResponseStub` to hide the symbol in userland
-          let ctx: DataStrategyCtx = { response: responseStub as ResponseStub };
           // Only run opt-in loaders when fine-grained revalidation is enabled
           let data =
             loadRouteIds && !loadRouteIds.includes(match.route.id)
               ? null
-              : await handler(ctx);
-          return { type: "data", result: data };
-        });
-
-        // Transfer raw Response status/headers to responseStubs
-        if (isResponse(result.result)) {
-          proxyResponseToResponseStub(
-            result.result.status,
-            result.result.headers,
-            responseStub
-          );
-        }
-
-        return result;
-      })
-    );
-    return results;
-  };
-}
-
-export function getSingleFetchResourceRouteDataStrategy({
-  responseStubs,
-}: {
-  responseStubs: ReturnType<typeof getResponseStubs>;
-}): DataStrategyFunction {
-  return async ({ matches }: DataStrategyFunctionArgs) => {
-    let results = await Promise.all(
-      matches.map(async (match) => {
-        let responseStub = match.shouldLoad
-          ? responseStubs[match.route.id]
-          : null;
-        let result = await match.resolve(async (handler) => {
-          // Cast `ResponseStubImpl -> ResponseStub` to hide the symbol in userland
-          let ctx: DataStrategyCtx = {
-            response: responseStub as ResponseStub,
-          };
-          let data = await handler(ctx);
+              : await handler();
           return { type: "data", result: data };
         });
         return result;
@@ -132,6 +69,7 @@ export function getSingleFetchResourceRouteDataStrategy({
 }
 
 export async function singleFetchAction(
+  build: ServerBuild,
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   request: Request,
@@ -148,11 +86,10 @@ export async function singleFetchAction(
       ...(request.body ? { duplex: "half" } : undefined),
     });
 
-    let responseStubs = getResponseStubs();
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs, {
+      unstable_dataStrategy: getSingleFetchDataStrategy({
         isActionDataRequest: true,
       }),
     });
@@ -168,15 +105,11 @@ export async function singleFetchAction(
     }
 
     let context = result;
+    let headers = getDocumentHeaders(build, context);
 
-    let singleFetchResult: SingleFetchResult;
-    let { statusCode, headers } = mergeResponseStubs(context, responseStubs, {
-      isActionDataRequest: true,
-    });
-
-    if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
+    if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
       return {
-        result: getSingleFetchRedirect(statusCode, headers),
+        result: getSingleFetchRedirect(context.statusCode, headers),
         headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
       };
@@ -186,20 +119,16 @@ export async function singleFetchAction(
     if (context.errors) {
       Object.values(context.errors).forEach((err) => {
         // @ts-expect-error This is "private" from users but intended for internal use
-        if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
+        if (!isRouteErrorResponse(err) || err.error) {
           handleError(err);
         }
       });
       context.errors = sanitizeErrors(context.errors, serverMode);
     }
 
+    let singleFetchResult: SingleFetchResult;
     if (context.errors) {
-      let error = Object.values(context.errors)[0];
-      singleFetchResult = {
-        error: isResponseStub(error)
-          ? convertResponseStubToErrorResponse(error)
-          : error,
-      };
+      singleFetchResult = { error: Object.values(context.errors)[0] };
     } else {
       singleFetchResult = { data: Object.values(context.actionData || {})[0] };
     }
@@ -207,7 +136,7 @@ export async function singleFetchAction(
     return {
       result: singleFetchResult,
       headers,
-      status: statusCode,
+      status: context.statusCode,
     };
   } catch (error) {
     handleError(error);
@@ -221,6 +150,7 @@ export async function singleFetchAction(
 }
 
 export async function singleFetchLoaders(
+  build: ServerBuild,
   serverMode: ServerMode,
   staticHandler: StaticHandler,
   request: Request,
@@ -236,11 +166,10 @@ export async function singleFetchLoaders(
     let loadRouteIds =
       new URL(request.url).searchParams.get("_routes")?.split(",") || undefined;
 
-    let responseStubs = getResponseStubs();
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs, {
+      unstable_dataStrategy: getSingleFetchDataStrategy({
         loadRouteIds,
       }),
     });
@@ -259,14 +188,13 @@ export async function singleFetchLoaders(
     }
 
     let context = result;
+    let headers = getDocumentHeaders(build, context);
 
-    let { statusCode, headers } = mergeResponseStubs(context, responseStubs);
-
-    if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
+    if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
       return {
         result: {
           [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
-            statusCode,
+            context.statusCode,
             headers
           ),
         },
@@ -279,7 +207,7 @@ export async function singleFetchLoaders(
     if (context.errors) {
       Object.values(context.errors).forEach((err) => {
         // @ts-expect-error This is "private" from users but intended for internal use
-        if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
+        if (!isRouteErrorResponse(err) || err.error) {
           handleError(err);
         }
       });
@@ -299,13 +227,7 @@ export async function singleFetchLoaders(
       let data = context.loaderData?.[m.route.id];
       let error = context.errors?.[m.route.id];
       if (error !== undefined) {
-        if (isResponseStub(error)) {
-          results[m.route.id] = {
-            error: convertResponseStubToErrorResponse(error),
-          };
-        } else {
-          results[m.route.id] = { error };
-        }
+        results[m.route.id] = { error };
       } else if (data !== undefined) {
         results[m.route.id] = { data };
       }
@@ -314,7 +236,7 @@ export async function singleFetchLoaders(
     return {
       result: results,
       headers,
-      status: statusCode,
+      status: context.statusCode,
     };
   } catch (error: unknown) {
     handleError(error);
@@ -325,135 +247,6 @@ export async function singleFetchLoaders(
       status: 500,
     };
   }
-}
-
-export function isResponseStub(value: any): value is ResponseStubImpl {
-  return (
-    value && typeof value === "object" && ResponseStubOperationsSymbol in value
-  );
-}
-
-function getResponseStub(status?: number) {
-  let headers = new Headers();
-  let operations: ResponseStubOperation[] = [];
-  let headersProxy = new Proxy(headers, {
-    get(target, prop, receiver) {
-      if (prop === "set" || prop === "append" || prop === "delete") {
-        return (name: string, value: string) => {
-          operations.push([prop, name, value]);
-          Reflect.apply(target[prop], target, [name, value]);
-        };
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-  });
-  return {
-    status,
-    headers: headersProxy,
-    [ResponseStubOperationsSymbol]: operations,
-  };
-}
-
-export function getResponseStubs() {
-  return new Proxy({} as Record<string | symbol, ResponseStubImpl>, {
-    get(responseStubCache, prop) {
-      let cached = responseStubCache[prop];
-      if (!cached) {
-        responseStubCache[prop] = cached = getResponseStub();
-      }
-      return cached;
-    },
-  });
-}
-
-export function proxyResponseStubHeadersToHeaders(
-  stub: ResponseStubImpl,
-  headers: Headers
-) {
-  for (let [op, ...args] of stub[ResponseStubOperationsSymbol]) {
-    // @ts-expect-error
-    headers[op](...args);
-  }
-
-  return headers;
-}
-
-function proxyResponseToResponseStub(
-  status: number | undefined,
-  headers: Headers,
-  responseStub: ResponseStubImpl
-) {
-  if (status != null && responseStub.status == null) {
-    responseStub.status = status;
-  }
-  for (let [k, v] of headers) {
-    if (k.toLowerCase() !== "set-cookie") {
-      responseStub.headers.set(k, v);
-    }
-  }
-
-  // Unsure why this is complaining?  It's fine in VSCode but fails with tsc...
-  // @ts-ignore - ignoring instead of expecting because otherwise build fails locally
-  for (let v of headers.getSetCookie()) {
-    responseStub.headers.append("Set-Cookie", v);
-  }
-}
-
-export function convertResponseStubToErrorResponse(stub: ResponseStub) {
-  return new ErrorResponseImpl(stub.status || 500, "", null);
-}
-
-export function mergeResponseStubs(
-  context: StaticHandlerContext,
-  responseStubs: ReturnType<typeof getResponseStubs>,
-  { isActionDataRequest }: { isActionDataRequest?: boolean } = {}
-) {
-  let statusCode: number | undefined = undefined;
-  let headers = new Headers();
-
-  // Action followed by top-down loaders
-  let actionStub = responseStubs[ResponseStubActionSymbol];
-  let stubs = [actionStub];
-
-  // Nothing to merge at the route level on action data requests
-  if (!isActionDataRequest) {
-    stubs.push(...context.matches.map((m) => responseStubs[m.route.id]));
-  }
-
-  for (let stub of stubs) {
-    // Take the highest error/redirect, or the lowest success value - preferring
-    // action 200's over loader 200s
-    if (
-      // first status found on the way down
-      (statusCode === undefined && stub.status) ||
-      // deeper 2xx status found while not overriding the action status
-      (statusCode !== undefined &&
-        statusCode < 300 &&
-        stub.status &&
-        statusCode !== actionStub?.status)
-    ) {
-      statusCode = stub.status;
-    }
-
-    // Replay headers operations in order
-    let ops = stub[ResponseStubOperationsSymbol];
-    for (let [op, ...args] of ops) {
-      // @ts-expect-error
-      headers[op](...args);
-    }
-  }
-
-  // If no response stubs set it, use whatever we got back from the router
-  // context which handles internal ErrorResponse cases like 404/405's where
-  // we may never run a loader/action
-  if (statusCode === undefined) {
-    statusCode = context.statusCode;
-  }
-  if (statusCode === undefined) {
-    statusCode = 200;
-  }
-
-  return { statusCode, headers };
 }
 
 export function getSingleFetchRedirect(
@@ -475,6 +268,10 @@ export function getSingleFetchRedirect(
     reload: headers.has("X-Remix-Reload-Document"),
     replace: headers.has("X-Remix-Replace"),
   };
+}
+
+export function data(value: Serializable, init?: number | ResponseInit) {
+  return routerData(value, init);
 }
 
 // Note: If you change this function please change the corresponding
