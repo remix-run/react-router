@@ -541,6 +541,9 @@ importers:
       react-router:
         specifier: workspace:*
         version: 'link:'
+      set-cookie-parser:
+        specifier: ^2.6.0
+        version: 2.6.0
       source-map:
         specifier: ^0.7.3
         version: 0.7.4
@@ -548,6 +551,9 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
     devDependencies:
+      '@types/set-cookie-parser':
+        specifier: ^2.4.1
+        version: 2.4.7
       react:
         specifier: ^18.2.0
         version: 18.2.0
