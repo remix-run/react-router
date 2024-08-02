@@ -192,11 +192,9 @@ And then create the catchall route module and render your existing root App comp
 import { defineRoute } from "react-router";
 import App from "./App";
 
-export default defineRoute({
-  Component() {
-    return <App />;
-  },
-});
+export default function Component() {
+  return <App />;
+}
 ```
 
 Your app should be back on the screen and working as usual!
@@ -237,23 +235,20 @@ export default defineRoutes([
 ]);
 ```
 
-And then edit the route module to use `defineRoute`:
+And then edit the route module to use the Route Module API:
 
 ```tsx filename=src/pages/about.tsx
-import { defineRoute } from "react-router";
+import { useLoaderData } from "react-router";
 
-export default defineRoute({
-  params: ["id"],
+export async function clientLoader({ params }) {
+  let page = await getPage(params.id);
+  return page;
+}
 
-  async clientLoader({ params }) {
-    let page = await getPage(params.id);
-    return page;
-  },
-
-  Component({ data }) {
-    return <h1>{data.title}</h1>;
-  },
-});
+export default function Component() {
+  let data = useLoaderData();
+  return <h1>{data.title}</h1>;
+}
 ```
 
 You'll now get inferred type safety with params, loader data, and more.

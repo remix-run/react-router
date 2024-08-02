@@ -42,7 +42,6 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "../config";
-import * as defineRoute from "./define-route";
 
 export async function resolveViteConfig({
   configFile,
@@ -307,33 +306,6 @@ const getRouteManifestModuleExports = async (
 };
 
 const getRouteModuleExports = async (
-  viteChildCompiler: Vite.ViteDevServer | null,
-  ctx: ReactRouterPluginContext,
-  routeFile: string,
-  readRouteFile?: () => string | Promise<string>
-): Promise<string[]> => {
-  let routePath = path.resolve(ctx.reactRouterConfig.appDirectory, routeFile);
-  let code = await (readRouteFile?.() ?? fse.readFile(routePath, "utf-8"));
-  if (!code.includes("defineRoute")) {
-    return _getRouteModuleExports(
-      viteChildCompiler,
-      ctx,
-      routeFile,
-      readRouteFile
-    );
-  }
-  let renameFields = ["Component", "serverLoader", "actionLoader"];
-  let fields = defineRoute.parseFields(code);
-  let exports = fields.filter(
-    (exportName) => !renameFields.includes(exportName)
-  );
-  if (fields.includes("Component")) exports.push("default");
-  if (fields.includes("serverLoader")) exports.push("loader");
-  if (fields.includes("serverAction")) exports.push("action");
-  return exports;
-};
-
-const _getRouteModuleExports = async (
   viteChildCompiler: Vite.ViteDevServer | null,
   ctx: ReactRouterPluginContext,
   routeFile: string,
@@ -1228,59 +1200,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         let routeFileName = path.basename(routeModuleId);
 
-        if (!code.includes("defineRoute")) {
-          let sourceExports = await getRouteModuleExports(
-            viteChildCompiler,
-            ctx,
-            routeModuleId
-          );
+        let sourceExports = await getRouteModuleExports(
+          viteChildCompiler,
+          ctx,
+          routeModuleId
+        );
 
-          let reexports = sourceExports
-            .filter(
-              (exportName) =>
-                (options?.ssr &&
-                  SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-                CLIENT_ROUTE_EXPORTS.includes(exportName)
-            )
-            .join(", ");
-          return `export { ${reexports} } from "./${routeFileName}";`;
-        }
-
-        let renameFields = ["Component", "serverLoader", "serverAction"];
-        let fields = defineRoute.parseFields(code);
-        let reexports = fields
-          .filter((exportName) => !renameFields.includes(exportName))
+        let reexports = sourceExports
           .filter(
             (exportName) =>
               (options?.ssr &&
                 SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
               CLIENT_ROUTE_EXPORTS.includes(exportName)
           )
-          .map((reexport) => `export const ${reexport} = route.${reexport};`);
-
-        let content = `import route from "./${routeFileName}";`;
-        if (fields.includes("Component")) {
-          content +=
-            `\n` +
-            [
-              `import { createElement } from "react";`,
-              `import { useParams, useLoaderData, useActionData } from "react-router";`,
-              `export default function Route() {`,
-              `  let params = useParams();`,
-              `  let loaderData = useLoaderData();`,
-              `  let actionData = useActionData();`,
-              `  return createElement(route.Component, { params, loaderData, actionData });`,
-              `}`,
-            ].join("\n");
-        }
-        if (options?.ssr && fields.includes("serverLoader")) {
-          content += `\nexport const loader = route.serverLoader;`;
-        }
-        if (options?.ssr && fields.includes("serverAction")) {
-          content += `\nexport const action = route.serverAction;`;
-        }
-        content += "\n" + reexports.join("\n");
-        return content;
+          .join(", ");
+        return `export { ${reexports} } from "./${routeFileName}";`;
       },
     },
     {
@@ -1316,23 +1250,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             return `window.__remixManifest=${reactRouterManifestString};`;
           }
         }
-      },
-    },
-    {
-      name: "react-router-define-route",
-      enforce: "pre",
-      async transform(code, id, options) {
-        if (options?.ssr) return;
-        if (!code.includes("defineRoute")) return; // temporary back compat, remove once old style routes are unsupported
-
-        if (id.endsWith(ROUTE_ENTRY_QUERY_STRING)) return;
-
-        let route = getRoute(ctx.reactRouterConfig, id);
-        if (!route && code.includes("defineRoute")) {
-          return defineRoute.assertNotImported(code);
-        }
-
-        return defineRoute.transform(code, id, options);
       },
     },
     {

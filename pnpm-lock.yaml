@@ -636,9 +636,6 @@ importers:
       arg:
         specifier: ^5.0.1
         version: 5.0.2
-      babel-dead-code-elimination:
-        specifier: ^1.0.6
-        version: 1.0.6
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -6511,17 +6508,6 @@ packages:
       '@babel/types': 7.24.0
     transitivePeerDependencies:
       - supports-color
-
-  /babel-dead-code-elimination@1.0.6:
-    resolution: {integrity: sha512-JxFi9qyRJpN0LjEbbjbN8g0ux71Qppn9R8Qe3k6QzHg2CaKsbUQtbn307LQGiDLGjV6JCtEFqfxzVig9MyDCHQ==}
-    dependencies:
-      '@babel/core': 7.24.3
-      '@babel/parser': 7.24.1
-      '@babel/traverse': 7.24.1
-      '@babel/types': 7.24.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
 
   /babel-jest@29.7.0(@babel/core@7.22.9):
     resolution: {integrity: sha512-BrvGY3xZSwEcCzKvKsCi2GgHqDqsYkOP4/by5xCgIwGXQxIEh+8ew3gmrE1y7XRR6LHZIj6yLYnUi/mm2KXKBg==}
