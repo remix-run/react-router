@@ -22,7 +22,6 @@ import { ServerMode } from "./mode";
 import { isRedirectStatusCode, isResponse } from "./responses";
 import { getDocumentHeaders } from "./headers";
 import type { ServerBuild } from "./build";
-import type { Serializable } from "../router/define-route";
 
 export type { SingleFetchResult, SingleFetchResults };
 export { SingleFetchRedirectSymbol };
@@ -269,6 +268,24 @@ export function getSingleFetchRedirect(
     replace: headers.has("X-Remix-Replace"),
   };
 }
+
+type Serializable =
+  | undefined
+  | null
+  | boolean
+  | string
+  | symbol
+  | number
+  | Array<Serializable>
+  | { [key: PropertyKey]: Serializable }
+  | bigint
+  | Date
+  | URL
+  | RegExp
+  | Error
+  | Map<Serializable, Serializable>
+  | Set<Serializable>
+  | Promise<Serializable>;
 
 export function data(value: Serializable, init?: number | ResponseInit) {
   return routerData(value, init);
