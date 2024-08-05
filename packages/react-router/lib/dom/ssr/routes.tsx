@@ -40,6 +40,8 @@ export interface EntryRoute extends Route {
   imports?: string[];
   css?: string[];
   module: string;
+  clientActionModule: string | undefined;
+  clientLoaderModule: string | undefined;
   parentId?: string;
 }
 
@@ -392,6 +394,23 @@ export function createClientRoutes(
             if (isSpaMode) return Promise.resolve(null);
             return fetchServerLoader(singleFetch);
           });
+      } else if (route.clientLoaderModule) {
+        dataRoute.loader = async (
+          args: LoaderFunctionArgs,
+          singleFetch?: unknown
+        ) => {
+          invariant(route.clientLoaderModule);
+          let { clientLoader } = await import(
+            /* webpackIgnore: true */ route.clientLoaderModule
+          );
+          return clientLoader({
+            ...args,
+            async serverLoader() {
+              preventInvalidServerHandlerCall("loader", route, isSpaMode);
+              return fetchServerLoader(singleFetch);
+            },
+          });
+        };
       }
       if (!route.hasClientAction) {
         dataRoute.action = (
@@ -404,6 +423,23 @@ export function createClientRoutes(
             }
             return fetchServerAction(singleFetch);
           });
+      } else if (route.clientActionModule) {
+        dataRoute.action = async (
+          args: ActionFunctionArgs,
+          singleFetch?: unknown
+        ) => {
+          invariant(route.clientActionModule);
+          let { clientAction } = await import(
+            /* webpackIgnore: true */ route.clientActionModule
+          );
+          return clientAction({
+            ...args,
+            async serverAction() {
+              preventInvalidServerHandlerCall("action", route, isSpaMode);
+              return fetchServerAction(singleFetch);
+            },
+          });
+        };
       }
 
       // Load all other modules via route.lazy()
@@ -414,22 +450,23 @@ export function createClientRoutes(
         );
 
         let lazyRoute: Partial<DataRouteObject> = { ...mod };
-        if (mod.clientLoader) {
+        if (mod.clientLoader && !route.clientLoaderModule) {
           let clientLoader = mod.clientLoader;
           lazyRoute.loader = (
             args: LoaderFunctionArgs,
             singleFetch?: unknown
-          ) =>
-            clientLoader({
+          ) => {
+            return clientLoader({
               ...args,
               async serverLoader() {
                 preventInvalidServerHandlerCall("loader", route, isSpaMode);
                 return fetchServerLoader(singleFetch);
               },
             });
+          };
         }
 
-        if (mod.clientAction) {
+        if (mod.clientAction && !route.clientActionModule) {
           let clientAction = mod.clientAction;
           lazyRoute.action = (
             args: ActionFunctionArgs,

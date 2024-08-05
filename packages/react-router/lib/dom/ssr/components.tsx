@@ -645,12 +645,36 @@ export function Scripts(props: ScriptsProps) {
             : ""
         }${!enableFogOfWar ? `import ${JSON.stringify(manifest.url)}` : ""};
 ${matches
-  .map(
-    (match, index) =>
-      `import * as route${index} from ${JSON.stringify(
-        manifest.routes[match.route.id].module
-      )};`
-  )
+  .map((match, routeIndex) => {
+    let routeVarName = `route${routeIndex}`;
+    let manifestEntry = manifest.routes[match.route.id];
+    let { clientActionModule, clientLoaderModule, module } = manifestEntry;
+
+    // Ordered lowest to highest priority in terms of merging chunks
+    let chunks: Array<{ module: string; varName: string }> = [
+      ...(clientActionModule
+        ? [{ module: clientActionModule, varName: `${routeVarName}_a` }]
+        : []),
+      ...(clientLoaderModule
+        ? [{ module: clientLoaderModule, varName: `${routeVarName}_l` }]
+        : []),
+      { module, varName: `${routeVarName}_m` },
+    ];
+
+    if (chunks.length === 1) {
+      return `import * as ${routeVarName} from ${JSON.stringify(module)};`;
+    }
+
+    let chunkImportsSnippet = chunks
+      .map((chunk) => `import * as ${chunk.varName} from "${chunk.module}";`)
+      .join("\n");
+
+    let mergedChunksSnippet = `const ${routeVarName} = {${chunks
+      .map((chunk) => `...${chunk.varName}`)
+      .join(",")}};`;
+
+    return [chunkImportsSnippet, mergedChunksSnippet].join("\n");
+  })
   .join("\n")}
   ${
     enableFogOfWar

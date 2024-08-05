@@ -72,7 +72,12 @@ export type ServerBundlesBuildManifest = BaseBuildManifest & {
 
 type ServerModuleFormat = "esm" | "cjs";
 
-interface FutureConfig {}
+interface FutureConfig {
+  /**
+   * Automatically split route modules into multiple chunks when possible.
+   */
+  unstable_routeChunks?: boolean;
+}
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
@@ -184,7 +189,7 @@ export type ResolvedVitePluginConfig = Readonly<{
   /**
    * Enabled future flags
    */
-  future: FutureConfig;
+  future: Required<FutureConfig>;
   /**
    * An array of URLs to prerender to HTML files at build time.
    */
@@ -359,6 +364,7 @@ export async function resolveReactRouterConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
+    future: userFuture,
     ignoredRouteFiles,
     routes: userRoutesFunction,
     prerender: prerenderConfig,
@@ -435,7 +441,9 @@ export async function resolveReactRouterConfig({
     }
   }
 
-  let future: FutureConfig = {};
+  let future: FutureConfig = {
+    unstable_routeChunks: Boolean(userFuture?.unstable_routeChunks),
+  };
 
   let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
     appDirectory,
