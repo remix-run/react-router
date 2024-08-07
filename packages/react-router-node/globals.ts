@@ -6,6 +6,7 @@ import {
   Request as NodeRequest,
   Response as NodeResponse,
 } from "undici";
+import { webcrypto as nodeWebCrypto } from "node:crypto";
 
 declare global {
   namespace NodeJS {
@@ -24,6 +25,8 @@ declare global {
 
       ReadableStream: typeof ReadableStream;
       WritableStream: typeof WritableStream;
+
+      crypto: typeof nodeWebCrypto;
     }
   }
 
@@ -44,4 +47,9 @@ export function installGlobals() {
   global.fetch = nodeFetch;
   // @ts-expect-error - overriding globals
   global.FormData = NodeFormData;
+
+  if (!global.crypto) {
+    // @ts-expect-error - overriding globals
+    global.crypto = nodeWebCrypto;
+  }
 }

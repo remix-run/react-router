@@ -1,4 +1,3 @@
-import * as crypto from "node:crypto";
 import { promises as fsp } from "node:fs";
 import * as path from "node:path";
 import type {
@@ -6,8 +5,7 @@ import type {
   SessionIdStorageStrategy,
   SessionData,
 } from "react-router";
-
-import { createSessionStorage } from "../implementations";
+import { createSessionStorage } from "react-router";
 
 interface FileSessionStorageOptions {
   /**
@@ -40,9 +38,7 @@ export function createFileSessionStorage<Data = SessionData, FlashData = Data>({
       let content = JSON.stringify({ data, expires });
 
       while (true) {
-        // TODO: Once Node v19 is supported we should use the globally provided
-        // Web Crypto API's crypto.getRandomValues() function here instead.
-        let randomBytes = crypto.webcrypto.getRandomValues(new Uint8Array(8));
+        let randomBytes = crypto.getRandomValues(new Uint8Array(8));
         // This storage manages an id space of 2^64 ids, which is far greater
         // than the maximum number of files allowed on an NTFS or ext4 volume
         // (2^32). However, the larger id space should help to avoid collisions

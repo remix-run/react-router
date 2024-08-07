@@ -1,3 +1,7 @@
+/**
+ * @jest-environment node
+ */
+
 import path from "node:path";
 import { promises as fsp } from "node:fs";
 import os from "node:os";
