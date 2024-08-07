@@ -32,6 +32,8 @@ export interface EntryRoute extends Route {
   imports?: string[];
   css?: string[];
   module: string;
+  clientActionModule: string | undefined;
+  clientLoaderModule: string | undefined;
   parentId?: string;
 }
 
