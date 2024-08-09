@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { RouteManifest, RouteManifestEntry } from "@react-router/dev";
+import type {
+  RouteManifest,
+  RouteManifestEntry,
+} from "@react-router/dev/config";
 import { makeRe } from "minimatch";
 
 import { normalizeSlashes } from "./normalizeSlashes";

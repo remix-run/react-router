@@ -4,13 +4,13 @@ const path = require("path");
 module.exports = function rollup(options) {
   return [
     "react-router",
+    "react-router-dom",
+    "react-router-node",
+    "react-router-express",
+    "react-router-dev",
+    "react-router-serve",
     "react-router-architect",
     "react-router-cloudflare",
-    "react-router-dom",
-    "react-router-dev",
-    "react-router-express",
-    "react-router-node",
-    "react-router-serve",
     "react-router-remix-v2-routes",
   ]
     .flatMap((dir) => {

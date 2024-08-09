@@ -1,4 +1,7 @@
-import type { RouteManifest, RouteManifestEntry } from "@react-router/dev";
+import type {
+  RouteManifest,
+  RouteManifestEntry,
+} from "@react-router/dev/config";
 
 import { normalizeSlashes } from "./normalizeSlashes";
 

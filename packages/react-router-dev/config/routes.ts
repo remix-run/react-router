@@ -184,21 +184,14 @@ function createLayout(
   };
 }
 
-export const defineRouteHelpers = {
-  route: createRoute,
+export const route = Object.assign(createRoute, {
   index: createIndex,
   layout: createLayout,
-};
+});
 
-type ConfigRoutesFunction = (r: typeof defineRouteHelpers) => ConfigRoute[];
-
-export function defineRoutes(
-  routes: ConfigRoute[] | ConfigRoutesFunction
-): RouteConfigOptions {
+export function defineRoutes(routes: ConfigRoute[]): RouteConfigOptions {
   return {
-    routes: configRoutesToRouteManifest(
-      typeof routes === "function" ? routes(defineRouteHelpers) : routes
-    ),
+    routes: configRoutesToRouteManifest(routes),
   };
 }
 

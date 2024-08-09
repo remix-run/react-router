@@ -6,12 +6,6 @@ export type {
   Preset,
   ServerBundlesFunction,
   VitePluginConfig,
-} from "./config";
-export type {
-  RouteConfig,
-  RouteManifest,
-  RouteManifestEntry,
-} from "./config/routes";
-export { defineRoutes } from "./config/routes";
+} from "./vite/config";
 export { reactRouterVitePlugin as vitePlugin } from "./vite/plugin";
 export { cloudflareDevProxyVitePlugin } from "./vite/cloudflare-dev-proxy";
