@@ -502,6 +502,11 @@ test.describe("SPA Mode", () => {
               })],
             });
           `,
+          "src/routes.ts": js`
+            import { remixRoutes } from "@react-router/remix-v2-routes";
+
+            export default remixRoutes();
+          `,
           "src/root.tsx": js`
             import {
               Meta,
@@ -584,6 +589,11 @@ test.describe("SPA Mode", () => {
                 ssr: false,
               })],
             });
+          `,
+          "src/routes.ts": js`
+            import { remixRoutes } from "@react-router/remix-v2-routes";
+
+            export default remixRoutes();
           `,
           "src/root.tsx": js`
             import {

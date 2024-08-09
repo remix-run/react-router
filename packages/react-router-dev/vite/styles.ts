@@ -3,7 +3,7 @@ import type { ServerBuild } from "react-router";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
-import type { ResolvedVitePluginConfig } from "../config";
+import type { ResolvedVitePluginConfig } from "./config";
 import { resolveFileUrl } from "./resolve-file-url";
 
 type ServerRouteManifest = ServerBuild["routes"];

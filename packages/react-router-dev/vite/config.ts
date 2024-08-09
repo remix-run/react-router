@@ -1,4 +1,5 @@
 import type * as Vite from "vite";
+import type { ViteNodeRunner } from "vite-node/client";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import fse from "fs-extra";
@@ -7,14 +8,14 @@ import pick from "lodash/pick";
 import omit from "lodash/omit";
 import PackageJson from "@npmcli/package-json";
 
-import {
-  type RouteManifest,
-  type ConfigRoute,
-  type DefineRoutesFunction,
-  defineRoutes,
-} from "./config/routes";
-import { flatRoutes } from "./config/flatRoutes";
-import { detectPackageManager } from "./cli/detectPackageManager";
+import type {
+  RouteManifest,
+  RouteManifestEntry,
+  RouteConfig,
+  RouteConfigEntry,
+} from "../config/routes";
+import { detectPackageManager } from "../cli/detectPackageManager";
+import { importViteEsmSync } from "./import-vite-esm-sync";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof VitePluginConfig
@@ -40,11 +41,14 @@ const branchRouteProperties = [
   "path",
   "file",
   "index",
-] as const satisfies ReadonlyArray<keyof ConfigRoute>;
-type BranchRoute = Pick<ConfigRoute, (typeof branchRouteProperties)[number]>;
+] as const satisfies ReadonlyArray<keyof RouteManifestEntry>;
+type BranchRoute = Pick<
+  RouteManifestEntry,
+  (typeof branchRouteProperties)[number]
+>;
 
 export const configRouteToBranchRoute = (
-  configRoute: ConfigRoute
+  configRoute: RouteManifestEntry
 ): BranchRoute => pick(configRoute, branchRouteProperties);
 
 export type ServerBundlesFunction = (args: {
@@ -90,27 +94,9 @@ export type VitePluginConfig = {
   appDirectory?: string;
 
   /**
-   * A function for defining custom routes, in addition to those already defined
-   * using the filesystem convention in `app/routes`. Both sets of routes will
-   * be merged.
-   */
-  routes?: (
-    defineRoutes: DefineRoutesFunction
-  ) =>
-    | ReturnType<DefineRoutesFunction>
-    | Promise<ReturnType<DefineRoutesFunction>>;
-
-  /**
    * The output format of the server build. Defaults to "esm".
    */
   serverModuleFormat?: ServerModuleFormat;
-
-  /**
-   * A list of filenames or a glob patterns to match files in the `app/routes`
-   * directory that Remix will ignore. Matching files will not be recognized as
-   * routes.
-   */
-  ignoredRouteFiles?: string[];
 
   /**
    * Enabled future flags
@@ -249,34 +235,9 @@ let mergeReactRouterConfig = (
             },
           }
         : {}),
-      ...(mergeRequired("ignoredRouteFiles")
-        ? {
-            ignoredRouteFiles: Array.from(
-              new Set([
-                ...(configA.ignoredRouteFiles ?? []),
-                ...(configB.ignoredRouteFiles ?? []),
-              ])
-            ),
-          }
-        : {}),
       ...(mergeRequired("presets")
         ? {
             presets: [...(configA.presets ?? []), ...(configB.presets ?? [])],
-          }
-        : {}),
-      ...(mergeRequired("routes")
-        ? {
-            routes: async (...args) => {
-              let [routesA, routesB] = await Promise.all([
-                configA.routes?.(...args),
-                configB.routes?.(...args),
-              ]);
-
-              return {
-                ...routesA,
-                ...routesB,
-              };
-            },
           }
         : {}),
     };
@@ -310,17 +271,30 @@ export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.base ?? "/";
 }
 
+let isFirstLoad = true;
+let lastValidRoutes: RouteManifest = {};
+
 export async function resolveReactRouterConfig({
   rootDirectory,
   reactRouterUserConfig,
+  routesConfigChanged,
   viteUserConfig,
   viteCommand,
+  viteNodeRunner,
 }: {
   rootDirectory: string;
   reactRouterUserConfig: VitePluginConfig;
+  routesConfigChanged: boolean;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
+  viteNodeRunner: ViteNodeRunner;
 }) {
+  let vite = importViteEsmSync();
+
+  let logger = vite.createLogger(viteUserConfig.logLevel, {
+    prefix: "[react-router]",
+  });
+
   let presets: VitePluginConfig[] = (
     await Promise.all(
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
@@ -359,8 +333,6 @@ export async function resolveReactRouterConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
-    ignoredRouteFiles,
-    routes: userRoutesFunction,
     prerender: prerenderConfig,
     serverBuildFile,
     serverBundles,
@@ -390,10 +362,13 @@ export async function resolveReactRouterConfig({
     } else if (typeof prerenderConfig === "function") {
       prerender = await prerenderConfig();
     } else {
-      throw new Error(
-        "The `prerender` config must be an array of string paths, or a function " +
-          "returning an array of string paths"
+      logger.error(
+        colors.red(
+          "The `prerender` config must be an array of string paths, or a function " +
+            "returning an array of string paths"
+        )
       );
+      process.exit(1);
     }
   }
 
@@ -407,32 +382,109 @@ export async function resolveReactRouterConfig({
     !viteUserConfig.server?.middlewareMode &&
     !basename.startsWith(publicPath)
   ) {
-    throw new Error(
-      "When using the React Router `basename` and the Vite `base` config, " +
-        "the `basename` config must begin with `base` for the default " +
-        "Vite dev server."
+    logger.error(
+      colors.red(
+        "When using the React Router `basename` and the Vite `base` config, " +
+          "the `basename` config must begin with `base` for the default " +
+          "Vite dev server."
+      )
     );
+    process.exit(1);
   }
 
   let rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
-    throw new Error(`Missing "root" route file in ${appDirectory}`);
+    let rootRouteDisplayPath = path.relative(
+      rootDirectory,
+      path.join(appDirectory, "root.tsx")
+    );
+    logger.error(
+      colors.red(
+        `Could not find a root route module in the app directory as "${rootRouteDisplayPath}"`
+      )
+    );
+    process.exit(1);
   }
 
   let routes: RouteManifest = {
     root: { path: "", id: "root", file: rootRouteFile },
   };
-  if (fse.existsSync(path.resolve(appDirectory, "routes"))) {
-    let fileRoutes = flatRoutes(appDirectory, ignoredRouteFiles);
-    for (let route of Object.values(fileRoutes)) {
-      routes[route.id] = { ...route, parentId: route.parentId || "root" };
-    }
+
+  let routeConfigFile = findEntry(appDirectory, "routes");
+  if (!routeConfigFile) {
+    let routesConfigDisplayPath = path.relative(
+      rootDirectory,
+      path.join(appDirectory, "routes.ts")
+    );
+    logger.error(
+      colors.red(
+        `Could not find a routes config file at "${routesConfigDisplayPath}"`
+      )
+    );
+    process.exit(1);
   }
-  if (userRoutesFunction) {
-    let userRoutes = await userRoutesFunction(defineRoutes);
-    for (let route of Object.values(userRoutes)) {
-      routes[route.id] = { ...route, parentId: route.parentId || "root" };
+
+  try {
+    let routeConfig: RouteConfig = (
+      await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
+    ).default;
+
+    let routeConfigEntries = [routeConfig].flat(
+      Infinity as 1
+    ) as RouteConfigEntry[];
+
+    let routeManifests = await Promise.all(
+      routeConfigEntries.map(
+        async (config) =>
+          (typeof config === "function"
+            ? await config({ appDirectory })
+            : config
+          ).routes
+      )
+    );
+
+    Object.assign(routes, ...routeManifests);
+
+    lastValidRoutes = routes;
+
+    if (routesConfigChanged) {
+      logger.info(colors.green("Route config changed."), {
+        clear: true,
+        timestamp: true,
+      });
     }
+  } catch (error: any) {
+    logger.error(
+      [
+        colors.red("Route config is invalid."),
+        "",
+        error.loc?.file && error.loc?.column && error.frame
+          ? [
+              path.relative(appDirectory, error.loc.file) +
+                ":" +
+                error.loc.line +
+                ":" +
+                error.loc.column,
+              error.frame.trim?.(),
+            ]
+          : error.stack,
+      ]
+        .flat()
+        .join("\n"),
+      {
+        error,
+        clear: !isFirstLoad,
+        timestamp: !isFirstLoad,
+      }
+    );
+
+    // Bail if this is the first time loading config, otherwise keep the dev server running
+    if (isFirstLoad) {
+      process.exit(1);
+    }
+
+    // Keep dev server running with the last valid routes to allow for correction
+    routes = lastValidRoutes;
   }
 
   let future: FutureConfig = {};
@@ -455,6 +507,8 @@ export async function resolveReactRouterConfig({
     await preset.reactRouterConfigResolved?.({ reactRouterConfig });
   }
 
+  isFirstLoad = false;
+
   return reactRouterConfig;
 }
 
@@ -467,7 +521,7 @@ export async function resolveEntryFiles({
 }) {
   let { appDirectory } = reactRouterConfig;
 
-  let defaultsDirectory = path.resolve(__dirname, "config", "defaults");
+  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
 
   let userEntryClientFile = findEntry(appDirectory, "entry.client");
   let userEntryServerFile = findEntry(appDirectory, "entry.server");

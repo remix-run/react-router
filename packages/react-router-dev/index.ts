@@ -6,6 +6,6 @@ export type {
   Preset,
   ServerBundlesFunction,
   VitePluginConfig,
-} from "./config";
+} from "./vite/config";
 export { reactRouterVitePlugin as vitePlugin } from "./vite/plugin";
 export { cloudflareDevProxyVitePlugin } from "./vite/cloudflare-dev-proxy";
