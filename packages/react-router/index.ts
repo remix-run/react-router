@@ -26,6 +26,7 @@ export type {
   DataStrategyFunction as unstable_DataStrategyFunction,
   DataStrategyFunctionArgs as unstable_DataStrategyFunctionArgs,
   DataStrategyMatch as unstable_DataStrategyMatch,
+  DataWithResponseInit as UNSAFE_DataWithResponseInit,
   ErrorResponse,
   FormEncType,
   FormMethod,
@@ -57,6 +58,7 @@ export {
   IDLE_BLOCKER,
 } from "./lib/router/router";
 export {
+  data as unstable_data,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -64,6 +66,7 @@ export {
   matchRoutes,
   redirect,
   redirectDocument,
+  replace,
   resolvePath,
 } from "./lib/router/utils";
 
@@ -212,11 +215,6 @@ export type { ServerRouterProps } from "./lib/dom/ssr/server";
 export { ServerRouter } from "./lib/dom/ssr/server";
 export type { RoutesTestStubProps } from "./lib/dom/ssr/routes-test-stub";
 export { createRoutesStub } from "./lib/dom/ssr/routes-test-stub";
-export {
-  defineRoute,
-  type Match,
-  type MetaMatch,
-} from "./lib/router/define-route";
 
 // Expose old @remix-run/server-runtime API, minus duplicate APIs
 export { createCookieFactory, isCookie } from "./lib/server-runtime/cookies";
