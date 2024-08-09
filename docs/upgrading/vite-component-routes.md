@@ -176,7 +176,7 @@ To get back to rendering your app, we'll configure a "catchall" route that match
 Create a file at `src/routes.ts` and add this:
 
 ```ts filename=src/routes.ts
-import { defineRoutes } from "@react-router/dev";
+import { defineRoutes } from "@react-router/dev/config";
 
 export default defineRoutes([
   {
@@ -221,7 +221,7 @@ export default function App() {
 You can move the definition to a `routes.ts` file:
 
 ```tsx filename=src/routes.ts
-import { defineRoutes } from "@react-router/dev";
+import { defineRoutes } from "@react-router/dev/config";
 
 export default defineRoutes([
   {

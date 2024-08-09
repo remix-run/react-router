@@ -43,7 +43,7 @@ import {
   resolveReactRouterConfig,
   resolveEntryFiles,
   resolvePublicPath,
-} from "../config";
+} from "./config";
 
 export async function resolveViteConfig({
   configFile,

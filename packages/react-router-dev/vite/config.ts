@@ -13,9 +13,9 @@ import type {
   RouteManifestEntry,
   RouteConfig,
   RouteConfigEntry,
-} from "./config/routes";
-import { detectPackageManager } from "./cli/detectPackageManager";
-import { importViteEsmSync } from "./vite/import-vite-esm-sync";
+} from "../config/routes";
+import { detectPackageManager } from "../cli/detectPackageManager";
+import { importViteEsmSync } from "./import-vite-esm-sync";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
   keyof VitePluginConfig
@@ -521,7 +521,7 @@ export async function resolveEntryFiles({
 }) {
   let { appDirectory } = reactRouterConfig;
 
-  let defaultsDirectory = path.resolve(__dirname, "config", "defaults");
+  let defaultsDirectory = path.resolve(__dirname, "..", "config", "defaults");
 
   let userEntryClientFile = findEntry(appDirectory, "entry.client");
   let userEntryServerFile = findEntry(appDirectory, "entry.server");

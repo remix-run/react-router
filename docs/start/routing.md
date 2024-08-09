@@ -10,7 +10,7 @@ order: 2
 Routes are configured in `app/routes.ts`. The Vite plugin uses this file to create bundles for each route.
 
 ```ts filename=app/routes.ts
-import { route } from "react-router/config";
+import { route } from "@react-router/dev/config";
 
 export default [
   route.index("./home.tsx"),
@@ -103,7 +103,7 @@ export default defineRoute$({
 Using `route.layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. They can be added at any level.
 
 ```tsx filename=app/routes.ts lines=[3,9]
-import { route } from "react-router/config";
+import { route } from "@react-router/dev/config";
 export const routes = [
   route.layout("./marketing/layout.tsx", [
     route.index("./marketing/home.tsx"),
@@ -128,7 +128,7 @@ route.index(componentFile);
 Index routes render into their parent's [Outlet][outlet] at their parent's URL (like a default child route).
 
 ```ts filename=app/routes.ts
-import { route } from "react-router/config";
+import { route } from "@react-router/dev/config";
 export default [
   // renders into the root.tsx Outlet at /
   route.index("./home.tsx"),
@@ -227,7 +227,7 @@ const { "*": splat } = params;
 You can make your routes case sensitive by exporting a `config` object from `app/routes.ts`:
 
 ```ts filename=app/routes.ts
-import { route } from "react-router/config";
+import { route } from "@react-router/dev/config";
 
 export const config = {
   caseSensitive: true,

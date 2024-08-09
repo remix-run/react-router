@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { RouteManifest, RouteConfig } from "@react-router/dev";
+import type { RouteManifest, RouteConfig } from "@react-router/dev/config";
 
 import { fileRoutes } from "./fileRoutes";
 import { defineRoutes, type DefineRoutesFunction } from "./defineRoutes";
