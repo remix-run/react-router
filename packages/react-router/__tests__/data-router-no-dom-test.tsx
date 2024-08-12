@@ -4,7 +4,8 @@
 
 import * as React from "react";
 import renderer from "react-test-renderer";
-import { RouterProvider, useFetcher } from "../lib/dom/lib";
+import { useFetcher } from "../lib/dom/lib";
+import { RouterProvider } from "../lib/dom-export/dom-router-provider";
 import { createMemoryRouter } from "../lib/components";
 import { useLoaderData, useNavigate } from "../lib/hooks";
 

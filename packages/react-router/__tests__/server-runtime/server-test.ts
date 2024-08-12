@@ -414,7 +414,7 @@ describe("shared server runtime", () => {
       expect(spy.console.mock.calls.length).toBe(1);
     });
 
-    test("aborts request (v3_throwAbortReason)", async () => {
+    test("aborts request with reason", async () => {
       let rootLoader = jest.fn(() => {
         return "root";
       });
@@ -435,9 +435,6 @@ describe("shared server runtime", () => {
           },
         },
         {
-          future: {
-            v3_throwAbortReason: true,
-          },
           handleError: handleErrorSpy,
         }
       );
@@ -932,9 +929,6 @@ describe("shared server runtime", () => {
           },
         },
         {
-          future: {
-            v3_throwAbortReason: true,
-          },
           handleError: handleErrorSpy,
         }
       );
@@ -2015,9 +2009,6 @@ describe("shared server runtime", () => {
           },
         },
         {
-          future: {
-            v3_throwAbortReason: true,
-          },
           handleError: handleErrorSpy,
         }
       );

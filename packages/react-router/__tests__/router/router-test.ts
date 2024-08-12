@@ -1,14 +1,11 @@
-import type { HydrationState } from "../../lib/router";
-import {
-  createMemoryHistory,
-  createRouter,
-  IDLE_NAVIGATION,
-} from "../../lib/router";
+import type { HydrationState } from "../../lib/router/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter, IDLE_NAVIGATION } from "../../lib/router/router";
 import type {
   AgnosticDataRouteObject,
   AgnosticRouteObject,
-} from "../../lib/router";
-import { UNSAFE_ErrorResponseImpl as ErrorResponseImpl } from "../../lib/router";
+} from "../../lib/router/utils";
+import { ErrorResponseImpl } from "../../lib/router/utils";
 
 import { urlMatch } from "./utils/custom-matchers";
 import {

@@ -32,6 +32,7 @@ import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
 import * as VirtualModule from "./vmod";
 import { resolveFileUrl } from "./resolve-file-url";
+import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 import {
@@ -41,7 +42,6 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "../config";
-import * as defineRoute from "./define-route";
 
 export async function resolveViteConfig({
   configFile,
@@ -311,33 +311,6 @@ const getRouteModuleExports = async (
   routeFile: string,
   readRouteFile?: () => string | Promise<string>
 ): Promise<string[]> => {
-  let routePath = path.resolve(ctx.reactRouterConfig.appDirectory, routeFile);
-  let code = await (readRouteFile?.() ?? fse.readFile(routePath, "utf-8"));
-  if (!code.includes("defineRoute")) {
-    return _getRouteModuleExports(
-      viteChildCompiler,
-      ctx,
-      routeFile,
-      readRouteFile
-    );
-  }
-  let renameFields = ["Component", "serverLoader", "actionLoader"];
-  let fields = defineRoute.parseFields(code);
-  let exports = fields.filter(
-    (exportName) => !renameFields.includes(exportName)
-  );
-  if (fields.includes("Component")) exports.push("default");
-  if (fields.includes("serverLoader")) exports.push("loader");
-  if (fields.includes("serverAction")) exports.push("action");
-  return exports;
-};
-
-const _getRouteModuleExports = async (
-  viteChildCompiler: Vite.ViteDevServer | null,
-  ctx: ReactRouterPluginContext,
-  routeFile: string,
-  readRouteFile?: () => string | Promise<string>
-): Promise<string[]> => {
   if (!viteChildCompiler) {
     throw new Error("Vite child compiler not found");
   }
@@ -437,9 +410,7 @@ let deepFreeze = (o: any) => {
   return o;
 };
 
-export type ReactRouterVitePlugin = (
-  config?: VitePluginConfig
-) => Vite.Plugin[];
+type ReactRouterVitePlugin = (config?: VitePluginConfig) => Vite.Plugin[];
 export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   let reactRouterUserConfig = _config ?? {};
 
@@ -575,6 +546,14 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     return new Set(filePaths);
   };
 
+  let hasDependency = (name: string) => {
+    try {
+      return Boolean(require.resolve(name, { paths: [ctx.rootDirectory] }));
+    } catch (err) {
+      return false;
+    }
+  };
+
   let getViteManifestAssetPaths = (
     viteManifest: Vite.Manifest
   ): Set<string> => {
@@ -704,7 +683,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         path: route.path,
         index: route.index,
         caseSensitive: route.caseSensitive,
-        module: path.posix.join(
+        module: combineURLs(
           ctx.publicPath,
           `${resolveFileUrl(
             ctx,
@@ -722,18 +701,15 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
     return {
       version: String(Math.random()),
-      url: path.posix.join(
-        ctx.publicPath,
-        VirtualModule.url(browserManifestId)
-      ),
+      url: combineURLs(ctx.publicPath, VirtualModule.url(browserManifestId)),
       hmr: {
-        runtime: path.posix.join(
+        runtime: combineURLs(
           ctx.publicPath,
           VirtualModule.url(injectHmrRuntimeId)
         ),
       },
       entry: {
-        module: path.posix.join(
+        module: combineURLs(
           ctx.publicPath,
           resolveFileUrl(ctx, ctx.entryClientFilePath)
         ),
@@ -830,7 +806,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               // Pre-bundle router dependencies to avoid router duplicates.
               // Mismatching routers cause `Error: You must render this element inside a <Remix> element`.
               "react-router",
-              "react-router-dom",
+              // Check to avoid "Failed to resolve dependency: react-router-dom, present in 'optimizeDeps.include'"
+              ...(hasDependency("react-router-dom")
+                ? ["react-router-dom"]
+                : []),
             ],
           },
           esbuild: {
@@ -1232,59 +1211,21 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         let routeFileName = path.basename(routeModuleId);
 
-        if (!code.includes("defineRoute")) {
-          let sourceExports = await getRouteModuleExports(
-            viteChildCompiler,
-            ctx,
-            routeModuleId
-          );
+        let sourceExports = await getRouteModuleExports(
+          viteChildCompiler,
+          ctx,
+          routeModuleId
+        );
 
-          let reexports = sourceExports
-            .filter(
-              (exportName) =>
-                (options?.ssr &&
-                  SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-                CLIENT_ROUTE_EXPORTS.includes(exportName)
-            )
-            .join(", ");
-          return `export { ${reexports} } from "./${routeFileName}";`;
-        }
-
-        let renameFields = ["Component", "serverLoader", "serverAction"];
-        let fields = defineRoute.parseFields(code);
-        let reexports = fields
-          .filter((exportName) => !renameFields.includes(exportName))
+        let reexports = sourceExports
           .filter(
             (exportName) =>
               (options?.ssr &&
                 SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
               CLIENT_ROUTE_EXPORTS.includes(exportName)
           )
-          .map((reexport) => `export const ${reexport} = route.${reexport};`);
-
-        let content = `import route from "./${routeFileName}";`;
-        if (fields.includes("Component")) {
-          content +=
-            `\n` +
-            [
-              `import { createElement } from "react";`,
-              `import { useParams, useLoaderData, useActionData } from "react-router";`,
-              `export default function Route() {`,
-              `  let params = useParams();`,
-              `  let loaderData = useLoaderData();`,
-              `  let actionData = useActionData();`,
-              `  return createElement(route.Component, { params, loaderData, actionData });`,
-              `}`,
-            ].join("\n");
-        }
-        if (options?.ssr && fields.includes("serverLoader")) {
-          content += `\nexport const loader = route.serverLoader;`;
-        }
-        if (options?.ssr && fields.includes("serverAction")) {
-          content += `\nexport const action = route.serverAction;`;
-        }
-        content += "\n" + reexports.join("\n");
-        return content;
+          .join(", ");
+        return `export { ${reexports} } from "./${routeFileName}";`;
       },
     },
     {
@@ -1320,23 +1261,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             return `window.__remixManifest=${reactRouterManifestString};`;
           }
         }
-      },
-    },
-    {
-      name: "react-router-define-route",
-      enforce: "pre",
-      async transform(code, id, options) {
-        if (options?.ssr) return;
-        if (!code.includes("defineRoute")) return; // temporary back compat, remove once old style routes are unsupported
-
-        if (id.endsWith(ROUTE_ENTRY_QUERY_STRING)) return;
-
-        let route = getRoute(ctx.reactRouterConfig, id);
-        if (!route && code.includes("defineRoute")) {
-          return defineRoute.assertNotImported(code);
-        }
-
-        return defineRoute.transform(code, id, options);
       },
     },
     {
@@ -1723,7 +1647,7 @@ async function getRouteMetadata(
     path: route.path,
     index: route.index,
     caseSensitive: route.caseSensitive,
-    url: path.posix.join(
+    url: combineURLs(
       ctx.publicPath,
       "/" +
         path.relative(
@@ -1731,7 +1655,7 @@ async function getRouteMetadata(
           resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
         )
     ),
-    module: path.posix.join(
+    module: combineURLs(
       ctx.publicPath,
       `${resolveFileUrl(
         ctx,

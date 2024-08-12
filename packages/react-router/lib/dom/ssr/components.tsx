@@ -4,11 +4,10 @@ import type {
   TouchEventHandler,
 } from "react";
 import * as React from "react";
-import {
-  matchRoutes,
-  type AgnosticDataRouteMatch,
-  type RouterState,
-} from "../../router";
+
+import type { RouterState } from "../../router/router";
+import type { AgnosticDataRouteMatch } from "../../router/utils";
+import { matchRoutes } from "../../router/utils";
 
 import type { FrameworkContextObject } from "./entry";
 import invariant from "./invariant";
@@ -29,7 +28,7 @@ import type {
 } from "./routeModules";
 import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
-import { useLocation, useNavigation } from "../../hooks";
+import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
 
 // TODO: Temporary shim until we figure out the way to handle typings in v7

@@ -1,41 +1,53 @@
-import type {
-  FutureConfig,
-  HydrationState,
-  InitialEntry,
-  LazyRouteFunction,
-  Location,
-  MemoryHistory,
-  RelativeRoutingType,
-  Router as RemixRouter,
-  To,
-  TrackedPromise,
-  unstable_DataStrategyFunction,
-  unstable_AgnosticPatchRoutesOnMissFunction,
-} from "./router";
-import {
-  Action as NavigationType,
-  createMemoryHistory,
-  createRouter,
-  UNSAFE_invariant as invariant,
-  parsePath,
-  resolveTo,
-  stripBasename,
-  UNSAFE_warning as warning,
-} from "./router";
 import * as React from "react";
 
 import type {
+  InitialEntry,
+  Location,
+  MemoryHistory,
+  To,
+} from "./router/history";
+import {
+  Action as NavigationType,
+  createMemoryHistory,
+  invariant,
+  parsePath,
+  warning,
+} from "./router/history";
+import type {
+  FutureConfig,
+  HydrationState,
+  RelativeRoutingType,
+  Router as RemixRouter,
+  RouterState,
+  RouterSubscriber,
+} from "./router/router";
+import { createRouter } from "./router/router";
+import type {
+  AgnosticPatchRoutesOnMissFunction,
+  DataStrategyFunction,
+  LazyRouteFunction,
+  TrackedPromise,
+} from "./router/utils";
+import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
+
+import type {
+  DataRouteObject,
   IndexRouteObject,
   Navigator,
   NonIndexRouteObject,
   RouteMatch,
   RouteObject,
+  ViewTransitionContextObject,
 } from "./context";
 import {
   AwaitContext,
+  DataRouterContext,
+  DataRouterStateContext,
+  FetchersContext,
   LocationContext,
   NavigationContext,
   RouteContext,
+  ViewTransitionContext,
 } from "./context";
 import {
   _renderMatches,
@@ -45,8 +57,10 @@ import {
   useNavigate,
   useOutlet,
   useRoutes,
+  useRoutesImpl,
 } from "./hooks";
-import { getResolveToMatches } from "./router/utils";
+import type { ViewTransition } from "./dom/global";
+import { warnOnce } from "./server-runtime/warnings";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -116,8 +130,8 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
-export interface unstable_PatchRoutesOnMissFunction
-  extends unstable_AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
+export interface PatchRoutesOnMissFunction
+  extends AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
 
 /**
  * @category Routers
@@ -130,8 +144,8 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
-    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+    unstable_dataStrategy?: DataStrategyFunction;
+    unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -147,6 +161,307 @@ export function createMemoryRouter(
     unstable_dataStrategy: opts?.unstable_dataStrategy,
     unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
   }).initialize();
+}
+
+class Deferred<T> {
+  status: "pending" | "resolved" | "rejected" = "pending";
+  promise: Promise<T>;
+  // @ts-expect-error - no initializer
+  resolve: (value: T) => void;
+  // @ts-expect-error - no initializer
+  reject: (reason?: unknown) => void;
+  constructor() {
+    this.promise = new Promise((resolve, reject) => {
+      this.resolve = (value) => {
+        if (this.status === "pending") {
+          this.status = "resolved";
+          resolve(value);
+        }
+      };
+      this.reject = (reason) => {
+        if (this.status === "pending") {
+          this.status = "rejected";
+          reject(reason);
+        }
+      };
+    });
+  }
+}
+
+// Copied from react-dom types
+export interface RouterProviderProps {
+  router: RemixRouter;
+  flushSync?: (fn: () => unknown) => undefined;
+}
+
+/**
+ * Given a Remix Router instance, render the appropriate UI
+ */
+export function RouterProvider({
+  router,
+  flushSync: reactDomFlushSyncImpl,
+}: RouterProviderProps): React.ReactElement {
+  let [state, setStateImpl] = React.useState(router.state);
+  let [pendingState, setPendingState] = React.useState<RouterState>();
+  let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
+  let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
+  let [transition, setTransition] = React.useState<ViewTransition>();
+  let [interruption, setInterruption] = React.useState<{
+    state: RouterState;
+    currentLocation: Location;
+    nextLocation: Location;
+  }>();
+  let fetcherData = React.useRef<Map<string, any>>(new Map());
+
+  let setState = React.useCallback<RouterSubscriber>(
+    (
+      newState: RouterState,
+      {
+        deletedFetchers,
+        unstable_flushSync: flushSync,
+        unstable_viewTransitionOpts: viewTransitionOpts,
+      }
+    ) => {
+      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
+      newState.fetchers.forEach((fetcher, key) => {
+        if (fetcher.data !== undefined) {
+          fetcherData.current.set(key, fetcher.data);
+        }
+      });
+
+      warnOnce(
+        flushSync === false || reactDomFlushSyncImpl != null,
+        "You provided the `unstable_flushSync` option to a router update, " +
+          "but you are not using the `<RouterProvider>` from `react-router/dom` " +
+          "so `ReactDOM.flushSync()` is unavailable.  Please update your app " +
+          'to `import { RouterProvider } from "react-router/dom"` and ensure ' +
+          "you have `react-dom` installed as a dependency to use the " +
+          "`unstable_flushSync` option."
+      );
+
+      let isViewTransitionAvailable =
+        router.window != null &&
+        router.window.document != null &&
+        typeof router.window.document.startViewTransition === "function";
+
+      warnOnce(
+        viewTransitionOpts == null || isViewTransitionAvailable,
+        "You provided the `unstable_viewTransition` option to a router update, " +
+          "but you do not appear to be running in a DOM environment as " +
+          "`window.startViewTransition` is not available."
+      );
+
+      // If this isn't a view transition or it's not available in this browser,
+      // just update and be done with it
+      if (!viewTransitionOpts || !isViewTransitionAvailable) {
+        if (reactDomFlushSyncImpl && flushSync) {
+          reactDomFlushSyncImpl(() => setStateImpl(newState));
+        } else {
+          React.startTransition(() => setStateImpl(newState));
+        }
+        return;
+      }
+
+      // flushSync + startViewTransition
+      if (reactDomFlushSyncImpl && flushSync) {
+        // Flush through the context to mark DOM elements as transition=ing
+        reactDomFlushSyncImpl(() => {
+          // Cancel any pending transitions
+          if (transition) {
+            renderDfd && renderDfd.resolve();
+            transition.skipTransition();
+          }
+          setVtContext({
+            isTransitioning: true,
+            flushSync: true,
+            currentLocation: viewTransitionOpts.currentLocation,
+            nextLocation: viewTransitionOpts.nextLocation,
+          });
+        });
+
+        // Update the DOM
+        let t = router.window!.document.startViewTransition(() => {
+          reactDomFlushSyncImpl(() => setStateImpl(newState));
+        });
+
+        // Clean up after the animation completes
+        t.finished.finally(() => {
+          reactDomFlushSyncImpl(() => {
+            setRenderDfd(undefined);
+            setTransition(undefined);
+            setPendingState(undefined);
+            setVtContext({ isTransitioning: false });
+          });
+        });
+
+        reactDomFlushSyncImpl(() => setTransition(t));
+        return;
+      }
+
+      // startTransition + startViewTransition
+      if (transition) {
+        // Interrupting an in-progress transition, cancel and let everything flush
+        // out, and then kick off a new transition from the interruption state
+        renderDfd && renderDfd.resolve();
+        transition.skipTransition();
+        setInterruption({
+          state: newState,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
+        });
+      } else {
+        // Completed navigation update with opted-in view transitions, let 'er rip
+        setPendingState(newState);
+        setVtContext({
+          isTransitioning: true,
+          flushSync: false,
+          currentLocation: viewTransitionOpts.currentLocation,
+          nextLocation: viewTransitionOpts.nextLocation,
+        });
+      }
+    },
+    [router.window, reactDomFlushSyncImpl, transition, renderDfd]
+  );
+
+  // Need to use a layout effect here so we are subscribed early enough to
+  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
+  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
+
+  // When we start a view transition, create a Deferred we can use for the
+  // eventual "completed" render
+  React.useEffect(() => {
+    if (vtContext.isTransitioning && !vtContext.flushSync) {
+      setRenderDfd(new Deferred<void>());
+    }
+  }, [vtContext]);
+
+  // Once the deferred is created, kick off startViewTransition() to update the
+  // DOM and then wait on the Deferred to resolve (indicating the DOM update has
+  // happened)
+  React.useEffect(() => {
+    if (renderDfd && pendingState && router.window) {
+      let newState = pendingState;
+      let renderPromise = renderDfd.promise;
+      let transition = router.window.document.startViewTransition(async () => {
+        React.startTransition(() => setStateImpl(newState));
+        await renderPromise;
+      });
+      transition.finished.finally(() => {
+        setRenderDfd(undefined);
+        setTransition(undefined);
+        setPendingState(undefined);
+        setVtContext({ isTransitioning: false });
+      });
+      setTransition(transition);
+    }
+  }, [pendingState, renderDfd, router.window]);
+
+  // When the new location finally renders and is committed to the DOM, this
+  // effect will run to resolve the transition
+  React.useEffect(() => {
+    if (
+      renderDfd &&
+      pendingState &&
+      state.location.key === pendingState.location.key
+    ) {
+      renderDfd.resolve();
+    }
+  }, [renderDfd, transition, state.location, pendingState]);
+
+  // If we get interrupted with a new navigation during a transition, we skip
+  // the active transition, let it cleanup, then kick it off again here
+  React.useEffect(() => {
+    if (!vtContext.isTransitioning && interruption) {
+      setPendingState(interruption.state);
+      setVtContext({
+        isTransitioning: true,
+        flushSync: false,
+        currentLocation: interruption.currentLocation,
+        nextLocation: interruption.nextLocation,
+      });
+      setInterruption(undefined);
+    }
+  }, [vtContext.isTransitioning, interruption]);
+
+  let navigator = React.useMemo((): Navigator => {
+    return {
+      createHref: router.createHref,
+      encodeLocation: router.encodeLocation,
+      go: (n) => router.navigate(n),
+      push: (to, state, opts) =>
+        router.navigate(to, {
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+      replace: (to, state, opts) =>
+        router.navigate(to, {
+          replace: true,
+          state,
+          preventScrollReset: opts?.preventScrollReset,
+        }),
+    };
+  }, [router]);
+
+  let basename = router.basename || "/";
+
+  let dataRouterContext = React.useMemo(
+    () => ({
+      router,
+      navigator,
+      static: false,
+      basename,
+    }),
+    [router, navigator, basename]
+  );
+
+  // The fragment and {null} here are important!  We need them to keep React 18's
+  // useId happy when we are server-rendering since we may have a <script> here
+  // containing the hydrated server-side staticContext (from StaticRouterProvider).
+  // useId relies on the component tree structure to generate deterministic id's
+  // so we need to ensure it remains the same on the client even though
+  // we don't need the <script> tag
+  return (
+    <>
+      <DataRouterContext.Provider value={dataRouterContext}>
+        <DataRouterStateContext.Provider value={state}>
+          <FetchersContext.Provider value={fetcherData.current}>
+            <ViewTransitionContext.Provider value={vtContext}>
+              <Router
+                basename={basename}
+                location={state.location}
+                navigationType={state.historyAction}
+                navigator={navigator}
+              >
+                <MemoizedDataRoutes
+                  routes={router.routes}
+                  future={router.future}
+                  state={state}
+                />
+              </Router>
+            </ViewTransitionContext.Provider>
+          </FetchersContext.Provider>
+        </DataRouterStateContext.Provider>
+      </DataRouterContext.Provider>
+      {null}
+    </>
+  );
+}
+
+// Memoize to avoid re-renders when updating `ViewTransitionContext`
+const MemoizedDataRoutes = React.memo(DataRoutes);
+
+function DataRoutes({
+  routes,
+  future,
+  state,
+}: {
+  routes: DataRouteObject[];
+  future: RemixRouter["future"];
+  state: RouterState;
+}): React.ReactElement | null {
+  return useRoutesImpl(routes, undefined, state, future);
 }
 
 /**
@@ -681,8 +996,6 @@ enum AwaitRenderStatus {
   success,
   error,
 }
-
-const neverSettledPromise = new Promise(() => {});
 
 class AwaitErrorBoundary extends React.Component<
   AwaitErrorBoundaryProps,

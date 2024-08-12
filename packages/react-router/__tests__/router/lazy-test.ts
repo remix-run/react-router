@@ -1,9 +1,6 @@
-import {
-  createMemoryHistory,
-  createRouter,
-  createStaticHandler,
-  json,
-} from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter, createStaticHandler } from "../../lib/router/router";
+import { json } from "../../lib/router/utils";
 
 import type { TestRouteObject } from "./utils/data-router-setup";
 import { cleanup, createDeferred, setup } from "./utils/data-router-setup";

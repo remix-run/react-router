@@ -1,26 +1,31 @@
 import * as React from "react";
-import type { HydrationState, Router as RemixRouter } from "../../router";
-import { createBrowserHistory, createRouter, matchRoutes } from "../../router";
 
-import "../global";
-import { mapRouteProperties } from "../../components";
-import { RouterProvider } from "../lib";
-import type { AssetsManifest } from "./entry";
-import { deserializeErrors } from "./errors";
-import type { RouteModules } from "./routeModules";
-import invariant from "./invariant";
+import type {
+  UNSAFE_AssetsManifest as AssetsManifest,
+  UNSAFE_RouteModules as RouteModules,
+  createBrowserRouter,
+  HydrationState,
+} from "react-router";
 import {
-  createClientRoutes,
-  createClientRoutesWithHMRRevalidationOptOut,
-  shouldHydrateRouteLoader,
-} from "./routes";
-import {
-  decodeViaTurboStream,
-  getSingleFetchDataStrategy,
-} from "./single-fetch";
-import { FrameworkContext } from "./components";
-import { RemixErrorBoundary } from "./errorBoundaries";
-import { initFogOfWar, useFogOFWarDiscovery } from "./fog-of-war";
+  UNSAFE_invariant as invariant,
+  UNSAFE_FrameworkContext as FrameworkContext,
+  UNSAFE_decodeViaTurboStream as decodeViaTurboStream,
+  UNSAFE_RemixErrorBoundary as RemixErrorBoundary,
+  UNSAFE_createBrowserHistory as createBrowserHistory,
+  UNSAFE_createClientRoutes as createClientRoutes,
+  UNSAFE_createRouter as createRouter,
+  UNSAFE_deserializeErrors as deserializeErrors,
+  UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
+  UNSAFE_initFogOfWar as initFogOfWar,
+  UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
+  UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
+  UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
+  matchRoutes,
+} from "react-router";
+import { RouterProvider } from "./dom-router-provider";
+
+type RemixRouter = ReturnType<typeof createBrowserRouter>;
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__remixContext"]>;
@@ -65,24 +70,6 @@ function createHydratedRouter(): RemixRouter {
       "You must be using the SSR features of React Router in order to skip " +
         "passing a `router` prop to `<RouterProvider>`"
     );
-  }
-
-  // Hard reload if the path we tried to load is not the current path.
-  // This is usually the result of 2 rapid back/forward clicks from an
-  // external site into a Remix app, where we initially start the load for
-  // one URL and while the JS chunks are loading a second forward click moves
-  // us to a new URL.  Avoid comparing search params because of CDNs which
-  // can be configured to ignore certain params and only pathname is relevant
-  // towards determining the route matches.
-  let initialPathname = ssrInfo.context.url;
-  let hydratedPathname = window.location.pathname;
-  if (initialPathname !== hydratedPathname && !ssrInfo.context.isSpaMode) {
-    let errorMsg =
-      `Initial URL (${initialPathname}) does not match URL at time of hydration ` +
-      `(${hydratedPathname}), reloading page...`;
-    console.error(errorMsg);
-    window.location.reload();
-    throw new Error("SSR/Client mismatch - reloading current URL");
   }
 
   // We need to suspend until the initial state snapshot is decoded into
@@ -137,6 +124,31 @@ function createHydratedRouter(): RemixRouter {
       window.location,
       window.__remixContext?.basename
     );
+
+    // Hard reload if the matches we rendered on the server aren't the matches
+    // we matched in the client, otherwise we'll try to hydrate without the
+    // right modules and throw a hydration error, which can put React into an
+    // infinite hydration loop when hydrating the full `<html>` document.
+    // This is usually the result of 2 rapid back/forward clicks from an
+    // external site into a Remix app, where we initially start the load for
+    // one URL and while the JS chunks are loading a second forward click moves
+    // us to a new URL.
+    let ssrMatches = ssrInfo.context.ssrMatches;
+    let hasDifferentSSRMatches =
+      (initialMatches || []).length !== ssrMatches.length ||
+      !(initialMatches || []).every((m, i) => ssrMatches[i] === m.route.id);
+
+    if (hasDifferentSSRMatches && !ssrInfo.context.isSpaMode) {
+      let ssr = ssrMatches.join(",");
+      let client = (initialMatches || []).map((m) => m.route.id).join(",");
+      let errorMsg =
+        `SSR Matches (${ssr}) do not match client matches (${client}) at ` +
+        `time of hydration , reloading page...`;
+      console.error(errorMsg);
+      window.location.reload();
+      throw new Error("SSR/Client mismatch - reloading current URL");
+    }
+
     if (initialMatches) {
       for (let match of initialMatches) {
         let routeId = match.route.id;
@@ -187,10 +199,6 @@ function createHydratedRouter(): RemixRouter {
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
-    future: {
-      // Single fetch enables this underlying behavior
-      v7_skipActionErrorRevalidation: true,
-    },
     hydrationData,
     mapRouteProperties,
     unstable_dataStrategy: getSingleFetchDataStrategy(
@@ -211,7 +219,9 @@ function createHydratedRouter(): RemixRouter {
   }
 
   // @ts-ignore
-  router.createRoutesForHMR = createClientRoutesWithHMRRevalidationOptOut;
+  router.createRoutesForHMR =
+    /* spacer so ts-ignore does not affect the right hand of the assignment */
+    createClientRoutesWithHMRRevalidationOptOut;
   window.__remixRouter = router;
 
   return router;

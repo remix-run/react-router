@@ -72,11 +72,7 @@ export type ServerBundlesBuildManifest = BaseBuildManifest & {
 
 type ServerModuleFormat = "esm" | "cjs";
 
-interface FutureConfig {
-  v3_fetcherPersist: boolean;
-  v3_relativeSplatPath: boolean;
-  v3_throwAbortReason: boolean;
-}
+interface FutureConfig {}
 
 export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
@@ -363,7 +359,6 @@ export async function resolveReactRouterConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
-    future: userFuture,
     ignoredRouteFiles,
     routes: userRoutesFunction,
     prerender: prerenderConfig,
@@ -440,11 +435,7 @@ export async function resolveReactRouterConfig({
     }
   }
 
-  let future: FutureConfig = {
-    v3_fetcherPersist: userFuture?.v3_fetcherPersist === true,
-    v3_relativeSplatPath: userFuture?.v3_relativeSplatPath === true,
-    v3_throwAbortReason: userFuture?.v3_throwAbortReason === true,
-  };
+  let future: FutureConfig = {};
 
   let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
     appDirectory,

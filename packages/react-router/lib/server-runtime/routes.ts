@@ -2,11 +2,10 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
-} from "../router";
+} from "../router/utils";
 import { callRouteAction, callRouteLoader } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
 import type { ServerRouteModule } from "./routeModules";
-import type { DataStrategyCtx } from "./single-fetch";
 
 export interface RouteManifest<Route> {
   [routeId: string]: Route;
@@ -99,7 +98,6 @@ export function createStaticHandlerDataRoutes(
               loadContext: args.context,
               loader: route.module.loader!,
               routeId: route.id,
-              response: (dataStrategyCtx as DataStrategyCtx).response,
             })
         : undefined,
       action: route.module.action
@@ -110,7 +108,6 @@ export function createStaticHandlerDataRoutes(
               loadContext: args.context,
               action: route.module.action!,
               routeId: route.id,
-              response: (dataStrategyCtx as DataStrategyCtx).response,
             })
         : undefined,
       handle: route.module.handle,

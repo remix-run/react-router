@@ -61,6 +61,38 @@ module.exports = function rollup() {
         validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
+    {
+      input: `${SOURCE_DIR}/dom-export.tsx`,
+      output: {
+        file: `${OUTPUT_DIR}/dom-export.mjs`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("React Router", version),
+      },
+      external: (id) => isBareModuleId(id),
+      plugins: [
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          presets: [
+            ["@babel/preset-env", { loose: true }],
+            "@babel/preset-react",
+            "@babel/preset-typescript",
+          ],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
+          extensions: [".ts", ".tsx"],
+        }),
+        typescript({
+          // eslint-disable-next-line no-restricted-globals
+          tsconfig: path.join(__dirname, "tsconfig.dom.json"),
+          noEmitOnError: !WATCH,
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // JS modules for <script type=module>
@@ -142,6 +174,81 @@ module.exports = function rollup() {
         terser({ ecma: 8, safari10: true }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
+    {
+      input: `${SOURCE_DIR}/dom-export.tsx`,
+      output: {
+        file: `${OUTPUT_DIR}/react-router-dom.development.js`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("React Router", version),
+      },
+      external: (id) => isBareModuleId(id),
+      plugins: [
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          presets: [
+            "@babel/preset-modules",
+            "@babel/preset-react",
+            "@babel/preset-typescript",
+          ],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
+          extensions: [".ts", ".tsx"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+    {
+      input: `${SOURCE_DIR}/dom-export.tsx`,
+      output: {
+        file: `${OUTPUT_DIR}/react-router-dom.production.min.js`,
+        format: "esm",
+        sourcemap: !PRETTY,
+        banner: createBanner("React Router", version),
+      },
+      external: (id) => isBareModuleId(id),
+      plugins: [
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          presets: [
+            [
+              "@babel/preset-modules",
+              {
+                // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
+                loose: true,
+              },
+            ],
+            [
+              "@babel/preset-react",
+              {
+                // Compile JSX Spread to Object.assign(), which is reliable in ESM browsers.
+                useBuiltIns: true,
+              },
+            ],
+            "@babel/preset-typescript",
+          ],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
+          extensions: [".ts", ".tsx"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
+        }),
+        terser({ ecma: 8, safari10: true }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // UMD modules for <script> tags and CommonJS (node)
@@ -219,6 +326,79 @@ module.exports = function rollup() {
         validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
+    {
+      input: `${SOURCE_DIR}/dom-export.tsx`,
+      output: {
+        file: `${OUTPUT_DIR}/umd/react-router-dom.development.js`,
+        format: "umd",
+        sourcemap: !PRETTY,
+        banner: createBanner("React Router", version),
+        globals: {
+          react: "React",
+          "react-router": "ReactRouter",
+        },
+        name: "ReactRouterDOMExport",
+      },
+      external: (id) => isBareModuleId(id),
+      plugins: [
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          presets: [
+            ["@babel/preset-env", { loose: true }],
+            "@babel/preset-react",
+            "@babel/preset-typescript",
+          ],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
+          extensions: [".ts", ".tsx"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("development") },
+        }),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+    {
+      input: `${SOURCE_DIR}/dom-export.tsx`,
+      output: {
+        file: `${OUTPUT_DIR}/umd/react-router-dom.production.min.js`,
+        format: "umd",
+        sourcemap: !PRETTY,
+        banner: createBanner("React Router", version),
+        globals: {
+          react: "React",
+          "react-router": "ReactRouter",
+        },
+        name: "ReactRouterDomExport",
+      },
+      external: (id) => isBareModuleId(id),
+      plugins: [
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          presets: [
+            ["@babel/preset-env", { loose: true }],
+            "@babel/preset-react",
+            "@babel/preset-typescript",
+          ],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
+          extensions: [".ts", ".tsx"],
+        }),
+        replace({
+          preventAssignment: true,
+          values: { "process.env.NODE_ENV": JSON.stringify("production") },
+        }),
+        terser(),
+      ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
   ];
 
   // Node entry points
@@ -227,6 +407,15 @@ module.exports = function rollup() {
       input: `${SOURCE_DIR}/node-main.js`,
       output: {
         file: `${OUTPUT_DIR}/main.js`,
+        format: "cjs",
+        banner: createBanner("React Router", version),
+      },
+      plugins: [].concat(PRETTY ? prettier({ parser: "babel" }) : []),
+    },
+    {
+      input: `${SOURCE_DIR}/node-main-dom-export.js`,
+      output: {
+        file: `${OUTPUT_DIR}/main-dom-export.js`,
         format: "cjs",
         banner: createBanner("React Router", version),
       },

@@ -1,5 +1,5 @@
-import { createMemoryHistory, createPath } from "../../lib/router";
-import { createRouter } from "../../lib/router";
+import { createMemoryHistory, createPath } from "../../lib/router/history";
+import { createRouter } from "../../lib/router/router";
 import { cleanup } from "./utils/data-router-setup";
 import { createFormData } from "./utils/utils";
 

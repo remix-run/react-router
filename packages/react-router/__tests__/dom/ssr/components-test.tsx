@@ -9,7 +9,7 @@ import {
   Outlet,
   RouterProvider,
 } from "../../../index";
-import { HydratedRouter } from "../../../lib/dom/ssr/browser";
+import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";
@@ -218,7 +218,7 @@ describe("<ServerRouter>", () => {
 describe("<HydratedRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
     window.__remixContext = {
-      url: "/",
+      ssrMatches: ["root", "empty"],
       future: {},
     };
     window.__remixRouteModules = {

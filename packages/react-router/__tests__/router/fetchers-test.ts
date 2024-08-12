@@ -1,12 +1,12 @@
 /* eslint-disable jest/valid-title */
-import type { HydrationState } from "../../lib/router";
+import type { HydrationState } from "../../lib/router/router";
+import { createMemoryHistory } from "../../lib/router/history";
 import {
-  createMemoryHistory,
   createRouter,
   IDLE_FETCHER,
   IDLE_NAVIGATION,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "../../lib/router";
+} from "../../lib/router/router";
+import { ErrorResponseImpl } from "../../lib/router/utils";
 
 import {
   cleanup,
@@ -2400,6 +2400,108 @@ describe("fetchers", () => {
         state: "idle",
         data: "C",
       });
+    });
+
+    it("cancels in-flight fetcher.loads on fetcher.action submission and forces reload (one time)", async () => {
+      let t = setup({
+        routes: [
+          {
+            id: "root",
+            path: "/",
+            children: [
+              {
+                id: "index",
+                index: true,
+              },
+              {
+                id: "page",
+                path: "page",
+                action: true,
+              },
+              {
+                id: "action",
+                path: "action",
+                action: true,
+              },
+              {
+                id: "fetch",
+                path: "fetch",
+                loader: true,
+                shouldRevalidate: () => false,
+              },
+            ],
+          },
+        ],
+      });
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+
+      // Kick off a fetch from the root route
+      let keyA = "a";
+      let A = await t.fetch("/fetch", keyA, "root");
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      // Interrupt with a fetcher submission which will trigger a forced
+      // revalidation, ignoring shouldRevalidate=false since the prior load
+      // was interrupted
+      let keyB = "b";
+      let B = await t.fetch("/action", keyB, {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(B.loaders, "fetch", "loader", "fetch");
+      expect(t.fetchers[keyB]).toMatchObject({
+        state: "submitting",
+        data: undefined,
+      });
+
+      // Resolving the first load is a no-op since it would have been aborted
+      await A.loaders.fetch.resolve("A LOADER");
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      // Resolve the action, kicking off revalidations which will force the
+      // fetcher "a" load to run again even through shouldRevalidate=false
+      await B.actions.action.resolve("B ACTION");
+      expect(t.fetchers[keyB]).toMatchObject({
+        state: "loading",
+        data: "B ACTION",
+      });
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      // Resolve the second loader kicked off after the action
+      await B.loaders.fetch.resolve("B LOADER");
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "idle",
+        data: "B LOADER",
+      });
+
+      // submitting to another route
+      let C = await t.navigate("/page", {
+        formMethod: "post",
+        formData: createFormData({}),
+      });
+      t.shimHelper(C.loaders, "navigation", "loader", "fetch");
+      expect(t.router.state.navigation.location?.pathname).toBe("/page");
+
+      // should not trigger a fetcher reload due to shouldRevalidate=false
+      // This fixes a prior bug where we didn't remove the fetcher from
+      // cancelledFetcherLoaders upon the forced revalidation
+      await C.actions.page.resolve("PAGE ACTION");
+      expect(t.router.state.location.pathname).toBe("/page");
+      expect(t.router.state.navigation).toBe(IDLE_NAVIGATION);
+      expect(t.fetchers[keyA]).toMatchObject({
+        state: "idle",
+        data: "B LOADER",
+      });
+      expect(C.loaders.fetch.stub).not.toHaveBeenCalled();
     });
 
     it("does not cancel pending action navigation on deletion of revalidating fetcher", async () => {
