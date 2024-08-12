@@ -3193,17 +3193,10 @@ export function createRouter(init: RouterInit): Router {
 
         return { active: true, matches: fogMatches || [] };
       } else {
-        let leafRoute = matches[matches.length - 1].route;
-        let matchedSplat =
-          leafRoute.path &&
-          (leafRoute.path === "*" || leafRoute.path.endsWith("/*"));
-        let matchedDynamic = matches.some(
-          (m) => m.route.path && m.route.path.startsWith(":")
-        );
-        if (matchedDynamic || matchedSplat) {
-          // If we matched a slug or splat, it might only be because we haven't
-          // yet discovered other routes that would match with a higher score,
-          // so let's fetch around and find out
+        if (Object.keys(matches[0].params).length > 0) {
+          // If we matched a dynamic param or a splat, it might only be because
+          // we haven't yet discovered other routes that would match with a
+          // higher score.  Call patchRoutesOnMiss just to be sure
           let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
             routesToUse,
             pathname,
@@ -3239,10 +3232,6 @@ export function createRouter(init: RouterInit): Router {
     signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
     let partialMatches: AgnosticDataRouteMatch[] | null = matches;
-    let route =
-      partialMatches.length > 0
-        ? partialMatches[partialMatches.length - 1].route
-        : null;
     while (true) {
       let isNonHMR = inFlightDataRoutes == null;
       let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -3276,26 +3265,8 @@ export function createRouter(init: RouterInit): Router {
       }
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
-      let matchedSplat = false;
       if (newMatches) {
-        let leafRoute = newMatches[newMatches.length - 1].route;
-
-        if (leafRoute.index) {
-          // If we found an index route, we can stop
-          return { type: "success", matches: newMatches };
-        }
-
-        if (leafRoute.path && leafRoute.path.length > 0) {
-          if (leafRoute.path === "*") {
-            // If we found a splat route, we can't be sure there's not a
-            // higher-scoring route down some partial matches trail so we need
-            // to check that out
-            matchedSplat = true;
-          } else {
-            // If we found a non-splat route, we can stop
-            return { type: "success", matches: newMatches };
-          }
-        }
+        return { type: "success", matches: newMatches };
       }
 
       let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
@@ -3305,23 +3276,18 @@ export function createRouter(init: RouterInit): Router {
         true
       );
 
-      // If we are no longer partially matching anything, this was either a
-      // legit splat match above, or it's a 404.  Also avoid loops if the
-      // second pass results in the same partial matches
+      // Avoid loops if the second pass results in the same partial matches
       if (
         !newPartialMatches ||
-        partialMatches.map((m) => m.route.id).join("-") ===
-          newPartialMatches.map((m) => m.route.id).join("-")
+        (partialMatches.length === newPartialMatches.length &&
+          partialMatches.every(
+            (m, i) => m.route.id === newPartialMatches![i].route.id
+          ))
       ) {
-        return { type: "success", matches: matchedSplat ? newMatches : null };
+        return { type: "success", matches: null };
       }
 
       partialMatches = newPartialMatches;
-      route = partialMatches[partialMatches.length - 1].route;
-      if (route.path === "*") {
-        // The splat is still our most accurate partial, so run with it
-        return { type: "success", matches: partialMatches };
-      }
     }
   }
 

@@ -507,6 +507,121 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/static");
+    expect(router.state.location.pathname).toBe("/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches (product/:slug)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/product/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/product/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches (child route)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "product",
+          path: "/product",
+          children: [
+            {
+              id: "slug",
+              path: ":slug",
+            },
+          ],
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch("product", [
+          {
+            id: "static",
+            path: "static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "product",
+      "static",
+    ]);
+  });
+
+  it("matches dynamic params when other paths don't pan out", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        await tick();
+      },
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location.pathname).toBe("/a");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["slug"]);
+  });
+
   it("de-prioritizes splat routes in favor of looking for better async matches", async () => {
     router = createRouter({
       history: createMemoryHistory(),
@@ -567,6 +682,43 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     await router.navigate("/splat/static");
     expect(router.state.location.pathname).toBe("/splat/static");
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes splat routes in favor of looking for better async matches (child route)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "product",
+          path: "/product",
+          children: [
+            {
+              id: "splat",
+              path: "*",
+            },
+          ],
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch("product", [
+          {
+            id: "static",
+            path: "static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "product",
+      "static",
+    ]);
   });
 
   it("matches splats when other paths don't pan out", async () => {
