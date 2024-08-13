@@ -11,8 +11,7 @@ import PackageJson from "@npmcli/package-json";
 import type {
   RouteManifest,
   RouteManifestEntry,
-  RouteConfig,
-  RouteConfigEntry,
+  RoutesConfig,
 } from "../config/routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
 import { importViteEsmSync } from "./import-vite-esm-sync";
@@ -425,16 +424,14 @@ export async function resolveReactRouterConfig({
   }
 
   try {
-    let routeConfig: RouteConfig = (
+    let routesConfig: RoutesConfig = (
       await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
     ).default;
 
-    let routeConfigEntries = [routeConfig].flat(
-      Infinity as 1
-    ) as RouteConfigEntry[];
+    let entries = Array.isArray(routesConfig) ? routesConfig : [routesConfig];
 
     let routeManifests = await Promise.all(
-      routeConfigEntries.map(
+      entries.map(
         async (config) =>
           (typeof config === "function"
             ? await config({ appDirectory })

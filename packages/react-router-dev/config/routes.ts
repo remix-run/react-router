@@ -40,13 +40,16 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type RouteConfigOptions = { routes: RouteManifest };
-type DynamicRouteConfigOptions = (args: {
+export type StaticRoutesConfigEntry = { routes: RouteManifest };
+export type DynamicRoutesConfigEntry = (args: {
   appDirectory: string;
-}) => RouteConfigOptions | Promise<RouteConfigOptions>;
+}) => StaticRoutesConfigEntry | Promise<StaticRoutesConfigEntry>;
 
-export type RouteConfigEntry = RouteConfigOptions | DynamicRouteConfigOptions;
-export type RouteConfig = RouteConfigEntry | RouteConfigEntry[];
+export type RoutesConfigEntry =
+  | StaticRoutesConfigEntry
+  | DynamicRoutesConfigEntry;
+
+export type RoutesConfig = RoutesConfigEntry | RoutesConfigEntry[];
 
 /**
  * A route exported from the routes config file
@@ -184,16 +187,15 @@ function createLayout(
   };
 }
 
-export const route = Object.assign(createRoute, {
-  index: createIndex,
-  layout: createLayout,
-});
-
-export function defineRoutes(routes: ConfigRoute[]): RouteConfigOptions {
+export function routes(routes: ConfigRoute[]): StaticRoutesConfigEntry {
   return {
     routes: configRoutesToRouteManifest(routes),
   };
 }
+
+export const route = createRoute;
+export const index = createIndex;
+export const layout = createLayout;
 
 function configRoutesToRouteManifest(
   routes: ConfigRoute[],
