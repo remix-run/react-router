@@ -197,9 +197,9 @@ ReactDOM.hydrateRoot(
 You can move the definition to a `routes.ts` file:
 
 ```tsx filename=src/routes.ts
-import { defineRoutes } from "@react-router/dev/config";
+import { routes } from "@react-router/dev/routes";
 
-export default defineRoutes([
+export default routes([
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",

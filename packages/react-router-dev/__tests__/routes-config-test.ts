@@ -1,8 +1,8 @@
-import { defineRoutes, route } from "../config/routes";
+import { routes, route, layout, index } from "../config/routes";
 
-describe("defineRoutes", () => {
+describe("routes config", () => {
   it("returns an array of routes", () => {
-    let { routes } = defineRoutes([
+    let config = routes([
       { path: "/", file: "routes/home.js" },
       {
         path: "inbox",
@@ -15,7 +15,7 @@ describe("defineRoutes", () => {
       },
     ]);
 
-    expect(routes).toMatchInlineSnapshot(`
+    expect(config.routes).toMatchInlineSnapshot(`
       {
         "routes/home": {
           "caseSensitive": undefined,
@@ -62,21 +62,21 @@ describe("defineRoutes", () => {
   });
 
   it("returns an array of routes using helpers", () => {
-    let { routes } = defineRoutes([
+    let config = routes([
       route("/", "routes/home.js"),
-      route.layout("routes/authenticated.js", [
+      layout("routes/authenticated.js", [
         route("inbox", "routes/inbox.js", [
-          route.index("routes/inbox/index.js"),
+          index("routes/inbox/index.js"),
           route(":messageId", "routes/inbox/$messageId.js"),
         ]),
         route("outbox", "routes/outbox.js", [
-          route.index("routes/outbox/index.js"),
+          index("routes/outbox/index.js"),
           route(":messageId", "routes/outbox/$messageId.js"),
         ]),
       ]),
     ]);
 
-    expect(routes).toMatchInlineSnapshot(`
+    expect(config.routes).toMatchInlineSnapshot(`
       {
         "routes/authenticated": {
           "caseSensitive": undefined,
@@ -147,13 +147,13 @@ describe("defineRoutes", () => {
   });
 
   it("allows multiple routes with the same route module", () => {
-    let { routes } = defineRoutes([
+    let config = routes([
       route("/user/:id", "routes/_index.tsx", { id: "user-by-id" }),
       route("/user", "routes/_index.tsx", { id: "user" }),
       route("/other", "routes/other-route.tsx"),
     ]);
 
-    expect(routes).toMatchInlineSnapshot(`
+    expect(config.routes).toMatchInlineSnapshot(`
       {
         "routes/other-route": {
           "caseSensitive": undefined,
@@ -186,7 +186,7 @@ describe("defineRoutes", () => {
   it("throws an error on route id collisions", () => {
     // Two conflicting custom id's
     let defineNonUniqueRoutes = () => {
-      defineRoutes([
+      routes([
         route("/user/:id", "routes/user.tsx", { id: "user" }),
         route("/user", "routes/user.tsx", { id: "user" }),
         route("/other", "routes/other-route.tsx"),
@@ -199,7 +199,7 @@ describe("defineRoutes", () => {
 
     // Custom id conflicting with a later-defined auto-generated id
     defineNonUniqueRoutes = () => {
-      defineRoutes([
+      routes([
         route("/user/:id", "routes/user.tsx", { id: "routes/user" }),
         route("/user", "routes/user.tsx"),
       ]);
@@ -211,7 +211,7 @@ describe("defineRoutes", () => {
 
     // Custom id conflicting with an earlier-defined auto-generated id
     defineNonUniqueRoutes = () => {
-      defineRoutes([
+      routes([
         route("/user", "routes/user.tsx"),
         route("/user/:id", "routes/user.tsx", { id: "routes/user" }),
       ]);
@@ -327,7 +327,7 @@ describe("defineRoutes", () => {
 
     describe("index", () => {
       it("supports basic routes", () => {
-        expect(route.index("file.tsx")).toMatchInlineSnapshot(`
+        expect(index("file.tsx")).toMatchInlineSnapshot(`
           {
             "file": "file.tsx",
             "index": true,
@@ -336,8 +336,7 @@ describe("defineRoutes", () => {
       });
 
       it("supports custom IDs", () => {
-        expect(route.index("file.tsx", { id: "custom-id" }))
-          .toMatchInlineSnapshot(`
+        expect(index("file.tsx", { id: "custom-id" })).toMatchInlineSnapshot(`
           {
             "file": "file.tsx",
             "id": "custom-id",
@@ -348,7 +347,7 @@ describe("defineRoutes", () => {
 
       it("ignores unsupported options", () => {
         expect(
-          route.index("file.tsx", {
+          index("file.tsx", {
             id: "custom-id",
             // @ts-expect-error
             unsupportedOption: 123,
@@ -365,7 +364,7 @@ describe("defineRoutes", () => {
 
     describe("layout", () => {
       it("supports basic routes", () => {
-        expect(route.layout("layout.tsx")).toMatchInlineSnapshot(`
+        expect(layout("layout.tsx")).toMatchInlineSnapshot(`
           {
             "children": undefined,
             "file": "layout.tsx",
@@ -374,7 +373,7 @@ describe("defineRoutes", () => {
       });
 
       it("supports children", () => {
-        expect(route.layout("layout.tsx", [route("path", "file.tsx")]))
+        expect(layout("layout.tsx", [route("path", "file.tsx")]))
           .toMatchInlineSnapshot(`
           {
             "children": [
@@ -390,7 +389,7 @@ describe("defineRoutes", () => {
       });
 
       it("supports custom IDs", () => {
-        expect(route.layout("layout.tsx", { id: "custom-id" }))
+        expect(layout("layout.tsx", { id: "custom-id" }))
           .toMatchInlineSnapshot(`
           {
             "children": undefined,
@@ -402,9 +401,7 @@ describe("defineRoutes", () => {
 
       it("supports custom IDs with children", () => {
         expect(
-          route.layout("layout.tsx", { id: "custom-id" }, [
-            route("path", "file.tsx"),
-          ])
+          layout("layout.tsx", { id: "custom-id" }, [route("path", "file.tsx")])
         ).toMatchInlineSnapshot(`
           {
             "children": [

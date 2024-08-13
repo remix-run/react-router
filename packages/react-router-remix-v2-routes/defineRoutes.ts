@@ -1,7 +1,7 @@
 import type {
   RouteManifest,
   RouteManifestEntry,
-} from "@react-router/dev/config";
+} from "@react-router/dev/routes";
 
 import { normalizeSlashes } from "./normalizeSlashes";
 

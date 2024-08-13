@@ -19,9 +19,9 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./config": {
-      "types": "./dist/config-entry.d.ts",
-      "default": "./dist/config-entry.js"
+    "./routes": {
+      "types": "./dist/routes.d.ts",
+      "default": "./dist/routes.js"
     },
     "./package.json": "./package.json"
   },

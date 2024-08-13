@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { RouteManifest, RouteConfig } from "@react-router/dev/config";
+import type {
+  RouteManifest,
+  DynamicRoutesConfigEntry,
+} from "@react-router/dev/routes";
 
 import { fileRoutes } from "./fileRoutes";
 import { defineRoutes, type DefineRoutesFunction } from "./defineRoutes";
@@ -23,7 +26,7 @@ export function remixRoutes({
   ) =>
     | ReturnType<DefineRoutesFunction>
     | Promise<ReturnType<DefineRoutesFunction>>;
-} = {}): RouteConfig {
+} = {}): DynamicRoutesConfigEntry {
   return async ({ appDirectory }) => {
     let routes: RouteManifest = {};
 

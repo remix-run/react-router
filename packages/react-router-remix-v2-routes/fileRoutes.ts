@@ -3,7 +3,7 @@ import path from "node:path";
 import type {
   RouteManifest,
   RouteManifestEntry,
-} from "@react-router/dev/config";
+} from "@react-router/dev/routes";
 import { makeRe } from "minimatch";
 
 import { normalizeSlashes } from "./normalizeSlashes";

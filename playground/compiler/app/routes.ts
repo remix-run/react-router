@@ -1,7 +1,7 @@
-import { defineRoutes, route } from "@react-router/dev/config";
+import { routes, index, type RoutesConfig } from "@react-router/dev/routes";
 import { remixRoutes } from "@react-router/remix-v2-routes";
 
 export default [
-  defineRoutes([route.index("routes/_index.tsx")]),
+  routes([index("routes/_index.tsx")]),
   remixRoutes({ rootDirectory: "remix-routes" }),
-];
+] satisfies RoutesConfig;
