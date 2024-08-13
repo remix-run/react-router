@@ -150,14 +150,14 @@ describe("routes config", () => {
     let config = routes([
       route("/user/:id", "routes/_index.tsx", { id: "user-by-id" }),
       route("/user", "routes/_index.tsx", { id: "user" }),
-      route("/other", "routes/other-tsx"),
+      route("/other", "routes/other-route.tsx"),
     ]);
 
     expect(config.routes).toMatchInlineSnapshot(`
       {
         "routes/other-route": {
           "caseSensitive": undefined,
-          "file": "routes/other-tsx",
+          "file": "routes/other-route.tsx",
           "id": "routes/other-route",
           "index": undefined,
           "parentId": "root",
@@ -189,7 +189,7 @@ describe("routes config", () => {
       routes([
         route("/user/:id", "routes/user.tsx", { id: "user" }),
         route("/user", "routes/user.tsx", { id: "user" }),
-        route("/other", "routes/other-tsx"),
+        route("/other", "routes/other-route.tsx"),
       ]);
     };
 
