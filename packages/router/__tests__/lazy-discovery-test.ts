@@ -755,6 +755,50 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
   });
 
+  it("recurses unstable_patchRoutesOnMiss until a match is found", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        await tick();
+        count++;
+        if (last(matches).route.id === "a") {
+          patch("a", [
+            {
+              id: "b",
+              path: "b",
+            },
+          ]);
+        } else if (last(matches).route.id === "b") {
+          patch("b", [
+            {
+              id: "c",
+              path: "c",
+            },
+          ]);
+        }
+      },
+    });
+
+    await router.navigate("/a/b/c");
+    expect(router.state.location.pathname).toBe("/a/b/c");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+    expect(count).toBe(2);
+  });
+
   it("discovers routes during initial hydration", async () => {
     let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
     let loaderDfd = createDeferred();
