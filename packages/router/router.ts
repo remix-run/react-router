@@ -4963,7 +4963,7 @@ async function convertHandlerResultToDataResult(
         };
       }
 
-      // Convert thrown unstable_data() to ErrorResponse instances
+      // Convert thrown data() to ErrorResponse instances
       result = new ErrorResponseImpl(
         result.init?.status || 500,
         undefined,

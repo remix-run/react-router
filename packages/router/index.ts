@@ -38,7 +38,7 @@ export type {
 
 export {
   AbortedDeferredError,
-  data as unstable_data,
+  data,
   defer,
   generatePath,
   getToPathname,
