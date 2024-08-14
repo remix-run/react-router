@@ -32,7 +32,7 @@ import type {
   To,
   UIMatch,
   unstable_HandlerResult,
-  unstable_AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -291,8 +291,8 @@ function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
-export interface unstable_PatchRoutesOnNavigationFunction
-  extends unstable_AgnosticPatchRoutesOnNavigationFunction<RouteMatch> {}
+export interface PatchRoutesOnNavigationFunction
+  extends AgnosticPatchRoutesOnNavigationFunction<RouteMatch> {}
 
 export function createMemoryRouter(
   routes: RouteObject[],
@@ -303,7 +303,7 @@ export function createMemoryRouter(
     initialEntries?: InitialEntry[];
     initialIndex?: number;
     dataStrategy?: DataStrategyFunction;
-    unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
+    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -320,7 +320,7 @@ export function createMemoryRouter(
     routes,
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
   }).initialize();
 }
 

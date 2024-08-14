@@ -16,7 +16,7 @@ import type {
   RouterProps,
   RouterProviderProps,
   To,
-  unstable_PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunction,
 } from "react-router";
 import {
   Router,
@@ -153,7 +153,7 @@ export type {
   To,
   UIMatch,
   unstable_HandlerResult,
-  unstable_PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunction,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -261,7 +261,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   dataStrategy?: DataStrategyFunction;
-  unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   window?: Window;
 }
 
@@ -280,7 +280,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -300,7 +300,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
