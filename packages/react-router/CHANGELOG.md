@@ -1,5 +1,130 @@
 # `react-router`
 
+## 7.0.0-pre.0
+
+### Major Changes
+
+- Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream`. This removes these exports from React Router: ([#11744](https://github.com/remix-run/react-router/pull/11744))
+
+  - `defer`
+  - `AbortedDeferredError`
+  - `type TypedDeferredData`
+  - `UNSAFE_DeferredData`
+  - `UNSAFE_DEFERRED_SYMBOL`,
+
+- - Collapse `@remix-run/router` into `react-router` ([#11505](https://github.com/remix-run/react-router/pull/11505))
+  - Collapse `react-router-dom` into `react-router`
+  - Collapse `@remix-run/server-runtime` into `react-router`
+  - Collapse `@remix-run/testing` into `react-router`
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
+- Remove `future.v7_startTransition` flag ([#11696](https://github.com/remix-run/react-router/pull/11696))
+- - Expose the underlying router promises from the following APIs for compsition in React 19 APIs: ([#11521](https://github.com/remix-run/react-router/pull/11521))
+    - `useNavigate()`
+    - `useSubmit`
+    - `useFetcher().load`
+    - `useFetcher().submit`
+    - `useRevalidator.revalidate`
+- Remove `future.v7_normalizeFormMethod` future flag ([#11697](https://github.com/remix-run/react-router/pull/11697))
+- Imports/Exports cleanup ([#11840](https://github.com/remix-run/react-router/pull/11840))
+
+  - Removed the following exports that were previously public API from `@remix-run/router`
+    - types
+      - `AgnosticDataIndexRouteObject`
+      - `AgnosticDataNonIndexRouteObject`
+      - `AgnosticDataRouteMatch`
+      - `AgnosticDataRouteObject`
+      - `AgnosticIndexRouteObject`
+      - `AgnosticNonIndexRouteObject`
+      - `AgnosticRouteMatch`
+      - `AgnosticRouteObject`
+      - `TrackedPromise`
+      - `unstable_AgnosticPatchRoutesOnMissFunction`
+      - `Action` -> exported as `NavigationType` via `react-router`
+      - `Router` exported as `RemixRouter` to differentiate from RR's `<Router>`
+    - API
+      - `getToPathname` (`@private`)
+      - `joinPaths` (`@private`)
+      - `normalizePathname` (`@private`)
+      - `resolveTo` (`@private`)
+      - `stripBasename` (`@private`)
+      - `createBrowserHistory` -> in favor of `createBrowserRouter`
+      - `createHashHistory` -> in favor of `createHashRouter`
+      - `createMemoryHistory` -> in favor of `createMemoryRouter`
+      - `createRouter`
+      - `createStaticHandler` -> in favor of wrapper `createStaticHandler` in RR Dom
+      - `getStaticContextFromError`
+  - Removed the following exports that were previously public API from `react-router`
+    - `Hash`
+    - `Pathname`
+    - `Search`
+
+- update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+- Remove `future.v7_prependBasename` from the ionternalized `@remix-run/router` package ([#11726](https://github.com/remix-run/react-router/pull/11726))
+- Remove `future.v7_throwAbortReason` from internalized `@remix-run/router` package ([#11728](https://github.com/remix-run/react-router/pull/11728))
+- Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+- node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
+- renamed RemixContext to FrameworkContext ([#11705](https://github.com/remix-run/react-router/pull/11705))
+- updates the minimum React version to 18 ([#11689](https://github.com/remix-run/react-router/pull/11689))
+- - Remove the `future.v7_partialHydration` flag ([#11725](https://github.com/remix-run/react-router/pull/11725))
+    - This also removes the `<RouterProvider fallbackElement>` prop
+      - To migrate, move the `fallbackElement` to a `hydrateFallbackElement`/`HydrateFallback` on your root route
+    - Also worth nothing there is a related breaking changer with this future flag:
+      - Without `future.v7_partialHydration` (when using `fallbackElement`), `state.navigation` was populated during the initial load
+      - With `future.v7_partialHydration`, `state.navigation` remains in an `"idle"` state during the initial load
+- Remove `v7_relativeSplatPath` future flag ([#11695](https://github.com/remix-run/react-router/pull/11695))
+- Remove remaining future flags ([#11820](https://github.com/remix-run/react-router/pull/11820))
+
+  - React Router `v7_skipActionErrorRevalidation`
+  - Remix `v3_fetcherPersist`, `v3_relativeSplatPath`, `v3_throwAbortReason`
+
+- rename createRemixStub to createRoutesStub ([#11692](https://github.com/remix-run/react-router/pull/11692))
+- Remove `@remix-run/router` deprecated `detectErrorBoundary` option in favor of `mapRouteProperties` ([#11751](https://github.com/remix-run/react-router/pull/11751))
+- Add `react-router/dom` subpath export to properly enable `react-dom` as an optional `peerDependency` ([#11851](https://github.com/remix-run/react-router/pull/11851))
+
+  - This ensures that we don't blindly `import ReactDOM from "react-dom"` in `<RouterProvider>` in order to access `ReactDOM.flushSync()`, since that would break `createMemoryRouter` use cases in non-DOM environments
+  - DOM environments should import from `react-router/dom` to get the proper component that makes `ReactDOM.flushSync()` available:
+    - If you are using the Vite plugin, use this in your `entry.client.tsx`:
+      - `import { HydratedRouter } from 'react-router/dom'`
+    - If you are not using the Vite plugin and are manually calling `createBrowserRouter`/`createHashRouter`:
+      - `import { RouterProvider } from "react-router/dom"`
+
+- Remove `future.v7_fetcherPersist` flag ([#11731](https://github.com/remix-run/react-router/pull/11731))
+
+### Minor Changes
+
+- - Add support for `prerender` config in the React Router vite plugin, to support existing SSG use-cases ([#11539](https://github.com/remix-run/react-router/pull/11539))
+    - You can use the `prerender` config to pre-render your `.html` and `.data` files at build time and then serve them statically at runtime (either from a running server or a CDN)
+    - `prerender` can either be an array of string paths, or a function (sync or async) that returns an array of strings so that you can dynamically generate the paths by talking to your CMS, etc.
+
+  ```ts
+  export default defineConfig({
+    plugins: [
+      reactRouter({
+        async prerender() {
+          let slugs = await fakeGetSlugsFromCms();
+          // Prerender these paths into `.html` files at build time, and `.data`
+          // files if they have loaders
+          return ["/", "/about", ...slugs.map((slug) => `/product/${slug}`)];
+        },
+      }),
+      tsconfigPaths(),
+    ],
+  });
+
+  async function fakeGetSlugsFromCms() {
+    await new Promise((r) => setTimeout(r, 1000));
+    return ["shirt", "hat"];
+  }
+  ```
+
+- Remove duplicate `RouterProvider` impliementations ([#11679](https://github.com/remix-run/react-router/pull/11679))
+
+### Patch Changes
+
+- Updated dependencies:
+  - `react-router@7.0.0-pre.0`
+
 ## 6.26.0
 
 ### Minor Changes
