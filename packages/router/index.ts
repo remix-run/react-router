@@ -23,7 +23,7 @@ export type {
   LoaderFunctionArgs,
   ParamParseKey,
   Params,
-  AgnosticPatchRoutesOnMissFunction as unstable_AgnosticPatchRoutesOnMissFunction,
+  AgnosticPatchRoutesOnNavigationFunction as unstable_AgnosticPatchRoutesOnNavigationFunction,
   PathMatch,
   PathParam,
   PathPattern,
@@ -33,10 +33,12 @@ export type {
   TrackedPromise,
   UIMatch,
   V7_FormMethod,
+  DataWithResponseInit as UNSAFE_DataWithResponseInit,
 } from "./utils";
 
 export {
   AbortedDeferredError,
+  data as unstable_data,
   defer,
   generatePath,
   getToPathname,
@@ -48,6 +50,7 @@ export {
   normalizePathname,
   redirect,
   redirectDocument,
+  replace,
   resolvePath,
   resolveTo,
   stripBasename,
@@ -92,6 +95,7 @@ export {
   ErrorResponseImpl as UNSAFE_ErrorResponseImpl,
   convertRoutesToDataRoutes as UNSAFE_convertRoutesToDataRoutes,
   convertRouteMatchToUiMatch as UNSAFE_convertRouteMatchToUiMatch,
+  decodePath as UNSAFE_decodePath,
   getResolveToMatches as UNSAFE_getResolveToMatches,
 } from "./utils";
 

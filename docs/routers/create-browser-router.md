@@ -52,7 +52,7 @@ function createBrowserRouter(
     future?: FutureConfig;
     hydrationData?: HydrationState;
     unstable_dataStrategy?: unstable_DataStrategyFunction;
-    unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+    unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
     window?: Window;
   }
 ): RemixRouter;
@@ -125,7 +125,7 @@ The following future flags are currently available:
 | `v7_partialHydration`                       | Support partial hydration for Server-rendered apps                      |
 | `v7_prependBasename`                        | Prepend the router basename to navigate/fetch paths                     |
 | [`v7_relativeSplatPath`][relativesplatpath] | Fix buggy relative path resolution in splat routes                      |
-| `unstable_skipActionErrorRevalidation`      | Do not revalidate by default if the action returns a 4xx/5xx `Response` |
+| `v7_skipActionErrorRevalidation`            | Do not revalidate by default if the action returns a 4xx/5xx `Response` |
 
 ## `opts.hydrationData`
 
@@ -246,7 +246,7 @@ interface HandlerResult {
     - If you are on `/parent/child/a` and you submit to `a`'s `action`, then only `a` will have `shouldLoad=true` for the action execution of `dataStrategy`
       - After the `action`, `dataStrategy` will be called again for the `loader` revalidation, and all matches will have `shouldLoad=true` (assuming no custom `shouldRevalidate` implementations)
 
-The `dataStrategy` function should return a parallel array of `HandlerResult` instances, which indicates if the handler was successful or not. If the returned `handlerResult.result` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but preserve the status code, you can return the decoded value in `handlerResult.result` and send the status along via `handlerResult.status` (for example, when using the `future.unstable_skipActionRevalidation` flag). `match.resolve()` will return a `HandlerResult` if you are not passing it a handler override function. If you are, then you need to wrap the `handler` result in a `HandlerResult` (see examples below).
+The `dataStrategy` function should return a parallel array of `HandlerResult` instances, which indicates if the handler was successful or not. If the returned `handlerResult.result` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but preserve the status code, you can return the decoded value in `handlerResult.result` and send the status along via `handlerResult.status` (for example, when using the `future.v7_skipActionRevalidation` flag). `match.resolve()` will return a `HandlerResult` if you are not passing it a handler override function. If you are, then you need to wrap the `handler` result in a `HandlerResult` (see examples below).
 
 ### Example Use Cases
 
@@ -384,7 +384,7 @@ let router = createBrowserRouter(routes, {
 });
 ```
 
-## `opts.unstable_patchRoutesOnMiss`
+## `opts.unstable_patchRoutesOnNavigation`
 
 <docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
 
@@ -394,12 +394,12 @@ To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] whic
 
 In some cases, even this doesn't go far enough. For very large applications, providing all route definitions up front can be prohibitively expensive. Additionally, it might not even be possible to provide all route definitions up front in certain Micro-Frontend or Module-Federation architectures.
 
-This is where `unstable_patchRoutesOnMiss` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
+This is where `unstable_patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
 
 ### Type Declaration
 
 ```ts
-export interface unstable_PatchRoutesOnMissFunction {
+export interface unstable_PatchRoutesOnNavigationFunction {
   (opts: {
     path: string;
     matches: RouteMatch[];
@@ -413,7 +413,7 @@ export interface unstable_PatchRoutesOnMissFunction {
 
 ### Overview
 
-`unstable_patchRoutesOnMiss` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
+`unstable_patchRoutesOnNavigation` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
 
 **Patching children into an existing route**
 
@@ -427,7 +427,10 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnMiss({ path, patch }) {
+    async unstable_patchRoutesOnNavigation({
+      path,
+      patch,
+    }) {
       if (path === "/a") {
         // Load/patch the `a` route as a child of the route with id `root`
         let route = await getARoute();
@@ -439,7 +442,7 @@ const router = createBrowserRouter(
 );
 ```
 
-In the above example, if the user clicks a clink to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnMiss` with `/a` and a `matches` array containing the root route match. By calling `patch`, it the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
+In the above example, if the user clicks a link to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnNavigation` with `/a` and a `matches` array containing the root route match. By calling `patch`, the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
 **Patching new root-level routes**
 
@@ -455,7 +458,10 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnMiss({ path, patch }) {
+    async unstable_patchRoutesOnNavigation({
+      path,
+      patch,
+    }) {
       if (path === "/root-sibling") {
         // Load/patch the `/root-sibling` route as a sibling of the root route
         let route = await getRootSiblingRoute();
@@ -478,24 +484,19 @@ let router = createBrowserRouter(
       path: "/",
       Component: Home,
     },
-    {
-      id: "dashboard",
-      path: "/dashboard",
-    },
-    {
-      id: "account",
-      path: "/account",
-    },
   ],
   {
-    async unstable_patchRoutesOnMiss({ path, patch }) {
+    async unstable_patchRoutesOnNavigation({
+      path,
+      patch,
+    }) {
       if (path.startsWith("/dashboard")) {
         let children = await import("./dashboard");
-        patch("dashboard", children);
+        patch(null, children);
       }
       if (path.startsWith("/account")) {
         let children = await import("./account");
-        patch("account", children);
+        patch(null, children);
       }
     },
   }
@@ -507,32 +508,55 @@ let router = createBrowserRouter(
 If you don't wish to perform your own pseudo-matching, you can leverage the partial `matches` array and the `handle` field on a route to keep the children definitions co-located:
 
 ```jsx
-let router = createBrowserRouter([
+let router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      Component: Home,
+    },
+    {
+      path: "/dashboard",
+      children: [
+        {
+          // If we want to include /dashboard in the critical routes, we need to
+          // also include it's index route since patchRoutesOnNavigation will not be
+          // called on a navigation to `/dashboard` because it will have successfully
+          // matched the `/dashboard` parent route
+          index: true,
+          // ...
+        },
+      ],
+      handle: {
+        lazyChildren: () => import("./dashboard"),
+      },
+    },
+    {
+      path: "/account",
+      children: [
+        {
+          index: true,
+          // ...
+        },
+      ],
+      handle: {
+        lazyChildren: () => import("./account"),
+      },
+    },
+  ],
   {
-    path: "/",
-    Component: Home,
-  },
-  {
-    path: "/dashboard",
-    handle: {
-      lazyChildren: () => import('./dashboard');
-    }
-  },
-  {
-    path: "/account",
-    handle: {
-      lazyChildren: () => import('./account');
-    }
-  },
-], {
-  async unstable_patchRoutesOnMiss({ matches, patch }) {
-    let leafRoute = matches[matches.length - 1]?.route;
-    if (leafRoute?.handle?.lazyChildren) {
-      let children = await leafRoute.handle.lazyChildren();
-      patch(leafRoute.id, children);
-    }
+    async unstable_patchRoutesOnNavigation({
+      matches,
+      patch,
+    }) {
+      let leafRoute = matches[matches.length - 1]?.route;
+      if (leafRoute?.handle?.lazyChildren) {
+        let children =
+          await leafRoute.handle.lazyChildren();
+        patch(leafRoute.id, children);
+      }
+    },
   }
-});
+);
 ```
 
 ## `opts.window`

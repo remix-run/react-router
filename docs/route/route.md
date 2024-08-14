@@ -70,7 +70,7 @@ Neither style is discouraged and behavior is identical. For the majority of this
 interface RouteObject {
   path?: string;
   index?: boolean;
-  children?: React.ReactNode;
+  children?: RouteObject[];
   caseSensitive?: boolean;
   id?: string;
   loader?: LoaderFunction;

@@ -33,7 +33,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           loader: () => loaderDfd.promise,
         },
       ],
-      async unstable_patchRoutesOnMiss({ patch }) {
+      async unstable_patchRoutesOnNavigation({ patch }) {
         let children = await childrenDfd.promise;
         patch("parent", children);
       },
@@ -89,7 +89,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss({ patch, matches }) {
+      async unstable_patchRoutesOnNavigation({ patch, matches }) {
         await tick();
         if (last(matches).route.id === "a") {
           patch("a", [
@@ -145,7 +145,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           loader: () => loaderDfd.promise,
         },
       ],
-      async unstable_patchRoutesOnMiss({ patch }) {
+      async unstable_patchRoutesOnNavigation({ patch }) {
         let children = await childrenDfd.promise;
         patch("parent", children);
       },
@@ -219,7 +219,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss({ patch, matches }) {
+      async unstable_patchRoutesOnNavigation({ patch, matches }) {
         await tick();
         if (last(matches).route.id === "a") {
           patch("a", [
@@ -283,7 +283,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss({ path, matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ path, matches, patch }) {
         let routeId = last(matches).route.id;
         calls.push([path, routeId]);
         patch("a", await aDfd.promise);
@@ -338,7 +338,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss({ path, matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ path, matches, patch }) {
         let routeId = last(matches).route.id;
         if (!path) {
           return;
@@ -441,7 +441,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           },
         },
       ],
-      async unstable_patchRoutesOnMiss({ matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
         let leafRoute = last(matches).route;
         patch(leafRoute.id, await leafRoute.handle.loadChildren?.());
       },
@@ -471,7 +471,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss({ matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
         await tick();
         if (last(matches).route.id === "a") {
           patch("a", [
@@ -507,6 +507,121 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/static");
+    expect(router.state.location.pathname).toBe("/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches (product/:slug)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/product/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/product/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches (child route)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "product",
+          path: "/product",
+          children: [
+            {
+              id: "slug",
+              path: ":slug",
+            },
+          ],
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ patch }) {
+        await tick();
+        patch("product", [
+          {
+            id: "static",
+            path: "static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "product",
+      "static",
+    ]);
+  });
+
+  it("matches dynamic params when other paths don't pan out", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
+        await tick();
+      },
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location.pathname).toBe("/a");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["slug"]);
+  });
+
   it("de-prioritizes splat routes in favor of looking for better async matches", async () => {
     router = createRouter({
       history: createMemoryHistory(),
@@ -523,7 +638,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss({ matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
         await tick();
         if (last(matches).route.id === "a") {
           patch("a", [
@@ -539,6 +654,71 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     await router.navigate("/a/b");
     expect(router.state.location.pathname).toBe("/a/b");
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
+  });
+
+  it("de-prioritizes splat routes in favor of looking for better async matches (splat/*)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "splat",
+          path: "/splat/*",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/splat/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/splat/static");
+    expect(router.state.location.pathname).toBe("/splat/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes splat routes in favor of looking for better async matches (child route)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "product",
+          path: "/product",
+          children: [
+            {
+              id: "splat",
+              path: "*",
+            },
+          ],
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ patch }) {
+        await tick();
+        patch("product", [
+          {
+            id: "static",
+            path: "static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "product",
+      "static",
+    ]);
   });
 
   it("matches splats when other paths don't pan out", async () => {
@@ -557,7 +737,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "a",
         },
       ],
-      async unstable_patchRoutesOnMiss({ matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
         await tick();
         if (last(matches).route.id === "a") {
           patch("a", [
@@ -573,6 +753,50 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     await router.navigate("/a/nope");
     expect(router.state.location.pathname).toBe("/a/nope");
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
+  });
+
+  it("recurses unstable_patchRoutesOnNavigation until a match is found", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
+        await tick();
+        count++;
+        if (last(matches).route.id === "a") {
+          patch("a", [
+            {
+              id: "b",
+              path: "b",
+            },
+          ]);
+        } else if (last(matches).route.id === "b") {
+          patch("b", [
+            {
+              id: "c",
+              path: "c",
+            },
+          ]);
+        }
+      },
+    });
+
+    await router.navigate("/a/b/c");
+    expect(router.state.location.pathname).toBe("/a/b/c");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+    expect(count).toBe(2);
   });
 
   it("discovers routes during initial hydration", async () => {
@@ -592,7 +816,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           loader: () => loaderDfd.promise,
         },
       ],
-      async unstable_patchRoutesOnMiss({ patch }) {
+      async unstable_patchRoutesOnNavigation({ patch }) {
         let children = await childrenDfd.promise;
         patch("parent", children);
       },
@@ -600,9 +824,11 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     router.initialize();
 
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.length).toBe(0);
 
     loaderDfd.resolve("PARENT");
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.length).toBe(0);
 
     childrenDfd.resolve([
       {
@@ -612,6 +838,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       },
     ]);
     expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.length).toBe(0);
 
     childLoaderDfd.resolve("CHILD");
     await tick();
@@ -628,6 +855,129 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("discovers routes during initial hydration (w/v7_partialHydration)", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+    let loaderDfd = createDeferred();
+    let childLoaderDfd = createDeferred();
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/parent/child"] }),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "parent",
+          path: "parent",
+          loader: () => loaderDfd.promise,
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ patch }) {
+        let children = await childrenDfd.promise;
+        patch("parent", children);
+      },
+      future: {
+        v7_partialHydration: true,
+      },
+    });
+    router.initialize();
+
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+
+    loaderDfd.resolve("PARENT");
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+
+    childrenDfd.resolve([
+      {
+        id: "child",
+        path: "child",
+        loader: () => childLoaderDfd.promise,
+      },
+    ]);
+    expect(router.state.initialized).toBe(false);
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["parent"]);
+
+    childLoaderDfd.resolve("CHILD");
+    await tick();
+
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.location.pathname).toBe("/parent/child");
+    expect(router.state.loaderData).toEqual({
+      parent: "PARENT",
+      child: "CHILD",
+    });
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "parent",
+      "child",
+    ]);
+  });
+
+  it("discovers routes during initial SPA renders when a splat route matches", async () => {
+    let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
+
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/test"] }),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          path: "*",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation({ patch }) {
+        let children = await childrenDfd.promise;
+        patch(null, children);
+      },
+    });
+    router.initialize();
+    expect(router.state.initialized).toBe(false);
+
+    childrenDfd.resolve([
+      {
+        id: "test",
+        path: "/test",
+      },
+    ]);
+    await tick();
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.location.pathname).toBe("/test");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["test"]);
+  });
+
+  it("does not discover routes during initial SSR hydration when a splat route matches", async () => {
+    router = createRouter({
+      history: createMemoryHistory({ initialEntries: ["/test"] }),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "splat",
+          loader: () => "SPLAT 2",
+          path: "*",
+        },
+      ],
+      hydrationData: {
+        loaderData: {
+          splat: "SPLAT 1",
+        },
+      },
+      async unstable_patchRoutesOnNavigation() {
+        throw new Error("Should not be called");
+      },
+    });
+    router.initialize();
+
+    await tick();
+    expect(router.state.initialized).toBe(true);
+    expect(router.state.location.pathname).toBe("/test");
+    expect(router.state.loaderData.splat).toBe("SPLAT 1");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
+  });
+
   it("discovers new root routes", async () => {
     let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
     let childLoaderDfd = createDeferred();
@@ -642,7 +992,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "/parent",
         },
       ],
-      async unstable_patchRoutesOnMiss({ patch }) {
+      async unstable_patchRoutesOnNavigation({ patch }) {
         patch(null, await childrenDfd.promise);
       },
     });
@@ -693,7 +1043,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "/:param",
         },
       ],
-      async unstable_patchRoutesOnMiss({ matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
         // We matched for the param but we want to patch in under root
         expect(matches.length).toBe(1);
         expect(matches[0].route.id).toBe("param");
@@ -737,7 +1087,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     let childLoaderDfd = createDeferred();
 
     router = createRouter({
-      history: createMemoryHistory(),
+      history: createMemoryHistory({ initialEntries: ["/other"] }),
       routes: [
         {
           id: "other",
@@ -748,7 +1098,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "*",
         },
       ],
-      async unstable_patchRoutesOnMiss({ matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
         // We matched for the splat but we want to patch in at the top
         expect(matches.length).toBe(1);
         expect(matches[0].route.id).toBe("splat");
@@ -798,7 +1148,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "/nope",
         },
       ],
-      async unstable_patchRoutesOnMiss({ matches, patch }) {
+      async unstable_patchRoutesOnNavigation({ matches, patch }) {
         expect(matches.length).toBe(0);
         let children = await childrenDfd.promise;
         patch(null, children);
@@ -849,7 +1199,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
           path: "parent",
         },
       ],
-      async unstable_patchRoutesOnMiss({ patch }) {
+      async unstable_patchRoutesOnNavigation({ patch }) {
         let children = await childrenDfd.promise;
         patch("parent", children);
       },
@@ -909,6 +1259,136 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     unsubscribe();
   });
 
+  it('does not re-call for previously called "good" paths', async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "param",
+          path: ":param",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation() {
+        count++;
+        await tick();
+        // Nothing to patch - there is no better static route in this case
+      },
+    });
+
+    await router.navigate("/whatever");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/whatever");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
+
+    await router.navigate("/");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/");
+
+    await router.navigate("/whatever");
+    expect(count).toBe(1); // Not called again
+    expect(router.state.location.pathname).toBe("/whatever");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
+  });
+
+  it("does not re-call for previously called 404 paths", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          id: "index",
+          path: "/",
+        },
+        {
+          id: "static",
+          path: "static",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation() {
+        count++;
+      },
+    });
+
+    await router.navigate("/junk");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/junk");
+    expect(router.state.errors?.index).toEqual(
+      new ErrorResponseImpl(
+        404,
+        "Not Found",
+        new Error('No route matches URL "/junk"'),
+        true
+      )
+    );
+
+    await router.navigate("/");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/");
+    expect(router.state.errors).toBeNull();
+
+    await router.navigate("/junk");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/junk");
+    expect(router.state.errors?.index).toEqual(
+      new ErrorResponseImpl(
+        404,
+        "Not Found",
+        new Error('No route matches URL "/junk"'),
+        true
+      )
+    );
+  });
+
+  it("caps internal fifo queue at 1000 paths", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "param",
+          path: ":param",
+        },
+      ],
+      async unstable_patchRoutesOnNavigation() {
+        count++;
+        // Nothing to patch - there is no better static route in this case
+      },
+    });
+
+    // Fill it up with 1000 paths
+    for (let i = 1; i <= 1000; i++) {
+      await router.navigate(`/path-${i}`);
+      expect(count).toBe(i);
+      expect(router.state.location.pathname).toBe(`/path-${i}`);
+
+      await router.navigate("/");
+      expect(count).toBe(i);
+      expect(router.state.location.pathname).toBe("/");
+    }
+
+    // Don't call patchRoutesOnNavigation since this is the first item in the queue
+    await router.navigate(`/path-1`);
+    expect(count).toBe(1000);
+    expect(router.state.location.pathname).toBe(`/path-1`);
+
+    // Call patchRoutesOnNavigation and evict the first item
+    await router.navigate(`/path-1001`);
+    expect(count).toBe(1001);
+    expect(router.state.location.pathname).toBe(`/path-1001`);
+
+    // Call patchRoutesOnNavigation since this item was evicted
+    await router.navigate(`/path-1`);
+    expect(count).toBe(1002);
+    expect(router.state.location.pathname).toBe(`/path-1`);
+  });
+
   describe("errors", () => {
     it("lazy 404s (GET navigation)", async () => {
       let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
@@ -924,7 +1404,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        async unstable_patchRoutesOnMiss({ patch }) {
+        async unstable_patchRoutesOnNavigation({ patch }) {
           let children = await childrenDfd.promise;
           patch("parent", children);
         },
@@ -979,7 +1459,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        async unstable_patchRoutesOnMiss({ patch }) {
+        async unstable_patchRoutesOnNavigation({ patch }) {
           let children = await childrenDfd.promise;
           patch("parent", children);
         },
@@ -1036,7 +1516,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [
@@ -1089,7 +1569,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [
@@ -1142,7 +1622,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [
@@ -1194,7 +1674,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [
@@ -1251,7 +1731,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [
@@ -1308,7 +1788,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [
@@ -1352,7 +1832,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       ]);
     });
 
-    it("handles errors thrown from children() (GET navigation)", async () => {
+    it("handles errors thrown from patchRoutesOnNavigation() (GET navigation)", async () => {
       let shouldThrow = true;
       router = createRouter({
         history: createMemoryHistory(),
@@ -1366,7 +1846,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ patch }) {
+        async unstable_patchRoutesOnNavigation({ patch }) {
           await tick();
           if (shouldThrow) {
             shouldThrow = false;
@@ -1394,7 +1874,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             400,
             "Bad Request",
             new Error(
-              'Unable to match URL "/a/b" - the `children()` function for route `a` threw the following error:\nError: broke!'
+              'Unable to match URL "/a/b" - the `unstable_patchRoutesOnNavigation()` ' +
+                "function threw the following error:\nError: broke!"
             ),
             true
           ),
@@ -1423,7 +1904,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
     });
 
-    it("handles errors thrown from children() (POST navigation)", async () => {
+    it("handles errors thrown from patchRoutesOnNavigation() (POST navigation)", async () => {
       let shouldThrow = true;
       router = createRouter({
         history: createMemoryHistory(),
@@ -1437,7 +1918,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ patch }) {
+        async unstable_patchRoutesOnNavigation({ patch }) {
           await tick();
           if (shouldThrow) {
             shouldThrow = false;
@@ -1468,7 +1949,8 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             400,
             "Bad Request",
             new Error(
-              'Unable to match URL "/a/b" - the `children()` function for route `a` threw the following error:\nError: broke!'
+              'Unable to match URL "/a/b" - the `unstable_patchRoutesOnNavigation()` ' +
+                "function threw the following error:\nError: broke!"
             ),
             true
           ),
@@ -1499,6 +1981,122 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       });
       expect(router.state.matches.map((m) => m.route.id)).toEqual(["a", "b"]);
     });
+
+    it("bubbles errors thrown from patchRoutesOnNavigation() during hydration", async () => {
+      router = createRouter({
+        history: createMemoryHistory({
+          initialEntries: ["/parent/child/grandchild"],
+        }),
+        routes: [
+          {
+            id: "parent",
+            path: "parent",
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+              },
+            ],
+          },
+        ],
+        async unstable_patchRoutesOnNavigation() {
+          await tick();
+          throw new Error("broke!");
+        },
+      }).initialize();
+
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        initialized: false,
+        errors: null,
+      });
+      expect(router.state.matches.length).toBe(0);
+
+      await tick();
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          parent: new ErrorResponseImpl(
+            400,
+            "Bad Request",
+            new Error(
+              'Unable to match URL "/parent/child/grandchild" - the ' +
+                "`unstable_patchRoutesOnNavigation()` function threw the following " +
+                "error:\nError: broke!"
+            ),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
+    });
+
+    it("bubbles errors thrown from patchRoutesOnNavigation() during hydration (w/v7_partialHydration)", async () => {
+      router = createRouter({
+        history: createMemoryHistory({
+          initialEntries: ["/parent/child/grandchild"],
+        }),
+        routes: [
+          {
+            id: "parent",
+            path: "parent",
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+              },
+            ],
+          },
+        ],
+        async unstable_patchRoutesOnNavigation() {
+          await tick();
+          throw new Error("broke!");
+        },
+        future: {
+          v7_partialHydration: true,
+        },
+      }).initialize();
+
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        initialized: false,
+        errors: null,
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
+
+      await tick();
+      expect(router.state).toMatchObject({
+        location: { pathname: "/parent/child/grandchild" },
+        actionData: null,
+        loaderData: {},
+        errors: {
+          parent: new ErrorResponseImpl(
+            400,
+            "Bad Request",
+            new Error(
+              'Unable to match URL "/parent/child/grandchild" - the ' +
+                "`unstable_patchRoutesOnNavigation()` function threw the following " +
+                "error:\nError: broke!"
+            ),
+            true
+          ),
+        },
+      });
+      expect(router.state.matches.map((m) => m.route.id)).toEqual([
+        "parent",
+        "child",
+      ]);
+    });
   });
 
   describe("fetchers", () => {
@@ -1517,7 +2115,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        async unstable_patchRoutesOnMiss({ patch }) {
+        async unstable_patchRoutesOnNavigation({ patch }) {
           let children = await childrenDfd.promise;
           patch("parent", children);
         },
@@ -1555,7 +2153,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [
@@ -1602,7 +2200,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "parent",
           },
         ],
-        async unstable_patchRoutesOnMiss({ patch }) {
+        async unstable_patchRoutesOnNavigation({ patch }) {
           let children = await childrenDfd.promise;
           patch("parent", children);
         },
@@ -1643,7 +2241,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
             path: "a",
           },
         ],
-        async unstable_patchRoutesOnMiss({ matches, patch }) {
+        async unstable_patchRoutesOnNavigation({ matches, patch }) {
           await tick();
           if (last(matches).route.id === "a") {
             patch("a", [

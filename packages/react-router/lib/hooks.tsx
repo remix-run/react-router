@@ -18,6 +18,7 @@ import {
   IDLE_BLOCKER,
   Action as NavigationType,
   UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
+  UNSAFE_decodePath as decodePath,
   UNSAFE_getResolveToMatches as getResolveToMatches,
   UNSAFE_invariant as invariant,
   isRouteErrorResponse,
@@ -141,7 +142,7 @@ export function useMatch<
 
   let { pathname } = useLocation();
   return React.useMemo(
-    () => matchPath<ParamKey, Path>(pattern, pathname),
+    () => matchPath<ParamKey, Path>(pattern, decodePath(pathname)),
     [pathname, pattern]
   );
 }
@@ -682,9 +683,26 @@ export function _renderMatches(
   future: RemixRouter["future"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
-    if (dataRouterState?.errors) {
+    if (!dataRouterState) {
+      return null;
+    }
+
+    if (dataRouterState.errors) {
       // Don't bail if we have data router errors so we can render them in the
       // boundary.  Use the pre-matched (or shimmed) matches
+      matches = dataRouterState.matches as DataRouteMatch[];
+    } else if (
+      future?.v7_partialHydration &&
+      parentMatches.length === 0 &&
+      !dataRouterState.initialized &&
+      dataRouterState.matches.length > 0
+    ) {
+      // Don't bail if we're initializing with partial hydration and we have
+      // router matches.  That means we're actively running `patchRoutesOnNavigation`
+      // so we should render down the partial matches to the appropriate
+      // `HydrateFallback`.  We only do this if `parentMatches` is empty so it
+      // only impacts the root matches for `RouterProvider` and no descendant
+      // `<Routes>`
       matches = dataRouterState.matches as DataRouteMatch[];
     } else {
       return null;

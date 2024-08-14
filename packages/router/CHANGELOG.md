@@ -1,5 +1,49 @@
 # `@remix-run/router`
 
+## 1.19.0
+
+### Minor Changes
+
+- Add a new `replace(url, init?)` alternative to `redirect(url, init?)` that performs a `history.replaceState` instead of a `history.pushState` on client-side navigation redirects ([#11811](https://github.com/remix-run/react-router/pull/11811))
+- Add a new `unstable_data()` API for usage with Remix Single Fetch ([#11836](https://github.com/remix-run/react-router/pull/11836))
+  - This API is not intended for direct usage in React Router SPA applications
+  - It is primarily intended for usage with `createStaticHandler.query()` to allow loaders/actions to return arbitrary data + `status`/`headers` without forcing the serialization of data into a `Response` instance
+  - This allows for more advanced serialization tactics via `unstable_dataStrategy` such as serializing via `turbo-stream` in Remix Single Fetch
+  - ⚠️ This removes the `status` field from `HandlerResult`
+    - If you need to return a specific `status` from `unstable_dataStrategy` you should instead do so via `unstable_data()`
+
+### Patch Changes
+
+- Fix internal cleanup of interrupted fetchers to avoid invalid revalidations on navigations ([#11839](https://github.com/remix-run/react-router/pull/11839))
+  - When a `fetcher.load` is interrupted by an `action` submission, we track it internally and force revalidation once the `action` completes
+  - We previously only cleared out this internal tracking info on a successful _navigation_ submission
+  - Therefore, if the `fetcher.load` was interrupted by a `fetcher.submit`, then we wouldn't remove it from this internal tracking info on successful load (incorrectly)
+  - And then on the next navigation it's presence in the internal tracking would automatically trigger execution of the `fetcher.load` again, ignoring any `shouldRevalidate` logic
+  - This fix cleans up the internal tracking so it applies to both navigation submission and fetcher submissions
+- Fix initial hydration behavior when using `future.v7_partialHydration` along with `unstable_patchRoutesOnMiss` ([#11838](https://github.com/remix-run/react-router/pull/11838))
+  - During initial hydration, `router.state.matches` will now include any partial matches so that we can render ancestor `HydrateFallback` components
+
+## 1.18.0
+
+### Minor Changes
+
+- Stabilize `future.unstable_skipActionErrorRevalidation` as `future.v7_skipActionErrorRevalidation` ([#11769](https://github.com/remix-run/react-router/pull/11769))
+  - When this flag is enabled, actions will not automatically trigger a revalidation if they return/throw a `Response` with a `4xx`/`5xx` status code
+  - You may still opt-into revalidation via `shouldRevalidate`
+  - This also changes `shouldRevalidate`'s `unstable_actionStatus` parameter to `actionStatus`
+
+### Patch Changes
+
+- Fix bubbling of errors thrown from `unstable_patchRoutesOnMiss` ([#11786](https://github.com/remix-run/react-router/pull/11786))
+- Fix hydration in SSR apps using `unstable_patchRoutesOnMiss` that matched a splat route on the server ([#11790](https://github.com/remix-run/react-router/pull/11790))
+
+## 1.17.1
+
+### Patch Changes
+
+- Fog of War (unstable): Trigger a new `router.routes` identity/reflow during route patching ([#11740](https://github.com/remix-run/react-router/pull/11740))
+- Fog of War (unstable): Fix initial matching when a splat route matches ([#11759](https://github.com/remix-run/react-router/pull/11759))
+
 ## 1.17.0
 
 ### Minor Changes

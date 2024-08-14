@@ -13,9 +13,10 @@ import type {
   Navigator,
   RelativeRoutingType,
   RouteObject,
+  RouterProps,
   RouterProviderProps,
   To,
-  unstable_PatchRoutesOnMissFunction,
+  unstable_PatchRoutesOnNavigationFunction,
 } from "react-router";
 import {
   Router,
@@ -153,7 +154,7 @@ export type {
   To,
   UIMatch,
   unstable_HandlerResult,
-  unstable_PatchRoutesOnMissFunction,
+  unstable_PatchRoutesOnNavigationFunction,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -178,6 +179,7 @@ export {
   parsePath,
   redirect,
   redirectDocument,
+  replace,
   renderMatches,
   resolvePath,
   useActionData,
@@ -260,7 +262,7 @@ interface DOMRouterOpts {
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: unstable_DataStrategyFunction;
-  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+  unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
   window?: Window;
 }
 
@@ -280,7 +282,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -301,7 +303,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -711,6 +713,13 @@ export function RouterProvider({
     [router, navigator, basename]
   );
 
+  let routerFuture = React.useMemo<RouterProps["future"]>(
+    () => ({
+      v7_relativeSplatPath: router.future.v7_relativeSplatPath,
+    }),
+    [router.future.v7_relativeSplatPath]
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -728,12 +737,10 @@ export function RouterProvider({
                 location={state.location}
                 navigationType={state.historyAction}
                 navigator={navigator}
-                future={{
-                  v7_relativeSplatPath: router.future.v7_relativeSplatPath,
-                }}
+                future={routerFuture}
               >
                 {state.initialized || router.future.v7_partialHydration ? (
-                  <DataRoutes
+                  <MemoizedDataRoutes
                     routes={router.routes}
                     future={router.future}
                     state={state}
@@ -750,6 +757,9 @@ export function RouterProvider({
     </>
   );
 }
+
+// Memoize to avoid re-renders when updating `ViewTransitionContext`
+const MemoizedDataRoutes = React.memo(DataRoutes);
 
 function DataRoutes({
   routes,
