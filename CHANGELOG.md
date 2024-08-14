@@ -203,6 +203,18 @@ Date: YYYY-MM-DD
 **Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 -->
 
+## v6.26.1
+
+Date: 2024-08-15
+
+### Patch Changes
+
+- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` to match new behavior ([#11888](https://github.com/remix-run/react-router/pull/11888))
+- Update `unstable_patchRoutesOnNavigation` logic so that we call the method when we match routes with dynamic param or splat segments in case there exists a higher-scoring static route that we've not yet discovered ([#11883](https://github.com/remix-run/react-router/pull/11883))
+  - We also now leverage an internal FIFO queue of previous paths we've already called `unstable_patchRoutesOnNavigation` against so that we don't re-call on subsequent navigations to the same path
+
+**Full Changelog**: [`v6.26.0...v6.26.1`](https://github.com/remix-run/react-router/compare/react-router@6.26.0...react-router@6.26.1)
+
 ## v6.26.0
 
 Date: 2024-08-01

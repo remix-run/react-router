@@ -8,5 +8,8 @@
     "react-router-native": "6.26.0",
     "@remix-run/router": "1.19.0"
   },
-  "changesets": []
+  "changesets": [
+    "cyan-bobcats-notice",
+    "silver-coats-work"
+  ]
 }

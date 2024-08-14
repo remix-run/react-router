@@ -1,5 +1,14 @@
 # `react-router-dom`
 
+## 6.26.1-pre.0
+
+### Patch Changes
+
+- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` because it will now be called on the first navigation to paths matching splat/param routes in case there exists a higher-scoring route match not yet discovered ([#11888](https://github.com/remix-run/react-router/pull/11888))
+- Updated dependencies:
+  - `@remix-run/router@1.19.1-pre.0`
+  - `react-router@6.26.1-pre.0`
+
 ## 6.26.0
 
 ### Minor Changes
