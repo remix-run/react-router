@@ -32,7 +32,7 @@ export async function routes(
   }
 
   let format: RoutesFormat = flags.json ? "json" : "jsx";
-  console.log(formatRoutes(ctx.reactRouterConfig.routes, format));
+  console.log(formatRoutes(ctx.routes, format));
 }
 
 export async function build(
