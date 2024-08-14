@@ -35,7 +35,7 @@ import type {
   UIMatch,
   V7_FormMethod,
   V7_MutationFormMethod,
-  AgnosticPatchRoutesOnMissFunction,
+  AgnosticPatchRoutesOnNavigationFunction,
   DataWithResponseInit,
 } from "./utils";
 import {
@@ -391,7 +391,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
-  unstable_patchRoutesOnMiss?: AgnosticPatchRoutesOnMissFunction;
+  unstable_patchRoutesOnNavigation?: AgnosticPatchRoutesOnNavigationFunction;
   unstable_dataStrategy?: DataStrategyFunction;
 }
 
@@ -798,7 +798,7 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
-  let patchRoutesOnMissImpl = init.unstable_patchRoutesOnMiss;
+  let patchRoutesOnNavigationImpl = init.unstable_patchRoutesOnNavigation;
 
   // Config driven behavior flags
   let future: FutureConfig = {
@@ -835,7 +835,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialErrors: RouteData | null = null;
 
-  if (initialMatches == null && !patchRoutesOnMissImpl) {
+  if (initialMatches == null && !patchRoutesOnNavigationImpl) {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the error boundary to take over
     let error = getInternalRouterError(404, {
@@ -846,7 +846,7 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // In SPA apps, if the user provided a patchRoutesOnMiss implementation and
+  // In SPA apps, if the user provided a patchRoutesOnNavigation implementation and
   // our initial match is a splat route, clear them out so we run through lazy
   // discovery on hydration in case there's a more accurate lazy route match.
   // In SSR apps (with `hydrationData`), we expect that the server will send
@@ -869,7 +869,7 @@ export function createRouter(init: RouterInit): Router {
     initialMatches = [];
 
     // If partial hydration and fog of war is enabled, we will be running
-    // `patchRoutesOnMiss` during hydration so include any partial matches as
+    // `patchRoutesOnNavigation` during hydration so include any partial matches as
     // the initial matches so we can properly render `HydrateFallback`'s
     if (future.v7_partialHydration) {
       let fogOfWar = checkFogOfWar(
@@ -1024,11 +1024,11 @@ export function createRouter(init: RouterInit): Router {
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
 
-  // Map of pending patchRoutesOnMiss() promises (keyed by path/matches) so
+  // Map of pending patchRoutesOnNavigation() promises (keyed by path/matches) so
   // that we only kick them off once for a given combo
   let pendingPatchRoutes = new Map<
     string,
-    ReturnType<AgnosticPatchRoutesOnMissFunction>
+    ReturnType<AgnosticPatchRoutesOnNavigationFunction>
   >();
 
   // Flag to ignore the next history update, so we can revert the URL change on
@@ -3186,7 +3186,7 @@ export function createRouter(init: RouterInit): Router {
     routesToUse: AgnosticDataRouteObject[],
     pathname: string
   ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
-    if (patchRoutesOnMissImpl) {
+    if (patchRoutesOnNavigationImpl) {
       // Don't bother re-calling patchRouteOnMiss for a path we've already
       // processed.  the last execution would have patched the route tree
       // accordingly so `matches` here are already accurate.
@@ -3207,7 +3207,7 @@ export function createRouter(init: RouterInit): Router {
         if (Object.keys(matches[0].params).length > 0) {
           // If we matched a dynamic param or a splat, it might only be because
           // we haven't yet discovered other routes that would match with a
-          // higher score.  Call patchRoutesOnMiss just to be sure
+          // higher score.  Call patchRoutesOnNavigation just to be sure
           let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
             routesToUse,
             pathname,
@@ -3248,7 +3248,7 @@ export function createRouter(init: RouterInit): Router {
       let routesToUse = inFlightDataRoutes || dataRoutes;
       try {
         await loadLazyRouteChildren(
-          patchRoutesOnMissImpl!,
+          patchRoutesOnNavigationImpl!,
           pathname,
           partialMatches,
           routesToUse,
@@ -4544,24 +4544,27 @@ function shouldRevalidateLoader(
 }
 
 /**
- * Idempotent utility to execute patchRoutesOnMiss() to lazily load route
+ * Idempotent utility to execute patchRoutesOnNavigation() to lazily load route
  * definitions and update the routes/routeManifest
  */
 async function loadLazyRouteChildren(
-  patchRoutesOnMissImpl: AgnosticPatchRoutesOnMissFunction,
+  patchRoutesOnNavigationImpl: AgnosticPatchRoutesOnNavigationFunction,
   path: string,
   matches: AgnosticDataRouteMatch[],
   routes: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  pendingRouteChildren: Map<string, ReturnType<typeof patchRoutesOnMissImpl>>,
+  pendingRouteChildren: Map<
+    string,
+    ReturnType<typeof patchRoutesOnNavigationImpl>
+  >,
   signal: AbortSignal
 ) {
   let key = [path, ...matches.map((m) => m.route.id)].join("-");
   try {
     let pending = pendingRouteChildren.get(key);
     if (!pending) {
-      pending = patchRoutesOnMissImpl({
+      pending = patchRoutesOnNavigationImpl({
         path,
         matches,
         patch: (routeId, children) => {
@@ -5400,7 +5403,7 @@ function getInternalRouterError(
     statusText = "Bad Request";
     if (type === "route-discovery") {
       errorMessage =
-        `Unable to match URL "${pathname}" - the \`unstable_patchRoutesOnMiss()\` ` +
+        `Unable to match URL "${pathname}" - the \`unstable_patchRoutesOnNavigation()\` ` +
         `function threw the following error:\n${message}`;
     } else if (method && pathname && routeId) {
       errorMessage =
