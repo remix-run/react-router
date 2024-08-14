@@ -1,14 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
-import type {
-  RouteManifest,
-  DynamicRoutesConfigEntry,
+import {
+  getAppDirectory,
+  type RouteManifest,
+  type RoutesConfigEntry,
 } from "@react-router/dev/routes";
 
 import { fileRoutes } from "./fileRoutes";
 import { defineRoutes, type DefineRoutesFunction } from "./defineRoutes";
 
-export function remixRoutes({
+export async function remixRoutes({
   ignoredRouteFiles,
   rootDirectory = "routes",
   routes: customRoutes,
@@ -26,24 +27,23 @@ export function remixRoutes({
   ) =>
     | ReturnType<DefineRoutesFunction>
     | Promise<ReturnType<DefineRoutesFunction>>;
-} = {}): DynamicRoutesConfigEntry {
-  return async ({ appDirectory }) => {
-    let routes: RouteManifest = {};
+} = {}): Promise<RoutesConfigEntry> {
+  let appDirectory = getAppDirectory();
+  let routes: RouteManifest = {};
 
-    if (fs.existsSync(path.resolve(appDirectory, rootDirectory))) {
-      routes = {
-        ...routes,
-        ...fileRoutes(appDirectory, ignoredRouteFiles, rootDirectory),
-      };
-    }
+  if (fs.existsSync(path.resolve(appDirectory, rootDirectory))) {
+    routes = {
+      ...routes,
+      ...fileRoutes(appDirectory, ignoredRouteFiles, rootDirectory),
+    };
+  }
 
-    if (customRoutes) {
-      routes = {
-        ...routes,
-        ...(await customRoutes(defineRoutes)),
-      };
-    }
+  if (customRoutes) {
+    routes = {
+      ...routes,
+      ...(await customRoutes(defineRoutes)),
+    };
+  }
 
-    return { routes };
-  };
+  return { routes };
 }

@@ -8,10 +8,11 @@ import pick from "lodash/pick";
 import omit from "lodash/omit";
 import PackageJson from "@npmcli/package-json";
 
-import type {
-  RouteManifest,
-  RouteManifestEntry,
-  RoutesConfig,
+import {
+  setAppDirectory,
+  type RouteManifest,
+  type RouteManifestEntry,
+  type RoutesConfig,
 } from "../config/routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
 import { importViteEsmSync } from "./import-vite-esm-sync";
@@ -175,10 +176,6 @@ export type ResolvedVitePluginConfig = Readonly<{
    */
   prerender: Array<string> | null;
   /**
-   * An object of all available routes, keyed by route id.
-   */
-  routes: RouteManifest;
-  /**
    * The file name of the server build output. This file
    * should end in a `.js` extension and should be deployed to your server.
    * Defaults to `"index.js"`.
@@ -270,23 +267,16 @@ export function resolvePublicPath(viteUserConfig: Vite.UserConfig) {
   return viteUserConfig.base ?? "/";
 }
 
-let isFirstLoad = true;
-let lastValidRoutes: RouteManifest = {};
-
 export async function resolveReactRouterConfig({
   rootDirectory,
   reactRouterUserConfig,
-  routesConfigChanged,
   viteUserConfig,
   viteCommand,
-  viteNodeRunner,
 }: {
   rootDirectory: string;
   reactRouterUserConfig: VitePluginConfig;
-  routesConfigChanged: boolean;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
-  viteNodeRunner: ViteNodeRunner;
 }) {
   let vite = importViteEsmSync();
 
@@ -391,6 +381,51 @@ export async function resolveReactRouterConfig({
     process.exit(1);
   }
 
+  let future: FutureConfig = {};
+
+  let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
+    appDirectory,
+    basename,
+    buildDirectory,
+    buildEnd,
+    future,
+    prerender,
+    serverBuildFile,
+    serverBundles,
+    serverModuleFormat,
+    ssr,
+  });
+
+  for (let preset of reactRouterUserConfig.presets ?? []) {
+    await preset.reactRouterConfigResolved?.({ reactRouterConfig });
+  }
+
+  return reactRouterConfig;
+}
+
+let isFirstLoad = true;
+let lastValidRoutes: RouteManifest = {};
+
+export async function resolveRoutes({
+  rootDirectory,
+  reactRouterConfig,
+  routesConfigChanged,
+  viteUserConfig,
+  viteNodeRunner,
+}: {
+  rootDirectory: string;
+  reactRouterConfig: ResolvedVitePluginConfig;
+  routesConfigChanged: boolean;
+  viteUserConfig: Vite.UserConfig;
+  viteNodeRunner: ViteNodeRunner;
+}) {
+  let vite = importViteEsmSync();
+
+  let logger = vite.createLogger(viteUserConfig.logLevel, {
+    prefix: "[react-router]",
+  });
+
+  let { appDirectory } = reactRouterConfig;
   let rootRouteFile = findEntry(appDirectory, "root");
   if (!rootRouteFile) {
     let rootRouteDisplayPath = path.relative(
@@ -424,6 +459,7 @@ export async function resolveReactRouterConfig({
   }
 
   try {
+    setAppDirectory(reactRouterConfig.appDirectory);
     let routesConfig: RoutesConfig = (
       await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
     ).default;
@@ -431,13 +467,7 @@ export async function resolveReactRouterConfig({
     let entries = Array.isArray(routesConfig) ? routesConfig : [routesConfig];
 
     let routeManifests = await Promise.all(
-      entries.map(
-        async (config) =>
-          (typeof config === "function"
-            ? await config({ appDirectory })
-            : config
-          ).routes
-      )
+      entries.map(async (config) => config.routes)
     );
 
     Object.assign(routes, ...routeManifests);
@@ -484,29 +514,7 @@ export async function resolveReactRouterConfig({
     routes = lastValidRoutes;
   }
 
-  let future: FutureConfig = {};
-
-  let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
-    appDirectory,
-    basename,
-    buildDirectory,
-    buildEnd,
-    future,
-    prerender,
-    routes,
-    serverBuildFile,
-    serverBundles,
-    serverModuleFormat,
-    ssr,
-  });
-
-  for (let preset of reactRouterUserConfig.presets ?? []) {
-    await preset.reactRouterConfigResolved?.({ reactRouterConfig });
-  }
-
-  isFirstLoad = false;
-
-  return reactRouterConfig;
+  return routes;
 }
 
 export async function resolveEntryFiles({

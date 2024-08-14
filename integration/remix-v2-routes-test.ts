@@ -28,7 +28,7 @@ test.describe("remix v2 routes", () => {
         "app/routes.ts": js`
           import { remixRoutes } from "@react-router/remix-v2-routes";
 
-          export default remixRoutes({
+          export default await remixRoutes({
             ignoredRouteFiles: ["**/ignored-route.*"],
             routes: async (defineRoutes) => {
               await new Promise((resolve) => setTimeout(resolve, 100));

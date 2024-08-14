@@ -40,14 +40,7 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type StaticRoutesConfigEntry = { routes: RouteManifest };
-export type DynamicRoutesConfigEntry = (args: {
-  appDirectory: string;
-}) => StaticRoutesConfigEntry | Promise<StaticRoutesConfigEntry>;
-
-export type RoutesConfigEntry =
-  | StaticRoutesConfigEntry
-  | DynamicRoutesConfigEntry;
+export type RoutesConfigEntry = { routes: RouteManifest };
 
 export type RoutesConfig = RoutesConfigEntry | RoutesConfigEntry[];
 
@@ -187,7 +180,7 @@ function createLayout(
   };
 }
 
-export function routes(routes: ConfigRoute[]): StaticRoutesConfigEntry {
+export function routes(routes: ConfigRoute[]): RoutesConfigEntry {
   return {
     routes: configRoutesToRouteManifest(routes),
   };
@@ -196,6 +189,16 @@ export function routes(routes: ConfigRoute[]): StaticRoutesConfigEntry {
 export const route = createRoute;
 export const index = createIndex;
 export const layout = createLayout;
+
+let appDirectory: string;
+
+export function setAppDirectory(directory: string) {
+  appDirectory = directory;
+}
+
+export function getAppDirectory() {
+  return appDirectory;
+}
 
 function configRoutesToRouteManifest(
   routes: ConfigRoute[],

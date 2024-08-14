@@ -5,6 +5,7 @@ import type { ModuleNode, ViteDevServer } from "vite";
 
 import type { ResolvedVitePluginConfig } from "./config";
 import { resolveFileUrl } from "./resolve-file-url";
+import type { RouteManifest } from "../routes";
 
 type ServerRouteManifest = ServerBuild["routes"];
 type ServerRoute = ServerRouteManifest[string];
@@ -176,6 +177,7 @@ const createRoutes = (
 export const getStylesForUrl = async ({
   viteDevServer,
   rootDirectory,
+  routes: routeManifest,
   reactRouterConfig,
   entryClientFilePath,
   cssModulesManifest,
@@ -184,7 +186,8 @@ export const getStylesForUrl = async ({
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
-  reactRouterConfig: Pick<ResolvedVitePluginConfig, "appDirectory" | "routes">;
+  routes: RouteManifest;
+  reactRouterConfig: Pick<ResolvedVitePluginConfig, "appDirectory">;
   entryClientFilePath: string;
   cssModulesManifest: Record<string, string>;
   build: ServerBuild;
@@ -198,7 +201,7 @@ export const getStylesForUrl = async ({
   let appPath = path.relative(process.cwd(), reactRouterConfig.appDirectory);
   let documentRouteFiles =
     matchRoutes(routes, url, build.basename)?.map((match) =>
-      path.resolve(appPath, reactRouterConfig.routes[match.route.id].file)
+      path.resolve(appPath, routeManifest[match.route.id].file)
     ) ?? [];
 
   let styles = await getStylesForFiles({

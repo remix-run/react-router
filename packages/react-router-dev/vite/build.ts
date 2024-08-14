@@ -77,8 +77,8 @@ async function getServerBuilds(ctx: ReactRouterPluginContext): Promise<{
   serverBuilds: ReactRouterServerBuildArgs[];
   buildManifest: BuildManifest;
 }> {
-  let { rootDirectory } = ctx;
-  const { routes, serverBuildFile, serverBundles, appDirectory } =
+  let { rootDirectory, routes } = ctx;
+  const { serverBuildFile, serverBundles, appDirectory } =
     ctx.reactRouterConfig;
   let serverBuildDirectory = getServerBuildDirectory(ctx);
   if (!serverBundles) {

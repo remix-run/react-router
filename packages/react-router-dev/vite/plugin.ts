@@ -43,6 +43,7 @@ import {
   resolveReactRouterConfig,
   resolveEntryFiles,
   resolvePublicPath,
+  resolveRoutes,
 } from "./config";
 
 export async function resolveViteConfig({
@@ -160,6 +161,7 @@ export type ReactRouterPluginContext = ReactRouterPluginSsrBuildContext & {
   entryServerFilePath: string;
   publicPath: string;
   reactRouterConfig: ResolvedVitePluginConfig;
+  routes: RouteManifest;
   viteManifestEnabled: boolean;
 };
 
@@ -295,7 +297,7 @@ const getRouteManifestModuleExports = async (
   ctx: ReactRouterPluginContext
 ): Promise<Record<string, string[]>> => {
   let entries = await Promise.all(
-    Object.entries(ctx.reactRouterConfig.routes).map(async ([key, route]) => {
+    Object.entries(ctx.routes).map(async ([key, route]) => {
       let sourceExports = await getRouteModuleExports(
         viteChildCompiler,
         ctx,
@@ -459,13 +461,19 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     let rootDirectory =
       viteUserConfig.root ?? process.env.REACT_ROUTER_ROOT ?? process.cwd();
 
-    invariant(viteNodeRunner);
     let reactRouterConfig = await resolveReactRouterConfig({
       rootDirectory,
       reactRouterUserConfig,
-      routesConfigChanged,
       viteUserConfig,
       viteCommand,
+    });
+
+    invariant(viteNodeRunner);
+    let routes = await resolveRoutes({
+      rootDirectory,
+      reactRouterConfig,
+      routesConfigChanged,
+      viteUserConfig,
       viteNodeRunner,
     });
 
@@ -490,6 +498,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
     ctx = {
       reactRouterConfig,
+      routes,
       rootDirectory,
       entryClientFilePath,
       entryServerFilePath,
@@ -512,7 +521,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         // routes for this bundle rather than importing all routes
         ctx.serverBundleBuildConfig.routes
       : // Otherwise, all routes are imported as usual
-        ctx.reactRouterConfig.routes;
+        ctx.routes;
 
     return `
     import * as entryServer from ${JSON.stringify(
@@ -621,7 +630,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       ctx
     );
 
-    for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
+    for (let [key, route] of Object.entries(ctx.routes)) {
       let routeFilePath = path.join(
         ctx.reactRouterConfig.appDirectory,
         route.file
@@ -702,7 +711,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       ctx
     );
 
-    for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
+    for (let [key, route] of Object.entries(ctx.routes)) {
       let sourceExports = routeManifestExports[key];
       routes[key] = {
         id: route.id,
@@ -902,7 +911,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                           preserveEntrySignatures: "exports-only",
                           input: [
                             ctx.entryClientFilePath,
-                            ...Object.values(ctx.reactRouterConfig.routes).map(
+                            ...Object.values(ctx.routes).map(
                               (route) =>
                                 `${path.resolve(
                                   ctx.reactRouterConfig.appDirectory,
@@ -1077,6 +1086,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           getCriticalCss: async (build, url) => {
             return getStylesForUrl({
               rootDirectory: ctx.rootDirectory,
+              routes: ctx.routes,
               entryClientFilePath: ctx.entryClientFilePath,
               reactRouterConfig: ctx.reactRouterConfig,
               viteDevServer,
@@ -1358,7 +1368,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         let importerShort = vite.normalizePath(
           path.relative(ctx.rootDirectory, importer)
         );
-        let isRoute = getRoute(ctx.reactRouterConfig, importer);
+        let isRoute = getRoute(ctx, importer);
 
         if (isRoute) {
           let serverOnlyExports = SERVER_ONLY_ROUTE_EXPORTS.map(
@@ -1419,7 +1429,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       async transform(code, id, options) {
         if (options?.ssr) return;
 
-        let route = getRoute(ctx.reactRouterConfig, id);
+        let route = getRoute(ctx, id);
         if (!route) return;
 
         if (!ctx.reactRouterConfig.ssr) {
@@ -1523,7 +1533,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         if (!useFastRefresh) return;
 
         if (isRouteEntry(id)) {
-          return { code: addRefreshWrapper(ctx.reactRouterConfig, code, id) };
+          return { code: addRefreshWrapper(ctx, code, id) };
         }
 
         let result = await babel.transformAsync(code, {
@@ -1543,7 +1553,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         code = result.code!;
         let refreshContentRE = /\$Refresh(?:Reg|Sig)\$\(/;
         if (refreshContentRE.test(code)) {
-          code = addRefreshWrapper(ctx.reactRouterConfig, code, id);
+          code = addRefreshWrapper(ctx, code, id);
         }
         return { code, map: result.map };
       },
@@ -1551,7 +1561,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     {
       name: "react-router-hmr-updates",
       async handleHotUpdate({ server, file, modules, read }) {
-        let route = getRoute(ctx.reactRouterConfig, file);
+        let route = getRoute(ctx, file);
 
         type ManifestRoute = ReactRouterManifest["routes"][string];
         type HmrEventData = { route: ManifestRoute | null };
@@ -1631,11 +1641,11 @@ function isEqualJson(v1: unknown, v2: unknown) {
 }
 
 function addRefreshWrapper(
-  reactRouterConfig: ResolvedVitePluginConfig,
+  ctx: ReactRouterPluginContext,
   code: string,
   id: string
 ): string {
-  let route = getRoute(reactRouterConfig, id);
+  let route = getRoute(ctx, id);
   let acceptExports =
     route || isRouteEntry(id)
       ? [
@@ -1694,14 +1704,14 @@ if (import.meta.hot && !inWebWorker) {
 }`;
 
 function getRoute(
-  pluginConfig: ResolvedVitePluginConfig,
+  ctx: ReactRouterPluginContext,
   file: string
 ): RouteManifestEntry | undefined {
   let vite = importViteEsmSync();
   let routePath = vite.normalizePath(
-    path.relative(pluginConfig.appDirectory, file)
+    path.relative(ctx.reactRouterConfig.appDirectory, file)
   );
-  let route = Object.values(pluginConfig.routes).find(
+  let route = Object.values(ctx.routes).find(
     (r) => vite.normalizePath(r.file) === routePath
   );
   return route;
