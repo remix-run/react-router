@@ -51,7 +51,7 @@ function createBrowserRouter(
     basename?: string;
     future?: FutureConfig;
     hydrationData?: HydrationState;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
+    dataStrategy?: DataStrategyFunction;
     unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
     window?: Window;
   }
@@ -184,7 +184,7 @@ const router = createBrowserRouter(
 );
 ```
 
-## `opts.unstable_dataStrategy`
+## `opts.dataStrategy`
 
 <docs-warning>This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warning>
 
@@ -192,7 +192,7 @@ const router = createBrowserRouter(
 
 By default, React Router is opinionated about how your data is loaded/submitted - and most notably, executes all of your loaders in parallel for optimal data fetching. While we think this is the right behavior for most use-cases, we realize that there is no "one size fits all" solution when it comes to data fetching for the wide landscape of application requirements.
 
-The `unstable_dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
+The `dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
 
 ### Type Declaration
 
@@ -232,7 +232,7 @@ interface HandlerResult {
 
 ### Overview
 
-`unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives a `matches` array which is an array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
+`dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives a `matches` array which is an array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
 
 - **`match.resolve`** - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
   - You should call `match.resolve` for _all_ matches every time to ensure that all lazy routes are properly resolved
@@ -256,7 +256,7 @@ In the simplest case, let's look at hooking into this API to add some logging fo
 
 ```ts
 let router = createBrowserRouter(routes, {
-  unstable_dataStrategy({ request, matches }) {
+  dataStrategy({ request, matches }) {
     return Promise.all(
       matches.map(async (match) => {
         console.log(`Processing route ${match.route.id}`);
@@ -307,7 +307,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({
+  async dataStrategy({
     request,
     params,
     matches,
@@ -373,7 +373,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  unstable_dataStrategy({ request, params, matches }) {
+  dataStrategy({ request, params, matches }) {
     // Compose route fragments into a single GQL payload
     let gql = getFragmentsFromRouteHandles(matches);
     let data = await fetchGql(gql);

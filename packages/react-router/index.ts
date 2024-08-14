@@ -4,9 +4,9 @@ import type {
   ActionFunctionArgs,
   Blocker,
   BlockerFunction,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
   ErrorResponse,
   Fetcher,
   HydrationState,
@@ -136,9 +136,9 @@ export type {
   AwaitProps,
   DataRouteMatch,
   DataRouteObject,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -302,7 +302,7 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
+    dataStrategy?: DataStrategyFunction;
     unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
   }
 ): RemixRouter {
@@ -319,7 +319,7 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    dataStrategy: opts?.dataStrategy,
     unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
   }).initialize();
 }
