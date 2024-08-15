@@ -15,7 +15,7 @@ describe("routes config", () => {
       },
     ]);
 
-    expect(config.routes).toMatchInlineSnapshot(`
+    expect(config).toMatchInlineSnapshot(`
       {
         "routes/home": {
           "caseSensitive": undefined,
@@ -76,7 +76,7 @@ describe("routes config", () => {
       ]),
     ]);
 
-    expect(config.routes).toMatchInlineSnapshot(`
+    expect(config).toMatchInlineSnapshot(`
       {
         "routes/authenticated": {
           "caseSensitive": undefined,
@@ -153,7 +153,7 @@ describe("routes config", () => {
       route("/other", "routes/other-route.tsx"),
     ]);
 
-    expect(config.routes).toMatchInlineSnapshot(`
+    expect(config).toMatchInlineSnapshot(`
       {
         "routes/other-route": {
           "caseSensitive": undefined,
