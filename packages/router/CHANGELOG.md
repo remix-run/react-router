@@ -1,6 +1,6 @@
 # `@remix-run/router`
 
-## 1.19.1-pre.0
+## 1.19.1
 
 ### Patch Changes
 
@@ -8,7 +8,7 @@
 
   - We also now leverage an internal FIFO queue of previous paths we've already called `unstable_patchRouteOnMiss` against so that we don't re-call on subsequent navigations to the same path
 
-- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` because it will now be called on the first navigation to paths matching splat/param routes in case there exists a higher-scoring route match not yet discovered ([#11888](https://github.com/remix-run/react-router/pull/11888))
+- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` to match new behavior ([#11888](https://github.com/remix-run/react-router/pull/11888))
 
 ## 1.19.0
 
