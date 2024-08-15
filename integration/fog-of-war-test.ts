@@ -692,6 +692,7 @@ test.describe("Fog of War", () => {
       "routes/parent._a._b",
       "routes/parent._a._b._index",
     ]);
+    expect(manifestRequests).toEqual([]);
 
     // Without pre-loading the index, we'd "match" `/parent` to just the
     // parent route client side and never fetch the children pathless/index routes
@@ -713,6 +714,444 @@ test.describe("Fog of War", () => {
         /\/__manifest\?version=[a-z0-9]{8}&p=%2Fparent%2Fchild2/
       ),
     ]);
+  });
+
+  test("detects higher-ranking static routes on the server when a slug match is already known by the client", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "@remix-run/react";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body >
+                  <nav>
+                    <Link to="/something">/something</Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                  </body>
+              </html>
+            );
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>
+          }
+        `,
+        "app/routes/$slug.tsx": js`
+          import { Link } from "@remix-run/react";
+          export default function Component() {
+            return (
+              <>
+                <h2 id="slug">Slug</h2>;
+                <Link to="/static" discover="none">Go to /static</Link>
+              </>
+            );
+          }
+        `,
+        "app/routes/static.tsx": js`
+          export default function Component() {
+            return <h2 id="static">Static</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/$slug"]);
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fsomething/),
+    ]);
+    manifestRequests = [];
+
+    await app.clickLink("/something");
+    await page.waitForSelector("#slug");
+    expect(await app.getHtml("#slug")).toMatch("Slug");
+    expect(manifestRequests).toEqual([]);
+
+    // This will require a new fetch for the /static route
+    await app.clickLink("/static");
+    await page.waitForSelector("#static");
+    expect(await app.getHtml("#static")).toMatch("Static");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fstatic/),
+    ]);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/$slug", "routes/static"]);
+  });
+
+  test("detects higher-ranking static routes on the server when a splat match is already known by the client", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "@remix-run/react";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body >
+                  <nav>
+                    <Link to="/something">/something</Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                  </body>
+              </html>
+            );
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>
+          }
+        `,
+        "app/routes/$.tsx": js`
+          import { Link } from "@remix-run/react";
+          export default function Component() {
+            return (
+              <>
+                <h2 id="splat">Splat</h2>;
+                <Link to="/static" discover="none">Go to /static</Link>
+              </>
+            );
+          }
+        `,
+        "app/routes/static.tsx": js`
+          export default function Component() {
+            return <h2 id="static">Static</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/$"]);
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fsomething/),
+    ]);
+    manifestRequests = [];
+
+    await app.clickLink("/something");
+    await page.waitForSelector("#splat");
+    expect(await app.getHtml("#splat")).toMatch("Splat");
+    expect(manifestRequests).toEqual([]);
+
+    // This will require a new fetch for the /static route
+    await app.clickLink("/static");
+    await page.waitForSelector("#static");
+    expect(await app.getHtml("#static")).toMatch("Static");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fstatic/),
+    ]);
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index", "routes/$", "routes/static"]);
+  });
+
+  test("does not re-request for previously discovered slug routes", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "@remix-run/react";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body >
+                  <nav>
+                    <Link to="/" discover="none">Go to /</Link>
+                    <Link to="/a" discover="none">Go to /a</Link>
+                    <Link to="/b" discover="none">Go to /b</Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                  </body>
+              </html>
+            );
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>;
+          }
+        `,
+        "app/routes/$slug.tsx": js`
+          import { Link, useParams } from "@remix-run/react";
+          export default function Component() {
+            let params = useParams();
+            return <h2 id="slug">Slug: {params.slug}</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index"]);
+    expect(manifestRequests.length).toBe(0);
+
+    // Click /a which will discover via a manifest request
+    await app.clickLink("/a");
+    await page.waitForSelector("#slug");
+    expect(await app.getHtml("#slug")).toMatch("Slug: a");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fa/),
+    ]);
+    manifestRequests = [];
+
+    // Go back home
+    await app.clickLink("/");
+    await page.waitForSelector("#index");
+    expect(manifestRequests).toEqual([]);
+
+    // Click /a again which will not re-discover
+    await app.clickLink("/a");
+    await page.waitForSelector("#slug");
+    expect(await app.getHtml("#slug")).toMatch("Slug: a");
+    expect(manifestRequests).toEqual([]);
+    manifestRequests = [];
+
+    // Click /b which will need to discover
+    await app.clickLink("/b");
+    await page.waitForSelector("#slug");
+    expect(await app.getHtml("#slug")).toMatch("Slug: b");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fb/),
+    ]);
+  });
+
+  test("does not re-request for previously discovered splat routes", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "@remix-run/react";
+          export default function Root() {
+            return (
+              <html lang="en">
+                <head></head>
+                <body >
+                  <nav>
+                    <Link to="/" discover="none">Go to /</Link>
+                    <Link to="/a" discover="none">Go to /a</Link>
+                    <Link to="/b/c" discover="none">Go to /b/c</Link>
+                  </nav>
+                  <Outlet />
+                  <Scripts />
+                  </body>
+              </html>
+            );
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>;
+          }
+        `,
+        "app/routes/$.tsx": js`
+          import { Link, useParams } from "@remix-run/react";
+          export default function Component() {
+            let params = useParams();
+            return <h2 id="splat">Splat: {params["*"]}</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index"]);
+    expect(manifestRequests.length).toBe(0);
+
+    // Click /a which will discover via a manifest request
+    await app.clickLink("/a");
+    await page.waitForSelector("#splat");
+    expect(await app.getHtml("#splat")).toMatch("Splat: a");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fa/),
+    ]);
+    manifestRequests = [];
+
+    // Go back home
+    await app.clickLink("/");
+    await page.waitForSelector("#index");
+    expect(manifestRequests).toEqual([]);
+
+    // Click /a again which will not re-discover
+    await app.clickLink("/a");
+    await page.waitForSelector("#splat");
+    expect(await app.getHtml("#splat")).toMatch("Splat: a");
+    expect(manifestRequests).toEqual([]);
+    manifestRequests = [];
+
+    // Click /b which will need to discover
+    await app.clickLink("/b/c");
+    await page.waitForSelector("#splat");
+    expect(await app.getHtml("#splat")).toMatch("Splat: b/c");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fb%2Fc/),
+    ]);
+  });
+
+  test("does not re-request for previously navigated 404 routes", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        "app/root.tsx": js`
+          import { Link, Outlet, Scripts } from "@remix-run/react";
+          export function Layout({ children }) {
+            return (
+              <html lang="en">
+                <head></head>
+                <body >
+                  <nav>
+                    <Link to="/" discover="none">Go to /</Link>
+                    <Link to="/something" discover="none">Go to /something</Link>
+                    <Link to="/not/a/path" discover="none">Go to /not/a/path</Link>
+                  </nav>
+                  {children}
+                  <Scripts />
+                  </body>
+              </html>
+            );
+          }
+          export default function Root() {
+            return <Outlet />;
+          }
+          export function ErrorBoundary() {
+            return <h1 id="error">Error</h1>;
+          }
+        `,
+
+        "app/routes/_index.tsx": js`
+          export default function Index() {
+            return <h1 id="index">Index</h1>;
+          }
+        `,
+        "app/routes/$slug.tsx": js`
+          import { Link, useParams } from "@remix-run/react";
+          export default function Component() {
+            let params = useParams();
+            return <h2 id="slug">Slug: {params.slug}</h2>;
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    expect(await app.getHtml("#index")).toMatch("Index");
+    expect(
+      await page.evaluate(() =>
+        Object.keys((window as any).__remixManifest.routes)
+      )
+    ).toEqual(["root", "routes/_index"]);
+    expect(manifestRequests.length).toBe(0);
+
+    // Click a 404 link which will try to discover via a manifest request
+    await app.clickLink("/not/a/path");
+    await page.waitForSelector("#error");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(
+        /\/__manifest\?version=[a-z0-9]{8}&p=%2Fnot%2Fa%2Fpath/
+      ),
+    ]);
+    manifestRequests = [];
+
+    // Go to a valid slug route
+    await app.clickLink("/something");
+    await page.waitForSelector("#slug");
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fsomething/),
+    ]);
+    manifestRequests = [];
+
+    // Click the same 404 link again which will not re-discover
+    await app.clickLink("/not/a/path");
+    await page.waitForSelector("#error");
+    expect(manifestRequests).toEqual([]);
   });
 
   test("skips prefetching if the URL gets too large", async ({ page }) => {

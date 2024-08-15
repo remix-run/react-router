@@ -186,13 +186,6 @@ function createHydratedRouter(): RemixRouter {
     }
   }
 
-  let { enabled: isFogOfWarEnabled, patchRoutesOnNavigation } = initFogOfWar(
-    ssrInfo.manifest,
-    ssrInfo.routeModules,
-    ssrInfo.context.isSpaMode,
-    ssrInfo.context.basename
-  );
-
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
@@ -205,9 +198,13 @@ function createHydratedRouter(): RemixRouter {
       ssrInfo.manifest,
       ssrInfo.routeModules
     ),
-    ...(isFogOfWarEnabled
-      ? { unstable_patchRoutesOnNavigation: patchRoutesOnNavigation }
-      : {}),
+    unstable_patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
+      ssrInfo.context.future,
+      ssrInfo.context.isSpaMode,
+      ssrInfo.context.basename
+    ),
   });
   ssrInfo.router = router;
 

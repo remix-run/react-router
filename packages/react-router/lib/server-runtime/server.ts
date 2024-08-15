@@ -239,10 +239,7 @@ async function handleManifestRequest(
   routes: ServerRoute[],
   url: URL
 ) {
-  let data: {
-    patches: Record<string, EntryRoute>;
-    notFoundPaths: string[];
-  } = { patches: {}, notFoundPaths: [] };
+  let patches: Record<string, EntryRoute> = {};
 
   if (url.searchParams.has("p")) {
     for (let path of url.searchParams.getAll("p")) {
@@ -250,14 +247,12 @@ async function handleManifestRequest(
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
-          data.patches[routeId] = build.assets.routes[routeId];
+          patches[routeId] = build.assets.routes[routeId];
         }
-      } else {
-        data.notFoundPaths.push(path);
       }
     }
 
-    return json(data, {
+    return json(patches, {
       headers: {
         "Cache-Control": "public, max-age=31536000, immutable",
       },
