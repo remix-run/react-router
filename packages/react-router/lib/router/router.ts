@@ -4384,7 +4384,10 @@ async function loadLazyRouteChildren(
   routes: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  pendingRouteChildren: Map<string, ReturnType<typeof patchRoutesOnNavigationImpl>>,
+  pendingRouteChildren: Map<
+    string,
+    ReturnType<typeof patchRoutesOnNavigationImpl>
+  >,
   signal: AbortSignal
 ) {
   let key = [path, ...matches.map((m) => m.route.id)].join("-");
