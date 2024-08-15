@@ -11,12 +11,12 @@ import {
   data as routerData,
   stripBasename,
 } from "../router/utils";
-import {
-  type SingleFetchRedirectResult,
-  type SingleFetchResult,
-  type SingleFetchResults,
-  SingleFetchRedirectSymbol,
+import type {
+  SingleFetchRedirectResult,
+  SingleFetchResult,
+  SingleFetchResults,
 } from "../dom/ssr/single-fetch";
+import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
