@@ -1356,7 +1356,7 @@ test.describe("single-fetch", () => {
         ...files,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@remix-run/dev";
+          import { vitePlugin as remix } from "@react-router/dev";
           export default defineConfig({
             plugins: [
               remix({
@@ -1366,7 +1366,7 @@ test.describe("single-fetch", () => {
           });
         `,
         "app/routes/data.tsx": js`
-          import { redirect } from '@remix-run/node';
+          import { redirect } from 'react-router';
           export function loader() {
             throw redirect('/target');
           }

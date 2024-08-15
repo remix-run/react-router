@@ -722,7 +722,7 @@ test.describe("Fog of War", () => {
     let fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Link, Outlet, Scripts } from "@remix-run/react";
+          import { Link, Outlet, Scripts } from "react-router";
           export default function Root() {
             return (
               <html lang="en">
@@ -745,7 +745,7 @@ test.describe("Fog of War", () => {
           }
         `,
         "app/routes/$slug.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router";
           export default function Component() {
             return (
               <>
@@ -809,7 +809,7 @@ test.describe("Fog of War", () => {
     let fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Link, Outlet, Scripts } from "@remix-run/react";
+          import { Link, Outlet, Scripts } from "react-router";
           export default function Root() {
             return (
               <html lang="en">
@@ -832,7 +832,7 @@ test.describe("Fog of War", () => {
           }
         `,
         "app/routes/$.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router";
           export default function Component() {
             return (
               <>
@@ -896,7 +896,7 @@ test.describe("Fog of War", () => {
     let fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Link, Outlet, Scripts } from "@remix-run/react";
+          import { Link, Outlet, Scripts } from "react-router";
           export default function Root() {
             return (
               <html lang="en">
@@ -921,7 +921,7 @@ test.describe("Fog of War", () => {
           }
         `,
         "app/routes/$slug.tsx": js`
-          import { Link, useParams } from "@remix-run/react";
+          import { Link, useParams } from "react-router";
           export default function Component() {
             let params = useParams();
             return <h2 id="slug">Slug: {params.slug}</h2>;
@@ -984,7 +984,7 @@ test.describe("Fog of War", () => {
     let fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Link, Outlet, Scripts } from "@remix-run/react";
+          import { Link, Outlet, Scripts } from "react-router";
           export default function Root() {
             return (
               <html lang="en">
@@ -1009,7 +1009,7 @@ test.describe("Fog of War", () => {
           }
         `,
         "app/routes/$.tsx": js`
-          import { Link, useParams } from "@remix-run/react";
+          import { Link, useParams } from "react-router";
           export default function Component() {
             let params = useParams();
             return <h2 id="splat">Splat: {params["*"]}</h2>;
@@ -1072,7 +1072,7 @@ test.describe("Fog of War", () => {
     let fixture = await createFixture({
       files: {
         "app/root.tsx": js`
-          import { Link, Outlet, Scripts } from "@remix-run/react";
+          import { Link, Outlet, Scripts } from "react-router";
           export function Layout({ children }) {
             return (
               <html lang="en">
@@ -1103,7 +1103,7 @@ test.describe("Fog of War", () => {
           }
         `,
         "app/routes/$slug.tsx": js`
-          import { Link, useParams } from "@remix-run/react";
+          import { Link, useParams } from "react-router";
           export default function Component() {
             let params = useParams();
             return <h2 id="slug">Slug: {params.slug}</h2>;
