@@ -8,10 +8,11 @@ import pick from "lodash/pick";
 import omit from "lodash/omit";
 import PackageJson from "@npmcli/package-json";
 
-import type {
-  RouteManifest,
-  RouteManifestEntry,
-  RoutesConfig,
+import {
+  setAppDirectory,
+  type RouteManifest,
+  type RouteManifestEntry,
+  type RoutesConfig,
 } from "../config/routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
 import { importViteEsmSync } from "./import-vite-esm-sync";
@@ -424,21 +425,14 @@ export async function resolveReactRouterConfig({
   }
 
   try {
+    setAppDirectory(appDirectory);
     let routesConfig: RoutesConfig = (
       await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
     ).default;
 
-    let entries = Array.isArray(routesConfig) ? routesConfig : [routesConfig];
-
-    let routeManifests = await Promise.all(
-      entries.map(
-        async (config) =>
-          (typeof config === "function"
-            ? await config({ appDirectory })
-            : config
-          ).routes
-      )
-    );
+    let routeManifests = Array.isArray(routesConfig)
+      ? routesConfig
+      : [routesConfig];
 
     Object.assign(routes, ...routeManifests);
 

@@ -1114,7 +1114,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             routeConfigViteServer?.moduleGraph.getModuleById(filepath)
           );
 
-          if (routesConfigChanged) {
+          if (routesConfigChanged || appFileAddedOrRemoved) {
             routeConfigViteServer?.moduleGraph.invalidateAll();
             viteNodeRunner?.moduleCache.clear();
           }
