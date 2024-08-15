@@ -83,7 +83,6 @@ export function getPatchRoutesOnNavigationFunction(
       [path],
       manifest,
       routeModules,
-      future,
       isSpaMode,
       basename,
       patch

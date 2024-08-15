@@ -374,7 +374,7 @@ export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/e
 
 /** @internal */
 export {
-  initFogOfWar as UNSAFE_initFogOfWar,
+  getPatchRoutesOnNavigationFunction as UNSAFE_getPatchRoutesOnNavigationFunction,
   useFogOFWarDiscovery as UNSAFE_useFogOFWarDiscovery,
 } from "./lib/dom/ssr/fog-of-war";
 

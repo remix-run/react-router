@@ -16,7 +16,7 @@ import {
   UNSAFE_createRouter as createRouter,
   UNSAFE_deserializeErrors as deserializeErrors,
   UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
-  UNSAFE_initFogOfWar as initFogOfWar,
+  UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
@@ -201,7 +201,6 @@ function createHydratedRouter(): RemixRouter {
     unstable_patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
       ssrInfo.routeModules,
-      ssrInfo.context.future,
       ssrInfo.context.isSpaMode,
       ssrInfo.context.basename
     ),
