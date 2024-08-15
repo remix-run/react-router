@@ -403,7 +403,7 @@ export async function resolveReactRouterConfig({
   return reactRouterConfig;
 }
 
-let isFirstLoad = true;
+let isFirstRoutesConfigLoad = true;
 let lastValidRoutes: RouteManifest = {};
 
 export async function resolveRoutes({
@@ -500,19 +500,21 @@ export async function resolveRoutes({
         .join("\n"),
       {
         error,
-        clear: !isFirstLoad,
-        timestamp: !isFirstLoad,
+        clear: !isFirstRoutesConfigLoad,
+        timestamp: !isFirstRoutesConfigLoad,
       }
     );
 
     // Bail if this is the first time loading config, otherwise keep the dev server running
-    if (isFirstLoad) {
+    if (isFirstRoutesConfigLoad) {
       process.exit(1);
     }
 
     // Keep dev server running with the last valid routes to allow for correction
     routes = lastValidRoutes;
   }
+
+  isFirstRoutesConfigLoad = false;
 
   return routes;
 }
