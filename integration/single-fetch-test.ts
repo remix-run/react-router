@@ -1350,6 +1350,67 @@ test.describe("single-fetch", () => {
     expect(await app.getHtml("#target")).toContain("Target");
   });
 
+  test("processes redirects when a basename is present", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { vitePlugin as remix } from "@remix-run/dev";
+          export default defineConfig({
+            plugins: [
+              remix({
+                basename: '/base',
+              }),
+            ],
+          });
+        `,
+        "app/routes/data.tsx": js`
+          import { redirect } from '@remix-run/node';
+          export function loader() {
+            throw redirect('/target');
+          }
+          export default function Component() {
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
+      },
+    });
+
+    console.error = () => {};
+
+    let res = await fixture.requestDocument("/base/data");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("Location")).toBe("/base/target");
+    expect(await res.text()).toBe("");
+
+    let { status, data } = await fixture.requestSingleFetchData(
+      "/base/data.data"
+    );
+    expect(data).toEqual({
+      [SingleFetchRedirectSymbol]: {
+        status: 302,
+        redirect: "/target",
+        reload: false,
+        replace: false,
+        revalidate: false,
+      },
+    });
+    expect(status).toBe(202);
+
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/base/");
+    await app.clickLink("/base/data");
+    await page.waitForSelector("#target");
+    expect(await app.getHtml("#target")).toContain("Target");
+  });
+
   test("processes thrown loader errors", async ({ page }) => {
     let fixture = await createFixture({
       files: {

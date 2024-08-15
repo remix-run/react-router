@@ -163,7 +163,11 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
         if (isRedirectResponse(response)) {
           let result: SingleFetchResult | SingleFetchResults =
-            getSingleFetchRedirect(response.status, response.headers);
+            getSingleFetchRedirect(
+              response.status,
+              response.headers,
+              _build.basename
+            );
 
           if (request.method === "GET") {
             result = {
