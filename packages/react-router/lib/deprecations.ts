@@ -22,19 +22,22 @@ export function logV6DeprecationWarnings(
   renderFuture: Partial<RenderFutureConfig> | undefined,
   routerFuture?: Omit<RouterFutureConfig, "v7_prependBasename">
 ) {
-  if (!renderFuture?.v7_relativeSplatPath) {
-    logDeprecation(
-      "v7_relativeSplatPath",
-      "Relative route resolution within Splat routes is changing in v7",
-      "https://reactrouter.com/en/v7/upgrading/future#v7_relativesplatpath"
-    );
-  }
-
   if (!renderFuture?.v7_startTransition) {
     logDeprecation(
       "v7_startTransition",
       "React Router will begin wrapping state updates in `React.startTransition` in v7",
       "https://reactrouter.com/en/v7/upgrading/future#v7_starttransition"
+    );
+  }
+
+  if (
+    !renderFuture?.v7_relativeSplatPath &&
+    (!routerFuture || !routerFuture.v7_relativeSplatPath)
+  ) {
+    logDeprecation(
+      "v7_relativeSplatPath",
+      "Relative route resolution within Splat routes is changing in v7",
+      "https://reactrouter.com/en/v7/upgrading/future#v7_relativesplatpath"
     );
   }
 

@@ -39,9 +39,21 @@ describe(`ScrollRestoration`, () => {
           children: testPages,
         },
       ],
-      { basename: "/base", window: testWindow }
+      {
+        basename: "/base",
+        window: testWindow,
+        future: {
+          v7_fetcherPersist: true,
+          v7_normalizeFormMethod: true,
+          v7_partialHydration: true,
+          v7_skipActionErrorRevalidation: true,
+          v7_relativeSplatPath: true,
+        },
+      }
     );
-    let { container } = render(<RouterProvider router={router} />);
+    let { container } = render(
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
+    );
 
     expect(getHtml(container)).toMatch("On page 1");
 

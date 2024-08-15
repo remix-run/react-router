@@ -16,7 +16,11 @@ describe("<Router basename>", () => {
     let renderer: TestRenderer.ReactTestRenderer;
     TestRenderer.act(() => {
       renderer = TestRenderer.create(
-        <MemoryRouter basename="/app" initialEntries={["/home"]}>
+        <MemoryRouter
+          basename="/app"
+          initialEntries={["/home"]}
+          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+        >
           <Routes>
             <Route path="/" element={<h1>App</h1>} />
           </Routes>
