@@ -218,7 +218,7 @@ describe("<ServerRouter>", () => {
 describe("<HydratedRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
     window.__remixContext = {
-      ssrMatches: ["root", "empty"],
+      url: "/",
       future: {},
     };
     window.__remixRouteModules = {
