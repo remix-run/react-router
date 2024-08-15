@@ -510,6 +510,121 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/static");
+    expect(router.state.location.pathname).toBe("/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches (product/:slug)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/product/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch(null, [
+          {
+            id: "static",
+            path: "/product/static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
+  });
+
+  it("de-prioritizes dynamic param routes in favor of looking for better async matches (child route)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "product",
+          path: "/product",
+          children: [
+            {
+              id: "slug",
+              path: ":slug",
+            },
+          ],
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch("product", [
+          {
+            id: "static",
+            path: "static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "product",
+      "static",
+    ]);
+  });
+
+  it("matches dynamic params when other paths don't pan out", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "slug",
+          path: "/:slug",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        await tick();
+      },
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location.pathname).toBe("/a");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["slug"]);
+  });
+
   it("de-prioritizes splat routes in favor of looking for better async matches", async () => {
     router = createRouter({
       history: createMemoryHistory(),
@@ -572,6 +687,43 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["static"]);
   });
 
+  it("de-prioritizes splat routes in favor of looking for better async matches (child route)", async () => {
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "product",
+          path: "/product",
+          children: [
+            {
+              id: "splat",
+              path: "*",
+            },
+          ],
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ patch }) {
+        await tick();
+        patch("product", [
+          {
+            id: "static",
+            path: "static",
+          },
+        ]);
+      },
+    });
+
+    await router.navigate("/product/static");
+    expect(router.state.location.pathname).toBe("/product/static");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "product",
+      "static",
+    ]);
+  });
+
   it("matches splats when other paths don't pan out", async () => {
     router = createRouter({
       history: createMemoryHistory(),
@@ -604,6 +756,50 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     await router.navigate("/a/nope");
     expect(router.state.location.pathname).toBe("/a/nope");
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["splat"]);
+  });
+
+  it("recurses unstable_patchRoutesOnMiss until a match is found", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "a",
+          path: "a",
+        },
+      ],
+      async unstable_patchRoutesOnMiss({ matches, patch }) {
+        await tick();
+        count++;
+        if (last(matches).route.id === "a") {
+          patch("a", [
+            {
+              id: "b",
+              path: "b",
+            },
+          ]);
+        } else if (last(matches).route.id === "b") {
+          patch("b", [
+            {
+              id: "c",
+              path: "c",
+            },
+          ]);
+        }
+      },
+    });
+
+    await router.navigate("/a/b/c");
+    expect(router.state.location.pathname).toBe("/a/b/c");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
+    expect(count).toBe(2);
   });
 
   it("discovers routes during initial hydration", async () => {
@@ -1004,6 +1200,136 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
 
     unsubscribe();
+  });
+
+  it('does not re-call for previously called "good" paths', async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "param",
+          path: ":param",
+        },
+      ],
+      async unstable_patchRoutesOnMiss() {
+        count++;
+        await tick();
+        // Nothing to patch - there is no better static route in this case
+      },
+    });
+
+    await router.navigate("/whatever");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/whatever");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
+
+    await router.navigate("/");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/");
+
+    await router.navigate("/whatever");
+    expect(count).toBe(1); // Not called again
+    expect(router.state.location.pathname).toBe("/whatever");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
+  });
+
+  it("does not re-call for previously called 404 paths", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          id: "index",
+          path: "/",
+        },
+        {
+          id: "static",
+          path: "static",
+        },
+      ],
+      async unstable_patchRoutesOnMiss() {
+        count++;
+      },
+    });
+
+    await router.navigate("/junk");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/junk");
+    expect(router.state.errors?.index).toEqual(
+      new ErrorResponseImpl(
+        404,
+        "Not Found",
+        new Error('No route matches URL "/junk"'),
+        true
+      )
+    );
+
+    await router.navigate("/");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/");
+    expect(router.state.errors).toBeNull();
+
+    await router.navigate("/junk");
+    expect(count).toBe(1);
+    expect(router.state.location.pathname).toBe("/junk");
+    expect(router.state.errors?.index).toEqual(
+      new ErrorResponseImpl(
+        404,
+        "Not Found",
+        new Error('No route matches URL "/junk"'),
+        true
+      )
+    );
+  });
+
+  it("caps internal fifo queue at 1000 paths", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+        {
+          id: "param",
+          path: ":param",
+        },
+      ],
+      async unstable_patchRoutesOnMiss() {
+        count++;
+        // Nothing to patch - there is no better static route in this case
+      },
+    });
+
+    // Fill it up with 1000 paths
+    for (let i = 1; i <= 1000; i++) {
+      await router.navigate(`/path-${i}`);
+      expect(count).toBe(i);
+      expect(router.state.location.pathname).toBe(`/path-${i}`);
+
+      await router.navigate("/");
+      expect(count).toBe(i);
+      expect(router.state.location.pathname).toBe("/");
+    }
+
+    // Don't call patchRoutesOnMiss since this is the first item in the queue
+    await router.navigate(`/path-1`);
+    expect(count).toBe(1000);
+    expect(router.state.location.pathname).toBe(`/path-1`);
+
+    // Call patchRoutesOnMiss and evict the first item
+    await router.navigate(`/path-1001`);
+    expect(count).toBe(1001);
+    expect(router.state.location.pathname).toBe(`/path-1001`);
+
+    // Call patchRoutesOnMiss since this item was evicted
+    await router.navigate(`/path-1`);
+    expect(count).toBe(1002);
+    expect(router.state.location.pathname).toBe(`/path-1`);
   });
 
   describe("errors", () => {

@@ -819,6 +819,10 @@ export function createRouter(init: RouterInit): Router {
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
   let subscribers = new Set<RouterSubscriber>();
+  // FIFO queue of previously discovered routes to prevent re-calling on
+  // subsequent navigations to the same path
+  let discoveredRoutesMaxSize = 1000;
+  let discoveredRoutes = new Set<string>();
   // Externally-provided object to hold scroll restoration locations during routing
   let savedScrollPositions: Record<string, number> | null = null;
   // Externally-provided function to get scroll restoration keys
@@ -3079,6 +3083,13 @@ export function createRouter(init: RouterInit): Router {
     pathname: string
   ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
     if (patchRoutesOnMissImpl) {
+      // Don't bother re-calling patchRouteOnMiss for a path we've already
+      // processed.  the last execution would have patched the route tree
+      // accordingly so `matches` here are already accurate.
+      if (discoveredRoutes.has(pathname)) {
+        return { active: false, matches };
+      }
+
       if (!matches) {
         let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
           routesToUse,
@@ -3089,14 +3100,10 @@ export function createRouter(init: RouterInit): Router {
 
         return { active: true, matches: fogMatches || [] };
       } else {
-        let leafRoute = matches[matches.length - 1].route;
-        if (
-          leafRoute.path &&
-          (leafRoute.path === "*" || leafRoute.path.endsWith("/*"))
-        ) {
-          // If we matched a splat, it might only be because we haven't yet fetched
-          // the children that would match with a higher score, so let's fetch
-          // around and find out
+        if (Object.keys(matches[0].params).length > 0) {
+          // If we matched a dynamic param or a splat, it might only be because
+          // we haven't yet discovered other routes that would match with a
+          // higher score.  Call patchRoutesOnMiss just to be sure
           let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
             routesToUse,
             pathname,
@@ -3132,10 +3139,6 @@ export function createRouter(init: RouterInit): Router {
     signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
     let partialMatches: AgnosticDataRouteMatch[] | null = matches;
-    let route =
-      partialMatches.length > 0
-        ? partialMatches[partialMatches.length - 1].route
-        : null;
     while (true) {
       let isNonHMR = inFlightDataRoutes == null;
       let routesToUse = inFlightDataRoutes || dataRoutes;
@@ -3169,26 +3172,9 @@ export function createRouter(init: RouterInit): Router {
       }
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
-      let matchedSplat = false;
       if (newMatches) {
-        let leafRoute = newMatches[newMatches.length - 1].route;
-
-        if (leafRoute.index) {
-          // If we found an index route, we can stop
-          return { type: "success", matches: newMatches };
-        }
-
-        if (leafRoute.path && leafRoute.path.length > 0) {
-          if (leafRoute.path === "*") {
-            // If we found a splat route, we can't be sure there's not a
-            // higher-scoring route down some partial matches trail so we need
-            // to check that out
-            matchedSplat = true;
-          } else {
-            // If we found a non-splat route, we can stop
-            return { type: "success", matches: newMatches };
-          }
-        }
+        addToFifoQueue(pathname, discoveredRoutes);
+        return { type: "success", matches: newMatches };
       }
 
       let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
@@ -3198,24 +3184,28 @@ export function createRouter(init: RouterInit): Router {
         true
       );
 
-      // If we are no longer partially matching anything, this was either a
-      // legit splat match above, or it's a 404.  Also avoid loops if the
-      // second pass results in the same partial matches
+      // Avoid loops if the second pass results in the same partial matches
       if (
         !newPartialMatches ||
-        partialMatches.map((m) => m.route.id).join("-") ===
-          newPartialMatches.map((m) => m.route.id).join("-")
+        (partialMatches.length === newPartialMatches.length &&
+          partialMatches.every(
+            (m, i) => m.route.id === newPartialMatches![i].route.id
+          ))
       ) {
-        return { type: "success", matches: matchedSplat ? newMatches : null };
+        addToFifoQueue(pathname, discoveredRoutes);
+        return { type: "success", matches: null };
       }
 
       partialMatches = newPartialMatches;
-      route = partialMatches[partialMatches.length - 1].route;
-      if (route.path === "*") {
-        // The splat is still our most accurate partial, so run with it
-        return { type: "success", matches: partialMatches };
-      }
     }
+  }
+
+  function addToFifoQueue(path: string, queue: Set<string>) {
+    if (queue.size >= discoveredRoutesMaxSize) {
+      let first = queue.values().next().value;
+      queue.delete(first);
+    }
+    queue.add(path);
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
