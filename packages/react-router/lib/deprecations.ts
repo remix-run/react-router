@@ -13,7 +13,7 @@ export function warnOnce(key: string, message: string): void {
 const logDeprecation = (flag: string, msg: string, link: string) =>
   warnOnce(
     flag,
-    `⚠️ Future Flag Warning: ${msg}. ` +
+    `⚠️ React Router Future Flag Warning: ${msg}. ` +
       `You can use the \`${flag}\` future flag to opt-in early. ` +
       `For more information, see ${link}.`
   );

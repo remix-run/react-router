@@ -155,6 +155,11 @@ export function RouterProvider({
     [router, navigator, basename]
   );
 
+  React.useEffect(
+    () => logV6DeprecationWarnings({ ...router.future, ...future }, true),
+    [router, future]
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).

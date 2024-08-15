@@ -270,7 +270,6 @@ export function createBrowserRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
 ): RemixRouter {
-  logV6DeprecationWarnings(opts?.future, true);
   return createRouter({
     basename: opts?.basename,
     future: {
@@ -291,7 +290,6 @@ export function createHashRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
 ): RemixRouter {
-  logV6DeprecationWarnings(opts?.future, true);
   return createRouter({
     basename: opts?.basename,
     future: {
@@ -718,6 +716,11 @@ export function RouterProvider({
       v7_relativeSplatPath: router.future.v7_relativeSplatPath,
     }),
     [router.future.v7_relativeSplatPath]
+  );
+
+  React.useEffect(
+    () => logV6DeprecationWarnings({ ...router.future, ...future }, true),
+    [router, future]
   );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
