@@ -222,7 +222,7 @@ export interface DataStrategyFunction {
   (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
 }
 
-export interface AgnosticPatchRoutesOnMissFunction<
+export interface AgnosticPatchRoutesOnNavigationFunction<
   M extends AgnosticRouteMatch = AgnosticRouteMatch
 > {
   (opts: {

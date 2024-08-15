@@ -16,7 +16,7 @@ import {
   UNSAFE_createRouter as createRouter,
   UNSAFE_deserializeErrors as deserializeErrors,
   UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
-  UNSAFE_initFogOfWar as initFogOfWar,
+  UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
@@ -186,13 +186,6 @@ function createHydratedRouter(): RemixRouter {
     }
   }
 
-  let { enabled: isFogOfWarEnabled, patchRoutesOnMiss } = initFogOfWar(
-    ssrInfo.manifest,
-    ssrInfo.routeModules,
-    ssrInfo.context.isSpaMode,
-    ssrInfo.context.basename
-  );
-
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
@@ -205,9 +198,12 @@ function createHydratedRouter(): RemixRouter {
       ssrInfo.manifest,
       ssrInfo.routeModules
     ),
-    ...(isFogOfWarEnabled
-      ? { unstable_patchRoutesOnMiss: patchRoutesOnMiss }
-      : {}),
+    unstable_patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
+      ssrInfo.context.isSpaMode,
+      ssrInfo.context.basename
+    ),
   });
   ssrInfo.router = router;
 
