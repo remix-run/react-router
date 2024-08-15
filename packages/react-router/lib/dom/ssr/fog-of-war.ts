@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { PatchRoutesOnMissFunction } from "../../components";
+import type { PatchRoutesOnNavigationFunction } from "../../components";
 import type { Router as RemixRouter } from "../../router/router";
 import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
@@ -77,7 +77,7 @@ export function initFogOfWar(
   basename: string | undefined
 ): {
   enabled: boolean;
-  patchRoutesOnMiss?: PatchRoutesOnMissFunction;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
 } {
   if (!isFogOfWarEnabled(isSpaMode)) {
     return { enabled: false };
@@ -91,7 +91,7 @@ export function initFogOfWar(
 
   return {
     enabled: true,
-    patchRoutesOnMiss: async ({ path, patch }) => {
+    patchRoutesOnNavigation: async ({ path, patch }) => {
       if (
         fogOfWar!.known404Paths.has(path) ||
         fogOfWar!.knownGoodPaths.has(path)

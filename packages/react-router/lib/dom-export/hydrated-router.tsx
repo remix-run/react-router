@@ -186,7 +186,7 @@ function createHydratedRouter(): RemixRouter {
     }
   }
 
-  let { enabled: isFogOfWarEnabled, patchRoutesOnMiss } = initFogOfWar(
+  let { enabled: isFogOfWarEnabled, patchRoutesOnNavigation } = initFogOfWar(
     ssrInfo.manifest,
     ssrInfo.routeModules,
     ssrInfo.context.isSpaMode,
@@ -206,7 +206,7 @@ function createHydratedRouter(): RemixRouter {
       ssrInfo.routeModules
     ),
     ...(isFogOfWarEnabled
-      ? { unstable_patchRoutesOnMiss: patchRoutesOnMiss }
+      ? { unstable_patchRoutesOnNavigation: patchRoutesOnNavigation }
       : {}),
   });
   ssrInfo.router = router;
