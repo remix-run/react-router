@@ -249,7 +249,7 @@ export function MemoryRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
 
   return (
     <Router

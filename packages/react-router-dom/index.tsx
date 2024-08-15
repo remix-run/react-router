@@ -270,7 +270,7 @@ export function createBrowserRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
 ): RemixRouter {
-  logV6DeprecationWarnings(opts?.future);
+  logV6DeprecationWarnings(opts?.future, true);
   return createRouter({
     basename: opts?.basename,
     future: {
@@ -291,7 +291,7 @@ export function createHashRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
 ): RemixRouter {
-  logV6DeprecationWarnings(opts?.future);
+  logV6DeprecationWarnings(opts?.future, true);
   return createRouter({
     basename: opts?.basename,
     future: {
@@ -811,7 +811,7 @@ export function BrowserRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
 
   return (
     <Router
@@ -864,7 +864,7 @@ export function HashRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
 
   return (
     <Router
@@ -913,7 +913,7 @@ function HistoryRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
 
   return (
     <Router

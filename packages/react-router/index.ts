@@ -307,7 +307,7 @@ export function createMemoryRouter(
     unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
   }
 ): RemixRouter {
-  logV6DeprecationWarnings(opts?.future);
+  logV6DeprecationWarnings(opts?.future, true);
   return createRouter({
     basename: opts?.basename,
     future: {
