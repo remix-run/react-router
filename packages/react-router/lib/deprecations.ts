@@ -19,14 +19,10 @@ const logDeprecation = (flag: string, msg: string, link: string) =>
   );
 
 export function logV6DeprecationWarnings(
-  future:
-    | Partial<
-        Omit<RouterFutureConfig, "v7_prependBasename"> & RenderFutureConfig
-      >
-    | undefined,
-  isDataRouter: boolean
+  renderFuture: Partial<RenderFutureConfig> | undefined,
+  routerFuture?: Omit<RouterFutureConfig, "v7_prependBasename">
 ) {
-  if (!future?.v7_relativeSplatPath) {
+  if (!renderFuture?.v7_relativeSplatPath) {
     logDeprecation(
       "v7_relativeSplatPath",
       "Relative route resolution within Splat routes is changing in v7",
@@ -34,7 +30,7 @@ export function logV6DeprecationWarnings(
     );
   }
 
-  if (!future?.v7_startTransition) {
+  if (!renderFuture?.v7_startTransition) {
     logDeprecation(
       "v7_startTransition",
       "React Router will begin wrapping state updates in `React.startTransition` in v7",
@@ -42,8 +38,8 @@ export function logV6DeprecationWarnings(
     );
   }
 
-  if (isDataRouter) {
-    if (!future?.v7_fetcherPersist) {
+  if (routerFuture) {
+    if (!routerFuture.v7_fetcherPersist) {
       logDeprecation(
         "v7_fetcherPersist",
         "The persistence behavior of fetchers is changing in v7",
@@ -51,7 +47,7 @@ export function logV6DeprecationWarnings(
       );
     }
 
-    if (!future?.v7_normalizeFormMethod) {
+    if (!routerFuture.v7_normalizeFormMethod) {
       logDeprecation(
         "v7_normalizeFormMethod",
         "Casing of `formMethod` fields is being normalized to uppercase in v7",
@@ -59,7 +55,7 @@ export function logV6DeprecationWarnings(
       );
     }
 
-    if (!future?.v7_partialHydration) {
+    if (!routerFuture.v7_partialHydration) {
       logDeprecation(
         "v7_partialHydration",
         "`RouterProvider` hydration behavior is changing in v7",
@@ -67,7 +63,7 @@ export function logV6DeprecationWarnings(
       );
     }
 
-    if (!future?.v7_skipActionErrorRevalidation) {
+    if (!routerFuture.v7_skipActionErrorRevalidation) {
       logDeprecation(
         "v7_skipActionErrorRevalidation",
         "The revalidation behavior after 4xx/5xx `action` responses is changing in v7",

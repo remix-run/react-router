@@ -719,8 +719,8 @@ export function RouterProvider({
   );
 
   React.useEffect(
-    () => logV6DeprecationWarnings({ ...router.future, ...future }, true),
-    [router, future]
+    () => logV6DeprecationWarnings(future, router.future),
+    [future, router.future]
   );
 
   // The fragment and {null} here are important!  We need them to keep React 18's
@@ -814,7 +814,7 @@ export function BrowserRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
@@ -867,7 +867,7 @@ export function HashRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
@@ -916,7 +916,7 @@ function HistoryRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router

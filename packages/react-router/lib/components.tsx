@@ -156,7 +156,7 @@ export function RouterProvider({
   );
 
   React.useEffect(
-    () => logV6DeprecationWarnings({ ...router.future, ...future }, true),
+    () => logV6DeprecationWarnings(future, router.future),
     [router, future]
   );
 
@@ -254,7 +254,7 @@ export function MemoryRouter({
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
 
-  React.useEffect(() => logV6DeprecationWarnings(future, false), [future]);
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
