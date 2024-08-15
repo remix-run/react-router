@@ -6,7 +6,7 @@ import type {
 import type { RouteModules } from "./ssr/routeModules";
 
 export type WindowRemixContext = {
-  ssrMatches: string[];
+  url: string;
   basename?: string;
   state: HydrationState;
   criticalCss?: string;
