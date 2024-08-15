@@ -430,9 +430,9 @@ export async function resolveReactRouterConfig({
       await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
     ).default;
 
-    let entries = Array.isArray(routesConfig) ? routesConfig : [routesConfig];
-
-    let routeManifests = entries.map((config) => config.routes);
+    let routeManifests = Array.isArray(routesConfig)
+      ? routesConfig
+      : [routesConfig];
 
     Object.assign(routes, ...routeManifests);
 
