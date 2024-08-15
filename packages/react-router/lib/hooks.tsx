@@ -698,7 +698,7 @@ export function _renderMatches(
       dataRouterState.matches.length > 0
     ) {
       // Don't bail if we're initializing with partial hydration and we have
-      // router matches.  That means we're actively running `patchRoutesOnMiss`
+      // router matches.  That means we're actively running `patchRoutesOnNavigation`
       // so we should render down the partial matches to the appropriate
       // `HydrateFallback`.  We only do this if `parentMatches` is empty so it
       // only impacts the root matches for `RouterProvider` and no descendant

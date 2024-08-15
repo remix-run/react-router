@@ -1,5 +1,14 @@
 # `react-router-dom`
 
+## 6.26.1
+
+### Patch Changes
+
+- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` to match new behavior ([#11888](https://github.com/remix-run/react-router/pull/11888))
+- Updated dependencies:
+  - `@remix-run/router@1.19.1`
+  - `react-router@6.26.1`
+
 ## 6.26.0
 
 ### Minor Changes
