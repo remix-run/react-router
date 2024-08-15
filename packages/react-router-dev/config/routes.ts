@@ -1,5 +1,17 @@
 import * as path from "node:path";
 import pick from "lodash/pick";
+import invariant from "../invariant";
+
+let appDirectory: string;
+
+export function setAppDirectory(directory: string) {
+  appDirectory = directory;
+}
+
+export function getAppDirectory() {
+  invariant(appDirectory);
+  return appDirectory;
+}
 
 export interface RouteManifestEntry {
   /**
@@ -40,16 +52,7 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type StaticRoutesConfigEntry = { routes: RouteManifest };
-export type DynamicRoutesConfigEntry = (args: {
-  appDirectory: string;
-}) => StaticRoutesConfigEntry | Promise<StaticRoutesConfigEntry>;
-
-export type RoutesConfigEntry =
-  | StaticRoutesConfigEntry
-  | DynamicRoutesConfigEntry;
-
-export type RoutesConfig = RoutesConfigEntry | RoutesConfigEntry[];
+export type RoutesConfig = RouteManifest | RouteManifest[];
 
 /**
  * A route exported from the routes config file
@@ -187,10 +190,8 @@ function createLayout(
   };
 }
 
-export function routes(routes: ConfigRoute[]): StaticRoutesConfigEntry {
-  return {
-    routes: configRoutesToRouteManifest(routes),
-  };
+export function routes(routes: ConfigRoute[]): RouteManifest {
+  return configRoutesToRouteManifest(routes);
 }
 
 export const route = createRoute;

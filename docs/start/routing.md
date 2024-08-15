@@ -44,7 +44,7 @@ import { remixRoutes } from "@react-router/remix-v2-routes";
 
 export default [
   // supports Remix v2 route file names
-  remixRoutes(),
+  await remixRoutes(),
 
   // can still do regular configuration
   routes([route("/can/still/add/more", "./more.tsx")]),
