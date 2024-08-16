@@ -432,7 +432,6 @@ export async function resolveReactRouterConfig({
     ).default;
 
     routes = { ...routes, ...configRoutesToRouteManifest(routesConfig) };
-    console.log("routes", routes);
 
     lastValidRoutes = routes;
 
