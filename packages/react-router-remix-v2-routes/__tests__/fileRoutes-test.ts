@@ -1,5 +1,6 @@
 import path from "node:path";
-import type { RouteManifestEntry } from "@react-router/dev";
+
+import type { RouteManifestEntry } from "../manifest";
 
 import {
   fileRoutesUniversal,

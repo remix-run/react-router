@@ -52,7 +52,7 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type RoutesConfig = RouteManifest | RouteManifest[];
+export type RoutesConfig = ConfigRoute[] | Promise<ConfigRoute[]>;
 
 /**
  * A route exported from the routes config file
@@ -190,15 +190,17 @@ function createLayout(
   };
 }
 
-export function routes(routes: ConfigRoute[]): RouteManifest {
-  return configRoutesToRouteManifest(routes);
+export function defineRoutes<Routes extends RoutesConfig>(
+  routes: Routes
+): Routes {
+  return routes;
 }
 
 export const route = createRoute;
 export const index = createIndex;
 export const layout = createLayout;
 
-function configRoutesToRouteManifest(
+export function configRoutesToRouteManifest(
   routes: ConfigRoute[],
   rootId = "root"
 ): RouteManifest {

@@ -88,9 +88,12 @@ export default function Home() {
 ```
 
 ```ts filename=app/routes.ts
-import { routes, index } from "@react-router/dev/routes";
+import {
+  defineRoutes,
+  index,
+} from "@react-router/dev/routes";
 
-export default routes([index("./home.tsx")]);
+export default defineRoutes([index("./home.tsx")]);
 ```
 
 ```tsx filename=vite.config.ts

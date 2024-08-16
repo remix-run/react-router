@@ -1,11 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import type {
-  RouteManifest,
-  RouteManifestEntry,
-} from "@react-router/dev/routes";
 import { makeRe } from "minimatch";
 
+import type { RouteManifest, RouteManifestEntry } from "./manifest";
 import { normalizeSlashes } from "./normalizeSlashes";
 
 export const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
