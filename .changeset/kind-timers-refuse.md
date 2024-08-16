@@ -1,5 +1,4 @@
 ---
-"@react-router/server-runtime": major
 "react-router-dom": major
 "@react-router/express": major
 "react-router": major

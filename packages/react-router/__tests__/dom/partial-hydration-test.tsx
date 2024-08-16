@@ -32,7 +32,7 @@ describe("Partial Hydration Behavior", () => {
     testPartialHydration(createMemoryRouter, ReactRouter_RouterProvider);
 
     // these tests only run for memory since we just need to set initialEntries
-    it("supports partial hydration w/patchRoutesOnMiss (leaf fallback)", async () => {
+    it("supports partial hydration w/patchRoutesOnNavigation (leaf fallback)", async () => {
       let parentDfd = createDeferred();
       let childDfd = createDeferred();
       let router = createMemoryRouter(
@@ -70,7 +70,7 @@ describe("Partial Hydration Behavior", () => {
           future: {
             v7_partialHydration: true,
           },
-          unstable_patchRoutesOnMiss({ path, patch }) {
+          unstable_patchRoutesOnNavigation({ path, patch }) {
             if (path === "/parent/child") {
               patch("parent", [
                 {
@@ -120,7 +120,7 @@ describe("Partial Hydration Behavior", () => {
           `);
     });
 
-    it("supports partial hydration w/patchRoutesOnMiss (root fallback)", async () => {
+    it("supports partial hydration w/patchRoutesOnNavigation (root fallback)", async () => {
       let parentDfd = createDeferred();
       let childDfd = createDeferred();
       let router = createMemoryRouter(
@@ -158,7 +158,7 @@ describe("Partial Hydration Behavior", () => {
           future: {
             v7_partialHydration: true,
           },
-          unstable_patchRoutesOnMiss({ path, patch }) {
+          unstable_patchRoutesOnNavigation({ path, patch }) {
             if (path === "/parent/child") {
               patch("parent", [
                 {

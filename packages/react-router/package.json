@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.25.0",
+  "version": "6.26.2",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -42,7 +42,7 @@
     "react-router": "workspace:*",
     "set-cookie-parser": "^2.6.0",
     "source-map": "^0.7.3",
-    "turbo-stream": "^2.2.0"
+    "turbo-stream": "2.3.0"
   },
   "devDependencies": {
     "@types/set-cookie-parser": "^2.4.1",

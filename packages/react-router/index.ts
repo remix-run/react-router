@@ -93,7 +93,7 @@ export type {
   RouterProps,
   RouterProviderProps,
   RoutesProps,
-  PatchRoutesOnMissFunction as unstable_PatchRoutesOnMissFunction,
+  PatchRoutesOnNavigationFunction as unstable_PatchRoutesOnNavigationFunction,
 } from "./lib/components";
 export type { NavigateFunction } from "./lib/hooks";
 export {
@@ -374,7 +374,7 @@ export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/e
 
 /** @internal */
 export {
-  initFogOfWar as UNSAFE_initFogOfWar,
+  getPatchRoutesOnNavigationFunction as UNSAFE_getPatchRoutesOnNavigationFunction,
   useFogOFWarDiscovery as UNSAFE_useFogOFWarDiscovery,
 } from "./lib/dom/ssr/fog-of-war";
 

@@ -23,7 +23,7 @@ import type {
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
-  AgnosticPatchRoutesOnMissFunction,
+  AgnosticPatchRoutesOnNavigationFunction,
   DataStrategyFunction,
   LazyRouteFunction,
   TrackedPromise,
@@ -130,8 +130,8 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
-export interface PatchRoutesOnMissFunction
-  extends AgnosticPatchRoutesOnMissFunction<RouteMatch> {}
+export interface PatchRoutesOnNavigationFunction
+  extends AgnosticPatchRoutesOnNavigationFunction<RouteMatch> {}
 
 /**
  * @category Routers
@@ -145,7 +145,7 @@ export function createMemoryRouter(
     initialEntries?: InitialEntry[];
     initialIndex?: number;
     unstable_dataStrategy?: DataStrategyFunction;
-    unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
+    unstable_patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -159,7 +159,7 @@ export function createMemoryRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
   }).initialize();
 }
 
