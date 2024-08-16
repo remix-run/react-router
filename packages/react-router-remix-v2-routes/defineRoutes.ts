@@ -1,8 +1,4 @@
-import type {
-  RouteManifest,
-  RouteManifestEntry,
-} from "@react-router/dev/routes";
-
+import type { RouteManifest, RouteManifestEntry } from "./manifest";
 import { normalizeSlashes } from "./normalizeSlashes";
 
 export type DefineRoutesFunction = typeof defineRoutes;

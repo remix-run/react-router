@@ -10,6 +10,7 @@ import PackageJson from "@npmcli/package-json";
 
 import {
   setAppDirectory,
+  configRoutesToRouteManifest,
   type RouteManifest,
   type RouteManifestEntry,
   type RoutesConfig,
@@ -430,11 +431,8 @@ export async function resolveReactRouterConfig({
       await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
     ).default;
 
-    let routeManifests = Array.isArray(routesConfig)
-      ? routesConfig
-      : [routesConfig];
-
-    Object.assign(routes, ...routeManifests);
+    routes = { ...routes, ...configRoutesToRouteManifest(routesConfig) };
+    console.log("routes", routes);
 
     lastValidRoutes = routes;
 
