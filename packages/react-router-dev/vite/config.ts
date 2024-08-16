@@ -431,7 +431,7 @@ export async function resolveReactRouterConfig({
       await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
     ).default;
 
-    routes = { ...routes, ...configRoutesToRouteManifest(routesConfig) };
+    routes = { ...routes, ...configRoutesToRouteManifest(await routesConfig) };
 
     lastValidRoutes = routes;
 

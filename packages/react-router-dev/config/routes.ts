@@ -52,7 +52,7 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type RoutesConfig = ConfigRoute[];
+export type RoutesConfig = ConfigRoute[] | Promise<ConfigRoute[]>;
 
 /**
  * A route exported from the routes config file
@@ -190,7 +190,7 @@ function createLayout(
   };
 }
 
-export function defineRoutes<Routes extends ConfigRoute[]>(
+export function defineRoutes<Routes extends RoutesConfig>(
   routes: Routes
 ): Routes {
   return routes;
