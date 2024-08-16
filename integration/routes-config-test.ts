@@ -12,7 +12,7 @@ import {
 const js = String.raw;
 
 test.describe("routes config", () => {
-  test("fails the build if config is invalid", async () => {
+  test("fails the build if routes config is invalid", async () => {
     let cwd = await createProject({
       "app/routes.ts": `export default INVALID(`,
     });
@@ -21,7 +21,7 @@ test.describe("routes config", () => {
     expect(buildResult.stderr.toString()).toContain("Route config is invalid");
   });
 
-  test("fails the dev process if config is initially invalid", async ({
+  test("fails the dev process if routes config is initially invalid", async ({
     dev,
   }) => {
     let files: Files = async ({ port }) => ({
@@ -37,7 +37,10 @@ test.describe("routes config", () => {
     expect(devError?.toString()).toContain("Route config is invalid");
   });
 
-  test("supports correcting an invalid config", async ({ page, dev }) => {
+  test("supports correcting an invalid routes config", async ({
+    page,
+    dev,
+  }) => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
@@ -89,7 +92,7 @@ test.describe("routes config", () => {
     }).toPass();
   });
 
-  test("supports correcting an invalid config module graph", async ({
+  test("supports correcting an invalid routes config module graph", async ({
     page,
     dev,
   }) => {

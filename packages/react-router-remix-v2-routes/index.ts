@@ -5,13 +5,21 @@ import { type ConfigRoute, getAppDirectory } from "@react-router/dev/routes";
 import { type RouteManifest, routeManifestToConfigRoutes } from "./manifest";
 import { fileRoutes } from "./fileRoutes";
 import { defineRoutes, type DefineRoutesFunction } from "./defineRoutes";
+import { normalizeSlashes } from "./normalizeSlashes";
+
+export type { RouteManifest, DefineRoutesFunction };
 
 export async function remixRoutes({
   ignoredRouteFiles,
-  rootDirectory = "routes",
+  rootDirectory: userRootDirectory = "./routes",
   routes: customRoutes,
 }: {
   ignoredRouteFiles?: string[];
+
+  /**
+   * The directory containing file system routes, relative to the app directory.
+   * Defaults to `./routes`.
+   */
   rootDirectory?: string;
 
   /**
@@ -26,12 +34,15 @@ export async function remixRoutes({
     | Promise<ReturnType<DefineRoutesFunction>>;
 } = {}): Promise<ConfigRoute[]> {
   let appDirectory = getAppDirectory();
+  let rootDirectory = path.resolve(appDirectory, userRootDirectory);
+  let relativeRootDirectory = path.relative(appDirectory, rootDirectory);
+  let prefix = normalizeSlashes(relativeRootDirectory);
   let routes: RouteManifest = {};
 
-  if (fs.existsSync(path.resolve(appDirectory, rootDirectory))) {
+  if (fs.existsSync(rootDirectory)) {
     routes = {
       ...routes,
-      ...fileRoutes(appDirectory, ignoredRouteFiles, rootDirectory),
+      ...fileRoutes(appDirectory, ignoredRouteFiles, prefix),
     };
   }
 

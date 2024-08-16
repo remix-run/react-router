@@ -924,9 +924,6 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../packages/react-router-dev
-      '@react-router/remix-v2-routes':
-        specifier: workspace:*
-        version: link:../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
