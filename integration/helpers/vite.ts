@@ -14,7 +14,7 @@ import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
-import type { VitePluginConfig } from "@react-router/dev";
+import type { VitePluginConfig } from "@react-router/dev/vite";
 
 const require = createRequire(import.meta.url);
 
@@ -47,7 +47,7 @@ export const viteConfig = {
     };
 
     return dedent`
-      import { vitePlugin as reactRouter } from "@react-router/dev";
+      import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 

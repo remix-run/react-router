@@ -1,9 +1,6 @@
-import {
-  vitePlugin as reactRouter,
-  cloudflareDevProxyVitePlugin as reactRouterCloudflareDevProxy,
-} from "@react-router/dev";
+import { reactRouter, cloudflareDevProxy } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [reactRouterCloudflareDevProxy(), reactRouter()],
+  plugins: [cloudflareDevProxy(), reactRouter()],
 });
