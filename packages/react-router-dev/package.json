@@ -27,6 +27,10 @@
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
     },
+    "./vite/cloudflare": {
+      "types": "./dist/vite-cloudflare.d.ts",
+      "default": "./dist/vite-cloudflare.js"
+    },
     "./package.json": "./package.json"
   },
   "bin": {

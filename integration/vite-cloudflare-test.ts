@@ -6,10 +6,8 @@ import { test, viteConfig } from "./helpers/vite.js";
 
 const files: Files = async ({ port }) => ({
   "vite.config.ts": `
-    import {
-      reactRouter,
-      cloudflareDevProxy,
-    } from "@react-router/dev/vite";
+    import { reactRouter } from "@react-router/dev/vite";
+    import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
     import { getLoadContext } from "./load-context";
 
     export default {
