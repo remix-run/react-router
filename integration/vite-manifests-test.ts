@@ -52,7 +52,7 @@ test.describe(() => {
   test.beforeAll(async () => {
     cwd = await createProject({
       "vite.config.ts": dedent(js`
-        import { vitePlugin as reactRouter } from "@react-router/dev";
+        import { reactRouter } from "@react-router/dev/vite";
 
         export default {
           build: { manifest: true },

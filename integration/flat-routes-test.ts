@@ -20,7 +20,7 @@ test.describe("flat routes", () => {
       files: {
         "vite.config.js": `
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             plugins: [reactRouter({

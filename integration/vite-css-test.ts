@@ -151,7 +151,7 @@ const files = {
 };
 
 const VITE_CONFIG = async (port: number) => dedent`
-  import { vitePlugin as reactRouter } from "@react-router/dev";
+  import { reactRouter } from "@react-router/dev/vite";
   import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
   export default {
