@@ -176,14 +176,14 @@ To get back to rendering your app, we'll configure a "catchall" route that match
 Create a file at `src/routes.ts` and add this:
 
 ```ts filename=src/routes.ts
-import { defineRoutes } from "react-router/config";
+import { type RoutesConfig } from "@react-router/dev/routes";
 
-export default defineRoutes([
+export const routes: RoutesConfig = [
   {
     path: "*",
     file: "src/catchall.tsx",
   },
-]);
+];
 ```
 
 And then create the catchall route module and render your existing root App component within it.
@@ -221,9 +221,9 @@ export default function App() {
 You can move the definition to a `routes.ts` file:
 
 ```tsx filename=src/routes.ts
-import { defineRoutes } from "react-router/config";
+import { type RoutesConfig } from "@react-router/dev/routes";
 
-export default defineRoutes([
+export const routes: RoutesConfig = [
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",
@@ -232,7 +232,7 @@ export default defineRoutes([
     path: "*",
     file: "src/catchall.tsx",
   },
-]);
+];
 ```
 
 And then edit the route module to use the Route Module API:

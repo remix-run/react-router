@@ -19,6 +19,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./routes": {
+      "types": "./dist/routes.d.ts",
+      "default": "./dist/routes.js"
+    },
     "./vite": {
       "types": "./dist/vite.d.ts",
       "default": "./dist/vite.js"
@@ -51,13 +55,13 @@
     "gunzip-maybe": "^1.4.2",
     "jsesc": "3.0.2",
     "lodash": "^4.17.21",
-    "minimatch": "^9.0.0",
     "picocolors": "^1.0.0",
     "picomatch": "^2.3.1",
     "prettier": "^2.7.1",
     "react-refresh": "^0.14.0",
     "semver": "^7.3.7",
-    "set-cookie-parser": "^2.6.0"
+    "set-cookie-parser": "^2.6.0",
+    "vite-node": "^1.6.0"
   },
   "devDependencies": {
     "@react-router/serve": "workspace:*",

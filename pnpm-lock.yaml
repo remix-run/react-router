@@ -398,6 +398,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -450,6 +453,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -505,6 +511,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -666,9 +675,6 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
-      minimatch:
-        specifier: ^9.0.0
-        version: 9.0.3
       picocolors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -690,6 +696,9 @@ importers:
       typescript:
         specifier: ^5.1.0
         version: 5.4.5
+      vite-node:
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.26)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -835,6 +844,18 @@ importers:
       react-router:
         specifier: workspace:*
         version: link:../react-router
+      typescript:
+        specifier: ^5.1.6
+        version: 5.4.5
+
+  packages/react-router-remix-v2-routes:
+    devDependencies:
+      '@react-router/dev':
+        specifier: workspace:*
+        version: link:../react-router-dev
+      minimatch:
+        specifier: ^9.0.0
+        version: 9.0.3
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -6134,7 +6155,7 @@ packages:
       mlly: 1.6.1
       outdent: 0.8.0
       vite: 5.1.3(@types/node@18.19.26)
-      vite-node: 1.4.0
+      vite-node: 1.6.0(@types/node@18.19.26)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -14093,8 +14114,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /vite-node@1.4.0:
-    resolution: {integrity: sha512-VZDAseqjrHgNd4Kh8icYHWzTKSCZMhia7GyHfhtzLW33fZlG9SwsB6CEhgyVOWkJfJ2pFLrp/Gj1FSfAiqH9Lw==}
+  /vite-node@1.6.0(@types/node@18.19.26):
+    resolution: {integrity: sha512-de6HJgzC+TFzOu0NTC4RAIsyf/DY/ibWDYQUcuEA84EMHhcefTUGkjFHKKEJhQN4A+6I0u++kr3l36ZF2d7XRw==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     dependencies:
