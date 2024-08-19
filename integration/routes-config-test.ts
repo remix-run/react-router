@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { expect } from "@playwright/test";
 
 import {
@@ -12,6 +14,16 @@ import {
 const js = String.raw;
 
 test.describe("routes config", () => {
+  test("fails the build if routes config is missing", async () => {
+    let cwd = await createProject();
+    await fs.rm(path.join(cwd, "app/routes.ts"));
+    let buildResult = build({ cwd });
+    expect(buildResult.status).toBe(1);
+    expect(buildResult.stderr.toString()).toContain(
+      'Could not find a routes config file at "app/routes.ts"'
+    );
+  });
+
   test("fails the build if routes config is invalid", async () => {
     let cwd = await createProject({
       "app/routes.ts": `export default INVALID(`,
