@@ -1,8 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
-import { type ConfigRoute, getAppDirectory } from "@react-router/dev/routes";
+import {
+  type RoutesConfigEntry,
+  getAppDirectory,
+} from "@react-router/dev/routes";
 
-import { type RouteManifest, routeManifestToConfigRoutes } from "./manifest";
+import { type RouteManifest, routeManifestToRoutesConfig } from "./manifest";
 import { fileRoutes } from "./fileRoutes";
 import { defineRoutes, type DefineRoutesFunction } from "./defineRoutes";
 import { normalizeSlashes } from "./normalizeSlashes";
@@ -32,7 +35,7 @@ export async function remixRoutes({
   ) =>
     | ReturnType<DefineRoutesFunction>
     | Promise<ReturnType<DefineRoutesFunction>>;
-} = {}): Promise<ConfigRoute[]> {
+} = {}): Promise<RoutesConfigEntry[]> {
   let appDirectory = getAppDirectory();
   let rootDirectory = path.resolve(appDirectory, userRootDirectory);
   let relativeRootDirectory = path.relative(appDirectory, rootDirectory);
@@ -53,5 +56,5 @@ export async function remixRoutes({
     };
   }
 
-  return routeManifestToConfigRoutes(routes);
+  return routeManifestToRoutesConfig(routes);
 }

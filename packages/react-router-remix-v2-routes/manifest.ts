@@ -1,4 +1,4 @@
-import type { ConfigRoute } from "@react-router/dev/routes";
+import type { RoutesConfigEntry } from "@react-router/dev/routes";
 
 export interface RouteManifestEntry {
   path?: string;
@@ -13,17 +13,18 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export function routeManifestToConfigRoutes(
+export function routeManifestToRoutesConfig(
   routeManifest: RouteManifest,
   rootId = "root"
-): ConfigRoute[] {
-  let configRoutes: {
-    [id: string]: Omit<ConfigRoute, "id"> & Required<Pick<ConfigRoute, "id">>;
+): RoutesConfigEntry[] {
+  let routesConfigById: {
+    [id: string]: Omit<RoutesConfigEntry, "id"> &
+      Required<Pick<RoutesConfigEntry, "id">>;
   } = {};
 
   for (let id in routeManifest) {
     let route = routeManifest[id];
-    configRoutes[id] = {
+    routesConfigById[id] = {
       id: route.id,
       file: route.file,
       path: route.path,
@@ -32,15 +33,15 @@ export function routeManifestToConfigRoutes(
     };
   }
 
-  let rootRoutes: ConfigRoute[] = [];
+  let routesConfig: RoutesConfigEntry[] = [];
 
-  for (let id in configRoutes) {
-    let route = configRoutes[id];
+  for (let id in routesConfigById) {
+    let route = routesConfigById[id];
     let parentId = routeManifest[route.id].parentId;
     if (parentId === rootId) {
-      rootRoutes.push(route);
+      routesConfig.push(route);
     } else {
-      let parentRoute = parentId && configRoutes[parentId];
+      let parentRoute = parentId && routesConfigById[parentId];
       if (parentRoute) {
         parentRoute.children = parentRoute.children || [];
         parentRoute.children.push(route);
@@ -48,5 +49,5 @@ export function routeManifestToConfigRoutes(
     }
   }
 
-  return rootRoutes;
+  return routesConfig;
 }
