@@ -2,7 +2,7 @@ export type {
   BuildManifest,
   Preset,
   ServerBundlesFunction,
-  VitePluginConfig,
+  ReactRouterConfig,
 } from "./config";
 
 export { reactRouterVitePlugin as reactRouter } from "./vite/plugin";

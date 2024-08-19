@@ -14,7 +14,7 @@ import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
-import type { VitePluginConfig } from "@react-router/dev/vite";
+import type { ReactRouterConfig } from "@react-router/dev/vite";
 
 const require = createRequire(import.meta.url);
 
@@ -42,7 +42,7 @@ export const viteConfig = {
     fsAllow?: string[];
     spaMode?: boolean;
   }) => {
-    let pluginOptions: VitePluginConfig = {
+    let config: ReactRouterConfig = {
       ssr: !args.spaMode,
     };
 
@@ -54,7 +54,7 @@ export const viteConfig = {
       export default {
         ${await viteConfig.server(args)}
         plugins: [
-          reactRouter(${JSON.stringify(pluginOptions)}),
+          reactRouter(${JSON.stringify(config)}),
           envOnlyMacros(),
           tsconfigPaths()
         ],

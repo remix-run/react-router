@@ -17,20 +17,20 @@ import { flatRoutes } from "./config/flatRoutes";
 import { detectPackageManager } from "./cli/detectPackageManager";
 
 const excludedConfigPresetKeys = ["presets"] as const satisfies ReadonlyArray<
-  keyof VitePluginConfig
+  keyof ReactRouterConfig
 >;
 
 type ExcludedConfigPresetKey = (typeof excludedConfigPresetKeys)[number];
 
-type ConfigPreset = Omit<VitePluginConfig, ExcludedConfigPresetKey>;
+type ConfigPreset = Omit<ReactRouterConfig, ExcludedConfigPresetKey>;
 
 export type Preset = {
   name: string;
   reactRouterConfig?: (args: {
-    reactRouterUserConfig: VitePluginConfig;
+    reactRouterUserConfig: ReactRouterConfig;
   }) => ConfigPreset | Promise<ConfigPreset>;
   reactRouterConfigResolved?: (args: {
-    reactRouterConfig: ResolvedVitePluginConfig;
+    reactRouterConfig: ResolvedReactRouterConfig;
   }) => void | Promise<void>;
 };
 
@@ -78,11 +78,11 @@ export type BuildManifest = DefaultBuildManifest | ServerBundlesBuildManifest;
 
 type BuildEndHook = (args: {
   buildManifest: BuildManifest | undefined;
-  reactRouterConfig: ResolvedVitePluginConfig;
+  reactRouterConfig: ResolvedReactRouterConfig;
   viteConfig: Vite.ResolvedConfig;
 }) => void | Promise<void>;
 
-export type VitePluginConfig = {
+export type ReactRouterConfig = {
   /**
    * The path to the `app` directory, relative to `remix.config.js`. Defaults
    * to `"app"`.
@@ -164,7 +164,7 @@ export type VitePluginConfig = {
   ssr?: boolean;
 };
 
-export type ResolvedVitePluginConfig = Readonly<{
+export type ResolvedReactRouterConfig = Readonly<{
   /**
    * The absolute path to the application source directory.
    */
@@ -219,13 +219,13 @@ export type ResolvedVitePluginConfig = Readonly<{
 }>;
 
 let mergeReactRouterConfig = (
-  ...configs: VitePluginConfig[]
-): VitePluginConfig => {
+  ...configs: ReactRouterConfig[]
+): ReactRouterConfig => {
   let reducer = (
-    configA: VitePluginConfig,
-    configB: VitePluginConfig
-  ): VitePluginConfig => {
-    let mergeRequired = (key: keyof VitePluginConfig) =>
+    configA: ReactRouterConfig,
+    configB: ReactRouterConfig
+  ): ReactRouterConfig => {
+    let mergeRequired = (key: keyof ReactRouterConfig) =>
       configA[key] !== undefined && configB[key] !== undefined;
 
     return {
@@ -317,11 +317,11 @@ export async function resolveReactRouterConfig({
   viteCommand,
 }: {
   rootDirectory: string;
-  reactRouterUserConfig: VitePluginConfig;
+  reactRouterUserConfig: ReactRouterConfig;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
 }) {
-  let presets: VitePluginConfig[] = (
+  let presets: ReactRouterConfig[] = (
     await Promise.all(
       (reactRouterUserConfig.presets ?? []).map(async (preset) => {
         if (!preset.name) {
@@ -334,7 +334,7 @@ export async function resolveReactRouterConfig({
           return null;
         }
 
-        let configPreset: VitePluginConfig = omit(
+        let configPreset: ReactRouterConfig = omit(
           await preset.reactRouterConfig({ reactRouterUserConfig }),
           excludedConfigPresetKeys
         );
@@ -352,7 +352,7 @@ export async function resolveReactRouterConfig({
     serverBuildFile: "index.js",
     serverModuleFormat: "esm",
     ssr: true,
-  } as const satisfies Partial<VitePluginConfig>;
+  } as const satisfies Partial<ReactRouterConfig>;
 
   let {
     appDirectory: userAppDirectory,
@@ -437,7 +437,7 @@ export async function resolveReactRouterConfig({
 
   let future: FutureConfig = {};
 
-  let reactRouterConfig: ResolvedVitePluginConfig = deepFreeze({
+  let reactRouterConfig: ResolvedReactRouterConfig = deepFreeze({
     appDirectory,
     basename,
     buildDirectory,
@@ -463,7 +463,7 @@ export async function resolveEntryFiles({
   reactRouterConfig,
 }: {
   rootDirectory: string;
-  reactRouterConfig: ResolvedVitePluginConfig;
+  reactRouterConfig: ResolvedReactRouterConfig;
 }) {
   let { appDirectory } = reactRouterConfig;
 

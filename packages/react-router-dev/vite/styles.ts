@@ -3,7 +3,7 @@ import type { ServerBuild } from "react-router";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
-import type { ResolvedVitePluginConfig } from "../config";
+import type { ResolvedReactRouterConfig } from "../config";
 import { resolveFileUrl } from "./resolve-file-url";
 
 type ServerRouteManifest = ServerBuild["routes"];
@@ -184,7 +184,7 @@ export const getStylesForUrl = async ({
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
-  reactRouterConfig: Pick<ResolvedVitePluginConfig, "appDirectory" | "routes">;
+  reactRouterConfig: Pick<ResolvedReactRouterConfig, "appDirectory" | "routes">;
   entryClientFilePath: string;
   cssModulesManifest: Record<string, string>;
   build: ServerBuild;
