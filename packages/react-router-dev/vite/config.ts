@@ -417,9 +417,8 @@ export async function resolveReactRouterConfig({
 
   try {
     if (!routeConfigFile) {
-      let routesConfigDisplayPath = path.relative(
-        rootDirectory,
-        path.join(appDirectory, "routes.ts")
+      let routesConfigDisplayPath = vite.normalizePath(
+        path.relative(rootDirectory, path.join(appDirectory, "routes.ts"))
       );
       throw new FriendlyError(
         `Could not find a routes config file at "${routesConfigDisplayPath}"`
