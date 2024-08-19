@@ -412,26 +412,40 @@ export async function resolveReactRouterConfig({
   };
 
   let routeConfigFile = findEntry(appDirectory, "routes");
-  if (!routeConfigFile) {
-    let routesConfigDisplayPath = path.relative(
-      rootDirectory,
-      path.join(appDirectory, "routes.ts")
-    );
-    logger.error(
-      colors.red(
-        `Could not find a routes config file at "${routesConfigDisplayPath}"`
-      )
-    );
-    process.exit(1);
-  }
+
+  class FriendlyError extends Error {}
 
   try {
-    setAppDirectory(appDirectory);
-    let routesConfig: RoutesConfig = (
-      await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
-    ).default;
+    if (!routeConfigFile) {
+      let routesConfigDisplayPath = path.relative(
+        rootDirectory,
+        path.join(appDirectory, "routes.ts")
+      );
+      throw new FriendlyError(
+        `Could not find a routes config file at "${routesConfigDisplayPath}"`
+      );
+    }
 
-    routes = { ...routes, ...configRoutesToRouteManifest(await routesConfig) };
+    setAppDirectory(appDirectory);
+    let routesConfigExport: RoutesConfig = (
+      await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
+    ).routes;
+
+    let routesConfig = await routesConfigExport;
+
+    if (!routesConfig) {
+      throw new FriendlyError(
+        `No "routes" export defined in "${routeConfigFile}"`
+      );
+    }
+
+    if (!Array.isArray(routesConfig)) {
+      throw new FriendlyError(
+        `Routes exported from "${routeConfigFile}" must be an array`
+      );
+    }
+
+    routes = { ...routes, ...configRoutesToRouteManifest(routesConfig) };
 
     lastValidRoutes = routes;
 
@@ -443,22 +457,24 @@ export async function resolveReactRouterConfig({
     }
   } catch (error: any) {
     logger.error(
-      [
-        colors.red("Route config is invalid."),
-        "",
-        error.loc?.file && error.loc?.column && error.frame
-          ? [
-              path.relative(appDirectory, error.loc.file) +
-                ":" +
-                error.loc.line +
-                ":" +
-                error.loc.column,
-              error.frame.trim?.(),
-            ]
-          : error.stack,
-      ]
-        .flat()
-        .join("\n"),
+      error instanceof FriendlyError
+        ? colors.red(error.message)
+        : [
+            colors.red("Route config is invalid."),
+            "",
+            error.loc?.file && error.loc?.column && error.frame
+              ? [
+                  path.relative(appDirectory, error.loc.file) +
+                    ":" +
+                    error.loc.line +
+                    ":" +
+                    error.loc.column,
+                  error.frame.trim?.(),
+                ]
+              : error.stack,
+          ]
+            .flat()
+            .join("\n"),
       {
         error,
         clear: !isFirstLoad,

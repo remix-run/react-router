@@ -26,20 +26,18 @@ test.describe("remix v2 routes", () => {
           });
         `,
         "app/routes.ts": js`
-          import { defineRoutes } from "@react-router/dev/routes";  
+          import { type RoutesConfig } from "@react-router/dev/routes";  
           import { remixRoutes } from "@react-router/remix-v2-routes";
 
-          export default defineRoutes(
-            await remixRoutes({
-              ignoredRouteFiles: ["**/ignored-route.*"],
-              routes: async (defineRoutes) => {
-                // Ensure async routes work
-                return defineRoutes((route) => {
-                  route("/custom/route", "custom-route.tsx")
-                });
-              }
-            })
-          );
+          export const routes: RoutesConfig = remixRoutes({
+            ignoredRouteFiles: ["**/ignored-route.*"],
+            routes: async (defineRoutes) => {
+              // Ensure async routes work
+              return defineRoutes((route) => {
+                route("/custom/route", "custom-route.tsx")
+              });
+            }
+          });
         `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";
