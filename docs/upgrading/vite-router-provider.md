@@ -197,14 +197,14 @@ ReactDOM.hydrateRoot(
 You can move the definition to a `routes.ts` file:
 
 ```tsx filename=src/routes.ts
-import { defineRoutes } from "@react-router/dev/routes";
+import { type RoutesConfig } from "@react-router/dev/routes";
 
-export default defineRoutes([
+export const routes: RoutesConfig = [
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",
   },
-]);
+];
 ```
 
 And then edit the route module to use the Route Module API:

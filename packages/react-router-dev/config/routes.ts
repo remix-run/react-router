@@ -190,12 +190,6 @@ function createLayout(
   };
 }
 
-export function defineRoutes<Routes extends RoutesConfig>(
-  routes: Routes
-): Routes {
-  return routes;
-}
-
 export const route = createRoute;
 export const index = createIndex;
 export const layout = createLayout;
