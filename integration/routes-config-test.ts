@@ -99,7 +99,7 @@ test.describe("routes config", () => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
-        export { default } from "./actual-routes";
+        export { routes } from "./actual-routes";
       `,
       "app/actual-routes.ts": js`
         import { type RoutesConfig } from "@react-router/dev/routes";
