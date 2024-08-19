@@ -161,4 +161,67 @@ test.describe("routes config", () => {
       );
     }).toPass();
   });
+
+  test("supports correcting a missing routes config", async ({ page, dev }) => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.js": await viteConfig.basic({ port }),
+      "app/routes.ts": js`
+        import { type RoutesConfig } from "@react-router/dev/routes";
+
+        export const routes: RoutesConfig = [
+          {
+            file: "test-route-1.tsx",
+            index: true,
+          },
+        ];
+      `,
+      "app/test-route-1.tsx": `
+        export default () => <div data-test-route>Test route 1</div>
+      `,
+      "app/test-route-2.tsx": `
+        export default () => <div data-test-route>Test route 2</div>
+      `,
+    });
+    let { cwd, port } = await dev(files);
+
+    await page.goto(`http://localhost:${port}/`, { waitUntil: "networkidle" });
+    await expect(page.locator("[data-test-route]")).toHaveText("Test route 1");
+
+    let edit = createEditor(cwd);
+
+    let INVALID_FILENAME = "app/routes.ts.oops";
+
+    // Rename config to make it missing
+    await fs.rename(
+      path.join(cwd, "app/routes.ts"),
+      path.join(cwd, INVALID_FILENAME)
+    );
+
+    // Ensure dev server is still running with old config + HMR
+    await edit("app/test-route-1.tsx", (contents) =>
+      contents.replace("Test route 1", "Test route 1 updated")
+    );
+    await expect(page.locator("[data-test-route]")).toHaveText(
+      "Test route 1 updated"
+    );
+
+    // Add new route
+    await edit(INVALID_FILENAME, (contents) =>
+      contents.replace("test-route-1", "test-route-2")
+    );
+
+    // Rename config to bring it back
+    await fs.rename(
+      path.join(cwd, INVALID_FILENAME),
+      path.join(cwd, "app/routes.ts")
+    );
+
+    await expect(async () => {
+      // Reload to pick up new route for current path
+      await page.reload();
+      await expect(page.locator("[data-test-route]")).toHaveText(
+        "Test route 2"
+      );
+    }).toPass();
+  });
 });
