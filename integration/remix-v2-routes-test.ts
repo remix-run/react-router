@@ -19,7 +19,7 @@ test.describe("remix v2 routes", () => {
       files: {
         "vite.config.js": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             plugins: [reactRouter()],

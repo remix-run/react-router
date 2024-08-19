@@ -9,7 +9,7 @@ The `manifest` option been superseded by the more powerful `buildEnd` hook since
 If you were using the `manifest` option, you can replace it with a `buildEnd` hook that writes the manifest to disk like this:
 
 ```js
-import { vitePlugin as reactRouter } from "@react-router/dev";
+import { reactRouter } from "@react-router/dev/vite";
 import { writeFile } from "node:fs/promises";
 
 export default {

@@ -217,7 +217,7 @@ test.describe("Vite / non-route / server-only module referenced by client", () =
 test.describe("Vite / server-only escape hatch", async () => {
   let files: Files = async ({ port }) => ({
     "vite.config.ts": dedent`
-      import { vitePlugin as reactRouter } from "@react-router/dev";
+      import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 

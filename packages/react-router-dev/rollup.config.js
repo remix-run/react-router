@@ -26,7 +26,11 @@ module.exports = function rollup() {
       external(id) {
         return isBareModuleId(id);
       },
-      input: [`${SOURCE_DIR}/index.ts`, `${SOURCE_DIR}/routes.ts`],
+      input: [
+        `${SOURCE_DIR}/index.ts`,
+        `${SOURCE_DIR}/routes.ts`,
+        `${SOURCE_DIR}/vite.ts`,
+      ],
       output: {
         banner: createBanner("@react-router/dev", version),
         dir: OUTPUT_DIR,

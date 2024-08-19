@@ -23,6 +23,10 @@
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"
     },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    },
     "./package.json": "./package.json"
   },
   "bin": {

@@ -25,7 +25,7 @@ test.beforeAll(async () => {
     `,
     "vite.config.ts": js`
       import { defineConfig } from "vite";
-      import { vitePlugin as reactRouter } from "@react-router/dev";
+      import { reactRouter } from "@react-router/dev/vite";
       import mdx from "@mdx-js/rollup";
 
       export default defineConfig({

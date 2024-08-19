@@ -38,8 +38,8 @@ import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 import {
-  type VitePluginConfig,
-  type ResolvedVitePluginConfig,
+  type ReactRouterConfig,
+  type ResolvedReactRouterConfig,
   resolveReactRouterConfig,
   resolveEntryFiles,
   resolvePublicPath,
@@ -159,7 +159,7 @@ export type ReactRouterPluginContext = ReactRouterPluginSsrBuildContext & {
   entryClientFilePath: string;
   entryServerFilePath: string;
   publicPath: string;
-  reactRouterConfig: ResolvedVitePluginConfig;
+  reactRouterConfig: ResolvedReactRouterConfig;
   viteManifestEnabled: boolean;
 };
 
@@ -171,7 +171,7 @@ let injectHmrRuntimeId = VirtualModule.id("inject-hmr-runtime");
 
 const resolveRelativeRouteFilePath = (
   route: RouteManifestEntry,
-  reactRouterConfig: ResolvedVitePluginConfig
+  reactRouterConfig: ResolvedReactRouterConfig
 ) => {
   let vite = importViteEsmSync();
   let file = route.file;
@@ -370,7 +370,7 @@ export let getServerBuildDirectory = (ctx: ReactRouterPluginContext) =>
       : [])
   );
 
-let getClientBuildDirectory = (reactRouterConfig: ResolvedVitePluginConfig) =>
+let getClientBuildDirectory = (reactRouterConfig: ResolvedReactRouterConfig) =>
   path.join(reactRouterConfig.buildDirectory, "client");
 
 let defaultEntriesDir = path.resolve(__dirname, "..", "config", "defaults");
@@ -412,7 +412,7 @@ let deepFreeze = (o: any) => {
   return o;
 };
 
-type ReactRouterVitePlugin = (config?: VitePluginConfig) => Vite.Plugin[];
+type ReactRouterVitePlugin = (config?: ReactRouterConfig) => Vite.Plugin[];
 export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   let reactRouterUserConfig = _config ?? {};
 
@@ -1631,7 +1631,7 @@ function isEqualJson(v1: unknown, v2: unknown) {
 }
 
 function addRefreshWrapper(
-  reactRouterConfig: ResolvedVitePluginConfig,
+  reactRouterConfig: ResolvedReactRouterConfig,
   code: string,
   id: string
 ): string {
@@ -1694,7 +1694,7 @@ if (import.meta.hot && !inWebWorker) {
 }`;
 
 function getRoute(
-  pluginConfig: ResolvedVitePluginConfig,
+  pluginConfig: ResolvedReactRouterConfig,
   file: string
 ): RouteManifestEntry | undefined {
   let vite = importViteEsmSync();

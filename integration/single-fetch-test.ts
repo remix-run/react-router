@@ -1356,10 +1356,10 @@ test.describe("single-fetch", () => {
         ...files,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as remix } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
           export default defineConfig({
             plugins: [
-              remix({
+              reactRouter({
                 basename: '/base',
               }),
             ],

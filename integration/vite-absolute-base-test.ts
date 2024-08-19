@@ -6,7 +6,7 @@ import { test, viteConfig } from "./helpers/vite.js";
 
 let files: Files = async ({ port }) => ({
   "vite.config.ts": dedent`
-    import { vitePlugin as reactRouter } from "@react-router/dev";
+    import { reactRouter } from "@react-router/dev/vite";
     
     export default {
       base: "http://localhost:${port}/",

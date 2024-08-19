@@ -65,7 +65,7 @@ async function viteConfigFile({
   basename?: string;
 }) {
   return js`
-    import { vitePlugin as reactRouter } from "@react-router/dev";
+    import { reactRouter } from "@react-router/dev/vite";
 
     export default {
       ${base !== "/" ? 'base: "' + base + '",' : ""}
