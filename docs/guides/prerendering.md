@@ -20,7 +20,7 @@ This is still something that could be done entirely in userland, but it's be so 
 To enable pre-rendering, add the `prerender` option to your React Router Vite plugin to tell React Router which paths to pre-render:
 
 ```ts filename=vite.config.ts
-import { vitePlugin as reactRouter } from "@remix-run/dev";
+import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -35,7 +35,7 @@ export default defineConfig({
 `prerender` can also be a function, which allows you to dynamically generate the paths -- after fetching blog posts from your CMS for example:
 
 ```ts filename=vite.config.ts
-import { vitePlugin as reactRouter } from "@remix-run/dev";
+import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({

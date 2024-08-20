@@ -16,7 +16,7 @@ import {
   UNSAFE_createRouter as createRouter,
   UNSAFE_deserializeErrors as deserializeErrors,
   UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
-  UNSAFE_initFogOfWar as initFogOfWar,
+  UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
   UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
   UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
   UNSAFE_mapRouteProperties as mapRouteProperties,
@@ -72,6 +72,24 @@ function createHydratedRouter(): RemixRouter {
     );
   }
 
+  // Hard reload if the path we tried to load is not the current path.
+  // This is usually the result of 2 rapid back/forward clicks from an
+  // external site into a Remix app, where we initially start the load for
+  // one URL and while the JS chunks are loading a second forward click moves
+  // us to a new URL.  Avoid comparing search params because of CDNs which
+  // can be configured to ignore certain params and only pathname is relevant
+  // towards determining the route matches.
+  let initialPathname = ssrInfo.context.url;
+  let hydratedPathname = window.location.pathname;
+  if (initialPathname !== hydratedPathname && !ssrInfo.context.isSpaMode) {
+    let errorMsg =
+      `Initial URL (${initialPathname}) does not match URL at time of hydration ` +
+      `(${hydratedPathname}), reloading page...`;
+    console.error(errorMsg);
+    window.location.reload();
+    throw new Error("SSR/Client mismatch - reloading current URL");
+  }
+
   // We need to suspend until the initial state snapshot is decoded into
   // window.__remixContext.state
 
@@ -124,31 +142,6 @@ function createHydratedRouter(): RemixRouter {
       window.location,
       window.__remixContext?.basename
     );
-
-    // Hard reload if the matches we rendered on the server aren't the matches
-    // we matched in the client, otherwise we'll try to hydrate without the
-    // right modules and throw a hydration error, which can put React into an
-    // infinite hydration loop when hydrating the full `<html>` document.
-    // This is usually the result of 2 rapid back/forward clicks from an
-    // external site into a Remix app, where we initially start the load for
-    // one URL and while the JS chunks are loading a second forward click moves
-    // us to a new URL.
-    let ssrMatches = ssrInfo.context.ssrMatches;
-    let hasDifferentSSRMatches =
-      (initialMatches || []).length !== ssrMatches.length ||
-      !(initialMatches || []).every((m, i) => ssrMatches[i] === m.route.id);
-
-    if (hasDifferentSSRMatches && !ssrInfo.context.isSpaMode) {
-      let ssr = ssrMatches.join(",");
-      let client = (initialMatches || []).map((m) => m.route.id).join(",");
-      let errorMsg =
-        `SSR Matches (${ssr}) do not match client matches (${client}) at ` +
-        `time of hydration , reloading page...`;
-      console.error(errorMsg);
-      window.location.reload();
-      throw new Error("SSR/Client mismatch - reloading current URL");
-    }
-
     if (initialMatches) {
       for (let match of initialMatches) {
         let routeId = match.route.id;
@@ -186,13 +179,6 @@ function createHydratedRouter(): RemixRouter {
     }
   }
 
-  let { enabled: isFogOfWarEnabled, patchRoutesOnMiss } = initFogOfWar(
-    ssrInfo.manifest,
-    ssrInfo.routeModules,
-    ssrInfo.context.isSpaMode,
-    ssrInfo.context.basename
-  );
-
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
@@ -205,9 +191,12 @@ function createHydratedRouter(): RemixRouter {
       ssrInfo.manifest,
       ssrInfo.routeModules
     ),
-    ...(isFogOfWarEnabled
-      ? { unstable_patchRoutesOnMiss: patchRoutesOnMiss }
-      : {}),
+    unstable_patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
+      ssrInfo.context.isSpaMode,
+      ssrInfo.context.basename
+    ),
   });
   ssrInfo.router = router;
 

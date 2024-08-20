@@ -9,13 +9,14 @@ import {
   isRouteErrorResponse,
   ErrorResponseImpl,
   data as routerData,
+  stripBasename,
 } from "../router/utils";
-import {
-  type SingleFetchRedirectResult,
-  type SingleFetchResult,
-  type SingleFetchResults,
-  SingleFetchRedirectSymbol,
+import type {
+  SingleFetchRedirectResult,
+  SingleFetchResult,
+  SingleFetchResults,
 } from "../dom/ssr/single-fetch";
+import { SingleFetchRedirectSymbol } from "../dom/ssr/single-fetch";
 import type { AppLoadContext } from "./data";
 import { sanitizeError, sanitizeErrors } from "./errors";
 import { ServerMode } from "./mode";
@@ -97,7 +98,11 @@ export async function singleFetchAction(
     // let non-Response return values through
     if (isResponse(result)) {
       return {
-        result: getSingleFetchRedirect(result.status, result.headers),
+        result: getSingleFetchRedirect(
+          result.status,
+          result.headers,
+          build.basename
+        ),
         headers: result.headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
       };
@@ -108,7 +113,11 @@ export async function singleFetchAction(
 
     if (isRedirectStatusCode(context.statusCode) && headers.has("Location")) {
       return {
-        result: getSingleFetchRedirect(context.statusCode, headers),
+        result: getSingleFetchRedirect(
+          context.statusCode,
+          headers,
+          build.basename
+        ),
         headers,
         status: SINGLE_FETCH_REDIRECT_STATUS,
       };
@@ -178,7 +187,8 @@ export async function singleFetchLoaders(
         result: {
           [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
             result.status,
-            result.headers
+            result.headers,
+            build.basename
           ),
         },
         headers: result.headers,
@@ -194,7 +204,8 @@ export async function singleFetchLoaders(
         result: {
           [SingleFetchRedirectSymbol]: getSingleFetchRedirect(
             context.statusCode,
-            headers
+            headers,
+            build.basename
           ),
         },
         headers,
@@ -250,10 +261,17 @@ export async function singleFetchLoaders(
 
 export function getSingleFetchRedirect(
   status: number,
-  headers: Headers
+  headers: Headers,
+  basename: string | undefined
 ): SingleFetchRedirectResult {
+  let redirect = headers.get("Location")!;
+
+  if (basename) {
+    redirect = stripBasename(redirect, basename) || redirect;
+  }
+
   return {
-    redirect: headers.get("Location")!,
+    redirect,
     status,
     revalidate:
       // Technically X-Remix-Revalidate isn't needed here - that was an implementation

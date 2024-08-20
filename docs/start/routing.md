@@ -10,19 +10,24 @@ order: 2
 Routes are configured in `app/routes.ts`. The Vite plugin uses this file to create bundles for each route.
 
 ```ts filename=app/routes.ts
-import { route } from "react-router/config";
+import {
+  type RoutesConfig,
+  route,
+  index,
+  layout,
+} from "@react-router/dev/routes";
 
-export default [
-  route.index("./home.tsx"),
+export const routes: RoutesConfig = [
+  index("./home.tsx"),
   route("about", "./about.tsx"),
 
-  route.layout("./auth/layout.tsx", [
+  layout("./auth/layout.tsx", [
     route("login", "./auth/login.tsx"),
     route("register", "./auth/register.tsx"),
   ]),
 
   route("concerts", [
-    route.index("./concerts/home.tsx"),
+    index("./concerts/home.tsx"),
     route(":city", "./concerts/city.tsx"),
     route("trending", "./concerts/trending.tsx"),
   ]),
@@ -31,19 +36,29 @@ export default [
 
 ## File System Routes
 
-If you prefer a file system routing convention there are two conventions from React Router, but you can also make your own.
+If you prefer a file system routing convention, you can use the convention provided with Remix v2, but you can also make your own.
 
 ```tsx filename=app/routes.ts
-import { nested, flat } from "@react-router/fs-routes";
+import { type RoutesConfig } from "@react-router/dev/routes";
+import { remixRoutes } from "@react-router/remix-v2-routes";
 
-export const routes = [
-  // simulates Next.js route file names
-  ...nested("./routes"),
+export const routes: RoutesConfig = remixRoutes();
+```
 
-  // simulates Remix v2 route file names
-  ...flat("./routes"),
+You can also mix routing conventions into a single array of routes.
 
-  // can still do regular configuration
+```tsx filename=app/routes.ts
+import {
+  type RoutesConfig,
+  route,
+} from "@react-router/dev/routes";
+import { remixRoutes } from "@react-router/remix-v2-routes";
+
+export const routes: RoutesConfig = [
+  // Provide Remix v2 file system routes
+  ...(await remixRoutes()),
+
+  // Then provide additional config routes
   route("/can/still/add/more", "./more.tsx"),
 ];
 ```
@@ -76,10 +91,18 @@ function Header() {
 Routes can be nested inside parent routes. Nested routes are rendered into their parent's [Outlet][outlet]
 
 ```ts filename=app/routes.ts
-route("dashboard", "./dashboard.tsx", () => [
-  route.index("./home.tsx"),
-  route("settings", "./settings.tsx"),
-]);
+import {
+  type RoutesConfig,
+  route,
+  index,
+} from "@react-router/dev/routes";
+
+export const routes: RoutesConfig = [
+  route("dashboard", "./dashboard.tsx", [
+    index("./home.tsx"),
+    route("settings", "./settings.tsx"),
+  ]),
+];
 ```
 
 ```tsx filename=app/dashboard.tsx
@@ -100,41 +123,52 @@ export default defineRoute$({
 
 ## Layout Routes
 
-Using `route.layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. They can be added at any level.
+Using `layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. They can be added at any level.
 
-```tsx filename=app/routes.ts lines=[3,9]
-import { route } from "react-router/config";
-export const routes = [
-  route.layout("./marketing/layout.tsx", [
-    route.index("./marketing/home.tsx"),
+```tsx filename=app/routes.ts lines=[9,15]
+import {
+  type RoutesConfig,
+  route,
+  layout,
+  index,
+} from "@react-router/dev/routes";
+
+export const routes: RoutesConfig = [
+  layout("./marketing/layout.tsx", [
+    index("./marketing/home.tsx"),
     route("contact", "./marketing/contact.tsx"),
   ]),
   route("projects", [
-    route.index("./projects/home.tsx"),
-    route.layout("./projects/project-layout.tsx", [
+    index("./projects/home.tsx"),
+    layout("./projects/project-layout.tsx", [
       route(":pid", "./projects/project.tsx"),
       route(":pid/edit", "./projects/edit-project.tsx"),
     ]),
   ]),
-]);
+];
 ```
 
 ## Index Routes
 
 ```ts
-route.index(componentFile);
+index(componentFile);
 ```
 
 Index routes render into their parent's [Outlet][outlet] at their parent's URL (like a default child route).
 
 ```ts filename=app/routes.ts
-import { route } from "react-router/config";
-export default [
+import {
+  type RoutesConfig,
+  route,
+  index,
+} from "@react-router/dev/routes";
+
+export const routes: RoutesConfig = [
   // renders into the root.tsx Outlet at /
-  route.index("./home.tsx"),
-  route("dashboard", "./dashboard.tsx", () => [
+  index("./home.tsx"),
+  route("dashboard", "./dashboard.tsx", [
     // renders into the dashboard.tsx Outlet at /dashboard
-    route.index("./dashboard-home.tsx"),
+    index("./dashboard-home.tsx"),
     route("settings", "./dashboard-settings.tsx"),
   ]),
 ];
@@ -221,25 +255,6 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 ```tsx
 const { "*": splat } = params;
 ```
-
-## Case Sensitive Routes
-
-You can make your routes case sensitive by exporting a `config` object from `app/routes.ts`:
-
-```ts filename=app/routes.ts
-import { route } from "react-router/config";
-
-export const config = {
-  caseSensitive: true,
-};
-
-export default [
-  route("wEll-aCtuAlly", "./well-actually.tsx"),
-];
-```
-
-- Will match `"wEll-aCtuAlly"`
-- Will not match `"well-actually"`
 
 ## Component Routes
 

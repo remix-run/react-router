@@ -64,7 +64,7 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import type { PatchRoutesOnMissFunction } from "../components";
+import type { PatchRoutesOnNavigationFunction } from "../components";
 import { Router, mapRouteProperties } from "../components";
 import type { RouteObject, NavigateOptions } from "../context";
 import {
@@ -123,7 +123,7 @@ interface DOMRouterOpts {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   unstable_dataStrategy?: DataStrategyFunction;
-  unstable_patchRoutesOnMiss?: PatchRoutesOnMissFunction;
+  unstable_patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   window?: Window;
 }
 
@@ -142,7 +142,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -162,7 +162,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }

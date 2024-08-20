@@ -398,6 +398,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -450,6 +453,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -505,6 +511,9 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
+      '@react-router/remix-v2-routes':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-v2-routes
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -548,8 +557,8 @@ importers:
         specifier: ^0.7.3
         version: 0.7.4
       turbo-stream:
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: 2.3.0
+        version: 2.3.0
     devDependencies:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
@@ -642,6 +651,9 @@ importers:
       arg:
         specifier: ^5.0.1
         version: 5.0.2
+      babel-dead-code-elimination:
+        specifier: ^1.0.6
+        version: 1.0.6
       chalk:
         specifier: ^4.1.2
         version: 4.1.2
@@ -663,9 +675,6 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
-      minimatch:
-        specifier: ^9.0.0
-        version: 9.0.3
       picocolors:
         specifier: ^1.0.0
         version: 1.0.0
@@ -687,6 +696,9 @@ importers:
       typescript:
         specifier: ^5.1.0
         version: 5.4.5
+      vite-node:
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@18.19.26)
     devDependencies:
       '@react-router/serve':
         specifier: workspace:*
@@ -832,6 +844,18 @@ importers:
       react-router:
         specifier: workspace:*
         version: link:../react-router
+      typescript:
+        specifier: ^5.1.6
+        version: 5.4.5
+
+  packages/react-router-remix-v2-routes:
+    devDependencies:
+      '@react-router/dev':
+        specifier: workspace:*
+        version: link:../react-router-dev
+      minimatch:
+        specifier: ^9.0.0
+        version: 9.0.3
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
@@ -6131,7 +6155,7 @@ packages:
       mlly: 1.6.1
       outdent: 0.8.0
       vite: 5.1.3(@types/node@18.19.26)
-      vite-node: 1.4.0
+      vite-node: 1.6.0(@types/node@18.19.26)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6514,6 +6538,17 @@ packages:
       '@babel/types': 7.24.0
     transitivePeerDependencies:
       - supports-color
+
+  /babel-dead-code-elimination@1.0.6:
+    resolution: {integrity: sha512-JxFi9qyRJpN0LjEbbjbN8g0ux71Qppn9R8Qe3k6QzHg2CaKsbUQtbn307LQGiDLGjV6JCtEFqfxzVig9MyDCHQ==}
+    dependencies:
+      '@babel/core': 7.24.3
+      '@babel/parser': 7.24.1
+      '@babel/traverse': 7.24.1
+      '@babel/types': 7.24.0
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
 
   /babel-jest@29.7.0(@babel/core@7.22.9):
     resolution: {integrity: sha512-BrvGY3xZSwEcCzKvKsCi2GgHqDqsYkOP4/by5xCgIwGXQxIEh+8ew3gmrE1y7XRR6LHZIj6yLYnUi/mm2KXKBg==}
@@ -13577,8 +13612,8 @@ packages:
       yargs: 17.7.2
     dev: false
 
-  /turbo-stream@2.2.0:
-    resolution: {integrity: sha512-FKFg7A0To1VU4CH9YmSMON5QphK0BXjSoiC7D9yMh+mEEbXLUP9qJ4hEt1qcjKtzncs1OpcnjZO8NgrlVbZH+g==}
+  /turbo-stream@2.3.0:
+    resolution: {integrity: sha512-PhEr9mdexoVv+rJkQ3c8TjrN3DUghX37GNJkSMksoPR4KrXIPnM2MnqRt07sViIqX9IdlhrgtTSyjoVOASq6cg==}
     dev: false
 
   /type-check@0.4.0:
@@ -14079,8 +14114,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /vite-node@1.4.0:
-    resolution: {integrity: sha512-VZDAseqjrHgNd4Kh8icYHWzTKSCZMhia7GyHfhtzLW33fZlG9SwsB6CEhgyVOWkJfJ2pFLrp/Gj1FSfAiqH9Lw==}
+  /vite-node@1.6.0(@types/node@18.19.26):
+    resolution: {integrity: sha512-de6HJgzC+TFzOu0NTC4RAIsyf/DY/ibWDYQUcuEA84EMHhcefTUGkjFHKKEJhQN4A+6I0u++kr3l36ZF2d7XRw==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     dependencies:

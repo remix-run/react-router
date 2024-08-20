@@ -65,7 +65,7 @@ async function viteConfigFile({
   basename?: string;
 }) {
   return js`
-    import { vitePlugin as reactRouter } from "@react-router/dev";
+    import { reactRouter } from "@react-router/dev/vite";
 
     export default {
       ${base !== "/" ? 'base: "' + base + '",' : ""}
@@ -176,7 +176,7 @@ test.describe("Vite base / React Router basename / Vite dev", () => {
     });
     let proc = await viteDevCmd({ cwd });
     expect(proc.stderr.toString()).toMatch(
-      "Error: When using the React Router `basename` and the Vite `base` config, the " +
+      "When using the React Router `basename` and the Vite `base` config, the " +
         "`basename` config must begin with `base` for the default Vite dev server."
     );
   });

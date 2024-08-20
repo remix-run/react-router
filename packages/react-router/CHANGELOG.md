@@ -1,5 +1,13 @@
 # `react-router`
 
+## 6.26.1
+
+### Patch Changes
+
+- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` to match new behavior ([#11888](https://github.com/remix-run/react-router/pull/11888))
+- Updated dependencies:
+  - `@remix-run/router@1.19.1`
+
 ## 6.26.0
 
 ### Minor Changes
@@ -15,9 +23,7 @@
 
 ## 6.25.1
 
-### Patch Changes
-
-- Memoize some `RouterProvider` internals to reduce unnecessary re-renders ([#11803](https://github.com/remix-run/react-router/pull/11803))
+No significant changes to this package were made in this release. [See the repo `CHANGELOG.md`](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md) for an overview of all changes in v6.25.1.
 
 ## 6.25.0
 
