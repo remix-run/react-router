@@ -30,6 +30,7 @@ module.exports = function rollup() {
         `${SOURCE_DIR}/index.ts`,
         `${SOURCE_DIR}/routes.ts`,
         `${SOURCE_DIR}/vite.ts`,
+        `${SOURCE_DIR}/vite-cloudflare.ts`,
       ],
       output: {
         banner: createBanner("@react-router/dev", version),

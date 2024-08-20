@@ -2,7 +2,7 @@
 "@react-router/dev": major
 ---
 
-For Remix consumers migrating to React Router, the `vitePlugin` and `cloudflareDevProxyVitePlugin` exports have been renamed and nested under `@react-router/dev/vite` to remove the `vitePlugin` naming convention .
+For Remix consumers migrating to React Router, the `vitePlugin` and `cloudflareDevProxyVitePlugin` exports have been renamed and moved.
 
 ```diff
 -import {
@@ -10,8 +10,6 @@ For Remix consumers migrating to React Router, the `vitePlugin` and `cloudflareD
 -  cloudflareDevProxyVitePlugin,
 -} from "@remix/dev";
 
-+import {
-+  reactRouter,
-+  cloudflareDevProxy,
-+} from "@react-router/dev/vite";
++import { reactRouter } from "@react-router/dev/vite";
++import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
 ```
