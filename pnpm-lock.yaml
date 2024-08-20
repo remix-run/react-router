@@ -822,9 +822,6 @@ importers:
       '@web3-storage/multipart-parser':
         specifier: ^1.0.0
         version: 1.0.0
-      cookie-signature:
-        specifier: ^1.1.0
-        version: 1.2.1
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -835,9 +832,6 @@ importers:
         specifier: ^6.19.2
         version: 6.19.2
     devDependencies:
-      '@types/cookie-signature':
-        specifier: ^1.0.3
-        version: 1.1.2
       '@types/source-map-support':
         specifier: ^0.5.4
         version: 0.5.10
@@ -5463,12 +5457,6 @@ packages:
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
     dependencies:
       '@types/node': 18.19.26
-
-  /@types/cookie-signature@1.1.2:
-    resolution: {integrity: sha512-2OhrZV2LVnUAXklUFwuYUTokalh/dUb8rqt70OW6ByMSxYpauPZ+kfNLknX3aJyjY5iu8i3cUyoLZP9Fn37tTg==}
-    dependencies:
-      '@types/node': 18.19.26
-    dev: true
 
   /@types/cookie@0.6.0:
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
