@@ -23,9 +23,11 @@
   "scripts": {
     "tsc": "tsc"
   },
+  "dependencies": {
+    "minimatch": "^9.0.0"
+  },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "minimatch": "^9.0.0",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {

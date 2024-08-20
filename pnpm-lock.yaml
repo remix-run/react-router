@@ -849,13 +849,14 @@ importers:
         version: 5.4.5
 
   packages/react-router-remix-v2-routes:
+    dependencies:
+      minimatch:
+        specifier: ^9.0.0
+        version: 9.0.3
     devDependencies:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../react-router-dev
-      minimatch:
-        specifier: ^9.0.0
-        version: 9.0.3
       typescript:
         specifier: ^5.1.6
         version: 5.4.5
