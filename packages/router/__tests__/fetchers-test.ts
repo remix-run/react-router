@@ -16,7 +16,7 @@ import {
   setup,
   TASK_ROUTES,
 } from "./utils/data-router-setup";
-import { createFormData, tick } from "./utils/utils";
+import { createFormData, sleep, tick } from "./utils/utils";
 
 function initializeTest(init?: {
   url?: string;
@@ -2316,7 +2316,7 @@ describe("fetchers", () => {
                 loader: true,
                 shouldRevalidate: () => false,
               },
-              // fetch C will not before the action, and will not be able to opt
+              // fetch C will not resolve before the action, and will not be able to opt
               // out because it has no data
               {
                 id: "fetchC",
@@ -2505,6 +2505,66 @@ describe("fetchers", () => {
         data: "B LOADER",
       });
       expect(C.loaders.fetch.stub).not.toHaveBeenCalled();
+    });
+
+    // This is another example of the above bug where cancelled fetchers were not
+    // cleaned up correctly (https://github.com/remix-run/remix/issues/8298).
+    // It was also fixed by https://github.com/remix-run/react-router/pull/11839
+    it("Remix Github Issue 8298", async () => {
+      let loaderCount = 0;
+      let router = createRouter({
+        history: createMemoryHistory(),
+        routes: [
+          {
+            id: "index",
+            path: "/",
+          },
+          {
+            id: "loader",
+            path: "/loader",
+            async loader() {
+              let count = ++loaderCount;
+              await sleep(100);
+              return count;
+            },
+          },
+          {
+            id: "action",
+            path: "/action",
+            async action() {
+              await sleep(100);
+              return "ACTION";
+            },
+          },
+        ],
+      });
+      router.initialize();
+
+      router.fetch("a", "index", "/loader");
+      expect(router.getFetcher("a")).toMatchObject({ state: "loading" });
+
+      await sleep(250);
+      router.revalidate();
+
+      await sleep(250);
+      router.fetch("b", "index", "/action", {
+        formMethod: "post",
+        body: createFormData({}),
+      });
+      expect(router.getFetcher("b")).toMatchObject({ state: "submitting" });
+
+      await sleep(250);
+
+      expect(router.getFetcher("b")).toMatchObject({
+        state: "idle",
+        data: "ACTION",
+      });
+
+      // fetcher load, router revalidation, action revalidation
+      expect(router.getFetcher("a")).toMatchObject({
+        state: "idle",
+        data: 3,
+      });
     });
 
     it("does not cancel pending action navigation on deletion of revalidating fetcher", async () => {
