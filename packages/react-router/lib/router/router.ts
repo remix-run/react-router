@@ -1483,7 +1483,11 @@ export function createRouter(init: RouterInit): Router {
     startNavigation(
       pendingAction || state.historyAction,
       state.navigation.location,
-      { overrideNavigation: state.navigation }
+      {
+        overrideNavigation: state.navigation,
+        // Proxy through any rending view transition
+        enableViewTransition: pendingViewTransitionEnabled === true,
+      }
     );
     return promise;
   }
