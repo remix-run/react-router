@@ -287,7 +287,7 @@ The route action is called when a submission is sent to the route from a [Form][
 ```tsx [3-5]
 <Route
   path="/teams/:teamId"
-  action={({ request }) => {
+  action={async ({ request }) => {
     const formData = await request.formData();
     return updateTeam(formData);
   }}
