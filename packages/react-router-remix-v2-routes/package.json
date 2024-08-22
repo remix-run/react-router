@@ -1,6 +1,6 @@
 {
   "name": "@react-router/remix-v2-routes",
-  "version": "2.9.0-pre.0",
+  "version": "6.26.2",
   "description": "Remix v2 routing conventions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
@@ -23,9 +23,11 @@
   "scripts": {
     "tsc": "tsc"
   },
+  "dependencies": {
+    "minimatch": "^9.0.0"
+  },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "minimatch": "^9.0.0",
     "typescript": "^5.1.6"
   },
   "peerDependencies": {
