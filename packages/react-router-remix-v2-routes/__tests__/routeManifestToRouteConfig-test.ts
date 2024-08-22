@@ -1,6 +1,6 @@
 import { route } from "@react-router/dev/routes";
 
-import { routeManifestToRoutesConfig } from "../manifest";
+import { routeManifestToRouteConfig } from "../manifest";
 import { defineRoutes } from "../defineRoutes";
 
 const clean = (obj: any) => cleanUndefined(cleanIds(obj));
@@ -14,9 +14,9 @@ const cleanIds = (obj: any) =>
     })
   );
 
-describe("routeManifestToRoutesConfig", () => {
+describe("routeManifestToRouteConfig", () => {
   test("creates routes config", () => {
-    let remixRoutes = routeManifestToRoutesConfig(
+    let remixRoutes = routeManifestToRouteConfig(
       defineRoutes((route) => {
         route("/", "routes/home.js");
         route("inbox", "routes/inbox.js", () => {
@@ -27,7 +27,7 @@ describe("routeManifestToRoutesConfig", () => {
         });
       })
     );
-    let routesConfig = [
+    let routeConfig = [
       route("/", "routes/home.js"),
       route("inbox", "routes/inbox.js", [
         route("/", "routes/inbox/index.js", { index: true }),
@@ -37,7 +37,7 @@ describe("routeManifestToRoutesConfig", () => {
       ]),
     ];
 
-    expect(clean(remixRoutes)).toEqual(clean(routesConfig));
+    expect(clean(remixRoutes)).toEqual(clean(routeConfig));
 
     expect(cleanUndefined(remixRoutes)).toMatchInlineSnapshot(`
       [
@@ -70,7 +70,7 @@ describe("routeManifestToRoutesConfig", () => {
   });
 
   test("creates routes config with IDs", () => {
-    let configRoutes = routeManifestToRoutesConfig(
+    let configRoutes = routeManifestToRouteConfig(
       defineRoutes((route) => {
         route("/", "routes/home.js", { id: "home" });
       })

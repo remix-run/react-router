@@ -52,12 +52,12 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type RoutesConfig = RoutesConfigEntry[] | Promise<RoutesConfigEntry[]>;
+export type RouteConfig = RouteConfigEntry[] | Promise<RouteConfigEntry[]>;
 
 /**
  * A route exported from the routes config file
  */
-export interface RoutesConfigEntry {
+export interface RouteConfigEntry {
   /**
    * The unique id for this route.
    */
@@ -87,7 +87,7 @@ export interface RoutesConfigEntry {
   /**
    * The child routes.
    */
-  children?: RoutesConfigEntry[];
+  children?: RouteConfigEntry[];
 }
 
 type CreateRoutePath = string | null | undefined;
@@ -101,28 +101,28 @@ const createConfigRouteOptionKeys = [
   "id",
   "index",
   "caseSensitive",
-] as const satisfies Array<keyof RoutesConfigEntry>;
+] as const satisfies Array<keyof RouteConfigEntry>;
 type CreateRouteOptions = Pick<
-  RoutesConfigEntry,
+  RouteConfigEntry,
   (typeof createConfigRouteOptionKeys)[number]
 >;
 function createRoute(
   path: CreateRoutePath,
   file: string,
-  children?: RoutesConfigEntry[]
-): RoutesConfigEntry;
+  children?: RouteConfigEntry[]
+): RouteConfigEntry;
 function createRoute(
   path: CreateRoutePath,
   file: string,
   options: RequireAtLeastOne<CreateRouteOptions>,
-  children?: RoutesConfigEntry[]
-): RoutesConfigEntry;
+  children?: RouteConfigEntry[]
+): RouteConfigEntry;
 function createRoute(
   path: CreateRoutePath,
   file: string,
-  optionsOrChildren: CreateRouteOptions | RoutesConfigEntry[] | undefined,
-  children?: RoutesConfigEntry[]
-): RoutesConfigEntry {
+  optionsOrChildren: CreateRouteOptions | RouteConfigEntry[] | undefined,
+  children?: RouteConfigEntry[]
+): RouteConfigEntry {
   let options: CreateRouteOptions = {};
 
   if (Array.isArray(optionsOrChildren) || !optionsOrChildren) {
@@ -140,16 +140,16 @@ function createRoute(
 }
 
 const createIndexOptionKeys = ["id"] as const satisfies Array<
-  keyof RoutesConfigEntry
+  keyof RouteConfigEntry
 >;
 type CreateIndexOptions = Pick<
-  RoutesConfigEntry,
+  RouteConfigEntry,
   (typeof createIndexOptionKeys)[number]
 >;
 function createIndex(
   file: string,
   options?: RequireAtLeastOne<CreateIndexOptions>
-): RoutesConfigEntry {
+): RouteConfigEntry {
   return {
     file,
     index: true,
@@ -158,26 +158,26 @@ function createIndex(
 }
 
 const createLayoutOptionKeys = ["id"] as const satisfies Array<
-  keyof RoutesConfigEntry
+  keyof RouteConfigEntry
 >;
 type CreateLayoutOptions = Pick<
-  RoutesConfigEntry,
+  RouteConfigEntry,
   (typeof createLayoutOptionKeys)[number]
 >;
 function createLayout(
   file: string,
-  children?: RoutesConfigEntry[]
-): RoutesConfigEntry;
+  children?: RouteConfigEntry[]
+): RouteConfigEntry;
 function createLayout(
   file: string,
   options: RequireAtLeastOne<CreateLayoutOptions>,
-  children?: RoutesConfigEntry[]
-): RoutesConfigEntry;
+  children?: RouteConfigEntry[]
+): RouteConfigEntry;
 function createLayout(
   file: string,
-  optionsOrChildren: CreateLayoutOptions | RoutesConfigEntry[] | undefined,
-  children?: RoutesConfigEntry[]
-): RoutesConfigEntry {
+  optionsOrChildren: CreateLayoutOptions | RouteConfigEntry[] | undefined,
+  children?: RouteConfigEntry[]
+): RouteConfigEntry {
   let options: CreateLayoutOptions = {};
 
   if (Array.isArray(optionsOrChildren) || !optionsOrChildren) {
@@ -198,12 +198,12 @@ export const index = createIndex;
 export const layout = createLayout;
 
 export function configRoutesToRouteManifest(
-  routes: RoutesConfigEntry[],
+  routes: RouteConfigEntry[],
   rootId = "root"
 ): RouteManifest {
   let routeManifest: RouteManifest = {};
 
-  function walk(route: RoutesConfigEntry, parentId: string) {
+  function walk(route: RouteConfigEntry, parentId: string) {
     let id = route.id || createRouteId(route.file);
     let manifestItem: RouteManifestEntry = {
       id,
