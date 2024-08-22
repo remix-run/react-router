@@ -89,11 +89,11 @@ export default function Home() {
 
 ```ts filename=app/routes.ts
 import {
-  type RoutesConfig,
+  type RouteConfig,
   index,
 } from "@react-router/dev/routes";
 
-export const routes: RoutesConfig = [index("./home.tsx")];
+export const routes: RouteConfig = [index("./home.tsx")];
 ```
 
 ```tsx filename=vite.config.ts

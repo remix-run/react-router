@@ -11,13 +11,13 @@ Routes are configured in `app/routes.ts`. The Vite plugin uses this file to crea
 
 ```ts filename=app/routes.ts
 import {
-  type RoutesConfig,
+  type RouteConfig,
   route,
   index,
   layout,
 } from "@react-router/dev/routes";
 
-export const routes: RoutesConfig = [
+export const routes: RouteConfig = [
   index("./home.tsx"),
   route("about", "./about.tsx"),
 
@@ -39,22 +39,22 @@ export const routes: RoutesConfig = [
 If you prefer a file system routing convention, you can use the convention provided with Remix v2, but you can also make your own.
 
 ```tsx filename=app/routes.ts
-import { type RoutesConfig } from "@react-router/dev/routes";
+import { type RouteConfig } from "@react-router/dev/routes";
 import { remixRoutes } from "@react-router/remix-v2-routes";
 
-export const routes: RoutesConfig = remixRoutes();
+export const routes: RouteConfig = remixRoutes();
 ```
 
 You can also mix routing conventions into a single array of routes.
 
 ```tsx filename=app/routes.ts
 import {
-  type RoutesConfig,
+  type RouteConfig,
   route,
 } from "@react-router/dev/routes";
 import { remixRoutes } from "@react-router/remix-v2-routes";
 
-export const routes: RoutesConfig = [
+export const routes: RouteConfig = [
   // Provide Remix v2 file system routes
   ...(await remixRoutes()),
 
@@ -92,12 +92,12 @@ Routes can be nested inside parent routes. Nested routes are rendered into their
 
 ```ts filename=app/routes.ts
 import {
-  type RoutesConfig,
+  type RouteConfig,
   route,
   index,
 } from "@react-router/dev/routes";
 
-export const routes: RoutesConfig = [
+export const routes: RouteConfig = [
   route("dashboard", "./dashboard.tsx", [
     index("./home.tsx"),
     route("settings", "./settings.tsx"),
@@ -127,13 +127,13 @@ Using `layout`, layout routes create new nesting for their children, but they do
 
 ```tsx filename=app/routes.ts lines=[9,15]
 import {
-  type RoutesConfig,
+  type RouteConfig,
   route,
   layout,
   index,
 } from "@react-router/dev/routes";
 
-export const routes: RoutesConfig = [
+export const routes: RouteConfig = [
   layout("./marketing/layout.tsx", [
     index("./marketing/home.tsx"),
     route("contact", "./marketing/contact.tsx"),
@@ -158,12 +158,12 @@ Index routes render into their parent's [Outlet][outlet] at their parent's URL (
 
 ```ts filename=app/routes.ts
 import {
-  type RoutesConfig,
+  type RouteConfig,
   route,
   index,
 } from "@react-router/dev/routes";
 
-export const routes: RoutesConfig = [
+export const routes: RouteConfig = [
   // renders into the root.tsx Outlet at /
   index("./home.tsx"),
   route("dashboard", "./dashboard.tsx", [
