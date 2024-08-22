@@ -1637,7 +1637,7 @@ export function createRouter(init: RouterInit): Router {
       // Create a GET request for the loaders
       request = createClientSideRequest(
         init.history,
-        request.url,
+        createPath(new URL(request.url)),
         request.signal
       );
     }
