@@ -1,202 +1,116 @@
-import type {
-  ActionFunction,
-  ActionFunctionArgs,
+// Expose old @remix-run/router API
+export type { InitialEntry, Location, Path, To } from "./lib/router/history";
+export type {
+  HydrationState,
+  StaticHandler,
+  GetScrollPositionFunction,
+  GetScrollRestorationKeyFunction,
+  StaticHandlerContext,
+  Fetcher,
+  Navigation,
+  NavigationStates,
+  RelativeRoutingType,
   Blocker,
   BlockerFunction,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
+  Router as RemixRouter,
+  RouterState,
+  RouterInit,
+  RouterSubscriber,
+  RouterNavigateOptions,
+  RouterFetchOptions,
+  RevalidationState,
+} from "./lib/router/router";
+export type {
+  ActionFunction,
+  ActionFunctionArgs,
+  DataStrategyFunction as unstable_DataStrategyFunction,
+  DataStrategyFunctionArgs as unstable_DataStrategyFunctionArgs,
+  DataStrategyMatch as unstable_DataStrategyMatch,
+  DataWithResponseInit as UNSAFE_DataWithResponseInit,
   ErrorResponse,
-  Fetcher,
+  FormEncType,
+  FormMethod,
+  HandlerResult as unstable_HandlerResult,
+  HTMLFormMethod,
   JsonFunction,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
-  Location,
-  Navigation,
-  NavigationStates,
   ParamParseKey,
   Params,
-  Path,
   PathMatch,
   PathParam,
   PathPattern,
   RedirectFunction,
-  RelativeRoutingType,
   ShouldRevalidateFunction,
   ShouldRevalidateFunctionArgs,
-  To,
   UIMatch,
-  unstable_HandlerResult,
-} from "./lib/router";
-import {
+} from "./lib/router/utils";
+
+export {
   Action as NavigationType,
   createPath,
+  parsePath,
+} from "./lib/router/history";
+export {
+  IDLE_NAVIGATION,
+  IDLE_FETCHER,
+  IDLE_BLOCKER,
+} from "./lib/router/router";
+export {
+  data as unstable_data,
   generatePath,
   isRouteErrorResponse,
   json,
   matchPath,
   matchRoutes,
-  parsePath,
   redirect,
   redirectDocument,
+  replace,
   resolvePath,
-  UNSAFE_ErrorResponseImpl,
-} from "./lib/router";
-
-import type {
-  AwaitProps,
-  IndexRouteProps,
-  LayoutRouteProps,
-  MemoryRouterProps,
-  NavigateProps,
-  OutletProps,
-  PathRouteProps,
-  RouteProps,
-  RouterProps,
-  RoutesProps,
-  unstable_PatchRoutesOnMissFunction,
-} from "./lib/components";
-import {
-  Await,
-  MemoryRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Router,
-  Routes,
-  createRoutesFromChildren,
-  renderMatches,
-  createMemoryRouter,
-  mapRouteProperties,
-} from "./lib/components";
-import type {
-  DataRouteMatch,
-  DataRouteObject,
-  IndexRouteObject,
-  NavigateOptions,
-  Navigator,
-  NonIndexRouteObject,
-  RouteMatch,
-  RouteObject,
-} from "./lib/context";
-import {
-  DataRouterContext,
-  DataRouterStateContext,
-  LocationContext,
-  NavigationContext,
-  RouteContext,
-} from "./lib/context";
-import type { NavigateFunction } from "./lib/hooks";
-import {
-  useActionData,
-  useAsyncError,
-  useAsyncValue,
-  useBlocker,
-  useHref,
-  useInRouterContext,
-  useLoaderData,
-  useLocation,
-  useMatch,
-  useMatches,
-  useNavigate,
-  useNavigation,
-  useNavigationType,
-  useOutlet,
-  useOutletContext,
-  useParams,
-  useResolvedPath,
-  useRevalidator,
-  useRouteError,
-  useRouteId,
-  useRouteLoaderData,
-  useRoutes,
-  useRoutesImpl,
-} from "./lib/hooks";
-
-// Exported for backwards compatibility, but not being used internally anymore
-type Hash = string;
-type Pathname = string;
-type Search = string;
+} from "./lib/router/utils";
 
 // Expose react-router public API
 export type {
-  ActionFunction,
-  ActionFunctionArgs,
-  AwaitProps,
   DataRouteMatch,
   DataRouteObject,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
-  ErrorResponse,
-  Fetcher,
-  Hash,
   IndexRouteObject,
-  IndexRouteProps,
-  JsonFunction,
-  LayoutRouteProps,
-  LazyRouteFunction,
-  LoaderFunction,
-  LoaderFunctionArgs,
-  Location,
-  MemoryRouterProps,
-  NavigateFunction,
   NavigateOptions,
-  NavigateProps,
-  Navigation,
-  NavigationStates,
   Navigator,
   NonIndexRouteObject,
-  OutletProps,
-  ParamParseKey,
-  Params,
-  Path,
-  PathMatch,
-  PathParam,
-  PathPattern,
-  PathRouteProps,
-  Pathname,
-  RedirectFunction,
-  RelativeRoutingType,
   RouteMatch,
   RouteObject,
+} from "./lib/context";
+export type {
+  AwaitProps,
+  IndexRouteProps,
+  LayoutRouteProps,
+  MemoryRouterProps,
+  NavigateProps,
+  OutletProps,
+  PathRouteProps,
   RouteProps,
   RouterProps,
+  RouterProviderProps,
   RoutesProps,
-  Search,
-  ShouldRevalidateFunction,
-  ShouldRevalidateFunctionArgs,
-  To,
-  UIMatch,
-  Blocker,
-  BlockerFunction,
-  unstable_HandlerResult,
-  unstable_PatchRoutesOnMissFunction,
-};
+  PatchRoutesOnNavigationFunction as unstable_PatchRoutesOnNavigationFunction,
+} from "./lib/components";
+export type { NavigateFunction } from "./lib/hooks";
 export {
   Await,
   MemoryRouter,
   Navigate,
-  NavigationType,
   Outlet,
   Route,
   Router,
+  RouterProvider,
   Routes,
   createMemoryRouter,
-  createPath,
   createRoutesFromChildren,
   createRoutesFromChildren as createRoutesFromElements,
-  generatePath,
-  isRouteErrorResponse,
-  json,
-  matchPath,
-  matchRoutes,
-  parsePath,
-  redirect,
-  redirectDocument,
   renderMatches,
-  resolvePath,
+} from "./lib/components";
+export {
   useBlocker,
   useActionData,
   useAsyncError,
@@ -218,42 +132,9 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
-};
-
-// Expose old @remix-run/router API
-export type {
-  // TODO: Stop exporting agnostic stuff in v7?
-  AgnosticDataIndexRouteObject,
-  AgnosticDataNonIndexRouteObject,
-  AgnosticDataRouteMatch,
-  AgnosticDataRouteObject,
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
-  AgnosticRouteMatch,
-  AgnosticRouteObject,
-  HydrationState,
-  InitialEntry,
-  LowerCaseFormMethod,
-  StaticHandler,
-  TrackedPromise,
-  FetcherStates,
-  UpperCaseFormMethod,
-} from "./lib/router";
-export {
-  getStaticContextFromError,
-  stripBasename,
-  UNSAFE_convertRoutesToDataRoutes,
-} from "./lib/router";
+} from "./lib/hooks";
 
 // Expose old RR DOM API
-export type {
-  FormEncType,
-  FormMethod,
-  GetScrollRestorationKeyFunction,
-  StaticHandlerContext,
-  Submission,
-} from "./lib/router";
-
 export type {
   BrowserRouterProps,
   HashRouterProps,
@@ -268,7 +149,6 @@ export type {
   SubmitFunction,
   FetcherSubmitFunction,
   FetcherWithComponents,
-  RouterProviderProps,
 } from "./lib/dom/lib";
 export {
   createBrowserRouter,
@@ -276,14 +156,9 @@ export {
   BrowserRouter,
   HashRouter,
   Link,
-  // TODO: Collapse RouterProvider implementations
-  // RouterProvider,
-  UNSAFE_ViewTransitionContext,
-  UNSAFE_FetchersContext,
-  unstable_HistoryRouter,
+  HistoryRouter as unstable_HistoryRouter,
   NavLink,
   Form,
-  RouterProvider,
   ScrollRestoration,
   useLinkClickHandler,
   useSearchParams,
@@ -291,12 +166,12 @@ export {
   useFormAction,
   useFetcher,
   useFetchers,
-  UNSAFE_useScrollRestoration,
   useBeforeUnload,
-  unstable_usePrompt,
-  unstable_useViewTransitionState,
+  usePrompt as unstable_usePrompt,
+  useViewTransitionState as unstable_useViewTransitionState,
 } from "./lib/dom/lib";
 export type {
+  FetcherSubmitOptions,
   ParamKeyValuePair,
   SubmitOptions,
   URLSearchParamsInit,
@@ -313,7 +188,6 @@ export {
   StaticRouter,
   StaticRouterProvider,
 } from "./lib/dom/server";
-export { HydratedRouter } from "./lib/dom/ssr/browser";
 export {
   Meta,
   Links,
@@ -341,14 +215,9 @@ export type { ServerRouterProps } from "./lib/dom/ssr/server";
 export { ServerRouter } from "./lib/dom/ssr/server";
 export type { RoutesTestStubProps } from "./lib/dom/ssr/routes-test-stub";
 export { createRoutesStub } from "./lib/dom/ssr/routes-test-stub";
-export {
-  defineRoute,
-  type Match,
-  type MetaMatch,
-} from "./lib/router/define-route";
 
 // Expose old @remix-run/server-runtime API, minus duplicate APIs
-export { createCookieFactory, isCookie } from "./lib/server-runtime/cookies";
+export { createCookie, isCookie } from "./lib/server-runtime/cookies";
 export {
   composeUploadHandlers as unstable_composeUploadHandlers,
   parseMultipartFormData as unstable_parseMultipartFormData,
@@ -362,32 +231,23 @@ export {
 export { createRequestHandler } from "./lib/server-runtime/server";
 export {
   createSession,
-  createSessionStorageFactory,
+  createSessionStorage,
   isSession,
 } from "./lib/server-runtime/sessions";
-export { createCookieSessionStorageFactory } from "./lib/server-runtime/sessions/cookieStorage";
-export { createMemorySessionStorageFactory } from "./lib/server-runtime/sessions/memoryStorage";
+export { createCookieSessionStorage } from "./lib/server-runtime/sessions/cookieStorage";
+export { createMemorySessionStorage } from "./lib/server-runtime/sessions/memoryStorage";
 export { createMemoryUploadHandler as unstable_createMemoryUploadHandler } from "./lib/server-runtime/upload/memoryUploadHandler";
 export { MaxPartSizeExceededError } from "./lib/server-runtime/upload/errors";
 export { setDevServerHooks as unstable_setDevServerHooks } from "./lib/server-runtime/dev";
 
-export type {
-  CreateCookieFunction,
-  IsCookieFunction,
-} from "./lib/server-runtime/cookies";
+export type { IsCookieFunction } from "./lib/server-runtime/cookies";
 // TODO: (v7) Clean up code paths for these exports
 // export type {
 //   JsonFunction,
 //   RedirectFunction,
 // } from "./lib/server-runtime/responses";
 export type { CreateRequestHandlerFunction } from "./lib/server-runtime/server";
-export type {
-  CreateSessionFunction,
-  CreateSessionStorageFunction,
-  IsSessionFunction,
-} from "./lib/server-runtime/sessions";
-export type { CreateCookieSessionStorageFunction } from "./lib/server-runtime/sessions/cookieStorage";
-export type { CreateMemorySessionStorageFunction } from "./lib/server-runtime/sessions/memoryStorage";
+export type { IsSessionFunction } from "./lib/server-runtime/sessions";
 
 export type {
   HandleDataRequestFunction,
@@ -413,8 +273,6 @@ export type {
   CookieSerializeOptions,
   CookieSignatureOptions,
 } from "./lib/server-runtime/cookies";
-
-export type { SignFunction, UnsignFunction } from "./lib/server-runtime/crypto";
 
 export type { AppLoadContext } from "./lib/server-runtime/data";
 
@@ -452,9 +310,6 @@ export type {
   FlashSessionData,
 } from "./lib/server-runtime/sessions";
 
-// Private exports for internal use
-export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
-
 ///////////////////////////////////////////////////////////////////////////////
 // DANGER! PLEASE READ ME!
 // We provide these exports as an escape hatch in the event that you need any
@@ -470,43 +325,69 @@ export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
 
 /** @internal */
 export {
+  createBrowserHistory as UNSAFE_createBrowserHistory,
+  invariant as UNSAFE_invariant,
+} from "./lib/router/history";
+
+/** @internal */
+export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
+
+/** @internal */
+export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+
+/** @internal */
+export {
   DataRouterContext as UNSAFE_DataRouterContext,
   DataRouterStateContext as UNSAFE_DataRouterStateContext,
+  FetchersContext as UNSAFE_FetchersContext,
   LocationContext as UNSAFE_LocationContext,
   NavigationContext as UNSAFE_NavigationContext,
   RouteContext as UNSAFE_RouteContext,
-  mapRouteProperties as UNSAFE_mapRouteProperties,
-  useRouteId as UNSAFE_useRouteId,
-  useRoutesImpl as UNSAFE_useRoutesImpl,
-  UNSAFE_ErrorResponseImpl,
-};
+  ViewTransitionContext as UNSAFE_ViewTransitionContext,
+} from "./lib/context";
+
+/** @internal */
+export { mapRouteProperties as UNSAFE_mapRouteProperties } from "./lib/components";
 
 /** @internal */
 export { FrameworkContext as UNSAFE_FrameworkContext } from "./lib/dom/ssr/components";
 
 /** @internal */
+export type { AssetsManifest as UNSAFE_AssetsManifest } from "./lib/dom/ssr/entry";
+
+/** @internal */
+export { deserializeErrors as UNSAFE_deserializeErrors } from "./lib/dom/ssr/errors";
+
+/** @internal */
+export { RemixErrorBoundary as UNSAFE_RemixErrorBoundary } from "./lib/dom/ssr/errorBoundaries";
+
+/** @internal */
+export {
+  getPatchRoutesOnNavigationFunction as UNSAFE_getPatchRoutesOnNavigationFunction,
+  useFogOFWarDiscovery as UNSAFE_useFogOFWarDiscovery,
+} from "./lib/dom/ssr/fog-of-war";
+
+/** @internal */
 export type { RouteModules as UNSAFE_RouteModules } from "./lib/dom/ssr/routeModules";
 
 /** @internal */
-export type {
-  FutureConfig as UNSAFE_FutureConfig,
-  AssetsManifest as UNSAFE_AssetsManifest,
-  FrameworkContextObject as UNSAFE_FrameworkContextObject,
-} from "./lib/dom/ssr/entry";
-
-/** @internal */
-export type {
-  EntryRoute as UNSAFE_EntryRoute,
-  RouteManifest as UNSAFE_RouteManifest,
+export {
+  createClientRoutes as UNSAFE_createClientRoutes,
+  createClientRoutesWithHMRRevalidationOptOut as UNSAFE_createClientRoutesWithHMRRevalidationOptOut,
+  shouldHydrateRouteLoader as UNSAFE_shouldHydrateRouteLoader,
 } from "./lib/dom/ssr/routes";
 
 /** @internal */
-export type {
-  SingleFetchRedirectResult as UNSAFE_SingleFetchRedirectResult,
-  SingleFetchResult as UNSAFE_SingleFetchResult,
-  SingleFetchResults as UNSAFE_SingleFetchResults,
-} from "./lib/dom/ssr/single-fetch";
+export { getSingleFetchDataStrategy as UNSAFE_getSingleFetchDataStrategy } from "./lib/dom/ssr/single-fetch";
+
+/** @internal */
 export {
   decodeViaTurboStream as UNSAFE_decodeViaTurboStream,
   SingleFetchRedirectSymbol as UNSAFE_SingleFetchRedirectSymbol,
 } from "./lib/dom/ssr/single-fetch";
+
+/** @internal */
+export { ServerMode as UNSAFE_ServerMode } from "./lib/server-runtime/mode";
+
+/** @internal */
+export { useScrollRestoration as UNSAFE_useScrollRestoration } from "./lib/dom/lib";

@@ -1,6 +1,6 @@
 import type { History, Location, Path, To } from "./history";
 import {
-  Action as HistoryAction,
+  Action as NavigationType,
   createLocation,
   createPath,
   invariant,
@@ -30,7 +30,8 @@ import type {
   Submission,
   SuccessResult,
   UIMatch,
-  AgnosticPatchRoutesOnMissFunction,
+  AgnosticPatchRoutesOnNavigationFunction,
+  DataWithResponseInit,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -273,10 +274,12 @@ export interface Router {
  * reflect the the "old" location unless otherwise noted.
  */
 export interface RouterState {
+  // TODO: (v7) should we consider renaming this `navigationType` to align with
+  // `useNavigationType` at some point?
   /**
    * The action of the most recent navigation
    */
-  historyAction: HistoryAction;
+  historyAction: NavigationType;
 
   /**
    * The current location reflected by the router
@@ -353,9 +356,7 @@ export type HydrationState = Partial<
 /**
  * Future flags to toggle new feature behavior
  */
-export interface FutureConfig {
-  v7_skipActionErrorRevalidation: boolean;
-}
+export interface FutureConfig {}
 
 /**
  * Initialization options for createRouter
@@ -368,7 +369,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
-  unstable_patchRoutesOnMiss?: AgnosticPatchRoutesOnMissFunction;
+  unstable_patchRoutesOnNavigation?: AgnosticPatchRoutesOnNavigationFunction;
   unstable_dataStrategy?: DataStrategyFunction;
 }
 
@@ -654,7 +655,7 @@ export type Blocker = BlockerUnblocked | BlockerBlocked | BlockerProceeding;
 export type BlockerFunction = (args: {
   currentLocation: Location;
   nextLocation: Location;
-  historyAction: HistoryAction;
+  historyAction: NavigationType;
 }) => boolean;
 
 interface ShortCircuitable {
@@ -808,17 +809,20 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
-  let patchRoutesOnMissImpl = init.unstable_patchRoutesOnMiss;
+  let patchRoutesOnNavigationImpl = init.unstable_patchRoutesOnNavigation;
 
   // Config driven behavior flags
   let future: FutureConfig = {
-    v7_skipActionErrorRevalidation: false,
     ...init.future,
   };
   // Cleanup function for history
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
   let subscribers = new Set<RouterSubscriber>();
+  // FIFO queue of previously discovered routes to prevent re-calling on
+  // subsequent navigations to the same path
+  let discoveredRoutesMaxSize = 1000;
+  let discoveredRoutes = new Set<string>();
   // Externally-provided object to hold scroll restoration locations during routing
   let savedScrollPositions: Record<string, number> | null = null;
   // Externally-provided function to get scroll restoration keys
@@ -836,7 +840,7 @@ export function createRouter(init: RouterInit): Router {
   let initialMatches = matchRoutes(dataRoutes, init.history.location, basename);
   let initialErrors: RouteData | null = null;
 
-  if (initialMatches == null && !patchRoutesOnMissImpl) {
+  if (initialMatches == null && !patchRoutesOnNavigationImpl) {
     // If we do not match a user-provided-route, fall back to the root
     // to allow the error boundary to take over
     let error = getInternalRouterError(404, {
@@ -847,13 +851,13 @@ export function createRouter(init: RouterInit): Router {
     initialErrors = { [route.id]: error };
   }
 
-  // In SPA apps, if the user provided a patchRoutesOnMiss implementation and
+  // In SPA apps, if the user provided a patchRoutesOnNavigation implementation and
   // our initial match is a splat route, clear them out so we run through lazy
   // discovery on hydration in case there's a more accurate lazy route match.
   // In SSR apps (with `hydrationData`), we expect that the server will send
   // up the proper matched routes so we don't want to run lazy discovery on
   // initial hydration and want to hydrate into the splat route.
-  if (initialMatches && patchRoutesOnMissImpl && !init.hydrationData) {
+  if (initialMatches && !init.hydrationData) {
     let fogOfWar = checkFogOfWar(
       initialMatches,
       dataRoutes,
@@ -866,9 +870,20 @@ export function createRouter(init: RouterInit): Router {
 
   let initialized: boolean;
   if (!initialMatches) {
-    // We need to run patchRoutesOnMiss in initialize()
     initialized = false;
     initialMatches = [];
+
+    // If partial hydration and fog of war is enabled, we will be running
+    // `patchRoutesOnNavigation` during hydration so include any partial matches as
+    // the initial matches so we can properly render `HydrateFallback`'s
+    let fogOfWar = checkFogOfWar(
+      null,
+      dataRoutes,
+      init.history.location.pathname
+    );
+    if (fogOfWar.active && fogOfWar.matches) {
+      initialMatches = fogOfWar.matches;
+    }
   } else if (initialMatches.some((m) => m.route.lazy)) {
     // All initialMatches need to be loaded before we're ready.  If we have lazy
     // functions around still then we'll need to run them in initialize()
@@ -932,7 +947,7 @@ export function createRouter(init: RouterInit): Router {
 
   // -- Stateful internal variables to manage navigations --
   // Current navigation in progress (to be committed in completeNavigation)
-  let pendingAction: HistoryAction = HistoryAction.Pop;
+  let pendingAction: NavigationType = NavigationType.Pop;
 
   // Should the current navigation prevent the scroll reset if scroll cannot
   // be restored?
@@ -965,7 +980,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Use this internal array to capture fetcher loads that were cancelled by an
   // action navigation and require revalidation
-  let cancelledFetcherLoads: string[] = [];
+  let cancelledFetcherLoads: Set<string> = new Set();
 
   // AbortControllers for any in-flight fetchers
   let fetchControllers = new Map<string, AbortController>();
@@ -998,11 +1013,11 @@ export function createRouter(init: RouterInit): Router {
   // we don't need to update UI state if they change
   let blockerFunctions = new Map<string, BlockerFunction>();
 
-  // Map of pending patchRoutesOnMiss() promises (keyed by path/matches) so
+  // Map of pending patchRoutesOnNavigation() promises (keyed by path/matches) so
   // that we only kick them off once for a given combo
   let pendingPatchRoutes = new Map<
     string,
-    ReturnType<AgnosticPatchRoutesOnMissFunction>
+    ReturnType<AgnosticPatchRoutesOnNavigationFunction>
   >();
 
   // Flag to ignore the next history update, so we can revert the URL change on
@@ -1095,7 +1110,7 @@ export function createRouter(init: RouterInit): Router {
     // resolved prior to router creation since we can't go into a fallback
     // UI for SSR'd apps
     if (!state.initialized) {
-      startNavigation(HistoryAction.Pop, state.location, {
+      startNavigation(NavigationType.Pop, state.location, {
         initialHydration: true,
       });
     }
@@ -1243,18 +1258,18 @@ export function createRouter(init: RouterInit): Router {
 
     if (isUninterruptedRevalidation) {
       // If this was an uninterrupted revalidation then do not touch history
-    } else if (pendingAction === HistoryAction.Pop) {
+    } else if (pendingAction === NavigationType.Pop) {
       // Do nothing for POP - URL has already been updated
-    } else if (pendingAction === HistoryAction.Push) {
+    } else if (pendingAction === NavigationType.Push) {
       init.history.push(location, location.state);
-    } else if (pendingAction === HistoryAction.Replace) {
+    } else if (pendingAction === NavigationType.Replace) {
       init.history.replace(location, location.state);
     }
 
     let viewTransitionOpts: ViewTransitionOpts | undefined;
 
     // On POP, enable transitions if they were enabled on the original navigation
-    if (pendingAction === HistoryAction.Pop) {
+    if (pendingAction === NavigationType.Pop) {
       // Forward takes precedence so they behave like the original navigation
       let priorPaths = appliedViewTransitions.get(state.location.pathname);
       if (priorPaths && priorPaths.has(location.pathname)) {
@@ -1309,14 +1324,13 @@ export function createRouter(init: RouterInit): Router {
     );
 
     // Reset stateful navigation vars
-    pendingAction = HistoryAction.Pop;
+    pendingAction = NavigationType.Pop;
     pendingPreventScrollReset = false;
     pendingViewTransitionEnabled = false;
     isUninterruptedRevalidation = false;
     isRevalidationRequired = false;
     pendingRevalidationDfd?.resolve();
     pendingRevalidationDfd = null;
-    cancelledFetcherLoads = [];
   }
 
   // Trigger a navigation event, which can either be a numerical POP or a PUSH
@@ -1359,10 +1373,10 @@ export function createRouter(init: RouterInit): Router {
 
     let userReplace = opts && opts.replace != null ? opts.replace : undefined;
 
-    let historyAction = HistoryAction.Push;
+    let historyAction = NavigationType.Push;
 
     if (userReplace === true) {
-      historyAction = HistoryAction.Replace;
+      historyAction = NavigationType.Replace;
     } else if (userReplace === false) {
       // no-op
     } else if (
@@ -1374,7 +1388,7 @@ export function createRouter(init: RouterInit): Router {
       // users don't have to double-click the back button to get to the prior
       // location.  If the user redirects to a different location from the
       // action/loader this will be ignored and the redirect will be a PUSH
-      historyAction = HistoryAction.Replace;
+      historyAction = NavigationType.Replace;
     }
 
     let preventScrollReset =
@@ -1481,7 +1495,7 @@ export function createRouter(init: RouterInit): Router {
   // overrideNavigation which will override the normalLoad in the case of a redirect
   // navigation
   async function startNavigation(
-    historyAction: HistoryAction,
+    historyAction: NavigationType,
     location: Location,
     opts?: {
       initialHydration?: boolean;
@@ -1787,7 +1801,7 @@ export function createRouter(init: RouterInit): Router {
       // back button to get back to the pre-submission form location to try
       // again
       if ((opts && opts.replace) !== true) {
-        pendingAction = HistoryAction.Push;
+        pendingAction = NavigationType.Push;
       }
 
       return {
@@ -1900,7 +1914,6 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission,
       location,
       initialHydration === true,
-      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledFetcherLoads,
       fetchersQueuedForDeletion,
@@ -2320,7 +2333,6 @@ export function createRouter(init: RouterInit): Router {
       submission,
       nextLocation,
       false,
-      future.v7_skipActionErrorRevalidation,
       isRevalidationRequired,
       cancelledFetcherLoads,
       fetchersQueuedForDeletion,
@@ -2635,8 +2647,10 @@ export function createRouter(init: RouterInit): Router {
     // redirect until the action/loaders have settled
     pendingNavigationController = null;
 
-    let redirectHistoryAction =
-      replace === true ? HistoryAction.Replace : HistoryAction.Push;
+    let redirectNavigationType =
+      replace === true || redirect.response.headers.has("X-Remix-Replace")
+        ? NavigationType.Replace
+        : NavigationType.Push;
 
     // Use the incoming submission if provided, fallback on the active one in
     // state.navigation
@@ -2660,7 +2674,7 @@ export function createRouter(init: RouterInit): Router {
       activeSubmission &&
       isMutationMethod(activeSubmission.formMethod)
     ) {
-      await startNavigation(redirectHistoryAction, redirectLocation, {
+      await startNavigation(redirectNavigationType, redirectLocation, {
         submission: {
           ...activeSubmission,
           formAction: location,
@@ -2675,7 +2689,7 @@ export function createRouter(init: RouterInit): Router {
         redirectLocation,
         submission
       );
-      await startNavigation(redirectHistoryAction, redirectLocation, {
+      await startNavigation(redirectNavigationType, redirectLocation, {
         overrideNavigation,
         // Send fetcher submissions through for shouldRevalidate
         fetcherSubmission,
@@ -2781,7 +2795,7 @@ export function createRouter(init: RouterInit): Router {
     // Abort in-flight fetcher loads
     fetchLoadMatches.forEach((_, key) => {
       if (fetchControllers.has(key)) {
-        cancelledFetcherLoads.push(key);
+        cancelledFetcherLoads.add(key);
         abortFetcher(key);
       }
     });
@@ -2843,6 +2857,7 @@ export function createRouter(init: RouterInit): Router {
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
     fetchersQueuedForDeletion.delete(key);
+    cancelledFetcherLoads.delete(key);
     state.fetchers.delete(key);
   }
 
@@ -2947,7 +2962,7 @@ export function createRouter(init: RouterInit): Router {
   }: {
     currentLocation: Location;
     nextLocation: Location;
-    historyAction: HistoryAction;
+    historyAction: NavigationType;
   }): string | undefined {
     if (blockerFunctions.size === 0) {
       return;
@@ -3070,7 +3085,14 @@ export function createRouter(init: RouterInit): Router {
     routesToUse: AgnosticDataRouteObject[],
     pathname: string
   ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
-    if (patchRoutesOnMissImpl) {
+    if (patchRoutesOnNavigationImpl) {
+      // Don't bother re-calling patchRouteOnMiss for a path we've already
+      // processed.  the last execution would have patched the route tree
+      // accordingly so `matches` here are already accurate.
+      if (discoveredRoutes.has(pathname)) {
+        return { active: false, matches };
+      }
+
       if (!matches) {
         let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
           routesToUse,
@@ -3081,14 +3103,10 @@ export function createRouter(init: RouterInit): Router {
 
         return { active: true, matches: fogMatches || [] };
       } else {
-        let leafRoute = matches[matches.length - 1].route;
-        if (
-          leafRoute.path &&
-          (leafRoute.path === "*" || leafRoute.path.endsWith("/*"))
-        ) {
-          // If we matched a splat, it might only be because we haven't yet fetched
-          // the children that would match with a higher score, so let's fetch
-          // around and find out
+        if (Object.keys(matches[0].params).length > 0) {
+          // If we matched a dynamic param or a splat, it might only be because
+          // we haven't yet discovered other routes that would match with a
+          // higher score.  Call patchRoutesOnNavigation just to be sure
           let partialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
             routesToUse,
             pathname,
@@ -3124,16 +3142,12 @@ export function createRouter(init: RouterInit): Router {
     signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
     let partialMatches: AgnosticDataRouteMatch[] | null = matches;
-    let route =
-      partialMatches.length > 0
-        ? partialMatches[partialMatches.length - 1].route
-        : null;
     while (true) {
       let isNonHMR = inFlightDataRoutes == null;
       let routesToUse = inFlightDataRoutes || dataRoutes;
       try {
         await loadLazyRouteChildren(
-          patchRoutesOnMissImpl!,
+          patchRoutesOnNavigationImpl!,
           pathname,
           partialMatches,
           routesToUse,
@@ -3161,26 +3175,9 @@ export function createRouter(init: RouterInit): Router {
       }
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
-      let matchedSplat = false;
       if (newMatches) {
-        let leafRoute = newMatches[newMatches.length - 1].route;
-
-        if (leafRoute.index) {
-          // If we found an index route, we can stop
-          return { type: "success", matches: newMatches };
-        }
-
-        if (leafRoute.path && leafRoute.path.length > 0) {
-          if (leafRoute.path === "*") {
-            // If we found a splat route, we can't be sure there's not a
-            // higher-scoring route down some partial matches trail so we need
-            // to check that out
-            matchedSplat = true;
-          } else {
-            // If we found a non-splat route, we can stop
-            return { type: "success", matches: newMatches };
-          }
-        }
+        addToFifoQueue(pathname, discoveredRoutes);
+        return { type: "success", matches: newMatches };
       }
 
       let newPartialMatches = matchRoutesImpl<AgnosticDataRouteObject>(
@@ -3190,24 +3187,28 @@ export function createRouter(init: RouterInit): Router {
         true
       );
 
-      // If we are no longer partially matching anything, this was either a
-      // legit splat match above, or it's a 404.  Also avoid loops if the
-      // second pass results in the same partial matches
+      // Avoid loops if the second pass results in the same partial matches
       if (
         !newPartialMatches ||
-        partialMatches.map((m) => m.route.id).join("-") ===
-          newPartialMatches.map((m) => m.route.id).join("-")
+        (partialMatches.length === newPartialMatches.length &&
+          partialMatches.every(
+            (m, i) => m.route.id === newPartialMatches![i].route.id
+          ))
       ) {
-        return { type: "success", matches: matchedSplat ? newMatches : null };
+        addToFifoQueue(pathname, discoveredRoutes);
+        return { type: "success", matches: null };
       }
 
       partialMatches = newPartialMatches;
-      route = partialMatches[partialMatches.length - 1].route;
-      if (route.path === "*") {
-        // The splat is still our most accurate partial, so run with it
-        return { type: "success", matches: partialMatches };
-      }
     }
+  }
+
+  function addToFifoQueue(path: string, queue: Set<string>) {
+    if (queue.size >= discoveredRoutesMaxSize) {
+      let first = queue.values().next().value;
+      queue.delete(first);
+    }
+    queue.add(path);
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
@@ -4150,9 +4151,8 @@ function getMatchesToLoad(
   submission: Submission | undefined,
   location: Location,
   isInitialLoad: boolean,
-  skipActionErrorRevalidation: boolean,
   isRevalidationRequired: boolean,
-  cancelledFetcherLoads: string[],
+  cancelledFetcherLoads: Set<string>,
   fetchersQueuedForDeletion: Set<string>,
   fetchLoadMatches: Map<string, FetchLoadMatch>,
   fetchRedirectIds: Set<string>,
@@ -4183,8 +4183,7 @@ function getMatchesToLoad(
   let actionStatus = pendingActionResult
     ? pendingActionResult[1].statusCode
     : undefined;
-  let shouldSkipRevalidation =
-    skipActionErrorRevalidation && actionStatus && actionStatus >= 400;
+  let shouldSkipRevalidation = actionStatus && actionStatus >= 400;
 
   let navigationMatches = boundaryMatches.filter((match, index) => {
     let { route } = match;
@@ -4283,8 +4282,9 @@ function getMatchesToLoad(
     if (fetchRedirectIds.has(key)) {
       // Never trigger a revalidation of an actively redirecting fetcher
       shouldRevalidate = false;
-    } else if (cancelledFetcherLoads.includes(key)) {
-      // Always revalidate if the fetcher was cancelled
+    } else if (cancelledFetcherLoads.has(key)) {
+      // Always mark for revalidation if the fetcher was cancelled
+      cancelledFetcherLoads.delete(key);
       shouldRevalidate = true;
     } else if (
       fetcher &&
@@ -4377,24 +4377,27 @@ function shouldRevalidateLoader(
 }
 
 /**
- * Idempotent utility to execute patchRoutesOnMiss() to lazily load route
+ * Idempotent utility to execute patchRoutesOnNavigation() to lazily load route
  * definitions and update the routes/routeManifest
  */
 async function loadLazyRouteChildren(
-  patchRoutesOnMissImpl: AgnosticPatchRoutesOnMissFunction,
+  patchRoutesOnNavigationImpl: AgnosticPatchRoutesOnNavigationFunction,
   path: string,
   matches: AgnosticDataRouteMatch[],
   routes: AgnosticDataRouteObject[],
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
-  pendingRouteChildren: Map<string, ReturnType<typeof patchRoutesOnMissImpl>>,
+  pendingRouteChildren: Map<
+    string,
+    ReturnType<typeof patchRoutesOnNavigationImpl>
+  >,
   signal: AbortSignal
 ) {
   let key = [path, ...matches.map((m) => m.route.id)].join("-");
   try {
     let pending = pendingRouteChildren.get(key);
     if (!pending) {
-      pending = patchRoutesOnMissImpl({
+      pending = patchRoutesOnNavigationImpl({
         path,
         matches,
         patch: (routeId, children) => {
@@ -4736,7 +4739,7 @@ async function callLoaderOrAction(
 async function convertHandlerResultToDataResult(
   handlerResult: HandlerResult
 ): Promise<DataResult> {
-  let { result, type, status } = handlerResult;
+  let { result, type } = handlerResult;
 
   if (isResponse(result)) {
     let data: any;
@@ -4776,14 +4779,42 @@ async function convertHandlerResultToDataResult(
   }
 
   if (type === ResultType.error) {
+    if (isDataWithResponseInit(result)) {
+      if (result.data instanceof Error) {
+        return {
+          type: ResultType.error,
+          error: result.data,
+          statusCode: result.init?.status,
+        };
+      }
+
+      // Convert thrown unstable_data() to ErrorResponse instances
+      result = new ErrorResponseImpl(
+        result.init?.status || 500,
+        undefined,
+        result.data
+      );
+    }
+
     return {
       type: ResultType.error,
       error: result,
-      statusCode: isRouteErrorResponse(result) ? result.status : status,
+      statusCode: isRouteErrorResponse(result) ? result.status : undefined,
     };
   }
 
-  return { type: ResultType.data, data: result, statusCode: status };
+  if (isDataWithResponseInit(result)) {
+    return {
+      type: ResultType.data,
+      data: result.data,
+      statusCode: result.init?.status,
+      headers: result.init?.headers
+        ? new Headers(result.init.headers)
+        : undefined,
+    };
+  }
+
+  return { type: ResultType.data, data: result };
 }
 
 // Support relative routing in internal redirects
@@ -5162,7 +5193,7 @@ function getInternalRouterError(
     statusText = "Bad Request";
     if (type === "route-discovery") {
       errorMessage =
-        `Unable to match URL "${pathname}" - the \`unstable_patchRoutesOnMiss()\` ` +
+        `Unable to match URL "${pathname}" - the \`unstable_patchRoutesOnNavigation()\` ` +
         `function threw the following error:\n${message}`;
     } else if (method && pathname && routeId) {
       errorMessage =
@@ -5263,6 +5294,18 @@ function isRedirectResult(result?: DataResult): result is RedirectResult {
   return (result && result.type) === ResultType.redirect;
 }
 
+export function isDataWithResponseInit(
+  value: any
+): value is DataWithResponseInit<unknown> {
+  return (
+    typeof value === "object" &&
+    value != null &&
+    "type" in value &&
+    "data" in value &&
+    "init" in value &&
+    value.type === "DataWithResponseInit"
+  );
+}
 function isResponse(value: any): value is Response {
   return (
     value != null &&

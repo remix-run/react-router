@@ -197,33 +197,30 @@ ReactDOM.hydrateRoot(
 You can move the definition to a `routes.ts` file:
 
 ```tsx filename=src/routes.ts
-import { defineRoutes } from "react-router/config";
+import { type RouteConfig } from "@react-router/dev/routes";
 
-export default defineRoutes([
+export const routes: RouteConfig = [
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",
   },
-]);
+];
 ```
 
-And then edit the route module to use `defineRoute`:
+And then edit the route module to use the Route Module API:
 
 ```tsx filename=src/pages/about.tsx
-import { defineRoute } from "react-router";
+import { useLoaderData } from "react-router";
 
-export default defineRoute({
-  params: ["id"],
+export async function clientLoader({ params }) {
+  let page = await getPage(params.id);
+  return page;
+}
 
-  async clientLoader({ params }) {
-    let page = await getPage(params.id);
-    return page;
-  },
-
-  Component({ data }) {
-    return <h1>{data.title}</h1>;
-  },
-});
+export default function Component() {
+  let data = useLoaderData();
+  return <h1>{data.title}</h1>;
+}
 ```
 
 You'll now get inferred type safety with params, loader data, and more.

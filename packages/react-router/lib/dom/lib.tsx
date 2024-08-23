@@ -1,46 +1,42 @@
 import * as React from "react";
 
-// TODO: This static import doesn't allow us to work quite right in a pure-react
-// app that doesn't even have react-dom as a dependency.  Let's look into using
-// an export map for `react-router/dom   that would provide the `flushSync` method
-// to the memory `<RouterProvider>` via a prop.  And then
-// `import { RouterProvider } from 'react-router/memory'` // memory use case
-// `import { RouterProvider } from 'react-router/dom'` // DOM use case
-import * as ReactDOM from "react-dom";
 import type {
   BrowserHistory,
-  unstable_DataStrategyFunction,
-  Fetcher,
-  FormEncType,
-  FutureConfig,
-  GetScrollRestorationKeyFunction,
   HashHistory,
   History,
-  HTMLFormMethod,
-  HydrationState,
-  Router as RemixRouter,
-  RouterState,
-  RouterSubscriber,
-  BlockerFunction,
-  Location,
   Action as NavigationType,
-  RelativeRoutingType,
+  Location,
   To,
-  UIMatch,
-} from "../router";
+} from "../router/history";
 import {
-  createRouter,
   createBrowserHistory,
   createHashHistory,
-  joinPaths,
-  stripBasename,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-  UNSAFE_invariant as invariant,
-  UNSAFE_warning as warning,
-  matchPath,
-  IDLE_FETCHER,
   createPath,
-} from "../router";
+  invariant,
+  warning,
+} from "../router/history";
+import type {
+  BlockerFunction,
+  Fetcher,
+  FutureConfig,
+  GetScrollRestorationKeyFunction,
+  HydrationState,
+  RelativeRoutingType,
+  Router as RemixRouter,
+} from "../router/router";
+import { IDLE_FETCHER, createRouter } from "../router/router";
+import type {
+  DataStrategyFunction,
+  FormEncType,
+  HTMLFormMethod,
+  UIMatch,
+} from "../router/utils";
+import {
+  ErrorResponseImpl,
+  joinPaths,
+  matchPath,
+  stripBasename,
+} from "../router/utils";
 
 import "./global";
 import type {
@@ -68,19 +64,16 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import type { unstable_PatchRoutesOnMissFunction } from "../components";
+import type { PatchRoutesOnNavigationFunction } from "../components";
 import { Router, mapRouteProperties } from "../components";
-import type {
-  Navigator,
-  RouteObject,
-  DataRouteObject,
-  NavigateOptions,
-} from "../context";
+import type { RouteObject, NavigateOptions } from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,
+  FetchersContext,
   NavigationContext,
   RouteContext,
+  ViewTransitionContext,
 } from "../context";
 import {
   useBlocker,
@@ -91,7 +84,6 @@ import {
   useNavigation,
   useResolvedPath,
   useRouteId,
-  useRoutesImpl,
 } from "../hooks";
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,8 +122,8 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: unstable_DataStrategyFunction;
-  unstable_patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
+  unstable_dataStrategy?: DataStrategyFunction;
+  unstable_patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   window?: Window;
 }
 
@@ -150,7 +142,7 @@ export function createBrowserRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -170,7 +162,7 @@ export function createHashRouter(
     routes,
     mapRouteProperties,
     unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnMiss: opts?.unstable_patchRoutesOnMiss,
+    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -237,328 +229,8 @@ function deserializeErrors(
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
-//#region Contexts
-////////////////////////////////////////////////////////////////////////////////
-
-type ViewTransitionContextObject =
-  | {
-      isTransitioning: false;
-    }
-  | {
-      isTransitioning: true;
-      flushSync: boolean;
-      currentLocation: Location;
-      nextLocation: Location;
-    };
-
-const ViewTransitionContext = React.createContext<ViewTransitionContextObject>({
-  isTransitioning: false,
-});
-ViewTransitionContext.displayName = "ViewTransition";
-
-export { ViewTransitionContext as UNSAFE_ViewTransitionContext };
-
-// TODO: (v7) Change the useFetcher data from `any` to `unknown`
-type FetchersContextObject = Map<string, any>;
-
-const FetchersContext = React.createContext<FetchersContextObject>(new Map());
-FetchersContext.displayName = "Fetchers";
-
-export { FetchersContext as UNSAFE_FetchersContext };
-
-//#endregion
-
-////////////////////////////////////////////////////////////////////////////////
 //#region Components
 ////////////////////////////////////////////////////////////////////////////////
-
-export interface ViewTransition {
-  finished: Promise<void>;
-  ready: Promise<void>;
-  updateCallbackDone: Promise<void>;
-  skipTransition(): void;
-}
-
-class Deferred<T> {
-  status: "pending" | "resolved" | "rejected" = "pending";
-  promise: Promise<T>;
-  // @ts-expect-error - no initializer
-  resolve: (value: T) => void;
-  // @ts-expect-error - no initializer
-  reject: (reason?: unknown) => void;
-  constructor() {
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = (value) => {
-        if (this.status === "pending") {
-          this.status = "resolved";
-          resolve(value);
-        }
-      };
-      this.reject = (reason) => {
-        if (this.status === "pending") {
-          this.status = "rejected";
-          reject(reason);
-        }
-      };
-    });
-  }
-}
-
-export interface RouterProviderProps {
-  router: RemixRouter;
-}
-
-/**
- * Given a Remix Router instance, render the appropriate UI
- */
-export function RouterProvider({
-  router,
-}: RouterProviderProps): React.ReactElement {
-  let [state, setStateImpl] = React.useState(router.state);
-  let [pendingState, setPendingState] = React.useState<RouterState>();
-  let [vtContext, setVtContext] = React.useState<ViewTransitionContextObject>({
-    isTransitioning: false,
-  });
-  let [renderDfd, setRenderDfd] = React.useState<Deferred<void>>();
-  let [transition, setTransition] = React.useState<ViewTransition>();
-  let [interruption, setInterruption] = React.useState<{
-    state: RouterState;
-    currentLocation: Location;
-    nextLocation: Location;
-  }>();
-  let fetcherData = React.useRef<Map<string, any>>(new Map());
-
-  let setState = React.useCallback<RouterSubscriber>(
-    (
-      newState: RouterState,
-      {
-        deletedFetchers,
-        unstable_flushSync: flushSync,
-        unstable_viewTransitionOpts: viewTransitionOpts,
-      }
-    ) => {
-      deletedFetchers.forEach((key) => fetcherData.current.delete(key));
-      newState.fetchers.forEach((fetcher, key) => {
-        if (fetcher.data !== undefined) {
-          fetcherData.current.set(key, fetcher.data);
-        }
-      });
-
-      let isViewTransitionUnavailable =
-        router.window == null ||
-        router.window.document == null ||
-        typeof router.window.document.startViewTransition !== "function";
-
-      // If this isn't a view transition or it's not available in this browser,
-      // just update and be done with it
-      if (!viewTransitionOpts || isViewTransitionUnavailable) {
-        if (flushSync) {
-          ReactDOM.flushSync(() => setStateImpl(newState));
-        } else {
-          React.startTransition(() => setStateImpl(newState));
-        }
-        return;
-      }
-
-      // flushSync + startViewTransition
-      if (flushSync) {
-        // Flush through the context to mark DOM elements as transition=ing
-        ReactDOM.flushSync(() => {
-          // Cancel any pending transitions
-          if (transition) {
-            renderDfd && renderDfd.resolve();
-            transition.skipTransition();
-          }
-          setVtContext({
-            isTransitioning: true,
-            flushSync: true,
-            currentLocation: viewTransitionOpts.currentLocation,
-            nextLocation: viewTransitionOpts.nextLocation,
-          });
-        });
-
-        // Update the DOM
-        let t = router.window!.document.startViewTransition(() => {
-          ReactDOM.flushSync(() => setStateImpl(newState));
-        });
-
-        // Clean up after the animation completes
-        t.finished.finally(() => {
-          ReactDOM.flushSync(() => {
-            setRenderDfd(undefined);
-            setTransition(undefined);
-            setPendingState(undefined);
-            setVtContext({ isTransitioning: false });
-          });
-        });
-
-        ReactDOM.flushSync(() => setTransition(t));
-        return;
-      }
-
-      // startTransition + startViewTransition
-      if (transition) {
-        // Interrupting an in-progress transition, cancel and let everything flush
-        // out, and then kick off a new transition from the interruption state
-        renderDfd && renderDfd.resolve();
-        transition.skipTransition();
-        setInterruption({
-          state: newState,
-          currentLocation: viewTransitionOpts.currentLocation,
-          nextLocation: viewTransitionOpts.nextLocation,
-        });
-      } else {
-        // Completed navigation update with opted-in view transitions, let 'er rip
-        setPendingState(newState);
-        setVtContext({
-          isTransitioning: true,
-          flushSync: false,
-          currentLocation: viewTransitionOpts.currentLocation,
-          nextLocation: viewTransitionOpts.nextLocation,
-        });
-      }
-    },
-    [router.window, transition, renderDfd, fetcherData]
-  );
-
-  // Need to use a layout effect here so we are subscribed early enough to
-  // pick up on any render-driven redirects/navigations (useEffect/<Navigate>)
-  React.useLayoutEffect(() => router.subscribe(setState), [router, setState]);
-
-  // When we start a view transition, create a Deferred we can use for the
-  // eventual "completed" render
-  React.useEffect(() => {
-    if (vtContext.isTransitioning && !vtContext.flushSync) {
-      setRenderDfd(new Deferred<void>());
-    }
-  }, [vtContext]);
-
-  // Once the deferred is created, kick off startViewTransition() to update the
-  // DOM and then wait on the Deferred to resolve (indicating the DOM update has
-  // happened)
-  React.useEffect(() => {
-    if (renderDfd && pendingState && router.window) {
-      let newState = pendingState;
-      let renderPromise = renderDfd.promise;
-      let transition = router.window.document.startViewTransition(async () => {
-        React.startTransition(() => setStateImpl(newState));
-        await renderPromise;
-      });
-      transition.finished.finally(() => {
-        setRenderDfd(undefined);
-        setTransition(undefined);
-        setPendingState(undefined);
-        setVtContext({ isTransitioning: false });
-      });
-      setTransition(transition);
-    }
-  }, [pendingState, renderDfd, router.window]);
-
-  // When the new location finally renders and is committed to the DOM, this
-  // effect will run to resolve the transition
-  React.useEffect(() => {
-    if (
-      renderDfd &&
-      pendingState &&
-      state.location.key === pendingState.location.key
-    ) {
-      renderDfd.resolve();
-    }
-  }, [renderDfd, transition, state.location, pendingState]);
-
-  // If we get interrupted with a new navigation during a transition, we skip
-  // the active transition, let it cleanup, then kick it off again here
-  React.useEffect(() => {
-    if (!vtContext.isTransitioning && interruption) {
-      setPendingState(interruption.state);
-      setVtContext({
-        isTransitioning: true,
-        flushSync: false,
-        currentLocation: interruption.currentLocation,
-        nextLocation: interruption.nextLocation,
-      });
-      setInterruption(undefined);
-    }
-  }, [vtContext.isTransitioning, interruption]);
-
-  let navigator = React.useMemo((): Navigator => {
-    return {
-      createHref: router.createHref,
-      encodeLocation: router.encodeLocation,
-      go: (n) => router.navigate(n),
-      push: (to, state, opts) =>
-        router.navigate(to, {
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-      replace: (to, state, opts) =>
-        router.navigate(to, {
-          replace: true,
-          state,
-          preventScrollReset: opts?.preventScrollReset,
-        }),
-    };
-  }, [router]);
-
-  let basename = router.basename || "/";
-
-  let dataRouterContext = React.useMemo(
-    () => ({
-      router,
-      navigator,
-      static: false,
-      basename,
-    }),
-    [router, navigator, basename]
-  );
-
-  // The fragment and {null} here are important!  We need them to keep React 18's
-  // useId happy when we are server-rendering since we may have a <script> here
-  // containing the hydrated server-side staticContext (from StaticRouterProvider).
-  // useId relies on the component tree structure to generate deterministic id's
-  // so we need to ensure it remains the same on the client even though
-  // we don't need the <script> tag
-  return (
-    <>
-      <DataRouterContext.Provider value={dataRouterContext}>
-        <DataRouterStateContext.Provider value={state}>
-          <FetchersContext.Provider value={fetcherData.current}>
-            <ViewTransitionContext.Provider value={vtContext}>
-              <Router
-                basename={basename}
-                location={state.location}
-                navigationType={state.historyAction}
-                navigator={navigator}
-              >
-                <MemoizedDataRoutes
-                  routes={router.routes}
-                  future={router.future}
-                  state={state}
-                />
-              </Router>
-            </ViewTransitionContext.Provider>
-          </FetchersContext.Provider>
-        </DataRouterStateContext.Provider>
-      </DataRouterContext.Provider>
-      {null}
-    </>
-  );
-}
-
-// Memoize to avoid re-renders when updating `ViewTransitionContext`
-const MemoizedDataRoutes = React.memo(DataRoutes);
-
-function DataRoutes({
-  routes,
-  future,
-  state,
-}: {
-  routes: DataRouteObject[];
-  future: RemixRouter["future"];
-  state: RouterState;
-}): React.ReactElement | null {
-  return useRoutesImpl(routes, undefined, state, future);
-}
 
 /**
  * @category Types
@@ -670,9 +342,14 @@ export interface HistoryRouterProps {
  * two versions of the history library to your bundles unless you use the same
  * version of the history library that React Router uses internally.
  *
+ * @name unstable_HistoryRouter
  * @category Router Components
  */
-function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
+export function HistoryRouter({
+  basename,
+  children,
+  history,
+}: HistoryRouterProps) {
   let [state, setStateImpl] = React.useState({
     action: history.action,
     location: history.location,
@@ -697,8 +374,6 @@ function HistoryRouter({ basename, children, history }: HistoryRouterProps) {
   );
 }
 HistoryRouter.displayName = "unstable_HistoryRouter";
-
-export { HistoryRouter as unstable_HistoryRouter };
 
 /**
  * @category Types
@@ -2265,7 +1940,7 @@ function getScrollRestorationKey(
 /**
  * When rendered inside a RouterProvider, will restore scroll positions on navigations
  */
-function useScrollRestoration({
+export function useScrollRestoration({
   getKey,
   storageKey,
 }: {
@@ -2377,8 +2052,6 @@ function useScrollRestoration({
   }
 }
 
-export { useScrollRestoration as UNSAFE_useScrollRestoration };
-
 /**
  * Setup a callback to be fired on the window's `beforeunload` event.
  *
@@ -2454,8 +2127,9 @@ function usePageHide(
   ```
 
   @category Hooks
+  @name unstable_usePrompt
  */
-function usePrompt({
+export function usePrompt({
   when,
   message,
 }: {
@@ -2485,14 +2159,13 @@ function usePrompt({
   }, [blocker, when]);
 }
 
-export { usePrompt as unstable_usePrompt };
-
 /**
   This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via {@link LinkProps.unstable_viewTransition} (or the `Form`, `submit`, or `navigate` call)
 
   @category Hooks
+  @name unstable_useViewTransitionState
  */
-function useViewTransitionState(
+export function useViewTransitionState(
   to: To,
   opts: { relative?: RelativeRoutingType } = {}
 ) {
@@ -2537,7 +2210,5 @@ function useViewTransitionState(
     matchPath(path.pathname, currentPath) != null
   );
 }
-
-export { useViewTransitionState as unstable_useViewTransitionState };
 
 //#endregion

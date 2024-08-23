@@ -1,4 +1,4 @@
-import type { HydrationState } from "../router";
+import type { HydrationState } from "../router/router";
 import type { FutureConfig } from "../dom/ssr/entry";
 import { escapeHtml } from "./markup";
 

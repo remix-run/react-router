@@ -1,4 +1,4 @@
-import type { StaticHandlerContext } from "../../router";
+import type { StaticHandlerContext } from "../../router/router";
 
 import type { RouteManifest, EntryRoute } from "./routes";
 import type { RouteModules } from "./routeModules";
@@ -40,11 +40,7 @@ export interface EntryContext extends FrameworkContextObject {
   serverHandoffStream?: ReadableStream<Uint8Array>;
 }
 
-export interface FutureConfig {
-  v3_fetcherPersist: boolean;
-  v3_relativeSplatPath: boolean;
-  v3_throwAbortReason: boolean;
-}
+export interface FutureConfig {}
 
 export interface AssetsManifest {
   entry: {

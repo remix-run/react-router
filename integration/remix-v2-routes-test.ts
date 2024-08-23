@@ -13,19 +13,30 @@ import {
 let fixture: Fixture;
 let appFixture: AppFixture;
 
-test.describe("flat routes", () => {
-  let IGNORED_ROUTE = "ignore-me-pls";
+test.describe("remix v2 routes", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
-        "vite.config.js": `
+        "vite.config.js": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
-            plugins: [reactRouter({
-              ignoredRouteFiles: [${JSON.stringify(`**/${IGNORED_ROUTE}.*`)}],
-            })],
+            plugins: [reactRouter()],
+          });
+        `,
+        "app/routes.ts": js`
+          import { type RouteConfig } from "@react-router/dev/routes";  
+          import { remixRoutes } from "@react-router/remix-v2-routes";
+
+          export const routes: RouteConfig = remixRoutes({
+            ignoredRouteFiles: ["**/ignored-route.*"],
+            routes: async (defineRoutes) => {
+              // Ensure async routes work
+              return defineRoutes((route) => {
+                route("/custom/route", "custom-route.tsx")
+              });
+            }
           });
         `,
         "app/root.tsx": js`
@@ -74,6 +85,12 @@ test.describe("flat routes", () => {
           }
         `,
 
+        "app/custom-route.tsx": js`
+          export default function () {
+            return <h2>Custom Route</h2>;
+          }
+        `,
+
         "app/routes/.dotfile": `
           DOTFILE SHOULD BE IGNORED
         `,
@@ -107,7 +124,7 @@ test.describe("flat routes", () => {
           }
         `,
 
-        [`app/routes/${IGNORED_ROUTE}.jsx`]: js`
+        [`app/routes/ignored-route.jsx`]: js`
           export default function () {
             return <h2>i should 404</h2>;
           }
@@ -169,6 +186,15 @@ test.describe("flat routes", () => {
 </div>`);
     });
 
+    test("renders matching routes (custom route)", async ({ page }) => {
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/custom/route");
+      expect(await app.getHtml("#content")).toBe(`<div id="content">
+  <h1>Root</h1>
+  <h2>Custom Route</h2>
+</div>`);
+    });
+
     test("renders matching routes (route with escaped leading dot)", async ({
       page,
     }) => {
@@ -192,7 +218,7 @@ test.describe("flat routes", () => {
   }
 
   test("allows ignoredRouteFiles to be configured", async () => {
-    let response = await fixture.requestDocument("/" + IGNORED_ROUTE);
+    let response = await fixture.requestDocument("/ignored-route");
 
     expect(response.status).toBe(404);
   });

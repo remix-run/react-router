@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.25.0",
+  "version": "6.26.2",
   "description": "Declarative routing for React",
   "keywords": [
     "react",
@@ -28,6 +28,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/main.js"
     },
+    "./dom": {
+      "types": "./dist/dom-export.d.ts",
+      "import": "./dist/dom-export.mjs",
+      "require": "./dist/main-dom-export.js"
+    },
     "./package.json": "./package.json"
   },
   "dependencies": {
@@ -35,10 +40,12 @@
     "@web3-storage/multipart-parser": "^1.0.0",
     "cookie": "^0.6.0",
     "react-router": "workspace:*",
+    "set-cookie-parser": "^2.6.0",
     "source-map": "^0.7.3",
-    "turbo-stream": "^2.2.0"
+    "turbo-stream": "2.3.0"
   },
   "devDependencies": {
+    "@types/set-cookie-parser": "^2.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

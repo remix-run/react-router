@@ -2,7 +2,8 @@
  * @jest-environment node
  */
 
-import { createMemoryHistory, createRouter } from "../../lib/router";
+import { createMemoryHistory } from "../../lib/router/history";
+import { createRouter } from "../../lib/router/router";
 
 // This suite of tests specifically runs in the node jest environment to catch
 // issues when window is not present

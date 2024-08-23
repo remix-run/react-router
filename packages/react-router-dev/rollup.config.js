@@ -28,9 +28,9 @@ module.exports = function rollup() {
       },
       input: [
         `${SOURCE_DIR}/index.ts`,
-        // Since we're using a dynamic require for the Vite plugin, we
-        // need to tell Rollup it's an entry point
-        `${SOURCE_DIR}/vite/plugin.ts`,
+        `${SOURCE_DIR}/routes.ts`,
+        `${SOURCE_DIR}/vite.ts`,
+        `${SOURCE_DIR}/vite-cloudflare.ts`,
       ],
       output: {
         banner: createBanner("@react-router/dev", version),

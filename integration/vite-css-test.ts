@@ -45,7 +45,7 @@ const files = {
   "app/entry.client.tsx": js`
     import "./entry.client.css";
 
-    import { HydratedRouter } from "react-router";
+    import { HydratedRouter } from "react-router/dom";
     import { startTransition, StrictMode } from "react";
     import { hydrateRoot } from "react-dom/client";
 
@@ -151,7 +151,7 @@ const files = {
 };
 
 const VITE_CONFIG = async (port: number) => dedent`
-  import { vitePlugin as reactRouter } from "@react-router/dev";
+  import { reactRouter } from "@react-router/dev/vite";
   import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 
   export default {

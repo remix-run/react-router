@@ -1,26 +1,31 @@
 import * as React from "react";
-import type { HydrationState, Router as RemixRouter } from "../../router";
-import { createBrowserHistory, createRouter, matchRoutes } from "../../router";
 
-import "../global";
-import { mapRouteProperties } from "../../components";
-import { RouterProvider } from "../lib";
-import type { AssetsManifest } from "./entry";
-import { deserializeErrors } from "./errors";
-import type { RouteModules } from "./routeModules";
-import invariant from "./invariant";
+import type {
+  UNSAFE_AssetsManifest as AssetsManifest,
+  UNSAFE_RouteModules as RouteModules,
+  createBrowserRouter,
+  HydrationState,
+} from "react-router";
 import {
-  createClientRoutes,
-  createClientRoutesWithHMRRevalidationOptOut,
-  shouldHydrateRouteLoader,
-} from "./routes";
-import {
-  decodeViaTurboStream,
-  getSingleFetchDataStrategy,
-} from "./single-fetch";
-import { FrameworkContext } from "./components";
-import { RemixErrorBoundary } from "./errorBoundaries";
-import { initFogOfWar, useFogOFWarDiscovery } from "./fog-of-war";
+  UNSAFE_invariant as invariant,
+  UNSAFE_FrameworkContext as FrameworkContext,
+  UNSAFE_decodeViaTurboStream as decodeViaTurboStream,
+  UNSAFE_RemixErrorBoundary as RemixErrorBoundary,
+  UNSAFE_createBrowserHistory as createBrowserHistory,
+  UNSAFE_createClientRoutes as createClientRoutes,
+  UNSAFE_createRouter as createRouter,
+  UNSAFE_deserializeErrors as deserializeErrors,
+  UNSAFE_getSingleFetchDataStrategy as getSingleFetchDataStrategy,
+  UNSAFE_getPatchRoutesOnNavigationFunction as getPatchRoutesOnNavigationFunction,
+  UNSAFE_shouldHydrateRouteLoader as shouldHydrateRouteLoader,
+  UNSAFE_useFogOFWarDiscovery as useFogOFWarDiscovery,
+  UNSAFE_mapRouteProperties as mapRouteProperties,
+  UNSAFE_createClientRoutesWithHMRRevalidationOptOut as createClientRoutesWithHMRRevalidationOptOut,
+  matchRoutes,
+} from "react-router";
+import { RouterProvider } from "./dom-router-provider";
+
+type RemixRouter = ReturnType<typeof createBrowserRouter>;
 
 type SSRInfo = {
   context: NonNullable<(typeof window)["__remixContext"]>;
@@ -174,32 +179,24 @@ function createHydratedRouter(): RemixRouter {
     }
   }
 
-  let { enabled: isFogOfWarEnabled, patchRoutesOnMiss } = initFogOfWar(
-    ssrInfo.manifest,
-    ssrInfo.routeModules,
-    ssrInfo.context.isSpaMode,
-    ssrInfo.context.basename
-  );
-
   // We don't use createBrowserRouter here because we need fine-grained control
   // over initialization to support synchronous `clientLoader` flows.
   let router = createRouter({
     routes,
     history: createBrowserHistory(),
     basename: ssrInfo.context.basename,
-    future: {
-      // Single fetch enables this underlying behavior
-      v7_skipActionErrorRevalidation: true,
-    },
     hydrationData,
     mapRouteProperties,
     unstable_dataStrategy: getSingleFetchDataStrategy(
       ssrInfo.manifest,
       ssrInfo.routeModules
     ),
-    ...(isFogOfWarEnabled
-      ? { unstable_patchRoutesOnMiss: patchRoutesOnMiss }
-      : {}),
+    unstable_patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+      ssrInfo.manifest,
+      ssrInfo.routeModules,
+      ssrInfo.context.isSpaMode,
+      ssrInfo.context.basename
+    ),
   });
   ssrInfo.router = router;
 
@@ -211,7 +208,9 @@ function createHydratedRouter(): RemixRouter {
   }
 
   // @ts-ignore
-  router.createRoutesForHMR = createClientRoutesWithHMRRevalidationOptOut;
+  router.createRoutesForHMR =
+    /* spacer so ts-ignore does not affect the right hand of the assignment */
+    createClientRoutesWithHMRRevalidationOptOut;
   window.__remixRouter = router;
 
   return router;

@@ -93,6 +93,9 @@ async function run() {
     await ensureBuildVersion("react-router-express", version);
     await ensureBuildVersion("react-router-node", version);
     await ensureBuildVersion("react-router-serve", version);
+    await ensureBuildVersion("react-router-architect", version);
+    await ensureBuildVersion("react-router-cloudflare", version);
+    await ensureBuildVersion("react-router-remix-v2-routes", version);
 
     // 4. Publish to npm
     publishBuild("react-router", tag);
@@ -101,6 +104,9 @@ async function run() {
     publishBuild("react-router-express", tag);
     publishBuild("react-router-node", tag);
     publishBuild("react-router-serve", tag);
+    publishBuild("react-router-architect", tag);
+    publishBuild("react-router-cloudflare", tag);
+    publishBuild("react-router-remix-v2-routes", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);

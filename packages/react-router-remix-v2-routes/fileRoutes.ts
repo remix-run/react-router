@@ -2,9 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { makeRe } from "minimatch";
 
-import type { ConfigRoute, RouteManifest } from "./routes";
-import { normalizeSlashes } from "./routes";
-import { findConfig } from "./findConfig";
+import type { RouteManifest, RouteManifestEntry } from "./manifest";
+import { normalizeSlashes } from "./normalizeSlashes";
 
 export const routeModuleExts = [".js", ".jsx", ".ts", ".tsx", ".md", ".mdx"];
 
@@ -72,7 +71,7 @@ class PrefixLookupTrie {
   }
 }
 
-export function flatRoutes(
+export function fileRoutes(
   appDirectory: string,
   ignoredFilePatterns: string[] = [],
   prefix = "routes"
@@ -82,7 +81,7 @@ export function flatRoutes(
     .filter((re: any): re is RegExp => !!re);
   let routesDir = path.join(appDirectory, prefix);
 
-  let rootRoute = findConfig(appDirectory, "root", routeModuleExts);
+  let rootRoute = findFile(appDirectory, "root", routeModuleExts);
 
   if (!rootRoute) {
     throw new Error(
@@ -121,19 +120,19 @@ export function flatRoutes(
     if (route) routes.push(route);
   }
 
-  let routeManifest = flatRoutesUniversal(appDirectory, routes, prefix);
+  let routeManifest = fileRoutesUniversal(appDirectory, routes, prefix);
   return routeManifest;
 }
 
-export function flatRoutesUniversal(
+export function fileRoutesUniversal(
   appDirectory: string,
   routes: string[],
   prefix: string = "routes"
 ): RouteManifest {
-  let urlConflicts = new Map<string, ConfigRoute[]>();
+  let urlConflicts = new Map<string, RouteManifestEntry[]>();
   let routeManifest: RouteManifest = {};
   let prefixLookup = new PrefixLookupTrie();
-  let uniqueRoutes = new Map<string, ConfigRoute>();
+  let uniqueRoutes = new Map<string, RouteManifestEntry>();
   let routeIdConflicts = new Map<string, string[]>();
 
   // id -> file
@@ -193,7 +192,7 @@ export function flatRoutesUniversal(
   }
 
   // path creation
-  let parentChildrenMap = new Map<string, ConfigRoute[]>();
+  let parentChildrenMap = new Map<string, RouteManifestEntry[]>();
   for (let [routeId] of sortedRouteIds) {
     let config = routeManifest[routeId];
     if (!config.parentId) continue;
@@ -317,8 +316,8 @@ function findRouteModuleForFolder(
   let isIgnored = ignoredFileRegex.some((regex) => regex.test(relativePath));
   if (isIgnored) return null;
 
-  let routeRouteModule = findConfig(filepath, "route", routeModuleExts);
-  let routeIndexModule = findConfig(filepath, "index", routeModuleExts);
+  let routeRouteModule = findFile(filepath, "route", routeModuleExts);
+  let routeIndexModule = findFile(filepath, "index", routeModuleExts);
 
   // if both a route and index module exist, throw a conflict error
   // preferring the route module over the index module
@@ -405,7 +404,7 @@ export function getRouteSegments(routeId: string): [string[], string[]] {
           rawRouteSegment += char;
           break;
         }
-        if (!routeSegment && char == paramPrefixChar) {
+        if (!routeSegment && char === paramPrefixChar) {
           if (index === routeId.length) {
             routeSegment += "*";
             rawRouteSegment += char;
@@ -547,4 +546,18 @@ export function getRouteIdConflictErrorMessage(
 export function isSegmentSeparator(checkChar: string | undefined) {
   if (!checkChar) return false;
   return ["/", ".", path.win32.sep].includes(checkChar);
+}
+
+function findFile(
+  dir: string,
+  basename: string,
+  extensions: string[]
+): string | undefined {
+  for (let ext of extensions) {
+    let name = basename + ext;
+    let file = path.join(dir, name);
+    if (fs.existsSync(file)) return file;
+  }
+
+  return undefined;
 }
