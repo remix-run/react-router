@@ -12,7 +12,6 @@ import {
   useBlocker,
   useNavigate,
 } from "../../index";
-import { waitFor } from "@testing-library/react";
 
 type Router = ReturnType<typeof createMemoryRouter>;
 
@@ -280,9 +279,10 @@ describe("navigation blocking with useBlocker", () => {
       it("navigates", async () => {
         await act(async () => {
           click(node.querySelector("a[href='/about']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("About"));
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -300,15 +300,14 @@ describe("navigation blocking with useBlocker", () => {
       it("gets an 'unblocked' blocker after navigation completes", async () => {
         await act(async () => {
           click(node.querySelector("a[href='/about']"));
+          await sleep(LOADER_LATENCY_MS);
         });
-        await waitFor(() =>
-          expect(blocker).toEqual({
-            state: "unblocked",
-            proceed: undefined,
-            reset: undefined,
-            location: undefined,
-          })
-        );
+        expect(blocker).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+          location: undefined,
+        });
       });
     });
 
@@ -486,9 +485,10 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("About"));
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -512,9 +512,11 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='reset']"));
+          // wait for '/about' loader so we catch failure if navigation proceeds
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("Home"));
+        expect(h1?.textContent).toBe("Home");
       });
     });
   });
@@ -573,9 +575,10 @@ describe("navigation blocking with useBlocker", () => {
       it("navigates", async () => {
         await act(async () => {
           click(node.querySelector("a[href='/about']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("About"));
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -657,9 +660,10 @@ describe("navigation blocking with useBlocker", () => {
       it("does not navigate", async () => {
         await act(async () => {
           click(node.querySelector("a[href='/about']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).not.toBe("About"));
+        expect(h1?.textContent).not.toBe("About");
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
@@ -769,15 +773,14 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
+          await sleep(LOADER_LATENCY_MS);
         });
-        await waitFor(() =>
-          expect(blocker).toEqual({
-            state: "unblocked",
-            proceed: undefined,
-            reset: undefined,
-            location: undefined,
-          })
-        );
+        expect(blocker).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+          location: undefined,
+        });
       });
 
       it("navigates after proceeding navigation completes", async () => {
@@ -786,9 +789,10 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("About"));
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -812,9 +816,11 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='reset']"));
+          // wait for '/about' loader so we catch failure if navigation proceeds
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("Home"));
+        expect(h1?.textContent).toBe("Home");
       });
     });
   });
@@ -881,9 +887,10 @@ describe("navigation blocking with useBlocker", () => {
       it("navigates", async () => {
         await act(async () => {
           click(node.querySelector("[data-action='back']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("About"));
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after navigation starts", async () => {
@@ -901,6 +908,7 @@ describe("navigation blocking with useBlocker", () => {
       it("gets an 'unblocked' blocker after navigation completes", async () => {
         await act(async () => {
           click(node.querySelector("[data-action='back']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         expect(blocker).toEqual({
           state: "unblocked",
@@ -972,9 +980,10 @@ describe("navigation blocking with useBlocker", () => {
       it("does not navigate", async () => {
         await act(async () => {
           click(node.querySelector("[data-action='back']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).not.toBe("About"));
+        expect(h1?.textContent).not.toBe("About");
       });
 
       it("gets a 'blocked' blocker after navigation starts", async () => {
@@ -992,6 +1001,7 @@ describe("navigation blocking with useBlocker", () => {
       it("gets a 'blocked' blocker after navigation promise resolves", async () => {
         await act(async () => {
           click(node.querySelector("[data-action='back']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         expect(blocker).toEqual({
           state: "blocked",
@@ -1091,15 +1101,14 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
+          await sleep(LOADER_LATENCY_MS);
         });
-        await waitFor(() =>
-          expect(blocker).toEqual({
-            state: "unblocked",
-            proceed: undefined,
-            reset: undefined,
-            location: undefined,
-          })
-        );
+        expect(blocker).toEqual({
+          state: "unblocked",
+          proceed: undefined,
+          reset: undefined,
+          location: undefined,
+        });
       });
 
       it("navigates after proceeding navigation completes", async () => {
@@ -1108,9 +1117,10 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("About"));
+        expect(h1?.textContent).toBe("About");
       });
 
       it("gets an 'unblocked' blocker after resetting navigation", async () => {
@@ -1135,9 +1145,10 @@ describe("navigation blocking with useBlocker", () => {
         await act(async () => {
           click(node.querySelector("[data-action='reset']"));
           // wait for '/about' loader so we catch failure if navigation proceeds
+          await sleep(LOADER_LATENCY_MS);
         });
         let h1 = node.querySelector("h1");
-        await waitFor(() => expect(h1?.textContent).toBe("Contact"));
+        expect(h1?.textContent).toBe("Contact");
       });
     });
   });
