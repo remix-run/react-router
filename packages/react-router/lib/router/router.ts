@@ -1022,7 +1022,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Flag to ignore the next history update, so we can revert the URL change on
   // a POP navigation that was blocked by the user without touching router state
-  let ignoreNextHistoryUpdate: (() => void) | undefined = undefined;
+  let unblockBlockerHistoryUpdate: (() => void) | undefined = undefined;
 
   let pendingRevalidationDfd: ReturnType<typeof createDeferred<void>> | null =
     null;
@@ -1037,9 +1037,9 @@ export function createRouter(init: RouterInit): Router {
       ({ action: historyAction, location, delta }) => {
         // Ignore this event if it was just us resetting the URL from a
         // blocked POP navigation
-        if (ignoreNextHistoryUpdate) {
-          ignoreNextHistoryUpdate();
-          ignoreNextHistoryUpdate = undefined;
+        if (unblockBlockerHistoryUpdate) {
+          unblockBlockerHistoryUpdate();
+          unblockBlockerHistoryUpdate = undefined;
           return;
         }
 
@@ -1062,7 +1062,7 @@ export function createRouter(init: RouterInit): Router {
         if (blockerKey && delta != null) {
           // Restore the URL to match the current UI, but don't update router state
           const nextHistoryUpdatePromise = new Promise<void>(
-            (resolve) => (ignoreNextHistoryUpdate = resolve)
+            (resolve) => (unblockBlockerHistoryUpdate = resolve)
           );
           init.history.go(delta * -1);
 
