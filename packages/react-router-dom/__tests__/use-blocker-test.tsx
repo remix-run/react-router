@@ -1084,14 +1084,23 @@ describe("navigation blocking with useBlocker", () => {
         act(() => {
           click(node.querySelector("[data-action='back']"));
         });
-        act(() => {
+        expect(node.innerHTML).toContain("<h1>Contact</h1>");
+        await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
+          expect([...router.state.blockers.values()][0]).toEqual({
+            state: "proceeding",
+            proceed: undefined,
+            reset: undefined,
+            location: expect.any(Object),
+          });
+          await sleep(LOADER_LATENCY_MS + 10);
         });
+        expect(node.innerHTML).toContain("<h1>About</h1>");
         expect(blocker).toEqual({
-          state: "proceeding",
+          state: "unblocked",
           proceed: undefined,
           reset: undefined,
-          location: expect.any(Object),
+          location: undefined,
         });
       });
 
