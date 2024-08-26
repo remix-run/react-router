@@ -1,13 +1,22 @@
-import { type BabelTypes, type NodePath, parse, traverse } from "./babel";
+import type { GeneratorOptions, GeneratorResult } from "@babel/generator";
+import {
+  type BabelTypes,
+  type NodePath,
+  parse,
+  traverse,
+  generate,
+  t,
+} from "./babel";
 import invariant from "../invariant";
 
+type Statement = BabelTypes.Statement;
 type Identifier = BabelTypes.Identifier;
 
-export function getTopLevelStatementsByExportName(
+function getTopLevelStatementsByExportName(
   code: string
-): Map<string, Set<NodePath>> {
+): Map<string, Set<Statement>> {
   let ast = parse(code, { sourceType: "module" });
-  let topLevelStatementsByExportName = new Map<string, Set<NodePath>>();
+  let topLevelStatementsByExportName = new Map<string, Set<Statement>>();
 
   traverse(ast, {
     ExportDeclaration(exportPath) {
@@ -17,7 +26,7 @@ export function getTopLevelStatementsByExportName(
       collectIdentifiers(visited, identifiers, exportPath);
 
       let topLevelStatements = new Set([
-        exportPath,
+        exportPath.node,
         ...getTopLevelStatementsForPaths(identifiers),
       ]);
       for (let exportName of getExportNames(exportPath)) {
@@ -46,12 +55,16 @@ function collectIdentifiers(
   });
 }
 
-function getTopLevelStatementsForPaths(paths: Set<NodePath>): Set<NodePath> {
-  let topLevelStatements = new Set<NodePath>();
+function getTopLevelStatementsForPaths(paths: Set<NodePath>): Set<Statement> {
+  let topLevelStatements = new Set<Statement>();
   for (let path of paths) {
     let ancestry = path.getAncestry();
     // The last node is the Program node so we want the ancestor before that
-    let topLevelStatement = ancestry[ancestry.length - 2];
+    let topLevelStatement = ancestry[ancestry.length - 2].node as Statement;
+    invariant(
+      t.isStatement(topLevelStatement),
+      `Expected statement, found type "${topLevelStatement.type}"`
+    );
     topLevelStatements.add(topLevelStatement);
   }
   return topLevelStatements;
@@ -114,10 +127,8 @@ function areSetsDisjoint(set1: Set<any>, set2: Set<any>): boolean {
   return true;
 }
 
-export function hasChunkableExport(
-  topLevelStatementsByExportName: Map<string, Set<NodePath>>,
-  exportName: string
-): boolean {
+export function hasChunkableExport(code: string, exportName: string): boolean {
+  let topLevelStatementsByExportName = getTopLevelStatementsByExportName(code);
   let topLevelStatements = topLevelStatementsByExportName.get(exportName);
 
   // Export wasn't found in the file
@@ -148,6 +159,81 @@ export function hasChunkableExport(
   }
 
   return true;
+}
+
+function replaceBody(
+  ast: BabelTypes.File,
+  replacer: (body: Array<Statement>) => Array<Statement>
+): BabelTypes.File {
+  return {
+    ...ast,
+    program: {
+      ...ast.program,
+      body: replacer(ast.program.body),
+    },
+  };
+}
+
+export function getChunkedExport(
+  code: string,
+  exportName: string,
+  generateOptions: GeneratorOptions = {}
+): GeneratorResult | undefined {
+  let ast = parse(code, { sourceType: "module" });
+  let topLevelStatementsByExportName = getTopLevelStatementsByExportName(code);
+
+  if (!hasChunkableExport(code, exportName)) {
+    return undefined;
+  }
+
+  let topLevelStatements = topLevelStatementsByExportName.get(exportName);
+  invariant(topLevelStatements, "Expected export to have top level statements");
+
+  let topLevelStatementsArray = Array.from(topLevelStatements);
+  let chunkAst = replaceBody(ast, (body) =>
+    body.filter((node) =>
+      topLevelStatementsArray.some((statement) =>
+        t.isNodesEquivalent(node, statement)
+      )
+    )
+  );
+
+  return generate(chunkAst, generateOptions);
+}
+
+export function omitChunkedExports(
+  code: string,
+  exportNames: string[],
+  generateOptions: GeneratorOptions = {}
+): GeneratorResult | undefined {
+  let ast = parse(code, { sourceType: "module" });
+  let topLevelStatementsByExportName = getTopLevelStatementsByExportName(code);
+  let omittedStatements = new Set<Statement>();
+
+  for (let exportName of exportNames) {
+    let topLevelStatements = topLevelStatementsByExportName.get(exportName);
+    if (!topLevelStatements || !hasChunkableExport(code, exportName)) {
+      continue;
+    }
+    for (let statement of topLevelStatements) {
+      omittedStatements.add(statement);
+    }
+  }
+
+  let omittedStatementsArray = Array.from(omittedStatements);
+  let astWithChunksOmitted = replaceBody(ast, (body) =>
+    body.filter((node) =>
+      omittedStatementsArray.every(
+        (statement) => !t.isNodesEquivalent(node, statement)
+      )
+    )
+  );
+
+  if (astWithChunksOmitted.program.body.length === 0) {
+    return undefined;
+  }
+
+  return generate(astWithChunksOmitted, generateOptions);
 }
 
 // TODO: Make this real
