@@ -1093,7 +1093,7 @@ describe("navigation blocking with useBlocker", () => {
             reset: undefined,
             location: expect.any(Object),
           });
-          await sleep(LOADER_LATENCY_MS + 10);
+          await sleep(LOADER_LATENCY_MS * 2);
         });
         expect(node.innerHTML).toContain("<h1>About</h1>");
         expect(blocker).toEqual({
@@ -1110,7 +1110,7 @@ describe("navigation blocking with useBlocker", () => {
         });
         await act(async () => {
           click(node.querySelector("[data-action='proceed']"));
-          await sleep(LOADER_LATENCY_MS);
+          await sleep(LOADER_LATENCY_MS * 2);
         });
         expect(blocker).toEqual({
           state: "unblocked",
