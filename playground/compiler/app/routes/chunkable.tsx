@@ -1,6 +1,9 @@
 import { useLoaderData } from "react-router";
-import { clientLoader } from "./clientLoader";
-export { clientLoader } from "./clientLoader";
+
+export const clientLoader = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return "hello from chunkable client loader!";
+};
 
 export default function Hello() {
   const message = useLoaderData() as Awaited<ReturnType<typeof clientLoader>>;
