@@ -236,18 +236,13 @@ export function omitChunkedExports(
   return generate(astWithChunksOmitted, generateOptions);
 }
 
-// TODO: Make this real
 export function detectRouteChunks({ code }: { code: string }): {
   hasClientActionChunk: boolean;
   hasClientLoaderChunk: boolean;
   hasRouteChunks: boolean;
 } {
-  let hasClientActionChunk = code.includes(
-    'export { clientAction } from "./clientAction";'
-  );
-  let hasClientLoaderChunk = code.includes(
-    'export { clientLoader } from "./clientLoader";'
-  );
+  let hasClientActionChunk = hasChunkableExport(code, "clientAction");
+  let hasClientLoaderChunk = hasChunkableExport(code, "clientLoader");
   let hasRouteChunks = hasClientActionChunk || hasClientLoaderChunk;
 
   return {
@@ -257,21 +252,14 @@ export function detectRouteChunks({ code }: { code: string }): {
   };
 }
 
-// TODO: Make this real
-export function getRouteChunks({ code }: { code: string }) {
-  let { hasClientActionChunk, hasClientLoaderChunk } = detectRouteChunks({
-    code,
-  });
-
+export function getRouteChunks({ code }: { code: string }): {
+  main: GeneratorResult | undefined;
+  clientAction: GeneratorResult | undefined;
+  clientLoader: GeneratorResult | undefined;
+} {
   return {
-    main: code
-      .replace('export { clientAction } from "./clientAction";', "")
-      .replace('export { clientLoader } from "./clientLoader";', ""),
-    clientAction: hasClientActionChunk
-      ? `export { clientAction } from "./clientAction";`
-      : undefined,
-    clientLoader: hasClientLoaderChunk
-      ? `export { clientLoader } from "./clientLoader";`
-      : undefined,
+    main: omitChunkedExports(code, ["clientAction", "clientLoader"]),
+    clientAction: getChunkedExport(code, "clientAction"),
+    clientLoader: getChunkedExport(code, "clientLoader"),
   };
 }

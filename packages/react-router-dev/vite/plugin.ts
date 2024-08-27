@@ -315,12 +315,12 @@ const getRouteManifestModuleExports = async (
   return Object.fromEntries(entries);
 };
 
-const getRouteModuleExports = async (
+const compileRouteFile = async (
   viteChildCompiler: Vite.ViteDevServer | null,
   ctx: ReactRouterPluginContext,
   routeFile: string,
   readRouteFile?: () => string | Promise<string>
-): Promise<string[]> => {
+): Promise<string> => {
   if (!viteChildCompiler) {
     throw new Error("Vite child compiler not found");
   }
@@ -350,7 +350,27 @@ const getRouteModuleExports = async (
   ]);
 
   let transformed = await pluginContainer.transform(code, id, { ssr });
-  let [, exports] = esModuleLexer(transformed.code);
+  return transformed.code;
+};
+
+const getRouteModuleExports = async (
+  viteChildCompiler: Vite.ViteDevServer | null,
+  ctx: ReactRouterPluginContext,
+  routeFile: string,
+  readRouteFile?: () => string | Promise<string>
+): Promise<string[]> => {
+  if (!viteChildCompiler) {
+    throw new Error("Vite child compiler not found");
+  }
+
+  let code = await compileRouteFile(
+    viteChildCompiler,
+    ctx,
+    routeFile,
+    readRouteFile
+  );
+
+  let [, exports] = esModuleLexer(code);
   let exportNames = exports.map((e) => e.n);
 
   return exportNames;
@@ -605,6 +625,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     reactRouterServerManifest: ReactRouterManifest;
   }> => {
     invariant(viteConfig);
+    invariant(viteChildCompiler);
 
     let viteManifest = await loadViteManifest(
       getClientBuildDirectory(ctx.reactRouterConfig)
@@ -625,31 +646,27 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     );
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
-      let routeFilePath = path.join(
-        ctx.reactRouterConfig.appDirectory,
-        route.file
-      );
+      let routeFile = path.join(ctx.reactRouterConfig.appDirectory, route.file);
       let sourceExports = routeManifestExports[key];
       let isRootRoute = route.parentId === undefined;
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
 
-      let code = await fse.readFile(routeFilePath, "utf-8");
       let { hasClientActionChunk, hasClientLoaderChunk } =
-        detectRouteChunksIfEnabled({ ctx, code });
+        await detectRouteChunksIfEnabled(ctx, { routeFile, viteChildCompiler });
 
       let clientActionAssets = hasClientActionChunk
         ? getReactRouterManifestBuildAssets(
             ctx,
             viteManifest,
-            routeFilePath + CLIENT_ACTION_CHUNK_QUERY_STRING
+            routeFile + CLIENT_ACTION_CHUNK_QUERY_STRING
           )
         : null;
       let clientLoaderAssets = hasClientLoaderChunk
         ? getReactRouterManifestBuildAssets(
             ctx,
             viteManifest,
-            routeFilePath + CLIENT_LOADER_CHUNK_QUERY_STRING
+            routeFile + CLIENT_LOADER_CHUNK_QUERY_STRING
           )
         : null;
 
@@ -667,7 +684,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         ...getReactRouterManifestBuildAssets(
           ctx,
           viteManifest,
-          routeFilePath,
+          routeFile,
           // If this is the root route, we also need to include assets from the
           // client entry file as this is a common way for consumers to import
           // global reset styles, etc.
@@ -725,6 +742,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
   // In dev, the server and browser manifests are the same
   let getReactRouterManifestForDev = async (): Promise<ReactRouterManifest> => {
+    invariant(viteChildCompiler);
+
     let routes: ReactRouterManifest["routes"] = {};
 
     let routeManifestExports = await getRouteManifestModuleExports(
@@ -733,6 +752,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     );
 
     for (let [key, route] of Object.entries(ctx.reactRouterConfig.routes)) {
+      let routeFile = route.file;
       let sourceExports = routeManifestExports[key];
       let hasClientAction = sourceExports.includes("clientAction");
       let hasClientLoader = sourceExports.includes("clientLoader");
@@ -744,12 +764,8 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         )}`
       );
 
-      let code = await fse.readFile(
-        path.resolve(ctx.reactRouterConfig.appDirectory, route.file),
-        "utf-8"
-      );
       let { hasClientActionChunk, hasClientLoaderChunk } =
-        detectRouteChunksIfEnabled({ ctx, code });
+        await detectRouteChunksIfEnabled(ctx, { routeFile, viteChildCompiler });
 
       routes[key] = {
         id: route.id,
@@ -961,19 +977,25 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                                 routeFilePath,
                                 "utf-8"
                               );
-                              let {
-                                hasClientActionChunk,
-                                hasClientLoaderChunk,
-                              } = detectRouteChunksIfEnabled({ ctx, code });
+
+                              // If these keywords are present in the route
+                              // module, we need to include their relevant route
+                              // module chunks as entry points just in case
+                              // they're needed. If they're not, they'll resolve
+                              // to empty modules in the final build.
+                              let possiblyHasClientActionChunk =
+                                code.includes("clientAction");
+                              let possiblyHasClientLoaderChunk =
+                                code.includes("clientLoader");
 
                               return [
                                 `${routeFilePath}${ROUTE_ENTRY_QUERY_STRING}`,
-                                ...(hasClientActionChunk
+                                ...(possiblyHasClientActionChunk
                                   ? [
                                       `${routeFilePath}${CLIENT_ACTION_CHUNK_QUERY_STRING}`,
                                     ]
                                   : []),
-                                ...(hasClientLoaderChunk
+                                ...(possiblyHasClientLoaderChunk
                                   ? [
                                       `${routeFilePath}${CLIENT_LOADER_CHUNK_QUERY_STRING}`,
                                     ]
@@ -1338,7 +1360,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     },
     {
       name: "react-router-route-entry",
-      enforce: "pre",
       async transform(code, id, options) {
         if (!isRouteEntry(id)) return;
         let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
@@ -1352,7 +1373,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         );
 
         let { hasRouteChunks, hasClientActionChunk, hasClientLoaderChunk } =
-          detectRouteChunksIfEnabled({ ctx, code });
+          await detectRouteChunksIfEnabled(ctx, code);
 
         let reexports = sourceExports
           .filter(
@@ -1380,7 +1401,6 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     },
     {
       name: "react-router-route-chunks",
-      enforce: "pre",
       async transform(code, id, options) {
         // Routes aren't chunked on the server
         if (options?.ssr) return;
@@ -1388,15 +1408,20 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         // Ignore anything that isn't marked as a route chunk
         if (!id.includes(ROUTE_CHUNK_QUERY_STRING)) return;
 
-        let chunks = getRouteChunksIfEnabled({ ctx, code });
+        let chunks = await getRouteChunksIfEnabled(ctx, code);
+
+        if (chunks === null) {
+          return "// Route chunks disabled";
+        }
+
         if (id.endsWith(MAIN_ROUTE_CHUNK_QUERY_STRING)) {
-          return chunks.main;
+          return chunks.main ?? "// No main chunk";
         }
         if (id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING)) {
-          return chunks.clientAction;
+          return chunks.clientAction ?? "// No client action chunk";
         }
         if (id.endsWith(CLIENT_LOADER_CHUNK_QUERY_STRING)) {
-          return chunks.clientLoader;
+          return chunks.clientLoader ?? "// No client loader chunk";
         }
       },
     },
@@ -2086,15 +2111,28 @@ function createPrerenderRoutes(
   });
 }
 
-// TODO: Make this real
-function detectRouteChunksIfEnabled({
-  ctx,
-  code,
-}: {
-  ctx: ReactRouterPluginContext;
-  code: string;
-}): ReturnType<typeof detectRouteChunks> {
+const resolveRouteFileCode = async (
+  ctx: ReactRouterPluginContext,
+  input: string | { routeFile: string; viteChildCompiler: Vite.ViteDevServer }
+): Promise<string> =>
+  typeof input === "string"
+    ? input
+    : await compileRouteFile(input.viteChildCompiler, ctx, input.routeFile);
+
+async function detectRouteChunksIfEnabled(
+  ctx: ReactRouterPluginContext,
+  input: string | { routeFile: string; viteChildCompiler: Vite.ViteDevServer }
+): Promise<ReturnType<typeof detectRouteChunks>> {
   if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
+    return {
+      hasClientActionChunk: false,
+      hasClientLoaderChunk: false,
+      hasRouteChunks: false,
+    };
+  }
+
+  let code = await resolveRouteFileCode(ctx, input);
+  if (!code.includes("clientLoader") && !code.includes("clientAction")) {
     return {
       hasClientActionChunk: false,
       hasClientLoaderChunk: false,
@@ -2105,18 +2143,15 @@ function detectRouteChunksIfEnabled({
   return detectRouteChunks({ code });
 }
 
-// TODO: Make this real
-function getRouteChunksIfEnabled({
-  ctx,
-  code,
-}: {
-  ctx: ReactRouterPluginContext;
-  code: string;
-}) {
-  invariant(
-    ctx.reactRouterConfig.future.unstable_routeChunks,
-    "Route chunks shouldn't be requested when future.unstable_routeChunks is disabled"
-  );
+async function getRouteChunksIfEnabled(
+  ctx: ReactRouterPluginContext,
+  input: string | { routeFile: string; viteChildCompiler: Vite.ViteDevServer }
+): Promise<ReturnType<typeof getRouteChunks> | null> {
+  if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
+    return null;
+  }
+
+  let code = await resolveRouteFileCode(ctx, input);
 
   return getRouteChunks({ code });
 }
