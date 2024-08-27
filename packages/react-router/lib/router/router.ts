@@ -1022,7 +1022,7 @@ export function createRouter(init: RouterInit): Router {
 
   // Flag to ignore the next history update, so we can revert the URL change on
   // a POP navigation that was blocked by the user without touching router state
-  let ignoreNextHistoryUpdate = false;
+  let unblockBlockerHistoryUpdate: (() => void) | undefined = undefined;
 
   let pendingRevalidationDfd: ReturnType<typeof createDeferred<void>> | null =
     null;
@@ -1037,8 +1037,9 @@ export function createRouter(init: RouterInit): Router {
       ({ action: historyAction, location, delta }) => {
         // Ignore this event if it was just us resetting the URL from a
         // blocked POP navigation
-        if (ignoreNextHistoryUpdate) {
-          ignoreNextHistoryUpdate = false;
+        if (unblockBlockerHistoryUpdate) {
+          unblockBlockerHistoryUpdate();
+          unblockBlockerHistoryUpdate = undefined;
           return;
         }
 
@@ -1060,7 +1061,9 @@ export function createRouter(init: RouterInit): Router {
 
         if (blockerKey && delta != null) {
           // Restore the URL to match the current UI, but don't update router state
-          ignoreNextHistoryUpdate = true;
+          let nextHistoryUpdatePromise = new Promise<void>((resolve) => {
+            unblockBlockerHistoryUpdate = resolve;
+          });
           init.history.go(delta * -1);
 
           // Put the blocker into a blocked state
@@ -1074,8 +1077,10 @@ export function createRouter(init: RouterInit): Router {
                 reset: undefined,
                 location,
               });
-              // Re-do the same POP navigation we just blocked
-              init.history.go(delta);
+              // Re-do the same POP navigation we just blocked, after the url
+              // restoration is also complete.  See:
+              // https://github.com/remix-run/react-router/issues/11613
+              nextHistoryUpdatePromise.then(() => init.history.go(delta));
             },
             reset() {
               let blockers = new Map(state.blockers);
