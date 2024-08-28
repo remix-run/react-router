@@ -1084,7 +1084,12 @@ describe("router dataStrategy", () => {
                   });
                   return acc;
                 }, {});
-                return { type: "data", result: await callHandler(handlerCtx) };
+                return {
+                  type: "data",
+                  result: m.shouldLoad
+                    ? await callHandler(handlerCtx)
+                    : t.router.state.loaderData[m.route.id],
+                };
               })
             )
           );
@@ -1164,7 +1169,17 @@ describe("router dataStrategy", () => {
                 if (request.method !== "GET") {
                   // invalidate on actions
                   cache = {};
-                  return { type: "data", result: await handler() };
+                  return {
+                    type: "data",
+                    result: m.shouldLoad ? await handler() : undefined,
+                  };
+                }
+
+                if (!m.shouldLoad) {
+                  return {
+                    type: "data",
+                    result: t.router.state.loaderData[m.route.id],
+                  };
                 }
 
                 let key = getCacheKey(m);
