@@ -13,7 +13,7 @@ import {
   configRoutesToRouteManifest,
   type RouteManifest,
   type RouteManifestEntry,
-  type RoutesConfig,
+  type RouteConfig,
 } from "../config/routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
 import { importViteEsmSync } from "./import-vite-esm-sync";
@@ -283,14 +283,14 @@ let lastValidRoutes: RouteManifest = {};
 export async function resolveReactRouterConfig({
   rootDirectory,
   reactRouterUserConfig,
-  routesConfigChanged,
+  routeConfigChanged,
   viteUserConfig,
   viteCommand,
   viteNodeRunner,
 }: {
   rootDirectory: string;
   reactRouterUserConfig: ReactRouterConfig;
-  routesConfigChanged: boolean;
+  routeConfigChanged: boolean;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
   viteNodeRunner: ViteNodeRunner;
@@ -423,38 +423,38 @@ export async function resolveReactRouterConfig({
 
   try {
     if (!routeConfigFile) {
-      let routesConfigDisplayPath = vite.normalizePath(
+      let routeConfigDisplayPath = vite.normalizePath(
         path.relative(rootDirectory, path.join(appDirectory, "routes.ts"))
       );
       throw new FriendlyError(
-        `Could not find a routes config file at "${routesConfigDisplayPath}"`
+        `Could not find a routes config file at "${routeConfigDisplayPath}"`
       );
     }
 
     setAppDirectory(appDirectory);
-    let routesConfigExport: RoutesConfig = (
+    let routeConfigExport: RouteConfig = (
       await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
     ).routes;
 
-    let routesConfig = await routesConfigExport;
+    let routeConfig = await routeConfigExport;
 
-    if (!routesConfig) {
+    if (!routeConfig) {
       throw new FriendlyError(
         `No "routes" export defined in "${routeConfigFile}"`
       );
     }
 
-    if (!Array.isArray(routesConfig)) {
+    if (!Array.isArray(routeConfig)) {
       throw new FriendlyError(
         `Routes exported from "${routeConfigFile}" must be an array`
       );
     }
 
-    routes = { ...routes, ...configRoutesToRouteManifest(routesConfig) };
+    routes = { ...routes, ...configRoutesToRouteManifest(routeConfig) };
 
     lastValidRoutes = routes;
 
-    if (routesConfigChanged) {
+    if (routeConfigChanged) {
       logger.info(colors.green("Route config changed."), {
         clear: true,
         timestamp: true,
