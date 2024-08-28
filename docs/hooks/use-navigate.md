@@ -29,7 +29,7 @@ type RelativeRoutingType = "route" | "path";
 
 </details>
 
-<docs-warning>It's usually better to use [`redirect`][redirect] in [`loaders`][loaders] and [`actions`][actions] than this hook</docs-warning>
+<docs-warning>It's usually better to use [`redirect`][redirect] in [`loaders`][loaders] and [`actions`][actions] than this hook</docs-warning> when the redirect is in response to data.
 
 The `useNavigate` hook returns a function that lets you navigate programmatically, for example in an effect:
 
