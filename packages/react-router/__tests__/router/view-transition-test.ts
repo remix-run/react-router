@@ -1,5 +1,6 @@
 import { IDLE_NAVIGATION } from "../../lib/router/router";
 import { cleanup, setup } from "./utils/data-router-setup";
+import { createFormData } from "./utils/utils";
 
 describe("view transitions", () => {
   // Detect any failures inside the router navigate code
@@ -132,6 +133,41 @@ describe("view transitions", () => {
         },
       }),
     ]);
+
+    unsubscribe();
+    t.router.dispose();
+  });
+
+  it("preserves pending view transitions through redirects", async () => {
+    let t = setup({
+      routes: [
+        { path: "/" },
+        { id: "a", path: "/a", action: true },
+        { path: "/b" },
+      ],
+    });
+    let spy = jest.fn();
+    let unsubscribe = t.router.subscribe(spy);
+
+    let A = await t.navigate("/a", {
+      formMethod: "post",
+      formData: createFormData({}),
+      unstable_viewTransition: true,
+    });
+
+    await A.actions.a.redirect("/b");
+    expect(spy).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        navigation: IDLE_NAVIGATION,
+        location: expect.objectContaining({ pathname: "/b" }),
+      }),
+      expect.objectContaining({
+        unstable_viewTransitionOpts: {
+          currentLocation: expect.objectContaining({ pathname: "/" }),
+          nextLocation: expect.objectContaining({ pathname: "/b" }),
+        },
+      })
+    );
 
     unsubscribe();
     t.router.dispose();
