@@ -145,11 +145,24 @@ const isRouteEntry = (id: string): boolean => {
   return id.endsWith(ROUTE_ENTRY_QUERY_STRING);
 };
 
+const isMainRouteChunk = (id: string): boolean => {
+  return id.endsWith(MAIN_ROUTE_CHUNK_QUERY_STRING);
+};
+
+const isClientActionChunk = (id: string): boolean => {
+  return id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING);
+};
+
+const isClientLoaderChunk = (id: string): boolean => {
+  return id.endsWith(CLIENT_LOADER_CHUNK_QUERY_STRING);
+};
+
 const isRouteVirtualModule = (id: string): boolean => {
   return (
     isRouteEntry(id) ||
-    id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING) ||
-    id.endsWith(CLIENT_LOADER_CHUNK_QUERY_STRING)
+    isMainRouteChunk(id) ||
+    isClientActionChunk(id) ||
+    isClientLoaderChunk(id)
   );
 };
 
@@ -1419,13 +1432,13 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           return "// Route chunks disabled";
         }
 
-        if (id.endsWith(MAIN_ROUTE_CHUNK_QUERY_STRING)) {
+        if (isMainRouteChunk(id)) {
           return chunks.main ?? "// No main chunk";
         }
-        if (id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING)) {
+        if (isClientActionChunk(id)) {
           return chunks.clientAction ?? "// No client action chunk";
         }
-        if (id.endsWith(CLIENT_LOADER_CHUNK_QUERY_STRING)) {
+        if (isClientLoaderChunk(id)) {
           return chunks.clientLoader ?? "// No client loader chunk";
         }
       },
@@ -1714,8 +1727,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               [
                 "hasLoader",
                 "hasClientLoader",
+                "clientLoaderModule",
                 "hasAction",
                 "hasClientAction",
+                "clientActionModule",
                 "hasErrorBoundary",
               ] as const
             ).some((key) => oldRouteMetadata[key] !== newRouteMetadata[key])
@@ -1771,40 +1786,30 @@ function addRefreshWrapper(
   code: string,
   id: string
 ): string {
-  if (
-    id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING) ||
-    id.endsWith(CLIENT_LOADER_CHUNK_QUERY_STRING)
-  ) {
-    let ownerRoute = getRoute(reactRouterConfig, id.split("?")[0]);
-    let moduleUpdatesGlobal = id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING)
+  let route = getRoute(reactRouterConfig, id.split("?")[0]);
+  if (isClientActionChunk(id) || isClientLoaderChunk(id)) {
+    let moduleUpdatesGlobal = isClientActionChunk(id)
       ? "window.__reactRouterClientActionModuleUpdates"
       : "window.__reactRouterClientLoaderModuleUpdates";
-    let acceptExport = id.endsWith(CLIENT_ACTION_CHUNK_QUERY_STRING)
-      ? "clientAction"
-      : "clientLoader";
     return (
       code +
       REACT_REFRESH_ROUTE_CHUNK_FOOTER.replaceAll(
-        "__ACCEPT_EXPORT__",
-        JSON.stringify(acceptExport)
-      )
-        .replaceAll("__MODULE_UPDATES_GLOBAL__", moduleUpdatesGlobal)
-        .replaceAll("__OWNER_ROUTE_ID__", JSON.stringify(ownerRoute?.id))
+        "__MODULE_UPDATES_GLOBAL__",
+        moduleUpdatesGlobal
+      ).replaceAll("__OWNER_ROUTE_ID__", JSON.stringify(route?.id))
     );
   }
 
-  let route = getRoute(reactRouterConfig, id);
-  let acceptExports =
-    route || isRouteEntry(id)
-      ? [
-          "clientAction",
-          "clientLoader",
-          "handle",
-          "meta",
-          "links",
-          "shouldRevalidate",
-        ]
-      : [];
+  let acceptExports = route
+    ? [
+        "clientAction",
+        "clientLoader",
+        "handle",
+        "meta",
+        "links",
+        "shouldRevalidate",
+      ]
+    : [];
   return (
     REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
     code +
@@ -1836,10 +1841,25 @@ if (import.meta.hot && !inWebWorker) {
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
 }`.replace(/\n+/g, "");
 
+const IMPORT_CLIENT_ACTION_CHUNK_QUERY_STRING =
+  "?import&" + CLIENT_ACTION_CHUNK_QUERY_STRING.replace("?", "");
+const IMPORT_CLIENT_LOADER_CHUNK_QUERY_STRING =
+  "?import&" + CLIENT_LOADER_CHUNK_QUERY_STRING.replace("?", "");
+
 const REACT_REFRESH_FOOTER = `
 if (import.meta.hot && !inWebWorker) {
   window.$RefreshReg$ = prevRefreshReg;
   window.$RefreshSig$ = prevRefreshSig;
+  ${
+    // Ensure all route chunk modules are in memory to support HMR. This is to
+    // handle cases where route chunks don't exist on initial load but are
+    // subsequently created while editing the route module.
+    ""
+  }if (__ROUTE_ID__) {
+    const routeBase = import.meta.url.split("?")[0];
+    RefreshRuntime.__hmr_import(routeBase + "${IMPORT_CLIENT_ACTION_CHUNK_QUERY_STRING}");
+    RefreshRuntime.__hmr_import(routeBase + "${IMPORT_CLIENT_LOADER_CHUNK_QUERY_STRING}");
+  }
   RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
     RefreshRuntime.registerExportsForReactRefresh(__SOURCE__, currentExports);
     import.meta.hot.accept((nextExports) => {
@@ -1857,12 +1877,9 @@ const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof 
 if (import.meta.hot && !inWebWorker) {
   import.meta.hot.accept((nextExports) => {
     if (!nextExports) return;
-    const exportKeys = Object.keys(nextExports);
-    if (exportKeys.length > 1 || exportKeys[0] !== __ACCEPT_EXPORT__) {
-      import.meta.hot.invalidate("Could not Fast Refresh. Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports");
-      return;
+    if (Object.keys(nextExports).length) {
+      __MODULE_UPDATES_GLOBAL__.set(__OWNER_ROUTE_ID__, nextExports);
     }
-    __MODULE_UPDATES_GLOBAL__.set(__OWNER_ROUTE_ID__, nextExports);
     RefreshRuntime.enqueueUpdate();
   });
 }`;
