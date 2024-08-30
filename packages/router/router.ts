@@ -4780,48 +4780,50 @@ async function callDataStrategyImpl(
       : undefined
   );
 
+  let dsMatches = matches.map((match, i) => {
+    let loadRoutePromise = loadRouteDefinitionsPromises[i];
+    let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
+    // `resolve` encapsulates route.lazy(), executing the loader/action,
+    // and mapping return values/thrown errors to a `HandlerResult`.  Users
+    // can pass a callback to take fine-grained control over the execution
+    // of the loader/action
+    let resolve: DataStrategyMatch["resolve"] = async (handlerOverride) => {
+      if (
+        handlerOverride &&
+        request.method === "GET" &&
+        (match.route.lazy || match.route.loader)
+      ) {
+        shouldLoad = true;
+      }
+      return shouldLoad
+        ? callLoaderOrAction(
+            type,
+            request,
+            match,
+            loadRoutePromise,
+            handlerOverride,
+            requestContext
+          )
+        : Promise.resolve({ type: ResultType.data, result: undefined });
+    };
+
+    return {
+      ...match,
+      data: fetcherKey
+        ? state?.fetchers.get(fetcherKey)?.data
+        : request.method !== "GET"
+        ? state?.actionData?.[match.route.id]
+        : state?.loaderData[match.route.id],
+      shouldLoad,
+      resolve,
+    };
+  });
+
   // Send all matches here to allow for a middleware-type implementation.
   // handler will be a no-op for unneeded routes and we filter those results
   // back out below.
   let results = await dataStrategyImpl({
-    matches: matches.map((match, i) => {
-      let loadRoutePromise = loadRouteDefinitionsPromises[i];
-      let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
-      // `resolve` encapsulates route.lazy(), executing the loader/action,
-      // and mapping return values/thrown errors to a `HandlerResult`.  Users
-      // can pass a callback to take fine-grained control over the execution
-      // of the loader/action
-      let resolve: DataStrategyMatch["resolve"] = async (handlerOverride) => {
-        if (
-          handlerOverride &&
-          request.method === "GET" &&
-          (match.route.lazy || match.route.loader)
-        ) {
-          shouldLoad = true;
-        }
-        return shouldLoad
-          ? callLoaderOrAction(
-              type,
-              request,
-              match,
-              loadRoutePromise,
-              handlerOverride,
-              requestContext
-            )
-          : Promise.resolve({ type: ResultType.data, result: undefined });
-      };
-
-      return {
-        ...match,
-        data: fetcherKey
-          ? state?.fetchers.get(fetcherKey)?.data
-          : request.method !== "GET"
-          ? state?.actionData?.[match.route.id]
-          : state?.loaderData[match.route.id],
-        shouldLoad,
-        resolve,
-      };
-    }),
+    matches: dsMatches,
     request,
     params: matches[0].params,
     fetcherKey,
@@ -4837,11 +4839,11 @@ async function callDataStrategyImpl(
     // No-op
   }
 
-  // Throw if any loadRoute implementations not called since they are what
-  // ensures a route is fully loaded
-  // TODO: This shouldn't be needed once we await the promises
-  matchesToLoad.forEach((m) => {
-    if (!(m.route.id in results)) {
+  // Check to ensure that a result was provided for all matches we wanted to load.
+  // Only do this if the match doesn't currently have any data since they could
+  // just be choosing not to revalidate
+  dsMatches.forEach((m) => {
+    if (m.shouldLoad && !(m.route.id in results) && m.data === undefined) {
       let error = new Error(
         `No result was returned from \`unstable_dataStrategy\` for the route ` +
           `"${m.route.id}". Did you forget to call \`match.resolve()\`?`
