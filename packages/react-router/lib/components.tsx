@@ -49,6 +49,7 @@ import {
   useRoutes,
   useRoutesImpl,
 } from "./hooks";
+import { logV6DeprecationWarnings } from "./deprecations";
 
 export interface FutureConfig {
   v7_relativeSplatPath: boolean;
@@ -154,6 +155,11 @@ export function RouterProvider({
     [router, navigator, basename]
   );
 
+  React.useEffect(
+    () => logV6DeprecationWarnings(future, router.future),
+    [router, future]
+  );
+
   // The fragment and {null} here are important!  We need them to keep React 18's
   // useId happy when we are server-rendering since we may have a <script> here
   // containing the hydrated server-side staticContext (from StaticRouterProvider).
@@ -247,6 +253,8 @@ export function MemoryRouter({
   );
 
   React.useLayoutEffect(() => history.listen(setState), [history, setState]);
+
+  React.useEffect(() => logV6DeprecationWarnings(future), [future]);
 
   return (
     <Router
