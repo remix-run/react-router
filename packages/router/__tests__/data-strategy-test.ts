@@ -1,4 +1,8 @@
-import type { DataStrategyFunction, DataStrategyMatch } from "../utils";
+import type {
+  DataStrategyFunction,
+  DataStrategyMatch,
+  HandlerResult,
+} from "../utils";
 import { json } from "../utils";
 import { createDeferred, setup } from "./utils/data-router-setup";
 import { createFormData, tick } from "./utils/utils";
@@ -11,10 +15,26 @@ describe("router dataStrategy", () => {
     >(fn);
   }
 
+  function keyedResults(
+    matches: DataStrategyMatch[],
+    results: HandlerResult[]
+  ) {
+    return results.reduce(
+      (acc, r, i) =>
+        Object.assign(
+          acc,
+          matches[i].shouldLoad ? { [matches[i].route.id]: r } : {}
+        ),
+      {}
+    );
+  }
+
   describe("loaders", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results)
+        )
       );
       let t = setup({
         routes: [
@@ -72,7 +92,9 @@ describe("router dataStrategy", () => {
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results)
+        )
       );
       let t = setup({
         routes: [
@@ -148,7 +170,7 @@ describe("router dataStrategy", () => {
                 };
               })
             )
-          );
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -183,7 +205,7 @@ describe("router dataStrategy", () => {
                 };
               })
             )
-          );
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -220,7 +242,9 @@ describe("router dataStrategy", () => {
           },
         ],
         dataStrategy({ matches }) {
-          return Promise.all(matches.map(async (match) => match.resolve()));
+          return Promise.all(
+            matches.map(async (match) => match.resolve())
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -265,7 +289,7 @@ describe("router dataStrategy", () => {
                 };
               });
             })
-          );
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -315,7 +339,9 @@ describe("router dataStrategy", () => {
       });
     });
 
-    it("throws an error if an implementation does not call resolve", async () => {
+    it("errors if resolve is not called on a not yet loaded route", async () => {
+      let warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+
       let t = setup({
         routes: [
           {
@@ -335,35 +361,127 @@ describe("router dataStrategy", () => {
             ],
           },
         ],
-        // @ts-expect-error
-        dataStrategy({ matches }) {
+        async dataStrategy({ matches }) {
+          // Reload the parent route but skip the child
+          let result = await matches[0].resolve(async (handler) => {
+            let result = await handler();
+            return { type: "data", result };
+          });
+          return {
+            parent: result || matches[0].data,
+          };
+        },
+      });
+
+      let A = await t.navigate("/parent");
+      await A.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        errors: null,
+        loaderData: {
+          parent: "PARENT",
+        },
+        navigation: {
+          state: "idle",
+        },
+      });
+
+      let B = await t.navigate("/parent/child");
+      await B.loaders.parent.resolve("PARENT*");
+
+      // We're still loading because the internal resolution of route.lazy()
+      // hasn't completed yet
+      expect(t.router.state).toMatchObject({
+        errors: null,
+        loaderData: {
+          parent: "PARENT",
+        },
+        navigation: {
+          state: "loading",
+        },
+      });
+
+      await B.lazy.child.resolve({ loader: () => "CHILD" });
+      expect(t.router.state).toMatchObject({
+        errors: {
+          parent: new Error(
+            'No result was returned from `unstable_dataStrategy` for the route "child". ' +
+              "Did you forget to call `match.resolve()`?"
+          ),
+        },
+        loaderData: {
+          parent: "PARENT*",
+        },
+        navigation: {
+          state: "idle",
+        },
+      });
+
+      await B.lazy.child.resolve({ loader: () => "CHILD" });
+
+      warnSpy.mockRestore();
+    });
+
+    it("does not require resolve to be called if a match is not being loaded", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "parent",
+            path: "/parent",
+            loader: true,
+            hasErrorBoundary: true,
+            children: [
+              {
+                id: "child",
+                path: "child",
+                lazy: true,
+              },
+            ],
+          },
+        ],
+        dataStrategy({ matches, request }) {
           return Promise.all(
             matches.map(async (match) => {
-              if (match.route.id === "child") {
-                // noop to cause error
-                return "forgot to load child";
+              if (
+                request.url.endsWith("/parent/child") &&
+                match.route.id === "parent"
+              ) {
+                return undefined;
               }
               return match.resolve();
             })
+          ).then((results) =>
+            // @ts-expect-error
+            keyedResults(matches, results)
           );
         },
       });
 
-      let A = await t.navigate("/parent/child");
+      let A = await t.navigate("/parent");
       await A.loaders.parent.resolve("PARENT");
+      expect(t.router.state).toMatchObject({
+        errors: null,
+        loaderData: {
+          parent: "PARENT",
+        },
+        navigation: {
+          state: "idle",
+        },
+      });
+
+      let B = await t.navigate("/parent/child");
+      await B.lazy.child.resolve({ loader: () => "CHILD" });
+
+      // no-op
+      await B.loaders.parent.resolve("XXX");
 
       expect(t.router.state).toMatchObject({
-        actionData: null,
-        errors: {
-          parent: new Error(
-            '`match.resolve()` was not called for route id "child". ' +
-              "You must call `match.resolve()` on every match passed " +
-              "to `dataStrategy` to ensure all routes are properly loaded."
-          ),
-        },
+        errors: null,
         loaderData: {
-          child: undefined,
-          parent: undefined,
+          child: "CHILD",
+          parent: "PARENT",
         },
         navigation: {
           state: "idle",
@@ -376,7 +494,9 @@ describe("router dataStrategy", () => {
         ReturnType<DataStrategyFunction>,
         Parameters<DataStrategyFunction>
       >(({ matches }) => {
-        return Promise.all(matches.map((m) => m.resolve()));
+        return Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results)
+        );
       });
       let t = setup({
         routes: [
@@ -510,7 +630,9 @@ describe("router dataStrategy", () => {
   describe("actions", () => {
     it("should allow a custom implementation to passthrough to default behavior", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results)
+        )
       );
       let t = setup({
         routes: [
@@ -552,7 +674,9 @@ describe("router dataStrategy", () => {
 
     it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
       let dataStrategy = mockDataStrategy(({ matches }) =>
-        Promise.all(matches.map((m) => m.resolve()))
+        Promise.all(matches.map((m) => m.resolve())).then((results) =>
+          keyedResults(matches, results)
+        )
       );
       let t = setup({
         routes: [
@@ -597,7 +721,9 @@ describe("router dataStrategy", () => {
     describe("loaders", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results)
+          )
         );
         let t = setup({
           routes: [
@@ -638,7 +764,9 @@ describe("router dataStrategy", () => {
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results)
+          )
         );
         let t = setup({
           routes: [
@@ -680,7 +808,9 @@ describe("router dataStrategy", () => {
     describe("actions", () => {
       it("should allow a custom implementation to passthrough to default behavior", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results)
+          )
         );
         let t = setup({
           routes: [
@@ -724,7 +854,9 @@ describe("router dataStrategy", () => {
 
       it("should allow a custom implementation to passthrough to default behavior and lazy", async () => {
         let dataStrategy = mockDataStrategy(({ matches }) =>
-          Promise.all(matches.map((m) => m.resolve()))
+          Promise.all(matches.map((m) => m.resolve())).then((results) =>
+            keyedResults(matches, results)
+          )
         );
         let t = setup({
           routes: [
@@ -811,7 +943,7 @@ describe("router dataStrategy", () => {
                 return { type: "data", result };
               });
             })
-          );
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -832,6 +964,7 @@ describe("router dataStrategy", () => {
       });
     });
 
+    jest.setTimeout(10000000);
     it("allows a single-fetch type approach", async () => {
       let t = setup({
         routes: [
@@ -866,7 +999,7 @@ describe("router dataStrategy", () => {
               // the single fetch response and return it's promise
               let dfd = createDeferred();
               routeDeferreds.set(m.route.id, dfd);
-              return dfd.promise;
+              return dfd.promise as Promise<HandlerResult>;
             })
           );
 
@@ -876,14 +1009,15 @@ describe("router dataStrategy", () => {
               parent: "PARENT",
               child: "CHILD",
             },
-            errors: null,
           };
 
           // Resolve the deferred's above and return the mapped match promises
           routeDeferreds.forEach((dfd, routeId) =>
             dfd.resolve({ type: "data", result: result.loaderData[routeId] })
           );
-          return Promise.all(matchPromises);
+          return Promise.all(matchPromises).then((results) =>
+            keyedResults(matches, results)
+          );
         },
       });
 
@@ -968,7 +1102,7 @@ describe("router dataStrategy", () => {
                 return { type: "data", result: await handler(handlerCtx) };
               })
             )
-          );
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -1092,7 +1226,7 @@ describe("router dataStrategy", () => {
                 };
               })
             )
-          );
+          ).then((results) => keyedResults(matches, results));
         },
       });
 
@@ -1195,7 +1329,7 @@ describe("router dataStrategy", () => {
                 return { type: "data", result: handlerResult };
               });
             })
-          );
+          ).then((results) => keyedResults(matches, results));
         },
       });
 

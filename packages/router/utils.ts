@@ -19,7 +19,6 @@ export enum ResultType {
  * Successful result from a loader or action
  */
 export interface SuccessResult {
-  routeId: string;
   type: ResultType.data;
   data: unknown;
   statusCode?: number;
@@ -30,7 +29,6 @@ export interface SuccessResult {
  * Successful defer() result from a loader or action
  */
 export interface DeferredResult {
-  routeId: string;
   type: ResultType.deferred;
   deferredData: DeferredData;
   statusCode?: number;
@@ -41,7 +39,6 @@ export interface DeferredResult {
  * Redirect result from a loader or action
  */
 export interface RedirectResult {
-  routeId: string;
   type: ResultType.redirect;
   // We keep the raw Response for redirects so we can return it verbatim
   response: Response;
@@ -51,7 +48,6 @@ export interface RedirectResult {
  * Unsuccessful result from a loader or action
  */
 export interface ErrorResult {
-  routeId: string;
   type: ResultType.error;
   error: unknown;
   statusCode?: number;
@@ -73,10 +69,6 @@ export type DataResult =
 export interface HandlerResult {
   type: "data" | "error";
   result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
-}
-
-export interface HandlerResultWithRouteId extends HandlerResult {
-  routeId: string;
 }
 
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
@@ -261,7 +253,7 @@ export interface DataStrategyFunctionArgs<Context = any>
 }
 
 export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
+  (args: DataStrategyFunctionArgs): Promise<Record<string, HandlerResult>>;
 }
 
 export interface AgnosticPatchRoutesOnNavigationFunction<

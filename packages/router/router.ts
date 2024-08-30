@@ -37,7 +37,6 @@ import type {
   V7_MutationFormMethod,
   AgnosticPatchRoutesOnNavigationFunction,
   DataWithResponseInit,
-  HandlerResultWithRouteId,
 } from "./utils";
 import {
   ErrorResponseImpl,
@@ -644,7 +643,7 @@ interface ShortCircuitable {
   shortCircuited?: boolean;
 }
 
-type PendingActionResult = SuccessResult | ErrorResult;
+type PendingActionResult = (SuccessResult | ErrorResult) & { routeId: string };
 
 interface HandleActionResult extends ShortCircuitable {
   /**
@@ -1746,7 +1745,6 @@ export function createRouter(init: RouterInit): Router {
 
     if (!actionMatch.route.action && !actionMatch.route.lazy) {
       result = {
-        routeId: actionMatch.route.id,
         type: ResultType.error,
         error: getInternalRouterError(405, {
           method: request.method,
@@ -1763,7 +1761,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         null
       );
-      result = results[0];
+      result = results[actionMatch.route.id];
 
       if (request.signal.aborted) {
         return { shortCircuited: true };
@@ -2035,22 +2033,18 @@ export function createRouter(init: RouterInit): Router {
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(loaderResults);
-    let isFetcherRedirect = false;
-    if (!redirect) {
-      isFetcherRedirect = true;
-      redirect = findRedirect(fetcherResults);
-    }
     if (redirect) {
-      if (isFetcherRedirect) {
-        // If this redirect came from a fetcher make sure we mark it in
-        // fetchRedirectIds so it doesn't get revalidated on the next set of
-        // loader executions
-        let fetcherKey = revalidatingFetchers[redirect.idx].key;
-        fetchRedirectIds.add(fetcherKey);
-      }
-      await startRedirectNavigation(request, redirect.result, {
-        replace,
-      });
+      await startRedirectNavigation(request, redirect.result, { replace });
+      return { shortCircuited: true };
+    }
+
+    redirect = findRedirect(fetcherResults);
+    if (redirect) {
+      // If this redirect came from a fetcher make sure we mark it in
+      // fetchRedirectIds so it doesn't get revalidated on the next set of
+      // loader executions
+      fetchRedirectIds.add(redirect.key);
+      await startRedirectNavigation(request, redirect.result, { replace });
       return { shortCircuited: true };
     }
 
@@ -2313,13 +2307,7 @@ export function createRouter(init: RouterInit): Router {
       requestMatches,
       key
     );
-    let actionResult = actionResults.find(
-      (r) => r.routeId === match.route.id
-    ) || {
-      routeId: match.route.id,
-      type: ResultType.error,
-      error: getInternalRouterError(404, { pathname: path }),
-    };
+    let actionResult = actionResults[match.route.id];
 
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
@@ -2407,7 +2395,7 @@ export function createRouter(init: RouterInit): Router {
       fetchRedirectIds,
       routesToUse,
       basename,
-      actionResult
+      { ...actionResult, routeId: match.route.id }
     );
 
     // Put all revalidating fetchers into the loading state, except for the
@@ -2463,23 +2451,24 @@ export function createRouter(init: RouterInit): Router {
     fetchControllers.delete(key);
     revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
 
-    let redirect = findRedirect([...loaderResults, ...fetcherResults]);
+    let redirect = findRedirect(loaderResults);
     if (redirect) {
-      if (redirect.idx >= matchesToLoad.length) {
-        // If this redirect came from a fetcher make sure we mark it in
-        // fetchRedirectIds so it doesn't get revalidated on the next set of
-        // loader executions
-        let fetcherKey =
-          revalidatingFetchers[redirect.idx - matchesToLoad.length].key;
-        fetchRedirectIds.add(fetcherKey);
-      }
+      return startRedirectNavigation(revalidationRequest, redirect.result);
+    }
+
+    redirect = findRedirect(fetcherResults);
+    if (redirect) {
+      // If this redirect came from a fetcher make sure we mark it in
+      // fetchRedirectIds so it doesn't get revalidated on the next set of
+      // loader executions
+      fetchRedirectIds.add(redirect.key);
       return startRedirectNavigation(revalidationRequest, redirect.result);
     }
 
     // Process and commit output from loaders
     let { loaderData, errors } = processLoaderData(
       state,
-      state.matches,
+      matches,
       matchesToLoad,
       loaderResults,
       undefined,
@@ -2598,11 +2587,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       key
     );
-    let result = results.find((r) => r.routeId === match.route.id) || {
-      routeId: match.route.id,
-      type: ResultType.error,
-      error: getInternalRouterError(404, { pathname: path }),
-    };
+    let result = results[match.route.id];
 
     // Deferred isn't supported for fetcher loads, await everything and treat it
     // as a normal load.  resolveDeferredData will return undefined if this
@@ -2794,9 +2779,11 @@ export function createRouter(init: RouterInit): Router {
     matchesToLoad: AgnosticDataRouteMatch[],
     matches: AgnosticDataRouteMatch[],
     fetcherKey: string | null
-  ): Promise<DataResult[]> {
+  ): Promise<Record<string, DataResult>> {
+    let results: Record<string, HandlerResult>;
+    let dataResults: Record<string, DataResult> = {};
     try {
-      let results = await callDataStrategyImpl(
+      results = await callDataStrategyImpl(
         dataStrategyImpl,
         type,
         state,
@@ -2807,37 +2794,40 @@ export function createRouter(init: RouterInit): Router {
         manifest,
         mapRouteProperties
       );
-
-      return await Promise.all(
-        results.map((result, i) => {
-          if (isRedirectHandlerResult(result)) {
-            let response = result.result as Response;
-            return {
-              routeId: result.routeId,
-              type: ResultType.redirect,
-              response: normalizeRelativeRoutingRedirectResponse(
-                response,
-                request,
-                result.routeId,
-                matches,
-                basename,
-                future.v7_relativeSplatPath
-              ),
-            };
-          }
-
-          return convertHandlerResultToDataResult(result);
-        })
-      );
     } catch (e) {
       // If the outer dataStrategy method throws, just return the error for all
       // matches - and it'll naturally bubble to the root
-      return matchesToLoad.map((m) => ({
-        routeId: m.route.id,
-        type: ResultType.error,
-        error: e,
-      }));
+      matchesToLoad.forEach((m) => {
+        dataResults[m.route.id] = {
+          type: ResultType.error,
+          error: e,
+        };
+      });
+      return dataResults;
     }
+
+    await Promise.all(
+      Object.entries(results).map(async ([routeId, result]) => {
+        if (isRedirectHandlerResult(result)) {
+          let response = result.result as Response;
+          dataResults[routeId] = {
+            type: ResultType.redirect,
+            response: normalizeRelativeRoutingRedirectResponse(
+              response,
+              request,
+              routeId,
+              matches,
+              basename,
+              future.v7_relativeSplatPath
+            ),
+          };
+        } else {
+          dataResults[routeId] = await convertHandlerResultToDataResult(result);
+        }
+      })
+    );
+
+    return dataResults;
   }
 
   async function callLoadersAndMaybeResolveData(
@@ -2848,63 +2838,59 @@ export function createRouter(init: RouterInit): Router {
     request: Request
   ) {
     let currentMatches = state.matches;
+
+    // Kick off loaders and fetchers in parallel
     let loaderResultsPromise = matchesToLoad.length
       ? callDataStrategy("loader", state, request, matchesToLoad, matches, null)
-      : Promise.resolve([] as DataResult[]);
+      : Promise.resolve({} as Record<string, DataResult>);
+
     let fetcherResultsPromise = Promise.all(
-      fetchersToLoad.map((f) => {
+      fetchersToLoad.map(async (f) => {
         if (f.matches && f.match && f.controller) {
+          let fetcherRouteId = f.match.route.id;
           let fetcherRequest = createClientSideRequest(
             init.history,
             f.path,
             f.controller.signal
           );
-          return callDataStrategy(
+          let results = await callDataStrategy(
             "loader",
             state,
             fetcherRequest,
             [f.match],
             f.matches,
             f.key
-          ).then(
-            (results) =>
-              results.find((r) => r.routeId === f.match?.route.id) ||
-              ({
-                routeId: f.routeId,
-                type: ResultType.error,
-                error: getInternalRouterError(404, { pathname: f.path }),
-              } as ErrorResult)
           );
+          let result = results[fetcherRouteId];
+          return { [f.key]: result };
         } else {
-          return Promise.resolve<DataResult>({
-            routeId: f.routeId,
-            type: ResultType.error,
-            error: getInternalRouterError(404, {
-              pathname: f.path,
-            }),
+          return Promise.resolve({
+            [f.key]: {
+              type: ResultType.error,
+              error: getInternalRouterError(404, {
+                pathname: f.path,
+              }),
+            } as ErrorResult,
           });
         }
       })
     );
+
     let loaderResults = await loaderResultsPromise;
-    let fetcherResults = await fetcherResultsPromise;
+    let fetcherResults = (await fetcherResultsPromise).reduce(
+      (acc, r) => Object.assign(acc, r),
+      {}
+    );
 
     await Promise.all([
-      resolveDeferredResults(
-        currentMatches,
-        matchesToLoad,
+      resolveNavigationDeferredResults(
+        matches,
         loaderResults,
-        loaderResults.map(() => request.signal),
-        false,
+        request.signal,
+        currentMatches,
         state.loaderData
       ),
-      resolveDeferredResults(
-        currentMatches,
-        fetchersToLoad.map((f) => f.match),
-        fetcherResults,
-        fetchersToLoad.map((f) => (f.controller ? f.controller.signal : null)),
-        true
-      ),
+      resolveFetcherDeferredResults(matches, fetcherResults, fetchersToLoad),
     ]);
 
     return {
@@ -3792,7 +3778,6 @@ export function createStaticHandler(
         throw error;
       }
       result = {
-        routeId: actionMatch.route.id,
         type: ResultType.error,
         error,
       };
@@ -3806,7 +3791,7 @@ export function createStaticHandler(
         requestContext,
         unstable_dataStrategy
       );
-      result = results[0];
+      result = results[actionMatch.route.id];
 
       if (request.signal.aborted) {
         throwStaticHandlerAbortedError(request, isRouteRequest, future);
@@ -3832,7 +3817,6 @@ export function createStaticHandler(
         throw error;
       }
       result = {
-        routeId: actionMatch.route.id,
         type: ResultType.error,
         error,
       };
@@ -4037,7 +4021,7 @@ export function createStaticHandler(
     isRouteRequest: boolean,
     requestContext: unknown,
     unstable_dataStrategy: DataStrategyFunction | null
-  ): Promise<DataResult[]> {
+  ): Promise<Record<string, DataResult>> {
     let results = await callDataStrategyImpl(
       unstable_dataStrategy || defaultDataStrategy,
       type,
@@ -4051,15 +4035,20 @@ export function createStaticHandler(
       requestContext
     );
 
-    return await Promise.all(
-      results.map((result, i) => {
+    let dataResults: Record<string, DataResult> = {};
+    await Promise.all(
+      matches.map(async (match) => {
+        if (!(match.route.id in results)) {
+          return;
+        }
+        let result = results[match.route.id];
         if (isRedirectHandlerResult(result)) {
           let response = result.result as Response;
           // Throw redirects and let the server handle them with an HTTP redirect
           throw normalizeRelativeRoutingRedirectResponse(
             response,
             request,
-            matchesToLoad[i].route.id,
+            match.route.id,
             matches,
             basename,
             future.v7_relativeSplatPath
@@ -4071,9 +4060,12 @@ export function createStaticHandler(
           throw result;
         }
 
-        return convertHandlerResultToDataResult(result);
+        dataResults[match.route.id] = await convertHandlerResultToDataResult(
+          result
+        );
       })
     );
+    return dataResults;
   }
 
   return {
@@ -4764,10 +4756,16 @@ async function loadLazyRouteModule(
 }
 
 // Default implementation of `dataStrategy` which fetches all loaders in parallel
-function defaultDataStrategy(
-  opts: DataStrategyFunctionArgs
-): ReturnType<DataStrategyFunction> {
-  return Promise.all(opts.matches.map((m) => m.resolve()));
+async function defaultDataStrategy({
+  matches,
+}: DataStrategyFunctionArgs): ReturnType<DataStrategyFunction> {
+  let matchesToLoad = matches.filter((m) => m.shouldLoad);
+  let results = await Promise.all(matchesToLoad.map((m) => m.resolve()));
+  return results.reduce(
+    (acc, result, i) =>
+      Object.assign(acc, { [matchesToLoad[i].route.id]: result }),
+    {}
+  );
 }
 
 async function callDataStrategyImpl(
@@ -4781,41 +4779,38 @@ async function callDataStrategyImpl(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   requestContext?: unknown
-): Promise<HandlerResultWithRouteId[]> {
-  let routeIdsToLoad = matchesToLoad.reduce(
-    (acc, m) => acc.add(m.route.id),
-    new Set<string>()
+): Promise<Record<string, HandlerResult>> {
+  let loadRouteDefinitionsPromises = matches.map((m) =>
+    m.route.lazy
+      ? loadLazyRouteModule(m.route, mapRouteProperties, manifest)
+      : undefined
   );
-  let manualLoads = new Set<string>();
-  let loadedMatches = new Set<string>();
 
   // Send all matches here to allow for a middleware-type implementation.
   // handler will be a no-op for unneeded routes and we filter those results
   // back out below.
   let results = await dataStrategyImpl({
-    matches: matches.map((match) => {
-      let shouldLoad = routeIdsToLoad.has(match.route.id);
-      // `resolve` encapsulates the route.lazy, executing the
-      // loader/action, and mapping return values/thrown errors to a
-      // HandlerResult.  Users can pass a callback to take fine-grained control
-      // over the execution of the loader/action
-      let resolve: DataStrategyMatch["resolve"] = (handlerOverride) => {
-        loadedMatches.add(match.route.id);
+    matches: matches.map((match, i) => {
+      let loadRoutePromise = loadRouteDefinitionsPromises[i];
+      let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
+      // `resolve` encapsulates route.lazy(), executing the loader/action,
+      // and mapping return values/thrown errors to a `HandlerResult`.  Users
+      // can pass a callback to take fine-grained control over the execution
+      // of the loader/action
+      let resolve: DataStrategyMatch["resolve"] = async (handlerOverride) => {
         if (
           handlerOverride &&
           request.method === "GET" &&
           (match.route.lazy || match.route.loader)
         ) {
           shouldLoad = true;
-          manualLoads.add(match.route.id);
         }
         return shouldLoad
           ? callLoaderOrAction(
               type,
               request,
               match,
-              manifest,
-              mapRouteProperties,
+              loadRoutePromise,
               handlerOverride,
               requestContext
             )
@@ -4839,32 +4834,30 @@ async function callDataStrategyImpl(
     context: requestContext,
   });
 
+  // Wait for all routes to load here but don'swallow the error since we want
+  // it to bubble up from the await loadRoutePromise in `callLoaderOrAction` -
+  // called from `match.resolve()`
+  try {
+    await Promise.all(loadRouteDefinitionsPromises);
+  } catch (e) {
+    // No-op
+  }
+
   // Throw if any loadRoute implementations not called since they are what
   // ensures a route is fully loaded
-  matches.forEach((m) =>
-    invariant(
-      loadedMatches.has(m.route.id),
-      `\`match.resolve()\` was not called for route id "${m.route.id}". ` +
-        "You must call `match.resolve()` on every match passed to " +
-        "`dataStrategy` to ensure all routes are properly loaded."
-    )
-  );
-
-  // Filter out any middleware-only matches for which we didn't need to run handlers
-  let loadedRouteIds: string[] = [];
-  let filteredResults = results.filter((_, i) => {
-    let keep =
-      routeIdsToLoad.has(matches[i].route.id) ||
-      manualLoads.has(matches[i].route.id);
-    if (keep) {
-      loadedRouteIds.push(matches[i].route.id);
-      return true;
+  // TODO: This shouldn't be needed once we await the promises
+  matchesToLoad.forEach((m) => {
+    if (!(m.route.id in results)) {
+      let error = new Error(
+        `No result was returned from \`unstable_dataStrategy\` for the route ` +
+          `"${m.route.id}". Did you forget to call \`match.resolve()\`?`
+      );
+      console.warn(Error);
+      results[m.route.id] = { type: ResultType.error, result: error };
     }
   });
-  return filteredResults.map((result, i) => ({
-    ...result,
-    routeId: loadedRouteIds[i],
-  }));
+
+  return results;
 }
 
 // Default logic for calling a loader/action is the user has no specified a dataStrategy
@@ -4872,8 +4865,7 @@ async function callLoaderOrAction(
   type: "loader" | "action",
   request: Request,
   match: AgnosticDataRouteMatch,
-  manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction,
+  loadRoutePromise: Promise<void> | undefined,
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
   staticContext?: unknown
 ): Promise<HandlerResult> {
@@ -4930,7 +4922,8 @@ async function callLoaderOrAction(
   try {
     let handler = match.route[type];
 
-    if (match.route.lazy) {
+    // If we have a route.lazy promise, await that first
+    if (loadRoutePromise) {
       if (handler) {
         // Run statically defined handler in parallel with lazy()
         let handlerError;
@@ -4941,7 +4934,7 @@ async function callLoaderOrAction(
           runHandler(handler).catch((e) => {
             handlerError = e;
           }),
-          loadLazyRouteModule(match.route, mapRouteProperties, manifest),
+          loadRoutePromise,
         ]);
         if (handlerError !== undefined) {
           throw handlerError;
@@ -4949,7 +4942,7 @@ async function callLoaderOrAction(
         result = value!;
       } else {
         // Load lazy route module, then run any returned handler
-        await loadLazyRouteModule(match.route, mapRouteProperties, manifest);
+        await loadRoutePromise;
 
         handler = match.route[type];
         if (handler) {
@@ -4988,6 +4981,7 @@ async function callLoaderOrAction(
         `function. Please return a value or \`null\`.`
     );
   } catch (e) {
+    debugger;
     // We should already be catching and converting normal handler executions to
     // HandlerResults and returning them, so anything that throws here is an
     // unexpected error we still need to wrap
@@ -5002,9 +4996,9 @@ async function callLoaderOrAction(
 }
 
 async function convertHandlerResultToDataResult(
-  handlerResult: HandlerResultWithRouteId
+  handlerResult: HandlerResult
 ): Promise<DataResult> {
-  let { result, type, routeId } = handlerResult;
+  let { result, type } = handlerResult;
 
   if (isResponse(result)) {
     let data: any;
@@ -5024,7 +5018,6 @@ async function convertHandlerResultToDataResult(
       }
     } catch (e) {
       return {
-        routeId,
         type: ResultType.error,
         error: e,
       };
@@ -5032,7 +5025,6 @@ async function convertHandlerResultToDataResult(
 
     if (type === ResultType.error) {
       return {
-        routeId,
         type: ResultType.error,
         error: new ErrorResponseImpl(result.status, result.statusText, data),
         statusCode: result.status,
@@ -5041,7 +5033,6 @@ async function convertHandlerResultToDataResult(
     }
 
     return {
-      routeId,
       type: ResultType.data,
       data,
       statusCode: result.status,
@@ -5053,7 +5044,6 @@ async function convertHandlerResultToDataResult(
     if (isDataWithResponseInit(result)) {
       if (result.data instanceof Error) {
         return {
-          routeId,
           type: ResultType.error,
           error: result.data,
           statusCode: result.init?.status,
@@ -5068,7 +5058,6 @@ async function convertHandlerResultToDataResult(
       );
     }
     return {
-      routeId,
       type: ResultType.error,
       error: result,
       statusCode: isRouteErrorResponse(result) ? result.status : undefined,
@@ -5077,7 +5066,6 @@ async function convertHandlerResultToDataResult(
 
   if (isDeferredData(result)) {
     return {
-      routeId,
       type: ResultType.deferred,
       deferredData: result,
       statusCode: result.init?.status,
@@ -5087,7 +5075,6 @@ async function convertHandlerResultToDataResult(
 
   if (isDataWithResponseInit(result)) {
     return {
-      routeId,
       type: ResultType.data,
       data: result.data,
       statusCode: result.init?.status,
@@ -5098,7 +5085,6 @@ async function convertHandlerResultToDataResult(
   }
 
   return {
-    routeId,
     type: ResultType.data,
     data: result,
   };
@@ -5220,7 +5206,7 @@ function convertSearchParamsToFormData(
 
 function processRouteLoaderData(
   matches: AgnosticDataRouteMatch[],
-  results: DataResult[],
+  results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
   activeDeferreds: Map<string, DeferredData>,
   skipLoaderErrorBubbling: boolean
@@ -5242,8 +5228,12 @@ function processRouteLoaderData(
       : undefined;
 
   // Process loader results into state.loaderData/state.errors
-  results.forEach((result, index) => {
-    let id = result.routeId;
+  matches.forEach((match) => {
+    if (!(match.route.id in results)) {
+      return;
+    }
+    let id = match.route.id;
+    let result = results[id];
     invariant(
       !isRedirectResult(result),
       "Cannot handle redirect results in processLoaderData"
@@ -5336,10 +5326,10 @@ function processLoaderData(
   state: RouterState,
   matches: AgnosticDataRouteMatch[],
   matchesToLoad: AgnosticDataRouteMatch[],
-  results: DataResult[],
+  results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
   revalidatingFetchers: RevalidatingFetcher[],
-  fetcherResults: DataResult[],
+  fetcherResults: Record<string, DataResult>,
   activeDeferreds: Map<string, DeferredData>
 ): {
   loaderData: RouterState["loaderData"];
@@ -5354,18 +5344,15 @@ function processLoaderData(
   );
 
   // Process results from our revalidating fetchers
-  for (let index = 0; index < revalidatingFetchers.length; index++) {
-    let { key, match, controller } = revalidatingFetchers[index];
-    invariant(
-      fetcherResults !== undefined && fetcherResults[index] !== undefined,
-      "Did not find corresponding fetcher result"
-    );
-    let result = fetcherResults[index];
+  revalidatingFetchers.forEach((rf) => {
+    let { key, match, controller } = rf;
+    let result = fetcherResults[key];
+    invariant(result, "Did not find corresponding fetcher result");
 
     // Process fetcher non-redirect errors
     if (controller && controller.signal.aborted) {
       // Nothing to do for aborted fetchers
-      continue;
+      return;
     } else if (isErrorResult(result)) {
       let boundaryMatch = findNearestBoundary(state.matches, match?.route.id);
       if (!(errors && errors[boundaryMatch.route.id])) {
@@ -5387,7 +5374,7 @@ function processLoaderData(
       let doneFetcher = getDoneFetcher(result.data);
       state.fetchers.set(key, doneFetcher);
     }
-  }
+  });
 
   return { loaderData, errors };
 }
@@ -5545,12 +5532,13 @@ function getInternalRouterError(
 
 // Find any returned redirect errors, starting from the lowest match
 function findRedirect(
-  results: DataResult[]
-): { result: RedirectResult; idx: number } | undefined {
-  for (let i = results.length - 1; i >= 0; i--) {
-    let result = results[i];
+  results: Record<string, DataResult>
+): { key: string; result: RedirectResult } | undefined {
+  let entries = Object.entries(results);
+  for (let i = entries.length - 1; i >= 0; i--) {
+    let [key, result] = entries[i];
     if (isRedirectResult(result)) {
-      return { result, idx: i };
+      return { key, result };
     }
   }
 }
@@ -5668,17 +5656,17 @@ function isMutationMethod(
   return validMutationMethods.has(method.toLowerCase() as MutationFormMethod);
 }
 
-async function resolveDeferredResults(
+async function resolveNavigationDeferredResults(
+  matches: (AgnosticDataRouteMatch | null)[],
+  results: Record<string, DataResult>,
+  signal: AbortSignal,
   currentMatches: AgnosticDataRouteMatch[],
-  matchesToLoad: (AgnosticDataRouteMatch | null)[],
-  results: DataResult[],
-  signals: (AbortSignal | null)[],
-  isFetcher: boolean,
-  currentLoaderData?: RouteData
+  currentLoaderData: RouteData
 ) {
-  for (let index = 0; index < results.length; index++) {
-    let result = results[index];
-    let match = matchesToLoad[index];
+  let entries = Object.entries(results);
+  for (let index = 0; index < entries.length; index++) {
+    let [routeId, result] = entries[index];
+    let match = matches.find((m) => m?.route.id === routeId);
     // If we don't have a match, then we can have a deferred result to do
     // anything with.  This is for revalidating fetchers where the route was
     // removed during HMR
@@ -5694,20 +5682,50 @@ async function resolveDeferredResults(
       !isNewRouteInstance(currentMatch, match) &&
       (currentLoaderData && currentLoaderData[match.route.id]) !== undefined;
 
-    if (isDeferredResult(result) && (isFetcher || isRevalidatingLoader)) {
+    if (isDeferredResult(result) && isRevalidatingLoader) {
       // Note: we do not have to touch activeDeferreds here since we race them
       // against the signal in resolveDeferredData and they'll get aborted
       // there if needed
-      let signal = signals[index];
-      invariant(
-        signal,
-        "Expected an AbortSignal for revalidating fetcher deferred result"
-      );
-      await resolveDeferredData(result, signal, isFetcher).then((result) => {
+      await resolveDeferredData(result, signal, false).then((result) => {
         if (result) {
-          results[index] = result || results[index];
+          results[routeId] = result;
         }
       });
+    }
+  }
+}
+
+async function resolveFetcherDeferredResults(
+  matches: (AgnosticDataRouteMatch | null)[],
+  results: Record<string, DataResult>,
+  revalidatingFetchers: RevalidatingFetcher[]
+) {
+  for (let index = 0; index < revalidatingFetchers.length; index++) {
+    let { key, routeId, controller } = revalidatingFetchers[index];
+    let result = results[key];
+    let match = matches.find((m) => m?.route.id === routeId);
+    // If we don't have a match, then we can have a deferred result to do
+    // anything with.  This is for revalidating fetchers where the route was
+    // removed during HMR
+    if (!match) {
+      continue;
+    }
+
+    if (isDeferredResult(result)) {
+      // Note: we do not have to touch activeDeferreds here since we race them
+      // against the signal in resolveDeferredData and they'll get aborted
+      // there if needed
+      invariant(
+        controller,
+        "Expected an AbortController for revalidating fetcher deferred result"
+      );
+      await resolveDeferredData(result, controller.signal, true).then(
+        (result) => {
+          if (result) {
+            results[key] = result;
+          }
+        }
+      );
     }
   }
 }
@@ -5725,14 +5743,12 @@ async function resolveDeferredData(
   if (unwrap) {
     try {
       return {
-        routeId: result.routeId,
         type: ResultType.data,
         data: result.deferredData.unwrappedData,
       };
     } catch (e) {
       // Handle any TrackedPromise._error values encountered while unwrapping
       return {
-        routeId: result.routeId,
         type: ResultType.error,
         error: e,
       };
@@ -5740,7 +5756,6 @@ async function resolveDeferredData(
   }
 
   return {
-    routeId: result.routeId,
     type: ResultType.data,
     data: result.deferredData.data,
   };
