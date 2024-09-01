@@ -1142,6 +1142,7 @@ export function createRoutesFromChildren(
 
     let route: RouteObject = {
       id: element.props.id || treePath.join("-"),
+      name: element.props.name,
       caseSensitive: element.props.caseSensitive,
       element: element.props.element,
       Component: element.props.Component,
