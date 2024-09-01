@@ -24,6 +24,7 @@ export interface IndexRouteObject {
   caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
   path?: AgnosticIndexRouteObject["path"];
   id?: AgnosticIndexRouteObject["id"];
+  name?: string;
   loader?: AgnosticIndexRouteObject["loader"];
   action?: AgnosticIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
@@ -44,6 +45,7 @@ export interface NonIndexRouteObject {
   caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
   path?: AgnosticNonIndexRouteObject["path"];
   id?: AgnosticNonIndexRouteObject["id"];
+  name?: string;
   loader?: AgnosticNonIndexRouteObject["loader"];
   action?: AgnosticNonIndexRouteObject["action"];
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
@@ -79,6 +81,7 @@ export interface DataRouterContextObject
   // `NavigationContext` needs future since it doesn't have a `router` in all cases
   extends Omit<NavigationContextObject, "future"> {
   router: Router;
+  named: Map<string,string>;
   staticContext?: StaticHandlerContext;
 }
 

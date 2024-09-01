@@ -132,6 +132,7 @@ export {
   useRouteError,
   useRouteLoaderData,
   useRoutes,
+  useNamedRoutes
 } from "./lib/hooks";
 
 // Expose old RR DOM API
@@ -333,7 +334,7 @@ export {
 export { createRouter as UNSAFE_createRouter } from "./lib/router/router";
 
 /** @internal */
-export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl } from "./lib/router/utils";
+export { ErrorResponseImpl as UNSAFE_ErrorResponseImpl, generateNamedRoutes } from "./lib/router/utils";
 
 /** @internal */
 export {

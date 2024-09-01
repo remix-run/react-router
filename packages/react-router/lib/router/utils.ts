@@ -286,6 +286,7 @@ type AgnosticBaseRouteObject = {
   caseSensitive?: boolean;
   path?: string;
   id?: string;
+  name?: string;
   loader?: LoaderFunction | boolean;
   action?: ActionFunction | boolean;
   hasErrorBoundary?: boolean;
@@ -737,6 +738,44 @@ function computeScore(path: string, index: boolean | undefined): number {
           : staticSegmentValue),
       initialScore
     );
+}
+
+function generateUrl(base: string,url: string): string
+{
+  if(base[base.length-1]==="/" || url[0]==="/")
+  {
+    base=base.substring(0,base.length-1)
+  }
+  else if(base[base.length-1]!=="/" && url[0]!=="/")
+  {
+    base="/"
+  }
+
+  return base+url
+}
+
+export function generateNamedRoutes(routes: AgnosticDataRouteObject[],location: string): Map<string,string>
+{
+  const res: Map<string,string> = new Map()
+
+  for(const route of routes)
+  {
+    if("name" in route && typeof route.name === "string" && "path" in route && typeof route.path === "string")
+    {
+      res.set(route.name,generateUrl(location,route.path))
+    }
+    if("children" in route && Array.isArray(route.children))
+    {
+      const childrenNamedRoutes = generateNamedRoutes(route.children,location)
+
+      for(const key of childrenNamedRoutes.keys())
+      {
+        res.set(key,childrenNamedRoutes.get(key)!)
+      }
+    }
+  }
+
+  return res
 }
 
 function compareIndexes(a: number[], b: number[]): number {

@@ -24,6 +24,7 @@ import {
 import type { RouteManifest } from "../router/utils";
 import {
   convertRoutesToDataRoutes,
+  generateNamedRoutes,
   isRouteErrorResponse,
 } from "../router/utils";
 import { Router, mapRouteProperties } from "../components";
@@ -109,6 +110,7 @@ export function StaticRouterProvider({
     static: true,
     staticContext: context,
     basename: context.basename || "/",
+    named: generateNamedRoutes(router.routes,context.basename || "/")
   };
 
   let fetchersContext = new Map();

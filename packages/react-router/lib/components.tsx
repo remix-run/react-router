@@ -28,7 +28,7 @@ import type {
   LazyRouteFunction,
   TrackedPromise,
 } from "./router/utils";
-import { getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
+import { generateNamedRoutes, getResolveToMatches, resolveTo, stripBasename } from "./router/utils";
 
 import type {
   DataRouteObject,
@@ -412,6 +412,7 @@ export function RouterProvider({
       navigator,
       static: false,
       basename,
+      named: generateNamedRoutes(router.routes,basename),
     }),
     [router, navigator, basename]
   );

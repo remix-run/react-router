@@ -931,6 +931,7 @@ enum DataRouterHook {
   UseBlocker = "useBlocker",
   UseRevalidator = "useRevalidator",
   UseNavigateStable = "useNavigate",
+  UseNamedRoutes = "useNamedRoutes",
 }
 
 enum DataRouterStateHook {
@@ -1339,6 +1340,34 @@ function useNavigateStable(): NavigateFunction {
   );
 
   return navigate;
+}
+
+/**
+ * Returns the named routes and a route function to get url
+ */
+export function useNamedRoutes() : { routes: Map<string,string>,route: (name: string,args?: { [key: string]: string })=>string }
+{
+  const { named } = useDataRouterContext(DataRouterHook.UseNamedRoutes)
+  invariant(named!==undefined,"Named routes is undefined")
+
+  const route = (name: string,args?: { [key: string]: string }) => {
+    let res = (named.has(name) ? named.get(name) : invariant(false,"Named route Error: "+name+" route is not exist")) as string
+
+    if(args!==undefined)
+    {
+      for(const key of Object.keys(args))
+      {
+        res=res.replaceAll(":"+key,args[key])
+      }
+    }
+
+    return res
+  }
+
+  return {
+    routes:named,
+    route
+  }
 }
 
 const alreadyWarned: Record<string, boolean> = {};
