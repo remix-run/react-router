@@ -627,7 +627,7 @@ export interface PathRouteProps {
   caseSensitive?: NonIndexRouteObject["caseSensitive"];
   path?: NonIndexRouteObject["path"];
   id?: NonIndexRouteObject["id"];
-  name: NonIndexRouteObject["name"];
+  name?: NonIndexRouteObject["name"];
   lazy?: LazyRouteFunction<NonIndexRouteObject>;
   loader?: NonIndexRouteObject["loader"];
   action?: NonIndexRouteObject["action"];
