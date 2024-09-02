@@ -138,7 +138,7 @@ const CLIENT_ROUTE_EXPORTS = [
 const ROUTE_ENTRY_QUERY_STRING = "?route-entry=1";
 const ROUTE_CHUNK_QUERY_STRING = "?route-chunk=";
 const MAIN_ROUTE_CHUNK_QUERY_STRING = `${ROUTE_CHUNK_QUERY_STRING}main`;
-const CLIENT_ACTION_CHUNK_QUERY_STRING = `${ROUTE_CHUNK_QUERY_STRING}action-loader`;
+const CLIENT_ACTION_CHUNK_QUERY_STRING = `${ROUTE_CHUNK_QUERY_STRING}client-action`;
 const CLIENT_LOADER_CHUNK_QUERY_STRING = `${ROUTE_CHUNK_QUERY_STRING}client-loader`;
 
 const isRouteEntry = (id: string): boolean => {
