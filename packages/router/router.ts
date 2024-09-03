@@ -4828,11 +4828,6 @@ async function callDataStrategyImpl(
 
     return {
       ...match,
-      data: fetcherKey
-        ? state?.fetchers.get(fetcherKey)?.data
-        : request.method !== "GET"
-        ? state?.actionData?.[match.route.id]
-        : state?.loaderData[match.route.id],
       shouldLoad,
       resolve,
     };
@@ -4857,20 +4852,6 @@ async function callDataStrategyImpl(
   } catch (e) {
     // No-op
   }
-
-  // Check to ensure that a result was provided for all matches we wanted to load.
-  // Only do this if the match doesn't currently have any data since they could
-  // just be choosing not to revalidate
-  dsMatches.forEach((m) => {
-    if (m.shouldLoad && !(m.route.id in results) && m.data === undefined) {
-      let error = new Error(
-        `No result was returned from \`unstable_dataStrategy\` for the route ` +
-          `"${m.route.id}". Did you forget to call \`match.resolve()\`?`
-      );
-      console.warn(Error);
-      results[m.route.id] = { type: ResultType.error, result: error };
-    }
-  });
 
   return results;
 }
