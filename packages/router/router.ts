@@ -1786,7 +1786,7 @@ export function createRouter(init: RouterInit): Router {
         );
         replace = location === state.location.pathname + state.location.search;
       }
-      await startRedirectNavigation(request, result, {
+      await startRedirectNavigation(request, result, true, {
         submission,
         replace,
       });
@@ -2031,7 +2031,9 @@ export function createRouter(init: RouterInit): Router {
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(loaderResults);
     if (redirect) {
-      await startRedirectNavigation(request, redirect.result, { replace });
+      await startRedirectNavigation(request, redirect.result, true, {
+        replace,
+      });
       return { shortCircuited: true };
     }
 
@@ -2041,7 +2043,9 @@ export function createRouter(init: RouterInit): Router {
       // fetchRedirectIds so it doesn't get revalidated on the next set of
       // loader executions
       fetchRedirectIds.add(redirect.key);
-      await startRedirectNavigation(request, redirect.result, { replace });
+      await startRedirectNavigation(request, redirect.result, true, {
+        replace,
+      });
       return { shortCircuited: true };
     }
 
@@ -2337,7 +2341,7 @@ export function createRouter(init: RouterInit): Router {
         } else {
           fetchRedirectIds.add(key);
           updateFetcherState(key, getLoadingFetcher(submission));
-          return startRedirectNavigation(fetchRequest, actionResult, {
+          return startRedirectNavigation(fetchRequest, actionResult, false, {
             fetcherSubmission: submission,
           });
         }
@@ -2450,7 +2454,11 @@ export function createRouter(init: RouterInit): Router {
 
     let redirect = findRedirect(loaderResults);
     if (redirect) {
-      return startRedirectNavigation(revalidationRequest, redirect.result);
+      return startRedirectNavigation(
+        revalidationRequest,
+        redirect.result,
+        false
+      );
     }
 
     redirect = findRedirect(fetcherResults);
@@ -2459,7 +2467,11 @@ export function createRouter(init: RouterInit): Router {
       // fetchRedirectIds so it doesn't get revalidated on the next set of
       // loader executions
       fetchRedirectIds.add(redirect.key);
-      return startRedirectNavigation(revalidationRequest, redirect.result);
+      return startRedirectNavigation(
+        revalidationRequest,
+        redirect.result,
+        false
+      );
     }
 
     // Process and commit output from loaders
@@ -2622,7 +2634,7 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         fetchRedirectIds.add(key);
-        await startRedirectNavigation(fetchRequest, result);
+        await startRedirectNavigation(fetchRequest, result, false);
         return;
       }
     }
@@ -2661,6 +2673,7 @@ export function createRouter(init: RouterInit): Router {
   async function startRedirectNavigation(
     request: Request,
     redirect: RedirectResult,
+    isNavigation: boolean,
     {
       submission,
       fetcherSubmission,
@@ -2747,8 +2760,11 @@ export function createRouter(init: RouterInit): Router {
           ...activeSubmission,
           formAction: location,
         },
-        // Preserve this flag across redirects
+        // Preserve these flags across redirects
         preventScrollReset: pendingPreventScrollReset,
+        enableViewTransition: isNavigation
+          ? pendingViewTransitionEnabled
+          : undefined,
       });
     } else {
       // If we have a navigation submission, we will preserve it through the
@@ -2761,8 +2777,11 @@ export function createRouter(init: RouterInit): Router {
         overrideNavigation,
         // Send fetcher submissions through for shouldRevalidate
         fetcherSubmission,
-        // Preserve this flag across redirects
+        // Preserve these flags across redirects
         preventScrollReset: pendingPreventScrollReset,
+        enableViewTransition: isNavigation
+          ? pendingViewTransitionEnabled
+          : undefined,
       });
     }
   }
