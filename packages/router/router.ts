@@ -4830,8 +4830,8 @@ async function callDataStrategyImpl(
     context: requestContext,
   });
 
-  // Wait for all routes to load here but don'swallow the error since we want
-  // it to bubble up from the await loadRoutePromise in `callLoaderOrAction` -
+  // Wait for all routes to load here but 'swallow the error since we want
+  // it to bubble up from the `await loadRoutePromise` in `callLoaderOrAction` -
   // called from `match.resolve()`
   try {
     await Promise.all(loadRouteDefinitionsPromises);
@@ -4977,7 +4977,6 @@ async function callLoaderOrAction(
         `function. Please return a value or \`null\`.`
     );
   } catch (e) {
-    debugger;
     // We should already be catching and converting normal handler executions to
     // HandlerResults and returning them, so anything that throws here is an
     // unexpected error we still need to wrap
@@ -5013,10 +5012,7 @@ async function convertHandlerResultToDataResult(
         data = await result.text();
       }
     } catch (e) {
-      return {
-        type: ResultType.error,
-        error: e,
-      };
+      return { type: ResultType.error, error: e };
     }
 
     if (type === ResultType.error) {
@@ -5080,10 +5076,7 @@ async function convertHandlerResultToDataResult(
     };
   }
 
-  return {
-    type: ResultType.data,
-    data: result,
-  };
+  return { type: ResultType.data, data: result };
 }
 
 // Support relative routing in internal redirects
