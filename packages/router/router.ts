@@ -2822,28 +2822,26 @@ export function createRouter(init: RouterInit): Router {
       return dataResults;
     }
 
-    await Promise.all(
-      Object.entries(results).map(async ([routeId, result]) => {
-        if (isRedirectDataStrategyResultResult(result)) {
-          let response = result.result as Response;
-          dataResults[routeId] = {
-            type: ResultType.redirect,
-            response: normalizeRelativeRoutingRedirectResponse(
-              response,
-              request,
-              routeId,
-              matches,
-              basename,
-              future.v7_relativeSplatPath
-            ),
-          };
-        } else {
-          dataResults[routeId] = await convertDataStrategyResultToDataResult(
-            result
-          );
-        }
-      })
-    );
+    for (let [routeId, result] of Object.entries(results)) {
+      if (isRedirectDataStrategyResultResult(result)) {
+        let response = result.result as Response;
+        dataResults[routeId] = {
+          type: ResultType.redirect,
+          response: normalizeRelativeRoutingRedirectResponse(
+            response,
+            request,
+            routeId,
+            matches,
+            basename,
+            future.v7_relativeSplatPath
+          ),
+        };
+      } else {
+        dataResults[routeId] = await convertDataStrategyResultToDataResult(
+          result
+        );
+      }
+    }
 
     return dataResults;
   }
@@ -2858,28 +2856,28 @@ export function createRouter(init: RouterInit): Router {
     let currentMatches = state.matches;
 
     // Kick off loaders and fetchers in parallel
-    let loaderResultsPromise = matchesToLoad.length
-      ? callDataStrategy("loader", state, request, matchesToLoad, matches, null)
-      : Promise.resolve({} as Record<string, DataResult>);
+    let loaderResultsPromise = callDataStrategy(
+      "loader",
+      state,
+      request,
+      matchesToLoad,
+      matches,
+      null
+    );
 
     let fetcherResultsPromise = Promise.all(
       fetchersToLoad.map(async (f) => {
         if (f.matches && f.match && f.controller) {
-          let fetcherRouteId = f.match.route.id;
-          let fetcherRequest = createClientSideRequest(
-            init.history,
-            f.path,
-            f.controller.signal
-          );
           let results = await callDataStrategy(
             "loader",
             state,
-            fetcherRequest,
+            createClientSideRequest(init.history, f.path, f.controller.signal),
             [f.match],
             f.matches,
             f.key
           );
-          let result = results[fetcherRouteId];
+          let result = results[f.match.route.id];
+          // Fetcher results are keyed by fetcher key from here on out, not routeId
           return { [f.key]: result };
         } else {
           return Promise.resolve({
