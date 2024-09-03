@@ -1,4 +1,6 @@
 import type { GeneratorOptions, GeneratorResult } from "@babel/generator";
+import invariant from "../invariant";
+import { type Cache, getOrSetFromCache } from "./cache";
 import {
   type BabelTypes,
   type NodePath,
@@ -7,35 +9,53 @@ import {
   generate,
   t,
 } from "./babel";
-import invariant from "../invariant";
 
 type Statement = BabelTypes.Statement;
 type Identifier = BabelTypes.Identifier;
 
+function codeToAst(
+  code: string,
+  cache: Cache,
+  cacheKey: string
+): BabelTypes.File {
+  return getOrSetFromCache(cache, `${cacheKey}::codeToAst`, code, () =>
+    parse(code, { sourceType: "module" })
+  );
+}
+
 function getTopLevelStatementsByExportName(
-  code: string
+  code: string,
+  cache: Cache,
+  cacheKey: string
 ): Map<string, Set<Statement>> {
-  let ast = parse(code, { sourceType: "module" });
-  let topLevelStatementsByExportName = new Map<string, Set<Statement>>();
+  return getOrSetFromCache(
+    cache,
+    `${cacheKey}::getTopLevelStatementsByExportName`,
+    code,
+    () => {
+      let ast = codeToAst(code, cache, cacheKey);
+      let topLevelStatementsByExportName = new Map<string, Set<Statement>>();
 
-  traverse(ast, {
-    ExportDeclaration(exportPath) {
-      let visited = new Set<NodePath>();
-      let identifiers = new Set<NodePath<Identifier>>();
+      traverse(ast, {
+        ExportDeclaration(exportPath) {
+          let visited = new Set<NodePath>();
+          let identifiers = new Set<NodePath<Identifier>>();
 
-      collectIdentifiers(visited, identifiers, exportPath);
+          collectIdentifiers(visited, identifiers, exportPath);
 
-      let topLevelStatements = new Set([
-        exportPath.node,
-        ...getTopLevelStatementsForPaths(identifiers),
-      ]);
-      for (let exportName of getExportNames(exportPath)) {
-        topLevelStatementsByExportName.set(exportName, topLevelStatements);
-      }
-    },
-  });
+          let topLevelStatements = new Set([
+            exportPath.node,
+            ...getTopLevelStatementsForPaths(identifiers),
+          ]);
+          for (let exportName of getExportNames(exportPath)) {
+            topLevelStatementsByExportName.set(exportName, topLevelStatements);
+          }
+        },
+      });
 
-  return topLevelStatementsByExportName;
+      return topLevelStatementsByExportName;
+    }
+  );
 }
 
 function collectIdentifiers(
@@ -127,38 +147,54 @@ function areSetsDisjoint(set1: Set<any>, set2: Set<any>): boolean {
   return true;
 }
 
-export function hasChunkableExport(code: string, exportName: string): boolean {
-  let topLevelStatementsByExportName = getTopLevelStatementsByExportName(code);
-  let topLevelStatements = topLevelStatementsByExportName.get(exportName);
+export function hasChunkableExport(
+  code: string,
+  exportName: string,
+  cache: Cache,
+  cacheKey: string
+): boolean {
+  return getOrSetFromCache(
+    cache,
+    `${cacheKey}::hasChunkableExport::${exportName}`,
+    code,
+    () => {
+      let topLevelStatementsByExportName = getTopLevelStatementsByExportName(
+        code,
+        cache,
+        cacheKey
+      );
+      let topLevelStatements = topLevelStatementsByExportName.get(exportName);
 
-  // Export wasn't found in the file
-  if (!topLevelStatements) {
-    return false;
-  }
+      // Export wasn't found in the file
+      if (!topLevelStatements) {
+        return false;
+      }
 
-  // Export had no identifiers to collect, so it's isolated
-  // e.g. export default function () { return "string" }
-  if (topLevelStatements.size === 0) {
-    return true;
-  }
+      // Export had no identifiers to collect, so it's isolated
+      // e.g. export default function () { return "string" }
+      if (topLevelStatements.size === 0) {
+        return true;
+      }
 
-  // Loop through all other exports to see if they have any top level statements
-  // in common with the export we're trying to create a chunk for
-  for (let [
-    currentExportName,
-    currentTopLevelStatements,
-  ] of topLevelStatementsByExportName) {
-    if (currentExportName === exportName) {
-      continue;
+      // Loop through all other exports to see if they have any top level statements
+      // in common with the export we're trying to create a chunk for
+      for (let [
+        currentExportName,
+        currentTopLevelStatements,
+      ] of topLevelStatementsByExportName) {
+        if (currentExportName === exportName) {
+          continue;
+        }
+        // As soon as we find any top level statements in common with another export,
+        // we know this export cannot be placed in its own chunk
+        if (!areSetsDisjoint(currentTopLevelStatements, topLevelStatements)) {
+          return false;
+        }
+      }
+
+      return true;
     }
-    // As soon as we find any top level statements in common with another export,
-    // we know this export cannot be placed in its own chunk
-    if (!areSetsDisjoint(currentTopLevelStatements, topLevelStatements)) {
-      return false;
-    }
-  }
-
-  return true;
+  );
 }
 
 function replaceBody(
@@ -177,72 +213,121 @@ function replaceBody(
 export function getChunkedExport(
   code: string,
   exportName: string,
-  generateOptions: GeneratorOptions = {}
+  generateOptions: GeneratorOptions = {},
+  cache: Cache,
+  cacheKey: string
 ): GeneratorResult | undefined {
-  let ast = parse(code, { sourceType: "module" });
-  let topLevelStatementsByExportName = getTopLevelStatementsByExportName(code);
+  return getOrSetFromCache(
+    cache,
+    `${cacheKey}::getChunkedExport::${exportName}::${JSON.stringify(
+      generateOptions
+    )}`,
+    code,
+    () => {
+      if (!hasChunkableExport(code, exportName, cache, cacheKey)) {
+        return undefined;
+      }
 
-  if (!hasChunkableExport(code, exportName)) {
-    return undefined;
-  }
+      let ast = codeToAst(code, cache, cacheKey);
+      let topLevelStatementsByExportName = getTopLevelStatementsByExportName(
+        code,
+        cache,
+        cacheKey
+      );
+      let topLevelStatements = topLevelStatementsByExportName.get(exportName);
+      invariant(
+        topLevelStatements,
+        "Expected export to have top level statements"
+      );
 
-  let topLevelStatements = topLevelStatementsByExportName.get(exportName);
-  invariant(topLevelStatements, "Expected export to have top level statements");
+      let topLevelStatementsArray = Array.from(topLevelStatements);
+      let chunkAst = replaceBody(ast, (body) =>
+        body.filter((node) =>
+          topLevelStatementsArray.some((statement) =>
+            t.isNodesEquivalent(node, statement)
+          )
+        )
+      );
 
-  let topLevelStatementsArray = Array.from(topLevelStatements);
-  let chunkAst = replaceBody(ast, (body) =>
-    body.filter((node) =>
-      topLevelStatementsArray.some((statement) =>
-        t.isNodesEquivalent(node, statement)
-      )
-    )
+      return generate(chunkAst, generateOptions);
+    }
   );
-
-  return generate(chunkAst, generateOptions);
 }
 
 export function omitChunkedExports(
   code: string,
   exportNames: string[],
-  generateOptions: GeneratorOptions = {}
+  generateOptions: GeneratorOptions = {},
+  cache: Cache,
+  cacheKey: string
 ): GeneratorResult | undefined {
-  let ast = parse(code, { sourceType: "module" });
-  let topLevelStatementsByExportName = getTopLevelStatementsByExportName(code);
-  let omittedStatements = new Set<Statement>();
+  return getOrSetFromCache(
+    cache,
+    `${cacheKey}::omitChunkedExports::${exportNames.join(
+      ","
+    )}::${JSON.stringify(generateOptions)}`,
+    code,
+    () => {
+      let topLevelStatementsByExportName = getTopLevelStatementsByExportName(
+        code,
+        cache,
+        cacheKey
+      );
+      let omittedStatements = new Set<Statement>();
 
-  for (let exportName of exportNames) {
-    let topLevelStatements = topLevelStatementsByExportName.get(exportName);
-    if (!topLevelStatements || !hasChunkableExport(code, exportName)) {
-      continue;
-    }
-    for (let statement of topLevelStatements) {
-      omittedStatements.add(statement);
-    }
-  }
+      for (let exportName of exportNames) {
+        let topLevelStatements = topLevelStatementsByExportName.get(exportName);
+        if (
+          !topLevelStatements ||
+          !hasChunkableExport(code, exportName, cache, cacheKey)
+        ) {
+          continue;
+        }
+        for (let statement of topLevelStatements) {
+          omittedStatements.add(statement);
+        }
+      }
 
-  let omittedStatementsArray = Array.from(omittedStatements);
-  let astWithChunksOmitted = replaceBody(ast, (body) =>
-    body.filter((node) =>
-      omittedStatementsArray.every(
-        (statement) => !t.isNodesEquivalent(node, statement)
-      )
-    )
+      let omittedStatementsArray = Array.from(omittedStatements);
+      let ast = codeToAst(code, cache, cacheKey);
+      let astWithChunksOmitted = replaceBody(ast, (body) =>
+        body.filter((node) =>
+          omittedStatementsArray.every(
+            (statement) => !t.isNodesEquivalent(node, statement)
+          )
+        )
+      );
+
+      if (astWithChunksOmitted.program.body.length === 0) {
+        return undefined;
+      }
+
+      return generate(astWithChunksOmitted, generateOptions);
+    }
   );
-
-  if (astWithChunksOmitted.program.body.length === 0) {
-    return undefined;
-  }
-
-  return generate(astWithChunksOmitted, generateOptions);
 }
 
-export function detectRouteChunks({ code }: { code: string }): {
+export function detectRouteChunks(
+  code: string,
+  cache: Cache,
+  cacheKey: string
+): {
   hasClientActionChunk: boolean;
   hasClientLoaderChunk: boolean;
   hasRouteChunks: boolean;
 } {
-  let hasClientActionChunk = hasChunkableExport(code, "clientAction");
-  let hasClientLoaderChunk = hasChunkableExport(code, "clientLoader");
+  let hasClientActionChunk = hasChunkableExport(
+    code,
+    "clientAction",
+    cache,
+    cacheKey
+  );
+  let hasClientLoaderChunk = hasChunkableExport(
+    code,
+    "clientLoader",
+    cache,
+    cacheKey
+  );
   let hasRouteChunks = hasClientActionChunk || hasClientLoaderChunk;
 
   return {
@@ -252,14 +337,24 @@ export function detectRouteChunks({ code }: { code: string }): {
   };
 }
 
-export function getRouteChunks({ code }: { code: string }): {
+export function getRouteChunks(
+  code: string,
+  cache: Cache,
+  cacheKey: string
+): {
   main: GeneratorResult | undefined;
   clientAction: GeneratorResult | undefined;
   clientLoader: GeneratorResult | undefined;
 } {
   return {
-    main: omitChunkedExports(code, ["clientAction", "clientLoader"]),
-    clientAction: getChunkedExport(code, "clientAction"),
-    clientLoader: getChunkedExport(code, "clientLoader"),
+    main: omitChunkedExports(
+      code,
+      ["clientAction", "clientLoader"],
+      {},
+      cache,
+      cacheKey
+    ),
+    clientAction: getChunkedExport(code, "clientAction", {}, cache, cacheKey),
+    clientLoader: getChunkedExport(code, "clientLoader", {}, cache, cacheKey),
   };
 }
