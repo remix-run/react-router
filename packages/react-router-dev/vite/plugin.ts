@@ -1325,7 +1325,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       name: "react-router-dot-server",
       enforce: "pre",
       async resolveId(id, importer, options) {
-        if (options?.ssr) return;
+        // https://vitejs.dev/config/dep-optimization-options
+        let isOptimizeDeps =
+          viteCommand === "serve" &&
+          (options as { scan?: boolean })?.scan === true;
+
+        if (isOptimizeDeps || options?.ssr) return;
 
         let isResolving = options?.custom?.["react-router-dot-server"] ?? false;
         if (isResolving) return;
