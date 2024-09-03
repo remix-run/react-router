@@ -63,14 +63,6 @@ export type DataResult =
   | RedirectResult
   | ErrorResult;
 
-/**
- * Result from a loader or action called via dataStrategy
- */
-export interface HandlerResult {
-  type: "data" | "error";
-  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
-}
-
 type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 
@@ -241,8 +233,8 @@ export interface DataStrategyMatch
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => Promise<HandlerResult>
-  ) => Promise<HandlerResult>;
+    ) => Promise<DataStrategyResult>
+  ) => Promise<DataStrategyResult>;
 }
 
 export interface DataStrategyFunctionArgs<Context = any>
@@ -251,8 +243,16 @@ export interface DataStrategyFunctionArgs<Context = any>
   fetcherKey: string | null;
 }
 
+/**
+ * Result from a loader or action called via dataStrategy
+ */
+export interface DataStrategyResult {
+  type: "data" | "error";
+  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
+}
+
 export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<Record<string, HandlerResult>>;
+  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
 }
 
 export interface AgnosticPatchRoutesOnNavigationFunction<

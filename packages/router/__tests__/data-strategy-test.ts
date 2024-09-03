@@ -1,7 +1,7 @@
 import type {
   DataStrategyFunction,
   DataStrategyMatch,
-  HandlerResult,
+  DataStrategyResult,
 } from "../utils";
 import { json } from "../utils";
 import { createDeferred, setup } from "./utils/data-router-setup";
@@ -17,7 +17,7 @@ describe("router dataStrategy", () => {
 
   function keyedResults(
     matches: DataStrategyMatch[],
-    results: HandlerResult[]
+    results: DataStrategyResult[]
   ) {
     return results.reduce(
       (acc, r, i) =>
@@ -917,7 +917,7 @@ describe("router dataStrategy", () => {
               // the single fetch response and return it's promise
               let dfd = createDeferred();
               routeDeferreds.set(m.route.id, dfd);
-              return dfd.promise as Promise<HandlerResult>;
+              return dfd.promise as Promise<DataStrategyResult>;
             })
           );
 
@@ -1239,12 +1239,12 @@ describe("router dataStrategy", () => {
                   return { type: "data", result: cache[key] };
                 }
 
-                let handlerResult = await handler();
+                let dsResult = await handler();
                 if (key) {
-                  cache[key] = handlerResult;
+                  cache[key] = dsResult;
                 }
 
-                return { type: "data", result: handlerResult };
+                return { type: "data", result: dsResult };
               });
             })
           ).then((results) => keyedResults(matches, results));

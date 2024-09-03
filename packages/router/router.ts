@@ -22,7 +22,7 @@ import type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
-  HandlerResult,
+  DataStrategyResult,
   ImmutableRouteKey,
   MapRoutePropertiesFunction,
   MutationFormMethod,
@@ -2796,7 +2796,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     fetcherKey: string | null
   ): Promise<Record<string, DataResult>> {
-    let results: Record<string, HandlerResult>;
+    let results: Record<string, DataStrategyResult>;
     let dataResults: Record<string, DataResult> = {};
     try {
       results = await callDataStrategyImpl(
@@ -2824,7 +2824,7 @@ export function createRouter(init: RouterInit): Router {
 
     await Promise.all(
       Object.entries(results).map(async ([routeId, result]) => {
-        if (isRedirectHandlerResult(result)) {
+        if (isRedirectDataStrategyResultResult(result)) {
           let response = result.result as Response;
           dataResults[routeId] = {
             type: ResultType.redirect,
@@ -2838,7 +2838,9 @@ export function createRouter(init: RouterInit): Router {
             ),
           };
         } else {
-          dataResults[routeId] = await convertHandlerResultToDataResult(result);
+          dataResults[routeId] = await convertDataStrategyResultToDataResult(
+            result
+          );
         }
       })
     );
@@ -3756,9 +3758,9 @@ export function createStaticHandler(
           };
     } catch (e) {
       // If the user threw/returned a Response in callLoaderOrAction for a
-      // `queryRoute` call, we throw the `HandlerResult` to bail out early
+      // `queryRoute` call, we throw the `DataStrategyResult` to bail out early
       // and then return or throw the raw Response here accordingly
-      if (isHandlerResult(e) && isResponse(e.result)) {
+      if (isDataStrategyResult(e) && isResponse(e.result)) {
         if (e.type === ResultType.error) {
           throw e.result;
         }
@@ -4055,7 +4057,7 @@ export function createStaticHandler(
           return;
         }
         let result = results[match.route.id];
-        if (isRedirectHandlerResult(result)) {
+        if (isRedirectDataStrategyResultResult(result)) {
           let response = result.result as Response;
           // Throw redirects and let the server handle them with an HTTP redirect
           throw normalizeRelativeRoutingRedirectResponse(
@@ -4073,9 +4075,8 @@ export function createStaticHandler(
           throw result;
         }
 
-        dataResults[match.route.id] = await convertHandlerResultToDataResult(
-          result
-        );
+        dataResults[match.route.id] =
+          await convertDataStrategyResultToDataResult(result);
       })
     );
     return dataResults;
@@ -4792,7 +4793,7 @@ async function callDataStrategyImpl(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction,
   requestContext?: unknown
-): Promise<Record<string, HandlerResult>> {
+): Promise<Record<string, DataStrategyResult>> {
   let loadRouteDefinitionsPromises = matches.map((m) =>
     m.route.lazy
       ? loadLazyRouteModule(m.route, mapRouteProperties, manifest)
@@ -4803,7 +4804,7 @@ async function callDataStrategyImpl(
     let loadRoutePromise = loadRouteDefinitionsPromises[i];
     let shouldLoad = matchesToLoad.some((m) => m.route.id === match.route.id);
     // `resolve` encapsulates route.lazy(), executing the loader/action,
-    // and mapping return values/thrown errors to a `HandlerResult`.  Users
+    // and mapping return values/thrown errors to a `DataStrategyResult`.  Users
     // can pass a callback to take fine-grained control over the execution
     // of the loader/action
     let resolve: DataStrategyMatch["resolve"] = async (handlerOverride) => {
@@ -4864,18 +4865,18 @@ async function callLoaderOrAction(
   loadRoutePromise: Promise<void> | undefined,
   handlerOverride: Parameters<DataStrategyMatch["resolve"]>[0],
   staticContext?: unknown
-): Promise<HandlerResult> {
-  let result: HandlerResult;
+): Promise<DataStrategyResult> {
+  let result: DataStrategyResult;
   let onReject: (() => void) | undefined;
 
   let runHandler = (
     handler: AgnosticRouteObject["loader"] | AgnosticRouteObject["action"]
-  ): Promise<HandlerResult> => {
+  ): Promise<DataStrategyResult> => {
     // Setup a promise we can race against so that abort signals short circuit
     let reject: () => void;
-    // This will never resolve so safe to type it as Promise<HandlerResult> to
+    // This will never resolve so safe to type it as Promise<DataStrategyResult> to
     // satisfy the function return value
-    let abortPromise = new Promise<HandlerResult>((_, r) => (reject = r));
+    let abortPromise = new Promise<DataStrategyResult>((_, r) => (reject = r));
     onReject = () => reject();
     request.signal.addEventListener("abort", onReject);
 
@@ -4898,7 +4899,7 @@ async function callLoaderOrAction(
       );
     };
 
-    let handlerPromise: Promise<HandlerResult>;
+    let handlerPromise: Promise<DataStrategyResult>;
     if (handlerOverride) {
       handlerPromise = handlerOverride((ctx: unknown) => actualHandler(ctx));
     } else {
@@ -4978,7 +4979,7 @@ async function callLoaderOrAction(
     );
   } catch (e) {
     // We should already be catching and converting normal handler executions to
-    // HandlerResults and returning them, so anything that throws here is an
+    // DataStrategyResults and returning them, so anything that throws here is an
     // unexpected error we still need to wrap
     return { type: ResultType.error, result: e };
   } finally {
@@ -4990,10 +4991,10 @@ async function callLoaderOrAction(
   return result;
 }
 
-async function convertHandlerResultToDataResult(
-  handlerResult: HandlerResult
+async function convertDataStrategyResultToDataResult(
+  dataStrategyResult: DataStrategyResult
 ): Promise<DataResult> {
-  let { result, type } = handlerResult;
+  let { result, type } = dataStrategyResult;
 
   if (isResponse(result)) {
     let data: any;
@@ -5562,7 +5563,7 @@ function isPromise<T = unknown>(val: unknown): val is Promise<T> {
   return typeof val === "object" && val != null && "then" in val;
 }
 
-function isHandlerResult(result: unknown): result is HandlerResult {
+function isDataStrategyResult(result: unknown): result is DataStrategyResult {
   return (
     result != null &&
     typeof result === "object" &&
@@ -5572,7 +5573,7 @@ function isHandlerResult(result: unknown): result is HandlerResult {
   );
 }
 
-function isRedirectHandlerResult(result: HandlerResult) {
+function isRedirectDataStrategyResultResult(result: DataStrategyResult) {
   return (
     isResponse(result.result) && redirectStatusCodes.has(result.result.status)
   );
