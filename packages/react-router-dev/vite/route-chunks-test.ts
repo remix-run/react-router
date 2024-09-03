@@ -1,10 +1,13 @@
 import dedent from "dedent";
 
+import type { Cache } from "./cache";
 import {
   hasChunkableExport,
   getChunkedExport,
   omitChunkedExports,
 } from "./route-chunks";
+
+let cache: [Cache, string] = [new Map(), "cacheKey"];
 
 describe("route chunks", () => {
   describe("chunkable", () => {
@@ -16,24 +19,32 @@ describe("route chunks", () => {
         export const target2 = () => null;
         export const other2 = () => null;
       `;
-      expect(hasChunkableExport(code, "default")).toBe(true);
-      expect(hasChunkableExport(code, "target1")).toBe(true);
-      expect(hasChunkableExport(code, "target2")).toBe(true);
-      expect(getChunkedExport(code, "default")?.code).toMatchInlineSnapshot(`
+      expect(hasChunkableExport(code, "default", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "default", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
         "export default function () {
           return null;
         }"
       `);
-      expect(getChunkedExport(code, "target1")?.code).toMatchInlineSnapshot(`
+      expect(getChunkedExport(code, "target1", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
         "export function target1() {
           return null;
         }"
       `);
-      expect(getChunkedExport(code, "target2")?.code).toMatchInlineSnapshot(
-        `"export const target2 = () => null;"`
-      );
-      expect(omitChunkedExports(code, ["default", "target1", "target2"])?.code)
-        .toMatchInlineSnapshot(`
+      expect(
+        getChunkedExport(code, "target2", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const target2 = () => null;"`);
+      expect(
+        omitChunkedExports(
+          code,
+          ["default", "target1", "target2"],
+          {},
+          ...cache
+        )?.code
+      ).toMatchInlineSnapshot(`
         "export function other1() {
           return null;
         }
@@ -58,24 +69,27 @@ describe("route chunks", () => {
         export const target2 = () => getTargetMessage2();
         export const other2 = () => getOtherMessage2();
       `;
-      expect(hasChunkableExport(code, "target1")).toBe(true);
-      expect(hasChunkableExport(code, "target2")).toBe(true);
-      expect(getChunkedExport(code, "target1")?.code).toMatchInlineSnapshot(`
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "target1", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
         "import { targetMessage1 } from "./targetMessage1";
         const getTargetMessage1 = () => targetMessage1;
         export function target1() {
           return getTargetMessage1();
         }"
       `);
-      expect(getChunkedExport(code, "target2")?.code).toMatchInlineSnapshot(`
+      expect(getChunkedExport(code, "target2", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
         "import { targetMessage2 } from "./targetMessage2";
         function getTargetMessage2() {
           return targetMessage2;
         }
         export const target2 = () => getTargetMessage2();"
       `);
-      expect(omitChunkedExports(code, ["target1", "target2"])?.code)
-        .toMatchInlineSnapshot(`
+      expect(
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`
         "import { otherMessage1 } from "./otherMessage1";
         import { otherMessage2 } from "./otherMessage2";
         const getOtherMessage1 = () => otherMessage1;
@@ -100,22 +114,30 @@ describe("route chunks", () => {
       export const other1 = () => sharedMessage;
       export const other2 = () => sharedMessage;
     `;
-      expect(hasChunkableExport(code, "default")).toBe(true);
-      expect(hasChunkableExport(code, "target1")).toBe(true);
-      expect(hasChunkableExport(code, "target2")).toBe(false);
-      expect(getChunkedExport(code, "default")?.code).toMatchInlineSnapshot(`
+      expect(hasChunkableExport(code, "default", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "default", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
         "export default function () {
           return null;
         }"
       `);
-      expect(getChunkedExport(code, "target1")?.code).toMatchInlineSnapshot(`
+      expect(getChunkedExport(code, "target1", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
         "export function target1() {
           return null;
         }"
       `);
-      expect(getChunkedExport(code, "target2")).toBeUndefined();
-      expect(omitChunkedExports(code, ["default", "target1", "target2"])?.code)
-        .toMatchInlineSnapshot(`
+      expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
+      expect(
+        omitChunkedExports(
+          code,
+          ["default", "target1", "target2"],
+          {},
+          ...cache
+        )?.code
+      ).toMatchInlineSnapshot(`
         "import { sharedMessage } from "./sharedMessage";
         export const target2 = () => sharedMessage;
         export const other1 = () => sharedMessage;
@@ -138,18 +160,20 @@ describe("route chunks", () => {
         export const target2 = () => getTargetMessage2();
         export const other2 = () => getOtherMessage2();
       `;
-      expect(hasChunkableExport(code, "target1")).toBe(true);
-      expect(hasChunkableExport(code, "target2")).toBe(false);
-      expect(getChunkedExport(code, "target1")?.code).toMatchInlineSnapshot(`
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target1", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
         "import { targetMessage1 } from "./targetMessage1";
         const getTargetMessage1 = () => targetMessage1;
         export function target1() {
           return getTargetMessage1();
         }"
       `);
-      expect(getChunkedExport(code, "target2")).toBeUndefined();
-      expect(omitChunkedExports(code, ["target1", "target2"])?.code)
-        .toMatchInlineSnapshot(`
+      expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
+      expect(
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`
         "import { sharedMessage } from "./sharedMessage";
         const getOtherMessage1 = () => sharedMessage;
         function getTargetMessage2() {
@@ -172,12 +196,12 @@ describe("route chunks", () => {
       const code = dedent`
         export default function () {}
       `;
-      expect(hasChunkableExport(code, "target1")).toBe(false);
-      expect(getChunkedExport(code, "target1")).toBeUndefined();
-      expect(hasChunkableExport(code, "target2")).toBe(false);
-      expect(getChunkedExport(code, "target2")).toBeUndefined();
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target1", {}, ...cache)).toBeUndefined();
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
       expect(
-        omitChunkedExports(code, ["target1", "target2"])?.code
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
       ).toMatchInlineSnapshot(`"export default function () {}"`);
     });
 
@@ -193,12 +217,13 @@ describe("route chunks", () => {
         export const other1 = () => getOtherMessage1();
         export const other2 = () => getOtherMessage2();
       `;
-      expect(hasChunkableExport(code, "target1")).toBe(false);
-      expect(getChunkedExport(code, "target1")).toBeUndefined();
-      expect(hasChunkableExport(code, "target2")).toBe(false);
-      expect(getChunkedExport(code, "target2")).toBeUndefined();
-      expect(omitChunkedExports(code, ["target1", "target2"])?.code)
-        .toMatchInlineSnapshot(`
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target1", {}, ...cache)).toBeUndefined();
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
+      expect(
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`
         "const sharedMessage = "shared";
         const getTargetMessage1 = () => sharedMessage;
         const getTargetMessage2 = () => sharedMessage;
@@ -228,12 +253,13 @@ describe("route chunks", () => {
         export const other1 = () => getOtherMessage1();
         export const other2 = () => getOtherMessage2();
       `;
-      expect(hasChunkableExport(code, "target1")).toBe(false);
-      expect(getChunkedExport(code, "target1")).toBeUndefined();
-      expect(hasChunkableExport(code, "target2")).toBe(false);
-      expect(getChunkedExport(code, "target2")).toBeUndefined();
-      expect(omitChunkedExports(code, ["target1", "target2"])?.code)
-        .toMatchInlineSnapshot(`
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target1", {}, ...cache)).toBeUndefined();
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
+      expect(
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`
         "import { targetMessage1, targetMessage2, otherMessage1, otherMessage2 } from "./messages";
         const getTargetMessage1 = () => targetMessage1;
         const getTargetMessage2 = () => targetMessage2;
@@ -258,12 +284,13 @@ describe("route chunks", () => {
         export const other1 = () => getOtherMessage1();
         export const other2 = () => getOtherMessage2();
       `;
-      expect(hasChunkableExport(code, "target1")).toBe(false);
-      expect(getChunkedExport(code, "target1")).toBeUndefined();
-      expect(hasChunkableExport(code, "target2")).toBe(false);
-      expect(getChunkedExport(code, "target2")).toBeUndefined();
-      expect(omitChunkedExports(code, ["target1", "target2"])?.code)
-        .toMatchInlineSnapshot(`
+      expect(hasChunkableExport(code, "target1", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target1", {}, ...cache)).toBeUndefined();
+      expect(hasChunkableExport(code, "target2", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "target2", {}, ...cache)).toBeUndefined();
+      expect(
+        omitChunkedExports(code, ["target1", "target2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`
         "import * as messages from "./messages";
         const getTargetMessage1 = () => messages.targetMessage1;
         const getTargetMessage2 = () => messages.targetMessage2;
