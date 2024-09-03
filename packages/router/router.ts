@@ -4897,19 +4897,16 @@ async function callLoaderOrAction(
       );
     };
 
-    let handlerPromise: Promise<DataStrategyResult>;
-    if (handlerOverride) {
-      handlerPromise = handlerOverride((ctx: unknown) => actualHandler(ctx));
-    } else {
-      handlerPromise = (async () => {
-        try {
-          let val = await actualHandler();
-          return { type: "data", result: val };
-        } catch (e) {
-          return { type: "error", result: e };
-        }
-      })();
-    }
+    let handlerPromise: Promise<DataStrategyResult> = (async () => {
+      try {
+        let val = await (handlerOverride
+          ? handlerOverride((ctx: unknown) => actualHandler(ctx))
+          : actualHandler());
+        return { type: "data", result: val };
+      } catch (e) {
+        return { type: "error", result: e };
+      }
+    })();
 
     return Promise.race([handlerPromise, abortPromise]);
   };

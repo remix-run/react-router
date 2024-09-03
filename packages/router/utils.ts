@@ -233,7 +233,7 @@ export interface DataStrategyMatch
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => Promise<DataStrategyResult>
+    ) => DataFunctionReturnValue
   ) => Promise<DataStrategyResult>;
 }
 

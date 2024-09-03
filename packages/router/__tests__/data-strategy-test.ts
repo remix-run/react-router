@@ -164,10 +164,7 @@ describe("router dataStrategy", () => {
             matches.map((m) =>
               m.resolve(async (handler) => {
                 let result = await handler();
-                return {
-                  type: "data",
-                  result: `Route ID "${m.route.id}" returned "${result}"`,
-                };
+                return `Route ID "${m.route.id}" returned "${result}"`;
               })
             )
           ).then((results) => keyedResults(matches, results));
@@ -179,6 +176,38 @@ describe("router dataStrategy", () => {
 
       expect(t.router.state.loaderData).toMatchObject({
         test: 'Route ID "test" returned "TEST"',
+      });
+    });
+
+    it("should allow custom implementations to override default behavior when erroring", async () => {
+      let t = setup({
+        routes: [
+          {
+            path: "/",
+          },
+          {
+            id: "test",
+            path: "/test",
+            loader: true,
+            hasErrorBoundary: true,
+          },
+        ],
+        async dataStrategy({ matches }) {
+          return Promise.all(
+            matches.map((m) =>
+              m.resolve(async () => {
+                throw new Error(`Route ID "${m.route.id}" errored!`);
+              })
+            )
+          ).then((results) => keyedResults(matches, results));
+        },
+      });
+
+      let A = await t.navigate("/test");
+      await A.loaders.test.resolve("TEST");
+
+      expect(t.router.state.errors).toMatchObject({
+        test: new Error('Route ID "test" errored!'),
       });
     });
 
@@ -199,10 +228,7 @@ describe("router dataStrategy", () => {
             matches.map((m) =>
               m.resolve(async (handler) => {
                 let result = await handler();
-                return {
-                  type: "data",
-                  result: `Route ID "${m.route.id}" returned "${result}"`,
-                };
+                return `Route ID "${m.route.id}" returned "${result}"`;
               })
             )
           ).then((results) => keyedResults(matches, results));
@@ -850,15 +876,12 @@ describe("router dataStrategy", () => {
                 ) {
                   let str = await result.text();
                   return {
-                    type: "data",
-                    result: {
-                      original: str,
-                      reversed: str.split("").reverse().join(""),
-                    },
+                    original: str,
+                    reversed: str.split("").reverse().join(""),
                   };
                 }
                 // This will be a JSON response we expect to be decoded the normal way
-                return { type: "data", result };
+                return result;
               });
             })
           ).then((results) => keyedResults(matches, results));
@@ -931,7 +954,7 @@ describe("router dataStrategy", () => {
 
           // Resolve the deferred's above and return the mapped match promises
           routeDeferreds.forEach((dfd, routeId) =>
-            dfd.resolve({ type: "data", result: result.loaderData[routeId] })
+            dfd.resolve(result.loaderData[routeId])
           );
           return Promise.all(matchPromises).then((results) =>
             keyedResults(matches, results)
@@ -1017,7 +1040,8 @@ describe("router dataStrategy", () => {
                   });
                   return acc;
                 }, {});
-                return { type: "data", result: await handler(handlerCtx) };
+                let result = await handler(handlerCtx);
+                return result;
               })
             )
           ).then((results) => keyedResults(matches, results));
@@ -1136,12 +1160,10 @@ describe("router dataStrategy", () => {
                   });
                   return acc;
                 }, {});
-                return {
-                  type: "data",
-                  result: m.shouldLoad
-                    ? await callHandler(handlerCtx)
-                    : t.router.state.loaderData[m.route.id],
-                };
+                let result = m.shouldLoad
+                  ? await callHandler(handlerCtx)
+                  : t.router.state.loaderData[m.route.id];
+                return result;
               })
             )
           ).then((results) => keyedResults(matches, results));
@@ -1215,39 +1237,29 @@ describe("router dataStrategy", () => {
               ? [m.route.id, m.route.handle.cacheKey(request.url)].join("-")
               : null;
 
+          if (request.method !== "GET") {
+            // invalidate on actions
+            cache = {};
+          }
+
+          let matchesToLoad = matches.filter((m) => m.shouldLoad);
           return Promise.all(
-            matches.map(async (m) => {
+            matchesToLoad.map(async (m) => {
               return m.resolve(async (handler) => {
-                if (request.method !== "GET") {
-                  // invalidate on actions
-                  cache = {};
-                  return {
-                    type: "data",
-                    result: m.shouldLoad ? await handler() : undefined,
-                  };
-                }
-
-                if (!m.shouldLoad) {
-                  return {
-                    type: "data",
-                    result: t.router.state.loaderData[m.route.id],
-                  };
-                }
-
                 let key = getCacheKey(m);
                 if (key && cache[key]) {
-                  return { type: "data", result: cache[key] };
+                  return cache[key];
                 }
 
                 let dsResult = await handler();
-                if (key) {
+                if (key && request.method === "GET") {
                   cache[key] = dsResult;
                 }
 
-                return { type: "data", result: dsResult };
+                return dsResult;
               });
             })
-          ).then((results) => keyedResults(matches, results));
+          ).then((results) => keyedResults(matchesToLoad, results));
         },
       });
 
