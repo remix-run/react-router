@@ -1,5 +1,15 @@
 # `@remix-run/router`
 
+## 1.19.1
+
+### Patch Changes
+
+- Fog of War: Update `unstable_patchRoutesOnMiss` logic so that we call the method when we match routes with dynamic param or splat segments in case there exists a higher-scoring static route that we've not yet discovered. ([#11883](https://github.com/remix-run/react-router/pull/11883))
+
+  - We also now leverage an internal FIFO queue of previous paths we've already called `unstable_patchRouteOnMiss` against so that we don't re-call on subsequent navigations to the same path
+
+- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` to match new behavior ([#11888](https://github.com/remix-run/react-router/pull/11888))
+
 ## 1.19.0
 
 ### Minor Changes
