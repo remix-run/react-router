@@ -8,5 +8,10 @@
     "react-router-native": "6.26.1",
     "@remix-run/router": "1.19.1"
   },
-  "changesets": []
+  "changesets": [
+    "four-books-bow",
+    "hot-insects-rescue",
+    "serious-news-kick",
+    "soft-socks-remain"
+  ]
 }

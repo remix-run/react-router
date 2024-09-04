@@ -203,6 +203,28 @@ Date: YYYY-MM-DD
 **Full Changelog**: [`v6.X.Y...v6.X.Y`](https://github.com/remix-run/react-router/compare/react-router@6.X.Y...react-router@6.X.Y)
 -->
 
+## v6.26.2
+
+Date: 2024-09-04
+
+### Patch Changes
+
+- Update the `unstable_dataStrategy` API to allow for more advanced implementations ([#11943](https://github.com/remix-run/react-router/pull/11943))
+  - ⚠️ If you have already adopted `unstable_dataStrategy`, please review carefully as this includes breaking changes to this API
+  - Rename `unstable_HandlerResult` to `unstable_DataStrategyResult`
+  - Change the return signature of `unstable_dataStrategy` from a parallel array of `unstable_DataStrategyResult[]` (parallel to `matches`) to a key/value object of `routeId => unstable_DataStrategyResult`
+    - This allows more advanced control over revalidation behavior because you can opt-into or out-of revalidating data that may not have been revalidated by default (via `match.shouldLoad`)
+  - You should now return/throw a result from your `handlerOverride` instead of returning a `DataStrategyResult`
+    - The return value (or thrown error) from your `handlerOverride` will be wrapped up into a `DataStrategyResult` and returned fromm `match.resolve`
+    - Therefore, if you are aggregating the results of `match.resolve()` into a final results object you should not need to think about the `DataStrategyResult` type
+    - If you are manually filling your results object from within your `handlerOverride`, then you will need to assign a `DataStrategyResult` as the value so React Router knows if it's a successful execution or an error (see examples in the documentation for details)
+  - Added a new `fetcherKey` parameter to `unstable_dataStrategy` to allow differentiation from navigational and fetcher calls
+- Preserve opted-in view transitions through redirects ([#11925](https://github.com/remix-run/react-router/pull/11925))
+- Preserve pending view transitions through a router revalidation call ([#11917](https://github.com/remix-run/react-router/pull/11917))
+- Fix blocker usage when `blocker.proceed` is called quickly/synchronously ([#11930](https://github.com/remix-run/react-router/pull/11930))
+
+**Full Changelog**: [`v6.26.1...v6.26.2`](https://github.com/remix-run/react-router/compare/react-router@6.26.1...react-router@6.26.2)
+
 ## v6.26.1
 
 Date: 2024-08-15
