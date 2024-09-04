@@ -40,7 +40,12 @@ import * as VirtualModule from "./vmod";
 import { resolveFileUrl } from "./resolve-file-url";
 import { combineURLs } from "./combine-urls";
 import { removeExports } from "./remove-exports";
-import { detectRouteChunks, getRouteChunks } from "./route-chunks";
+import {
+  type RouteChunkName,
+  detectRouteChunks,
+  isRouteChunkName,
+  getRouteChunk,
+} from "./route-chunks";
 import { importViteEsmSync, preloadViteEsm } from "./import-vite-esm-sync";
 import {
   type ReactRouterConfig,
@@ -137,10 +142,16 @@ const CLIENT_ROUTE_EXPORTS = [
 
 // Each route gets its own virtual module marked with an entry query string
 const ROUTE_ENTRY_QUERY_STRING = "?route-entry=1";
+
+type RouteChunkQueryString =
+  `${typeof ROUTE_CHUNK_QUERY_STRING}${RouteChunkName}`;
 const ROUTE_CHUNK_QUERY_STRING = "?route-chunk=";
-const MAIN_ROUTE_CHUNK_QUERY_STRING = `${ROUTE_CHUNK_QUERY_STRING}main`;
-const CLIENT_ACTION_CHUNK_QUERY_STRING = `${ROUTE_CHUNK_QUERY_STRING}client-action`;
-const CLIENT_LOADER_CHUNK_QUERY_STRING = `${ROUTE_CHUNK_QUERY_STRING}client-loader`;
+const MAIN_ROUTE_CHUNK_QUERY_STRING =
+  `${ROUTE_CHUNK_QUERY_STRING}main` satisfies RouteChunkQueryString;
+const CLIENT_ACTION_CHUNK_QUERY_STRING =
+  `${ROUTE_CHUNK_QUERY_STRING}clientAction` satisfies RouteChunkQueryString;
+const CLIENT_LOADER_CHUNK_QUERY_STRING =
+  `${ROUTE_CHUNK_QUERY_STRING}clientLoader` satisfies RouteChunkQueryString;
 
 const isRouteEntry = (id: string): boolean => {
   return id.endsWith(ROUTE_ENTRY_QUERY_STRING);
@@ -1446,21 +1457,25 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         // Ignore anything that isn't marked as a route chunk
         if (!id.includes(ROUTE_CHUNK_QUERY_STRING)) return;
 
-        let chunks = await getRouteChunksIfEnabled(cache, ctx, id, code);
+        let chunkName = id.split(ROUTE_CHUNK_QUERY_STRING)[1].split("&")[0];
 
-        if (chunks === null) {
+        if (!isRouteChunkName(chunkName)) {
+          throw new Error(`Invalid route chunk name "${chunkName}" in "${id}"`);
+        }
+
+        let chunk = await getRouteChunkIfEnabled(
+          cache,
+          ctx,
+          id,
+          chunkName,
+          code
+        );
+
+        if (chunk === null) {
           return "// Route chunks disabled";
         }
 
-        if (isMainRouteChunk(id)) {
-          return chunks.main ?? "// No main chunk";
-        }
-        if (isClientActionChunk(id)) {
-          return chunks.clientAction ?? "// No client action chunk";
-        }
-        if (isClientLoaderChunk(id)) {
-          return chunks.clientLoader ?? "// No client loader chunk";
-        }
+        return chunk ?? `// No ${chunkName} chunk`;
       },
     },
     {
@@ -2257,12 +2272,13 @@ async function detectRouteChunksIfEnabled(
   return detectRouteChunks(code, cache, cacheKey);
 }
 
-async function getRouteChunksIfEnabled(
+async function getRouteChunkIfEnabled(
   cache: Cache,
   ctx: ReactRouterPluginContext,
   id: string,
+  chunkName: RouteChunkName,
   input: ResolveRouteFileCodeInput
-): Promise<ReturnType<typeof getRouteChunks> | null> {
+): Promise<ReturnType<typeof getRouteChunk> | null> {
   if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
     return null;
   }
@@ -2273,5 +2289,5 @@ async function getRouteChunksIfEnabled(
     normalizeRelativeFilePath(id, ctx.reactRouterConfig) +
     (typeof input === "string" ? "" : "?read");
 
-  return getRouteChunks(code, cache, cacheKey);
+  return getRouteChunk(code, chunkName, cache, cacheKey);
 }

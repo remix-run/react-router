@@ -256,7 +256,7 @@ export function getChunkedExport(
 
 export function omitChunkedExports(
   code: string,
-  exportNames: string[],
+  exportNames: readonly string[],
   generateOptions: GeneratorOptions = {},
   cache: Cache,
   cacheKey: string
@@ -337,24 +337,25 @@ export function detectRouteChunks(
   };
 }
 
-export function getRouteChunks(
+const mainChunkName = "main" as const;
+const chunkedExportNames = ["clientAction", "clientLoader"] as const;
+export type RouteChunkName =
+  | typeof mainChunkName
+  | (typeof chunkedExportNames)[number];
+
+export function isRouteChunkName(name: string): name is RouteChunkName {
+  return name === mainChunkName || chunkedExportNames.includes(name as any);
+}
+
+export function getRouteChunk(
   code: string,
+  chunkName: RouteChunkName,
   cache: Cache,
   cacheKey: string
-): {
-  main: GeneratorResult | undefined;
-  clientAction: GeneratorResult | undefined;
-  clientLoader: GeneratorResult | undefined;
-} {
-  return {
-    main: omitChunkedExports(
-      code,
-      ["clientAction", "clientLoader"],
-      {},
-      cache,
-      cacheKey
-    ),
-    clientAction: getChunkedExport(code, "clientAction", {}, cache, cacheKey),
-    clientLoader: getChunkedExport(code, "clientLoader", {}, cache, cacheKey),
-  };
+): GeneratorResult | undefined {
+  if (chunkName === mainChunkName) {
+    return omitChunkedExports(code, chunkedExportNames, {}, cache, cacheKey);
+  }
+
+  return getChunkedExport(code, chunkName, {}, cache, cacheKey);
 }
