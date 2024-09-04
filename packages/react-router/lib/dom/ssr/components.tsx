@@ -715,14 +715,9 @@ import(${JSON.stringify(manifest.entry.module)});`;
     // eslint-disable-next-line
   }, []);
 
-  let routePreloads = matches
-    .map((match) => {
-      let route = manifest.routes[match.route.id];
-      return (route.imports || []).concat([route.module]);
-    })
-    .flat(1);
-
-  let preloads = isHydrated ? [] : manifest.entry.imports.concat(routePreloads);
+  let preloads = isHydrated
+    ? []
+    : manifest.entry.imports.concat(getModuleLinkHrefs(matches, manifest));
 
   return isHydrated ? null : (
     <>
