@@ -45,6 +45,7 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "./config";
+import { withProps } from "./with-props";
 
 export async function resolveViteConfig({
   configFile,
@@ -1453,6 +1454,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         let ast = parse(code, { sourceType: "module" });
         removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        withProps(ast);
         return generate(ast, {
           sourceMaps: true,
           filename: id,
