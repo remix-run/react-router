@@ -16,6 +16,7 @@ import type {
   RouterProps,
   RouterProviderProps,
   To,
+  unstable_DataStrategyFunction,
   unstable_PatchRoutesOnNavigationFunction,
 } from "react-router";
 import {
@@ -38,9 +39,6 @@ import {
 } from "react-router";
 import type {
   BrowserHistory,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
   Fetcher,
   FormEncType,
   FormMethod,
@@ -89,9 +87,6 @@ import {
 ////////////////////////////////////////////////////////////////////////////////
 
 export type {
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
   FormEncType,
   FormMethod,
   GetScrollRestorationKeyFunction,
@@ -111,6 +106,10 @@ export type {
   BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
+  unstable_DataStrategyFunction,
+  unstable_DataStrategyFunctionArgs,
+  unstable_DataStrategyMatch,
+  unstable_DataStrategyResult,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -152,7 +151,6 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  unstable_HandlerResult,
   unstable_PatchRoutesOnNavigationFunction,
 } from "react-router";
 export {

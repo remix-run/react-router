@@ -30,6 +30,7 @@ export type {
   unstable_DataStrategyFunction,
   unstable_DataStrategyFunctionArgs,
   unstable_DataStrategyMatch,
+  unstable_DataStrategyResult,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -71,7 +72,6 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  unstable_HandlerResult,
 } from "react-router";
 export {
   AbortedDeferredError,
