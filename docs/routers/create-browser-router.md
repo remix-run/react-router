@@ -199,7 +199,7 @@ The `unstable_dataStrategy` option gives you full control over how your loaders 
 ```ts
 interface DataStrategyFunction {
   (args: DataStrategyFunctionArgs): Promise<
-    HandlerResult[]
+    Record<string, DataStrategyResult>
   >;
 }
 
@@ -208,6 +208,7 @@ interface DataStrategyFunctionArgs<Context = any> {
   params: Params;
   context?: Context;
   matches: DataStrategyMatch[];
+  fetcherKey: string | null;
 }
 
 interface DataStrategyMatch
@@ -219,34 +220,36 @@ interface DataStrategyMatch
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => Promise<HandlerResult>
-  ) => Promise<HandlerResult>;
+    ) => Promise<DataStrategyResult>
+  ) => Promise<DataStrategyResult>;
 }
 
-interface HandlerResult {
+interface DataStrategyResult {
   type: "data" | "error";
-  result: any; // data, Error, Response, DeferredData
-  status?: number;
+  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 ```
 
 ### Overview
 
-`unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives a `matches` array which is an array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
+`unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives 2 new parameters: `matches` and `fetcherKey`:
 
-- **`match.resolve`** - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `HandlerResult`
-  - You should call `match.resolve` for _all_ matches every time to ensure that all lazy routes are properly resolved
-  - This does not mean you're calling the loader/action (the "handler") - `resolve` will only call the `handler` internally if needed and if you don't pass your own `handlerOverride` function parameter
-  - See the examples below for how to implement custom handler execution via `match.resolve`
-- **`match.shouldLoad`** - A boolean value indicating whether this route handler needs to be called in this pass
-  - The `matches` array always includes _all_ matched routes even when only _some_ route handlers need to be called so that things like middleware can be implemented
-  - `shouldLoad` is usually only interesting if you are skipping the route handler entirely and implementing custom handler logic - since it lets you determine if that custom logic should run for this route or not
-  - For example:
-    - If you are on `/parent/child/a` and you navigate to `/parent/child/b` - you'll get an array of three matches (`[parent, child, b]`), but only `b` will have `shouldLoad=true` because the data for `parent` and `child` is already loaded
-    - If you are on `/parent/child/a` and you submit to `a`'s `action`, then only `a` will have `shouldLoad=true` for the action execution of `dataStrategy`
-      - After the `action`, `dataStrategy` will be called again for the `loader` revalidation, and all matches will have `shouldLoad=true` (assuming no custom `shouldRevalidate` implementations)
+- **`matches`** - An array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
+  - **`match.shouldLoad`** - A boolean value indicating whether this route handler should be called in this pass
+    - The `matches` array always includes _all_ matched routes even when only _some_ route handlers need to be called so that things like middleware can be implemented
+    - `shouldLoad` is usually only interesting if you are skipping the route handler entirely and implementing custom handler logic - since it lets you determine if that custom logic should run for this route or not
+    - For example:
+      - If you are on `/parent/child/a` and you navigate to `/parent/child/b` - you'll get an array of three matches (`[parent, child, b]`), but only `b` will have `shouldLoad=true` because the data for `parent` and `child` is already loaded
+      - If you are on `/parent/child/a` and you submit to `a`'s `action`, then only `a` will have `shouldLoad=true` for the action execution of `dataStrategy`
+        - After the `action`, `dataStrategy` will be called again for the `loader` revalidation, and all matches will have `shouldLoad=true` (assuming no custom `shouldRevalidate` implementations)
+  - **`match.resolve`** - An async function that will resolve any `route.lazy` implementations and execute the route's handler (if necessary), returning a `DataStrategyResult`
+    - Calling `match.resolve` does not mean you're calling the `loader`/`action` (the "handler") - `resolve` will only call the `handler` internally if needed _and_ if you don't pass your own `handlerOverride` function parameter
+    - It is safe to call `match.resolve` for all matches, even if they have `shouldLoad=false`, and it will no-op if no loading is required
+    - You should generally always call `match.resolve()` for `shouldLoad:true` routes to ensure that any `route.lazy` implementations are processed
+    - See the examples below for how to implement custom handler execution via `match.resolve`
+- **`fetcherKey`** - The key of the fetcher we are calling `unstable_dataStrategy` for, otherwise `null` for navigational executions
 
-The `dataStrategy` function should return a parallel array of `HandlerResult` instances, which indicates if the handler was successful or not. If the returned `handlerResult.result` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but preserve the status code, you can return the decoded value in `handlerResult.result` and send the status along via `handlerResult.status` (for example, when using the `future.v7_skipActionRevalidation` flag). `match.resolve()` will return a `HandlerResult` if you are not passing it a handler override function. If you are, then you need to wrap the `handler` result in a `HandlerResult` (see examples below).
+The `dataStrategy` function should return a key/value object of `routeId -> DataStrategyResult` and should include entries for any routes where a handler was executed. A `DataStrategyResult` indicates if the handler was successful or not based on the `DataStrategyResult["type"]` field. If the returned `DataStrategyResult["result"]` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but want to preserve the status code, you can use the `unstable_data` utility to return your decoded data along with a `ResponseInit`.
 
 ### Example Use Cases
 
@@ -256,18 +259,61 @@ In the simplest case, let's look at hooking into this API to add some logging fo
 
 ```ts
 let router = createBrowserRouter(routes, {
-  unstable_dataStrategy({ request, matches }) {
-    return Promise.all(
-      matches.map(async (match) => {
-        console.log(`Processing route ${match.route.id}`);
+  async unstable_dataStrategy({ request, matches }) {
+    // Grab only the matches we need to run handlers for
+    const matchesToLoad = matches.filter(
+      (m) => m.shouldLoad
+    );
+    // Run the handlers in parallel, logging before and after
+    const results = await Promise.all(
+      matchesToLoad.map(async (match) => {
+        console.log(`Processing ${match.route.id}`);
         // Don't override anything - just resolve route.lazy + call loader
-        let result = await match.resolve();
-        console.log(
-          `Done processing route ${match.route.id}`
-        );
+        const result = await match.resolve();
         return result;
       })
     );
+
+    // Aggregate the results into a bn object of `routeId -> DataStrategyResult`
+    return results.reduce(
+      (acc, result, i) =>
+        Object.assign(acc, {
+          [matchesToLoad[i].route.id]: result,
+        }),
+      {}
+    );
+  },
+});
+```
+
+If you want to avoid the `reduce`, you can manually build up the `results` object, but you'll need to construct the `DataStrategyResult` manually - indicating if the handler was successful or not:
+
+```ts
+let router = createBrowserRouter(routes, {
+  async unstable_dataStrategy({ request, matches }) {
+    const matchesToLoad = matches.filter(
+      (m) => m.shouldLoad
+    );
+    const results = {};
+    await Promise.all(
+      matchesToLoad.map(async (match) => {
+        console.log(`Processing ${match.route.id}`);
+        try {
+          const result = await match.resolve();
+          results[match.route.id] = {
+            type: "data",
+            result,
+          };
+        } catch (e) {
+          results[match.route.id] = {
+            type: "error",
+            result: e,
+          };
+        }
+      })
+    );
+
+    return results;
   },
 });
 ```
@@ -324,15 +370,22 @@ let router = createBrowserRouter(routes, {
     }
 
     // Run loaders in parallel with the `context` value
-    return Promise.all(
-      matches.map((match, i) =>
-        match.resolve(async (handler) => {
+    let matchesToLoad = matches.filter((m) => m.shouldLoad);
+    let results = await Promise.all(
+      matchesToLoad.map((match, i) =>
+        match.resolve((handler) => {
           // Whatever you pass to `handler` will be passed as the 2nd parameter
           // to your loader/action
-          let result = await handler(context);
-          return { type: "data", result };
+          return handler(context);
         })
       )
+    );
+    return results.reduce(
+      (acc, result, i) =>
+        Object.assign(acc, {
+          [matchesToLoad[i].route.id]: result,
+        }),
+      {}
     );
   },
 });
@@ -377,7 +430,8 @@ let router = createBrowserRouter(routes, {
     // Compose route fragments into a single GQL payload
     let gql = getFragmentsFromRouteHandles(matches);
     let data = await fetchGql(gql);
-    // Parse results back out into individual route level HandlerResult's
+    // Parse results back out into individual route level `DataStrategyResult`'s
+    // keyed by `routeId`
     let results = parseResultsFromGql(data);
     return results;
   },
