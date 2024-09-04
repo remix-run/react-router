@@ -29,6 +29,7 @@ import colors from "picocolors";
 import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
+import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
@@ -1450,7 +1451,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         let [filepath] = id.split("?");
 
-        return removeExports(code, SERVER_ONLY_ROUTE_EXPORTS, {
+        let ast = parse(code, { sourceType: "module" });
+        removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        return generate(ast, {
           sourceMaps: true,
           filename: id,
           sourceFileName: filepath,
