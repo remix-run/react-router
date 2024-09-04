@@ -1263,7 +1263,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     {
       name: "react-router-route-entry",
       enforce: "pre",
-      async transform(code, id, options) {
+      async transform(_code, id, options) {
         if (!isRouteEntry(id)) return;
         let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
 
@@ -1586,7 +1586,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           }
         }
 
-        server.ws.send({
+        server.hot.send({
           type: "custom",
           event: "react-router:hmr",
           data: hmrEventData,
