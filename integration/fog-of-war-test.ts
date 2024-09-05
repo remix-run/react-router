@@ -1,4 +1,3 @@
-import type { Request as PlaywrightRequest } from "@playwright/test";
 import { test, expect } from "@playwright/test";
 
 import {
@@ -710,9 +709,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#parent")).toMatch(`Parent`);
     expect(await app.getHtml("#child2")).toMatch(`Child 2`);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(
-        /\/__manifest\?version=[a-z0-9]{8}&p=%2Fparent%2Fchild2/
-      ),
+      expect.stringMatching(/\/__manifest\?p=%2Fparent%2Fchild2&version=/),
     ]);
   });
 
@@ -780,7 +777,7 @@ test.describe("Fog of War", () => {
       )
     ).toEqual(["root", "routes/_index", "routes/$slug"]);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fsomething/),
+      expect.stringMatching(/\/__manifest\?&p=%2Fsomething&version=/),
     ]);
     manifestRequests = [];
 
@@ -794,7 +791,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#static");
     expect(await app.getHtml("#static")).toMatch("Static");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fstatic/),
+      expect.stringMatching(/\/__manifest\?p=%2Fstatic&version=/),
     ]);
     expect(
       await page.evaluate(() =>
@@ -867,7 +864,7 @@ test.describe("Fog of War", () => {
       )
     ).toEqual(["root", "routes/_index", "routes/$"]);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fsomething/),
+      expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
     ]);
     manifestRequests = [];
 
@@ -881,7 +878,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#static");
     expect(await app.getHtml("#static")).toMatch("Static");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fstatic/),
+      expect.stringMatching(/\/__manifest\?p=%2Fstatic&version=/),
     ]);
     expect(
       await page.evaluate(() =>
@@ -953,7 +950,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#slug");
     expect(await app.getHtml("#slug")).toMatch("Slug: a");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fa/),
+      expect.stringMatching(/\/__manifest\?p=%2Fa&version=/),
     ]);
     manifestRequests = [];
 
@@ -974,7 +971,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#slug");
     expect(await app.getHtml("#slug")).toMatch("Slug: b");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fb/),
+      expect.stringMatching(/\/__manifest\?p=%2Fb&version=/),
     ]);
   });
 
@@ -1041,7 +1038,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#splat");
     expect(await app.getHtml("#splat")).toMatch("Splat: a");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fa/),
+      expect.stringMatching(/\/__manifest\?p=%2Fa&version=/),
     ]);
     manifestRequests = [];
 
@@ -1062,7 +1059,7 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#splat");
     expect(await app.getHtml("#splat")).toMatch("Splat: b/c");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fb%2Fc/),
+      expect.stringMatching(/\/__manifest\?p=%2Fb%2Fc&version=/),
     ]);
   });
 
@@ -1134,9 +1131,7 @@ test.describe("Fog of War", () => {
     await app.clickLink("/not/a/path");
     await page.waitForSelector("#error");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(
-        /\/__manifest\?version=[a-z0-9]{8}&p=%2Fnot%2Fa%2Fpath/
-      ),
+      expect.stringMatching(/\/__manifest\?p=%2Fnot%2Fa%2Fpath&version=/),
     ]);
     manifestRequests = [];
 
@@ -1144,7 +1139,7 @@ test.describe("Fog of War", () => {
     await app.clickLink("/something");
     await page.waitForSelector("#slug");
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?version=[a-z0-9]{8}&p=%2Fsomething/),
+      expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
     ]);
     manifestRequests = [];
 
@@ -1177,10 +1172,10 @@ test.describe("Fog of War", () => {
     let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
 
-    let manifestRequests: PlaywrightRequest[] = [];
+    let manifestRequests: string[] = [];
     page.on("request", (req) => {
       if (req.url().includes("/__manifest")) {
-        manifestRequests.push(req);
+        manifestRequests.push(req.url());
       }
     });
 
@@ -1196,5 +1191,86 @@ test.describe("Fog of War", () => {
         Object.keys((window as any).__remixManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
+  });
+
+  test("includes a version query parameter as a cachebuster", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/routes/_index.tsx": js`
+          import { Link } from "@remix-run/react";
+          export default function Index() {
+            return (
+              <>
+                <h1 id="index">Index</h1>
+                <Link to="/a">/a</Link>
+                <Link to="/b">/b</Link>
+              </>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(
+        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&version=[a-z0-9]{8}/
+      ),
+    ]);
+  });
+
+  test("sorts url parameters", async ({ page }) => {
+    let fixture = await createFixture({
+      files: {
+        ...getFiles(),
+        "app/routes/_index.tsx": js`
+          import { Link } from "@remix-run/react";
+          export default function Index() {
+            return (
+              <>
+                <h1 id="index">Index</h1>
+                <Link to="/a">/a</Link>
+                <Link to="/c">/c</Link>
+                <Link to="/e">/e</Link>
+                <Link to="/g">/g</Link>
+                <Link to="/f">/f</Link>
+                <Link to="/d">/d</Link>
+                <Link to="/b">/b</Link>
+              </>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let manifestRequests: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes("/__manifest")) {
+        manifestRequests.push(req.url());
+      }
+    });
+
+    await app.goto("/", true);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(manifestRequests).toEqual([
+      expect.stringMatching(
+        /\/__manifest\?p=%2F&p=%2Fa&p=%2Fb&p=%2Fc&p=%2Fd&p=%2Fe&p=%2Ff&p=%2F/
+      ),
+    ]);
   });
 });

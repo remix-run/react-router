@@ -210,8 +210,8 @@ export async function fetchAndApplyManifestPatches(
     "/"
   );
   let url = new URL(manifestPath, window.location.origin);
+  paths.sort().forEach((path) => url.searchParams.append("p", path));
   url.searchParams.set("version", manifest.version);
-  paths.forEach((path) => url.searchParams.append("p", path));
 
   // If the URL is nearing the ~8k limit on GET requests, skip this optimization
   // step and just let discovery happen on link click.  We also wipe out the
