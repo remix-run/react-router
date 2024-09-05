@@ -12,9 +12,9 @@ import type {
 
 import type { SerializeFrom } from "./components";
 import type { AppData } from "./data";
-import type { LinkDescriptor } from "./links";
 import type { EntryRoute } from "./routes";
 import type { DataRouteMatch } from "../../context";
+import type { LinkDescriptor } from "../../router/links";
 
 export interface RouteModules {
   [routeId: string]: RouteModule | undefined;

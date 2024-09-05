@@ -202,11 +202,6 @@ export {
 export type { ScriptsProps } from "./lib/dom/ssr/components";
 export type { EntryContext } from "./lib/dom/ssr/entry";
 export type {
-  HtmlLinkDescriptor,
-  LinkDescriptor,
-  PrefetchPageDescriptor,
-} from "./lib/dom/ssr/links";
-export type {
   ClientActionFunction,
   ClientActionFunctionArgs,
   ClientLoaderFunction,
@@ -282,11 +277,10 @@ export type {
 export type { AppLoadContext } from "./lib/server-runtime/data";
 
 export type {
-  // TODO: (v7) Clean up code paths for these exports
-  // HtmlLinkDescriptor,
-  // LinkDescriptor,
   PageLinkDescriptor,
-} from "./lib/server-runtime/links";
+  HtmlLinkDescriptor,
+  LinkDescriptor,
+} from "./lib/router/links";
 
 export type { TypedResponse } from "./lib/server-runtime/responses";
 
