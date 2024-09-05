@@ -777,7 +777,7 @@ test.describe("Fog of War", () => {
       )
     ).toEqual(["root", "routes/_index", "routes/$slug"]);
     expect(manifestRequests).toEqual([
-      expect.stringMatching(/\/__manifest\?&p=%2Fsomething&version=/),
+      expect.stringMatching(/\/__manifest\?p=%2Fsomething&version=/),
     ]);
     manifestRequests = [];
 
@@ -1200,7 +1200,7 @@ test.describe("Fog of War", () => {
       files: {
         ...getFiles(),
         "app/routes/_index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router";
           export default function Index() {
             return (
               <>
@@ -1237,7 +1237,7 @@ test.describe("Fog of War", () => {
       files: {
         ...getFiles(),
         "app/routes/_index.tsx": js`
-          import { Link } from "@remix-run/react";
+          import { Link } from "react-router";
           export default function Index() {
             return (
               <>

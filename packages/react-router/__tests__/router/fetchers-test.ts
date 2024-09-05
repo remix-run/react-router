@@ -2537,6 +2537,13 @@ describe("fetchers", () => {
       });
       router.initialize();
 
+      let fetcherData = new Map<string, unknown>();
+      router.subscribe((state) => {
+        state.fetchers.forEach((fetcher, key) => {
+          fetcherData.set(key, fetcher.data);
+        });
+      });
+
       router.fetch("a", "index", "/loader");
       expect(router.getFetcher("a")).toMatchObject({ state: "loading" });
 
@@ -2552,16 +2559,12 @@ describe("fetchers", () => {
 
       await sleep(250);
 
-      expect(router.getFetcher("b")).toMatchObject({
-        state: "idle",
-        data: "ACTION",
-      });
+      expect(router.getFetcher("b")).toMatchObject({ state: "idle" });
+      expect(fetcherData.get("b")).toBe("ACTION");
 
       // fetcher load, router revalidation, action revalidation
-      expect(router.getFetcher("a")).toMatchObject({
-        state: "idle",
-        data: 3,
-      });
+      expect(router.getFetcher("a")).toMatchObject({ state: "idle" });
+      expect(fetcherData.get("a")).toBe(3);
     });
 
     it("does not cancel pending action navigation on deletion of revalidating fetcher", async () => {
