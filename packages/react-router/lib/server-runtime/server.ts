@@ -367,7 +367,6 @@ async function handleDocumentRequest(
     staticHandlerContext: context,
     criticalCss,
     serverHandoffString: createServerHandoffString({
-      url: context.location.pathname,
       basename: build.basename,
       criticalCss,
       future: build.future,
@@ -439,7 +438,6 @@ async function handleDocumentRequest(
       ...entryContext,
       staticHandlerContext: context,
       serverHandoffString: createServerHandoffString({
-        url: context.location.pathname,
         basename: build.basename,
         future: build.future,
         isSpaMode: build.isSpaMode,
