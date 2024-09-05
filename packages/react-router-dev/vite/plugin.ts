@@ -29,6 +29,7 @@ import colors from "picocolors";
 import { type RouteManifestEntry, type RouteManifest } from "../config/routes";
 import type { Manifest as ReactRouterManifest } from "../manifest";
 import invariant from "../invariant";
+import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
@@ -44,6 +45,7 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "./config";
+import { withProps } from "./with-props";
 
 export async function resolveViteConfig({
   configFile,
@@ -1263,7 +1265,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     {
       name: "react-router-route-entry",
       enforce: "pre",
-      async transform(code, id, options) {
+      async transform(_code, id, options) {
         if (!isRouteEntry(id)) return;
         let routeModuleId = id.replace(ROUTE_ENTRY_QUERY_STRING, "");
 
@@ -1450,7 +1452,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         let [filepath] = id.split("?");
 
-        return removeExports(code, SERVER_ONLY_ROUTE_EXPORTS, {
+        let ast = parse(code, { sourceType: "module" });
+        removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        withProps(ast);
+        return generate(ast, {
           sourceMaps: true,
           filename: id,
           sourceFileName: filepath,
@@ -1586,7 +1591,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           }
         }
 
-        server.ws.send({
+        server.hot.send({
           type: "custom",
           event: "react-router:hmr",
           data: hmrEventData,

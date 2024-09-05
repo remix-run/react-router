@@ -1,22 +1,18 @@
-import type { GeneratorOptions } from "@babel/generator";
 import {
   findReferencedIdentifiers,
   deadCodeElimination,
 } from "babel-dead-code-elimination";
 
-import type { BabelTypes, NodePath } from "./babel";
-import { parse, traverse, generate } from "./babel";
+import type { Babel, NodePath, ParseResult } from "./babel";
+import { traverse } from "./babel";
 
 export const removeExports = (
-  source: string,
-  exportsToRemove: string[],
-  generateOptions: GeneratorOptions = {}
+  ast: ParseResult<Babel.File>,
+  exportsToRemove: string[]
 ) => {
-  let ast = parse(source, { sourceType: "module" });
-
   let previouslyReferencedIdentifiers = findReferencedIdentifiers(ast);
   let exportsFiltered = false;
-  let markedForRemoval = new Set<NodePath<BabelTypes.Node>>();
+  let markedForRemoval = new Set<NodePath<Babel.Node>>();
 
   traverse(ast, {
     ExportDeclaration(path) {
@@ -116,12 +112,10 @@ export const removeExports = (
     // Run dead code elimination on any newly unreferenced identifiers
     deadCodeElimination(ast, previouslyReferencedIdentifiers);
   }
-
-  return generate(ast, generateOptions);
 };
 
 function validateDestructuredExports(
-  id: BabelTypes.ArrayPattern | BabelTypes.ObjectPattern,
+  id: Babel.ArrayPattern | Babel.ObjectPattern,
   exportsToRemove: string[]
 ) {
   if (id.type === "ArrayPattern") {
