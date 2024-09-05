@@ -18,7 +18,7 @@ import {
   getNewMatchesForLinks,
   isPageLinkDescriptor,
 } from "./links";
-import type { KeyedHtmlLinkDescriptor, PrefetchPageDescriptor } from "./links";
+import type { KeyedHtmlLinkDescriptor } from "./links";
 import { createHtml } from "./markup";
 import type {
   MetaFunction,
@@ -30,6 +30,7 @@ import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
 import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
+import type { PageLinkDescriptor } from "../../router/links";
 
 // TODO: Temporary shim until we figure out the way to handle typings in v7
 export type SerializeFrom<D> = D extends () => {} ? Awaited<ReturnType<D>> : D;
@@ -273,7 +274,7 @@ export function Links() {
 export function PrefetchPageLinks({
   page,
   ...dataLinkProps
-}: PrefetchPageDescriptor) {
+}: PageLinkDescriptor) {
   let { router } = useDataRouterContext();
   let matches = React.useMemo(
     () => matchRoutes(router.routes, page, router.basename),
@@ -320,7 +321,7 @@ function PrefetchPageLinksImpl({
   page,
   matches: nextMatches,
   ...linkProps
-}: PrefetchPageDescriptor & {
+}: PageLinkDescriptor & {
   matches: AgnosticDataRouteMatch[];
 }) {
   let location = useLocation();
