@@ -265,13 +265,13 @@ function resolveDependantChunks(
       return;
     }
 
+    chunks.add(chunk);
+
     if (chunk.imports) {
       for (let importKey of chunk.imports) {
         walk(viteManifest[importKey]);
       }
     }
-
-    chunks.add(chunk);
   }
 
   for (let entryChunk of entryChunks) {
