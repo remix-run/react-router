@@ -1,5 +1,6 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
+import type { Router as RemixRouter } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -18,7 +19,6 @@ import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
 import type { DataRouteObject } from "../../context";
-import { Router as RemixRouter } from "../../router/router";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
