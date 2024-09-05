@@ -273,35 +273,29 @@ async function singleFetchLoaderNavigationStrategy(
             results[m.route.id] = { type: "error", result: e };
           }
           return;
-        } else if (!manifest.routes[m.route.id].hasLoader) {
-          // If we don't have a server loader, then we don't care about the HTTP
-          // call and can just send back a `null` - because we _do_ have a `loader`
-          // in the client router handling route module/styles loads
-          results[m.route.id] = {
-            type: "data",
-            result: null,
-          };
-          return;
         }
 
-        // Otherwise, we want to load this route on the server and can lump this
-        // it in with the others on a singular promise
-        routesParams.add(m.route.id);
+        // Load this route on the server if it has a loader
+        if (manifest.routes[m.route.id].hasLoader) {
+          routesParams.add(m.route.id);
+        }
 
-        await handler(async () => {
-          try {
+        // Lump this match in with the others on a singular promise
+        try {
+          let result = await handler(async () => {
             let data = await singleFetchDfd.promise;
-            results[m.route.id] = {
-              type: "data",
-              result: unwrapSingleFetchResults(data, m.route.id),
-            };
-          } catch (e) {
-            results[m.route.id] = {
-              type: "error",
-              result: e,
-            };
-          }
-        });
+            return unwrapSingleFetchResults(data, m.route.id);
+          });
+          results[m.route.id] = {
+            type: "data",
+            result,
+          };
+        } catch (e) {
+          results[m.route.id] = {
+            type: "error",
+            result: e,
+          };
+        }
       })
     )
   );
@@ -309,10 +303,17 @@ async function singleFetchLoaderNavigationStrategy(
   // Wait for all routes to resolve above before we make the HTTP call
   await routesLoadedPromise;
 
-  // Don't make any single fetch server calls:
+  // We can skip the server call:
   // - On initial hydration - only clientLoaders can pass through via `clientLoader.hydrate`
   // - If there are no routes to fetch from the server
-  if (!router.state.initialized || routesParams.size === 0) {
+  //
+  // One exception - if we are performing an HDR revalidation we have to call
+  // the server in case a new loader has shown up that the manifest doesn't yet
+  // know about
+  if (
+    (!router.state.initialized || routesParams.size === 0) &&
+    !window.__remixHdrActive
+  ) {
     singleFetchDfd.resolve({});
   } else {
     try {

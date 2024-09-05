@@ -41,7 +41,7 @@ declare global {
   var __remixManifest: AssetsManifest | undefined;
   var __remixRouteModules: RouteModules | undefined;
   var __remixRouter: RemixRouter | undefined;
-  var __remixRevalidation: number | undefined;
+  var __remixHdrActive: boolean;
   var __remixClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
     | {
