@@ -115,12 +115,13 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     let url = new URL(href, "test://test");
     let request = new Request(url.toString(), init);
     let response = await handler(request);
-    let decoded = await decodeViaTurboStream(response.body!, global);
     return {
       status: response.status,
       statusText: response.statusText,
       headers: response.headers,
-      data: decoded.value,
+      data: response.body
+        ? (await decodeViaTurboStream(response.body!, global)).value
+        : null,
     };
   };
 

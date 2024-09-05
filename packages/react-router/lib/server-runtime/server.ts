@@ -297,6 +297,11 @@ async function handleSingleFetchRequest(
   let resultHeaders = new Headers(headers);
   resultHeaders.set("X-Remix-Response", "yes");
 
+  // 304 responses should not have a body
+  if (status === 304) {
+    return new Response(null, { status: 304, headers: resultHeaders });
+  }
+
   // We use a less-descriptive `text/x-script` here instead of something like
   // `text/x-turbo` to enable compression when deployed via Cloudflare.  See:
   //  - https://github.com/remix-run/remix/issues/9884

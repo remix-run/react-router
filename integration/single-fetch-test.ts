@@ -1690,6 +1690,49 @@ test.describe("single-fetch", () => {
     ]);
   });
 
+  test("does not try to encode a turbo-stream body into 304 responses", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { useLoaderData } from "react-router";
+
+          const eTag = "1234";
+          export function loader({ request }) {
+            if (request.headers.get("If-None-Match") === eTag) {
+              throw new Response(null, { status: 304 });
+            }
+            return { message: "Hello from the loader!" };
+          };
+          export default function Index() {
+            const { message } = useLoaderData<typeof loader>();
+            return <h1>{message}</h1>
+          }
+        `,
+      },
+    });
+    let res = await fixture.requestSingleFetchData("/_root.data");
+    expect(res.data).toEqual({
+      root: {
+        data: {
+          message: "ROOT",
+        },
+      },
+      "routes/_index": {
+        data: {
+          message: "Hello from the loader!",
+        },
+      },
+    });
+    res = await fixture.requestSingleFetchData("/_root.data", {
+      headers: {
+        "If-None-Match": "1234",
+      },
+    });
+    expect(res.status).toBe(304);
+    expect(res.data).toBeNull();
+  });
+
   test.describe("revalidations/_routes param", () => {
     test("does not make a server call if no loaders need to run", async ({
       page,
