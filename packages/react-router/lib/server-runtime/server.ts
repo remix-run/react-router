@@ -175,7 +175,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
             };
           }
           let headers = new Headers(response.headers);
-          headers.set("Content-Type", "text/x-turbo");
+          headers.set("Content-Type", "text/x-script");
 
           return new Response(
             encodeViaTurboStream(
@@ -296,7 +296,12 @@ async function handleSingleFetchRequest(
   // network errors that are missing this header
   let resultHeaders = new Headers(headers);
   resultHeaders.set("X-Remix-Response", "yes");
-  resultHeaders.set("Content-Type", "text/x-turbo");
+
+  // We use a less-descriptive `text/x-script` here instead of something like
+  // `text/x-turbo` to enable compression when deployed via Cloudflare.  See:
+  //  - https://github.com/remix-run/remix/issues/9884
+  //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
+  resultHeaders.set("Content-Type", "text/x-script");
 
   return new Response(
     encodeViaTurboStream(
