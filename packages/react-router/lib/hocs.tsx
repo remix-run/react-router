@@ -8,7 +8,7 @@ export function withComponentProps(
     actionData: unknown;
   }>
 ) {
-  return function () {
+  return function Wrapped() {
     const props = {
       params: useParams(),
       loaderData: useLoaderData(),
@@ -21,7 +21,7 @@ export function withComponentProps(
 export function withHydrateFallbackProps(
   HydrateFallback: React.ComponentType<{ params: unknown }>
 ) {
-  return function () {
+  return function Wrapped() {
     const props = {
       params: useParams(),
     };
@@ -36,7 +36,7 @@ export function withErrorBoundaryProps(
     actionData: unknown;
   }>
 ) {
-  return function () {
+  return function Wrapped() {
     const props = {
       params: useParams(),
       loaderData: useLoaderData(),
