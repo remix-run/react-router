@@ -44,27 +44,22 @@ export function getSingleFetchDataStrategy({
   return async ({ request, matches }: DataStrategyFunctionArgs) => {
     // Don't call loaders on action data requests
     if (isActionDataRequest && request.method === "GET") {
-      return await Promise.all(
-        matches.map((m) =>
-          m.resolve(async () => ({ type: "data", result: null }))
-        )
-      );
+      return {};
     }
 
+    // Only run opt-in loaders when fine-grained revalidation is enabled
+    let matchesToLoad = loadRouteIds
+      ? matches.filter((m) => loadRouteIds.includes(m.route.id))
+      : matches;
+
     let results = await Promise.all(
-      matches.map(async (match) => {
-        let result = await match.resolve(async (handler) => {
-          // Only run opt-in loaders when fine-grained revalidation is enabled
-          let data =
-            loadRouteIds && !loadRouteIds.includes(match.route.id)
-              ? null
-              : await handler();
-          return { type: "data", result: data };
-        });
-        return result;
-      })
+      matchesToLoad.map((match) => match.resolve())
     );
-    return results;
+    return results.reduce(
+      (acc, result, i) =>
+        Object.assign(acc, { [matchesToLoad[i].route.id]: result }),
+      {}
+    );
   };
 }
 
