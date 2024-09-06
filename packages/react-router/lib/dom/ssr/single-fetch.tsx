@@ -374,6 +374,14 @@ export function decodeViaTurboStream(
         if (type === "SingleFetchRedirect") {
           return { value: { [SingleFetchRedirectSymbol]: rest[0] } };
         }
+
+        if (type === "SingleFetchClassInstance") {
+          return { value: rest[0] };
+        }
+
+        if (type === "SingleFetchFallback") {
+          return { value: undefined };
+        }
       },
     ],
   });

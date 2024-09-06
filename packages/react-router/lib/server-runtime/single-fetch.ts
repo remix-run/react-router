@@ -359,5 +359,17 @@ export function encodeViaTurboStream(
         }
       },
     ],
+    postPlugins: [
+      (value) => {
+        if (!value) return;
+        if (typeof value !== "object") return;
+
+        return [
+          "SingleFetchClassInstance",
+          Object.fromEntries(Object.entries(value)),
+        ];
+      },
+      () => ["SingleFetchFallback"],
+    ],
   });
 }
