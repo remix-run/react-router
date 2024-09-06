@@ -1693,8 +1693,23 @@ test.describe("single-fetch", () => {
         `,
       },
     });
-    let res = await fixture.requestSingleFetchData("/_root.data");
-    expect(res.data).toEqual({
+
+    // Document requests
+    let documentRes = await fixture.requestDocument("/");
+    let html = await documentRes.text();
+    expect(html).toContain("<body>");
+    expect(html).toContain("<h1>Hello from the loader!</h1>");
+    documentRes = await fixture.requestDocument("/", {
+      headers: {
+        "If-None-Match": "1234",
+      },
+    });
+    expect(documentRes.status).toBe(304);
+    expect(await documentRes.text()).toBe("");
+
+    // Data requests
+    let dataRes = await fixture.requestSingleFetchData("/_root.data");
+    expect(dataRes.data).toEqual({
       root: {
         data: {
           message: "ROOT",
@@ -1706,13 +1721,13 @@ test.describe("single-fetch", () => {
         },
       },
     });
-    res = await fixture.requestSingleFetchData("/_root.data", {
+    dataRes = await fixture.requestSingleFetchData("/_root.data", {
       headers: {
         "If-None-Match": "1234",
       },
     });
-    expect(res.status).toBe(304);
-    expect(res.data).toBeNull();
+    expect(dataRes.status).toBe(304);
+    expect(dataRes.data).toBeNull();
   });
 
   test.describe("revalidations/_routes param", () => {

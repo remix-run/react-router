@@ -347,6 +347,11 @@ async function handleDocumentRequest(
 
   let headers = getDocumentHeaders(build, context);
 
+  // 304 responses should not have a body or a content-type
+  if (context.statusCode === 304) {
+    return new Response(null, { status: 304, headers });
+  }
+
   // Sanitize errors outside of development environments
   if (context.errors) {
     Object.values(context.errors).forEach((err) => {
