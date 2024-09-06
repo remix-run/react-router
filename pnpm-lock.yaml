@@ -557,8 +557,8 @@ importers:
         specifier: ^0.7.3
         version: 0.7.4
       turbo-stream:
-        specifier: 2.3.0
-        version: 2.3.0
+        specifier: 2.4.0
+        version: 2.4.0
     devDependencies:
       '@types/set-cookie-parser':
         specifier: ^2.4.1
@@ -13613,8 +13613,8 @@ packages:
       yargs: 17.7.2
     dev: false
 
-  /turbo-stream@2.3.0:
-    resolution: {integrity: sha512-PhEr9mdexoVv+rJkQ3c8TjrN3DUghX37GNJkSMksoPR4KrXIPnM2MnqRt07sViIqX9IdlhrgtTSyjoVOASq6cg==}
+  /turbo-stream@2.4.0:
+    resolution: {integrity: sha512-FHncC10WpBd2eOmGwpmQsWLDoK4cqsA/UT/GqNoaKOQnT8uzhtCbg3EoUDMvqpOSAI0S26mr0rkjzbOO6S3v1g==}
     dev: false
 
   /type-check@0.4.0:
