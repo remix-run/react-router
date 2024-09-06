@@ -18,7 +18,6 @@ import type { AssetsManifest, EntryContext } from "./entry";
 import { escapeHtml } from "./markup";
 import type { RouteModules } from "./routeModules";
 import invariant from "./invariant";
-import type { DataRouteObject } from "../../context";
 
 export const SingleFetchRedirectSymbol = Symbol("SingleFetchRedirect");
 
@@ -386,56 +385,6 @@ function stripIndexParam(url: URL) {
     url.searchParams.append("index", toKeep);
   }
 
-  return url;
-}
-
-// Determine which routes we want to load so we can add a `?_routes` search param
-// for fine-grained revalidation if necessary. There's some nuance to this decision:
-//
-//  - The presence of `shouldRevalidate` and `clientLoader` functions are the only
-//    way to trigger fine-grained single fetch loader calls.  without either of
-//    these on the route matches we just always ask for the full `.data` request.
-//  - If any routes have a `shouldRevalidate` or `clientLoader` then we do a
-//    comparison of the routes we matched and the routes we're aiming to load
-//  - If they don't match up, then we add the `_routes` param or fine-grained
-//    loading
-//  - This is used by the single fetch implementation above and by the
-//    `<PrefetchPageLinksImpl>` component so we can prefetch routes using the
-//    same logic
-export function addRevalidationParam(
-  manifest: AssetsManifest,
-  routeModules: RouteModules,
-  matchedRoutes: DataRouteObject[],
-  loadRoutes: DataRouteObject[],
-  url: URL
-) {
-  let genRouteIds = (arr: string[]) =>
-    arr.filter((id) => manifest.routes[id].hasLoader).join(",");
-
-  // Look at the `routeModules` for `shouldRevalidate` here instead of the manifest
-  // since HDR adds a wrapper for `shouldRevalidate` even if the route didn't have one
-  // initially.
-  // TODO: We probably can get rid of that wrapper once we're strictly on on
-  // single-fetch in v3 and just leverage a needsRevalidation data structure here
-  // to determine what to fetch
-  let needsParam = matchedRoutes.some(
-    (r) =>
-      routeModules[r.id]?.shouldRevalidate ||
-      manifest.routes[r.id]?.hasClientLoader
-  );
-  if (!needsParam) {
-    return url;
-  }
-
-  let matchedIds = genRouteIds(matchedRoutes.map((r) => r.id));
-  let loadIds = genRouteIds(
-    loadRoutes
-      .filter((r) => !manifest.routes[r.id]?.hasClientLoader)
-      .map((r) => r.id)
-  );
-  if (matchedIds !== loadIds) {
-    url.searchParams.set("_routes", loadIds);
-  }
   return url;
 }
 

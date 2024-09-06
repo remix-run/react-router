@@ -26,7 +26,7 @@ import type {
   MetaMatch,
   MetaMatches,
 } from "./routeModules";
-import { addRevalidationParam, singleFetchUrl } from "./single-fetch";
+import { singleFetchUrl } from "./single-fetch";
 import { DataRouterContext, DataRouterStateContext } from "../../context";
 import { useLocation } from "../../hooks";
 import { getPartialManifest, isFogOfWarEnabled } from "./fog-of-war";
@@ -325,7 +325,7 @@ function PrefetchPageLinksImpl({
 }) {
   let location = useLocation();
   let { manifest, routeModules } = useFrameworkContext();
-  let { matches } = useDataRouterStateContext();
+  let { loaderData, matches } = useDataRouterStateContext();
 
   let newMatchesForData = React.useMemo(
     () =>
@@ -353,6 +353,64 @@ function PrefetchPageLinksImpl({
     [page, nextMatches, matches, manifest, location]
   );
 
+  let dataHrefs = React.useMemo(() => {
+    if (page === location.pathname + location.search + location.hash) {
+      // Because we opt-into revalidation, don't compute this for the current page
+      // since it would always trigger a prefetch of the existing loaders
+      return [];
+    }
+
+    // Single-fetch is harder :)
+    // This parallels the logic in the single fetch data strategy
+    let routesParams = new Set<string>();
+    let foundOptOutRoute = false;
+    nextMatches.forEach((m) => {
+      if (!manifest.routes[m.route.id].hasLoader) {
+        return;
+      }
+
+      if (
+        !newMatchesForData.some((m2) => m2.route.id === m.route.id) &&
+        m.route.id in loaderData &&
+        routeModules[m.route.id]?.shouldRevalidate
+      ) {
+        foundOptOutRoute = true;
+      } else if (manifest.routes[m.route.id].hasClientLoader) {
+        foundOptOutRoute = true;
+      } else {
+        routesParams.add(m.route.id);
+      }
+    });
+
+    if (routesParams.size === 0) {
+      return [];
+    }
+
+    let url = singleFetchUrl(page);
+    // When one or more routes have opted out, we add a _routes param to
+    // limit the loaders to those that have a server loader and did not
+    // opt out
+    if (foundOptOutRoute && routesParams.size > 0) {
+      url.searchParams.set(
+        "_routes",
+        nextMatches
+          .filter((m) => routesParams.has(m.route.id))
+          .map((m) => m.route.id)
+          .join(",")
+      );
+    }
+
+    return [url.pathname + url.search];
+  }, [
+    loaderData,
+    location,
+    manifest,
+    newMatchesForData,
+    nextMatches,
+    page,
+    routeModules,
+  ]);
+
   let moduleHrefs = React.useMemo(
     () => getModuleLinkHrefs(newMatchesForAssets, manifest),
     [newMatchesForAssets, manifest]
@@ -362,36 +420,11 @@ function PrefetchPageLinksImpl({
   // just the manifest like the other links in here.
   let keyedPrefetchLinks = useKeyedPrefetchLinks(newMatchesForAssets);
 
-  let linksToRender: React.ReactNode | React.ReactNode[] | null = null;
-  if (newMatchesForData.length > 0) {
-    // Single-fetch with routes that require data
-    let url = addRevalidationParam(
-      manifest,
-      routeModules,
-      nextMatches.map((m) => m.route),
-      newMatchesForData.map((m) => m.route),
-      singleFetchUrl(page)
-    );
-    if (url.searchParams.get("_routes") !== "") {
-      linksToRender = (
-        <link
-          key={url.pathname + url.search}
-          rel="prefetch"
-          as="fetch"
-          href={url.pathname + url.search}
-          {...linkProps}
-        />
-      );
-    } else {
-      // No single-fetch prefetching if _routes param is empty due to `clientLoader`'s
-    }
-  } else {
-    // No single-fetch prefetching if there are no new matches for data
-  }
-
   return (
     <>
-      {linksToRender}
+      {dataHrefs.map((href) => (
+        <link key={href} rel="prefetch" as="fetch" href={href} {...linkProps} />
+      ))}
       {moduleHrefs.map((href) => (
         <link key={href} rel="modulepreload" href={href} {...linkProps} />
       ))}

@@ -2940,9 +2940,9 @@ test.describe("single-fetch", () => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
-      // A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
+      // root/A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=routes%2Fa%2Croutes%2Fa.b']",
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa%2Croutes%2Fa.b']",
         { state: "attached" }
       );
       expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
@@ -3033,9 +3033,9 @@ test.describe("single-fetch", () => {
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
-      // Only A can get prefetched, B/C can't due to `clientLoader`
+      // root/A can get prefetched, B/C can't due to `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=routes%2Fa']",
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa']",
         { state: "attached" }
       );
       expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
@@ -3045,6 +3045,32 @@ test.describe("single-fetch", () => {
       let fixture = await createFixture({
         files: {
           ...files,
+          "app/root.tsx": js`
+            import { Links, Meta, Outlet, Scripts } from "react-router";
+            export function loader() {
+              return {
+                message: "ROOT",
+              };
+            }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (root client loader)" };
+            }
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
           "app/routes/_index.tsx": js`
             import {  Link } from "react-router";
 
@@ -3133,6 +3159,156 @@ test.describe("single-fetch", () => {
 
       // No prefetching due to clientLoaders
       expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(0);
+    });
+
+    test("when a reused route opts out of revalidation", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Link, Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "A server loader" };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "B server loader" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
+            export function  loader() {
+              return { message: "C server loader" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a", true);
+
+      // A opted out of revalidation
+      await page.waitForSelector(
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b%2Croutes%2Fa.b.c']",
+        { state: "attached" }
+      );
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+    });
+
+    test("when a reused route opts out of revalidation and another route has a clientLoader", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Link, Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "A server loader" };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "B server loader" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
+            export function  loader() {
+              return { message: "C server loader" };
+            }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a", true);
+
+      // A opted out of revalidation
+      await page.waitForSelector(
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b']",
+        { state: "attached" }
+      );
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
     });
   });
 
