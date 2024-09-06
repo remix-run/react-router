@@ -1,9 +1,61 @@
+import type { Plugin } from "vite";
+import dedent from "dedent";
+
 import type { Babel, NodePath, ParseResult } from "./babel";
 import { traverse, t } from "./babel";
+import * as VirtualModule from "./vmod";
+
+const vmodId = VirtualModule.id("with-props");
 
 const NAMED_COMPONENT_EXPORTS = ["HydrateFallback", "ErrorBoundary"];
 
-export const withProps = (ast: ParseResult<Babel.File>) => {
+export const plugin: Plugin = {
+  name: "react-router-with-props",
+  enforce: "pre",
+  resolveId(id) {
+    if (id === vmodId) return VirtualModule.resolve(vmodId);
+  },
+  async load(id) {
+    if (id !== VirtualModule.resolve(vmodId)) return;
+    return dedent`
+      import { createElement as h } from "react";
+      import { useActionData, useLoaderData, useParams } from "react-router";
+
+      export function withComponentProps(Component) {
+        return function Wrapped() {
+          const props = {
+            params: useParams(),
+            loaderData: useLoaderData(),
+            actionData: useActionData(),
+          };
+          return h(Component, props);
+        };
+      }
+
+      export function withHydrateFallbackProps(HydrateFallback) {
+        return function Wrapped() {
+          const props = {
+            params: useParams(),
+          };
+          return h(HydrateFallback, props);
+        };
+      }
+
+      export function withErrorBoundaryProps(ErrorBoundary) {
+        return function Wrapped() {
+          const props = {
+            params: useParams(),
+            loaderData: useLoaderData(),
+            actionData: useActionData(),
+          };
+          return h(ErrorBoundary, props);
+        };
+      }
+    `;
+  },
+};
+
+export const transform = (ast: ParseResult<Babel.File>) => {
   const hocs: Array<[string, Babel.Identifier]> = [];
   function getHocUid(path: NodePath, hocName: string) {
     const uid = path.scope.generateUidIdentifier(hocName);
@@ -72,7 +124,7 @@ export const withProps = (ast: ParseResult<Babel.File>) => {
         hocs.map(([name, identifier]) =>
           t.importSpecifier(identifier, t.identifier(name))
         ),
-        t.stringLiteral("react-router")
+        t.stringLiteral(vmodId)
       )
     );
   }

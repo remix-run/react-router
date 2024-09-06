@@ -133,11 +133,6 @@ export {
   useRouteLoaderData,
   useRoutes,
 } from "./lib/hooks";
-export {
-  withComponentProps,
-  withHydrateFallbackProps,
-  withErrorBoundaryProps,
-} from "./lib/hocs";
 
 // Expose old RR DOM API
 export type {
