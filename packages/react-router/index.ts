@@ -7,6 +7,7 @@ import type {
   unstable_DataStrategyFunction,
   unstable_DataStrategyFunctionArgs,
   unstable_DataStrategyMatch,
+  unstable_DataStrategyResult,
   ErrorResponse,
   Fetcher,
   HydrationState,
@@ -31,7 +32,6 @@ import type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  unstable_HandlerResult,
   unstable_AgnosticPatchRoutesOnNavigationFunction,
 } from "@remix-run/router";
 import {
@@ -139,6 +139,7 @@ export type {
   unstable_DataStrategyFunction,
   unstable_DataStrategyFunctionArgs,
   unstable_DataStrategyMatch,
+  unstable_DataStrategyResult,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -182,7 +183,6 @@ export type {
   UIMatch,
   Blocker,
   BlockerFunction,
-  unstable_HandlerResult,
 };
 export {
   AbortedDeferredError,
