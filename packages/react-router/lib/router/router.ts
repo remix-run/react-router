@@ -369,7 +369,7 @@ export interface RouterInit {
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
   window?: Window;
-  unstable_patchRoutesOnNavigation?: AgnosticPatchRoutesOnNavigationFunction;
+  patchRoutesOnNavigation?: AgnosticPatchRoutesOnNavigationFunction;
   unstable_dataStrategy?: DataStrategyFunction;
 }
 
@@ -809,7 +809,7 @@ export function createRouter(init: RouterInit): Router {
   let inFlightDataRoutes: AgnosticDataRouteObject[] | undefined;
   let basename = init.basename || "/";
   let dataStrategyImpl = init.unstable_dataStrategy || defaultDataStrategy;
-  let patchRoutesOnNavigationImpl = init.unstable_patchRoutesOnNavigation;
+  let patchRoutesOnNavigationImpl = init.patchRoutesOnNavigation;
 
   // Config driven behavior flags
   let future: FutureConfig = {
@@ -5271,7 +5271,7 @@ function getInternalRouterError(
     statusText = "Bad Request";
     if (type === "route-discovery") {
       errorMessage =
-        `Unable to match URL "${pathname}" - the \`unstable_patchRoutesOnNavigation()\` ` +
+        `Unable to match URL "${pathname}" - the \`patchRoutesOnNavigation()\` ` +
         `function threw the following error:\n${message}`;
     } else if (method && pathname && routeId) {
       errorMessage =
