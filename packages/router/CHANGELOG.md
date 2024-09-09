@@ -1,6 +1,6 @@
 # `@remix-run/router`
 
-## 1.19.2-pre.0
+## 1.19.2
 
 ### Patch Changes
 
@@ -16,7 +16,9 @@
     - If you are manually filling your results object from within your `handlerOverride`, then you will need to assign a `DataStrategyResult` as the value so React Router knows if it's a successful execution or an error.
 
 - Preserve view transition through redirects ([#11925](https://github.com/remix-run/react-router/pull/11925))
-- Fix blocker usage when `blocker.proceed` is called quickly/syncronously ([#11930](https://github.com/remix-run/react-router/pull/11930))
+
+- Fix blocker usage when `blocker.proceed` is called quickly/synchronously ([#11930](https://github.com/remix-run/react-router/pull/11930))
+
 - Preserve pending view transitions through a router revalidation call ([#11917](https://github.com/remix-run/react-router/pull/11917))
 
 ## 1.19.1
