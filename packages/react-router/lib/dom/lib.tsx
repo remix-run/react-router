@@ -122,7 +122,7 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: DataStrategyFunction;
+  dataStrategy?: DataStrategyFunction;
   unstable_patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   window?: Window;
 }
@@ -141,7 +141,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    dataStrategy: opts?.dataStrategy,
     unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
@@ -161,7 +161,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    dataStrategy: opts?.dataStrategy,
     unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
