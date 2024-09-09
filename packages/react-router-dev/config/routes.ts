@@ -1,4 +1,4 @@
-import * as path from "node:path";
+import { resolve, win32 } from "node:path";
 import pick from "lodash/pick";
 import invariant from "../invariant";
 
@@ -92,11 +92,6 @@ export interface RouteConfigEntry {
 
 type CreateRoutePath = string | null | undefined;
 
-type RequireAtLeastOne<T> = {
-  [K in keyof T]-?: Required<Pick<T, K>> &
-    Partial<Pick<T, Exclude<keyof T, K>>>;
-}[keyof T];
-
 const createConfigRouteOptionKeys = [
   "id",
   "index",
@@ -114,7 +109,7 @@ function createRoute(
 function createRoute(
   path: CreateRoutePath,
   file: string,
-  options: RequireAtLeastOne<CreateRouteOptions>,
+  options: CreateRouteOptions,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createRoute(
@@ -148,7 +143,7 @@ type CreateIndexOptions = Pick<
 >;
 function createIndex(
   file: string,
-  options?: RequireAtLeastOne<CreateIndexOptions>
+  options?: CreateIndexOptions
 ): RouteConfigEntry {
   return {
     file,
@@ -170,7 +165,7 @@ function createLayout(
 ): RouteConfigEntry;
 function createLayout(
   file: string,
-  options: RequireAtLeastOne<CreateLayoutOptions>,
+  options: CreateLayoutOptions,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createLayout(
@@ -196,6 +191,24 @@ function createLayout(
 export const route = createRoute;
 export const index = createIndex;
 export const layout = createLayout;
+type RouteHelpers = {
+  route: typeof route;
+  index: typeof index;
+  layout: typeof layout;
+};
+export function relative(directory: string): RouteHelpers {
+  return {
+    route: (path, file, ...rest) => {
+      return route(path, resolve(directory, file), ...(rest as any));
+    },
+    index: (file, ...rest) => {
+      return index(resolve(directory, file), ...(rest as any));
+    },
+    layout: (file, ...rest) => {
+      return layout(resolve(directory, file), ...(rest as any));
+    },
+  };
+}
 
 export function configRoutesToRouteManifest(
   routes: RouteConfigEntry[],
@@ -240,7 +253,7 @@ function createRouteId(file: string) {
 }
 
 function normalizeSlashes(file: string) {
-  return file.split(path.win32.sep).join("/");
+  return file.split(win32.sep).join("/");
 }
 
 function stripFileExtension(file: string) {
