@@ -60,7 +60,13 @@ const enqueueUpdate = debounce(async () => {
     window.__reactRouterRouteModuleUpdates.clear();
   }
 
-  await revalidate();
+  try {
+    window.__remixHdrActive = true;
+    await __remixRouter.revalidate();
+  } finally {
+    window.__remixHdrActive = false;
+  }
+
   if (manifest) {
     Object.assign(window.__remixManifest, manifest);
   }
@@ -144,31 +150,6 @@ function __hmr_import(module) {
 
 const routeUpdates = new Map();
 window.__reactRouterRouteModuleUpdates = new Map();
-
-async function revalidate() {
-  let { promise, resolve } = channel();
-  let unsub = __remixRouter.subscribe((state) => {
-    if (state.revalidation === "idle") {
-      unsub();
-      // Ensure RouterProvider setState has flushed before re-rendering
-      resolve();
-    }
-  });
-  window.__remixRevalidation = (window.__remixRevalidation || 0) + 1;
-  __remixRouter.revalidate();
-  return promise;
-}
-
-function channel() {
-  let resolve;
-  let reject;
-
-  let promise = new Promise((_resolve, _reject) => {
-    resolve = _resolve;
-    reject = _reject;
-  });
-  return { promise, resolve, reject };
-}
 
 import.meta.hot.on("react-router:hmr", async ({ route }) => {
   window.__remixClearCriticalCss();
