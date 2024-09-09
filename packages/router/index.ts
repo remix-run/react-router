@@ -24,6 +24,7 @@ export type {
   ParamParseKey,
   Params,
   AgnosticPatchRoutesOnNavigationFunction as unstable_AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunctionArgs as unstable_AgnosticPatchRoutesOnNavigationFunctionArgs,
   PathMatch,
   PathParam,
   PathPattern,

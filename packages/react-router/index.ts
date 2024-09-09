@@ -33,6 +33,7 @@ import type {
   To,
   UIMatch,
   unstable_AgnosticPatchRoutesOnNavigationFunction,
+  unstable_AgnosticPatchRoutesOnNavigationFunctionArgs,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -233,6 +234,12 @@ export {
   useRoutes,
 };
 
+export type unstable_PatchRoutesOnNavigationFunctionArgs =
+  unstable_AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+
+export type unstable_PatchRoutesOnNavigationFunction =
+  unstable_AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
+
 function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
     // Note: this check also occurs in createRoutesFromChildren so update
@@ -290,9 +297,6 @@ function mapRouteProperties(route: RouteObject) {
 
   return updates;
 }
-
-export interface unstable_PatchRoutesOnNavigationFunction
-  extends unstable_AgnosticPatchRoutesOnNavigationFunction<RouteMatch> {}
 
 export function createMemoryRouter(
   routes: RouteObject[],

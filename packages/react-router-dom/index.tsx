@@ -152,6 +152,7 @@ export type {
   To,
   UIMatch,
   unstable_PatchRoutesOnNavigationFunction,
+  unstable_PatchRoutesOnNavigationFunctionArgs,
 } from "react-router";
 export {
   AbortedDeferredError,
