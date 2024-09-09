@@ -209,7 +209,7 @@ Date: YYYY-MM-DD
 
 ## v6.26.2
 
-Date: 2024-09-06
+Date: 2024-09-09
 
 ### Patch Changes
 
