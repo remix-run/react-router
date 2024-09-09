@@ -1,4 +1,4 @@
-import { route, layout, index } from "../config/routes";
+import { route, layout, index, relative } from "../config/routes";
 
 describe("routes config", () => {
   describe("route helpers", () => {
@@ -192,6 +192,70 @@ describe("routes config", () => {
             ],
             "file": "layout.tsx",
             "id": "custom-id",
+          }
+        `);
+      });
+    });
+
+    describe("relative", () => {
+      it("supports relative routes", () => {
+        let { route } = relative("/path/to/dirname");
+        expect(
+          route("parent", "nested/parent.tsx", [
+            route("child", "nested/child.tsx", { id: "child" }),
+          ])
+        ).toMatchInlineSnapshot(`
+          {
+            "children": [
+              {
+                "children": undefined,
+                "file": "/path/to/dirname/nested/child.tsx",
+                "id": "child",
+                "path": "child",
+              },
+            ],
+            "file": "/path/to/dirname/nested/parent.tsx",
+            "path": "parent",
+          }
+        `);
+      });
+
+      it("supports relative index routes", () => {
+        let { index } = relative("/path/to/dirname");
+        expect([
+          index("nested/without-options.tsx"),
+          index("nested/with-options.tsx", { id: "with-options" }),
+        ]).toMatchInlineSnapshot(`
+          [
+            {
+              "file": "/path/to/dirname/nested/without-options.tsx",
+              "index": true,
+            },
+            {
+              "file": "/path/to/dirname/nested/with-options.tsx",
+              "id": "with-options",
+              "index": true,
+            },
+          ]
+        `);
+      });
+
+      it("supports relative layout routes", () => {
+        let { layout } = relative("/path/to/dirname");
+        expect(
+          layout("nested/parent.tsx", [
+            layout("nested/child.tsx", { id: "child" }),
+          ])
+        ).toMatchInlineSnapshot(`
+          {
+            "children": [
+              {
+                "children": undefined,
+                "file": "/path/to/dirname/nested/child.tsx",
+                "id": "child",
+              },
+            ],
+            "file": "/path/to/dirname/nested/parent.tsx",
           }
         `);
       });
