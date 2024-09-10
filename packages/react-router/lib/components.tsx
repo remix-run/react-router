@@ -145,7 +145,7 @@ export function createMemoryRouter(
     initialEntries?: InitialEntry[];
     initialIndex?: number;
     dataStrategy?: DataStrategyFunction;
-    unstable_patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -159,7 +159,7 @@ export function createMemoryRouter(
     routes,
     mapRouteProperties,
     dataStrategy: opts?.dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
   }).initialize();
 }
 

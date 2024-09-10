@@ -174,7 +174,7 @@ function createHydratedRouter(): RemixRouter {
       ssrInfo.routeModules,
       () => router
     ),
-    unstable_patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
+    patchRoutesOnNavigation: getPatchRoutesOnNavigationFunction(
       ssrInfo.manifest,
       ssrInfo.routeModules,
       ssrInfo.context.isSpaMode,

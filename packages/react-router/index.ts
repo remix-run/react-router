@@ -93,7 +93,7 @@ export type {
   RouterProps,
   RouterProviderProps,
   RoutesProps,
-  PatchRoutesOnNavigationFunction as unstable_PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunction as PatchRoutesOnNavigationFunction,
 } from "./lib/components";
 export type { NavigateFunction } from "./lib/hooks";
 export {

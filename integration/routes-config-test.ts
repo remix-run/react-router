@@ -224,4 +224,28 @@ test.describe("routes config", () => {
       );
     }).toPass();
   });
+
+  test("supports absolute route file paths", async ({ page, dev }) => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.js": await viteConfig.basic({ port }),
+      "app/routes.ts": js`
+        import path from "node:path";
+        import { type RouteConfig } from "@react-router/dev/routes";
+
+        export const routes: RouteConfig = [
+          {
+            file: path.resolve(import.meta.dirname, "test-route.tsx"),
+            index: true,
+          },
+        ];
+      `,
+      "app/test-route.tsx": `
+        export default () => <div data-test-route>Test route</div>
+      `,
+    });
+    let { port } = await dev(files);
+
+    await page.goto(`http://localhost:${port}/`, { waitUntil: "networkidle" });
+    await expect(page.locator("[data-test-route]")).toHaveText("Test route");
+  });
 });
