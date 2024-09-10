@@ -52,7 +52,7 @@ function createBrowserRouter(
     future?: FutureConfig;
     hydrationData?: HydrationState;
     unstable_dataStrategy?: unstable_DataStrategyFunction;
-    unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
+    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
     window?: Window;
   }
 ): RemixRouter;
@@ -438,7 +438,7 @@ let router = createBrowserRouter(routes, {
 });
 ```
 
-## `opts.unstable_patchRoutesOnNavigation`
+## `opts.patchRoutesOnNavigation`
 
 <docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
 
@@ -448,12 +448,12 @@ To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] whic
 
 In some cases, even this doesn't go far enough. For very large applications, providing all route definitions up front can be prohibitively expensive. Additionally, it might not even be possible to provide all route definitions up front in certain Micro-Frontend or Module-Federation architectures.
 
-This is where `unstable_patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
+This is where `patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
 
 ### Type Declaration
 
 ```ts
-export interface unstable_PatchRoutesOnNavigationFunction {
+export interface PatchRoutesOnNavigationFunction {
   (opts: {
     path: string;
     matches: RouteMatch[];
@@ -467,7 +467,7 @@ export interface unstable_PatchRoutesOnNavigationFunction {
 
 ### Overview
 
-`unstable_patchRoutesOnNavigation` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
+`patchRoutesOnNavigation` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
 
 **Patching children into an existing route**
 
@@ -481,7 +481,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
+    async patchRoutesOnNavigation({
       path,
       patch,
     }) {
@@ -512,7 +512,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
+    async patchRoutesOnNavigation({
       path,
       patch,
     }) {
@@ -540,7 +540,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
+    async patchRoutesOnNavigation({
       path,
       patch,
     }) {
@@ -598,7 +598,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
+    async patchRoutesOnNavigation({
       matches,
       patch,
     }) {
