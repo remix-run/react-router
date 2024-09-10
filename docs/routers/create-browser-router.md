@@ -597,6 +597,88 @@ let router = createBrowserRouter(
 );
 ```
 
+### A note on routes with parameters
+
+Because React Router uses ranked routes to find the best match for a given path, there is an interesting ambiguity introduced when only a partial route tree is known at any given point in time. If we match a fully static route such as `path: "/about/contact-us"` then we know we've found the right match since it's composed entirely of static URL segments, and thus we do not need to bother asking for any other potentially higher-scoring routes.
+
+However, routes with parameters (dynamic or splat) can't make this assumption because there might be a not-yet-discovered route tht scores higher. Consider a full route tree such as:
+
+```js
+// Assume this is the full route tree for your app
+const routes = [
+  {
+    path: "/",
+    Component: Home,
+  },
+  {
+    id: "blog",
+    path: "/blog",
+    Component: BlogLayout,
+    children: [
+      { path: "new", Component: NewPost },
+      { path: ":slug", Component: BlogPost },
+    ],
+  },
+];
+```
+
+And then assume we want to use `patchRoutesOnNavigation` to fill this in as the user navigates around:
+
+```js
+// Start with only the index route
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      Component: Home,
+    },
+  ],
+  {
+    patchRoutesOnNavigation({ path, patch }) {
+      if (path === "/blog/new") {
+        patch("blog", [
+          {
+            path: "new",
+            Component: NewPost,
+          },
+        ]);
+      } else if (path.startsWith("/blog")) {
+        patch("blog", [
+          {
+            path: ":slug",
+            Component: BlogPost,
+          },
+        ]);
+      }
+    },
+  }
+);
+```
+
+If the user were to a blog post first (i.e., `/blog/my-post`) we would patch in the `:slug` route. Then if the user navigated to `/blog/new` to write a new post, we'd match `/blog/:slug` but it wouldn't be the _right_ match! We need to call `patchRoutesOnNavigation` just in case there exists a higher-scoring route we've not yet discovered, which in this case there is.
+
+So, anytime React Router matches a path that contains at least one param, it will call `patchRoutesOnNavigation` and match routes again just to confirm it has found the best match.
+
+If your `patchRoutesOnNavigation` implementation is expensive or making side-effect `fetch` calls to a backend server, you may want to consider tracking previously seen routes to avoid over-fetching in cases where you know the proper route has already been found. This can usually be as simple as maintaining a small cache of prior `path` values for which you've already patched in the right routes:
+
+```js
+let discoveredRoutes = new Set();
+
+const router = createBrowserRouter(routes, {
+  patchRoutesOnNavigation({ path, patch }) {
+    if (discoveredRoutes.has(path)) {
+      // We've seen this before so nothing to patch in and we can let the router
+      // use the routes it already knows about
+      return;
+    }
+
+    discoveredRoutes.add(path);
+
+    // ... patch routes in accordingly
+  },
+});
+```
+
 ## `opts.window`
 
 Useful for environments like browser devtool plugins or testing to use a different window than the global `window`.

@@ -814,10 +814,6 @@ export function createRouter(init: RouterInit): Router {
   let unlistenHistory: (() => void) | null = null;
   // Externally-provided functions to call on all state changes
   let subscribers = new Set<RouterSubscriber>();
-  // FIFO queue of previously discovered routes to prevent re-calling on
-  // subsequent navigations to the same path
-  let discoveredRoutesMaxSize = 1000;
-  let discoveredRoutes = new Set<string>();
   // Externally-provided object to hold scroll restoration locations during routing
   let savedScrollPositions: Record<string, number> | null = null;
   // Externally-provided function to get scroll restoration keys
@@ -3243,13 +3239,6 @@ export function createRouter(init: RouterInit): Router {
     pathname: string
   ): { active: boolean; matches: AgnosticDataRouteMatch[] | null } {
     if (patchRoutesOnNavigationImpl) {
-      // Don't bother re-calling patchRouteOnMiss for a path we've already
-      // processed.  the last execution would have patched the route tree
-      // accordingly so `matches` here are already accurate.
-      if (discoveredRoutes.has(pathname)) {
-        return { active: false, matches };
-      }
-
       if (!matches) {
         let fogMatches = matchRoutesImpl<AgnosticDataRouteObject>(
           routesToUse,
@@ -3333,7 +3322,6 @@ export function createRouter(init: RouterInit): Router {
 
       let newMatches = matchRoutes(routesToUse, pathname, basename);
       if (newMatches) {
-        addToFifoQueue(pathname, discoveredRoutes);
         return { type: "success", matches: newMatches };
       }
 
@@ -3352,20 +3340,11 @@ export function createRouter(init: RouterInit): Router {
             (m, i) => m.route.id === newPartialMatches![i].route.id
           ))
       ) {
-        addToFifoQueue(pathname, discoveredRoutes);
         return { type: "success", matches: null };
       }
 
       partialMatches = newPartialMatches;
     }
-  }
-
-  function addToFifoQueue(path: string, queue: Set<string>) {
-    if (queue.size >= discoveredRoutesMaxSize) {
-      let first = queue.values().next().value;
-      queue.delete(first);
-    }
-    queue.add(path);
   }
 
   function _internalSetRoutes(newRoutes: AgnosticDataRouteObject[]) {
@@ -4661,32 +4640,42 @@ function patchRoutesImpl(
   manifest: RouteManifest,
   mapRouteProperties: MapRoutePropertiesFunction
 ) {
+  let childrenToPatch: AgnosticDataRouteObject[];
   if (routeId) {
     let route = manifest[routeId];
     invariant(
       route,
       `No route found to patch children into: routeId = ${routeId}`
     );
-    let dataChildren = convertRoutesToDataRoutes(
-      children,
-      mapRouteProperties,
-      [routeId, "patch", String(route.children?.length || "0")],
-      manifest
-    );
-    if (route.children) {
-      route.children.push(...dataChildren);
-    } else {
-      route.children = dataChildren;
+    if (!route.children) {
+      route.children = [];
     }
+    childrenToPatch = route.children;
   } else {
-    let dataChildren = convertRoutesToDataRoutes(
-      children,
-      mapRouteProperties,
-      ["patch", String(routesToUse.length || "0")],
-      manifest
-    );
-    routesToUse.push(...dataChildren);
+    childrenToPatch = routesToUse;
   }
+
+  // Don't patch in routes we already know about so that `patch` is idempotent
+  // to simplify user-land code. This is useful because we re-call the
+  // `patchRoutesOnNavigation` function for matched routes with params.
+  let uniqueChildren = children.filter(
+    (a) =>
+      !childrenToPatch.some(
+        (b) =>
+          a.index === b.index &&
+          a.path === b.path &&
+          a.caseSensitive === b.caseSensitive
+      )
+  );
+
+  let newRoutes = convertRoutesToDataRoutes(
+    uniqueChildren,
+    mapRouteProperties,
+    [routeId || "_", "patch", String(childrenToPatch?.length || "0")],
+    manifest
+  );
+
+  childrenToPatch.push(...newRoutes);
 }
 
 /**
