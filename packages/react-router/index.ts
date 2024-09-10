@@ -78,6 +78,8 @@ export type {
   NavigateOptions,
   Navigator,
   NonIndexRouteObject,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   RouteMatch,
   RouteObject,
 } from "./lib/context";
@@ -93,7 +95,6 @@ export type {
   RouterProps,
   RouterProviderProps,
   RoutesProps,
-  PatchRoutesOnNavigationFunction as PatchRoutesOnNavigationFunction,
 } from "./lib/components";
 export type { NavigateFunction } from "./lib/hooks";
 export {

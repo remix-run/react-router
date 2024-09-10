@@ -64,9 +64,12 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import type { PatchRoutesOnNavigationFunction } from "../components";
 import { Router, mapRouteProperties } from "../components";
-import type { RouteObject, NavigateOptions } from "../context";
+import type {
+  RouteObject,
+  NavigateOptions,
+  PatchRoutesOnNavigationFunction,
+} from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,

@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { PatchRoutesOnNavigationFunction } from "../../components";
+import type { PatchRoutesOnNavigationFunction } from "../../context";
 import type { Router as RemixRouter } from "../../router/router";
 import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
