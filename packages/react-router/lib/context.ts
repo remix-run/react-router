@@ -13,6 +13,8 @@ import type {
 import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
+  AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunctionArgs,
   AgnosticRouteMatch,
   LazyRouteFunction,
   TrackedPromise,
@@ -73,6 +75,12 @@ export interface RouteMatch<
 > extends AgnosticRouteMatch<ParamKey, RouteObjectType> {}
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
+
+export type PatchRoutesOnNavigationFunctionArgs =
+  AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+
+export type PatchRoutesOnNavigationFunction =
+  AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
 
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`

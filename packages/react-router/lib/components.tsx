@@ -23,7 +23,6 @@ import type {
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
-  AgnosticPatchRoutesOnNavigationFunction,
   DataStrategyFunction,
   LazyRouteFunction,
   TrackedPromise,
@@ -35,6 +34,7 @@ import type {
   IndexRouteObject,
   Navigator,
   NonIndexRouteObject,
+  PatchRoutesOnNavigationFunction,
   RouteMatch,
   RouteObject,
   ViewTransitionContextObject,
@@ -129,9 +129,6 @@ export function mapRouteProperties(route: RouteObject) {
 
   return updates;
 }
-
-export interface PatchRoutesOnNavigationFunction
-  extends AgnosticPatchRoutesOnNavigationFunction<RouteMatch> {}
 
 /**
  * @category Routers
