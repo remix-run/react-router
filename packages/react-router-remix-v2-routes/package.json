@@ -1,6 +1,6 @@
 {
   "name": "@react-router/remix-v2-routes",
-  "version": "6.26.2",
+  "version": "0.0.0-nightly-4db408248-20240910",
   "description": "Remix v2 routing conventions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
