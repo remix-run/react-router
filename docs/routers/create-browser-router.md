@@ -52,7 +52,7 @@ function createBrowserRouter(
     future?: FutureConfig;
     hydrationData?: HydrationState;
     dataStrategy?: DataStrategyFunction;
-    unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
+    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
     window?: Window;
   }
 ): RemixRouter;
@@ -353,11 +353,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  async dataStrategy({
-    request,
-    params,
-    matches,
-  }) {
+  async dataStrategy({ request, params, matches }) {
     // Run middleware sequentially and let them add data to `context`
     let context = {};
     for (const match of matches) {
@@ -438,7 +434,7 @@ let router = createBrowserRouter(routes, {
 });
 ```
 
-## `opts.unstable_patchRoutesOnNavigation`
+## `opts.patchRoutesOnNavigation`
 
 <docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
 
@@ -448,12 +444,12 @@ To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] whic
 
 In some cases, even this doesn't go far enough. For very large applications, providing all route definitions up front can be prohibitively expensive. Additionally, it might not even be possible to provide all route definitions up front in certain Micro-Frontend or Module-Federation architectures.
 
-This is where `unstable_patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
+This is where `patchRoutesOnNavigation` comes in ([RFC][fog-of-war-rfc]). This API is for advanced use-cases where you are unable to provide the full route tree up-front and need a way to lazily "discover" portions of the route tree at runtime. This feature is often referred to as ["Fog of War"][fog-of-war] because similar to how video games expand the "world" as you move around - the router would be expanding its routing tree as the user navigated around the app - but would only ever end up loading portions of the tree that the user visited.
 
 ### Type Declaration
 
 ```ts
-export interface unstable_PatchRoutesOnNavigationFunction {
+export interface PatchRoutesOnNavigationFunction {
   (opts: {
     path: string;
     matches: RouteMatch[];
@@ -467,7 +463,7 @@ export interface unstable_PatchRoutesOnNavigationFunction {
 
 ### Overview
 
-`unstable_patchRoutesOnNavigation` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
+`patchRoutesOnNavigation` will be called anytime React Router is unable to match a `path`. The arguments include the `path`, any partial `matches`, and a `patch` function you can call to patch new routes into the tree at a specific location. This method is executed during the `loading` portion of the navigation for `GET` requests and during the `submitting` portion of the navigation for non-`GET` requests.
 
 **Patching children into an existing route**
 
@@ -481,10 +477,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path === "/a") {
         // Load/patch the `a` route as a child of the route with id `root`
         let route = await getARoute();
@@ -512,10 +505,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path === "/root-sibling") {
         // Load/patch the `/root-sibling` route as a sibling of the root route
         let route = await getRootSiblingRoute();
@@ -540,10 +530,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path.startsWith("/dashboard")) {
         let children = await import("./dashboard");
         patch(null, children);
@@ -598,10 +585,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async unstable_patchRoutesOnNavigation({
-      matches,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ matches, patch }) {
       let leafRoute = matches[matches.length - 1]?.route;
       if (leafRoute?.handle?.lazyChildren) {
         let children =
