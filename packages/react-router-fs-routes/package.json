@@ -1,14 +1,14 @@
 {
-  "name": "@react-router/remix-v2-routes",
+  "name": "@react-router/fs-routes",
   "version": "6.26.2",
-  "description": "Remix v2 routing conventions for React Router",
+  "description": "File system routing conventions for React Router",
   "bugs": {
     "url": "https://github.com/remix-run/react-router/issues"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/remix-run/react-router",
-    "directory": "packages/react-router-remix-v2-routes"
+    "directory": "packages/react-router-fs-routes"
   },
   "license": "MIT",
   "main": "dist/index.js",

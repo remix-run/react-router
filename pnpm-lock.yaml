@@ -398,9 +398,12 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
-      '@react-router/remix-v2-routes':
+      '@react-router/fs-routes':
         specifier: workspace:*
-        version: link:../../../packages/react-router-remix-v2-routes
+        version: link:../../../packages/react-router-fs-routes
+      '@react-router/remix-config-routes-adapter':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-config-routes-adapter
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -453,9 +456,12 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
-      '@react-router/remix-v2-routes':
+      '@react-router/fs-routes':
         specifier: workspace:*
-        version: link:../../../packages/react-router-remix-v2-routes
+        version: link:../../../packages/react-router-fs-routes
+      '@react-router/remix-config-routes-adapter':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-config-routes-adapter
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -511,9 +517,12 @@ importers:
       '@react-router/dev':
         specifier: workspace:*
         version: link:../../../packages/react-router-dev
-      '@react-router/remix-v2-routes':
+      '@react-router/fs-routes':
         specifier: workspace:*
-        version: link:../../../packages/react-router-remix-v2-routes
+        version: link:../../../packages/react-router-fs-routes
+      '@react-router/remix-config-routes-adapter':
+        specifier: workspace:*
+        version: link:../../../packages/react-router-remix-config-routes-adapter
       '@types/react':
         specifier: ^18.2.18
         version: 18.2.18
@@ -820,6 +829,19 @@ importers:
         specifier: ^5.1.6
         version: 5.4.5
 
+  packages/react-router-fs-routes:
+    dependencies:
+      minimatch:
+        specifier: ^9.0.0
+        version: 9.0.3
+    devDependencies:
+      '@react-router/dev':
+        specifier: workspace:*
+        version: link:../react-router-dev
+      typescript:
+        specifier: ^5.1.6
+        version: 5.4.5
+
   packages/react-router-node:
     dependencies:
       '@web3-storage/multipart-parser':
@@ -845,11 +867,7 @@ importers:
         specifier: ^5.1.6
         version: 5.4.5
 
-  packages/react-router-remix-v2-routes:
-    dependencies:
-      minimatch:
-        specifier: ^9.0.0
-        version: 9.0.3
+  packages/react-router-remix-config-routes-adapter:
     devDependencies:
       '@react-router/dev':
         specifier: workspace:*
