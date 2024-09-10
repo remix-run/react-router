@@ -1259,7 +1259,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     unsubscribe();
   });
 
-  it('does not re-call for previously called "good" paths', async () => {
+  it("does not re-patch previously patched routes", async () => {
     let count = 0;
     router = createRouter({
       history: createMemoryHistory(),
@@ -1267,126 +1267,67 @@ describe("Lazy Route Discovery (Fog of War)", () => {
         {
           path: "/",
         },
-        {
-          id: "param",
-          path: ":param",
-        },
       ],
-      async patchRoutesOnNavigation() {
+      async patchRoutesOnNavigation({ patch }) {
         count++;
+        patch(null, [
+          {
+            id: "param",
+            path: ":param",
+          },
+        ]);
         await tick();
-        // Nothing to patch - there is no better static route in this case
       },
     });
 
-    await router.navigate("/whatever");
-    expect(count).toBe(1);
-    expect(router.state.location.pathname).toBe("/whatever");
+    await router.navigate("/a");
+    expect(router.state.location.pathname).toBe("/a");
     expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
-
-    await router.navigate("/");
     expect(count).toBe(1);
-    expect(router.state.location.pathname).toBe("/");
-
-    await router.navigate("/whatever");
-    expect(count).toBe(1); // Not called again
-    expect(router.state.location.pathname).toBe("/whatever");
-    expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
-  });
-
-  it("does not re-call for previously called 404 paths", async () => {
-    let count = 0;
-    router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
+    expect(router.routes).toMatchInlineSnapshot(`
+      [
         {
-          id: "index",
-          path: "/",
+          "children": undefined,
+          "hasErrorBoundary": false,
+          "id": "0",
+          "path": "/",
         },
         {
-          id: "static",
-          path: "static",
+          "children": undefined,
+          "hasErrorBoundary": false,
+          "id": "param",
+          "path": ":param",
         },
-      ],
-      async patchRoutesOnNavigation() {
-        count++;
-      },
-    });
-
-    await router.navigate("/junk");
-    expect(count).toBe(1);
-    expect(router.state.location.pathname).toBe("/junk");
-    expect(router.state.errors?.index).toEqual(
-      new ErrorResponseImpl(
-        404,
-        "Not Found",
-        new Error('No route matches URL "/junk"'),
-        true
-      )
-    );
+      ]
+    `);
 
     await router.navigate("/");
-    expect(count).toBe(1);
     expect(router.state.location.pathname).toBe("/");
+    expect(count).toBe(1);
+
+    await router.navigate("/b");
+    expect(router.state.location.pathname).toBe("/b");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual(["param"]);
     expect(router.state.errors).toBeNull();
-
-    await router.navigate("/junk");
-    expect(count).toBe(1);
-    expect(router.state.location.pathname).toBe("/junk");
-    expect(router.state.errors?.index).toEqual(
-      new ErrorResponseImpl(
-        404,
-        "Not Found",
-        new Error('No route matches URL "/junk"'),
-        true
-      )
-    );
-  });
-
-  it("caps internal fifo queue at 1000 paths", async () => {
-    let count = 0;
-    router = createRouter({
-      history: createMemoryHistory(),
-      routes: [
+    // Called again
+    expect(count).toBe(2);
+    // But not patched again
+    expect(router.routes).toMatchInlineSnapshot(`
+      [
         {
-          path: "/",
+          "children": undefined,
+          "hasErrorBoundary": false,
+          "id": "0",
+          "path": "/",
         },
         {
-          id: "param",
-          path: ":param",
+          "children": undefined,
+          "hasErrorBoundary": false,
+          "id": "param",
+          "path": ":param",
         },
-      ],
-      async patchRoutesOnNavigation() {
-        count++;
-        // Nothing to patch - there is no better static route in this case
-      },
-    });
-
-    // Fill it up with 1000 paths
-    for (let i = 1; i <= 1000; i++) {
-      await router.navigate(`/path-${i}`);
-      expect(count).toBe(i);
-      expect(router.state.location.pathname).toBe(`/path-${i}`);
-
-      await router.navigate("/");
-      expect(count).toBe(i);
-      expect(router.state.location.pathname).toBe("/");
-    }
-
-    // Don't call patchRoutesOnNavigation since this is the first item in the queue
-    await router.navigate(`/path-1`);
-    expect(count).toBe(1000);
-    expect(router.state.location.pathname).toBe(`/path-1`);
-
-    // Call patchRoutesOnNavigation and evict the first item
-    await router.navigate(`/path-1001`);
-    expect(count).toBe(1001);
-    expect(router.state.location.pathname).toBe(`/path-1001`);
-
-    // Call patchRoutesOnNavigation since this item was evicted
-    await router.navigate(`/path-1`);
-    expect(count).toBe(1002);
-    expect(router.state.location.pathname).toBe(`/path-1`);
+      ]
+    `);
   });
 
   describe("errors", () => {
