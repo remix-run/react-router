@@ -51,7 +51,7 @@ function createBrowserRouter(
     basename?: string;
     future?: FutureConfig;
     hydrationData?: HydrationState;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
+    dataStrategy?: DataStrategyFunction;
     patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
     window?: Window;
   }
@@ -184,7 +184,7 @@ const router = createBrowserRouter(
 );
 ```
 
-## `opts.unstable_dataStrategy`
+## `opts.dataStrategy`
 
 <docs-warning>This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warning>
 
@@ -192,7 +192,7 @@ const router = createBrowserRouter(
 
 By default, React Router is opinionated about how your data is loaded/submitted - and most notably, executes all of your loaders in parallel for optimal data fetching. While we think this is the right behavior for most use-cases, we realize that there is no "one size fits all" solution when it comes to data fetching for the wide landscape of application requirements.
 
-The `unstable_dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
+The `dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
 
 ### Type Declaration
 
@@ -232,7 +232,7 @@ interface DataStrategyResult {
 
 ### Overview
 
-`unstable_dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives 2 new parameters: `matches` and `fetcherKey`:
+`dataStrategy` receives the same arguments as a `loader`/`action` (`request`, `params`) but it also receives 2 new parameters: `matches` and `fetcherKey`:
 
 - **`matches`** - An array of the matched routes where each match is extended with 2 new fields for use in the data strategy function:
   - **`match.shouldLoad`** - A boolean value indicating whether this route handler should be called in this pass
@@ -247,9 +247,9 @@ interface DataStrategyResult {
     - It is safe to call `match.resolve` for all matches, even if they have `shouldLoad=false`, and it will no-op if no loading is required
     - You should generally always call `match.resolve()` for `shouldLoad:true` routes to ensure that any `route.lazy` implementations are processed
     - See the examples below for how to implement custom handler execution via `match.resolve`
-- **`fetcherKey`** - The key of the fetcher we are calling `unstable_dataStrategy` for, otherwise `null` for navigational executions
+- **`fetcherKey`** - The key of the fetcher we are calling `dataStrategy` for, otherwise `null` for navigational executions
 
-The `dataStrategy` function should return a key/value object of `routeId -> DataStrategyResult` and should include entries for any routes where a handler was executed. A `DataStrategyResult` indicates if the handler was successful or not based on the `DataStrategyResult["type"]` field. If the returned `DataStrategyResult["result"]` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but want to preserve the status code, you can use the `unstable_data` utility to return your decoded data along with a `ResponseInit`.
+The `dataStrategy` function should return a key/value object of `routeId -> DataStrategyResult` and should include entries for any routes where a handler was executed. A `DataStrategyResult` indicates if the handler was successful or not based on the `DataStrategyResult["type"]` field. If the returned `DataStrategyResult["result"]` is a `Response`, React Router will unwrap it for you (via `res.json` or `res.text`). If you need to do custom decoding of a `Response` but want to preserve the status code, you can use the `data` utility to return your decoded data along with a `ResponseInit`.
 
 ### Example Use Cases
 
@@ -259,7 +259,7 @@ In the simplest case, let's look at hooking into this API to add some logging fo
 
 ```ts
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({ request, matches }) {
+  async dataStrategy({ request, matches }) {
     // Grab only the matches we need to run handlers for
     const matchesToLoad = matches.filter(
       (m) => m.shouldLoad
@@ -290,7 +290,7 @@ If you want to avoid the `reduce`, you can manually build up the `results` objec
 
 ```ts
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({ request, matches }) {
+  async dataStrategy({ request, matches }) {
     const matchesToLoad = matches.filter(
       (m) => m.shouldLoad
     );
@@ -353,11 +353,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  async unstable_dataStrategy({
-    request,
-    params,
-    matches,
-  }) {
+  async dataStrategy({ request, params, matches }) {
     // Run middleware sequentially and let them add data to `context`
     let context = {};
     for (const match of matches) {
@@ -426,7 +422,7 @@ const routes = [
 ];
 
 let router = createBrowserRouter(routes, {
-  unstable_dataStrategy({ request, params, matches }) {
+  dataStrategy({ request, params, matches }) {
     // Compose route fragments into a single GQL payload
     let gql = getFragmentsFromRouteHandles(matches);
     let data = await fetchGql(gql);
@@ -481,10 +477,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path === "/a") {
         // Load/patch the `a` route as a child of the route with id `root`
         let route = await getARoute();
@@ -512,10 +505,7 @@ const router = createBrowserRouter(
     },
   ],
   {
-    async patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path === "/root-sibling") {
         // Load/patch the `/root-sibling` route as a sibling of the root route
         let route = await getRootSiblingRoute();
@@ -540,10 +530,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async patchRoutesOnNavigation({
-      path,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ path, patch }) {
       if (path.startsWith("/dashboard")) {
         let children = await import("./dashboard");
         patch(null, children);
@@ -598,10 +585,7 @@ let router = createBrowserRouter(
     },
   ],
   {
-    async patchRoutesOnNavigation({
-      matches,
-      patch,
-    }) {
+    async patchRoutesOnNavigation({ matches, patch }) {
       let leafRoute = matches[matches.length - 1]?.route;
       if (leafRoute?.handle?.lazyChildren) {
         let children =

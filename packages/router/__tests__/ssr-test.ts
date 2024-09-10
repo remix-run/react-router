@@ -1602,7 +1602,7 @@ describe("ssr", () => {
         let { query } = createStaticHandler(SSR_ROUTES);
 
         let context = await query(createRequest("/custom"), {
-          unstable_dataStrategy: urlDataStrategy,
+          dataStrategy: urlDataStrategy,
         });
         expect(context).toMatchObject({
           actionData: null,
@@ -2635,7 +2635,7 @@ describe("ssr", () => {
         let data;
 
         data = await queryRoute(createRequest("/custom"), {
-          unstable_dataStrategy: urlDataStrategy,
+          dataStrategy: urlDataStrategy,
         });
         expect(data).toBeInstanceOf(URLSearchParams);
         expect((data as URLSearchParams).get("foo")).toBe("bar");

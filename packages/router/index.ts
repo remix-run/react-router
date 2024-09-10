@@ -9,10 +9,10 @@ export type {
   AgnosticNonIndexRouteObject,
   AgnosticRouteMatch,
   AgnosticRouteObject,
-  DataStrategyFunction as unstable_DataStrategyFunction,
-  DataStrategyFunctionArgs as unstable_DataStrategyFunctionArgs,
-  DataStrategyMatch as unstable_DataStrategyMatch,
-  DataStrategyResult as unstable_DataStrategyResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
+  DataStrategyResult,
   ErrorResponse,
   FormEncType,
   FormMethod,
@@ -38,7 +38,7 @@ export type {
 
 export {
   AbortedDeferredError,
-  data as unstable_data,
+  data,
   defer,
   generatePath,
   getToPathname,
