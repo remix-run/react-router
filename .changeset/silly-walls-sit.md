@@ -5,4 +5,4 @@
 ---
 
 - Fix types for `RouteObject` within `PatchRoutesOnNavigationFunction`'s `patch` method so it doesn't expect agnostic route objects passed to `patch`
-- Add new `unstable_PatchRoutesOnNavigationFunctionArgs` type for convenience
+- Add new `PatchRoutesOnNavigationFunctionArgs` type for convenience
