@@ -16,7 +16,7 @@ import type {
   RouterProps,
   RouterProviderProps,
   To,
-  unstable_DataStrategyFunction,
+  DataStrategyFunction,
   unstable_PatchRoutesOnNavigationFunction,
 } from "react-router";
 import {
@@ -106,10 +106,10 @@ export type {
   BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
-  unstable_DataStrategyResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
+  DataStrategyResult,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -258,7 +258,7 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: unstable_DataStrategyFunction;
+  dataStrategy?: DataStrategyFunction;
   unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
   window?: Window;
 }
@@ -277,7 +277,7 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    dataStrategy: opts?.dataStrategy,
     unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
@@ -297,7 +297,7 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
+    dataStrategy: opts?.dataStrategy,
     unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
