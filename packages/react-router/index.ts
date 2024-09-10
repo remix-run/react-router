@@ -2,12 +2,14 @@ import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunctionArgs,
   Blocker,
   BlockerFunction,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
-  unstable_DataStrategyResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
+  DataStrategyResult,
   ErrorResponse,
   Fetcher,
   HydrationState,
@@ -32,8 +34,6 @@ import type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  unstable_AgnosticPatchRoutesOnNavigationFunction,
-  unstable_AgnosticPatchRoutesOnNavigationFunctionArgs,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -137,10 +137,10 @@ export type {
   AwaitProps,
   DataRouteMatch,
   DataRouteObject,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
-  unstable_DataStrategyResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
+  DataStrategyResult,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -234,11 +234,11 @@ export {
   useRoutes,
 };
 
-export type unstable_PatchRoutesOnNavigationFunctionArgs =
-  unstable_AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+export type PatchRoutesOnNavigationFunctionArgs =
+  AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
 
-export type unstable_PatchRoutesOnNavigationFunction =
-  unstable_AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
+export type PatchRoutesOnNavigationFunction =
+  AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
 
 function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
@@ -306,8 +306,8 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
-    unstable_dataStrategy?: unstable_DataStrategyFunction;
-    unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
+    dataStrategy?: DataStrategyFunction;
+    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -323,8 +323,8 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    dataStrategy: opts?.dataStrategy,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
   }).initialize();
 }
 

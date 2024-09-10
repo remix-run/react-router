@@ -16,8 +16,8 @@ import type {
   RouterProps,
   RouterProviderProps,
   To,
-  unstable_DataStrategyFunction,
-  unstable_PatchRoutesOnNavigationFunction,
+  DataStrategyFunction,
+  PatchRoutesOnNavigationFunction,
 } from "react-router";
 import {
   Router,
@@ -106,10 +106,10 @@ export type {
   BlockerFunction,
   DataRouteMatch,
   DataRouteObject,
-  unstable_DataStrategyFunction,
-  unstable_DataStrategyFunctionArgs,
-  unstable_DataStrategyMatch,
-  unstable_DataStrategyResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
+  DataStrategyResult,
   ErrorResponse,
   Fetcher,
   FutureConfig,
@@ -132,6 +132,8 @@ export type {
   OutletProps,
   Params,
   ParamParseKey,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   Path,
   PathMatch,
   Pathname,
@@ -151,8 +153,6 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  unstable_PatchRoutesOnNavigationFunction,
-  unstable_PatchRoutesOnNavigationFunctionArgs,
 } from "react-router";
 export {
   AbortedDeferredError,
@@ -259,8 +259,8 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<Omit<RouterFutureConfig, "v7_prependBasename">>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: unstable_DataStrategyFunction;
-  unstable_patchRoutesOnNavigation?: unstable_PatchRoutesOnNavigationFunction;
+  dataStrategy?: DataStrategyFunction;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   window?: Window;
 }
 
@@ -278,8 +278,8 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    dataStrategy: opts?.dataStrategy,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -298,8 +298,8 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    dataStrategy: opts?.dataStrategy,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
