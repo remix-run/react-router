@@ -190,7 +190,7 @@ This could also be useful for animations:
 
 ## path: string | string[]
 
-Any valid URL path or array of paths that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
+Any valid URL path or array of paths that [`path-to-regexp@^1.9.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0) understands.
 
 ```jsx
 <Route path="/users/:id">

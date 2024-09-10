@@ -214,7 +214,7 @@ In v4, you must re-pass these properties to the `to` prop:
 
 ### matchPattern(pattern, pathname)
 
-In v3, you could use the same matching code used internally to check if a path matched a pattern. In v4 this has been replaced by [matchPath](/packages/react-router/docs/api/matchPath.md) which is powered by the [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) library.
+In v3, you could use the same matching code used internally to check if a path matched a pattern. In v4 this has been replaced by [matchPath](/packages/react-router/docs/api/matchPath.md) which is powered by the [`path-to-regexp@^1.9.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0) library.
 
 ### formatPattern(pattern, params)
 
@@ -229,7 +229,7 @@ const THING_PATH = "/thing/:id";
 </Link>;
 ```
 
-In v4, you can achieve the same functionality using the [`compile`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#compile-reverse-path-to-regexp) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
+In v4, you can achieve the same functionality using the [`compile`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0#compile-reverse-path-to-regexp) function in [`path-to-regexp@^1.9.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0).
 
 ```jsx
 // v4
@@ -241,7 +241,7 @@ const thingPath = pathToRegexp.compile(THING_PATH);
 
 ### getParamNames
 
-The `getParamNames` functionality can be achieved using the [`parse`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#parse) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
+The `getParamNames` functionality can be achieved using the [`parse`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0#parse) function in [`path-to-regexp@^1.9.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0).
 
 ## Link
 

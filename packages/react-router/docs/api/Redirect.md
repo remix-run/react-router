@@ -10,7 +10,7 @@ Rendering a `<Redirect>` will navigate to a new location. The new location will 
 
 ## to: string
 
-The URL to redirect to. Any valid URL path that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
+The URL to redirect to. Any valid URL path that [`path-to-regexp@^1.9.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0) understands.
 All URL parameters that are used in `to` must be covered by `from`.
 
 ```jsx
@@ -19,7 +19,7 @@ All URL parameters that are used in `to` must be covered by `from`.
 
 ## to: object
 
-A location to redirect to. `pathname` can be any valid URL path that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
+A location to redirect to. `pathname` can be any valid URL path that [`path-to-regexp@^1.9.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0) understands.
 
 ```jsx
 <Redirect
@@ -43,7 +43,7 @@ When `true`, redirecting will push a new entry onto the history instead of repla
 
 ## from: string
 
-A pathname to redirect from. Any valid URL path that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
+A pathname to redirect from. Any valid URL path that [`path-to-regexp@^1.9.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.9.0) understands.
 All matched URL parameters are provided to the pattern in `to`. Must contain all parameters that are used in `to`. Additional parameters not used by `to` are ignored.
 
 **Note:** This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
