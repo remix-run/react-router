@@ -132,6 +132,8 @@ export type {
   OutletProps,
   Params,
   ParamParseKey,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   Path,
   PathMatch,
   Pathname,
@@ -151,7 +153,6 @@ export type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  PatchRoutesOnNavigationFunction,
 } from "react-router";
 export {
   AbortedDeferredError,

@@ -2,6 +2,8 @@ import * as React from "react";
 import type {
   ActionFunction,
   ActionFunctionArgs,
+  AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunctionArgs,
   Blocker,
   BlockerFunction,
   DataStrategyFunction,
@@ -32,7 +34,6 @@ import type {
   ShouldRevalidateFunctionArgs,
   To,
   UIMatch,
-  AgnosticPatchRoutesOnNavigationFunction,
 } from "@remix-run/router";
 import {
   AbortedDeferredError,
@@ -233,6 +234,12 @@ export {
   useRoutes,
 };
 
+export type PatchRoutesOnNavigationFunctionArgs =
+  AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+
+export type PatchRoutesOnNavigationFunction =
+  AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
+
 function mapRouteProperties(route: RouteObject) {
   let updates: Partial<RouteObject> & { hasErrorBoundary: boolean } = {
     // Note: this check also occurs in createRoutesFromChildren so update
@@ -290,9 +297,6 @@ function mapRouteProperties(route: RouteObject) {
 
   return updates;
 }
-
-export interface PatchRoutesOnNavigationFunction
-  extends AgnosticPatchRoutesOnNavigationFunction<RouteMatch> {}
 
 export function createMemoryRouter(
   routes: RouteObject[],
