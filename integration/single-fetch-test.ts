@@ -110,7 +110,7 @@ const files = {
   `,
 
   "app/routes/data-with-response.tsx": js`
-    import { useActionData, useLoaderData, unstable_data as data } from "react-router";
+    import { useActionData, useLoaderData, data } from "react-router";
 
     export function headers ({ actionHeaders, loaderHeaders, errorHeaders }) {
       if ([...actionHeaders].length > 0) {
@@ -253,7 +253,7 @@ test.describe("single-fetch", () => {
     });
   });
 
-  test("loads proper data (via unstable_data) on single fetch loader requests", async () => {
+  test("loads proper data (via data()) on single fetch loader requests", async () => {
     let fixture = await createFixture({
       files,
     });
@@ -280,7 +280,7 @@ test.describe("single-fetch", () => {
     });
   });
 
-  test("loads proper data (via unstable_data) on single fetch action requests", async () => {
+  test("loads proper data (via data()) on single fetch action requests", async () => {
     let fixture = await createFixture({
       files,
     });
@@ -505,28 +505,28 @@ test.describe("single-fetch", () => {
     expect(urls).toEqual([]);
   });
 
-  test("does not revalidate on 4xx/5xx action responses (via unstable_data)", async ({
+  test("does not revalidate on 4xx/5xx action responses (via data())", async ({
     page,
   }) => {
     let fixture = await createFixture({
       files: {
         ...files,
         "app/routes/action.tsx": js`
-          import { Form, Link, useActionData, useLoaderData, useNavigation, unstable_data } from 'react-router';
+          import { Form, Link, useActionData, useLoaderData, useNavigation, data } from 'react-router';
 
           export async function action({ request }) {
             let fd = await request.formData();
             if (fd.get('throw') === "5xx") {
-              throw unstable_data("Thrown 500", { status: 500 });
+              throw data("Thrown 500", { status: 500 });
             }
             if (fd.get('throw') === "4xx") {
-              throw unstable_data("Thrown 400", { status: 400 });
+              throw data("Thrown 400", { status: 400 });
             }
             if (fd.get('return') === "5xx") {
-              return unstable_data("Returned 500", { status: 500 });
+              return data("Returned 500", { status: 500 });
             }
             if (fd.get('return') === "4xx") {
-              return unstable_data("Returned 400", { status: 400 });
+              return data("Returned 400", { status: 400 });
             }
             return null;
           }

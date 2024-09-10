@@ -28,9 +28,9 @@ test.describe("deferred loaders", () => {
         `,
 
         "app/routes/redirect.tsx": js`
-          import { unstable_data } from 'react-router';
+          import { data } from 'react-router';
           export function loader() {
-            return unstable_data(
+            return data(
               { food: "pizza" },
               {
                 status: 301,

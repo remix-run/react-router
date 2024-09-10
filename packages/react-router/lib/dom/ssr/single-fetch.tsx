@@ -184,7 +184,7 @@ async function singleFetchActionStrategy(
     return { [actionMatch.route.id]: result };
   }
 
-  // For non-responses, proxy along the statusCode via unstable_data()
+  // For non-responses, proxy along the statusCode via data()
   // (most notably for skipping action error revalidation)
   return {
     [actionMatch.route.id]: {

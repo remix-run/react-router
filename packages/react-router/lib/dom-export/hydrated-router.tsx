@@ -169,7 +169,7 @@ function createHydratedRouter(): RemixRouter {
     basename: ssrInfo.context.basename,
     hydrationData,
     mapRouteProperties,
-    unstable_dataStrategy: getSingleFetchDataStrategy(
+    dataStrategy: getSingleFetchDataStrategy(
       ssrInfo.manifest,
       ssrInfo.routeModules,
       () => router

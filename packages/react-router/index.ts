@@ -23,10 +23,10 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataStrategyFunction as unstable_DataStrategyFunction,
-  DataStrategyFunctionArgs as unstable_DataStrategyFunctionArgs,
-  DataStrategyMatch as unstable_DataStrategyMatch,
-  DataStrategyResult as unstable_DataStrategyResult,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
+  DataStrategyResult,
   DataWithResponseInit as UNSAFE_DataWithResponseInit,
   ErrorResponse,
   FormEncType,
@@ -58,7 +58,7 @@ export {
   IDLE_BLOCKER,
 } from "./lib/router/router";
 export {
-  data as unstable_data,
+  data,
   generatePath,
   isRouteErrorResponse,
   json,

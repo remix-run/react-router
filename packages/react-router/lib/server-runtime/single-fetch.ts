@@ -84,7 +84,7 @@ export async function singleFetchAction(
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      unstable_dataStrategy: getSingleFetchDataStrategy({
+      dataStrategy: getSingleFetchDataStrategy({
         isActionDataRequest: true,
       }),
     });
@@ -172,7 +172,7 @@ export async function singleFetchLoaders(
     let result = await staticHandler.query(handlerRequest, {
       requestContext: loadContext,
       skipLoaderErrorBubbling: true,
-      unstable_dataStrategy: getSingleFetchDataStrategy({
+      dataStrategy: getSingleFetchDataStrategy({
         loadRouteIds,
       }),
     });
