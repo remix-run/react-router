@@ -1665,6 +1665,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   >;
   submit: FetcherSubmitFunction;
   load: (href: string, opts?: { unstable_flushSync?: boolean }) => void;
+  abort: (data?: unknown) => void;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
@@ -1733,6 +1734,13 @@ export function useFetcher<TData = any>({
     [fetcherKey, submitImpl]
   );
 
+  let abort = React.useCallback(
+    (data?: unknown) => {
+      router.abortFetcher(fetcherKey, data);
+    },
+    [fetcherKey, router]
+  );
+
   let FetcherForm = React.useMemo(() => {
     let FetcherForm = React.forwardRef<HTMLFormElement, FetcherFormProps>(
       (props, ref) => {
@@ -1755,10 +1763,11 @@ export function useFetcher<TData = any>({
       Form: FetcherForm,
       submit,
       load,
+      abort,
       ...fetcher,
       data,
     }),
-    [FetcherForm, submit, load, fetcher, data]
+    [FetcherForm, submit, load, abort, fetcher, data]
   );
 
   return fetcherWithComponents;
