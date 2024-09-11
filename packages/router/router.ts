@@ -1190,7 +1190,6 @@ export function createRouter(init: RouterInit): Router {
     // Iterate over a local copy so that if flushSync is used and we end up
     // removing and adding a new subscriber due to the useCallback dependencies,
     // we don't get ourselves into a loop calling the new subscriber immediately
-    debugger;
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
         deletedFetchers: deletedFetchersKeys,
