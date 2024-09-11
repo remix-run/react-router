@@ -1,6 +1,6 @@
 {
   "name": "@remix-run/router",
-  "version": "1.19.2",
+  "version": "0.0.0-experimental-266d73f72",
   "description": "Nested/Data-driven/Framework-agnostic Routing",
   "keywords": [
     "remix",
