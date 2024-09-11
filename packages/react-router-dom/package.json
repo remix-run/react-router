@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.26.2",
+  "version": "0.0.0-experimental-3ec205f42",
   "description": "Declarative routing for React web applications",
   "keywords": [
     "react",
@@ -23,8 +23,8 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@remix-run/router": "workspace:*",
-    "react-router": "workspace:*"
+    "@remix-run/router": "0.0.0-experimental-3ec205f42",
+    "react-router": "0.0.0-experimental-3ec205f42"
   },
   "devDependencies": {
     "react": "^18.2.0",
