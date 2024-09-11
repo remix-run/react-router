@@ -1665,7 +1665,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   >;
   submit: FetcherSubmitFunction;
   load: (href: string, opts?: { unstable_flushSync?: boolean }) => void;
-  abort: (args: { reason?: unknown; data?: unknown }) => void;
+  abort: (args?: { reason?: unknown; data?: unknown }) => void;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
