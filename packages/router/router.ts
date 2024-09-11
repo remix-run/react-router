@@ -1194,6 +1194,7 @@ export function createRouter(init: RouterInit): Router {
     // Iterate over a local copy so that if flushSync is used and we end up
     // removing and adding a new subscriber due to the useCallback dependencies,
     // we don't get ourselves into a loop calling the new subscriber immediately
+    debugger;
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
         deletedFetchers: deletedFetchersKeys,
@@ -3036,10 +3037,10 @@ export function createRouter(init: RouterInit): Router {
     updateState({ fetchers: new Map(state.fetchers) });
   }
 
-  function abortFetcher(key: string) {
+  function abortFetcher(key: string, reason?: unknown) {
     let controller = fetchControllers.get(key);
     invariant(controller, `Expected fetch controller: ${key}`);
-    controller.abort();
+    controller.abort(reason);
     fetchControllers.delete(key);
   }
 
@@ -3458,13 +3459,19 @@ export function createRouter(init: RouterInit): Router {
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     deleteFetcher: deleteFetcherAndUpdateState,
-    abortFetcher(key: string, data?: unknown) {
+    abortFetcher(
+      key: string,
+      { reason, data }: { reason?: unknown; data?: unknown } = {}
+    ) {
       if (fetchControllers.has(key)) {
-        abortFetcher(key);
+        abortFetcher(key, reason);
       } else if (landedFetcherControllers.has(key)) {
-        landedFetcherControllers.get(key)!.abort();
+        landedFetcherControllers.get(key)!.abort(reason);
       }
-      updateFetcherState(key, getDoneFetcher(data));
+      updateFetcherState(
+        key,
+        getDoneFetcher(typeof data === "undefined" ? null : data)
+      );
     },
     dispose,
     getBlocker,

@@ -1664,7 +1664,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
   >;
   submit: FetcherSubmitFunction;
   load: (href: string, opts?: { unstable_flushSync?: boolean }) => void;
-  abort: (data?: unknown) => void;
+  abort: (args: { reason?: unknown; data?: unknown }) => void;
 };
 
 // TODO: (v7) Change the useFetcher generic default from `any` to `unknown`
@@ -1733,9 +1733,9 @@ export function useFetcher<TData = any>({
     [fetcherKey, submitImpl]
   );
 
-  let abort = React.useCallback(
-    (data?: unknown) => {
-      router.abortFetcher(fetcherKey, data);
+  let abort = React.useCallback<FetcherWithComponents<TData>["abort"]>(
+    (args) => {
+      router.abortFetcher(fetcherKey, args);
     },
     [fetcherKey, router]
   );
@@ -1757,7 +1757,7 @@ export function useFetcher<TData = any>({
   // Exposed FetcherWithComponents
   let fetcher = state.fetchers.get(fetcherKey) || IDLE_FETCHER;
   let data = fetcherData.get(fetcherKey);
-  let fetcherWithComponents = React.useMemo(
+  let fetcherWithComponents = React.useMemo<FetcherWithComponents<TData>>(
     () => ({
       Form: FetcherForm,
       submit,

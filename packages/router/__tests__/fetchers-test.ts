@@ -3352,14 +3352,14 @@ describe("fetchers", () => {
       t.router.abortFetcher("a");
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
-        data: undefined,
+        data: null,
       });
 
       // no-op
       await A.loaders.fetch.resolve("FETCH");
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
-        data: undefined,
+        data: null,
       });
     });
 
@@ -3392,14 +3392,14 @@ describe("fetchers", () => {
       t.router.abortFetcher("a");
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
-        data: undefined,
+        data: null,
       });
 
       // no-op
       await B.loaders.fetch.resolve("FETCH*");
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
-        data: undefined,
+        data: null,
       });
     });
 
@@ -3429,7 +3429,9 @@ describe("fetchers", () => {
         data: "FETCH",
       });
 
-      t.router.abortFetcher("a", t.router.state.fetchers.get("a")?.data);
+      t.router.abortFetcher("a", {
+        data: t.router.state.fetchers.get("a")?.data,
+      });
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
         data: "FETCH",
@@ -3473,7 +3475,9 @@ describe("fetchers", () => {
         },
       });
 
-      await t.router.abortFetcher("a", t.router.state.fetchers.get("a")?.data);
+      await t.router.abortFetcher("a", {
+        data: t.router.state.fetchers.get("a")?.data,
+      });
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
         data: {
@@ -3487,6 +3491,53 @@ describe("fetchers", () => {
       ).rejects.toMatchInlineSnapshot(
         `[AbortError: The operation was aborted.]`
       );
+    });
+
+    it("supports aborting with an Abortsignal `reason`", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.router.state.fetchers.get("a")).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      let dfd = createDeferred();
+      A.loaders.fetch.signal.addEventListener("abort", () =>
+        dfd.reject(A.loaders.fetch.signal.reason)
+      );
+      await A.loaders.fetch.resolve({
+        critical: "FETCH",
+        lazy: dfd.promise,
+      });
+      expect(t.router.state.fetchers.get("a")).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "FETCH",
+          lazy: expect.any(Promise),
+        },
+      });
+
+      await t.router.abortFetcher("a", {
+        data: t.router.state.fetchers.get("a")?.data,
+        reason: new Error("💥"),
+      });
+      expect(t.router.state.fetchers.get("a")).toMatchObject({
+        state: "idle",
+        data: {
+          critical: "FETCH",
+          lazy: expect.any(Promise),
+        },
+      });
+      expect(t.router.state.errors).toBeNull();
+      await expect(
+        t.router.state.fetchers.get("a")?.data.lazy
+      ).rejects.toMatchInlineSnapshot(`[Error: 💥]`);
     });
 
     it("cleans up internal controllers on fetcher unmount", async () => {
