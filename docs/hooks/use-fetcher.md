@@ -170,6 +170,42 @@ If you want to submit to an index route, use the [`?index` param][indexsearchpar
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
 
+### `fetcher.abort(options)`
+
+Abort an in-progress fetcher and reset `fetcher.data` to `null`:
+
+```js
+fetcher.abort();
+```
+
+If you wish to retain the current data you can pass that via the `data` parameter:
+
+```js
+fetcher.abort({ data: fetcher.data });
+```
+
+You may also optionally provide a custom [`reason`] for the `AbortSignal`:
+
+```js
+fetcher.abort({ reason: new Error("cancelled") });
+```
+
+When a fetcher is aborted, it will abort the internal `AbortController` for the in-progress call which will be proxied through to the `request.signal` in your `loader`/`action` function:
+
+```js
+function loader({ request }) {
+  return {
+    critical: "CRITICAL",
+    lazy: new Promise((resolve, reject) => {
+      request.signal.addEventListener("abort", () =>
+        reject(request.signal.reason)
+      );
+      setTimeout(() => resolve("LAZY"), 3000);
+    }),
+  };
+}
+```
+
 ## Properties
 
 ### `fetcher.state`
@@ -287,3 +323,4 @@ fetcher.formMethod; // "post"
 [use-fetchers]: ./use-fetchers
 [flush-sync]: https://react.dev/reference/react-dom/flushSync
 [start-transition]: https://react.dev/reference/react/startTransition
+[reason]: https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/reason
