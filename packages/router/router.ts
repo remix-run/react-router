@@ -216,6 +216,15 @@ export interface Router {
    * Delete the fetcher for a given key
    * @param key
    */
+  abortFetcher(key: string, data?: unknown): void;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Delete the fetcher for a given key
+   * @param key
+   */
   deleteFetcher(key: string): void;
 
   /**
@@ -989,6 +998,7 @@ export function createRouter(init: RouterInit): Router {
 
   // AbortControllers for any in-flight fetchers
   let fetchControllers = new Map<string, AbortController>();
+  let landedFetcherControllers = new Map<string, AbortController>();
 
   // Track loads based on the order in which they started
   let incrementingLoadId = 0;
@@ -2026,7 +2036,7 @@ export function createRouter(init: RouterInit): Router {
         abortPendingFetchRevalidations
       );
     }
-    revalidatingFetchers.forEach((rf) => fetchControllers.delete(rf.key));
+    revalidatingFetchers.forEach((rf) => markFetcherAsLanded(rf.key));
 
     // If any loaders returned a redirect Response, start a new REPLACE navigation
     let redirect = findRedirect(loaderResults);
@@ -2312,9 +2322,9 @@ export function createRouter(init: RouterInit): Router {
 
     if (fetchRequest.signal.aborted) {
       // We can delete this so long as we weren't aborted by our own fetcher
-      // re-submit which would have put _new_ controller is in fetchControllers
+      // re-submit which would have put a _new_ controller in fetchControllers
       if (fetchControllers.get(key) === abortController) {
-        fetchControllers.delete(key);
+        markFetcherAsLanded(key);
       }
       return;
     }
@@ -2330,7 +2340,7 @@ export function createRouter(init: RouterInit): Router {
       // Let SuccessResult's fall through for revalidation
     } else {
       if (isRedirectResult(actionResult)) {
-        fetchControllers.delete(key);
+        markFetcherAsLanded(key);
         if (pendingNavigationLoadId > originatingLoadId) {
           // A new navigation was kicked off after our action started, so that
           // should take precedence over this redirect navigation.  We already
@@ -2449,8 +2459,8 @@ export function createRouter(init: RouterInit): Router {
     );
 
     fetchReloadIds.delete(key);
-    fetchControllers.delete(key);
-    revalidatingFetchers.forEach((r) => fetchControllers.delete(r.key));
+    markFetcherAsLanded(key);
+    revalidatingFetchers.forEach((r) => markFetcherAsLanded(r.key));
 
     let redirect = findRedirect(loaderResults);
     if (redirect) {
@@ -2611,7 +2621,7 @@ export function createRouter(init: RouterInit): Router {
     // We can delete this so long as we weren't aborted by our our own fetcher
     // re-load which would have put _new_ controller is in fetchControllers
     if (fetchControllers.get(key) === abortController) {
-      fetchControllers.delete(key);
+      markFetcherAsLanded(key);
     }
 
     if (fetchRequest.signal.aborted) {
@@ -2944,6 +2954,21 @@ export function createRouter(init: RouterInit): Router {
     );
   }
 
+  // When a fetcher "lands" (i.e., the loader/action resolves) we remove the
+  // `AbortController` from `fetchControllers` which indicates in-flight fetchers.
+  // But because those loaders/actions could still be streaming data via Promises,
+  // we need to hang onto the `AbortController` so we can still abort the fetcher
+  // during subsequent streaming.
+  function markFetcherAsLanded(key: string) {
+    // Move this controller to landedFetcherControllers so we can still abort
+    // while data is being subsequently streamed down
+    let controller = fetchControllers.get(key);
+    if (controller) {
+      landedFetcherControllers.set(key, controller);
+    }
+    fetchControllers.delete(key);
+  }
+
   function setFetcherError(
     key: string,
     routeId: string,
@@ -2986,6 +3011,8 @@ export function createRouter(init: RouterInit): Router {
     ) {
       abortFetcher(key);
     }
+    landedFetcherControllers.delete(key);
+
     fetchLoadMatches.delete(key);
     fetchReloadIds.delete(key);
     fetchRedirectIds.delete(key);
@@ -3431,6 +3458,14 @@ export function createRouter(init: RouterInit): Router {
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     deleteFetcher: deleteFetcherAndUpdateState,
+    abortFetcher(key: string, data?: unknown) {
+      if (fetchControllers.has(key)) {
+        abortFetcher(key);
+      } else if (landedFetcherControllers.has(key)) {
+        landedFetcherControllers.get(key)!.abort();
+      }
+      updateFetcherState(key, getDoneFetcher(data));
+    },
     dispose,
     getBlocker,
     deleteBlocker,
