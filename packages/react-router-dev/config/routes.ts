@@ -8,6 +8,10 @@ export function setAppDirectory(directory: string) {
   appDirectory = directory;
 }
 
+/**
+ * Provides the absolute path to the app directory, for use within `routes.ts`.
+ * This is designed to support resolving file system routes.
+ */
 export function getAppDirectory() {
   invariant(appDirectory);
   return appDirectory;
@@ -52,10 +56,15 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
+/**
+ * Route config to be exported via the `routes` export within `routes.ts`.
+ */
 export type RouteConfig = RouteConfigEntry[] | Promise<RouteConfigEntry[]>;
 
 /**
- * A route exported from the routes config file
+ * Configuration for an individual route, for use within `routes.ts`. As a
+ * convenience, route config entries can be created with the {@link route},
+ * {@link index} and {@link layout} helper functions.
  */
 export interface RouteConfigEntry {
   /**
@@ -90,8 +99,6 @@ export interface RouteConfigEntry {
   children?: RouteConfigEntry[];
 }
 
-type CreateRoutePath = string | null | undefined;
-
 const createConfigRouteOptionKeys = [
   "id",
   "index",
@@ -101,19 +108,23 @@ type CreateRouteOptions = Pick<
   RouteConfigEntry,
   (typeof createConfigRouteOptionKeys)[number]
 >;
+/**
+ * Helper function for creating a route config entry, for use within
+ * `routes.ts`.
+ */
 function createRoute(
-  path: CreateRoutePath,
+  path: string | null | undefined,
   file: string,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createRoute(
-  path: CreateRoutePath,
+  path: string | null | undefined,
   file: string,
   options: CreateRouteOptions,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createRoute(
-  path: CreateRoutePath,
+  path: string | null | undefined,
   file: string,
   optionsOrChildren: CreateRouteOptions | RouteConfigEntry[] | undefined,
   children?: RouteConfigEntry[]
@@ -141,6 +152,10 @@ type CreateIndexOptions = Pick<
   RouteConfigEntry,
   (typeof createIndexOptionKeys)[number]
 >;
+/**
+ * Helper function for creating a route config entry for an index route, for use
+ * within `routes.ts`.
+ */
 function createIndex(
   file: string,
   options?: CreateIndexOptions
@@ -159,6 +174,10 @@ type CreateLayoutOptions = Pick<
   RouteConfigEntry,
   (typeof createLayoutOptionKeys)[number]
 >;
+/**
+ * Helper function for creating a route config entry for a layout route, for use
+ * within `routes.ts`.
+ */
 function createLayout(
   file: string,
   children?: RouteConfigEntry[]
@@ -191,19 +210,41 @@ function createLayout(
 export const route = createRoute;
 export const index = createIndex;
 export const layout = createLayout;
-type RouteHelpers = {
+/**
+ * Creates a set of route config helpers that resolve file paths relative to the
+ * given directory, for use within `routes.ts`. This is designed to support
+ * splitting route config into multiple files within different directories.
+ */
+export function relative(directory: string): {
   route: typeof route;
   index: typeof index;
   layout: typeof layout;
-};
-export function relative(directory: string): RouteHelpers {
+} {
   return {
+    /**
+     * Helper function for creating a route config entry, for use within
+     * `routes.ts`. Note that this helper has been scoped, meaning that file
+     * path will be resolved relative to the directory provided to the
+     * `relative` call that created this helper.
+     */
     route: (path, file, ...rest) => {
       return route(path, resolve(directory, file), ...(rest as any));
     },
+    /**
+     * Helper function for creating a route config entry for an index route, for
+     * use within `routes.ts`. Note that this helper has been scoped, meaning
+     * that file path will be resolved relative to the directory provided to the
+     * `relative` call that created this helper.
+     */
     index: (file, ...rest) => {
       return index(resolve(directory, file), ...(rest as any));
     },
+    /**
+     * Helper function for creating a route config entry for a layout route, for
+     * use within `routes.ts`. Note that this helper has been scoped, meaning
+     * that file path will be resolved relative to the directory provided to the
+     * `relative` call that created this helper.
+     */
     layout: (file, ...rest) => {
       return layout(resolve(directory, file), ...(rest as any));
     },

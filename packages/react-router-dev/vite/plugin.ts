@@ -415,6 +415,9 @@ let deepFreeze = (o: any) => {
 };
 
 type ReactRouterVitePlugin = (config?: ReactRouterConfig) => Vite.Plugin[];
+/**
+ * React Router [Vite plugin.](https://vitejs.dev/guide/using-plugins.html)
+ */
 export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   let reactRouterUserConfig = _config ?? {};
 

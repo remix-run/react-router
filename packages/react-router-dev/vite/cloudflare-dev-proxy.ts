@@ -28,12 +28,19 @@ function importWrangler() {
 
 const PLUGIN_NAME = "react-router-cloudflare-vite-dev-proxy";
 
-export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>({
-  getLoadContext,
-  ...options
-}: {
-  getLoadContext?: GetLoadContext<Env, Cf>;
-} & GetPlatformProxyOptions = {}): Plugin => {
+/**
+ * Vite plugin that provides [Node proxies to local workerd
+ * bindings](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy)
+ * to `context.cloudflare` in your server loaders and server actions during
+ * development.
+ */
+export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
+  options: {
+    getLoadContext?: GetLoadContext<Env, Cf>;
+  } & GetPlatformProxyOptions = {}
+): Plugin => {
+  let { getLoadContext, ...restOptions } = options;
+
   return {
     name: PLUGIN_NAME,
     config: () => ({
@@ -59,7 +66,9 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>({
     configureServer: async (viteDevServer) => {
       let { getPlatformProxy } = await importWrangler();
       // Do not include `dispose` in Cloudflare context
-      let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(options);
+      let { dispose, ...cloudflare } = await getPlatformProxy<Env, Cf>(
+        restOptions
+      );
       let context = { cloudflare };
       return () => {
         if (!viteDevServer.config.server.middlewareMode) {
