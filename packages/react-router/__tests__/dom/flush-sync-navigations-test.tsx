@@ -33,9 +33,7 @@ describe("flushSync", () => {
             return (
               <>
                 <h1>About</h1>
-                <button
-                  onClick={() => navigate("/", { flushSync: true })}
-                >
+                <button onClick={() => navigate("/", { flushSync: true })}>
                   Go to /
                 </button>
               </>
@@ -107,10 +105,7 @@ describe("flushSync", () => {
                 <h1>About</h1>
                 <button
                   onClick={() =>
-                    submit(
-                      {},
-                      { method: "post", action: "/", flushSync: true }
-                    )
+                    submit({}, { method: "post", action: "/", flushSync: true })
                   }
                 >
                   Go to /
@@ -163,9 +158,7 @@ describe("flushSync", () => {
                 </button>
                 <pre>{`async:${fetcher1.data}:${fetcher1.state}`}</pre>
                 <button
-                  onClick={() =>
-                    fetcher2.load("/fetch", { flushSync: true })
-                  }
+                  onClick={() => fetcher2.load("/fetch", { flushSync: true })}
                 >
                   Load sync
                 </button>
