@@ -42,8 +42,9 @@ async function ensureBuildVersion(packageName, version) {
  */
 function publishBuild(packageName, tag) {
   let buildDir = path.join(rootDir, "packages", packageName);
+  let flag = tag=="experimental":1?0;
   let args = ["--access public", `--tag ${tag}`];
-  if (tag === "experimental") {
+  if (flag) {
     args.push(`--no-git-checks`);
   } else {
     args.push("--publish-branch release-next");
