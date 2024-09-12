@@ -7405,13 +7405,13 @@ function testDomRouter(
                 return (
                   <div>
                     <Link to="/a">/a</Link>
-                    <Link to="/b" unstable_viewTransition>
+                    <Link to="/b" viewTransition>
                       /b
                     </Link>
                     <Form action="/c">
                       <button type="submit">/c</button>
                     </Form>
-                    <Form action="/d" unstable_viewTransition>
+                    <Form action="/d" viewTransition>
                       <button type="submit">/d</button>
                     </Form>
                     <Outlet />
@@ -7486,7 +7486,7 @@ function testDomRouter(
               Component() {
                 return (
                   <>
-                    <Link to="/page" unstable_viewTransition>
+                    <Link to="/page" viewTransition>
                       /page
                     </Link>
                     <Outlet />

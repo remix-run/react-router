@@ -20,18 +20,18 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/a" }),
       }),
-      expect.objectContaining({ unstable_viewTransitionOpts: undefined })
+      expect.objectContaining({ viewTransitionOpts: undefined })
     );
 
     // PUSH /a -> /b - w/ transition
-    t.navigate("/b", { unstable_viewTransition: true });
+    t.navigate("/b", { viewTransition: true });
     expect(spy).toHaveBeenLastCalledWith(
       expect.objectContaining({
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/b" }),
       }),
       expect.objectContaining({
-        unstable_viewTransitionOpts: {
+        viewTransitionOpts: {
           currentLocation: expect.objectContaining({ pathname: "/a" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
         },
@@ -46,7 +46,7 @@ describe("view transitions", () => {
         location: expect.objectContaining({ pathname: "/a" }),
       }),
       expect.objectContaining({
-        unstable_viewTransitionOpts: {
+        viewTransitionOpts: {
           // Args reversed on POP so same hooks apply
           currentLocation: expect.objectContaining({ pathname: "/a" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
@@ -61,7 +61,7 @@ describe("view transitions", () => {
         navigation: IDLE_NAVIGATION,
         location: expect.objectContaining({ pathname: "/" }),
       }),
-      expect.objectContaining({ unstable_viewTransitionOpts: undefined })
+      expect.objectContaining({ viewTransitionOpts: undefined })
     );
 
     unsubscribe();
@@ -75,13 +75,13 @@ describe("view transitions", () => {
     let spy = jest.fn();
     let unsubscribe = t.router.subscribe(spy);
 
-    let A = await t.navigate("/a", { unstable_viewTransition: true });
+    let A = await t.navigate("/a", { viewTransition: true });
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy.mock.calls[0]).toEqual([
       expect.objectContaining({
         navigation: expect.objectContaining({ state: "loading" }),
       }),
-      expect.objectContaining({ unstable_viewTransitionOpts: undefined }),
+      expect.objectContaining({ viewTransitionOpts: undefined }),
     ]);
     expect(A.loaders.a.stub).toHaveBeenCalledTimes(1);
 
@@ -93,7 +93,7 @@ describe("view transitions", () => {
         revalidation: "loading",
       }),
       expect.objectContaining({
-        unstable_viewTransitionOpts: undefined,
+        viewTransitionOpts: undefined,
       }),
     ]);
     expect(spy.mock.calls[2]).toEqual([
@@ -101,7 +101,7 @@ describe("view transitions", () => {
         navigation: expect.objectContaining({ state: "loading" }),
       }),
       expect.objectContaining({
-        unstable_viewTransitionOpts: undefined,
+        viewTransitionOpts: undefined,
       }),
     ]);
     expect(spy).toHaveBeenLastCalledWith(
@@ -109,7 +109,7 @@ describe("view transitions", () => {
         navigation: expect.objectContaining({ state: "loading" }),
       }),
       expect.objectContaining({
-        unstable_viewTransitionOpts: undefined,
+        viewTransitionOpts: undefined,
       })
     );
     expect(B.loaders.a.stub).toHaveBeenCalledTimes(1);
@@ -127,7 +127,7 @@ describe("view transitions", () => {
         },
       }),
       expect.objectContaining({
-        unstable_viewTransitionOpts: {
+        viewTransitionOpts: {
           currentLocation: expect.objectContaining({ pathname: "/" }),
           nextLocation: expect.objectContaining({ pathname: "/a" }),
         },
@@ -152,7 +152,7 @@ describe("view transitions", () => {
     let A = await t.navigate("/a", {
       formMethod: "post",
       formData: createFormData({}),
-      unstable_viewTransition: true,
+      viewTransition: true,
     });
 
     await A.actions.a.redirect("/b");
@@ -162,7 +162,7 @@ describe("view transitions", () => {
         location: expect.objectContaining({ pathname: "/b" }),
       }),
       expect.objectContaining({
-        unstable_viewTransitionOpts: {
+        viewTransitionOpts: {
           currentLocation: expect.objectContaining({ pathname: "/" }),
           nextLocation: expect.objectContaining({ pathname: "/b" }),
         },
