@@ -132,8 +132,8 @@ export interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  unstable_flushSync?: boolean;
-  unstable_viewTransition?: boolean;
+  flushSync?: boolean;
+  viewTransition?: boolean;
 }
 
 /**

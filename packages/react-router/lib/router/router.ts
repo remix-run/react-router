@@ -425,8 +425,8 @@ export interface RouterSubscriber {
     state: RouterState,
     opts: {
       deletedFetchers: string[];
-      unstable_viewTransitionOpts?: ViewTransitionOpts;
-      unstable_flushSync: boolean;
+      viewTransitionOpts?: ViewTransitionOpts;
+      flushSync: boolean;
     }
   ): void;
 }
@@ -456,7 +456,7 @@ export type RelativeRoutingType = "route" | "path";
 type BaseNavigateOrFetchOptions = {
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  unstable_flushSync?: boolean;
+  flushSync?: boolean;
 };
 
 // Only allowed for navigations
@@ -464,7 +464,7 @@ type BaseNavigateOptions = BaseNavigateOrFetchOptions & {
   replace?: boolean;
   state?: any;
   fromRouteId?: string;
-  unstable_viewTransition?: boolean;
+  viewTransition?: boolean;
 };
 
 // Only allowed for submission navigations
@@ -1174,8 +1174,8 @@ export function createRouter(init: RouterInit): Router {
     [...subscribers].forEach((subscriber) =>
       subscriber(state, {
         deletedFetchers: unmountedFetchers,
-        unstable_viewTransitionOpts: opts.viewTransitionOpts,
-        unstable_flushSync: opts.flushSync === true,
+        viewTransitionOpts: opts.viewTransitionOpts,
+        flushSync: opts.flushSync === true,
       })
     );
 
@@ -1394,7 +1394,7 @@ export function createRouter(init: RouterInit): Router {
         ? opts.preventScrollReset === true
         : undefined;
 
-    let flushSync = (opts && opts.unstable_flushSync) === true;
+    let flushSync = (opts && opts.flushSync) === true;
 
     let blockerKey = shouldBlockNavigation({
       currentLocation,
@@ -1433,7 +1433,7 @@ export function createRouter(init: RouterInit): Router {
       pendingError: error,
       preventScrollReset,
       replace: opts && opts.replace,
-      enableViewTransition: opts && opts.unstable_viewTransition,
+      enableViewTransition: opts && opts.viewTransition,
       flushSync,
     });
   }
@@ -2108,7 +2108,7 @@ export function createRouter(init: RouterInit): Router {
     opts?: RouterFetchOptions
   ) {
     if (fetchControllers.has(key)) abortFetcher(key);
-    let flushSync = (opts && opts.unstable_flushSync) === true;
+    let flushSync = (opts && opts.flushSync) === true;
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let normalizedPath = normalizeTo(
