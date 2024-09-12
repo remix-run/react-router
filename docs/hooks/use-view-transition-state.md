@@ -1,14 +1,14 @@
 ---
-title: unstable_useViewTransitionState
+title: useViewTransitionState
 ---
 
-# `unstable_useViewTransitionState`
+# `useViewTransitionState`
 
 <details>
   <summary>Type declaration</summary>
 
 ```tsx
-declare function unstable_useViewTransitionState(
+declare function useViewTransitionState(
   to: To,
   opts: { relative?: "route" : "path" } = {}
 ): boolean;
@@ -24,17 +24,16 @@ interface Path {
 
 </details>
 
-This hook returns `true` when there is an active [View Transition][view-transitions] to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via the [unstable_viewTransition][link-view-transition] prop on the `Link` (or the `Form`, `navigate`, or `submit` call).
+This hook returns `true` when there is an active [View Transition][view-transitions] to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via the [viewTransition][link-view-transition] prop on the `Link` (or the `Form`, `navigate`, or `submit` call).
 
 Consider clicking on an image in a list that you need to expand into the hero image on the destination page:
 
 ```jsx
 function NavImage({ src, alt, id }) {
   const to = `/images/${id}`;
-  const isTransitioning =
-    unstable_useViewTransitionState(to);
+  const isTransitioning = useViewTransitionState(to);
   return (
-    <Link to={to} unstable_viewTransition>
+    <Link to={to} viewTransition>
       <img
         src={src}
         alt={alt}
@@ -49,5 +48,5 @@ function NavImage({ src, alt, id }) {
 }
 ```
 
-[link-view-transition]: ../components/link#unstable_viewtransition
+[link-view-transition]: ../components/link#viewtransition
 [view-transitions]: https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API

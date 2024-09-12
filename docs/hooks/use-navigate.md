@@ -20,8 +20,8 @@ interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  unstable_flushSync?: boolean;
-  unstable_viewTransition?: boolean;
+  flushSync?: boolean;
+  viewTransition?: boolean;
 }
 
 type RelativeRoutingType = "route" | "path";
@@ -114,19 +114,19 @@ new URL("..", window.origin + location.pathname + "/");
 // 'https://remix.run/docs/en/main/start/'
 ```
 
-## `options.unstable_flushSync`
+## `options.flushSync`
 
-The `unstable_flushSync` option tells React Router DOM to wrap the initial state update for this navigation in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.
+The `flushSync` option tells React Router DOM to wrap the initial state update for this navigation in a [`ReactDOM.flushSync`][flush-sync] call instead of the default [`React.startTransition`][start-transition]. This allows you to perform synchronous DOM actions immediately after the update is flushed to the DOM.
 
-<docs-warning>`unstable_flushSync` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
+<docs-warning>`flushSync` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
 
 <docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
 
-## `options.unstable_viewTransition`
+## `options.viewTransition`
 
-The `unstable_viewTransition` option enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the [`unstable_useViewTransitionState()`][use-view-transition-state].
+The `viewTransition` option enables a [View Transition][view-transitions] for this navigation by wrapping the final state update in `document.startViewTransition()`. If you need to apply specific styles for this view transition, you will also need to leverage the [`useViewTransitionState()`][use-view-transition-state].
 
-<docs-warning>`unstable_viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
+<docs-warning>`viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
 
 <docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
 
