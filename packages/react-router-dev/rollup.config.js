@@ -79,7 +79,7 @@ module.exports = function rollup() {
       external() {
         return true;
       },
-      input: `${SOURCE_DIR}/cli.ts`,
+      input: `${SOURCE_DIR}/cli/index.ts`,
       output: {
         banner: createBanner(name, version),
         dir: OUTPUT_DIR,
