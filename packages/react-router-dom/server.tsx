@@ -367,6 +367,9 @@ export function createStaticRouter(
     deleteFetcher() {
       throw msg("deleteFetcher");
     },
+    resetFetcher() {
+      throw msg("resetFetcher");
+    },
     abortFetcher() {
       throw msg("abortFetcher");
     },

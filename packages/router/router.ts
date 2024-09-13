@@ -213,10 +213,19 @@ export interface Router {
    * @internal
    * PRIVATE - DO NOT USE
    *
-   * Delete the fetcher for a given key
+   * Reset the fetcher data for a given key
    * @param key
    */
-  abortFetcher(key: string, data?: unknown): void;
+  resetFetcher(key: string): void;
+
+  /**
+   * @internal
+   * PRIVATE - DO NOT USE
+   *
+   * Abort the fetcher for a given key
+   * @param key
+   */
+  abortFetcher(key: string, data: unknown, reason?: unknown): void;
 
   /**
    * @internal
@@ -3437,19 +3446,16 @@ export function createRouter(init: RouterInit): Router {
     encodeLocation: (to: To) => init.history.encodeLocation(to),
     getFetcher,
     deleteFetcher: deleteFetcherAndUpdateState,
-    abortFetcher(
-      key: string,
-      { reason, data }: { reason?: unknown; data?: unknown } = {}
-    ) {
+    resetFetcher(key: string) {
+      updateFetcherState(key, getDoneFetcher(null));
+    },
+    abortFetcher(key: string, data: unknown, reason?: unknown) {
       if (fetchControllers.has(key)) {
         abortFetcher(key, reason);
       } else if (landedFetcherControllers.has(key)) {
         landedFetcherControllers.get(key)!.abort(reason);
       }
-      updateFetcherState(
-        key,
-        getDoneFetcher(typeof data === "undefined" ? null : data)
-      );
+      updateFetcherState(key, getDoneFetcher(data));
     },
     dispose,
     getBlocker,

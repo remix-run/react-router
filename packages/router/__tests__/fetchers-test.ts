@@ -3334,7 +3334,36 @@ describe("fetchers", () => {
     });
   });
 
-  describe("fetcher.abort()", () => {
+  describe("resetFetcher", () => {
+    it("resets fetcher data", async () => {
+      let t = setup({
+        routes: [
+          { id: "root", path: "/" },
+          { id: "fetch", path: "/fetch", loader: true },
+        ],
+      });
+
+      let A = await t.fetch("/fetch", "a", "root");
+      expect(t.router.state.fetchers.get("a")).toMatchObject({
+        state: "loading",
+        data: undefined,
+      });
+
+      await A.loaders.fetch.resolve("FETCH");
+      expect(t.router.state.fetchers.get("a")).toMatchObject({
+        state: "idle",
+        data: "FETCH",
+      });
+
+      t.router.resetFetcher("a");
+      expect(t.router.state.fetchers.get("a")).toMatchObject({
+        state: "idle",
+        data: null,
+      });
+    });
+  });
+
+  describe("abortFetcher", () => {
     it("allows mid-flight fetcher aborts", async () => {
       let t = setup({
         routes: [
@@ -3349,7 +3378,7 @@ describe("fetchers", () => {
         data: undefined,
       });
 
-      t.router.abortFetcher("a");
+      t.router.abortFetcher("a", null);
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
         data: null,
@@ -3363,7 +3392,7 @@ describe("fetchers", () => {
       });
     });
 
-    it("resets fetcher data on abort", async () => {
+    it("can preserve data when aborting a fetcher", async () => {
       let t = setup({
         routes: [
           { id: "root", path: "/" },
@@ -3389,49 +3418,7 @@ describe("fetchers", () => {
         data: "FETCH",
       });
 
-      t.router.abortFetcher("a");
-      expect(t.router.state.fetchers.get("a")).toMatchObject({
-        state: "idle",
-        data: null,
-      });
-
-      // no-op
-      await B.loaders.fetch.resolve("FETCH*");
-      expect(t.router.state.fetchers.get("a")).toMatchObject({
-        state: "idle",
-        data: null,
-      });
-    });
-
-    it("allows preserving data when aborting a fetcher", async () => {
-      let t = setup({
-        routes: [
-          { id: "root", path: "/" },
-          { id: "fetch", path: "/fetch", loader: true },
-        ],
-      });
-
-      let A = await t.fetch("/fetch", "a", "root");
-      expect(t.router.state.fetchers.get("a")).toMatchObject({
-        state: "loading",
-        data: undefined,
-      });
-
-      await A.loaders.fetch.resolve("FETCH");
-      expect(t.router.state.fetchers.get("a")).toMatchObject({
-        state: "idle",
-        data: "FETCH",
-      });
-
-      let B = await t.fetch("/fetch", "a", "root");
-      expect(t.router.state.fetchers.get("a")).toMatchObject({
-        state: "loading",
-        data: "FETCH",
-      });
-
-      t.router.abortFetcher("a", {
-        data: t.router.state.fetchers.get("a")?.data,
-      });
+      t.router.abortFetcher("a", t.router.state.fetchers.get("a")?.data);
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
         data: "FETCH",
@@ -3475,9 +3462,7 @@ describe("fetchers", () => {
         },
       });
 
-      await t.router.abortFetcher("a", {
-        data: t.router.state.fetchers.get("a")?.data,
-      });
+      await t.router.abortFetcher("a", t.router.state.fetchers.get("a")?.data);
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
         data: {
@@ -3523,10 +3508,11 @@ describe("fetchers", () => {
         },
       });
 
-      await t.router.abortFetcher("a", {
-        data: t.router.state.fetchers.get("a")?.data,
-        reason: new Error("💥"),
-      });
+      await t.router.abortFetcher(
+        "a",
+        t.router.state.fetchers.get("a")?.data,
+        new Error("💥")
+      );
       expect(t.router.state.fetchers.get("a")).toMatchObject({
         state: "idle",
         data: {
