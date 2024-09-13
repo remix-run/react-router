@@ -319,9 +319,6 @@ importers:
       npm-run-all:
         specifier: ^4.1.5
         version: 4.1.5
-      pidtree:
-        specifier: ^0.6.0
-        version: 0.6.0
       postcss:
         specifier: ^8.4.19
         version: 8.4.38
@@ -5953,11 +5950,6 @@ packages:
 
   pidtree@0.3.1:
     resolution: {integrity: sha512-qQbW94hLHEqCg7nhby4yRC7G2+jYHY4Rguc2bjw7Uug4GIJuu1tvf2uHaZv5Q8zdt+WKJ6qK1FOI6amaWUo5FA==}
-    engines: {node: '>=0.10'}
-    hasBin: true
-
-  pidtree@0.6.0:
-    resolution: {integrity: sha512-eG2dWTVw5bzqGRztnHExczNxt5VGsE6OwTeCG3fdUf9KBsZzO3R5OIIIzWR+iZA0NtZ+RDVdaoE2dK1cn6jH4g==}
     engines: {node: '>=0.10'}
     hasBin: true
 
@@ -14438,8 +14430,6 @@ snapshots:
   picomatch@2.3.1: {}
 
   pidtree@0.3.1: {}
-
-  pidtree@0.6.0: {}
 
   pify@2.3.0: {}
 

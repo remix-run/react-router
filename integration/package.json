@@ -27,7 +27,6 @@
     "glob": "8.0.3",
     "isbot": "^5.1.11",
     "npm-run-all": "^4.1.5",
-    "pidtree": "^0.6.0",
     "postcss": "^8.4.19",
     "postcss-import": "^15.1.0",
     "prettier": "^2.7.1",
