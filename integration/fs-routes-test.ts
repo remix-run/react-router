@@ -13,7 +13,7 @@ import {
 let fixture: Fixture;
 let appFixture: AppFixture;
 
-test.describe("remix v2 routes", () => {
+test.describe("fs-routes", () => {
   test.beforeAll(async () => {
     fixture = await createFixture({
       files: {
@@ -27,17 +27,22 @@ test.describe("remix v2 routes", () => {
         `,
         "app/routes.ts": js`
           import { type RouteConfig } from "@react-router/dev/routes";  
-          import { remixRoutes } from "@react-router/remix-v2-routes";
+          import { flatRoutes } from "@react-router/fs-routes";
+          import { remixConfigRoutes } from "@react-router/remix-config-routes-adapter";
 
-          export const routes: RouteConfig = remixRoutes({
-            ignoredRouteFiles: ["**/ignored-route.*"],
-            routes: async (defineRoutes) => {
+          export const routes: RouteConfig = [
+            ...await flatRoutes({
+              ignoredRouteFiles: ["**/ignored-route.*"],
+            }),
+
+            // Ensure Remix back compat layer works
+            ...await remixConfigRoutes(async (defineRoutes) => {
               // Ensure async routes work
               return defineRoutes((route) => {
-                route("/custom/route", "custom-route.tsx")
+                route("/remix/config/route", "remix-config-route.tsx")
               });
-            }
-          });
+            })
+          ];
         `,
         "app/root.tsx": js`
           import { Links, Meta, Outlet, Scripts } from "react-router";
@@ -85,9 +90,9 @@ test.describe("remix v2 routes", () => {
           }
         `,
 
-        "app/custom-route.tsx": js`
+        "app/remix-config-route.tsx": js`
           export default function () {
-            return <h2>Custom Route</h2>;
+            return <h2>Remix Config Route</h2>;
           }
         `,
 
@@ -186,12 +191,12 @@ test.describe("remix v2 routes", () => {
 </div>`);
     });
 
-    test("renders matching routes (custom route)", async ({ page }) => {
+    test("renders matching routes (Remix config route)", async ({ page }) => {
       let app = new PlaywrightFixture(appFixture, page);
-      await app.goto("/custom/route");
+      await app.goto("/remix/config/route");
       expect(await app.getHtml("#content")).toBe(`<div id="content">
   <h1>Root</h1>
-  <h2>Custom Route</h2>
+  <h2>Remix Config Route</h2>
 </div>`);
     });
 

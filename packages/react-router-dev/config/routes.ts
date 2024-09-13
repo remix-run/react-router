@@ -1,4 +1,5 @@
-import * as path from "node:path";
+import { resolve, win32 } from "node:path";
+import * as v from "valibot";
 import pick from "lodash/pick";
 import invariant from "../invariant";
 
@@ -8,6 +9,10 @@ export function setAppDirectory(directory: string) {
   appDirectory = directory;
 }
 
+/**
+ * Provides the absolute path to the app directory, for use within `routes.ts`.
+ * This is designed to support resolving file system routes.
+ */
 export function getAppDirectory() {
   invariant(appDirectory);
   return appDirectory;
@@ -52,10 +57,10 @@ export interface RouteManifest {
   [routeId: string]: RouteManifestEntry;
 }
 
-export type RouteConfig = RouteConfigEntry[] | Promise<RouteConfigEntry[]>;
-
 /**
- * A route exported from the routes config file
+ * Configuration for an individual route, for use within `routes.ts`. As a
+ * convenience, route config entries can be created with the {@link route},
+ * {@link index} and {@link layout} helper functions.
  */
 export interface RouteConfigEntry {
   /**
@@ -90,12 +95,80 @@ export interface RouteConfigEntry {
   children?: RouteConfigEntry[];
 }
 
-type CreateRoutePath = string | null | undefined;
+export const routeConfigEntrySchema: v.BaseSchema<
+  RouteConfigEntry,
+  any,
+  v.BaseIssue<unknown>
+> = v.pipe(
+  v.custom<RouteConfigEntry>((value) => {
+    return !(
+      typeof value === "object" &&
+      value !== null &&
+      "then" in value &&
+      "catch" in value
+    );
+  }, "Invalid type: Expected object but received a promise. Did you forget to await?"),
+  v.object({
+    id: v.optional(v.string()),
+    path: v.optional(v.string()),
+    index: v.optional(v.boolean()),
+    caseSensitive: v.optional(v.boolean()),
+    file: v.string(),
+    children: v.optional(v.array(v.lazy(() => routeConfigEntrySchema))),
+  })
+);
 
-type RequireAtLeastOne<T> = {
-  [K in keyof T]-?: Required<Pick<T, K>> &
-    Partial<Pick<T, Exclude<keyof T, K>>>;
-}[keyof T];
+export const resolvedRouteConfigSchema = v.array(routeConfigEntrySchema);
+type ResolvedRouteConfig = v.InferInput<typeof resolvedRouteConfigSchema>;
+
+/**
+ * Route config to be exported via the `routes` export within `routes.ts`.
+ */
+export type RouteConfig = ResolvedRouteConfig | Promise<ResolvedRouteConfig>;
+
+export function validateRouteConfig({
+  routeConfigFile,
+  routeConfig,
+}: {
+  routeConfigFile: string;
+  routeConfig: unknown;
+}): { valid: false; message: string } | { valid: true } {
+  if (!routeConfig) {
+    return {
+      valid: false,
+      message: `No "routes" export defined in "${routeConfigFile}.`,
+    };
+  }
+
+  if (!Array.isArray(routeConfig)) {
+    return {
+      valid: false,
+      message: `Route config in "${routeConfigFile}" must be an array.`,
+    };
+  }
+
+  let { issues } = v.safeParse(resolvedRouteConfigSchema, routeConfig);
+
+  if (issues?.length) {
+    let { root, nested } = v.flatten(issues);
+    return {
+      valid: false,
+      message: [
+        `Route config in "${routeConfigFile}" is invalid.`,
+        root ? `${root}` : [],
+        nested
+          ? Object.entries(nested).map(
+              ([path, message]) => `Path: routes.${path}\n${message}`
+            )
+          : [],
+      ]
+        .flat()
+        .join("\n\n"),
+    };
+  }
+
+  return { valid: true };
+}
 
 const createConfigRouteOptionKeys = [
   "id",
@@ -106,19 +179,23 @@ type CreateRouteOptions = Pick<
   RouteConfigEntry,
   (typeof createConfigRouteOptionKeys)[number]
 >;
+/**
+ * Helper function for creating a route config entry, for use within
+ * `routes.ts`.
+ */
 function createRoute(
-  path: CreateRoutePath,
+  path: string | null | undefined,
   file: string,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createRoute(
-  path: CreateRoutePath,
+  path: string | null | undefined,
   file: string,
-  options: RequireAtLeastOne<CreateRouteOptions>,
+  options: CreateRouteOptions,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createRoute(
-  path: CreateRoutePath,
+  path: string | null | undefined,
   file: string,
   optionsOrChildren: CreateRouteOptions | RouteConfigEntry[] | undefined,
   children?: RouteConfigEntry[]
@@ -146,9 +223,13 @@ type CreateIndexOptions = Pick<
   RouteConfigEntry,
   (typeof createIndexOptionKeys)[number]
 >;
+/**
+ * Helper function for creating a route config entry for an index route, for use
+ * within `routes.ts`.
+ */
 function createIndex(
   file: string,
-  options?: RequireAtLeastOne<CreateIndexOptions>
+  options?: CreateIndexOptions
 ): RouteConfigEntry {
   return {
     file,
@@ -164,13 +245,17 @@ type CreateLayoutOptions = Pick<
   RouteConfigEntry,
   (typeof createLayoutOptionKeys)[number]
 >;
+/**
+ * Helper function for creating a route config entry for a layout route, for use
+ * within `routes.ts`.
+ */
 function createLayout(
   file: string,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createLayout(
   file: string,
-  options: RequireAtLeastOne<CreateLayoutOptions>,
+  options: CreateLayoutOptions,
   children?: RouteConfigEntry[]
 ): RouteConfigEntry;
 function createLayout(
@@ -196,6 +281,46 @@ function createLayout(
 export const route = createRoute;
 export const index = createIndex;
 export const layout = createLayout;
+/**
+ * Creates a set of route config helpers that resolve file paths relative to the
+ * given directory, for use within `routes.ts`. This is designed to support
+ * splitting route config into multiple files within different directories.
+ */
+export function relative(directory: string): {
+  route: typeof route;
+  index: typeof index;
+  layout: typeof layout;
+} {
+  return {
+    /**
+     * Helper function for creating a route config entry, for use within
+     * `routes.ts`. Note that this helper has been scoped, meaning that file
+     * path will be resolved relative to the directory provided to the
+     * `relative` call that created this helper.
+     */
+    route: (path, file, ...rest) => {
+      return route(path, resolve(directory, file), ...(rest as any));
+    },
+    /**
+     * Helper function for creating a route config entry for an index route, for
+     * use within `routes.ts`. Note that this helper has been scoped, meaning
+     * that file path will be resolved relative to the directory provided to the
+     * `relative` call that created this helper.
+     */
+    index: (file, ...rest) => {
+      return index(resolve(directory, file), ...(rest as any));
+    },
+    /**
+     * Helper function for creating a route config entry for a layout route, for
+     * use within `routes.ts`. Note that this helper has been scoped, meaning
+     * that file path will be resolved relative to the directory provided to the
+     * `relative` call that created this helper.
+     */
+    layout: (file, ...rest) => {
+      return layout(resolve(directory, file), ...(rest as any));
+    },
+  };
+}
 
 export function configRoutesToRouteManifest(
   routes: RouteConfigEntry[],
@@ -240,7 +365,7 @@ function createRouteId(file: string) {
 }
 
 function normalizeSlashes(file: string) {
-  return file.split(path.win32.sep).join("/");
+  return file.split(win32.sep).join("/");
 }
 
 function stripFileExtension(file: string) {

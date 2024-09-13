@@ -6,7 +6,6 @@ import type {
 import type { RouteModules } from "./ssr/routeModules";
 
 export type WindowRemixContext = {
-  url: string;
   basename?: string;
   state: HydrationState;
   criticalCss?: string;
@@ -42,7 +41,7 @@ declare global {
   var __remixManifest: AssetsManifest | undefined;
   var __remixRouteModules: RouteModules | undefined;
   var __remixRouter: RemixRouter | undefined;
-  var __remixRevalidation: number | undefined;
+  var __remixHdrActive: boolean;
   var __remixClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
     | {

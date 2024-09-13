@@ -33,6 +33,7 @@ import type {
 } from "../manifest";
 import invariant from "../invariant";
 import type { Cache } from "./cache";
+import { generate, parse } from "./babel";
 import type { NodeRequestHandler } from "./node-adapter";
 import { fromNodeRequest, toNodeRequest } from "./node-adapter";
 import { getStylesForUrl, isCssModulesFile } from "./styles";
@@ -54,6 +55,7 @@ import {
   resolveEntryFiles,
   resolvePublicPath,
 } from "./config";
+import * as WithProps from "./with-props";
 
 export async function resolveViteConfig({
   configFile,
@@ -317,13 +319,13 @@ function resolveDependantChunks(
       return;
     }
 
+    chunks.add(chunk);
+
     if (chunk.imports) {
       for (let importKey of chunk.imports) {
         walk(viteManifest[importKey]);
       }
     }
-
-    chunks.add(chunk);
   }
 
   for (let entryChunk of entryChunks) {
@@ -485,6 +487,9 @@ let deepFreeze = (o: any) => {
 };
 
 type ReactRouterVitePlugin = (config?: ReactRouterConfig) => Vite.Plugin[];
+/**
+ * React Router [Vite plugin.](https://vitejs.dev/guide/using-plugins.html)
+ */
 export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
   let reactRouterUserConfig = _config ?? {};
 
@@ -1517,7 +1522,12 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       name: "react-router-dot-server",
       enforce: "pre",
       async resolveId(id, importer, options) {
-        if (options?.ssr) return;
+        // https://vitejs.dev/config/dep-optimization-options
+        let isOptimizeDeps =
+          viteCommand === "serve" &&
+          (options as { scan?: boolean })?.scan === true;
+
+        if (isOptimizeDeps || options?.ssr) return;
 
         let isResolving = options?.custom?.["react-router-dot-server"] ?? false;
         if (isResolving) return;
@@ -1599,6 +1609,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         }
       },
     },
+    WithProps.plugin,
     {
       name: "react-router-route-exports",
       async transform(code, id, options) {
@@ -1637,7 +1648,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
 
         let [filepath] = id.split("?");
 
-        return removeExports(code, SERVER_ONLY_ROUTE_EXPORTS, {
+        let ast = parse(code, { sourceType: "module" });
+        removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        WithProps.transform(ast);
+        return generate(ast, {
           sourceMaps: true,
           filename: id,
           sourceFileName: filepath,
@@ -1775,7 +1789,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           }
         }
 
-        server.ws.send({
+        server.hot.send({
           type: "custom",
           event: "react-router:hmr",
           data: hmrEventData,
@@ -1847,12 +1861,30 @@ function addRefreshWrapper(
       ]
     : [];
   return (
-    REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id)) +
-    code +
-    REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
-      .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
-      .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
+    "\n\n" +
+    withCommentBoundaries(
+      "REACT REFRESH HEADER",
+      REACT_REFRESH_HEADER.replaceAll("__SOURCE__", JSON.stringify(id))
+    ) +
+    "\n\n" +
+    withCommentBoundaries("REACT REFRESH BODY", code) +
+    "\n\n" +
+    withCommentBoundaries(
+      "REACT REFRESH FOOTER",
+      REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
+        .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
+        .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
+    ) +
+    "\n"
   );
+}
+
+function withCommentBoundaries(label: string, text: string) {
+  let begin = `// [BEGIN] ${label} `;
+  begin += "-".repeat(80 - begin.length);
+  let end = `// [END] ${label} `;
+  end += "-".repeat(80 - end.length);
+  return `${begin}\n${text}\n${end}`;
 }
 
 const REACT_REFRESH_HEADER = `
@@ -1875,7 +1907,7 @@ if (import.meta.hot && !inWebWorker) {
     RefreshRuntime.register(type, __SOURCE__ + " " + id)
   };
   window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
-}`.replace(/\n+/g, "");
+}`.trim();
 
 const IMPORT_CLIENT_ACTION_CHUNK_QUERY_STRING =
   "?import&" + CLIENT_ACTION_CHUNK_QUERY_STRING.replace("?", "");
@@ -1905,7 +1937,7 @@ if (import.meta.hot && !inWebWorker) {
       if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
     });
   });
-}`;
+}`.trim();
 
 const REACT_REFRESH_ROUTE_CHUNK_FOOTER = `
 import RefreshRuntime from "${hmrRuntimeId}";

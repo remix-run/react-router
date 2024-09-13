@@ -1,7 +1,9 @@
 import type { RouteManifest, RouteManifestEntry } from "./manifest";
 import { normalizeSlashes } from "./normalizeSlashes";
 
-export type DefineRoutesFunction = typeof defineRoutes;
+export type DefineRoutesFunction = (
+  callback: (defineRoute: DefineRouteFunction) => void
+) => RouteManifest;
 
 interface DefineRouteOptions {
   /**
@@ -55,9 +57,7 @@ interface DefineRouteFunction {
  * A function for defining routes programmatically, instead of using the
  * filesystem convention.
  */
-export function defineRoutes(
-  callback: (defineRoute: DefineRouteFunction) => void
-): RouteManifest {
+export const defineRoutes: DefineRoutesFunction = (callback) => {
   let routes: RouteManifest = Object.create(null);
   let parentRoutes: RouteManifestEntry[] = [];
   let alreadyReturned = false;
@@ -119,7 +119,7 @@ export function defineRoutes(
   alreadyReturned = true;
 
   return routes;
-}
+};
 
 function createRouteId(file: string) {
   return normalizeSlashes(stripFileExtension(file));

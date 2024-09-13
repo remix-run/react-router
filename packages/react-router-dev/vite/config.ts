@@ -9,11 +9,12 @@ import omit from "lodash/omit";
 import PackageJson from "@npmcli/package-json";
 
 import {
-  setAppDirectory,
-  configRoutesToRouteManifest,
   type RouteManifest,
   type RouteManifestEntry,
   type RouteConfig,
+  setAppDirectory,
+  validateRouteConfig,
+  configRoutesToRouteManifest,
 } from "../config/routes";
 import { detectPackageManager } from "../cli/detectPackageManager";
 import { importViteEsmSync } from "./import-vite-esm-sync";
@@ -427,7 +428,7 @@ export async function resolveReactRouterConfig({
         path.relative(rootDirectory, path.join(appDirectory, "routes.ts"))
       );
       throw new FriendlyError(
-        `Could not find a routes config file at "${routeConfigDisplayPath}"`
+        `Route config file not found at "${routeConfigDisplayPath}".`
       );
     }
 
@@ -438,16 +439,13 @@ export async function resolveReactRouterConfig({
 
     let routeConfig = await routeConfigExport;
 
-    if (!routeConfig) {
-      throw new FriendlyError(
-        `No "routes" export defined in "${routeConfigFile}"`
-      );
-    }
+    let result = validateRouteConfig({
+      routeConfigFile,
+      routeConfig,
+    });
 
-    if (!Array.isArray(routeConfig)) {
-      throw new FriendlyError(
-        `Routes exported from "${routeConfigFile}" must be an array`
-      );
+    if (!result.valid) {
+      throw new FriendlyError(result.message);
     }
 
     routes = { ...routes, ...configRoutesToRouteManifest(routeConfig) };
@@ -465,7 +463,7 @@ export async function resolveReactRouterConfig({
       error instanceof FriendlyError
         ? colors.red(error.message)
         : [
-            colors.red("Route config is invalid."),
+            colors.red(`Route config in "${routeConfigFile}" is invalid.`),
             "",
             error.loc?.file && error.loc?.column && error.frame
               ? [
@@ -479,7 +477,7 @@ export async function resolveReactRouterConfig({
               : error.stack,
           ]
             .flat()
-            .join("\n"),
+            .join("\n") + "\n",
       {
         error,
         clear: !isFirstLoad,

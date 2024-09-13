@@ -1085,13 +1085,6 @@ export function useMatches(): UIMatch[] {
 export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
-
-  if (state.errors && state.errors[routeId] != null) {
-    console.error(
-      `You cannot \`useLoaderData\` in an errorElement (routeId: ${routeId})`
-    );
-    return undefined;
-  }
   return state.loaderData[routeId];
 }
 

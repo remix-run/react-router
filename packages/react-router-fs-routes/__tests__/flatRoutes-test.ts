@@ -3,16 +3,16 @@ import path from "node:path";
 import type { RouteManifestEntry } from "../manifest";
 
 import {
-  fileRoutesUniversal,
+  flatRoutesUniversal,
   getRoutePathConflictErrorMessage,
   getRouteIdConflictErrorMessage,
   getRouteSegments,
-} from "../fileRoutes";
+} from "../flatRoutes";
 import { normalizeSlashes } from "../normalizeSlashes";
 
 let APP_DIR = path.join("test", "root", "app");
 
-describe("fileRoutes", () => {
+describe("flatRoutes", () => {
   describe("creates proper route paths", () => {
     let tests: [string, string | undefined][] = [
       ["routes.$", "routes/*"],
@@ -81,7 +81,7 @@ describe("fileRoutes", () => {
       ["shop_.projects_.$id.roadmap", "shop/projects/:id/roadmap"],
     ];
 
-    let manifest = fileRoutesUniversal(
+    let manifest = flatRoutesUniversal(
       APP_DIR,
       tests.map((t) => path.join(APP_DIR, "routes", t[0] + ".tsx"))
     );
@@ -631,7 +631,7 @@ describe("fileRoutes", () => {
       }
     );
 
-    let routeManifest = fileRoutesUniversal(
+    let routeManifest = flatRoutesUniversal(
       APP_DIR,
       files.map(([file]) => path.join(APP_DIR, file))
     );
@@ -661,7 +661,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "sneakers.$sneakerId.tsx"),
       ];
 
-      let routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       let routes = Object.values(routeManifest);
 
@@ -691,7 +691,7 @@ describe("fileRoutes", () => {
       // which uses the relative path from the app directory internally
       let normalizedTestFiles = testFiles.map((file) => normalizeSlashes(file));
 
-      let routeManifest = fileRoutesUniversal(APP_DIR, fullPaths);
+      let routeManifest = flatRoutesUniversal(APP_DIR, fullPaths);
 
       let routes = Object.values(routeManifest);
 
@@ -714,7 +714,7 @@ describe("fileRoutes", () => {
       // which uses the relative path from the app directory internally
       let normalizedTestFiles = testFiles.map((file) => normalizeSlashes(file));
 
-      let routeManifest = fileRoutesUniversal(APP_DIR, fullPaths);
+      let routeManifest = flatRoutesUniversal(APP_DIR, fullPaths);
 
       let routes = Object.values(routeManifest);
 
@@ -727,22 +727,6 @@ describe("fileRoutes", () => {
       );
     });
 
-    test.skip("same path, different param name", () => {
-      let testFiles = [
-        path.join(APP_DIR, "routes", "products.$pid.tsx"),
-        path.join(APP_DIR, "routes", "products.$productId.tsx"),
-      ];
-
-      let routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
-
-      let routes = Object.values(routeManifest);
-
-      expect(routes).toHaveLength(1);
-      expect(consoleError).toHaveBeenCalledWith(
-        getRoutePathConflictErrorMessage("/products/:pid", testFiles)
-      );
-    });
-
     test("pathless layouts should not collide", () => {
       let testFiles = [
         path.join(APP_DIR, "routes", "_a.tsx"),
@@ -752,7 +736,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "_b.b.tsx"),
       ];
 
-      let routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       let routes = Object.values(routeManifest);
 
@@ -768,7 +752,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "_b.b", "route.tsx"),
       ];
 
-      routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       routes = Object.values(routeManifest);
 
@@ -785,7 +769,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "nested._b.b.tsx"),
       ];
 
-      let routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       let routes = Object.values(routeManifest);
 
@@ -801,7 +785,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "nested._b.b", "route.tsx"),
       ];
 
-      routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       routes = Object.values(routeManifest);
 
@@ -817,7 +801,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "nested._b.a.tsx"),
       ];
 
-      let routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       let routes = Object.values(routeManifest);
 
@@ -838,7 +822,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "nested._b.a", "route.tsx"),
       ];
 
-      routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       routes = Object.values(routeManifest);
 
@@ -859,7 +843,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "nested._b._index.tsx"),
       ];
 
-      let routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      let routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       let routes = Object.values(routeManifest);
 
@@ -880,7 +864,7 @@ describe("fileRoutes", () => {
         path.join(APP_DIR, "routes", "nested._b._index", "route.tsx"),
       ];
 
-      routeManifest = fileRoutesUniversal(APP_DIR, testFiles);
+      routeManifest = flatRoutesUniversal(APP_DIR, testFiles);
 
       routes = Object.values(routeManifest);
 

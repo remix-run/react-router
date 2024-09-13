@@ -70,7 +70,7 @@ describe("Partial Hydration Behavior", () => {
           future: {
             v7_partialHydration: true,
           },
-          unstable_patchRoutesOnNavigation({ path, patch }) {
+          patchRoutesOnNavigation({ path, patch }) {
             if (path === "/parent/child") {
               patch("parent", [
                 {
@@ -158,7 +158,7 @@ describe("Partial Hydration Behavior", () => {
           future: {
             v7_partialHydration: true,
           },
-          unstable_patchRoutesOnNavigation({ path, patch }) {
+          patchRoutesOnNavigation({ path, patch }) {
             if (path === "/parent/child") {
               patch("parent", [
                 {

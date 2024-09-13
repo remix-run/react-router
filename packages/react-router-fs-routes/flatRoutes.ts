@@ -71,7 +71,7 @@ class PrefixLookupTrie {
   }
 }
 
-export function fileRoutes(
+export function flatRoutes(
   appDirectory: string,
   ignoredFilePatterns: string[] = [],
   prefix = "routes"
@@ -120,11 +120,11 @@ export function fileRoutes(
     if (route) routes.push(route);
   }
 
-  let routeManifest = fileRoutesUniversal(appDirectory, routes, prefix);
+  let routeManifest = flatRoutesUniversal(appDirectory, routes, prefix);
   return routeManifest;
 }
 
-export function fileRoutesUniversal(
+export function flatRoutesUniversal(
   appDirectory: string,
   routes: string[],
   prefix: string = "routes"

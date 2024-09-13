@@ -13,27 +13,29 @@ import {
 
 const js = String.raw;
 
-test.describe("routes config", () => {
-  test("fails the build if routes config is missing", async () => {
+test.describe("route config", () => {
+  test("fails the build if route config is missing", async () => {
     let cwd = await createProject();
     await fs.rm(path.join(cwd, "app/routes.ts"));
     let buildResult = build({ cwd });
     expect(buildResult.status).toBe(1);
     expect(buildResult.stderr.toString()).toContain(
-      'Could not find a routes config file at "app/routes.ts"'
+      'Route config file not found at "app/routes.ts"'
     );
   });
 
-  test("fails the build if routes config is invalid", async () => {
+  test("fails the build if route config is invalid", async () => {
     let cwd = await createProject({
       "app/routes.ts": `export default INVALID(`,
     });
     let buildResult = build({ cwd });
     expect(buildResult.status).toBe(1);
-    expect(buildResult.stderr.toString()).toContain("Route config is invalid");
+    expect(buildResult.stderr.toString()).toContain(
+      'Route config in "routes.ts" is invalid.'
+    );
   });
 
-  test("fails the dev process if routes config is initially invalid", async ({
+  test("fails the dev process if route config is initially invalid", async ({
     dev,
   }) => {
     let files: Files = async ({ port }) => ({
@@ -46,13 +48,12 @@ test.describe("routes config", () => {
     } catch (error: any) {
       devError = error;
     }
-    expect(devError?.toString()).toContain("Route config is invalid");
+    expect(devError?.toString()).toContain(
+      'Route config in "routes.ts" is invalid.'
+    );
   });
 
-  test("supports correcting an invalid routes config", async ({
-    page,
-    dev,
-  }) => {
+  test("supports correcting an invalid route config", async ({ page, dev }) => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
@@ -104,7 +105,7 @@ test.describe("routes config", () => {
     }).toPass();
   });
 
-  test("supports correcting an invalid routes config module graph", async ({
+  test("supports correcting an invalid route config module graph", async ({
     page,
     dev,
   }) => {
@@ -162,7 +163,7 @@ test.describe("routes config", () => {
     }).toPass();
   });
 
-  test("supports correcting a missing routes config", async ({ page, dev }) => {
+  test("supports correcting a missing route config", async ({ page, dev }) => {
     let files: Files = async ({ port }) => ({
       "vite.config.js": await viteConfig.basic({ port }),
       "app/routes.ts": js`
@@ -223,5 +224,29 @@ test.describe("routes config", () => {
         "Test route 2"
       );
     }).toPass();
+  });
+
+  test("supports absolute route file paths", async ({ page, dev }) => {
+    let files: Files = async ({ port }) => ({
+      "vite.config.js": await viteConfig.basic({ port }),
+      "app/routes.ts": js`
+        import path from "node:path";
+        import { type RouteConfig } from "@react-router/dev/routes";
+
+        export const routes: RouteConfig = [
+          {
+            file: path.resolve(import.meta.dirname, "test-route.tsx"),
+            index: true,
+          },
+        ];
+      `,
+      "app/test-route.tsx": `
+        export default () => <div data-test-route>Test route</div>
+      `,
+    });
+    let { port } = await dev(files);
+
+    await page.goto(`http://localhost:${port}/`, { waitUntil: "networkidle" });
+    await expect(page.locator("[data-test-route]")).toHaveText("Test route");
   });
 });

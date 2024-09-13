@@ -73,6 +73,16 @@ const files = {
       };
     }
 
+    class MyClass {
+      a: string
+      b: bigint
+      constructor(a: string, b: bigint) {
+        this.a = a
+        this.b = b
+      }
+      c() {}
+    }
+
     export function loader({ request }) {
       if (new URL(request.url).searchParams.has("error")) {
         throw new Error("Loader Error");
@@ -80,6 +90,8 @@ const files = {
       return {
         message: "DATA",
         date: new Date("${ISO_DATE}"),
+        function: () => {},
+        class: new MyClass("hello", BigInt(1)),
       };
     }
 
@@ -98,7 +110,7 @@ const files = {
   `,
 
   "app/routes/data-with-response.tsx": js`
-    import { useActionData, useLoaderData, unstable_data as data } from "react-router";
+    import { useActionData, useLoaderData, data } from "react-router";
 
     export function headers ({ actionHeaders, loaderHeaders, errorHeaders }) {
       if ([...actionHeaders].length > 0) {
@@ -115,6 +127,16 @@ const files = {
       }, { status: 201, headers: { 'X-Action': 'yes' }});
     }
 
+    class MyClass {
+      a: string
+      b: Date
+      constructor(a: string, b: Date) {
+        this.a = a
+        this.b = b
+      }
+      c() {}
+    }
+
     export function loader({ request }) {
       if (new URL(request.url).searchParams.has("error")) {
         throw new Error("Loader Error");
@@ -122,6 +144,8 @@ const files = {
       return data({
         message: "DATA",
         date: new Date("${ISO_DATE}"),
+        function: () => {},
+        class: new MyClass("hello", BigInt(1)),
       }, { status: 206, headers: { 'X-Loader': 'yes' }});
     }
 
@@ -152,12 +176,9 @@ test.describe("single-fetch", () => {
   });
 
   test("loads proper data on single fetch loader requests", async () => {
-    let fixture = await createFixture(
-      {
-        files,
-      },
-      ServerMode.Development
-    );
+    let fixture = await createFixture({
+      files,
+    });
     let res = await fixture.requestSingleFetchData("/_root.data");
     expect(res.data).toEqual({
       root: {
@@ -169,9 +190,10 @@ test.describe("single-fetch", () => {
         data: null,
       },
     });
+    expect(res.headers.get("Content-Type")).toBe("text/x-script");
 
     res = await fixture.requestSingleFetchData("/data.data");
-    expect(res.data).toEqual({
+    expect(res.data).toStrictEqual({
       root: {
         data: {
           message: "ROOT",
@@ -181,6 +203,11 @@ test.describe("single-fetch", () => {
         data: {
           message: "DATA",
           date: new Date(ISO_DATE),
+          function: undefined,
+          class: {
+            a: "hello",
+            b: BigInt(1),
+          },
         },
       },
     });
@@ -210,12 +237,9 @@ test.describe("single-fetch", () => {
   });
 
   test("loads proper data on single fetch action requests", async () => {
-    let fixture = await createFixture(
-      {
-        files,
-      },
-      ServerMode.Development
-    );
+    let fixture = await createFixture({
+      files,
+    });
     let postBody = new URLSearchParams();
     postBody.set("key", "value");
     let res = await fixture.requestSingleFetchData("/data.data", {
@@ -229,14 +253,14 @@ test.describe("single-fetch", () => {
     });
   });
 
-  test("loads proper data (via unstable_data) on single fetch loader requests", async () => {
+  test("loads proper data (via data()) on single fetch loader requests", async () => {
     let fixture = await createFixture({
       files,
     });
     let res = await fixture.requestSingleFetchData("/data-with-response.data");
     expect(res.status).toEqual(206);
     expect(res.headers.get("X-Loader")).toEqual("yes");
-    expect(res.data).toEqual({
+    expect(res.data).toStrictEqual({
       root: {
         data: {
           message: "ROOT",
@@ -246,12 +270,17 @@ test.describe("single-fetch", () => {
         data: {
           message: "DATA",
           date: new Date(ISO_DATE),
+          function: undefined,
+          class: {
+            a: "hello",
+            b: BigInt(1),
+          },
         },
       },
     });
   });
 
-  test("loads proper data (via unstable_data) on single fetch action requests", async () => {
+  test("loads proper data (via data()) on single fetch action requests", async () => {
     let fixture = await createFixture({
       files,
     });
@@ -476,28 +505,28 @@ test.describe("single-fetch", () => {
     expect(urls).toEqual([]);
   });
 
-  test("does not revalidate on 4xx/5xx action responses (via unstable_data)", async ({
+  test("does not revalidate on 4xx/5xx action responses (via data())", async ({
     page,
   }) => {
     let fixture = await createFixture({
       files: {
         ...files,
         "app/routes/action.tsx": js`
-          import { Form, Link, useActionData, useLoaderData, useNavigation, unstable_data } from 'react-router';
+          import { Form, Link, useActionData, useLoaderData, useNavigation, data } from 'react-router';
 
           export async function action({ request }) {
             let fd = await request.formData();
             if (fd.get('throw') === "5xx") {
-              throw unstable_data("Thrown 500", { status: 500 });
+              throw data("Thrown 500", { status: 500 });
             }
             if (fd.get('throw') === "4xx") {
-              throw unstable_data("Thrown 400", { status: 400 });
+              throw data("Thrown 400", { status: 400 });
             }
             if (fd.get('return') === "5xx") {
-              return unstable_data("Returned 500", { status: 500 });
+              return data("Returned 500", { status: 500 });
             }
             if (fd.get('return') === "4xx") {
-              return unstable_data("Returned 400", { status: 400 });
+              return data("Returned 400", { status: 400 });
             }
             return null;
           }
@@ -982,28 +1011,25 @@ test.describe("single-fetch", () => {
   });
 
   test("processes thrown action redirects via Response", async ({ page }) => {
-    let fixture = await createFixture(
-      {
-        files: {
-          ...files,
-          "app/routes/data.tsx": js`
-            import { redirect } from 'react-router';
-            export function action() {
-              throw redirect('/target');
-            }
-            export default function Component() {
-              return null
-            }
-          `,
-          "app/routes/target.tsx": js`
-            export default function Component() {
-              return <h1 id="target">Target</h1>
-            }
-          `,
-        },
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from 'react-router';
+          export function action() {
+            throw redirect('/target');
+          }
+          export default function Component() {
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
       },
-      ServerMode.Development
-    );
+    });
 
     console.error = () => {};
 
@@ -1028,7 +1054,7 @@ test.describe("single-fetch", () => {
     });
     expect(status).toBe(202);
 
-    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton("/data");
@@ -1037,28 +1063,25 @@ test.describe("single-fetch", () => {
   });
 
   test("processes returned action redirects via Response", async ({ page }) => {
-    let fixture = await createFixture(
-      {
-        files: {
-          ...files,
-          "app/routes/data.tsx": js`
-            import { redirect } from 'react-router';
-            export function action() {
-              return redirect('/target');
-            }
-            export default function Component() {
-              return null
-            }
-          `,
-          "app/routes/target.tsx": js`
-            export default function Component() {
-              return <h1 id="target">Target</h1>
-            }
-          `,
-        },
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/data.tsx": js`
+          import { redirect } from 'react-router';
+          export function action() {
+            return redirect('/target');
+          }
+          export default function Component() {
+            return null
+          }
+        `,
+        "app/routes/target.tsx": js`
+          export default function Component() {
+            return <h1 id="target">Target</h1>
+          }
+        `,
       },
-      ServerMode.Development
-    );
+    });
 
     let res = await fixture.requestDocument("/data", {
       method: "post",
@@ -1081,7 +1104,7 @@ test.describe("single-fetch", () => {
     });
     expect(status).toBe(202);
 
-    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let appFixture = await createAppFixture(fixture);
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickSubmitButton("/data");
@@ -1542,69 +1565,243 @@ test.describe("single-fetch", () => {
     );
   });
 
-  test.describe("client loaders", () => {
-    test("when no routes have client loaders", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+  test("Strips ?_routes query param from loader/action requests", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { Link } from "react-router";
+          export default function Component() {
+            return <Link to="/parent/a">Go to /parent/a</Link>;
+          }
+        `,
+        "app/routes/parent.tsx": js`
+          import { Link, Outlet, useLoaderData } from "react-router";
+          export function loader({ request }) {
+            return { url: request.url };
+          }
+          export default function Component() {
+            return (
+              <>
+                <p id="parent">Parent loader URL: {useLoaderData().url}</p>
+                <Outlet/>
+              </>
+            );
+          }
+        `,
+        "app/routes/parent.a.tsx": js`
+          import { useLoaderData } from "react-router";
+          export function loader({ request }) {
+            return { url: request.url };
+          }
+          export async function clientLoader({ request, serverLoader }) {
+            let serverData = await serverLoader();
+            return {
+              serverUrl: serverData.url,
+              clientUrl: request.url
+            }
+          }
+          export default function Component() {
+            let data = useLoaderData();
+            return (
+              <>
+                <p id="a-server">A server loader URL: {data.serverUrl}</p>
+                <p id="a-client">A client loader URL: {data.clientUrl}</p>
+              </>
+            );
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes(".data")) {
+        urls.push(req.url());
+      }
+    });
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+    await app.goto("/");
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+    await app.clickLink("/parent/a");
+    await page.waitForSelector("#a-server");
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+    // HTTP Requests contained routes params
+    expect(urls.length).toBe(2);
+    expect(urls[0].endsWith("/parent/a.data?_routes=routes%2Fparent.a")).toBe(
+      true
+    );
+    expect(
+      urls[1].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent")
+    ).toBe(true);
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+    // But loaders don't receive any routes params
+    expect(await app.getHtml("#parent")).toMatch(
+      />Parent loader URL: http:\/\/localhost:\d+\/parent\/a</
+    );
+    expect(await app.getHtml("#a-server")).toMatch(
+      />A server loader URL: http:\/\/localhost:\d+\/parent\/a</
+    );
+    expect(await app.getHtml("#a-client")).toMatch(
+      />A client loader URL: http:\/\/localhost:\d+\/parent\/a</
+    );
+  });
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+  test("Action requests do not use _routes and do not call loaders on the server", async ({
+    page,
+  }) => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/page.tsx": js`
+          import { Form, useActionData, useLoaderData } from "react-router";
+          let count = 0;
+          export function loader({ request }) {
+            return { count: ++count };
+          }
+          export function action({ request }) {
+            return { message: "ACTION" };
+          }
+          export default function Component() {
+            let data = useLoaderData();
+            let actionData = useActionData();
+            return (
+              <>
+                <p id="data">{"Count:" + data.count}</p>
+                <Form method="post">
+                  <button type="submit">Submit</button>
+                  {actionData ? <p id="action">{actionData.message}</p> : null}
+                </Form>
+              </>
+            )
+          }
+        `,
+      },
+    });
+    let appFixture = await createAppFixture(fixture);
+    let app = new PlaywrightFixture(appFixture, page);
+
+    let urls: string[] = [];
+    page.on("request", (req) => {
+      if (req.url().includes(".data")) {
+        urls.push(req.method() + " " + req.url());
+      }
+    });
+
+    await app.goto("/page");
+    expect(await app.getHtml("#data")).toContain("Count:1");
+
+    await app.clickSubmitButton("/page");
+    await page.waitForSelector("#action");
+    expect(await app.getHtml("#data")).toContain("Count:2");
+
+    // HTTP Requests contained routes params
+    expect(urls).toEqual([
+      expect.stringMatching(/POST .*\/page.data$/),
+      expect.stringMatching(/GET .*\/page.data$/),
+    ]);
+  });
+
+  test("does not try to encode a turbo-stream body into 304 responses", async () => {
+    let fixture = await createFixture({
+      files: {
+        ...files,
+        "app/routes/_index.tsx": js`
+          import { useLoaderData } from "react-router";
+
+          const eTag = "1234";
+          export function loader({ request }) {
+            if (request.headers.get("If-None-Match") === eTag) {
+              throw new Response(null, { status: 304 });
+            }
+            return { message: "Hello from the loader!" };
+          };
+          export default function Index() {
+            const { message } = useLoaderData<typeof loader>();
+            return <h1>{message}</h1>
+          }
+        `,
+      },
+    });
+
+    // Document requests
+    let documentRes = await fixture.requestDocument("/");
+    let html = await documentRes.text();
+    expect(html).toContain("<body>");
+    expect(html).toContain("<h1>Hello from the loader!</h1>");
+    documentRes = await fixture.requestDocument("/", {
+      headers: {
+        "If-None-Match": "1234",
+      },
+    });
+    expect(documentRes.status).toBe(304);
+    expect(await documentRes.text()).toBe("");
+
+    // Data requests
+    let dataRes = await fixture.requestSingleFetchData("/_root.data");
+    expect(dataRes.data).toEqual({
+      root: {
+        data: {
+          message: "ROOT",
         },
-        ServerMode.Development
-      );
+      },
+      "routes/_index": {
+        data: {
+          message: "Hello from the loader!",
+        },
+      },
+    });
+    dataRes = await fixture.requestSingleFetchData("/_root.data", {
+      headers: {
+        "If-None-Match": "1234",
+      },
+    });
+    expect(dataRes.status).toBe(304);
+    expect(dataRes.data).toBeNull();
+  });
+
+  test.describe("revalidations/_routes param", () => {
+    test("does not make a server call if no loaders need to run", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          "app/root.tsx": js`
+            import { Link, Links, Meta, Outlet, Scripts } from "react-router";
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Link to="/">Home</Link><br/>
+                    <Link to="/a/b">/a/b</Link><br/>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+          "app/routes/a.tsx": js`
+            import { Outlet } from "react-router";
+            export default function Root() {
+              return <Outlet />;
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            export default function Root() {
+              return <h1>B</h1>;
+            }
+          `,
+        },
+      });
 
       let urls: string[] = [];
       page.on("request", (req) => {
@@ -1613,7 +1810,453 @@ test.describe("single-fetch", () => {
         }
       });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/");
+
+      await app.clickLink("/a/b");
+      await page.waitForSelector("h1");
+      expect(await app.getHtml("h1")).toBe("<h1>B</h1>");
+      expect(urls.length).toBe(0);
+    });
+
+    test("calls reused parent routes by default", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+            export default function Component() {
+              return <Link to="/parent/a">Go to /parent/a</Link>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet, useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return (
+                <>
+                  <p id="parent">Parent Count: {useLoaderData().count}</p>
+                  <Link to="/parent/a">Go to /parent/a</Link>
+                  <Link to="/parent/b">Go to /parent/b</Link>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="a">A Count: {useLoaderData().count}</p>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="b">B Count: {useLoaderData().count}</p>;
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      await app.goto("/");
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 1");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/parent/a.data")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/b");
+      await page.waitForSelector("#b");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 2");
+      expect(await app.getHtml("#b")).toContain("B Count: 1");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/parent/b.data")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 3");
+      expect(await app.getHtml("#a")).toContain("A Count: 2");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/parent/a.data")).toBe(true);
+    });
+
+    test("allows reused routes to opt out via shouldRevalidate", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+            export default function Component() {
+              return <Link to="/parent/a">Go to /parent/a</Link>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet, useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export default function Component() {
+              return (
+                <>
+                  <p id="parent">Parent Count: {useLoaderData().count}</p>
+                  <Link to="/parent/a">Go to /parent/a</Link>
+                  <Link to="/parent/b">Go to /parent/b</Link>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="a">A Count: {useLoaderData().count}</p>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="b">B Count: {useLoaderData().count}</p>;
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      await app.goto("/");
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 1");
+      expect(urls.length).toBe(1);
+      // Not a revalidation on the first navigation so no params
+      expect(urls[0].endsWith("/parent/a.data")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/b");
+      await page.waitForSelector("#b");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#b")).toContain("B Count: 1");
+      expect(urls.length).toBe(1);
+      // Don't reload the parent route
+      expect(
+        urls[0].endsWith("/parent/b.data?_routes=root%2Croutes%2Fparent.b")
+      ).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 2");
+      expect(urls.length).toBe(1);
+      // Don't reload the parent route
+      expect(
+        urls[0].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a")
+      ).toBe(true);
+    });
+
+    test("allows reused routes to opt out via shouldRevalidate (w/clientLoader)", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+            export default function Component() {
+              return <Link to="/parent/a">Go to /parent/a</Link>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet, useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export function clientLoader({ serverLoader }) {
+              return serverLoader()
+            }
+            export default function Component() {
+              return (
+                <>
+                  <p id="parent">Parent Count: {useLoaderData().count}</p>
+                  <Link to="/parent/a">Go to /parent/a</Link>
+                  <Link to="/parent/b">Go to /parent/b</Link>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="a">A Count: {useLoaderData().count}</p>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="b">B Count: {useLoaderData().count}</p>;
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      await app.goto("/");
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 1");
+      expect(urls.length).toBe(2);
+      // Client loader triggers 2 requests on the first navigation
+      expect(urls[0].endsWith("/parent/a.data?_routes=routes%2Fparent")).toBe(
+        true
+      );
+      expect(
+        urls[1].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a")
+      ).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/b");
+      await page.waitForSelector("#b");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#b")).toContain("B Count: 1");
+      expect(urls.length).toBe(1);
+      // Don't reload the parent route
+      expect(
+        urls[0].endsWith("/parent/b.data?_routes=root%2Croutes%2Fparent.b")
+      ).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 2");
+      expect(urls.length).toBe(1);
+      // Don't reload the parent route
+      expect(
+        urls[0].endsWith("/parent/a.data?_routes=root%2Croutes%2Fparent.a")
+      ).toBe(true);
+    });
+
+    test("does not add a _routes param for routes without loaders", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+            export default function Component() {
+              return <Link to="/parent/a">Go to /parent/a</Link>;
+            }
+          `,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet, useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export default function Component() {
+              return (
+                <>
+                  <p id="parent">Parent Count: {useLoaderData().count}</p>
+                  <Link to="/parent/a">Go to /parent/a</Link>
+                  <Link to="/parent/b">Go to /parent/b</Link>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            import { useLoaderData } from "react-router";
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <p id="a">A Count: {useLoaderData().count}</p>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            export default function Component() {
+              return <p id="b">B</p>;
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      await app.goto("/");
+
+      await app.clickLink("/parent/a");
+      await page.waitForSelector("#a");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#a")).toContain("A Count: 1");
+      expect(urls.length).toBe(1);
+      // Not a revalidation on the first navigation so no params
+      expect(urls[0].endsWith("/parent/a.data")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/b");
+      await page.waitForSelector("#b");
+      expect(await app.getHtml("#parent")).toContain("Parent Count: 1");
+      expect(await app.getHtml("#b")).toContain("B");
+      expect(urls.length).toBe(1);
+      // Don't reload the parent route
+      expect(urls[0].endsWith("/parent/b.data?_routes=root")).toBe(true);
+      urls = [];
+    });
+  });
+
+  test.describe("client loaders", () => {
+    test("when no routes have client loaders", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
+
+            export function loader() {
+              return { message: "A server loader" };
+            }
+
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
+
+            export function loader() {
+              return { message: "B server loader" };
+            }
+
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
+
+            export function  loader() {
+              return { message: "C server loader" };
+            }
+
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.method() === "GET" && req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await app.clickLink("/a/b/c");
@@ -1627,72 +2270,69 @@ test.describe("single-fetch", () => {
     });
 
     test("when one route has a client loader", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+            export function loader() {
+              return { message: "A server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+            export function loader() {
+              return { message: "B server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+            export function  loader() {
+              return { message: "C server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (C client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
         },
-        ServerMode.Development
-      );
+      });
 
       let urls: string[] = [];
       page.on("request", (req) => {
@@ -1701,7 +2341,7 @@ test.describe("single-fetch", () => {
         }
       });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await app.clickLink("/a/b/c");
@@ -1712,87 +2352,84 @@ test.describe("single-fetch", () => {
         "C server loader (C client loader)"
       );
 
-      // A/B can be loaded together, C needs it's own call due to it's clientLoader
+      // root/A/B can be loaded together, C needs it's own call due to it's clientLoader
       expect(urls.sort()).toEqual([
         expect.stringMatching(
-          /\/a\/b\/c\.data\?_routes=routes%2Fa%2Croutes%2Fa\.b$/
+          /\/a\/b\/c\.data\?_routes=root%2Croutes%2Fa%2Croutes%2Fa\.b$/
         ),
         expect.stringMatching(/\/a\/b\/c\.data\?_routes=routes%2Fa\.b\.c$/),
       ]);
     });
 
     test("when multiple routes have client loaders", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+            export function loader() {
+              return { message: "A server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+            export function loader() {
+              return { message: "B server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (B client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (B client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+            export function  loader() {
+              return { message: "C server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (C client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
         },
-        ServerMode.Development
-      );
+      });
 
       let urls: string[] = [];
       page.on("request", (req) => {
@@ -1801,7 +2438,7 @@ test.describe("single-fetch", () => {
         }
       });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await app.clickLink("/a/b/c");
@@ -1814,92 +2451,88 @@ test.describe("single-fetch", () => {
         "C server loader (C client loader)"
       );
 
-      // B/C have client loaders so they get individual calls, which leaves A
-      // getting it's own "individual" since it's the last route standing
+      // B/C have client loaders so they get individual calls, root/A go together
       expect(urls.sort()).toEqual([
-        expect.stringMatching(/\/a\/b\/c\.data\?_routes=routes%2Fa$/),
+        expect.stringMatching(/\/a\/b\/c\.data\?_routes=root%2Croutes%2Fa$/),
         expect.stringMatching(/\/a\/b\/c\.data\?_routes=routes%2Fa\.b$/),
         expect.stringMatching(/\/a\/b\/c\.data\?_routes=routes%2Fa\.b\.c$/),
       ]);
     });
 
     test("when all routes have client loaders", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+            export function loader() {
+              return { message: "A server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (A client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (A client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+            export function loader() {
+              return { message: "B server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (B client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (B client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+            export function  loader() {
+              return { message: "C server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (C client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
         },
-        ServerMode.Development
-      );
+      });
 
       let urls: string[] = [];
       page.on("request", (req) => {
@@ -1908,7 +2541,7 @@ test.describe("single-fetch", () => {
         }
       });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/");
       await app.clickLink("/a/b/c");
@@ -1923,8 +2556,9 @@ test.describe("single-fetch", () => {
         "C server loader (C client loader)"
       );
 
-      // A/B/C all have client loaders so they get individual calls
+      // root/A/B/C all have client loaders so they get individual calls
       expect(urls.sort()).toEqual([
+        expect.stringMatching(/\/a\/b\/c.data\?_routes=root$/),
         expect.stringMatching(/\/a\/b\/c.data\?_routes=routes%2Fa$/),
         expect.stringMatching(/\/a\/b\/c.data\?_routes=routes%2Fa.b$/),
         expect.stringMatching(/\/a\/b\/c.data\?_routes=routes%2Fa.b.c$/),
@@ -1932,82 +2566,324 @@ test.describe("single-fetch", () => {
     });
   });
 
+  test.describe("fetchers", () => {
+    test("Fetcher loaders call singular routes", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Outlet } from "react-router";
+            export default function Comp() {
+              return <Outlet />;
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { useFetcher } from "react-router";
+            export function loader() {
+              return { message: 'LOADER' };
+            }
+            export default function Comp() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <button id="load" onClick={() => fetcher.load('/a/b')}>Load</button>
+                  {fetcher.data ? <p id="data">{fetcher.data.message}</p> : null}
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.method() === "GET" && req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a/b");
+      await app.clickElement("#load");
+      await page.waitForSelector("#data");
+      expect(await app.getHtml("#data")).toContain("LOADER");
+
+      // No clientLoaders so we can make a single parameter-less fetch
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/a/b.data?_routes=routes%2Fa.b")).toBe(true);
+    });
+
+    test("Fetcher actions call singular routes", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Outlet } from "react-router";
+            export default function Comp() {
+              return <Outlet />;
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { useFetcher } from "react-router";
+            export function action() {
+              return { message: 'ACTION' };
+            }
+            export default function Comp() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <button id="submit" onClick={() => {
+                    fetcher.submit({}, {
+                      method: 'post',
+                      action: '/a/b'
+                    });
+                  }}>
+                    Load
+                  </button>
+                  {fetcher.data ? <p id="data">{fetcher.data.message}</p> : null}
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.method() === "GET" && req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a/b");
+      await app.clickElement("#submit");
+      await page.waitForSelector("#data");
+      expect(await app.getHtml("#data")).toContain("ACTION");
+
+      // No clientLoaders so we can make a single parameter-less fetch
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/a/b.data")).toBe(true);
+    });
+
+    test("Fetcher loads do not revalidate on GET navigations by default", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet, useFetcher } from "react-router";
+            export default function Component() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <Link to="/parent/a">Go to /parent/a</Link>
+                  <Link to="/parent/b">Go to /parent/b</Link>
+                  <button id="load" onClick={() => fetcher.load('/fetch')}>
+                    Load Fetcher
+                  </button>
+                  {fetcher.data ? <p id="fetch">Fetch Count: {fetcher.data.count}</p> : null}
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            export default function Component() {
+              return <p id="a">A</p>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            export default function Component() {
+              return <p id="b">B</p>;
+            }
+          `,
+          "app/routes/fetch.tsx": js`
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export default function Component() {
+              return <h1>Fetch</h1>;
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      await app.goto("/parent/a");
+      await app.clickElement("#load");
+      await page.waitForSelector("#fetch");
+      expect(await app.getHtml("#fetch")).toContain("Fetch Count: 1");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/fetch.data?_routes=routes%2Ffetch")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/b");
+      await page.waitForSelector("#b");
+      expect(await app.getHtml("#fetch")).toContain("Fetch Count: 1");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/parent/b.data")).toBe(true);
+    });
+
+    test("Fetcher loads can opt into revalidation on GET navigations", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/parent.tsx": js`
+            import { Link, Outlet, useFetcher } from "react-router";
+            export default function Component() {
+              let fetcher = useFetcher();
+              return (
+                <>
+                  <Link to="/parent/a">Go to /parent/a</Link>
+                  <Link to="/parent/b">Go to /parent/b</Link>
+                  <button id="load" onClick={() => fetcher.load('/fetch')}>
+                    Load Fetcher
+                  </button>
+                  {fetcher.data ? <p id="fetch">Fetch Count: {fetcher.data.count}</p> : null}
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/parent.a.tsx": js`
+            export default function Component() {
+              return <p id="a">A</p>;
+            }
+          `,
+          "app/routes/parent.b.tsx": js`
+            export default function Component() {
+              return <p id="b">B</p>;
+            }
+          `,
+          "app/routes/fetch.tsx": js`
+            let count = 0;
+            export function loader({ request }) {
+              return { count: ++count };
+            }
+            export function shouldRevalidate() {
+              return true;
+            }
+            export default function Component() {
+              return <h1>Fetch</h1>;
+            }
+          `,
+        },
+      });
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+
+      let urls: string[] = [];
+      page.on("request", (req) => {
+        if (req.url().includes(".data")) {
+          urls.push(req.url());
+        }
+      });
+
+      await app.goto("/parent/a");
+      await app.clickElement("#load");
+      await page.waitForSelector("#fetch");
+      expect(await app.getHtml("#fetch")).toContain("Fetch Count: 1");
+      expect(urls.length).toBe(1);
+      expect(urls[0].endsWith("/fetch.data?_routes=routes%2Ffetch")).toBe(true);
+      urls = [];
+
+      await app.clickLink("/parent/b");
+      await page.waitForSelector("#b");
+      expect(await app.getHtml("#fetch")).toContain("Fetch Count: 2");
+      expect(urls.length).toBe(2);
+      expect(urls[0].endsWith("/fetch.data?_routes=routes%2Ffetch")).toBe(true);
+      expect(urls[1].endsWith("/parent/b.data")).toBe(true);
+    });
+  });
+
   test.describe("prefetching", () => {
     test("when no routes have client loaders", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/_index.tsx": js`
-              import {  Link } from "react-router";
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import {  Link } from "react-router";
 
-              export default function Index() {
-                return (
-                  <nav>
-                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
-                  </nav>
-                );
-              }
-            `,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Index() {
+              return (
+                <nav>
+                  <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                </nav>
+              );
+            }
+          `,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+            export function loader() {
+              return { message: "A server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+            export function loader() {
+              return { message: "B server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+            export function  loader() {
+              return { message: "C server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
         },
-        ServerMode.Development
-      );
+      });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
       // No clientLoaders so we can make a single parameter-less fetch
@@ -2019,287 +2895,454 @@ test.describe("single-fetch", () => {
     });
 
     test("when one route has a client loader", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/_index.tsx": js`
-              import {  Link } from "react-router";
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import {  Link } from "react-router";
 
-              export default function Index() {
-                return (
-                  <nav>
-                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
-                  </nav>
-                );
-              }
-            `,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Index() {
+              return (
+                <nav>
+                  <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                </nav>
+              );
+            }
+          `,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+            export function loader() {
+              return { message: "A server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+            export function loader() {
+              return { message: "B server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+            export function  loader() {
+              return { message: "C server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (C client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
         },
-        ServerMode.Development
-      );
+      });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
-      // A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
+      // root/A/B can be prefetched, C doesn't get prefetched due to its `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=routes%2Fa%2Croutes%2Fa.b']",
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa%2Croutes%2Fa.b']",
         { state: "attached" }
       );
       expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
     });
 
     test("when multiple routes have client loaders", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/_index.tsx": js`
-              import {  Link } from "react-router";
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import {  Link } from "react-router";
 
-              export default function Index() {
-                return (
-                  <nav>
-                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
-                  </nav>
-                );
-              }
-            `,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Index() {
+              return (
+                <nav>
+                  <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                </nav>
+              );
+            }
+          `,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+            export function loader() {
+              return { message: "A server loader" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+            export function loader() {
+              return { message: "B server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (B client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (B client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+            export function  loader() {
+              return { message: "C server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (C client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
         },
-        ServerMode.Development
-      );
+      });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
-      // Only A can get prefetched, B/C can't due to `clientLoader`
+      // root/A can get prefetched, B/C can't due to `clientLoader`
       await page.waitForSelector(
-        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=routes%2Fa']",
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa']",
         { state: "attached" }
       );
       expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
     });
 
     test("when all routes have client loaders", async ({ page }) => {
-      let fixture = await createFixture(
-        {
-          files: {
-            ...files,
-            "app/routes/_index.tsx": js`
-              import {  Link } from "react-router";
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/root.tsx": js`
+            import { Links, Meta, Outlet, Scripts } from "react-router";
+            export function loader() {
+              return {
+                message: "ROOT",
+              };
+            }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (root client loader)" };
+            }
+            export default function Root() {
+              return (
+                <html lang="en">
+                  <head>
+                    <Meta />
+                    <Links />
+                  </head>
+                  <body>
+                    <Outlet />
+                    <Scripts />
+                  </body>
+                </html>
+              );
+            }
+          `,
+          "app/routes/_index.tsx": js`
+            import {  Link } from "react-router";
 
-              export default function Index() {
-                return (
-                  <nav>
-                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
-                  </nav>
-                );
-              }
-            `,
-            "app/routes/a.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Index() {
+              return (
+                <nav>
+                  <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                </nav>
+              );
+            }
+          `,
+          "app/routes/a.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "A server loader" };
-              }
+            export function loader() {
+              return { message: "A server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (A client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (A client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>A</h1>
-                    <p id="a-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.tsx": js`
-              import { Outlet, useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
 
-              export function loader() {
-                return { message: "B server loader" };
-              }
+            export function loader() {
+              return { message: "B server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (B client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (B client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>B</h1>
-                    <p id="b-data">{data.message}</p>
-                    <Outlet/>
-                  </>
-                );
-              }
-            `,
-            "app/routes/a.b.c.tsx": js`
-              import { useLoaderData } from 'react-router';
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
 
-              export function  loader() {
-                return { message: "C server loader" };
-              }
+            export function  loader() {
+              return { message: "C server loader" };
+            }
 
-              export async function clientLoader({ serverLoader }) {
-                let data = await serverLoader();
-                return { message: data.message + " (C client loader)" };
-              }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
 
-              export default function Comp() {
-                let data = useLoaderData();
-                return (
-                  <>
-                    <h1>C</h1>
-                    <p id="c-data">{data.message}</p>
-                  </>
-                );
-              }
-            `,
-          },
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
         },
-        ServerMode.Development
-      );
+      });
 
-      let appFixture = await createAppFixture(fixture, ServerMode.Development);
+      let appFixture = await createAppFixture(fixture);
       let app = new PlaywrightFixture(appFixture, page);
       await app.goto("/", true);
 
       // No prefetching due to clientLoaders
       expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(0);
+    });
+
+    test("when a reused route opts out of revalidation", async ({ page }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Link, Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "A server loader" };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "B server loader" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
+            export function  loader() {
+              return { message: "C server loader" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a", true);
+
+      // A opted out of revalidation
+      await page.waitForSelector(
+        "link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b%2Croutes%2Fa.b.c']",
+        { state: "attached" }
+      );
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
+    });
+
+    test("when a reused route opts out of revalidation and another route has a clientLoader", async ({
+      page,
+    }) => {
+      let fixture = await createFixture({
+        files: {
+          ...files,
+          "app/routes/a.tsx": js`
+            import { Link, Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "A server loader" };
+            }
+            export function shouldRevalidate() {
+              return false;
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>A</h1>
+                  <p id="a-data">{data.message}</p>
+                  <nav>
+                    <Link to="/a/b/c" prefetch="render">/a/b/c</Link>
+                  </nav>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.tsx": js`
+            import { Outlet, useLoaderData } from 'react-router';
+            export function loader() {
+              return { message: "B server loader" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>B</h1>
+                  <p id="b-data">{data.message}</p>
+                  <Outlet/>
+                </>
+              );
+            }
+          `,
+          "app/routes/a.b.c.tsx": js`
+            import { useLoaderData } from 'react-router';
+            export function  loader() {
+              return { message: "C server loader" };
+            }
+            export async function clientLoader({ serverLoader }) {
+              let data = await serverLoader();
+              return { message: data.message + " (C client loader)" };
+            }
+            export default function Comp() {
+              let data = useLoaderData();
+              return (
+                <>
+                  <h1>C</h1>
+                  <p id="c-data">{data.message}</p>
+                </>
+              );
+            }
+          `,
+        },
+      });
+
+      let appFixture = await createAppFixture(fixture);
+      let app = new PlaywrightFixture(appFixture, page);
+      await app.goto("/a", true);
+
+      // A opted out of revalidation
+      await page.waitForSelector(
+        "nav link[rel='prefetch'][as='fetch'][href='/a/b/c.data?_routes=root%2Croutes%2Fa.b']",
+        { state: "attached" }
+      );
+      expect(await app.page.locator("nav link[as='fetch']").count()).toEqual(1);
     });
   });
 

@@ -23,7 +23,6 @@ import type {
 } from "./router/router";
 import { createRouter } from "./router/router";
 import type {
-  AgnosticPatchRoutesOnNavigationFunction,
   DataStrategyFunction,
   LazyRouteFunction,
   TrackedPromise,
@@ -35,6 +34,7 @@ import type {
   IndexRouteObject,
   Navigator,
   NonIndexRouteObject,
+  PatchRoutesOnNavigationFunction,
   RouteMatch,
   RouteObject,
   ViewTransitionContextObject,
@@ -130,9 +130,6 @@ export function mapRouteProperties(route: RouteObject) {
   return updates;
 }
 
-export interface PatchRoutesOnNavigationFunction
-  extends AgnosticPatchRoutesOnNavigationFunction<RouteMatch> {}
-
 /**
  * @category Routers
  */
@@ -144,8 +141,8 @@ export function createMemoryRouter(
     hydrationData?: HydrationState;
     initialEntries?: InitialEntry[];
     initialIndex?: number;
-    unstable_dataStrategy?: DataStrategyFunction;
-    unstable_patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+    dataStrategy?: DataStrategyFunction;
+    patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   }
 ): RemixRouter {
   return createRouter({
@@ -158,8 +155,8 @@ export function createMemoryRouter(
     hydrationData: opts?.hydrationData,
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    dataStrategy: opts?.dataStrategy,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
   }).initialize();
 }
 
@@ -220,8 +217,8 @@ export function RouterProvider({
       newState: RouterState,
       {
         deletedFetchers,
-        unstable_flushSync: flushSync,
-        unstable_viewTransitionOpts: viewTransitionOpts,
+        flushSync: flushSync,
+        viewTransitionOpts: viewTransitionOpts,
       }
     ) => {
       deletedFetchers.forEach((key) => fetcherData.current.delete(key));
@@ -233,12 +230,12 @@ export function RouterProvider({
 
       warnOnce(
         flushSync === false || reactDomFlushSyncImpl != null,
-        "You provided the `unstable_flushSync` option to a router update, " +
+        "You provided the `flushSync` option to a router update, " +
           "but you are not using the `<RouterProvider>` from `react-router/dom` " +
           "so `ReactDOM.flushSync()` is unavailable.  Please update your app " +
           'to `import { RouterProvider } from "react-router/dom"` and ensure ' +
           "you have `react-dom` installed as a dependency to use the " +
-          "`unstable_flushSync` option."
+          "`flushSync` option."
       );
 
       let isViewTransitionAvailable =
@@ -248,7 +245,7 @@ export function RouterProvider({
 
       warnOnce(
         viewTransitionOpts == null || isViewTransitionAvailable,
-        "You provided the `unstable_viewTransition` option to a router update, " +
+        "You provided the `viewTransition` option to a router update, " +
           "but you do not appear to be running in a DOM environment as " +
           "`window.startViewTransition` is not available."
       );

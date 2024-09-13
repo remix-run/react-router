@@ -8,8 +8,8 @@ import type {
   Params,
 } from "../router/utils";
 import type { AppData, AppLoadContext } from "./data";
-import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "../dom/ssr/components";
+import type { LinkDescriptor } from "../router/links";
 
 export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule | undefined;

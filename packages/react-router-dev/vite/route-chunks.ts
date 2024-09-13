@@ -2,7 +2,7 @@ import type { GeneratorOptions, GeneratorResult } from "@babel/generator";
 import invariant from "../invariant";
 import { type Cache, getOrSetFromCache } from "./cache";
 import {
-  type BabelTypes,
+  type Babel,
   type NodePath,
   parse,
   traverse,
@@ -10,14 +10,10 @@ import {
   t,
 } from "./babel";
 
-type Statement = BabelTypes.Statement;
-type Identifier = BabelTypes.Identifier;
+type Statement = Babel.Statement;
+type Identifier = Babel.Identifier;
 
-function codeToAst(
-  code: string,
-  cache: Cache,
-  cacheKey: string
-): BabelTypes.File {
+function codeToAst(code: string, cache: Cache, cacheKey: string): Babel.File {
   return getOrSetFromCache(cache, `${cacheKey}::codeToAst`, code, () =>
     parse(code, { sourceType: "module" })
   );
@@ -90,9 +86,7 @@ function getTopLevelStatementsForPaths(paths: Set<NodePath>): Set<Statement> {
   return topLevelStatements;
 }
 
-function getExportNames(
-  path: NodePath<BabelTypes.ExportDeclaration>
-): string[] {
+function getExportNames(path: NodePath<Babel.ExportDeclaration>): string[] {
   // export default ...;
   if (path.node.type === "ExportDefaultDeclaration") {
     return ["default"];
@@ -198,9 +192,9 @@ export function hasChunkableExport(
 }
 
 function replaceBody(
-  ast: BabelTypes.File,
+  ast: Babel.File,
   replacer: (body: Array<Statement>) => Array<Statement>
-): BabelTypes.File {
+): Babel.File {
   return {
     ...ast,
     program: {

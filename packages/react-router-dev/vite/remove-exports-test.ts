@@ -1,8 +1,15 @@
+import { generate, parse } from "./babel";
 import { removeExports } from "./remove-exports";
 
-describe("removeExports", () => {
+function transform(code: string, exportsToRemove: string[]) {
+  let ast = parse(code, { sourceType: "module" });
+  removeExports(ast, exportsToRemove);
+  return generate(ast);
+}
+
+describe("transform", () => {
   test("arrow function", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = () => {}
       export const serverExport_2 = () => {}
@@ -20,7 +27,7 @@ describe("removeExports", () => {
   });
 
   test("arrow function with dependencies", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverLib } from 'server-lib'
       import { clientLib } from 'client-lib'
@@ -52,7 +59,7 @@ describe("removeExports", () => {
   });
 
   test("function statement", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export function serverExport_1(){}
       export function serverExport_2(){}
@@ -70,7 +77,7 @@ describe("removeExports", () => {
   });
 
   test("function statement with dependencies", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverLib } from 'server-lib'
       import { clientLib } from 'client-lib'
@@ -110,7 +117,7 @@ describe("removeExports", () => {
   });
 
   test("object", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = {}
       export const serverExport_2 = {}
@@ -128,7 +135,7 @@ describe("removeExports", () => {
   });
 
   test("object with dependencies", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverLib } from 'server-lib'
       import { clientLib } from 'client-lib'
@@ -164,7 +171,7 @@ describe("removeExports", () => {
   });
 
   test("class", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export class serverExport_1 {}
       export class serverExport_2 {}
@@ -182,7 +189,7 @@ describe("removeExports", () => {
   });
 
   test("class with dependencies", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverLib } from 'server-lib'
       import { clientLib } from 'client-lib'
@@ -226,7 +233,7 @@ describe("removeExports", () => {
   });
 
   test("function call", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = globalFunction()
       export const serverExport_2 = globalFunction()
@@ -244,7 +251,7 @@ describe("removeExports", () => {
   });
 
   test("function call with dependencies", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverLib } from 'server-lib'
       import { clientLib } from 'client-lib'
@@ -276,7 +283,7 @@ describe("removeExports", () => {
   });
 
   test("iife", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = (() => {})()
       export const serverExport_2 = (() => {})()
@@ -294,7 +301,7 @@ describe("removeExports", () => {
   });
 
   test("iife with dependencies", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverLib } from 'server-lib'
       import { clientLib } from 'client-lib'
@@ -326,7 +333,7 @@ describe("removeExports", () => {
   });
 
   test("aggregated export", () => {
-    let result = removeExports(
+    let result = transform(
       `
       const serverExport_1 = 123
       const serverExport_2 = 123
@@ -352,7 +359,7 @@ describe("removeExports", () => {
   });
 
   test("aggregated export multiple", () => {
-    let result = removeExports(
+    let result = transform(
       `
       const serverExport_1 = 123
       const serverExport_2 = 123
@@ -374,7 +381,7 @@ describe("removeExports", () => {
   });
 
   test("aggregated export multiple mixed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       const removeMe_1 = 123
       const removeMe_2 = 123
@@ -397,7 +404,7 @@ describe("removeExports", () => {
   });
 
   test("re-export", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export { serverExport_1 } from './server/1'
       export { serverExport_2 } from './server/2'
@@ -415,7 +422,7 @@ describe("removeExports", () => {
   });
 
   test("re-export multiple", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export { serverExport_1, serverExport_2 } from './server'
       export { clientExport_1, clientExport_2 } from './client'
@@ -429,7 +436,7 @@ describe("removeExports", () => {
   });
 
   test("re-export multiple mixed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export { removeMe_1, keepMe_1 } from './1'
       export { removeMe_2, keepMe_2 } from './2'
@@ -444,7 +451,7 @@ describe("removeExports", () => {
   });
 
   test("re-export manual", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverExport_1 } from './server/1'
       import { serverExport_2 } from './server/2'
@@ -469,7 +476,7 @@ describe("removeExports", () => {
   });
 
   test("re-export manual multiple", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { serverExport_1, serverExport_2 } from './server'
       import { clientExport_1, clientExport_2 } from './client'
@@ -487,7 +494,7 @@ describe("removeExports", () => {
   });
 
   test("re-export manual multiple mixed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       import { removeMe_1, keepMe_1 } from './1'
       import { removeMe_2, keepMe_2 } from './2'
@@ -507,7 +514,7 @@ describe("removeExports", () => {
   });
 
   test("number", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = 123
       export const serverExport_2 = 123
@@ -525,7 +532,7 @@ describe("removeExports", () => {
   });
 
   test("string", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = 'string'
       export const serverExport_2 = 'string'
@@ -543,7 +550,7 @@ describe("removeExports", () => {
   });
 
   test("string reference", () => {
-    let result = removeExports(
+    let result = transform(
       `
       const SERVER_STRING = 'SERVER_STRING';
       const CLIENT_STRING = 'CLIENT_STRING';
@@ -565,7 +572,7 @@ describe("removeExports", () => {
   });
 
   test("null", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = null
       export const serverExport_2 = null
@@ -583,7 +590,7 @@ describe("removeExports", () => {
   });
 
   test("multiple variable declarators", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = null,
         serverExport_2 = null
@@ -601,11 +608,11 @@ describe("removeExports", () => {
   });
 
   test("multiple variable declarators mixed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const serverExport_1 = null,
         clientExport_1 = null
-      
+
       export const clientExport_2 = null,
         serverExport_2 = null
     `,
@@ -620,7 +627,7 @@ describe("removeExports", () => {
 
   test("array destructuring throws on removed export", () => {
     expect(() =>
-      removeExports(
+      transform(
         `
         export const [serverExport_1, serverExport_2] = [null, null]
 
@@ -635,7 +642,7 @@ describe("removeExports", () => {
 
   test("array rest destructuring throws on removed export", () => {
     expect(() =>
-      removeExports(
+      transform(
         `
         export const [...serverExport_1] = [null, null]
 
@@ -650,7 +657,7 @@ describe("removeExports", () => {
 
   test("nested array destructuring throws on removed export", () => {
     expect(() =>
-      removeExports(
+      transform(
         `
         export const [keepMe_1, [{ nested: [ { nested: [serverExport_2] } ] }] ] = nested;
       `,
@@ -662,7 +669,7 @@ describe("removeExports", () => {
   });
 
   test("array destructuring works when nothing is removed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const [clientExport_1, clientExport_2] = [null, null]
     `,
@@ -676,7 +683,7 @@ describe("removeExports", () => {
 
   test("object destructuring throws on removed export", () => {
     expect(() =>
-      removeExports(
+      transform(
         `
         export const { serverExport_1, serverExport_2 } = {}
 
@@ -691,7 +698,7 @@ describe("removeExports", () => {
 
   test("object rest destructuring throws on removed export", () => {
     expect(() =>
-      removeExports(
+      transform(
         `
         export const { ...serverExport_1 } = {}
 
@@ -706,7 +713,7 @@ describe("removeExports", () => {
 
   test("nested object destructuring throws on removed export", () => {
     expect(() =>
-      removeExports(
+      transform(
         `
         export const [keepMe_1, [{ nested: [ { nested: { serverExport_2 } } ] }]] = nested;
       `,
@@ -718,7 +725,7 @@ describe("removeExports", () => {
   });
 
   test("object destructuring works when nothing is removed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const { clientExport_1, clientExport_2 } = {}
     `,
@@ -734,7 +741,7 @@ describe("removeExports", () => {
   });
 
   test("default export", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const keepMe = null;
 
@@ -749,7 +756,7 @@ describe("removeExports", () => {
   });
 
   test("default export aggregated", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const keepMe = null;
 
@@ -764,7 +771,7 @@ describe("removeExports", () => {
   });
 
   test("default export aggregated mixed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       const keepMe = null;
 
@@ -782,7 +789,7 @@ describe("removeExports", () => {
   });
 
   test("default re-export", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const keepMe = null;
 
@@ -795,7 +802,7 @@ describe("removeExports", () => {
   });
 
   test("default re-export mixed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export { default, keepMe } from "./module";
     `,
@@ -808,7 +815,7 @@ describe("removeExports", () => {
   });
 
   test("nothing removed", () => {
-    let result = removeExports(
+    let result = transform(
       `
       export const clientExport_1 = () => {}
       export const clientExport_2 = () => {}

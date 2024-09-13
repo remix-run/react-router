@@ -504,9 +504,9 @@ test.describe("SPA Mode", () => {
           `,
           "src/routes.ts": js`
             import { type RouteConfig } from "@react-router/dev/routes";
-            import { remixRoutes } from "@react-router/remix-v2-routes";
+            import { flatRoutes } from "@react-router/fs-routes";
 
-            export const routes: RouteConfig = remixRoutes();
+            export const routes: RouteConfig = flatRoutes();
           `,
           "src/root.tsx": js`
             import {
@@ -593,9 +593,9 @@ test.describe("SPA Mode", () => {
           `,
           "src/routes.ts": js`
             import { type RouteConfig } from "@react-router/dev/routes";
-            import { remixRoutes } from "@react-router/remix-v2-routes";
+            import { flatRoutes } from "@react-router/fs-routes";
 
-            export const routes: RouteConfig = remixRoutes();
+            export const routes: RouteConfig = flatRoutes();
           `,
           "src/root.tsx": js`
             import {

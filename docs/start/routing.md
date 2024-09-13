@@ -36,13 +36,13 @@ export const routes: RouteConfig = [
 
 ## File System Routes
 
-If you prefer a file system routing convention, you can use the convention provided with Remix v2, but you can also make your own.
+If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
 
 ```tsx filename=app/routes.ts
 import { type RouteConfig } from "@react-router/dev/routes";
-import { remixRoutes } from "@react-router/remix-v2-routes";
+import { flatRoutes } from "@react-router/fs-routes";
 
-export const routes: RouteConfig = remixRoutes();
+export const routes: RouteConfig = flatRoutes();
 ```
 
 You can also mix routing conventions into a single array of routes.
@@ -52,11 +52,11 @@ import {
   type RouteConfig,
   route,
 } from "@react-router/dev/routes";
-import { remixRoutes } from "@react-router/remix-v2-routes";
+import { flatRoutes } from "@react-router/fs-routes";
 
 export const routes: RouteConfig = [
-  // Provide Remix v2 file system routes
-  ...(await remixRoutes()),
+  // Provide file system routes
+  ...(await flatRoutes()),
 
   // Then provide additional config routes
   route("/can/still/add/more", "./more.tsx"),
@@ -279,6 +279,6 @@ function Wizard() {
 
 Note that these routes do not participate in data loading, actions, code splitting, or any other route module features, so their use cases are more limited than those of the route module.
 
-[route_file_naming]: ../file-conventions/routes
+[file-route-conventions]: ../guides/file-route-conventions
 [outlet]: ../components/outlet
 [code_splitting]: ../discussion/code-splitting

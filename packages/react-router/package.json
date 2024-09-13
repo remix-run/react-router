@@ -42,7 +42,7 @@
     "react-router": "workspace:*",
     "set-cookie-parser": "^2.6.0",
     "source-map": "^0.7.3",
-    "turbo-stream": "2.3.0"
+    "turbo-stream": "2.4.0"
   },
   "devDependencies": {
     "@types/set-cookie-parser": "^2.4.1",

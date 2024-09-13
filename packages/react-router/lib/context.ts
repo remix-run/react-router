@@ -13,6 +13,8 @@ import type {
 import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
+  AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunctionArgs,
   AgnosticRouteMatch,
   LazyRouteFunction,
   TrackedPromise,
@@ -74,6 +76,12 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
+export type PatchRoutesOnNavigationFunctionArgs =
+  AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+
+export type PatchRoutesOnNavigationFunction =
+  AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
+
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
   // `NavigationContext` needs future since it doesn't have a `router` in all cases
@@ -124,8 +132,8 @@ export interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  unstable_flushSync?: boolean;
-  unstable_viewTransition?: boolean;
+  flushSync?: boolean;
+  viewTransition?: boolean;
 }
 
 /**

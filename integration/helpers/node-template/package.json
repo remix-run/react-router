@@ -22,7 +22,8 @@
   },
   "devDependencies": {
     "@react-router/dev": "workspace:*",
-    "@react-router/remix-v2-routes": "workspace:*",
+    "@react-router/fs-routes": "workspace:*",
+    "@react-router/remix-config-routes-adapter": "workspace:*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "@vanilla-extract/css": "^1.10.0",

@@ -34,7 +34,7 @@ export async function callRouteAction({
   routeId: string;
 }) {
   let result = await action({
-    request: stripDataParam(stripIndexParam(request)),
+    request: stripRoutesParam(stripIndexParam(request)),
     context: loadContext,
     params,
   });
@@ -63,7 +63,7 @@ export async function callRouteLoader({
   routeId: string;
 }) {
   let result = await loader({
-    request: stripDataParam(stripIndexParam(request)),
+    request: stripRoutesParam(stripIndexParam(request)),
     context: loadContext,
     params,
   });
@@ -111,9 +111,9 @@ function stripIndexParam(request: Request) {
   return new Request(url.href, init);
 }
 
-function stripDataParam(request: Request) {
+function stripRoutesParam(request: Request) {
   let url = new URL(request.url);
-  url.searchParams.delete("_data");
+  url.searchParams.delete("_routes");
   let init: RequestInit = {
     method: request.method,
     body: request.body,

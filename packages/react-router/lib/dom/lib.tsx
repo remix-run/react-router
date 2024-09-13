@@ -64,9 +64,12 @@ import {
   mergeRefs,
   usePrefetchBehavior,
 } from "./ssr/components";
-import type { PatchRoutesOnNavigationFunction } from "../components";
 import { Router, mapRouteProperties } from "../components";
-import type { RouteObject, NavigateOptions } from "../context";
+import type {
+  RouteObject,
+  NavigateOptions,
+  PatchRoutesOnNavigationFunction,
+} from "../context";
 import {
   DataRouterContext,
   DataRouterStateContext,
@@ -122,8 +125,8 @@ interface DOMRouterOpts {
   basename?: string;
   future?: Partial<FutureConfig>;
   hydrationData?: HydrationState;
-  unstable_dataStrategy?: DataStrategyFunction;
-  unstable_patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
+  dataStrategy?: DataStrategyFunction;
+  patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   window?: Window;
 }
 
@@ -141,8 +144,8 @@ export function createBrowserRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    dataStrategy: opts?.dataStrategy,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -161,8 +164,8 @@ export function createHashRouter(
     hydrationData: opts?.hydrationData || parseHydrationData(),
     routes,
     mapRouteProperties,
-    unstable_dataStrategy: opts?.unstable_dataStrategy,
-    unstable_patchRoutesOnNavigation: opts?.unstable_patchRoutesOnNavigation,
+    dataStrategy: opts?.dataStrategy,
+    patchRoutesOnNavigation: opts?.patchRoutesOnNavigation,
     window: opts?.window,
   }).initialize();
 }
@@ -517,14 +520,14 @@ export interface LinkProps
     Enables a [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) for this navigation.
 
     ```jsx
-    <Link to={to} unstable_viewTransition>
+    <Link to={to} viewTransition>
       Click me
     </Link>
     ```
 
     To apply specific styles for the transition, see {@link useViewTransitionState}
    */
-  unstable_viewTransition?: boolean;
+  viewTransition?: boolean;
 }
 
 const ABSOLUTE_URL_REGEX = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
@@ -561,7 +564,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       to,
       preventScrollReset,
-      unstable_viewTransition,
+      viewTransition,
       ...rest
     },
     forwardedRef
@@ -616,7 +619,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       target,
       preventScrollReset,
       relative,
-      unstable_viewTransition,
+      viewTransition,
     });
     function handleClick(
       event: React.MouseEvent<HTMLAnchorElement, MouseEvent>
@@ -800,7 +803,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       end = false,
       style: styleProp,
       to,
-      unstable_viewTransition,
+      viewTransition,
       children,
       ...rest
     },
@@ -815,7 +818,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       // Conditional usage is OK here because the usage of a data router is static
       // eslint-disable-next-line react-hooks/rules-of-hooks
       useViewTransitionState(path) &&
-      unstable_viewTransition === true;
+      viewTransition === true;
 
     let toPathname = navigator.encodeLocation
       ? navigator.encodeLocation(path).pathname
@@ -899,7 +902,7 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
         ref={ref}
         style={style}
         to={to}
-        unstable_viewTransition={unstable_viewTransition}
+        viewTransition={viewTransition}
       >
         {typeof children === "function" ? children(renderProps) : children}
       </Link>
@@ -1004,9 +1007,9 @@ export interface FormProps extends SharedFormProps {
    * Enables a [View
    * Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API)
    * for this navigation. To apply specific styles during the transition see
-   * {@link unstable_useViewTransitionState}.
+   * {@link useViewTransitionState}.
    */
-  unstable_viewTransition?: boolean;
+  viewTransition?: boolean;
 }
 
 type HTMLSubmitEvent = React.BaseSyntheticEvent<
@@ -1054,7 +1057,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
       onSubmit,
       relative,
       preventScrollReset,
-      unstable_viewTransition,
+      viewTransition,
       ...props
     },
     forwardedRef
@@ -1086,7 +1089,7 @@ export const Form = React.forwardRef<HTMLFormElement, FormProps>(
         state,
         relative,
         preventScrollReset,
-        unstable_viewTransition,
+        viewTransition,
       });
     };
 
@@ -1276,14 +1279,14 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
     state,
     preventScrollReset,
     relative,
-    unstable_viewTransition,
+    viewTransition,
   }: {
     target?: React.HTMLAttributeAnchorTarget;
     replace?: boolean;
     state?: any;
     preventScrollReset?: boolean;
     relative?: RelativeRoutingType;
-    unstable_viewTransition?: boolean;
+    viewTransition?: boolean;
   } = {}
 ): (event: React.MouseEvent<E, MouseEvent>) => void {
   let navigate = useNavigate();
@@ -1307,7 +1310,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
           state,
           preventScrollReset,
           relative,
-          unstable_viewTransition,
+          viewTransition,
         });
       }
     },
@@ -1321,7 +1324,7 @@ export function useLinkClickHandler<E extends Element = HTMLAnchorElement>(
       to,
       preventScrollReset,
       relative,
-      unstable_viewTransition,
+      viewTransition,
     ]
   );
 }
@@ -1560,7 +1563,7 @@ export function useSubmit(): SubmitFunction {
           body,
           formMethod: options.method || (method as HTMLFormMethod),
           formEncType: options.encType || (encType as FormEncType),
-          unstable_flushSync: options.unstable_flushSync,
+          flushSync: options.flushSync,
         });
       } else {
         await router.navigate(options.action || action, {
@@ -1572,8 +1575,8 @@ export function useSubmit(): SubmitFunction {
           replace: options.replace,
           state: options.state,
           fromRouteId: currentRouteId,
-          unstable_flushSync: options.unstable_flushSync,
-          unstable_viewTransition: options.unstable_viewTransition,
+          flushSync: options.flushSync,
+          viewTransition: options.viewTransition,
         });
       }
     },
@@ -1746,7 +1749,7 @@ export type FetcherWithComponents<TData> = Fetcher<TData> & {
        * This allows you to perform synchronous DOM actions immediately after the
        * update is flushed to the DOM.
        */
-      unstable_flushSync?: boolean;
+      flushSync?: boolean;
     }
   ) => Promise<void>;
 };
@@ -1835,7 +1838,7 @@ export function useFetcher<TData = any>({
 
   // Fetcher additions
   let load = React.useCallback(
-    async (href: string, opts?: { unstable_flushSync?: boolean }) => {
+    async (href: string, opts?: { flushSync?: boolean }) => {
       invariant(routeId, "No routeId available for fetcher.load()");
       await router.fetch(fetcherKey, routeId, href, opts);
     },
@@ -2160,10 +2163,10 @@ export function usePrompt({
 }
 
 /**
-  This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via {@link LinkProps.unstable_viewTransition} (or the `Form`, `submit`, or `navigate` call)
+  This hook returns `true` when there is an active [View Transition](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API) to the specified location. This can be used to apply finer-grained styles to elements to further customize the view transition. This requires that view transitions have been enabled for the given navigation via {@link LinkProps.viewTransition} (or the `Form`, `submit`, or `navigate` call)
 
   @category Hooks
-  @name unstable_useViewTransitionState
+  @name useViewTransitionState
  */
 export function useViewTransitionState(
   to: To,
@@ -2173,7 +2176,7 @@ export function useViewTransitionState(
 
   invariant(
     vtContext != null,
-    "`unstable_useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
+    "`useViewTransitionState` must be used within `react-router-dom`'s `RouterProvider`.  " +
       "Did you accidentally import `RouterProvider` from `react-router`?"
   );
 
@@ -2196,11 +2199,11 @@ export function useViewTransitionState(
   // destination.  This ensures that other PUSH navigations that reverse
   // an indicated transition apply.  I.e., on the list view you have:
   //
-  //   <NavLink to="/details/1" unstable_viewTransition>
+  //   <NavLink to="/details/1" viewTransition>
   //
   // If you click the breadcrumb back to the list view:
   //
-  //   <NavLink to="/list" unstable_viewTransition>
+  //   <NavLink to="/list" viewTransition>
   //
   // We should apply the transition because it's indicated as active going
   // from /list -> /details/1 and therefore should be active on the reverse

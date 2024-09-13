@@ -339,7 +339,7 @@ export function setup({
     routes: enhanceRoutes(routes),
     hydrationData,
     window: testWindow,
-    unstable_dataStrategy: dataStrategy,
+    dataStrategy: dataStrategy,
   });
 
   let fetcherData = getFetcherData(currentRouter);

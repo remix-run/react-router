@@ -23,14 +23,14 @@ export type {
 export type {
   ActionFunction,
   ActionFunctionArgs,
-  DataStrategyFunction as unstable_DataStrategyFunction,
-  DataStrategyFunctionArgs as unstable_DataStrategyFunctionArgs,
-  DataStrategyMatch as unstable_DataStrategyMatch,
+  DataStrategyFunction,
+  DataStrategyFunctionArgs,
+  DataStrategyMatch,
+  DataStrategyResult,
   DataWithResponseInit as UNSAFE_DataWithResponseInit,
   ErrorResponse,
   FormEncType,
   FormMethod,
-  HandlerResult as unstable_HandlerResult,
   HTMLFormMethod,
   JsonFunction,
   LazyRouteFunction,
@@ -58,7 +58,7 @@ export {
   IDLE_BLOCKER,
 } from "./lib/router/router";
 export {
-  data as unstable_data,
+  data,
   generatePath,
   isRouteErrorResponse,
   json,
@@ -78,6 +78,8 @@ export type {
   NavigateOptions,
   Navigator,
   NonIndexRouteObject,
+  PatchRoutesOnNavigationFunction,
+  PatchRoutesOnNavigationFunctionArgs,
   RouteMatch,
   RouteObject,
 } from "./lib/context";
@@ -93,7 +95,6 @@ export type {
   RouterProps,
   RouterProviderProps,
   RoutesProps,
-  PatchRoutesOnNavigationFunction as unstable_PatchRoutesOnNavigationFunction,
 } from "./lib/components";
 export type { NavigateFunction } from "./lib/hooks";
 export {
@@ -168,7 +169,7 @@ export {
   useFetchers,
   useBeforeUnload,
   usePrompt as unstable_usePrompt,
-  useViewTransitionState as unstable_useViewTransitionState,
+  useViewTransitionState as useViewTransitionState,
 } from "./lib/dom/lib";
 export type {
   FetcherSubmitOptions,
@@ -196,11 +197,6 @@ export {
 } from "./lib/dom/ssr/components";
 export type { ScriptsProps } from "./lib/dom/ssr/components";
 export type { EntryContext } from "./lib/dom/ssr/entry";
-export type {
-  HtmlLinkDescriptor,
-  LinkDescriptor,
-  PrefetchPageDescriptor,
-} from "./lib/dom/ssr/links";
 export type {
   ClientActionFunction,
   ClientActionFunctionArgs,
@@ -277,11 +273,10 @@ export type {
 export type { AppLoadContext } from "./lib/server-runtime/data";
 
 export type {
-  // TODO: (v7) Clean up code paths for these exports
-  // HtmlLinkDescriptor,
-  // LinkDescriptor,
   PageLinkDescriptor,
-} from "./lib/server-runtime/links";
+  HtmlLinkDescriptor,
+  LinkDescriptor,
+} from "./lib/router/links";
 
 export type { TypedResponse } from "./lib/server-runtime/responses";
 
