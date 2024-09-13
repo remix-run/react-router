@@ -1525,7 +1525,10 @@ export function createRouter(init: RouterInit): Router {
 
     let routesToUse = inFlightDataRoutes || dataRoutes;
     let loadingNavigation = opts && opts.overrideNavigation;
-    let matches = matchRoutes(routesToUse, location, basename);
+    let matches =
+      isUninterruptedRevalidation && inFlightDataRoutes == null
+        ? state.matches
+        : matchRoutes(routesToUse, location, basename);
     let flushSync = (opts && opts.flushSync) === true;
 
     let fogOfWar = checkFogOfWar(matches, routesToUse, location.pathname);
