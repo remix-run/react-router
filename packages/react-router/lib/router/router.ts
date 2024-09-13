@@ -2149,7 +2149,7 @@ export function createRouter(init: RouterInit): Router {
 
     let match = getTargetMatch(matches, path);
 
-    pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
+    let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
       await handleFetcherAction(
@@ -2160,6 +2160,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         fogOfWar.active,
         flushSync,
+        preventScrollReset,
         submission
       );
       return;
@@ -2176,6 +2177,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       fogOfWar.active,
       flushSync,
+      preventScrollReset,
       submission
     );
   }
@@ -2190,6 +2192,7 @@ export function createRouter(init: RouterInit): Router {
     requestMatches: AgnosticDataRouteMatch[],
     isFogOfWar: boolean,
     flushSync: boolean,
+    preventScrollReset: boolean,
     submission: Submission
   ) {
     interruptActiveLoads();
@@ -2303,6 +2306,7 @@ export function createRouter(init: RouterInit): Router {
           updateFetcherState(key, getLoadingFetcher(submission));
           return startRedirectNavigation(fetchRequest, actionResult, false, {
             fetcherSubmission: submission,
+            preventScrollReset,
           });
         }
       }
@@ -2411,7 +2415,8 @@ export function createRouter(init: RouterInit): Router {
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
-        false
+        false,
+        { preventScrollReset }
       );
     }
 
@@ -2424,7 +2429,8 @@ export function createRouter(init: RouterInit): Router {
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
-        false
+        false,
+        { preventScrollReset }
       );
     }
 
@@ -2491,6 +2497,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     isFogOfWar: boolean,
     flushSync: boolean,
+    preventScrollReset: boolean,
     submission?: Submission
   ) {
     let existingFetcher = state.fetchers.get(key);
@@ -2577,7 +2584,9 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         fetchRedirectIds.add(key);
-        await startRedirectNavigation(fetchRequest, result, false);
+        await startRedirectNavigation(fetchRequest, result, false, {
+          preventScrollReset,
+        });
         return;
       }
     }
@@ -2618,10 +2627,12 @@ export function createRouter(init: RouterInit): Router {
     {
       submission,
       fetcherSubmission,
+      preventScrollReset,
       replace,
     }: {
       submission?: Submission;
       fetcherSubmission?: Submission;
+      preventScrollReset?: boolean;
       replace?: boolean;
     } = {}
   ) {
@@ -2702,7 +2713,7 @@ export function createRouter(init: RouterInit): Router {
           formAction: location,
         },
         // Preserve these flags across redirects
-        preventScrollReset: pendingPreventScrollReset,
+        preventScrollReset: preventScrollReset || pendingPreventScrollReset,
         enableViewTransition: isNavigation
           ? pendingViewTransitionEnabled
           : undefined,
@@ -2719,7 +2730,7 @@ export function createRouter(init: RouterInit): Router {
         // Send fetcher submissions through for shouldRevalidate
         fetcherSubmission,
         // Preserve these flags across redirects
-        preventScrollReset: pendingPreventScrollReset,
+        preventScrollReset: preventScrollReset || pendingPreventScrollReset,
         enableViewTransition: isNavigation
           ? pendingViewTransitionEnabled
           : undefined,
