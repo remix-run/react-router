@@ -18,7 +18,7 @@ import type { ReactRouterConfig } from "@react-router/dev/vite";
 
 const require = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
+const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");

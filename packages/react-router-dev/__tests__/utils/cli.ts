@@ -57,7 +57,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
   // // so unless source code changes are not yet reflected in the build, prefer running the built `.js`.
   // // To get speed ups in dev, make sure you build before running tests or are running `pnpm watch`
   let sourceDir = path.resolve(__dirname, "../..");
-  let sourceTS = path.resolve(sourceDir, "cli.ts");
+  let sourceTS = path.resolve(sourceDir, "cli/index.ts");
   // // when the most recent change happened _anywhere_ within `packages/react-router-dev/`
 
   let sourceModified = await mtimeDir(sourceDir);
@@ -66,7 +66,7 @@ export const run = async (args: string[], options: execa.Options = {}) => {
     __dirname,
     "../../../../build/node_modules/@react-router/dev"
   );
-  let builtJS = path.resolve(buildDir, "dist/cli.js");
+  let builtJS = path.resolve(buildDir, "dist/cli/index.js");
   let buildModified = await mtimeDir(buildDir);
 
   // sometimes `pnpm watch` is so fast that the build mtime is reported

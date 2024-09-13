@@ -291,7 +291,7 @@ export async function createFixtureProject(
   await fse.copy(integrationTemplateDir, projectDir);
   // let reactRouterDev = path.join(
   //   projectDir,
-  //   "node_modules/@react-router/dev/dist/cli.js"
+  //   "node_modules/@react-router/dev/dist/cli/index.js"
   // );
   // await fse.chmod(reactRouterDev, 0o755);
   // await fse.ensureSymlink(
@@ -343,7 +343,7 @@ function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
   // tested.
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
 
-  let reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
+  let reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
 
   let buildArgs: string[] = [reactRouterBin, "build"];
 

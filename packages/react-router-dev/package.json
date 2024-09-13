@@ -12,13 +12,7 @@
     "directory": "packages/react-router-dev"
   },
   "license": "MIT",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
     "./routes": {
       "types": "./dist/routes.d.ts",
       "default": "./dist/routes.js"
