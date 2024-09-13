@@ -1,6 +1,113 @@
-import { route, layout, index, relative } from "../config/routes";
+import {
+  validateRouteConfig,
+  route,
+  layout,
+  index,
+  relative,
+} from "../config/routes";
 
-describe("routes config", () => {
+describe("route config", () => {
+  describe("validateRouteConfig", () => {
+    it("validates a route config", () => {
+      expect(
+        validateRouteConfig({
+          routeConfigFile: "routes.ts",
+          routeConfig: [
+            route("parent", "parent.tsx", [route("child", "child.tsx")]),
+          ],
+        }).valid
+      ).toBe(true);
+    });
+
+    it("is invalid when not an array", () => {
+      let result = validateRouteConfig({
+        routeConfigFile: "routes.ts",
+        routeConfig: route("path", "file.tsx"),
+      });
+
+      expect(result.valid).toBe(false);
+      expect(!result.valid && result.message).toMatchInlineSnapshot(
+        `"Route config in "routes.ts" must be an array."`
+      );
+    });
+
+    it("is invalid when route is a promise", () => {
+      let result = validateRouteConfig({
+        routeConfigFile: "routes.ts",
+        /* @ts-expect-error */
+        routeConfig: [route("parent", "parent.tsx", [Promise.resolve({})])],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(!result.valid && result.message).toMatchInlineSnapshot(`
+        "Route config in "routes.ts" is invalid.
+
+        Path: routes.0.children.0
+        Invalid type: Expected object but received a promise. Did you forget to await?"
+      `);
+    });
+
+    it("is invalid when file is missing", () => {
+      let result = validateRouteConfig({
+        routeConfigFile: "routes.ts",
+        /* @ts-expect-error */
+        routeConfig: [route("parent", "parent.tsx", [{ id: "child" }])],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(!result.valid && result.message).toMatchInlineSnapshot(`
+        "Route config in "routes.ts" is invalid.
+
+        Path: routes.0.children.0.file
+        Invalid type: Expected string but received undefined"
+      `);
+    });
+
+    it("is invalid when property is wrong type", () => {
+      let result = validateRouteConfig({
+        routeConfigFile: "routes.ts",
+        /* @ts-expect-error */
+        routeConfig: [route("parent", "parent.tsx", [{ file: 123 }])],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(!result.valid && result.message).toMatchInlineSnapshot(`
+        "Route config in "routes.ts" is invalid.
+
+        Path: routes.0.children.0.file
+        Invalid type: Expected string but received 123"
+      `);
+    });
+
+    it("shows multiple error messages", () => {
+      let result = validateRouteConfig({
+        routeConfigFile: "routes.ts",
+        routeConfig: [
+          /* @ts-expect-error */
+          route("parent", "parent.tsx", [
+            { id: "child" },
+            { file: 123 },
+            Promise.resolve(),
+          ]),
+        ],
+      });
+
+      expect(result.valid).toBe(false);
+      expect(!result.valid && result.message).toMatchInlineSnapshot(`
+        "Route config in "routes.ts" is invalid.
+
+        Path: routes.0.children.0.file
+        Invalid type: Expected string but received undefined
+
+        Path: routes.0.children.1.file
+        Invalid type: Expected string but received 123
+
+        Path: routes.0.children.2
+        Invalid type: Expected object but received a promise. Did you forget to await?"
+      `);
+    });
+  });
+
   describe("route helpers", () => {
     describe("route", () => {
       it("supports basic routes", () => {
@@ -14,7 +121,7 @@ describe("routes config", () => {
       });
 
       it("supports children", () => {
-        expect(route("path", "file.tsx", [route("child", "child.tsx")]))
+        expect(route("parent", "parent.tsx", [route("child", "child.tsx")]))
           .toMatchInlineSnapshot(`
           {
             "children": [
@@ -24,8 +131,8 @@ describe("routes config", () => {
                 "path": "child",
               },
             ],
-            "file": "file.tsx",
-            "path": "path",
+            "file": "parent.tsx",
+            "path": "parent",
           }
         `);
       });
@@ -44,7 +151,7 @@ describe("routes config", () => {
 
       it("supports custom IDs with children", () => {
         expect(
-          route("path", "file.tsx", { id: "custom-id" }, [
+          route("parent", "parent.tsx", { id: "custom-id" }, [
             route("child", "child.tsx"),
           ])
         ).toMatchInlineSnapshot(`
@@ -56,9 +163,9 @@ describe("routes config", () => {
                 "path": "child",
               },
             ],
-            "file": "file.tsx",
+            "file": "parent.tsx",
             "id": "custom-id",
-            "path": "path",
+            "path": "parent",
           }
         `);
       });
@@ -152,14 +259,14 @@ describe("routes config", () => {
       });
 
       it("supports children", () => {
-        expect(layout("layout.tsx", [route("path", "file.tsx")]))
+        expect(layout("layout.tsx", [route("child", "child.tsx")]))
           .toMatchInlineSnapshot(`
           {
             "children": [
               {
                 "children": undefined,
-                "file": "file.tsx",
-                "path": "path",
+                "file": "child.tsx",
+                "path": "child",
               },
             ],
             "file": "layout.tsx",
@@ -180,14 +287,16 @@ describe("routes config", () => {
 
       it("supports custom IDs with children", () => {
         expect(
-          layout("layout.tsx", { id: "custom-id" }, [route("path", "file.tsx")])
+          layout("layout.tsx", { id: "custom-id" }, [
+            route("child", "child.tsx"),
+          ])
         ).toMatchInlineSnapshot(`
           {
             "children": [
               {
                 "children": undefined,
-                "file": "file.tsx",
-                "path": "path",
+                "file": "child.tsx",
+                "path": "child",
               },
             ],
             "file": "layout.tsx",

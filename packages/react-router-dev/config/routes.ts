@@ -1,4 +1,5 @@
 import { resolve, win32 } from "node:path";
+import * as v from "valibot";
 import pick from "lodash/pick";
 import invariant from "../invariant";
 
@@ -57,11 +58,6 @@ export interface RouteManifest {
 }
 
 /**
- * Route config to be exported via the `routes` export within `routes.ts`.
- */
-export type RouteConfig = RouteConfigEntry[] | Promise<RouteConfigEntry[]>;
-
-/**
  * Configuration for an individual route, for use within `routes.ts`. As a
  * convenience, route config entries can be created with the {@link route},
  * {@link index} and {@link layout} helper functions.
@@ -97,6 +93,81 @@ export interface RouteConfigEntry {
    * The child routes.
    */
   children?: RouteConfigEntry[];
+}
+
+export const routeConfigEntrySchema: v.BaseSchema<
+  RouteConfigEntry,
+  any,
+  v.BaseIssue<unknown>
+> = v.pipe(
+  v.custom<RouteConfigEntry>((value) => {
+    return !(
+      typeof value === "object" &&
+      value !== null &&
+      "then" in value &&
+      "catch" in value
+    );
+  }, "Invalid type: Expected object but received a promise. Did you forget to await?"),
+  v.object({
+    id: v.optional(v.string()),
+    path: v.optional(v.string()),
+    index: v.optional(v.boolean()),
+    caseSensitive: v.optional(v.boolean()),
+    file: v.string(),
+    children: v.optional(v.array(v.lazy(() => routeConfigEntrySchema))),
+  })
+);
+
+export const resolvedRouteConfigSchema = v.array(routeConfigEntrySchema);
+type ResolvedRouteConfig = v.InferInput<typeof resolvedRouteConfigSchema>;
+
+/**
+ * Route config to be exported via the `routes` export within `routes.ts`.
+ */
+export type RouteConfig = ResolvedRouteConfig | Promise<ResolvedRouteConfig>;
+
+export function validateRouteConfig({
+  routeConfigFile,
+  routeConfig,
+}: {
+  routeConfigFile: string;
+  routeConfig: unknown;
+}): { valid: false; message: string } | { valid: true } {
+  if (!routeConfig) {
+    return {
+      valid: false,
+      message: `No "routes" export defined in "${routeConfigFile}.`,
+    };
+  }
+
+  if (!Array.isArray(routeConfig)) {
+    return {
+      valid: false,
+      message: `Route config in "${routeConfigFile}" must be an array.`,
+    };
+  }
+
+  let { issues } = v.safeParse(resolvedRouteConfigSchema, routeConfig);
+
+  if (issues?.length) {
+    let { root, nested } = v.flatten(issues);
+    return {
+      valid: false,
+      message: [
+        `Route config in "${routeConfigFile}" is invalid.`,
+        root ? `${root}` : [],
+        nested
+          ? Object.entries(nested).map(
+              ([path, message]) => `Path: routes.${path}\n${message}`
+            )
+          : [],
+      ]
+        .flat()
+        .join("\n\n"),
+    };
+  }
+
+  return { valid: true };
 }
 
 const createConfigRouteOptionKeys = [

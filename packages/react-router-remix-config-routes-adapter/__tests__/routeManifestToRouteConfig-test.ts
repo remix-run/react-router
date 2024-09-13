@@ -15,7 +15,7 @@ const cleanIds = (obj: any) =>
   );
 
 describe("routeManifestToRouteConfig", () => {
-  test("creates routes config", () => {
+  test("creates route config", () => {
     let remixRoutes = routeManifestToRouteConfig(
       defineRoutes((route) => {
         route("/", "routes/home.js");
@@ -69,7 +69,7 @@ describe("routeManifestToRouteConfig", () => {
     `);
   });
 
-  test("creates routes config with IDs", () => {
+  test("creates route config with IDs", () => {
     let configRoutes = routeManifestToRouteConfig(
       defineRoutes((route) => {
         route("/", "routes/home.js", { id: "home" });
