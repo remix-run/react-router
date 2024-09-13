@@ -36,7 +36,7 @@ export const routes: RouteConfig = [
 
 ## File System Routes
 
-If you prefer a file system routing convention, the `@react-router/fs-routes` package provides support for [Remix-style flat routes.][route_file_naming]
+If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
 
 ```tsx filename=app/routes.ts
 import { type RouteConfig } from "@react-router/dev/routes";
@@ -279,6 +279,6 @@ function Wizard() {
 
 Note that these routes do not participate in data loading, actions, code splitting, or any other route module features, so their use cases are more limited than those of the route module.
 
-[route_file_naming]: ../file-conventions/routes
+[file-route-conventions]: ../guides/file-route-conventions
 [outlet]: ../components/outlet
 [code_splitting]: ../discussion/code-splitting
