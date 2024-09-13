@@ -445,7 +445,13 @@ export function useRoutesImpl(
     remainingPathname = "/" + segments.slice(parentSegments.length).join("/");
   }
 
-  let matches = matchRoutes(routes, { pathname: remainingPathname });
+  let matches =
+    dataRouterState && parentPathnameBase === "/"
+      ? // If we're rendering at the top level of a data router, we've already
+        // matched routes in the router so use those and avoid calling
+        // `matchRoutes` again
+        (dataRouterState.matches as RouteMatch<string, RouteObject>[])
+      : matchRoutes(routes, { pathname: remainingPathname });
 
   if (__DEV__) {
     warning(
