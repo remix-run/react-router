@@ -23,11 +23,9 @@ module.exports = function rollup() {
 
   return [
     {
-      external(id) {
-        return isBareModuleId(id);
-      },
+      external: isBareModuleId,
       input: [
-        `${SOURCE_DIR}/index.ts`,
+        `${SOURCE_DIR}/cli/index.ts`,
         `${SOURCE_DIR}/routes.ts`,
         `${SOURCE_DIR}/vite.ts`,
         `${SOURCE_DIR}/vite/cloudflare.ts`,
@@ -64,35 +62,6 @@ module.exports = function rollup() {
         }),
         // Allow dynamic imports in CJS code to allow us to utilize
         // ESM modules as part of the compiler.
-        {
-          name: "dynamic-import-polyfill",
-          renderDynamicImport() {
-            return {
-              left: "import(",
-              right: ")",
-            };
-          },
-        },
-      ],
-    },
-    {
-      external() {
-        return true;
-      },
-      input: `${SOURCE_DIR}/cli/index.ts`,
-      output: {
-        banner: createBanner(name, version),
-        dir: OUTPUT_DIR,
-        format: "cjs",
-      },
-      plugins: [
-        babel({
-          babelHelpers: "bundled",
-          exclude: /node_modules/,
-          extensions: [".ts"],
-          ...remixBabelConfig,
-        }),
-        nodeResolve({ extensions: [".ts"] }),
         {
           name: "dynamic-import-polyfill",
           renderDynamicImport() {
