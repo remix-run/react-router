@@ -3000,6 +3000,280 @@ function testDomRouter(
         });
       });
 
+      describe("submitting to self from parent/index when ?index param exists", () => {
+        it("useSubmit", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route
+                id="parent"
+                path="/parent"
+                element={<Parent />}
+                action={({ request }) => "PARENT ACTION: " + request.url}
+              >
+                <Route
+                  id="index"
+                  index
+                  element={<Index />}
+                  action={({ request }) => "INDEX ACTION: " + request.url}
+                />
+              </Route>
+            ),
+            {
+              window: getWindow("/parent?index&index=keep"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Parent() {
+            let actionData = useActionData();
+            let submit = useSubmit();
+            return (
+              <>
+                <p id="parent">{actionData}</p>
+                <button onClick={() => submit({}, { method: "post" })}>
+                  Submit from parent
+                </button>
+                <Outlet />
+              </>
+            );
+          }
+
+          function Index() {
+            let actionData = useActionData();
+            let submit = useSubmit();
+            return (
+              <>
+                <p id="index">{actionData}</p>
+                <button onClick={() => submit({}, { method: "post" })}>
+                  Submit from index
+                </button>
+              </>
+            );
+          }
+
+          fireEvent.click(screen.getByText("Submit from parent"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
+          expect(getHtml(container.querySelector("#parent")!)).toContain(
+            "PARENT ACTION: http://localhost/parent?index=keep"
+          );
+
+          fireEvent.click(screen.getByText("Submit from index"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
+          expect(getHtml(container.querySelector("#index")!)).toContain(
+            "INDEX ACTION: http://localhost/parent?index&index=keep"
+          );
+        });
+
+        it("Form", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route
+                id="parent"
+                path="/parent"
+                element={<Parent />}
+                action={({ request }) => "PARENT ACTION: " + request.url}
+              >
+                <Route
+                  id="index"
+                  index
+                  element={<Index />}
+                  action={({ request }) => "INDEX ACTION: " + request.url}
+                />
+              </Route>
+            ),
+            {
+              window: getWindow("/parent?index&index=keep"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Parent() {
+            let actionData = useActionData();
+            return (
+              <>
+                <p id="parent">{actionData}</p>
+                <Form method="post" id="parent-form">
+                  <button type="submit">Submit from parent</button>
+                </Form>
+                <Outlet />
+              </>
+            );
+          }
+
+          function Index() {
+            let actionData = useActionData();
+            return (
+              <>
+                <p id="index">{actionData}</p>
+                <Form method="post" id="index-form">
+                  <button type="submit">Submit from index</button>
+                </Form>
+              </>
+            );
+          }
+
+          expect(
+            container.querySelector("#parent-form")?.getAttribute("action")
+          ).toBe("/parent?index=keep");
+          expect(
+            container.querySelector("#index-form")?.getAttribute("action")
+          ).toBe("/parent?index&index=keep");
+
+          fireEvent.click(screen.getByText("Submit from parent"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
+          expect(getHtml(container.querySelector("#parent")!)).toContain(
+            "PARENT ACTION: http://localhost/parent?index=keep"
+          );
+
+          fireEvent.click(screen.getByText("Submit from index"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
+          expect(getHtml(container.querySelector("#index")!)).toContain(
+            "INDEX ACTION: http://localhost/parent?index&index=keep"
+          );
+        });
+
+        it("fetcher.submit", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route
+                id="parent"
+                path="/parent"
+                element={<Parent />}
+                action={({ request }) => "PARENT ACTION: " + request.url}
+              >
+                <Route
+                  id="index"
+                  index
+                  element={<Index />}
+                  action={({ request }) => "INDEX ACTION: " + request.url}
+                />
+              </Route>
+            ),
+            {
+              window: getWindow("/parent?index&index=keep"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Parent() {
+            let fetcher = useFetcher();
+
+            return (
+              <>
+                <p id="parent">{fetcher.data}</p>
+                <button onClick={() => fetcher.submit({}, { method: "post" })}>
+                  Submit from parent
+                </button>
+                <Outlet />
+              </>
+            );
+          }
+
+          function Index() {
+            let fetcher = useFetcher();
+
+            return (
+              <>
+                <p id="index">{fetcher.data}</p>
+                <button onClick={() => fetcher.submit({}, { method: "post" })}>
+                  Submit from index
+                </button>
+              </>
+            );
+          }
+
+          fireEvent.click(screen.getByText("Submit from parent"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
+          expect(getHtml(container.querySelector("#parent")!)).toContain(
+            "PARENT ACTION: http://localhost/parent?index=keep"
+          );
+
+          fireEvent.click(screen.getByText("Submit from index"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
+          expect(getHtml(container.querySelector("#index")!)).toContain(
+            "INDEX ACTION: http://localhost/parent?index&index=keep"
+          );
+        });
+
+        it("fetcher.Form", async () => {
+          let router = createTestRouter(
+            createRoutesFromElements(
+              <Route
+                id="parent"
+                path="/parent"
+                element={<Parent />}
+                action={({ request }) => "PARENT ACTION: " + request.url}
+              >
+                <Route
+                  id="index"
+                  index
+                  element={<Index />}
+                  action={({ request }) => "INDEX ACTION: " + request.url}
+                />
+              </Route>
+            ),
+            {
+              window: getWindow("/parent?index&index=keep"),
+            }
+          );
+          let { container } = render(<RouterProvider router={router} />);
+
+          function Parent() {
+            let fetcher = useFetcher();
+
+            return (
+              <>
+                <p id="parent">{fetcher.data}</p>
+                <fetcher.Form method="post" id="parent-form">
+                  <button type="submit">Submit from parent</button>
+                </fetcher.Form>
+                <Outlet />
+              </>
+            );
+          }
+
+          function Index() {
+            let fetcher = useFetcher();
+
+            return (
+              <>
+                <p id="index">{fetcher.data}</p>
+                <fetcher.Form method="post" id="index-form">
+                  <button type="submit">Submit from index</button>
+                </fetcher.Form>
+              </>
+            );
+          }
+
+          expect(
+            container.querySelector("#parent-form")?.getAttribute("action")
+          ).toBe("/parent?index=keep");
+          expect(
+            container.querySelector("#index-form")?.getAttribute("action")
+          ).toBe("/parent?index&index=keep");
+
+          fireEvent.click(screen.getByText("Submit from parent"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("PARENT ACTION")));
+          expect(getHtml(container.querySelector("#parent")!)).toContain(
+            "PARENT ACTION: http://localhost/parent?index=keep"
+          );
+
+          fireEvent.click(screen.getByText("Submit from index"));
+          await tick();
+          await waitFor(() => screen.getByText(new RegExp("INDEX ACTION")));
+          expect(getHtml(container.querySelector("#index")!)).toContain(
+            "INDEX ACTION: http://localhost/parent?index&index=keep"
+          );
+        });
+      });
+
       it("allows user to specify search params and hash", async () => {
         let router = createTestRouter(
           createRoutesFromElements(
@@ -5370,9 +5644,9 @@ function testDomRouter(
           let { container } = render(<RouterProvider router={router} />);
           expect(container.innerHTML).not.toMatch(/my-key/);
           await waitFor(() =>
-            // React `useId()` results in either `:r2a:` or `:rp:` depending on
-            // `DataBrowserRouter`/`DataHashRouter`
-            expect(container.innerHTML).toMatch(/(:r2a:|:rp:),my-key/)
+            // React `useId()` results in something such as `:r2a:`, `:r2i:`,
+            // `:rt:`, or `:rp:` depending on `DataBrowserRouter`/`DataHashRouter`
+            expect(container.innerHTML).toMatch(/(:r[0-9]?[a-z]:),my-key/)
           );
         });
       });
