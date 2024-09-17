@@ -397,8 +397,10 @@ export function omitChunkedExports(
         )
         // Remove unused imports.
         .map((node) => {
-          // Skip non import nodes.
-          if (!t.isImportDeclaration(node)) {
+          // Skip non import nodes and side effect imports. Side effect imports
+          // implicitly belong to the main chunk, so they're not filtered when
+          // omitting the chunked exports.
+          if (!t.isImportDeclaration(node) || node.specifiers.length === 0) {
             return node;
           }
 
