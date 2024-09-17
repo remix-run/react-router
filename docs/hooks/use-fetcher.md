@@ -170,40 +170,61 @@ If you want to submit to an index route, use the [`?index` param][indexsearchpar
 
 If you find yourself calling this function inside of click handlers, you can probably simplify your code by using `<fetcher.Form>` instead.
 
-### `fetcher.abort(options)`
+### `fetcher.abort(reason?)`
 
-Abort an in-progress fetcher and reset `fetcher.data` to `null`:
+Abort an in-progress fetcher:
 
 ```js
 fetcher.abort();
 ```
 
-If you wish to retain the current data you can pass that via the `data` parameter:
+You may optionally provide a custom [`reason`] for the `AbortSignal`:
 
 ```js
-fetcher.abort({ data: fetcher.data });
+fetcher.abort(new Error("cancelled"));
 ```
 
-You may also optionally provide a custom [`reason`] for the `AbortSignal`:
+When a fetcher is aborted, it will abort the internal `AbortController` for the in-progress call which will be proxied through to the `request.signal` in your `loader`/`action` function. This can be useful to avoid kicking off any expensive calls for requests that have been aborted:
 
 ```js
-fetcher.abort({ reason: new Error("cancelled") });
-```
-
-When a fetcher is aborted, it will abort the internal `AbortController` for the in-progress call which will be proxied through to the `request.signal` in your `loader`/`action` function:
-
-```js
-function loader({ request }) {
+async function loader({ request }) {
+  let data = await getData();
+  if (request.signal.aborted) {
+    throw new Error("Skipping unnecessary calls");
+  }
   return {
-    critical: "CRITICAL",
-    lazy: new Promise((resolve, reject) => {
-      request.signal.addEventListener("abort", () =>
-        reject(request.signal.reason)
-      );
-      setTimeout(() => resolve("LAZY"), 3000);
-    }),
+    data,
+    expensive: getExpensiveDeferredData(),
   };
 }
+```
+
+You can also use this to reject outstanding promises when deferring data:
+
+```js
+async function loader({ request }) {
+  let deferred = getDeferredData();
+  let critical = await getCriticalData();
+  return {
+    critical,
+    deferred: Promise.race([
+      deferred,
+      new Promise((_, reject) => {
+        request.signal.addEventListener("abort", () => {
+          reject(request.signal.reason);
+        });
+      }),
+    ]),
+  };
+}
+```
+
+### `fetcher.reset()`
+
+Reset `fetcher.data` to `null`
+
+```js
+fetcher.reset();
 ```
 
 ## Properties

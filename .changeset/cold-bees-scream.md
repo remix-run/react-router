@@ -3,4 +3,4 @@
 "@remix-run/router": minor
 ---
 
-Add support for `fetcher.abort()`
+Add support for `fetcher.abort()` and `fetcher.reset()` APIs
