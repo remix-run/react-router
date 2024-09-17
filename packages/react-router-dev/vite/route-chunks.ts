@@ -219,13 +219,6 @@ export function hasChunkableExport(
         `Expected export "${exportName}" to have top level statements if the set exists`
       );
 
-      // Export had no identifiers to collect, so it's chunkable, e.g. export
-      // default function () { return "string" }. Note that we check the size is
-      // 1 here because the export statement itself is included in the set
-      if (dependencies.topLevelStatements.size === 1) {
-        return true;
-      }
-
       // Loop through all other exports to see if they have top level non-import
       // statements in common with the export we're trying to chunk.
       for (let [currentExportName, currentDependencies] of exportDependencies) {
