@@ -1634,9 +1634,13 @@ export function useFormAction(
     // since it might not apply to our contextual route.  We add it back based
     // on match.route.index below
     let params = new URLSearchParams(path.search);
-    if (params.has("index") && params.get("index") === "") {
+    let indexValues = params.getAll("index");
+    let hasNakedIndexParam = indexValues.some((v) => v === "");
+    if (hasNakedIndexParam) {
       params.delete("index");
-      path.search = params.toString() ? `?${params.toString()}` : "";
+      indexValues.filter((v) => v).forEach((v) => params.append("index", v));
+      let qs = params.toString();
+      path.search = qs ? `?${qs}` : "";
     }
   }
 
