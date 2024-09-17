@@ -133,6 +133,24 @@ describe("route chunks", () => {
         export const other2 = () => getOtherMessage2();"
       `);
     });
+
+    test("side effect imports are placed in main chunk", () => {
+      const code = dedent`
+        import "./side-effect";
+        export const chunk = "chunk";
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "chunk", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import "./side-effect";
+        export const main = "main";"
+      `);
+    });
   });
 
   describe("partially chunkable", () => {
