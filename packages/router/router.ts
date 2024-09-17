@@ -4169,16 +4169,23 @@ function normalizeTo(
     path.hash = location.hash;
   }
 
-  // Add an ?index param for matched index routes if we don't already have one
-  if (
-    (to == null || to === "" || to === ".") &&
-    activeRouteMatch &&
-    activeRouteMatch.route.index &&
-    !hasNakedIndexQuery(path.search)
-  ) {
-    path.search = path.search
-      ? path.search.replace(/^\?/, "?index&")
-      : "?index";
+  // Account for `?index` params when routing to the current location
+  if ((to == null || to === "" || to === ".") && activeRouteMatch) {
+    let nakedIndex = hasNakedIndexQuery(path.search);
+    if (activeRouteMatch.route.index && !nakedIndex) {
+      // Add one when we're targeting an index route
+      path.search = path.search
+        ? path.search.replace(/^\?/, "?index&")
+        : "?index";
+    } else if (!activeRouteMatch.route.index && nakedIndex) {
+      // Remove existing ones when we're not
+      let params = new URLSearchParams(path.search);
+      let indexValues = params.getAll("index");
+      params.delete("index");
+      indexValues.filter((v) => v).forEach((v) => params.append("index", v));
+      let qs = params.toString();
+      path.search = qs ? `?${qs}` : "";
+    }
   }
 
   // If we're operating within a basename, prepend it to the pathname.  If
