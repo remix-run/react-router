@@ -12,6 +12,7 @@
     "directory": "packages/react-router-dev"
   },
   "license": "MIT",
+  "main": "./dist/typescript/plugin.ts",
   "exports": {
     "./routes": {
       "types": "./dist/routes.d.ts",

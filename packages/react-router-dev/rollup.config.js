@@ -73,5 +73,36 @@ module.exports = function rollup() {
         },
       ],
     },
+    {
+      external: isBareModuleId,
+      input: `${SOURCE_DIR}/typescript/plugin.ts`,
+      output: {
+        banner: createBanner("@react-router/dev", version),
+        dir: `${OUTPUT_DIR}/typescript`,
+        format: "cjs",
+        exports: "default",
+      },
+      plugins: [
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          extensions: [".ts"],
+          ...remixBabelConfig,
+        }),
+        nodeResolve({ extensions: [".ts"] }),
+        copy({ targets: [{ src: "LICENSE.md", dest: SOURCE_DIR }] }),
+        // Allow dynamic imports in CJS code to allow us to utilize
+        // ESM modules as part of the compiler.
+        {
+          name: "dynamic-import-polyfill",
+          renderDynamicImport() {
+            return {
+              left: "import(",
+              right: ")",
+            };
+          },
+        },
+      ],
+    },
   ];
 };
