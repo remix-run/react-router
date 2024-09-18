@@ -1149,7 +1149,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                   nodeReq,
                   nodeRes
                 ) => {
-                  let req = fromNodeRequest(nodeReq);
+                  let req = fromNodeRequest(nodeReq, nodeRes);
                   let res = await handler(
                     req,
                     await reactRouterDevLoadContext(req)
