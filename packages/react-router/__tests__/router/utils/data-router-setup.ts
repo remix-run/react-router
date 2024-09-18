@@ -1,30 +1,31 @@
+import type { InitialEntry } from "../../../lib/router/history";
 import type {
-  AgnosticDataRouteObject,
-  AgnosticRouteMatch,
   Fetcher,
   RouterFetchOptions,
   HydrationState,
-  InitialEntry,
   Router,
   RouterNavigateOptions,
-} from "../../../lib/router";
+} from "../../../lib/router/router";
+import type {
+  AgnosticDataRouteObject,
+  AgnosticRouteMatch,
+} from "../../../lib/router/utils";
+import { createRouter, IDLE_FETCHER } from "../../../lib/router/router";
 import {
   createMemoryHistory,
-  createRouter,
-  matchRoutes,
-  redirect,
+  invariant,
   parsePath,
-  IDLE_FETCHER,
-} from "../../../lib/router";
-
-// Private API
-import { invariant } from "../../../lib/router/history";
+} from "../../../lib/router/history";
 import type {
   AgnosticIndexRouteObject,
   AgnosticNonIndexRouteObject,
   DataStrategyFunction,
 } from "../../../lib/router/utils";
-import { stripBasename } from "../../../lib/router/utils";
+import {
+  matchRoutes,
+  redirect,
+  stripBasename,
+} from "../../../lib/router/utils";
 
 import { isRedirect, tick } from "./utils";
 
@@ -338,7 +339,7 @@ export function setup({
     routes: enhanceRoutes(routes),
     hydrationData,
     window: testWindow,
-    unstable_dataStrategy: dataStrategy,
+    dataStrategy: dataStrategy,
   });
 
   let fetcherData = getFetcherData(currentRouter);

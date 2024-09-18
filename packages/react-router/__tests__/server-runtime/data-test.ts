@@ -1,5 +1,4 @@
-import { UNSAFE_decodeViaTurboStream as decodeViaTurboStream } from "react-router";
-
+import { decodeViaTurboStream } from "../../lib/dom/ssr/single-fetch";
 import type { ServerBuild } from "../../lib/server-runtime/build";
 import { createRequestHandler } from "../../lib/server-runtime/server";
 
@@ -23,10 +22,6 @@ describe("loaders", () => {
         },
       },
       entry: { module: {} },
-      future: {
-        v3_fetcherPersist: false,
-        v3_relativeSplatPath: false,
-      },
     } as unknown as ServerBuild;
 
     let handler = createRequestHandler(build);

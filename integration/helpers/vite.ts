@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import type { Readable } from "node:stream";
 import url from "node:url";
 import { createRequire } from "node:module";
+import { platform } from "node:os";
 import fse from "fs-extra";
 import stripIndent from "strip-indent";
 import waitOn from "wait-on";
@@ -13,11 +14,11 @@ import glob from "glob";
 import dedent from "dedent";
 import type { Page } from "@playwright/test";
 import { test as base, expect } from "@playwright/test";
-import type { VitePluginConfig } from "@react-router/dev";
+import type { ReactRouterConfig } from "@react-router/dev/vite";
 
 const require = createRequire(import.meta.url);
 
-const reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
+const reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const root = path.resolve(__dirname, "../..");
 const TMP_DIR = path.join(root, ".tmp/integration");
@@ -41,19 +42,19 @@ export const viteConfig = {
     fsAllow?: string[];
     spaMode?: boolean;
   }) => {
-    let pluginOptions: VitePluginConfig = {
+    let config: ReactRouterConfig = {
       ssr: !args.spaMode,
     };
 
     return dedent`
-      import { vitePlugin as reactRouter } from "@react-router/dev";
+      import { reactRouter } from "@react-router/dev/vite";
       import { envOnlyMacros } from "vite-env-only";
       import tsconfigPaths from "vite-tsconfig-paths";
 
       export default {
         ${await viteConfig.server(args)}
         plugins: [
-          reactRouter(${JSON.stringify(pluginOptions)}),
+          reactRouter(${JSON.stringify(config)}),
           envOnlyMacros(),
           tsconfigPaths()
         ],
@@ -210,7 +211,7 @@ export const wranglerPagesDev = async ({
       env: { NODE_ENV: "production" },
     }
   );
-  await waitForServer(proc, { port });
+  await waitForServer(proc, { port, host: "127.0.0.1" });
   return () => proc.kill();
 };
 
@@ -351,14 +352,16 @@ function node(
 
 async function waitForServer(
   proc: ChildProcess & { stdout: Readable; stderr: Readable },
-  args: { port: number; basename?: string }
+  args: { port: number; host?: string; basename?: string }
 ) {
   let devStdout = bufferize(proc.stdout);
   let devStderr = bufferize(proc.stderr);
 
   await waitOn({
-    resources: [`http://localhost:${args.port}${args.basename ?? "/"}`],
-    timeout: 10000,
+    resources: [
+      `http://${args.host ?? "localhost"}:${args.port}${args.basename ?? "/"}`,
+    ],
+    timeout: platform() === "win32" ? 20000 : 10000,
   }).catch((err) => {
     let stdout = devStdout();
     let stderr = devStderr();

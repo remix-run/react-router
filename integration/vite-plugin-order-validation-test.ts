@@ -10,7 +10,7 @@ test.describe(() => {
   test.beforeAll(async () => {
     cwd = await createProject({
       "vite.config.ts": dedent`
-        import { vitePlugin as reactRouter } from "@react-router/dev";
+        import { reactRouter } from "@react-router/dev/vite";
         import mdx from "@mdx-js/rollup";
 
         export default {

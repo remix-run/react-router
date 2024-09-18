@@ -1,35 +1,5 @@
 import * as React from "react";
 import type {
-  Blocker,
-  BlockerFunction,
-  Location,
-  ParamParseKey,
-  Params,
-  Path,
-  PathMatch,
-  PathPattern,
-  RelativeRoutingType,
-  Router as RemixRouter,
-  RevalidationState,
-  To,
-  UIMatch,
-} from "./router";
-import {
-  IDLE_BLOCKER,
-  Action as NavigationType,
-  UNSAFE_convertRouteMatchToUiMatch as convertRouteMatchToUiMatch,
-  UNSAFE_invariant as invariant,
-  isRouteErrorResponse,
-  joinPaths,
-  matchPath,
-  matchRoutes,
-  parsePath,
-  resolveTo,
-  stripBasename,
-  UNSAFE_warning as warning,
-} from "./router";
-
-import type {
   DataRouteMatch,
   NavigateOptions,
   RouteContextObject,
@@ -45,7 +15,39 @@ import {
   RouteContext,
   RouteErrorContext,
 } from "./context";
-import { decodePath, getResolveToMatches } from "./router/utils";
+import type { Location, Path, To } from "./router/history";
+import {
+  Action as NavigationType,
+  invariant,
+  parsePath,
+  warning,
+} from "./router/history";
+import type {
+  Blocker,
+  BlockerFunction,
+  RelativeRoutingType,
+  Router as RemixRouter,
+  RevalidationState,
+} from "./router/router";
+import { IDLE_BLOCKER } from "./router/router";
+import type {
+  ParamParseKey,
+  Params,
+  PathMatch,
+  PathPattern,
+  UIMatch,
+} from "./router/utils";
+import {
+  convertRouteMatchToUiMatch,
+  decodePath,
+  getResolveToMatches,
+  isRouteErrorResponse,
+  joinPaths,
+  matchPath,
+  matchRoutes,
+  resolveTo,
+  stripBasename,
+} from "./router/utils";
 
 // TODO: Let's get this back to using an import map and development/production
 // condition once we get the rollup build replaced
@@ -769,9 +771,25 @@ export function _renderMatches(
   future: RemixRouter["future"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
-    if (dataRouterState?.errors) {
+    if (!dataRouterState) {
+      return null;
+    }
+
+    if (dataRouterState.errors) {
       // Don't bail if we have data router errors so we can render them in the
       // boundary.  Use the pre-matched (or shimmed) matches
+      matches = dataRouterState.matches as DataRouteMatch[];
+    } else if (
+      parentMatches.length === 0 &&
+      !dataRouterState.initialized &&
+      dataRouterState.matches.length > 0
+    ) {
+      // Don't bail if we're initializing with partial hydration and we have
+      // router matches.  That means we're actively running `patchRoutesOnNavigation`
+      // so we should render down the partial matches to the appropriate
+      // `HydrateFallback`.  We only do this if `parentMatches` is empty so it
+      // only impacts the root matches for `RouterProvider` and no descendant
+      // `<Routes>`
       matches = dataRouterState.matches as DataRouteMatch[];
     } else {
       return null;
@@ -1067,13 +1085,6 @@ export function useMatches(): UIMatch[] {
 export function useLoaderData(): unknown {
   let state = useDataRouterState(DataRouterStateHook.UseLoaderData);
   let routeId = useCurrentRouteId(DataRouterStateHook.UseLoaderData);
-
-  if (state.errors && state.errors[routeId] != null) {
-    console.error(
-      `You cannot \`useLoaderData\` in an errorElement (routeId: ${routeId})`
-    );
-    return undefined;
-  }
   return state.loaderData[routeId];
 }
 

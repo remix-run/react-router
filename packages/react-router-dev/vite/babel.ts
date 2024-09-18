@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import type { NodePath } from "@babel/traverse";
-import type { types as BabelTypes } from "@babel/core";
-import { parse } from "@babel/parser";
+import type { types as Babel } from "@babel/core";
+import { parse, type ParseResult } from "@babel/parser";
 import * as t from "@babel/types";
 
 // These `require`s were needed to support building within vite-ecosystem-ci,
@@ -12,4 +12,4 @@ const generate = require("@babel/generator")
   .default as typeof import("@babel/generator").default;
 
 export { traverse, generate, parse, t };
-export type { BabelTypes, NodePath };
+export type { Babel, NodePath, ParseResult };

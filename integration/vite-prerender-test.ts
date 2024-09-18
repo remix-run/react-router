@@ -13,7 +13,7 @@ import { PlaywrightFixture } from "./helpers/playwright-fixture.js";
 let files = {
   "vite.config.ts": js`
     import { defineConfig } from "vite";
-    import { vitePlugin as reactRouter } from "@react-router/dev";
+    import { reactRouter } from "@react-router/dev/vite";
 
     export default defineConfig({
       build: { manifest: true },
@@ -157,7 +157,7 @@ test.describe("Prerendering", () => {
         ...files,
         "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             build: { manifest: true },

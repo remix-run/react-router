@@ -45,3 +45,8 @@ if (!globalThis.File) {
   const { File } = require("undici");
   globalThis.File = File;
 }
+
+if (!globalThis.crypto) {
+  const { webcrypto } = require("node:crypto");
+  globalThis.crypto = webcrypto;
+}

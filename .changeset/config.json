@@ -9,6 +9,8 @@
     [
       "react-router",
       "react-router-dom",
+      "@react-router/architect",
+      "@react-router/cloudflare",
       "@react-router/dev",
       "@react-router/express",
       "@react-router/node",

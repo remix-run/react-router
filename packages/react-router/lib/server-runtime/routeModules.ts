@@ -1,16 +1,15 @@
+import type { Location } from "../router/history";
 import type {
   ActionFunction as RRActionFunction,
   ActionFunctionArgs as RRActionFunctionArgs,
   AgnosticRouteMatch,
   LoaderFunction as RRLoaderFunction,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
-  Location,
   Params,
-} from "../router";
+} from "../router/utils";
 import type { AppData, AppLoadContext } from "./data";
-import type { LinkDescriptor } from "./links";
 import type { SerializeFrom } from "../dom/ssr/components";
-import type { ResponseStub } from "./single-fetch";
+import type { LinkDescriptor } from "../router/links";
 
 export interface RouteModules<RouteModule> {
   [routeId: string]: RouteModule | undefined;
@@ -40,8 +39,6 @@ export type ActionFunction = (
 export type ActionFunctionArgs = RRActionFunctionArgs<AppLoadContext> & {
   // Context is always provided in Remix, and typed for module augmentation support.
   context: AppLoadContext;
-  // TODO: (v7) Make this non-optional once single-fetch is the default
-  response?: ResponseStub;
 };
 
 /**
@@ -73,8 +70,6 @@ export type LoaderFunction = (
 export type LoaderFunctionArgs = RRLoaderFunctionArgs<AppLoadContext> & {
   // Context is always provided in Remix, and typed for module augmentation support.
   context: AppLoadContext;
-  // TODO: (v7) Make this non-optional once single-fetch is the default
-  response?: ResponseStub;
 };
 
 /**

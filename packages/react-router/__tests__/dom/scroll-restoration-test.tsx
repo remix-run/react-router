@@ -208,10 +208,6 @@ describe(`ScrollRestoration`, () => {
     });
 
     let context: FrameworkContextObject = {
-      future: {
-        v3_fetcherPersist: false,
-        v3_relativeSplatPath: false,
-      },
       routeModules: { root: { default: () => null } },
       manifest: {
         routes: {

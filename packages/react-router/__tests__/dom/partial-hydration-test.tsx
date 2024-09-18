@@ -2,16 +2,17 @@ import "@testing-library/jest-dom";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 import type { LoaderFunction } from "react-router";
-import { RouterProvider as ReactRouter_RouterPRovider } from "react-router";
+import {} from "react-router";
 import {
   Outlet,
-  RouterProvider as ReactRouterDom_RouterProvider,
+  RouterProvider as ReactRouter_RouterProvider,
   createBrowserRouter,
   createHashRouter,
   createMemoryRouter,
   useLoaderData,
   useRouteError,
 } from "../../index";
+import { RouterProvider as ReactRouterDom_RouterProvider } from "../../dom-export";
 
 import getHtml from "../utils/getHtml";
 import { createDeferred, tick } from "../router/utils/utils";
@@ -28,7 +29,181 @@ describe("Partial Hydration Behavior", () => {
   });
 
   describe("createMemoryRouter", () => {
-    testPartialHydration(createMemoryRouter, ReactRouter_RouterPRovider);
+    testPartialHydration(createMemoryRouter, ReactRouter_RouterProvider);
+
+    // these tests only run for memory since we just need to set initialEntries
+    it("supports partial hydration w/patchRoutesOnNavigation (leaf fallback)", async () => {
+      let parentDfd = createDeferred();
+      let childDfd = createDeferred();
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            Component() {
+              return (
+                <>
+                  <h1>Root</h1>
+                  <Outlet />
+                </>
+              );
+            },
+            children: [
+              {
+                id: "parent",
+                path: "parent",
+                HydrateFallback: () => <p>Parent Loading...</p>,
+                loader: () => parentDfd.promise,
+                Component() {
+                  let data = useLoaderData() as string;
+                  return (
+                    <>
+                      <h2>{`Parent - ${data}`}</h2>
+                      <Outlet />
+                    </>
+                  );
+                },
+              },
+            ],
+          },
+        ],
+        {
+          future: {
+            v7_partialHydration: true,
+          },
+          patchRoutesOnNavigation({ path, patch }) {
+            if (path === "/parent/child") {
+              patch("parent", [
+                {
+                  path: "child",
+                  loader: () => childDfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h3>{`Child - ${data}`}</h3>;
+                  },
+                },
+              ]);
+            }
+          },
+          initialEntries: ["/parent/child"],
+        }
+      );
+      let { container } = render(
+        <ReactRouter_RouterProvider router={router} />
+      );
+
+      parentDfd.resolve("PARENT DATA");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <h1>
+                Root
+              </h1>
+              <p>
+                Parent Loading...
+              </p>
+            </div>"
+          `);
+
+      childDfd.resolve("CHILD DATA");
+      await waitFor(() => screen.getByText(/CHILD DATA/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <h1>
+                Root
+              </h1>
+              <h2>
+                Parent - PARENT DATA
+              </h2>
+              <h3>
+                Child - CHILD DATA
+              </h3>
+            </div>"
+          `);
+    });
+
+    it("supports partial hydration w/patchRoutesOnNavigation (root fallback)", async () => {
+      let parentDfd = createDeferred();
+      let childDfd = createDeferred();
+      let router = createMemoryRouter(
+        [
+          {
+            path: "/",
+            HydrateFallback: () => <p>Root Loading...</p>,
+            Component() {
+              return (
+                <>
+                  <h1>Root</h1>
+                  <Outlet />
+                </>
+              );
+            },
+            children: [
+              {
+                id: "parent",
+                path: "parent",
+                loader: () => parentDfd.promise,
+                Component() {
+                  let data = useLoaderData() as string;
+                  return (
+                    <>
+                      <h2>{`Parent - ${data}`}</h2>
+                      <Outlet />
+                    </>
+                  );
+                },
+              },
+            ],
+          },
+        ],
+        {
+          future: {
+            v7_partialHydration: true,
+          },
+          patchRoutesOnNavigation({ path, patch }) {
+            if (path === "/parent/child") {
+              patch("parent", [
+                {
+                  path: "child",
+                  loader: () => childDfd.promise,
+                  Component() {
+                    let data = useLoaderData() as string;
+                    return <h3>{`Child - ${data}`}</h3>;
+                  },
+                },
+              ]);
+            }
+          },
+          initialEntries: ["/parent/child"],
+        }
+      );
+      let { container } = render(
+        <ReactRouter_RouterProvider router={router} />
+      );
+
+      parentDfd.resolve("PARENT DATA");
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <p>
+                Root Loading...
+              </p>
+            </div>"
+          `);
+
+      childDfd.resolve("CHILD DATA");
+      await waitFor(() => screen.getByText(/CHILD DATA/));
+      expect(getHtml(container)).toMatchInlineSnapshot(`
+            "<div>
+              <h1>
+                Root
+              </h1>
+              <h2>
+                Parent - PARENT DATA
+              </h2>
+              <h3>
+                Child - CHILD DATA
+              </h3>
+            </div>"
+          `);
+    });
   });
 });
 
@@ -39,7 +214,7 @@ function testPartialHydration(
     | typeof createMemoryRouter,
   RouterProvider:
     | typeof ReactRouterDom_RouterProvider
-    | typeof ReactRouter_RouterPRovider
+    | typeof ReactRouter_RouterProvider
 ) {
   let consoleWarn: jest.SpyInstance;
 

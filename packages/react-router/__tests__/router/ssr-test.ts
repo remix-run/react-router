@@ -3,17 +3,20 @@
  */
 
 import urlDataStrategy from "./utils/urlDataStrategy";
-import type { StaticHandler, StaticHandlerContext } from "../../lib/router";
+import type {
+  StaticHandler,
+  StaticHandlerContext,
+} from "../../lib/router/router";
 import {
   createStaticHandler,
   getStaticContextFromError,
-} from "../../lib/router";
+} from "../../lib/router/router";
 import {
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
+  ErrorResponseImpl,
   isRouteErrorResponse,
   json,
   redirect,
-} from "../../lib/router";
+} from "../../lib/router/utils";
 import { createDeferred } from "./utils/data-router-setup";
 import {
   createRequest,
@@ -1400,7 +1403,7 @@ describe("ssr", () => {
         let { query } = createStaticHandler(SSR_ROUTES);
 
         let context = await query(createRequest("/custom"), {
-          unstable_dataStrategy: urlDataStrategy,
+          dataStrategy: urlDataStrategy,
         });
         expect(context).toMatchObject({
           actionData: null,
@@ -2248,7 +2251,7 @@ describe("ssr", () => {
         let data;
 
         data = await queryRoute(createRequest("/custom"), {
-          unstable_dataStrategy: urlDataStrategy,
+          dataStrategy: urlDataStrategy,
         });
         expect(data).toBeInstanceOf(URLSearchParams);
         expect((data as URLSearchParams).get("foo")).toBe("bar");

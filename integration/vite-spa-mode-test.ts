@@ -22,7 +22,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -53,7 +53,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -82,7 +82,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -154,7 +154,7 @@ test.describe("SPA Mode", () => {
         let cwd = await createProject({
           "vite.config.ts": js`
           import { defineConfig } from "vite";
-          import { vitePlugin as reactRouter } from "@react-router/dev";
+          import { reactRouter } from "@react-router/dev/vite";
 
           export default defineConfig({
             plugins: [reactRouter({ ssr: false })],
@@ -181,7 +181,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@react-router/dev";
+            import { reactRouter } from "@react-router/dev/vite";
 
             export default defineConfig({
               plugins: [reactRouter({ ssr: false })],
@@ -226,7 +226,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@react-router/dev";
+            import { reactRouter } from "@react-router/dev/vite";
 
             export default defineConfig({
               plugins: [reactRouter({
@@ -304,7 +304,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@react-router/dev";
+            import { reactRouter } from "@react-router/dev/vite";
 
             export default defineConfig({
               plugins: [reactRouter({ ssr: false })],
@@ -322,7 +322,7 @@ test.describe("SPA Mode", () => {
             </html>
           `,
           "app/entry.client.tsx": js`
-            import { HydratedRouter } from "react-router";
+            import { HydratedRouter } from "react-router/dom";
             import { startTransition, StrictMode } from "react";
             import { hydrateRoot } from "react-dom/client";
 
@@ -490,7 +490,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@react-router/dev";
+            import { reactRouter } from "@react-router/dev/vite";
 
             export default defineConfig({
               plugins: [reactRouter({
@@ -501,6 +501,12 @@ test.describe("SPA Mode", () => {
                 ssr: false,
               })],
             });
+          `,
+          "src/routes.ts": js`
+            import { type RouteConfig } from "@react-router/dev/routes";
+            import { flatRoutes } from "@react-router/fs-routes";
+
+            export const routes: RouteConfig = flatRoutes();
           `,
           "src/root.tsx": js`
             import {
@@ -573,7 +579,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@react-router/dev";
+            import { reactRouter } from "@react-router/dev/vite";
 
             export default defineConfig({
               plugins: [reactRouter({
@@ -584,6 +590,12 @@ test.describe("SPA Mode", () => {
                 ssr: false,
               })],
             });
+          `,
+          "src/routes.ts": js`
+            import { type RouteConfig } from "@react-router/dev/routes";
+            import { flatRoutes } from "@react-router/fs-routes";
+
+            export const routes: RouteConfig = flatRoutes();
           `,
           "src/root.tsx": js`
             import {
@@ -643,7 +655,7 @@ test.describe("SPA Mode", () => {
         files: {
           "vite.config.ts": js`
             import { defineConfig } from "vite";
-            import { vitePlugin as reactRouter } from "@react-router/dev";
+            import { reactRouter } from "@react-router/dev/vite";
 
             export default defineConfig({
               build: { manifest: true },

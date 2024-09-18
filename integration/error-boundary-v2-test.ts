@@ -177,7 +177,7 @@ test.describe("ErrorBoundary", () => {
       await waitForAndAssert(
         page,
         app,
-        "#child-error",
+        "#parent-error",
         "Unable to decode turbo-stream response"
       );
     });

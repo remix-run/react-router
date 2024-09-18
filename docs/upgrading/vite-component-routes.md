@@ -130,7 +130,7 @@ You would rename it to `entry.client.tsx` and have it look like this:
 import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { HydratedRouter } from "react-router";
+import { HydratedRouter } from "react-router/dom";
 
 ReactDOM.hydrateRoot(
   document,
@@ -176,14 +176,14 @@ To get back to rendering your app, we'll configure a "catchall" route that match
 Create a file at `src/routes.ts` and add this:
 
 ```ts filename=src/routes.ts
-import { defineRoutes } from "react-router/config";
+import { type RouteConfig } from "@react-router/dev/routes";
 
-export default defineRoutes([
+export const routes: RouteConfig = [
   {
     path: "*",
     file: "src/catchall.tsx",
   },
-]);
+];
 ```
 
 And then create the catchall route module and render your existing root App component within it.
@@ -192,11 +192,9 @@ And then create the catchall route module and render your existing root App comp
 import { defineRoute } from "react-router";
 import App from "./App";
 
-export default defineRoute({
-  Component() {
-    return <App />;
-  },
-});
+export default function Component() {
+  return <App />;
+}
 ```
 
 Your app should be back on the screen and working as usual!
@@ -223,9 +221,9 @@ export default function App() {
 You can move the definition to a `routes.ts` file:
 
 ```tsx filename=src/routes.ts
-import { defineRoutes } from "react-router/config";
+import { type RouteConfig } from "@react-router/dev/routes";
 
-export default defineRoutes([
+export const routes: RouteConfig = [
   {
     path: "/pages/:id",
     file: "./containers/page.tsx",
@@ -234,26 +232,23 @@ export default defineRoutes([
     path: "*",
     file: "src/catchall.tsx",
   },
-]);
+];
 ```
 
-And then edit the route module to use `defineRoute`:
+And then edit the route module to use the Route Module API:
 
 ```tsx filename=src/pages/about.tsx
-import { defineRoute } from "react-router";
+import { useLoaderData } from "react-router";
 
-export default defineRoute({
-  params: ["id"],
+export async function clientLoader({ params }) {
+  let page = await getPage(params.id);
+  return page;
+}
 
-  async clientLoader({ params }) {
-    let page = await getPage(params.id);
-    return page;
-  },
-
-  Component({ data }) {
-    return <h1>{data.title}</h1>;
-  },
-});
+export default function Component() {
+  let data = useLoaderData();
+  return <h1>{data.title}</h1>;
+}
 ```
 
 You'll now get inferred type safety with params, loader data, and more.

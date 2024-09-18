@@ -1,4 +1,4 @@
-import type { HydrationState } from "../router";
+import type { HydrationState } from "../router/router";
 import type { FutureConfig } from "../dom/ssr/entry";
 import { escapeHtml } from "./markup";
 
@@ -19,7 +19,6 @@ export function createServerHandoffString<T>(serverHandoff: {
   // we'd end up including duplicate info
   state?: ValidateShape<T, HydrationState>;
   criticalCss?: string;
-  ssrMatches: string[];
   basename: string | undefined;
   future: FutureConfig;
   isSpaMode: boolean;

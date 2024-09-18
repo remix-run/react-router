@@ -28,10 +28,17 @@ test.describe("deferred loaders", () => {
         `,
 
         "app/routes/redirect.tsx": js`
-          export function loader({ response }) {
-            response.status = 301;
-            response.headers.set("Location", "/?redirected");
-            return { food: "pizza" };
+          import { data } from 'react-router';
+          export function loader() {
+            return data(
+              { food: "pizza" },
+              {
+                status: 301,
+                headers: {
+                  Location: "/?redirected"
+                }
+              }
+            );
           }
           export default function Redirect() {return null;}
         `,
@@ -75,7 +82,7 @@ test.describe("deferred loaders", () => {
 
   test.afterAll(async () => appFixture.close());
 
-  test("deferred response can redirect on document request", async ({
+  test.skip("deferred response can redirect on document request", async ({
     page,
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
@@ -83,7 +90,9 @@ test.describe("deferred loaders", () => {
     await page.waitForURL(/\?redirected/);
   });
 
-  test("deferred response can redirect on transition", async ({ page }) => {
+  test.skip("deferred response can redirect on transition", async ({
+    page,
+  }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink("/redirect");

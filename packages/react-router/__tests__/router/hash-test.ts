@@ -2,8 +2,8 @@
 
 import { JSDOM } from "jsdom";
 
-import type { HashHistory } from "../../lib/router";
-import { createHashHistory } from "../../lib/router";
+import type { HashHistory } from "../../lib/router/history";
+import { createHashHistory } from "../../lib/router/history";
 
 import Listen from "./TestSequences/Listen";
 import InitialLocationDefaultKey from "./TestSequences/InitialLocationDefaultKey";

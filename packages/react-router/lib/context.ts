@@ -1,18 +1,24 @@
 import * as React from "react";
 import type {
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
-  AgnosticRouteMatch,
   History,
-  LazyRouteFunction,
-  Location,
   Action as NavigationType,
+  Location,
+  To,
+} from "./router/history";
+import type {
   RelativeRoutingType,
   Router,
   StaticHandlerContext,
-  To,
+} from "./router/router";
+import type {
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunctionArgs,
+  AgnosticRouteMatch,
+  LazyRouteFunction,
   TrackedPromise,
-} from "./router";
+} from "./router/utils";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
@@ -70,6 +76,12 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
+export type PatchRoutesOnNavigationFunctionArgs =
+  AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+
+export type PatchRoutesOnNavigationFunction =
+  AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
+
 export interface DataRouterContextObject
   // Omit `future` since those can be pulled from the `router`
   // `NavigationContext` needs future since it doesn't have a `router` in all cases
@@ -87,6 +99,31 @@ export const DataRouterStateContext = React.createContext<
 >(null);
 DataRouterStateContext.displayName = "DataRouterState";
 
+export type ViewTransitionContextObject =
+  | {
+      isTransitioning: false;
+    }
+  | {
+      isTransitioning: true;
+      flushSync: boolean;
+      currentLocation: Location;
+      nextLocation: Location;
+    };
+
+export const ViewTransitionContext =
+  React.createContext<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
+ViewTransitionContext.displayName = "ViewTransition";
+
+// TODO: (v7) Change the useFetcher data from `any` to `unknown`
+export type FetchersContextObject = Map<string, any>;
+
+export const FetchersContext = React.createContext<FetchersContextObject>(
+  new Map()
+);
+FetchersContext.displayName = "Fetchers";
+
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
 AwaitContext.displayName = "Await";
 
@@ -95,8 +132,8 @@ export interface NavigateOptions {
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  unstable_flushSync?: boolean;
-  unstable_viewTransition?: boolean;
+  flushSync?: boolean;
+  viewTransition?: boolean;
 }
 
 /**

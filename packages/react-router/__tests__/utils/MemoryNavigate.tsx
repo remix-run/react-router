@@ -1,5 +1,5 @@
-import type { HTMLFormMethod } from "../../lib/router";
-import { joinPaths } from "../../lib/router";
+import type { HTMLFormMethod } from "../../lib/router/utils";
+import { joinPaths } from "../../lib/router/utils";
 import * as React from "react";
 import { UNSAFE_DataRouterContext } from "../../index";
 

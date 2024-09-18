@@ -21,6 +21,8 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230518.0",
     "@react-router/dev": "workspace:*",
+    "@react-router/fs-routes": "workspace:*",
+    "@react-router/remix-config-routes-adapter": "workspace:*",
     "@types/react": "^18.2.20",
     "@types/react-dom": "^18.2.7",
     "typescript": "^5.1.6",

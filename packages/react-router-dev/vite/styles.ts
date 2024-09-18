@@ -3,7 +3,7 @@ import type { ServerBuild } from "react-router";
 import { matchRoutes } from "react-router";
 import type { ModuleNode, ViteDevServer } from "vite";
 
-import type { ResolvedVitePluginConfig } from "../config";
+import type { ResolvedReactRouterConfig } from "./config";
 import { resolveFileUrl } from "./resolve-file-url";
 
 type ServerRouteManifest = ServerBuild["routes"];
@@ -20,6 +20,33 @@ const cssModulesRegExp = new RegExp(`\\.module${cssFileRegExp.source}`);
 
 const isCssFile = (file: string) => cssFileRegExp.test(file);
 export const isCssModulesFile = (file: string) => cssModulesRegExp.test(file);
+
+// https://vitejs.dev/guide/features#disabling-css-injection-into-the-page
+// https://github.com/vitejs/vite/blob/561b940f6f963fbb78058a6e23b4adad53a2edb9/packages/vite/src/node/plugins/css.ts#L194
+// https://vitejs.dev/guide/features#static-assets
+// https://github.com/vitejs/vite/blob/561b940f6f963fbb78058a6e23b4adad53a2edb9/packages/vite/src/node/utils.ts#L309-L310
+const cssUrlParamsWithoutSideEffects = ["url", "inline", "raw", "inline-css"];
+export const isCssUrlWithoutSideEffects = (url: string) => {
+  let queryString = url.split("?")[1];
+
+  if (!queryString) {
+    return false;
+  }
+
+  let params = new URLSearchParams(queryString);
+  for (let paramWithoutSideEffects of cssUrlParamsWithoutSideEffects) {
+    if (
+      // Parameter is blank and not explicitly set, i.e. "?url", not "?url="
+      params.get(paramWithoutSideEffects) === "" &&
+      !url.includes(`?${paramWithoutSideEffects}=`) &&
+      !url.includes(`&${paramWithoutSideEffects}=`)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 const getStylesForFiles = async ({
   viteDevServer,
@@ -71,7 +98,7 @@ const getStylesForFiles = async ({
     if (
       dep.file &&
       isCssFile(dep.file) &&
-      !dep.url.endsWith("?url") // Ignore styles that resolved as URLs, otherwise we'll end up injecting URLs into the style tag contents
+      !isCssUrlWithoutSideEffects(dep.url) // Ignore styles that resolved as URLs, inline or raw. These shouldn't get injected.
     ) {
       try {
         let css = isCssModulesFile(dep.file)
@@ -184,7 +211,7 @@ export const getStylesForUrl = async ({
 }: {
   viteDevServer: ViteDevServer;
   rootDirectory: string;
-  reactRouterConfig: Pick<ResolvedVitePluginConfig, "appDirectory" | "routes">;
+  reactRouterConfig: Pick<ResolvedReactRouterConfig, "appDirectory" | "routes">;
   entryClientFilePath: string;
   cssModulesManifest: Record<string, string>;
   build: ServerBuild;

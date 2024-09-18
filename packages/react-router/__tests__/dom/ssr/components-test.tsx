@@ -9,7 +9,7 @@ import {
   Outlet,
   RouterProvider,
 } from "../../../index";
-import { HydratedRouter } from "../../../lib/dom/ssr/browser";
+import { HydratedRouter } from "../../../lib/dom-export/hydrated-router";
 import { FrameworkContext } from "../../../lib/dom/ssr/components";
 import invariant from "../../../lib/dom/ssr/invariant";
 import { ServerRouter } from "../../../lib/dom/ssr/server";

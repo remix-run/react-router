@@ -1,11 +1,14 @@
-import type { ErrorResponse, StaticHandler } from "../router";
+import type { StaticHandler } from "../router/router";
+import type { ErrorResponse } from "../router/utils";
+import {
+  isRouteErrorResponse,
+  json as routerJson,
+  ErrorResponseImpl,
+} from "../router/utils";
 import {
   getStaticContextFromError,
-  isRouteErrorResponse,
   createStaticHandler,
-  json as routerJson,
-  UNSAFE_ErrorResponseImpl as ErrorResponseImpl,
-} from "../router";
+} from "../router/router";
 import type { AppLoadContext } from "./data";
 import type { HandleErrorFunction, ServerBuild } from "./build";
 import type { EntryContext } from "../dom/ssr/entry";
@@ -16,30 +19,20 @@ import type { RouteMatch } from "./routeMatching";
 import { matchServerRoutes } from "./routeMatching";
 import type { EntryRoute, ServerRoute } from "./routes";
 import { createStaticHandlerDataRoutes, createRoutes } from "./routes";
-import {
-  isRedirectResponse,
-  isRedirectStatusCode,
-  isResponse,
-  json,
-} from "./responses";
+import { isRedirectResponse, isResponse, json } from "./responses";
 import { createServerHandoffString } from "./serverHandoff";
 import { getDevServerHooks } from "./dev";
 import type { SingleFetchResult, SingleFetchResults } from "./single-fetch";
 import {
-  convertResponseStubToErrorResponse,
   encodeViaTurboStream,
-  getResponseStubs,
-  getSingleFetchDataStrategy,
   getSingleFetchRedirect,
-  getSingleFetchResourceRouteDataStrategy,
-  isResponseStub,
-  mergeResponseStubs,
   singleFetchAction,
   singleFetchLoaders,
   SingleFetchRedirectSymbol,
   SINGLE_FETCH_REDIRECT_STATUS,
-  proxyResponseStubHeadersToHeaders,
 } from "./single-fetch";
+import { getDocumentHeaders } from "./headers";
+import invariant from "./invariant";
 
 export type RequestHandler = (
   request: Request,
@@ -170,7 +163,11 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
 
         if (isRedirectResponse(response)) {
           let result: SingleFetchResult | SingleFetchResults =
-            getSingleFetchRedirect(response.status, response.headers);
+            getSingleFetchRedirect(
+              response.status,
+              response.headers,
+              _build.basename
+            );
 
           if (request.method === "GET") {
             result = {
@@ -178,7 +175,7 @@ export const createRequestHandler: CreateRequestHandlerFunction = (
             };
           }
           let headers = new Headers(response.headers);
-          headers.set("Content-Type", "text/x-turbo");
+          headers.set("Content-Type", "text/x-script");
 
           return new Response(
             encodeViaTurboStream(
@@ -242,10 +239,7 @@ async function handleManifestRequest(
   routes: ServerRoute[],
   url: URL
 ) {
-  let data: {
-    patches: Record<string, EntryRoute>;
-    notFoundPaths: string[];
-  } = { patches: {}, notFoundPaths: [] };
+  let patches: Record<string, EntryRoute> = {};
 
   if (url.searchParams.has("p")) {
     for (let path of url.searchParams.getAll("p")) {
@@ -253,14 +247,12 @@ async function handleManifestRequest(
       if (matches) {
         for (let match of matches) {
           let routeId = match.route.id;
-          data.patches[routeId] = build.assets.routes[routeId];
+          patches[routeId] = build.assets.routes[routeId];
         }
-      } else {
-        data.notFoundPaths.push(path);
       }
     }
 
-    return json(data, {
+    return json(patches, {
       headers: {
         "Cache-Control": "public, max-age=31536000, immutable",
       },
@@ -282,6 +274,7 @@ async function handleSingleFetchRequest(
   let { result, headers, status } =
     request.method !== "GET"
       ? await singleFetchAction(
+          build,
           serverMode,
           staticHandler,
           request,
@@ -290,6 +283,7 @@ async function handleSingleFetchRequest(
           handleError
         )
       : await singleFetchLoaders(
+          build,
           serverMode,
           staticHandler,
           request,
@@ -302,7 +296,17 @@ async function handleSingleFetchRequest(
   // network errors that are missing this header
   let resultHeaders = new Headers(headers);
   resultHeaders.set("X-Remix-Response", "yes");
-  resultHeaders.set("Content-Type", "text/x-turbo");
+
+  // 304 responses should not have a body
+  if (status === 304) {
+    return new Response(null, { status: 304, headers: resultHeaders });
+  }
+
+  // We use a less-descriptive `text/x-script` here instead of something like
+  // `text/x-turbo` to enable compression when deployed via Cloudflare.  See:
+  //  - https://github.com/remix-run/remix/issues/9884
+  //  - https://developers.cloudflare.com/speed/optimization/content/brotli/content-compression/
+  resultHeaders.set("Content-Type", "text/x-script");
 
   return new Response(
     encodeViaTurboStream(
@@ -328,11 +332,9 @@ async function handleDocumentRequest(
   criticalCss?: string
 ) {
   let context;
-  let responseStubs = getResponseStubs();
   try {
     context = await staticHandler.query(request, {
       requestContext: loadContext,
-      unstable_dataStrategy: getSingleFetchDataStrategy(responseStubs),
     });
   } catch (error: unknown) {
     handleError(error);
@@ -343,27 +345,18 @@ async function handleDocumentRequest(
     return context;
   }
 
-  let merged = mergeResponseStubs(context, responseStubs);
-  let statusCode = merged.statusCode;
-  let headers = merged.headers;
+  let headers = getDocumentHeaders(build, context);
 
-  if (isRedirectStatusCode(statusCode) && headers.has("Location")) {
-    return new Response(null, {
-      status: statusCode,
-      headers,
-    });
+  // 304 responses should not have a body or a content-type
+  if (context.statusCode === 304) {
+    return new Response(null, { status: 304, headers });
   }
 
   // Sanitize errors outside of development environments
   if (context.errors) {
-    for (let [routeId, error] of Object.entries(context.errors)) {
-      if (isResponseStub(error)) {
-        context.errors[routeId] = convertResponseStubToErrorResponse(error);
-      }
-    }
     Object.values(context.errors).forEach((err) => {
       // @ts-expect-error This is "private" from users but intended for internal use
-      if ((!isRouteErrorResponse(err) || err.error) && !isResponseStub(err)) {
+      if (!isRouteErrorResponse(err) || err.error) {
         handleError(err);
       }
     });
@@ -406,7 +399,7 @@ async function handleDocumentRequest(
   try {
     return await handleDocumentRequestFunction(
       request,
-      statusCode,
+      context.statusCode,
       headers,
       entryContext,
       loadContext
@@ -495,34 +488,18 @@ async function handleResourceRequest(
   handleError: (err: unknown) => void
 ) {
   try {
-    let responseStubs = getResponseStubs();
     // Note we keep the routeId here to align with the Remix handling of
     // resource routes which doesn't take ?index into account and just takes
     // the leaf match
     let response = await staticHandler.queryRoute(request, {
       routeId,
       requestContext: loadContext,
-      unstable_dataStrategy: getSingleFetchResourceRouteDataStrategy({
-        responseStubs,
-      }),
     });
 
-    let stub = responseStubs[routeId];
-    if (isResponseStub(response) || response == null) {
-      // If the stub or null was returned, then there is no body so we just
-      // proxy along the status/headers to a Response
-      response = new Response(null, {
-        status: stub.status,
-        headers: proxyResponseStubHeadersToHeaders(stub, new Headers()),
-      });
-    } else if (isResponse(response)) {
-      // Use the response status and merge any response stub headers onto it
-      proxyResponseStubHeadersToHeaders(stub, response.headers);
-    } else {
-      throw new Error(
-        "Expected a Response to be returned from resource route handler"
-      );
-    }
+    invariant(
+      isResponse(response),
+      "Expected a Response to be returned from resource route handler"
+    );
 
     return response;
   } catch (error: unknown) {
@@ -531,13 +508,6 @@ async function handleResourceRequest(
       // match identically to what Remix returns
       error.headers.set("X-Remix-Catch", "yes");
       return error;
-    }
-
-    if (isResponseStub(error)) {
-      return new Response(null, {
-        status: error.status,
-        headers: proxyResponseStubHeadersToHeaders(error, new Headers()),
-      });
     }
 
     if (isRouteErrorResponse(error)) {

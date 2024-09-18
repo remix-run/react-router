@@ -1,8 +1,7 @@
 import * as React from "react";
-
-import type { Router } from "../../router";
-import { matchRoutes } from "../../router";
-import type { unstable_PatchRoutesOnMissFunction } from "../../components";
+import type { PatchRoutesOnNavigationFunction } from "../../context";
+import type { Router as RemixRouter } from "../../router/router";
+import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
 import { createClientRoutes } from "./routes";
@@ -13,28 +12,26 @@ declare global {
   }
 }
 
-type FogOfWarInfo = {
-  // Currently rendered links that may need prefetching
-  nextPaths: Set<string>;
-  // Paths we know the client can already match, so no need to perform client-side
-  // matching or prefetching for them.  Just an optimization to avoid re-matching
-  // on a larger and larger route tree over time
-  knownGoodPaths: Set<string>;
-  // Routes the server was unable to match - don't ask for them again
-  known404Paths: Set<string>;
-};
+// Currently rendered links that may need prefetching
+const nextPaths = new Set<string>();
+
+// FIFO queue of previously discovered routes to prevent re-calling on
+// subsequent navigations to the same path
+const discoveredPathsMaxSize = 1000;
+const discoveredPaths = new Set<string>();
 
 // 7.5k to come in under the ~8k limit for most browsers
 // https://stackoverflow.com/a/417184
 const URL_LIMIT = 7680;
 
-let fogOfWar: FogOfWarInfo | null = null;
-
 export function isFogOfWarEnabled(isSpaMode: boolean) {
   return !isSpaMode;
 }
 
-export function getPartialManifest(manifest: AssetsManifest, router: Router) {
+export function getPartialManifest(
+  manifest: AssetsManifest,
+  router: RemixRouter
+) {
   // Start with our matches for this pathname
   let routeIds = new Set(router.state.matches.map((m) => m.route.id));
 
@@ -68,49 +65,33 @@ export function getPartialManifest(manifest: AssetsManifest, router: Router) {
   };
 }
 
-export function initFogOfWar(
+export function getPatchRoutesOnNavigationFunction(
   manifest: AssetsManifest,
   routeModules: RouteModules,
   isSpaMode: boolean,
   basename: string | undefined
-): {
-  enabled: boolean;
-  patchRoutesOnMiss?: unstable_PatchRoutesOnMissFunction;
-} {
+): PatchRoutesOnNavigationFunction | undefined {
   if (!isFogOfWarEnabled(isSpaMode)) {
-    return { enabled: false };
+    return undefined;
   }
 
-  fogOfWar = {
-    nextPaths: new Set<string>(),
-    knownGoodPaths: new Set<string>(),
-    known404Paths: new Set<string>(),
-  };
-
-  return {
-    enabled: true,
-    patchRoutesOnMiss: async ({ path, patch }) => {
-      if (
-        fogOfWar!.known404Paths.has(path) ||
-        fogOfWar!.knownGoodPaths.has(path)
-      ) {
-        return;
-      }
-      await fetchAndApplyManifestPatches(
-        [path],
-        fogOfWar!,
-        manifest,
-        routeModules,
-        isSpaMode,
-        basename,
-        patch
-      );
-    },
+  return async ({ path, patch }) => {
+    if (discoveredPaths.has(path)) {
+      return;
+    }
+    await fetchAndApplyManifestPatches(
+      [path],
+      manifest,
+      routeModules,
+      isSpaMode,
+      basename,
+      patch
+    );
   };
 }
 
 export function useFogOFWarDiscovery(
-  router: Router,
+  router: RemixRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   isSpaMode: boolean
@@ -134,16 +115,21 @@ export function useFogOFWarDiscovery(
         return;
       }
       let url = new URL(path, window.location.origin);
-      let { knownGoodPaths, known404Paths, nextPaths } = fogOfWar!;
-      if (knownGoodPaths.has(url.pathname) || known404Paths.has(url.pathname)) {
-        return;
+      if (!discoveredPaths.has(url.pathname)) {
+        nextPaths.add(url.pathname);
       }
-      nextPaths.add(url.pathname);
     }
 
     // Register and fetch patches for all initially-rendered links/forms
     async function fetchPatches() {
-      let lazyPaths = getFogOfWarPaths(fogOfWar!, router);
+      let lazyPaths = Array.from(nextPaths.keys()).filter((path) => {
+        if (discoveredPaths.has(path)) {
+          nextPaths.delete(path);
+          return false;
+        }
+        return true;
+      });
+
       if (lazyPaths.length === 0) {
         return;
       }
@@ -151,7 +137,6 @@ export function useFogOFWarDiscovery(
       try {
         await fetchAndApplyManifestPatches(
           lazyPaths,
-          fogOfWar!,
           manifest,
           routeModules,
           isSpaMode,
@@ -212,40 +197,21 @@ export function useFogOFWarDiscovery(
   }, [isSpaMode, manifest, routeModules, router]);
 }
 
-function getFogOfWarPaths(fogOfWar: FogOfWarInfo, router: Router) {
-  let { knownGoodPaths, known404Paths, nextPaths } = fogOfWar;
-  return Array.from(nextPaths.keys()).filter((path) => {
-    if (knownGoodPaths.has(path)) {
-      nextPaths.delete(path);
-      return false;
-    }
-
-    if (known404Paths.has(path)) {
-      nextPaths.delete(path);
-      return false;
-    }
-
-    return true;
-  });
-}
-
 export async function fetchAndApplyManifestPatches(
   paths: string[],
-  _fogOfWar: FogOfWarInfo,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   isSpaMode: boolean,
   basename: string | undefined,
-  patchRoutes: Router["patchRoutes"]
+  patchRoutes: RemixRouter["patchRoutes"]
 ): Promise<void> {
-  let { nextPaths, knownGoodPaths, known404Paths } = _fogOfWar;
   let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(
     /\/+/g,
     "/"
   );
   let url = new URL(manifestPath, window.location.origin);
+  paths.sort().forEach((path) => url.searchParams.append("p", path));
   url.searchParams.set("version", manifest.version);
-  paths.forEach((path) => url.searchParams.append("p", path));
 
   // If the URL is nearing the ~8k limit on GET requests, skip this optimization
   // step and just let discovery happen on link click.  We also wipe out the
@@ -263,16 +229,11 @@ export async function fetchAndApplyManifestPatches(
     throw new Error(await res.text());
   }
 
-  let data = (await res.json()) as {
-    notFoundPaths: string[];
-    patches: AssetsManifest["routes"];
-  };
-
-  // Capture this before we apply the patches to the manifest
-  let knownRoutes = new Set(Object.keys(manifest.routes));
+  let serverPatches = (await res.json()) as AssetsManifest["routes"];
 
   // Patch routes we don't know about yet into the manifest
-  let patches: AssetsManifest["routes"] = Object.values(data.patches).reduce(
+  let knownRoutes = new Set(Object.keys(manifest.routes));
+  let patches: AssetsManifest["routes"] = Object.values(serverPatches).reduce(
     (acc, route) =>
       !knownRoutes.has(route.id)
         ? Object.assign(acc, { [route.id]: route })
@@ -281,11 +242,8 @@ export async function fetchAndApplyManifestPatches(
   );
   Object.assign(manifest.routes, patches);
 
-  // Track legit 404s so we don't try to fetch them again
-  data.notFoundPaths.forEach((p) => known404Paths.add(p));
-
-  // Track matched paths so we don't have to fetch them again
-  paths.forEach((p) => knownGoodPaths.add(p));
+  // Track discovered paths so we don't have to fetch them again
+  paths.forEach((p) => addToFifoQueue(p, discoveredPaths));
 
   // Identify all parentIds for which we have new children to add and patch
   // in their new children
@@ -301,6 +259,14 @@ export async function fetchAndApplyManifestPatches(
       createClientRoutes(patches, routeModules, null, isSpaMode, parentId)
     )
   );
+}
+
+function addToFifoQueue(path: string, queue: Set<string>) {
+  if (queue.size >= discoveredPathsMaxSize) {
+    let first = queue.values().next().value;
+    queue.delete(first);
+  }
+  queue.add(path);
 }
 
 // Thanks Josh!

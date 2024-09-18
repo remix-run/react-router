@@ -1,6 +1,4 @@
-import type { HydrationState, Router as RemixRouter } from "../router";
-
-import type { ViewTransition } from "./lib";
+import type { HydrationState, Router as RemixRouter } from "../router/router";
 import type {
   AssetsManifest,
   FutureConfig as RemixFutureConfig,
@@ -24,6 +22,13 @@ export type WindowRemixContext = {
   };
 };
 
+export interface ViewTransition {
+  finished: Promise<void>;
+  ready: Promise<void>;
+  updateCallbackDone: Promise<void>;
+  skipTransition(): void;
+}
+
 declare global {
   // TODO: v7 - Can this go away in favor of "just use remix"?
   var __staticRouterHydrationData: HydrationState | undefined;
@@ -37,7 +42,7 @@ declare global {
   var __remixManifest: AssetsManifest | undefined;
   var __remixRouteModules: RouteModules | undefined;
   var __remixRouter: RemixRouter | undefined;
-  var __remixRevalidation: number | undefined;
+  var __remixHdrActive: boolean;
   var __remixClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
     | {

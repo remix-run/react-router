@@ -48,15 +48,6 @@ export interface ErrorResult {
  */
 export type DataResult = SuccessResult | RedirectResult | ErrorResult;
 
-/**
- * Result from a loader or action called via dataStrategy
- */
-export interface HandlerResult {
-  type: "data" | "error";
-  result: unknown; // data, Error, Response
-  status?: number;
-}
-
 export type LowerCaseFormMethod = "get" | "post" | "put" | "patch" | "delete";
 export type UpperCaseFormMethod = Uppercase<LowerCaseFormMethod>;
 
@@ -210,28 +201,43 @@ export interface DataStrategyMatch
   resolve: (
     handlerOverride?: (
       handler: (ctx?: unknown) => DataFunctionReturnValue
-    ) => Promise<HandlerResult>
-  ) => Promise<HandlerResult>;
+    ) => DataFunctionReturnValue
+  ) => Promise<DataStrategyResult>;
 }
 
 export interface DataStrategyFunctionArgs<Context = any>
   extends DataFunctionArgs<Context> {
   matches: DataStrategyMatch[];
+  fetcherKey: string | null;
+}
+
+/**
+ * Result from a loader or action called via dataStrategy
+ */
+export interface DataStrategyResult {
+  type: "data" | "error";
+  result: unknown; // data, Error, Response, DeferredData, DataWithResponseInit
 }
 
 export interface DataStrategyFunction {
-  (args: DataStrategyFunctionArgs): Promise<HandlerResult[]>;
+  (args: DataStrategyFunctionArgs): Promise<Record<string, DataStrategyResult>>;
 }
 
-export interface AgnosticPatchRoutesOnMissFunction<
+export type AgnosticPatchRoutesOnNavigationFunctionArgs<
+  O extends AgnosticRouteObject = AgnosticRouteObject,
   M extends AgnosticRouteMatch = AgnosticRouteMatch
-> {
-  (opts: {
-    path: string;
-    matches: M[];
-    patch: (routeId: string | null, children: AgnosticRouteObject[]) => void;
-  }): void | Promise<void>;
-}
+> = {
+  path: string;
+  matches: M[];
+  patch: (routeId: string | null, children: O[]) => void;
+};
+
+export type AgnosticPatchRoutesOnNavigationFunction<
+  O extends AgnosticRouteObject = AgnosticRouteObject,
+  M extends AgnosticRouteMatch = AgnosticRouteMatch
+> = (
+  opts: AgnosticPatchRoutesOnNavigationFunctionArgs<O, M>
+) => void | Promise<void>;
 
 /**
  * Function provided by the framework-aware layers to set any framework-specific
@@ -1278,18 +1284,6 @@ export function resolveTo(
 /**
  * @private
  */
-export function getToPathname(to: To): string | undefined {
-  // Empty strings should be treated the same as / paths
-  return to === "" || (to as Path).pathname === ""
-    ? "/"
-    : typeof to === "string"
-    ? parsePath(to).pathname
-    : to.pathname;
-}
-
-/**
- * @private
- */
 export const joinPaths = (paths: string[]): string =>
   paths.join("/").replace(/\/\/+/g, "/");
 
@@ -1340,6 +1334,29 @@ export const json: JsonFunction = (data, init = {}) => {
   });
 };
 
+export class DataWithResponseInit<D> {
+  type: string = "DataWithResponseInit";
+  data: D;
+  init: ResponseInit | null;
+
+  constructor(data: D, init?: ResponseInit) {
+    this.data = data;
+    this.init = init || null;
+  }
+}
+
+/**
+ * Create "responses" that contain `status`/`headers` without forcing
+ * serialization into an actual `Response` - used by Remix single fetch
+ *
+ * @category Utils
+ */
+export function data<D>(data: D, init?: number | ResponseInit) {
+  return new DataWithResponseInit(
+    data,
+    typeof init === "number" ? { status: init } : init
+  );
+}
 export interface TrackedPromise extends Promise<any> {
   _tracked?: boolean;
   _data?: any;
@@ -1384,6 +1401,20 @@ export const redirect: RedirectFunction = (url, init = 302) => {
 export const redirectDocument: RedirectFunction = (url, init) => {
   let response = redirect(url, init);
   response.headers.set("X-Remix-Reload-Document", "true");
+  return response;
+};
+
+/**
+ * A redirect response that will perform a `history.replaceState` instead of a
+ * `history.pushState` for client-side navigation redirects.
+ * Sets the status code and the `Location` header.
+ * Defaults to "302 Found".
+ *
+ * @category Utils
+ */
+export const replace: RedirectFunction = (url, init) => {
+  let response = redirect(url, init);
+  response.headers.set("X-Remix-Replace", "true");
   return response;
 };
 
