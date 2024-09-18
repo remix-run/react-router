@@ -124,31 +124,6 @@ function createHydratedRouter(): RemixRouter {
       window.location,
       window.__remixContext?.basename
     );
-
-    // Hard reload if the matches we rendered for on the server are not the
-    // matches we find in the client.  This is usually the result of 2 rapid
-    // back/forward clicks from an external site into a Remix app, where we
-    // initially start the load for one URL and while the JS chunks are loading
-    // a second forward click moves us to a new URL.  We used to do this by URL
-    // comparison but it was subject to false positives on trailing slashes and
-    // double slashes
-    let { ssrMatches } = ssrInfo.context;
-    let mismatchBetweenSsrMatchesAndHydratedMatches =
-      (initialMatches || []).length !== ssrMatches.length ||
-      !(initialMatches || []).every((m, i) => ssrMatches[i] === m.route.id);
-    if (mismatchBetweenSsrMatchesAndHydratedMatches) {
-      let ssr = ssrMatches.join(",");
-      let client = initialMatches
-        ? initialMatches.map((m) => m.route.id).join(",")
-        : "[]";
-      let errorMsg =
-        `SSR Matches (${ssr}) do not match client matches at time of ` +
-        `hydration (${client}), reloading page...`;
-      console.error(errorMsg);
-      window.location.reload();
-      throw new Error("SSR/Client mismatch - reloading current URL");
-    }
-
     if (initialMatches) {
       for (let match of initialMatches) {
         let routeId = match.route.id;

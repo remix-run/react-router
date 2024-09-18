@@ -381,7 +381,6 @@ async function handleDocumentRequest(
       criticalCss,
       future: build.future,
       isSpaMode: build.isSpaMode,
-      ssrMatches: context.matches.map((m) => m.route.id),
     }),
     serverHandoffStream: encodeViaTurboStream(
       state,
@@ -452,7 +451,6 @@ async function handleDocumentRequest(
         basename: build.basename,
         future: build.future,
         isSpaMode: build.isSpaMode,
-        ssrMatches: context.matches.map((m) => m.route.id),
       }),
       serverHandoffStream: encodeViaTurboStream(
         state,

@@ -11,7 +11,6 @@ export type WindowRemixContext = {
   criticalCss?: string;
   future: RemixFutureConfig;
   isSpaMode: boolean;
-  ssrMatches: string[];
   stream: ReadableStream<Uint8Array> | undefined;
   streamController: ReadableStreamDefaultController<Uint8Array>;
   // The number of active deferred keys rendered on the server
