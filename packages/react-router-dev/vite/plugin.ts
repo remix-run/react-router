@@ -1227,7 +1227,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
             );
           }
 
-          if (ctx.reactRouterConfig.prerender != null) {
+          if (
+            ctx.reactRouterConfig.prerender != null &&
+            ctx.reactRouterConfig.prerender !== false
+          ) {
             // If we have prerender routes, that takes precedence over SPA mode
             // which is ssr:false and only the rot route being rendered
             await handlePrerender(
@@ -1834,7 +1837,22 @@ async function handlePrerender(
   );
 
   let routes = createPrerenderRoutes(build.routes);
-  let routesToPrerender = reactRouterConfig.prerender || ["/"];
+  let routesToPrerender: string[];
+  if (typeof reactRouterConfig.prerender === "boolean") {
+    invariant(reactRouterConfig.prerender, "Expected prerender:true");
+    routesToPrerender = determineStaticPrerenderRoutes(
+      routes,
+      viteConfig,
+      true
+    );
+  } else if (typeof reactRouterConfig.prerender === "function") {
+    routesToPrerender = await reactRouterConfig.prerender({
+      getStaticPaths: () =>
+        determineStaticPrerenderRoutes(routes, viteConfig, false),
+    });
+  } else {
+    routesToPrerender = reactRouterConfig.prerender || ["/"];
+  }
   let requestInit = {
     headers: {
       // Header that can be used in the loader to know if you're running at
@@ -1862,6 +1880,47 @@ async function handlePrerender(
       viteConfig,
       requestInit
     );
+  }
+
+  function determineStaticPrerenderRoutes(
+    routes: DataRouteObject[],
+    viteConfig: Vite.ResolvedConfig,
+    isBooleanUsage = false
+  ): string[] {
+    // Always start with the root/index route included
+    let paths: string[] = ["/"];
+    let paramRoutes: string[] = [];
+
+    // Then recursively add any new path defined by the tree
+    function recurse(subtree: typeof routes, prefix = "") {
+      for (let route of subtree) {
+        let newPath = [prefix, route.path].join("/").replace(/\/\/+/g, "/");
+        if (route.path) {
+          let segments = route.path.split("/");
+          if (segments.some((s) => s.startsWith(":") || s === "*")) {
+            paramRoutes.push(route.path);
+          } else {
+            paths.push(newPath);
+          }
+        }
+        if (route.children) {
+          recurse(route.children, newPath);
+        }
+      }
+    }
+    recurse(routes);
+
+    if (paramRoutes) {
+      viteConfig.logger.warn(
+        "The follwing paths were not pre-rendered because Dynamic Param and Splat " +
+          "routes are not prerendered when using `prerender:true`. You may want to " +
+          "consider using the `1prerender()` API if you wish to prerender slug and " +
+          "splat routes."
+      );
+    }
+
+    // Clean double slashes and remove trailing slashes
+    return paths.map((p) => p.replace(/\/\/+/g, "/").replace(/(.+)\/$/, "$1"));
   }
 
   async function prerenderData(
