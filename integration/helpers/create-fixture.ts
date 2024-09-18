@@ -28,6 +28,7 @@ export interface FixtureInit {
   files?: { [filename: string]: string };
   useReactRouterServe?: boolean;
   spaMode?: boolean;
+  prerender?: boolean;
   port?: number;
 }
 
@@ -56,13 +57,13 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     );
   };
 
-  let isSpaMode = init.spaMode;
-
-  if (isSpaMode) {
-    let requestDocument = () => {
-      let html = fse.readFileSync(
-        path.join(projectDir, "build/client/index.html")
-      );
+  if (init.spaMode || init.prerender) {
+    let requestDocument = async (href: string) => {
+      let pathname = new URL(href, "test://test").pathname;
+      let file = pathname.endsWith(".data")
+        ? pathname
+        : pathname + "/index.html";
+      let html = fse.readFileSync(path.join(projectDir, "build/client" + file));
       return new Response(html, {
         headers: {
           "Content-Type": "text/html",
@@ -73,7 +74,8 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     return {
       projectDir,
       build: null,
-      isSpaMode,
+      isSpaMode: init.spaMode,
+      prerender: init.prerender,
       requestDocument,
       requestResource: () => {
         throw new Error("Cannot requestResource in SPA Mode tests");
@@ -141,7 +143,8 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   return {
     projectDir,
     build: app,
-    isSpaMode,
+    isSpaMode: init.spaMode,
+    prerender: init.prerender,
     requestDocument,
     requestResource,
     requestSingleFetchData,
@@ -218,17 +221,20 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       });
     }
 
-    if (fixture.isSpaMode) {
+    if (fixture.isSpaMode || fixture.prerender) {
       return new Promise(async (accept) => {
         let port = await getPort();
         let app = express();
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
-        app.get("*", (_, res, next) =>
+        app.get("*", (req, res, next) => {
+          let file = req.path.endsWith(".data")
+            ? req.path
+            : req.path + "/index.html";
           res.sendFile(
-            path.join(fixture.projectDir, "build/client/index.html"),
+            path.join(fixture.projectDir, "build/client", file),
             next
-          )
-        );
+          );
+        });
         let server = app.listen(port);
         accept({ stop: server.close.bind(server), port });
       });
