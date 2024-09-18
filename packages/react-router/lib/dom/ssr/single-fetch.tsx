@@ -412,6 +412,9 @@ export function singleFetchUrl(reqUrl: URL | string) {
 
 async function fetchAndDecode(url: URL, init: RequestInit) {
   let res = await fetch(url, init);
+  if (res.status === 404) {
+    throw new ErrorResponseImpl(404, "Not Found", true);
+  }
   invariant(res.body, "No response body to decode");
   try {
     let decoded = await decodeViaTurboStream(res.body, window);

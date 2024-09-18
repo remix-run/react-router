@@ -1942,10 +1942,7 @@ async function prerenderManifest(
   let outdir = path.relative(process.cwd(), clientBuildDirectory);
   let outfile = path.join(outdir, ...normalizedPath.split("/"));
   await fse.ensureDir(path.dirname(outfile));
-  let manifestData = JSON.stringify({
-    notFoundPaths: [],
-    patches: build.assets.routes,
-  });
+  let manifestData = JSON.stringify(build.assets.routes);
   await fse.outputFile(outfile, manifestData);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
