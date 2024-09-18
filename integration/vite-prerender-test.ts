@@ -125,6 +125,7 @@ test.describe("Prerendering", () => {
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(fs.readdirSync(clientDir).sort()).toEqual([
       ".vite",
+      "__manifest",
       "_root.data",
       "about",
       "about.data",
@@ -178,6 +179,7 @@ test.describe("Prerendering", () => {
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(fs.readdirSync(clientDir).sort()).toEqual([
       ".vite",
+      "__manifest",
       "_root.data",
       "about",
       "about.data",

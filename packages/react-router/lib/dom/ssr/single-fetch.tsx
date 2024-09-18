@@ -412,10 +412,15 @@ export function singleFetchUrl(reqUrl: URL | string) {
 
 async function fetchAndDecode(url: URL, init: RequestInit) {
   let res = await fetch(url, init);
-  if (res.status === 404) {
+
+  // If this 404'd without hitting the running server (most likely in a
+  // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
+  if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
     throw new ErrorResponseImpl(404, "Not Found", true);
   }
+
   invariant(res.body, "No response body to decode");
+
   try {
     let decoded = await decodeViaTurboStream(res.body, window);
     return { status: res.status, data: decoded.value };
