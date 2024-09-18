@@ -364,6 +364,7 @@ export async function resolveReactRouterConfig({
   }
 
   let isValidPrerenderConfig =
+    prerender == null ||
     typeof prerender === "boolean" ||
     Array.isArray(prerender) ||
     typeof prerender === "function";
