@@ -113,6 +113,7 @@ function listAllFiles(_dir: string) {
 
   function recurse(dir: string) {
     fs.readdirSync(dir).forEach((file) => {
+      // Join with posix separator for consistency
       const absolute = dir + "/" + file;
       if (fs.statSync(absolute).isDirectory()) {
         if (![".vite", "assets"].includes(file)) {
