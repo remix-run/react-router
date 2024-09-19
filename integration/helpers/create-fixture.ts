@@ -240,6 +240,12 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
       });
     }
 
+    if (!fixture.build) {
+      return Promise.reject(
+        new Error("Cannot start app server without a build")
+      );
+    }
+
     return new Promise(async (accept) => {
       let port = await getPort();
       let app = express();
