@@ -1,6 +1,7 @@
 import type { AppLoadContext } from "./server-runtime/data";
 import type { Serializable } from "./server-runtime/single-fetch";
 
+export type Expect<T extends true> = T;
 // prettier-ignore
 type Equal<X, Y> =
   (<T>() => T extends X ? 1 : 2) extends
@@ -19,9 +20,20 @@ type RouteModule = {
   ErrorBoundary?: unknown;
 };
 
+type VoidToUndefined<T> = Equal<T, void> extends true ? undefined : T;
+
+// prettier-ignore
+type DataFrom<T> =
+  IsAny<T> extends true ? undefined :
+  T extends Fn ? VoidToUndefined<Awaited<ReturnType<T>>> :
+  undefined
+
+type ServerDataFrom<T> = Serialize<DataFrom<T>>;
+type ClientDataFrom<T> = DataFrom<T>;
+
 export type LoaderData<T extends RouteModule> = _LoaderData<
-  Serialize<DataFrom<T["loader"]>>,
-  DataFrom<T["clientLoader"]>,
+  ServerDataFrom<T["loader"]>,
+  ClientDataFrom<T["clientLoader"]>,
   false, // TODO
   IsAny<T["HydrateFallback"]> extends true ? false : true
 >;
@@ -46,8 +58,8 @@ type _LoaderData<
   undefined
 
 export type ActionData<T extends RouteModule> = _ActionData<
-  Serialize<DataFrom<T["action"]>>,
-  DataFrom<T["clientAction"]>
+  ServerDataFrom<T["action"]>,
+  ClientDataFrom<T["clientAction"]>
 >;
 
 // prettier-ignore
@@ -92,21 +104,13 @@ type Serialize<T> =
 
   undefined
 
-type VoidToUndefined<T> = Equal<T, void> extends true ? undefined : T;
-
-// prettier-ignore
-type DataFrom<T> =
-  IsAny<T> extends true ? undefined :
-  T extends Fn ? VoidToUndefined<Awaited<ReturnType<T>>> :
-  undefined
-
 export type ServerLoader<Params> = {
   args: DataFunctionArgs<Params>;
 };
 
 export type ClientLoader<Params, T extends RouteModule> = {
   args: DataFunctionArgs<Params> & {
-    serverLoader: () => Promise<Serialize<DataFrom<T["loader"]>>>;
+    serverLoader: () => Promise<ServerDataFrom<T["loader"]>>;
   };
 };
 
@@ -116,7 +120,7 @@ export type ServerAction<Params> = {
 
 export type ClientAction<Params, T extends RouteModule> = {
   args: DataFunctionArgs<Params> & {
-    serverAction: () => Promise<Serialize<DataFrom<T["action"]>>>;
+    serverAction: () => Promise<ServerDataFrom<T["action"]>>;
   };
 };
 
@@ -142,3 +146,80 @@ export type ErrorBoundary<Params, LoaderData, ActionData> = {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   return: import("react").ReactNode;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type __tests = [
+  // ServerDataFrom
+  Expect<Equal<ServerDataFrom<any>, undefined>>,
+  Expect<
+    Equal<
+      ServerDataFrom<() => { a: string; b: Date; c: () => boolean }>,
+      { a: string; b: Date; c: undefined }
+    >
+  >,
+
+  // ClientDataFrom
+  Expect<Equal<ClientDataFrom<any>, undefined>>,
+  Expect<
+    Equal<
+      ClientDataFrom<() => { a: string; b: Date; c: () => boolean }>,
+      { a: string; b: Date; c: () => boolean }
+    >
+  >,
+
+  // LoaderData
+  Expect<Equal<LoaderData<{}>, undefined>>,
+  Expect<
+    Equal<
+      LoaderData<{ loader: () => { a: string; b: Date; c: () => boolean } }>,
+      { a: string; b: Date; c: undefined }
+    >
+  >,
+  Expect<
+    Equal<
+      LoaderData<{
+        clientLoader: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      undefined | { a: string; b: Date; c: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      LoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: () => { d: string; e: Date; f: () => boolean };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  // TODO: tests w/ ClientLoaderHydrate
+
+  // ActionData
+  Expect<Equal<ActionData<{}>, undefined>>,
+  Expect<
+    Equal<
+      ActionData<{ action: () => { a: string; b: Date; c: () => boolean } }>,
+      { a: string; b: Date; c: undefined }
+    >
+  >,
+  // TODO: ask matt about this test case
+  // Expect<
+  //   Equal<
+  //     ActionData<{
+  //       clientAction: () => { a: string; b: Date; c: () => boolean };
+  //     }>,
+  //     undefined | { a: string; b: Date; c: () => boolean }
+  //   >
+  // >,
+  Expect<
+    Equal<
+      ActionData<{
+        action: () => { a: string; b: Date; c: () => boolean };
+        clientAction: () => { d: string; e: Date; f: () => boolean };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >
+];
