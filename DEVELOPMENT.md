@@ -72,6 +72,30 @@ You may need to make changes to a pre-release prior to publishing a final stable
 
 Hotfix releases follow the same process as standard releases above, but the `release-next` branch should be branched off latest `main` instead of `dev`. Once the stable hotfix is published, the `release-next` branch should be merged back into both `main` and `dev` just like a normal release.
 
+### 6.x releases from the `v6` branch
+
+After the `6.25.0` release, we branched off a `v6` branch for continued `6.x` work and merged the `v7` branch into `dev` to begin preparation for the `7.0.0` release. Until we launch `7.0.0`, we need to `6.x` releases in a slightly different manner.
+
+- Changes for 6.x should be PR'd to the `v6` branch with a changeset
+- Once merged, cherry-pick or re-do those changes against the `dev` branch so that they show up in v7
+  - This does not apply to things like adding deprecation warnings that should not land in v7
+  - You should not include a changelog in your commit to `dev`
+- Starting the release process for 6.x is the same as outlined above, with a few changes:
+  - Branch from `v6` instead of `dev`
+  - Do not merge `main` into the `release-*` branch
+- The process of the PRs and iterating on prereleases remains the same
+- Once the stable release is out:
+  - Merge `release-next` back to `v6` with a **Normal Merge**
+  - Patch the changes into `main`
+    - `git checkout main`
+    - `git diff react-router@6.26.1..react-router@6.26.2 > ./changes.patch`
+    - `git apply changes.patch`
+  - The _code_ changes should already be in the `dev` branch but confirm that the commits in this release are all included in `dev` already:
+    - I.e., https://github.com/remix-run/react-router/compare/react-router@6.26.1...react-router@6.26.2
+    - If one or more are not, then you can manually bring them over by cherry-picking the commit (or re-doing the work)
+    - You should not include a changelog in your commit to `dev`
+  - Copy the updated changelogs from `release-next` over to `dev` so the changelogs continue to reflect this new 6x release into the v7 releases
+
 ### Experimental releases
 
 Experimental releases use a [manually-triggered Github Actions workflow](./.github/workflows/release-experimental.yml) and can be built from any existing branch. to build and publish an experimental release:

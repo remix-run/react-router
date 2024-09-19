@@ -1357,6 +1357,7 @@ export function data<D>(data: D, init?: number | ResponseInit) {
     typeof init === "number" ? { status: init } : init
   );
 }
+
 export interface TrackedPromise extends Promise<any> {
   _tracked?: boolean;
   _data?: any;

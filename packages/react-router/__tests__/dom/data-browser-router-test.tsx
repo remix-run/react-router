@@ -1,4 +1,3 @@
-import type { ErrorResponse, Fetcher, RouterState } from "react-router";
 import "@testing-library/jest-dom";
 import {
   act,
@@ -9,7 +8,12 @@ import {
 } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import * as React from "react";
-import type { RouteObject } from "../../index";
+import type {
+  RouteObject,
+  ErrorResponse,
+  Fetcher,
+  RouterState,
+} from "../../index";
 import {
   Await,
   UNSAFE_DataRouterStateContext as DataRouterStateContext,

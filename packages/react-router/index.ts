@@ -169,7 +169,7 @@ export {
   useFetchers,
   useBeforeUnload,
   usePrompt as unstable_usePrompt,
-  useViewTransitionState as useViewTransitionState,
+  useViewTransitionState,
 } from "./lib/dom/lib";
 export type {
   FetcherSubmitOptions,
