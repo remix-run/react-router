@@ -1,0 +1,24 @@
+{
+  "mode": "pre",
+  "tag": "pre",
+  "initialVersions": {
+    "integration": "0.0.0",
+    "integration-node-template": "0.0.0",
+    "integration-vite-cloudflare-template": "0.0.0",
+    "integration-vite-template": "0.0.0",
+    "react-router": "6.26.2",
+    "@react-router/architect": "6.26.2",
+    "@react-router/cloudflare": "6.26.2",
+    "@react-router/dev": "6.26.2",
+    "react-router-dom": "6.26.2",
+    "@react-router/express": "6.26.2",
+    "@react-router/fs-routes": "6.26.2",
+    "@react-router/node": "6.26.2",
+    "@react-router/remix-config-routes-adapter": "6.26.2",
+    "@react-router/serve": "6.26.2",
+    "@playground/compiler": "0.0.0",
+    "@playground/compiler-express": "0.0.0",
+    "@playground/compiler-spa": "0.0.0"
+  },
+  "changesets": []
+}
