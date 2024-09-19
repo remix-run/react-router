@@ -26,7 +26,7 @@ let files = {
   `,
   "app/root.tsx": js`
     import * as React from "react";
-    import { Form, Link, Links, Meta, Outlet, Scripts } from "react-router";
+    import { Form, Link, Links, Meta, Outlet, Scripts, useRouteError } from "react-router";
 
     export function meta({ data }) {
       return [{
@@ -34,7 +34,7 @@ let files = {
       }];
     }
 
-    export default function Root() {
+    export function Layout({ children }) {
       const [mounted, setMounted] = React.useState(false);
       React.useEffect(() => setMounted(true), []);
       return (
@@ -49,12 +49,25 @@ let files = {
             <nav>
             <Link to="/">Home</Link><br/>
             <Link to="/about">About</Link><br/>
+            <Link to="/not-found">Not Found</Link><br/>
             </nav>
-            <Outlet />
+            {children}
             <Scripts />
           </body>
         </html>
       );
+    }
+
+    export default function Root() {
+      return <Outlet />
+    }
+
+    export function ErrorBoundary() {
+      let error = useRouteError();
+      let msg = 'status' in error ?
+        error.status + " " + error.statusText :
+        error.message;
+      return <p data-error>{msg}</p>;
     }
   `,
   "app/routes/_index.tsx": js`
@@ -141,6 +154,7 @@ test.describe("Prerendering", () => {
 
   test("Prerenders known static routes when true is specified", async () => {
     fixture = await createFixture({
+      prerender: true,
       files: {
         ...files,
         "app/routes/parent.tsx": js`
@@ -182,6 +196,7 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
+      "__manifest",
       "_root.data",
       "about.data",
       "about/index.html",
@@ -209,6 +224,7 @@ test.describe("Prerendering", () => {
 
   test("Prerenders a static array of routes", async () => {
     fixture = await createFixture({
+      prerender: true,
       files: {
         ...files,
         "vite.config.ts": js`
@@ -233,6 +249,7 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
+      "__manifest",
       "_root.data",
       "about.data",
       "about/index.html",
@@ -288,6 +305,7 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
+      "__manifest",
       "_root.data",
       "a.data",
       "a/index.html",
@@ -316,14 +334,16 @@ test.describe("Prerendering", () => {
 
   test("Hydrates into a navigable app", async ({ page }) => {
     fixture = await createFixture({
+      prerender: true,
       files,
     });
     appFixture = await createAppFixture(fixture);
 
     let requests: string[] = [];
     page.on("request", (request) => {
-      if (request.url().endsWith(".data")) {
-        requests.push(request.url());
+      let pathname = new URL(request.url()).pathname;
+      if (pathname.endsWith(".data") || pathname.endsWith("__manifest")) {
+        requests.push(pathname);
       }
     });
 
@@ -332,12 +352,16 @@ test.describe("Prerendering", () => {
     await page.waitForSelector("[data-mounted]");
     await app.clickLink("/about");
     await page.waitForSelector("[data-route]:has-text('About')");
-    expect(requests.length).toBe(1);
-    expect(requests[0]).toMatch(/\/about.data$/);
+    expect(requests).toEqual(["/__manifest", "/about.data"]);
   });
 
-  test("Serves the prerendered HTML file", async ({ page }) => {
+  test("Serves the prerendered HTML file alongside runtime routes", async ({
+    page,
+  }) => {
     fixture = await createFixture({
+      // Even thogh we are prerendering, we want a running server so we can
+      // hit the pre-rendered HTML file and a non-prerendered route
+      prerender: false,
       files: {
         ...files,
         "vite.config.ts": js`
@@ -390,10 +414,24 @@ test.describe("Prerendering", () => {
     expect(await app.getHtml()).toContain("<span>NOT-PRERENDERED-false</span>");
   });
 
-  test("Renders/ down to the proper HydrateFallback", async ({ page }) => {
+  test("Renders down to the proper HydrateFallback", async ({ page }) => {
     fixture = await createFixture({
+      prerender: true,
       files: {
         ...files,
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter({
+                prerender: ['/', '/parent', '/parent/child'],
+              })
+            ],
+          });
+        `,
         "app/routes/parent.tsx": js`
           import { Outlet, useLoaderData } from 'react-router';
           export function loader() {
@@ -439,5 +477,42 @@ test.describe("Prerendering", () => {
     await app.goto("/parent/child");
     await page.waitForSelector("[data-mounted]");
     expect(await app.getHtml()).toMatch("Index: INDEX");
+  });
+
+  test("Handles 404s on data requests", async ({ page }) => {
+    fixture = await createFixture({
+      prerender: true,
+      files: {
+        ...files,
+        "app/routes/$slug.tsx": js`
+          import * as React  from "react";
+          import { useLoaderData } from "react-router";
+
+          export async function loader() {
+            return null;
+          }
+
+          export default function Component() {
+            return <h2>Slug</h2>
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let requests: string[] = [];
+    page.on("request", (request) => {
+      let pathname = new URL(request.url()).pathname;
+      if (pathname.endsWith(".data")) {
+        requests.push(pathname);
+      }
+    });
+
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await page.waitForSelector("[data-mounted]");
+    await app.clickLink("/not-found");
+    await page.waitForSelector("[data-error]:has-text('404 Not Found')");
+    expect(requests).toEqual(["/not-found.data"]);
   });
 });

@@ -1882,73 +1882,80 @@ async function handlePrerender(
     );
   }
 
-  function determineStaticPrerenderRoutes(
-    routes: DataRouteObject[],
-    viteConfig: Vite.ResolvedConfig,
-    isBooleanUsage = false
-  ): string[] {
-    // Always start with the root/index route included
-    let paths: string[] = ["/"];
-    let paramRoutes: string[] = [];
+  await prerenderManifest(
+    build,
+    clientBuildDirectory,
+    reactRouterConfig,
+    viteConfig
+  );
+}
 
-    // Then recursively add any new path defined by the tree
-    function recurse(subtree: typeof routes, prefix = "") {
-      for (let route of subtree) {
-        let newPath = [prefix, route.path].join("/").replace(/\/\/+/g, "/");
-        if (route.path) {
-          let segments = route.path.split("/");
-          if (segments.some((s) => s.startsWith(":") || s === "*")) {
-            paramRoutes.push(route.path);
-          } else {
-            paths.push(newPath);
-          }
-        }
-        if (route.children) {
-          recurse(route.children, newPath);
+function determineStaticPrerenderRoutes(
+  routes: DataRouteObject[],
+  viteConfig: Vite.ResolvedConfig,
+  isBooleanUsage = false
+): string[] {
+  // Always start with the root/index route included
+  let paths: string[] = ["/"];
+  let paramRoutes: string[] = [];
+
+  // Then recursively add any new path defined by the tree
+  function recurse(subtree: typeof routes, prefix = "") {
+    for (let route of subtree) {
+      let newPath = [prefix, route.path].join("/").replace(/\/\/+/g, "/");
+      if (route.path) {
+        let segments = route.path.split("/");
+        if (segments.some((s) => s.startsWith(":") || s === "*")) {
+          paramRoutes.push(route.path);
+        } else {
+          paths.push(newPath);
         }
       }
+      if (route.children) {
+        recurse(route.children, newPath);
+      }
     }
-    recurse(routes);
+  }
+  recurse(routes);
 
-    if (paramRoutes) {
-      viteConfig.logger.warn(
-        "The follwing paths were not pre-rendered because Dynamic Param and Splat " +
-          "routes are not prerendered when using `prerender:true`. You may want to " +
-          "consider using the `1prerender()` API if you wish to prerender slug and " +
-          "splat routes."
-      );
-    }
-
-    // Clean double slashes and remove trailing slashes
-    return paths.map((p) => p.replace(/\/\/+/g, "/").replace(/(.+)\/$/, "$1"));
+  if (isBooleanUsage && paramRoutes) {
+    viteConfig.logger.warn(
+      "The following paths were not prerendered because Dynamic Param and Splat " +
+        "routes cannot be prerendered when using `prerender:true`. You may want to " +
+        "consider using the `prerender()` API if you wish to prerender slug and " +
+        "splat routes."
+    );
   }
 
-  async function prerenderData(
-    handler: RequestHandler,
-    prerenderPath: string,
-    clientBuildDirectory: string,
-    reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
-    viteConfig: Vite.ResolvedConfig,
-    requestInit: RequestInit
-  ) {
-    let normalizedPath = `${reactRouterConfig.basename}${
-      prerenderPath === "/"
-        ? "/_root.data"
-        : `${prerenderPath.replace(/\/$/, "")}.data`
-    }`.replace(/\/\/+/g, "/");
-    let request = new Request(`http://localhost${normalizedPath}`, requestInit);
-    let response = await handler(request);
-    let data = await response.text();
+  // Clean double slashes and remove trailing slashes
+  return paths.map((p) => p.replace(/\/\/+/g, "/").replace(/(.+)\/$/, "$1"));
+}
 
-    validatePrerenderedResponse(response, data, "Prerender", normalizedPath);
+async function prerenderData(
+  handler: RequestHandler,
+  prerenderPath: string,
+  clientBuildDirectory: string,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  viteConfig: Vite.ResolvedConfig,
+  requestInit: RequestInit
+) {
+  let normalizedPath = `${reactRouterConfig.basename}${
+    prerenderPath === "/"
+      ? "/_root.data"
+      : `${prerenderPath.replace(/\/$/, "")}.data`
+  }`.replace(/\/\/+/g, "/");
+  let request = new Request(`http://localhost${normalizedPath}`, requestInit);
+  let response = await handler(request);
+  let data = await response.text();
 
-    // Write out the .data file
-    let outdir = path.relative(process.cwd(), clientBuildDirectory);
-    let outfile = path.join(outdir, normalizedPath.split("/").join(path.sep));
-    await fse.ensureDir(path.dirname(outfile));
-    await fse.outputFile(outfile, data);
-    viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
-  }
+  validatePrerenderedResponse(response, data, "Prerender", normalizedPath);
+
+  // Write out the .data file
+  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  await fse.ensureDir(path.dirname(outfile));
+  await fse.outputFile(outfile, data);
+  viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
 
 async function prerenderRoute(
@@ -1978,6 +1985,24 @@ async function prerenderRoute(
   let outfile = path.join(outdir, ...normalizedPath.split("/"), "index.html");
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, html);
+  viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
+}
+
+async function prerenderManifest(
+  build: ServerBuild,
+  clientBuildDirectory: string,
+  reactRouterConfig: Awaited<ReturnType<typeof resolveReactRouterConfig>>,
+  viteConfig: Vite.ResolvedConfig
+) {
+  let normalizedPath = `${reactRouterConfig.basename}/__manifest`.replace(
+    /\/\/+/g,
+    "/"
+  );
+  let outdir = path.relative(process.cwd(), clientBuildDirectory);
+  let outfile = path.join(outdir, ...normalizedPath.split("/"));
+  await fse.ensureDir(path.dirname(outfile));
+  let manifestData = JSON.stringify(build.assets.routes);
+  await fse.outputFile(outfile, manifestData);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
 }
 
