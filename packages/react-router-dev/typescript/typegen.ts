@@ -89,7 +89,7 @@ function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
 
     type Route = typeof import("./${Pathe.filename(route.file)}")
 
-    export type Params = {${paramsTypeBody(routes, route)}}
+    export type Params = {${formattedParamsProperties(routes, route)}}
 
     export type LinksArgs = {} // TODO
     export type LinksReturn = {} // TODO
@@ -113,25 +113,32 @@ function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
   `;
 }
 
-function paramsTypeBody(routes: RouteManifest, route: RouteManifestEntry) {
+function formattedParamsProperties(
+  routes: RouteManifest,
+  route: RouteManifestEntry
+) {
   const urlpath = routeLineage(routes, route)
     .map((route) => route.path)
     .join("/");
   const params = parseParams(urlpath);
   const indent = "  ".repeat(3);
-  const paramTypeFields = Object.entries(params).map(([name, values]) => {
+  const properties = Object.entries(params).map(([name, values]) => {
     if (values.length === 1) {
       const isOptional = values[0];
-      return isOptional
-        ? `${indent}${name}?: string`
-        : `${indent}${name}: string`;
+      return indent + (isOptional ? `${name}?: string` : `${name}: string`);
     }
     const items = values.map((isOptional) =>
       isOptional ? "string | undefined" : "string"
     );
-    return `${indent}${name}: [${items.join(", ")}]`;
+    return indent + `${name}: [${items.join(", ")}]`;
   });
-  return paramTypeFields.length ? "\n" + paramTypeFields.join("\n") + "\n" : "";
+
+  // prettier-ignore
+  const body =
+    properties.length === 0 ? "" :
+    "\n" + properties.join("\n") + "\n";
+
+  return body;
 }
 
 function routeLineage(routes: RouteManifest, route: RouteManifestEntry) {
