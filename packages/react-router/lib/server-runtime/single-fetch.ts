@@ -282,7 +282,7 @@ export function getSingleFetchRedirect(
   };
 }
 
-type Serializable =
+export type Serializable =
   | undefined
   | null
   | boolean

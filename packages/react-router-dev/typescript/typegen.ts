@@ -86,30 +86,23 @@ export async function typegenAll(
 function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
   return dedent`
     // typegen: ${route.file}
-
-    type Route = typeof import("./${Pathe.filename(route.file)}")
+    import * as T from "react-router/types"
 
     export type Params = {${formattedParamsProperties(routes, route)}}
 
-    export type LinksArgs = {} // TODO
-    export type LinksReturn = {} // TODO
+    type Route = typeof import("./${Pathe.filename(route.file)}")
 
-    export type ServerLoaderArgs = {} // TODO
-    export type ClientLoaderArgs = {} // TODO
-    export type LoaderData = {} // TODO
+    export type LoaderData = T.LoaderData<Route>
+    export type ActionData = T.ActionData<Route>
 
-    export type HydrateFallbackArgs = {} // TODO
-    export type HydrateFallbackReturn = import("react").ReactNode
+    export type ServerLoader = T.ServerLoader<Params>
+    export type ClientLoader = T.ClientLoader<Params, Route>
+    export type ServerAction = T.ServerAction<Params>
+    export type ClientAction = T.ClientAction<Params, Route>
 
-    export type ServerActionArgs = {} // TODO
-    export type ClientActionArgs = {} // TODO
-    export type ActionData = {} // TODO
-
-    export type DefaultArgs = {} // TODO
-    export type DefaultReturn = import("react").ReactNode
-
-    export type ErrorBoundaryArgs = {} // TODO
-    export type ErrorBoundaryReturn = import("react").ReactNode
+    export type HydrateFallback = T.HydrateFallback<Params>
+    export type Default = T.Default<Params, LoaderData, ActionData>
+    export type ErrorBoundary = T.ErrorBoundary<Params, LoaderData, ActionData>
   `;
 }
 

@@ -28,6 +28,9 @@
       "import": "./dist/index.mjs",
       "require": "./dist/main.js"
     },
+    "./types": {
+      "types": "./dist/lib/types.d.ts"
+    },
     "./dom": {
       "types": "./dist/dom-export.d.ts",
       "import": "./dist/dom-export.mjs",
