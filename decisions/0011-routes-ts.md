@@ -10,38 +10,53 @@ Now that Remix is being merged upstream into React Router, we have an opportunit
 
 Remix ships with a default set of file system routing conventions. While convenient for demos, examples, tutorials and simple use cases, conventions like these come with a few major drawbacks:
 
-1. They're highly contentious.
+1. **They're highly contentious.**
 
    File system routing conventions are inherently subjective, with numerous possible approaches and preferences. For example, some developers prefer flat route folder structures, while others prefer deeply nested directories. Some even prefer a mix of both. These differing opinions make it challenging to create a one-size-fits-all solution.
 
-   When we changed the default routing conventions between Remix v1 and v2, we found this caused friction for some users who didn't see the benefit in migrating and preferred the old conventions. While consumers could opt out of the new conventions, this may not have been obvious to everyone, and it made anyone using another convention feel like they were veering off the beaten path. In hindsight, we feel we could have been less opinionated in this area.
+   When we changed the default routing conventions between Remix v1 and v2, we found this caused friction for some users who didn't see the benefit in migrating and preferred the old conventions. While consumers could opt out of the new conventions, this may not have been obvious to everyone, and it made anyone using another convention feel like they were veering off the blessed path. This was especially pronounced for anyone who chose to stick with the previous convention since it was now being presented as a legacy "v1" approach.
 
-2. Advanced usage gets convoluted.
+   For those that opted out of the built-in convention, the lower level `routes` option that was provided as an escape hatch presented some challenges. It was quite tricky to use since it didn't use a nested object structure to represent the route tree. Instead, it relied on function calls with nested callbacks to define routes, and then Remix used the call stack to determine the route tree for you. This made it more difficult than it should have been to build alternative routing conventions and resulted in some less-than-ideal APIs.
 
-   Filenames are more limited compared to config-based routes since they have fewer characters to work with. They not only need to include the route path and any parameters—they also need to encode further route configuration, leading to increasingly elaborate naming conventions.
+   In hindsight, we feel we could have been less opinionated in this area.
+
+2. **Advanced usage gets convoluted.**
+
+   Filenames are more limited compared to config-based routes since they have fewer characters to work with. They not only need to include the route path and any parameters—they also need to encode further route configuration (index/layout routes, opting out of nested layouts, escaping special characters, etc.), leading to increasingly elaborate naming conventions.
 
    This is exacerbated by the fact that, while other aspects of the framework's configuration are based in code and provide type safety, file naming conventions provide none of this assistance.
 
    This also makes it difficult for those looking to move between frameworks since they'd have to learn and memorize a new set of conventions that will likely be similar but not identical.
 
-3. They force a certain directory structure on consumers.
+3. **They force a directory structure on consumers.**
 
    File system routing conventions dictate a particular way to organize route files. This can be limiting, especially for larger applications where you may prefer to split up your directory structure by team or domain rather than by route.
 
 ## Goals
 
 1. Default to a more flexible configuration-based approach that better aligns with React Router's philosophy.
-2. Allow for easier iteration on routing conventions without forcing breaking changes on users.
+2. Allow for easier iteration on route configuration APIs and conventions without forcing breaking changes on users.
 3. Improve scalability, maintainability and legibility of complex routing scenarios.
 4. Provide type safety to ensure that routes are defined correctly.
 5. Maintain the option for file system routing for those who prefer it.
-6. Provide a clear migration path for Remix users adopting React Router v7.
+6. Make it easier for the community to create and adopt alternative routing conventions.
+7. Provide a clear migration path for Remix users adopting React Router v7.
 
 ## Decisions
 
 ### `routes.ts` is mandatory for Vite plugin consumers
 
-Any project using the Vite plugin must have a `routes.ts` file which exports an array of route config objects via the `routes` export.
+Any project using the Vite plugin must have a `routes.ts` file which exports an array of route config objects.
+
+### Route config is exported via the `routes` export
+
+We specifically chose to use the `routes` export instead of the more traditional `default` export you might expect in a config file. There are a couple of reasons for this:
+
+1. The `RouteConfig` type can be annotated up-front and inline (`export const routes: RouteConfig = [...]`).
+
+   In contrast, default exports either require a variable to be declared first (`let routes: RouteConfig = ...; export default routes;`), or they require the use of a `satisfies` annotation at the _end_ of the file (`export default ... satisfies RouteConfig`) which can be easy to miss when dealing with large route configs.
+
+2. In other areas of the framework we've come to prefer using named exports. We want to avoid introducing many different default exports that mean different things in different contexts. Named exports are much more self-documenting when looking at the file contents alone, especially if additional exports are added in the future.
 
 ### `routes.ts` is in the `app` directory
 
