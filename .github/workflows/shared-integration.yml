@@ -59,3 +59,4 @@ jobs:
 
       - name: 👀 Run Integration Tests ${{ matrix.browser }}
         run: "pnpm test:integration --project=${{ matrix.browser }}"
+        timeout-minutes: 40

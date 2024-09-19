@@ -19,7 +19,7 @@ let files = {
       build: { manifest: true },
       plugins: [
         reactRouter({
-          prerender: ['/', '/about'],
+          prerender: true,
         })
       ],
     });
@@ -108,6 +108,29 @@ let files = {
   `,
 };
 
+function listAllFiles(_dir: string) {
+  let files: string[] = [];
+
+  function recurse(dir: string) {
+    fs.readdirSync(dir).forEach((file) => {
+      // Join with posix separator for consistency
+      const absolute = dir + "/" + file;
+      if (fs.statSync(absolute).isDirectory()) {
+        if (![".vite", "assets"].includes(file)) {
+          return recurse(absolute);
+        }
+      } else {
+        return files.push(absolute);
+      }
+    });
+  }
+
+  recurse(_dir);
+
+  // Normalize *nix/windows paths
+  return files.map((f) => f.replace(_dir, "").replace(/^\//, ""));
+}
+
 test.describe("Prerendering", () => {
   let fixture: Fixture;
   let appFixture: AppFixture;
@@ -116,24 +139,57 @@ test.describe("Prerendering", () => {
     appFixture.close();
   });
 
-  test("Prerenders a static array of routes", async () => {
+  test("Prerenders known static routes when true is specified", async () => {
     fixture = await createFixture({
-      files,
+      files: {
+        ...files,
+        "app/routes/parent.tsx": js`
+          import { Outlet } from 'react-router'
+          export default function Component() {
+            return <Outlet/>
+          }
+        `,
+        "app/routes/parent.child.tsx": js`
+          import { Outlet } from 'react-router'
+          export function loader() {
+            return null;
+          }
+          export default function Component() {
+            return <Outlet/>
+          }
+        `,
+        "app/routes/$slug.tsx": js`
+          import { Outlet } from 'react-router'
+          export function loader() {
+            return null;
+          }
+          export default function Component() {
+            return <Outlet/>
+          }
+        `,
+        "app/routes/$.tsx": js`
+          import { Outlet } from 'react-router'
+          export function loader() {
+            return null;
+          }
+          export default function Component() {
+            return <Outlet/>
+          }
+        `,
+      },
     });
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
-    expect(fs.readdirSync(clientDir).sort()).toEqual([
-      ".vite",
+    expect(listAllFiles(clientDir).sort()).toEqual([
       "_root.data",
-      "about",
       "about.data",
-      "assets",
+      "about/index.html",
       "favicon.ico",
       "index.html",
-    ]);
-    expect(fs.readdirSync(path.join(clientDir, "about"))).toEqual([
-      "index.html",
+      "parent/child.data",
+      "parent/child/index.html",
+      "parent/index.html",
     ]);
 
     let res = await fixture.requestDocument("/");
@@ -151,7 +207,7 @@ test.describe("Prerendering", () => {
     expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
   });
 
-  test("Prerenders a dynamic array of routes", async () => {
+  test("Prerenders a static array of routes", async () => {
     fixture = await createFixture({
       files: {
         ...files,
@@ -176,16 +232,70 @@ test.describe("Prerendering", () => {
     appFixture = await createAppFixture(fixture);
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
-    expect(fs.readdirSync(clientDir).sort()).toEqual([
-      ".vite",
+    expect(listAllFiles(clientDir).sort()).toEqual([
       "_root.data",
-      "about",
       "about.data",
-      "assets",
+      "about/index.html",
       "favicon.ico",
       "index.html",
     ]);
-    expect(fs.readdirSync(path.join(clientDir, "about"))).toEqual([
+
+    let res = await fixture.requestDocument("/");
+    let html = await res.text();
+    expect(html).toMatch("<title>Index Title: Index Loader Data</title>");
+    expect(html).toMatch("<h1>Root</h1>");
+    expect(html).toMatch('<h2 data-route="true">Index</h2>');
+    expect(html).toMatch('<p data-loader-data="true">Index Loader Data</p>');
+
+    res = await fixture.requestDocument("/about");
+    html = await res.text();
+    expect(html).toMatch("<title>About Title: About Loader Data</title>");
+    expect(html).toMatch("<h1>Root</h1>");
+    expect(html).toMatch('<h2 data-route="true">About</h2>');
+    expect(html).toMatch('<p data-loader-data="true">About Loader Data</p>');
+  });
+
+  test("Prerenders a dynamic array of routes based on the static routes", async () => {
+    fixture = await createFixture({
+      files: {
+        ...files,
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter({
+                async prerender({ getStaticPaths }) {
+                  return [...getStaticPaths(), "/a", "/b"];
+                },
+              })
+            ],
+          });
+        `,
+        "app/routes/$slug.tsx": js`
+          export function loader() {
+            return null
+          }
+          export default function component() {
+            return null;
+          }
+        `,
+      },
+    });
+    appFixture = await createAppFixture(fixture);
+
+    let clientDir = path.join(fixture.projectDir, "build", "client");
+    expect(listAllFiles(clientDir).sort()).toEqual([
+      "_root.data",
+      "a.data",
+      "a/index.html",
+      "about.data",
+      "about/index.html",
+      "b.data",
+      "b/index.html",
+      "favicon.ico",
       "index.html",
     ]);
 
@@ -230,6 +340,20 @@ test.describe("Prerendering", () => {
     fixture = await createFixture({
       files: {
         ...files,
+        "vite.config.ts": js`
+          import { defineConfig } from "vite";
+          import { reactRouter } from "@react-router/dev/vite";
+
+          export default defineConfig({
+            build: { manifest: true },
+            plugins: [
+              reactRouter({
+                // Don't prerender the /not-prerendered route
+                prerender: ["/", "/about"],
+              })
+            ],
+          });
+        `,
         "app/routes/about.tsx": js`
           import { useLoaderData } from 'react-router';
           export function loader({ request }) {

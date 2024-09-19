@@ -125,7 +125,12 @@ export type ReactRouterConfig = {
    * An array of URLs to prerender to HTML files at build time.  Can also be a
    * function returning an array to dynamically generate URLs.
    */
-  prerender?: Array<string> | (() => Array<string> | Promise<Array<string>>);
+  prerender?:
+    | boolean
+    | Array<string>
+    | ((args: {
+        getStaticPaths: () => string[];
+      }) => Array<string> | Promise<Array<string>>);
   /**
    * An array of React Router plugin config presets to ease integration with
    * other platforms and tools.
@@ -174,9 +179,10 @@ export type ResolvedReactRouterConfig = Readonly<{
    */
   future: FutureConfig;
   /**
-   * An array of URLs to prerender to HTML files at build time.
+   * An array of URLs to prerender to HTML files at build time.  Can also be a
+   * function returning an array to dynamically generate URLs.
    */
-  prerender: Array<string> | null;
+  prerender: ReactRouterConfig["prerender"];
   /**
    * An object of all available routes, keyed by route id.
    */
@@ -335,7 +341,7 @@ export async function resolveReactRouterConfig({
     basename,
     buildDirectory: userBuildDirectory,
     buildEnd,
-    prerender: prerenderConfig,
+    prerender,
     serverBuildFile,
     serverBundles,
     serverModuleFormat,
@@ -357,21 +363,20 @@ export async function resolveReactRouterConfig({
     serverBundles = undefined;
   }
 
-  let prerender: Array<string> | null = null;
-  if (prerenderConfig) {
-    if (Array.isArray(prerenderConfig)) {
-      prerender = prerenderConfig;
-    } else if (typeof prerenderConfig === "function") {
-      prerender = await prerenderConfig();
-    } else {
-      logger.error(
-        colors.red(
-          "The `prerender` config must be an array of string paths, or a function " +
-            "returning an array of string paths"
-        )
-      );
-      process.exit(1);
-    }
+  let isValidPrerenderConfig =
+    prerender == null ||
+    typeof prerender === "boolean" ||
+    Array.isArray(prerender) ||
+    typeof prerender === "function";
+
+  if (!isValidPrerenderConfig) {
+    logger.error(
+      colors.red(
+        "The `prerender` config must be a boolean, an array of string paths, " +
+          "or a function returning a boolean or array of string paths"
+      )
+    );
+    process.exit(1);
   }
 
   let appDirectory = path.resolve(rootDirectory, userAppDirectory || "app");
