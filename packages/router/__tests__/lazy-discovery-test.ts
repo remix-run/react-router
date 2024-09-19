@@ -1330,6 +1330,196 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     `);
   });
 
+  it("distinguishes sibling pathless layout routes in idempotent patch check (via id)", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          children: [
+            {
+              id: "a-layout",
+              children: [
+                {
+                  id: "a",
+                  path: "a",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      async patchRoutesOnNavigation({ patch, path }) {
+        count++;
+        if (path === "/b") {
+          patch("root", [
+            {
+              id: "b-layout",
+              children: [
+                {
+                  id: "b",
+                  path: "b",
+                },
+              ],
+            },
+          ]);
+        }
+        await tick();
+      },
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location.pathname).toBe("/a");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "a-layout",
+      "a",
+    ]);
+    expect(router.state.errors).toBeNull();
+    expect(count).toBe(0);
+
+    await router.navigate("/b");
+    expect(router.state.location.pathname).toBe("/b");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "b-layout",
+      "b",
+    ]);
+    expect(router.state.errors).toBeNull();
+    expect(count).toBe(1);
+
+    expect(router.routes).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "hasErrorBoundary": false,
+                  "id": "a",
+                  "path": "a",
+                },
+              ],
+              "hasErrorBoundary": false,
+              "id": "a-layout",
+            },
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "hasErrorBoundary": false,
+                  "id": "b",
+                  "path": "b",
+                },
+              ],
+              "hasErrorBoundary": false,
+              "id": "b-layout",
+            },
+          ],
+          "hasErrorBoundary": false,
+          "id": "root",
+          "path": "/",
+        },
+      ]
+    `);
+  });
+
+  it("distinguishes sibling pathless layout routes in idempotent patch check (via children)", async () => {
+    let count = 0;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          id: "root",
+          path: "/",
+          children: [
+            {
+              children: [
+                {
+                  path: "a",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      async patchRoutesOnNavigation({ patch, path }) {
+        count++;
+        if (path === "/b") {
+          patch("root", [
+            {
+              children: [
+                {
+                  path: "b",
+                },
+              ],
+            },
+          ]);
+        }
+        await tick();
+      },
+    });
+
+    await router.navigate("/a");
+    expect(router.state.location.pathname).toBe("/a");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "0-0",
+      "0-0-0",
+    ]);
+    expect(router.state.errors).toBeNull();
+    expect(count).toBe(0);
+
+    await router.navigate("/b");
+    expect(router.state.location.pathname).toBe("/b");
+    expect(router.state.matches.map((m) => m.route.id)).toEqual([
+      "root",
+      "root-patch-1-0",
+      "root-patch-1-0-0",
+    ]);
+    expect(router.state.errors).toBeNull();
+    expect(count).toBe(1);
+
+    expect(router.routes).toMatchInlineSnapshot(`
+      [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "hasErrorBoundary": false,
+                  "id": "0-0-0",
+                  "path": "a",
+                },
+              ],
+              "hasErrorBoundary": false,
+              "id": "0-0",
+            },
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "hasErrorBoundary": false,
+                  "id": "root-patch-1-0-0",
+                  "path": "b",
+                },
+              ],
+              "hasErrorBoundary": false,
+              "id": "root-patch-1-0",
+            },
+          ],
+          "hasErrorBoundary": false,
+          "id": "root",
+          "path": "/",
+        },
+      ]
+    `);
+  });
+
   describe("errors", () => {
     it("lazy 404s (GET navigation)", async () => {
       let childrenDfd = createDeferred<AgnosticDataRouteObject[]>();
