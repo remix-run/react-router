@@ -127,7 +127,7 @@ function listAllFiles(_dir: string) {
   recurse(_dir);
 
   // Normalize *nix/windows paths
-  return files.map((f) => path.relative(_dir, f).replace("\\", "/"));
+  return files.map((f) => path.relative(_dir, f).replace("\\\\", "/"));
 }
 
 test.describe("Prerendering", () => {
