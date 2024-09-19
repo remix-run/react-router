@@ -113,7 +113,7 @@ function listAllFiles(_dir: string) {
 
   function recurse(dir: string) {
     fs.readdirSync(dir).forEach((file) => {
-      const absolute = path.join(dir, file);
+      const absolute = path.join(dir, file.replace(path.sep, ""));
       if (fs.statSync(absolute).isDirectory()) {
         if (![".vite", "assets"].includes(file)) {
           return recurse(absolute);
@@ -127,7 +127,7 @@ function listAllFiles(_dir: string) {
   recurse(_dir);
 
   // Normalize *nix/windows paths
-  return files.map((f) => path.relative(_dir, f).replace("\\\\", "/"));
+  return files.map((f) => path.relative(_dir, f).replace("\\", "/"));
 }
 
 test.describe("Prerendering", () => {
