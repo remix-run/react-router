@@ -305,6 +305,7 @@ test.describe("Prerendering", () => {
 
     let clientDir = path.join(fixture.projectDir, "build", "client");
     expect(listAllFiles(clientDir).sort()).toEqual([
+      "__manifest",
       "_root.data",
       "a.data",
       "a/index.html",
