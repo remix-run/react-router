@@ -4677,12 +4677,9 @@ function patchRoutesImpl(
   // to simplify user-land code. This is useful because we re-call the
   // `patchRoutesOnNavigation` function for matched routes with params.
   let uniqueChildren = children.filter(
-    (a) =>
-      !childrenToPatch.some(
-        (b) =>
-          a.index === b.index &&
-          a.path === b.path &&
-          a.caseSensitive === b.caseSensitive
+    (newRoute) =>
+      !childrenToPatch.some((existingRoute) =>
+        isSameRoute(newRoute, existingRoute)
       )
   );
 
@@ -4694,6 +4691,46 @@ function patchRoutesImpl(
   );
 
   childrenToPatch.push(...newRoutes);
+}
+
+function isSameRoute(
+  newRoute: AgnosticRouteObject,
+  existingRoute: AgnosticRouteObject
+): boolean {
+  // Most optimal check is by id
+  if (
+    "id" in newRoute &&
+    "id" in existingRoute &&
+    newRoute.id === existingRoute.id
+  ) {
+    return true;
+  }
+
+  // Second is by pathing differences
+  if (
+    !(
+      newRoute.index === existingRoute.index &&
+      newRoute.path === existingRoute.path &&
+      newRoute.caseSensitive === existingRoute.caseSensitive
+    )
+  ) {
+    return false;
+  }
+
+  // Pathless layout routes are trickier since we need to check children.
+  // If they have no children then they're the same as far as we can tell
+  if (
+    (!newRoute.children || newRoute.children.length === 0) &&
+    (!existingRoute.children || existingRoute.children.length === 0)
+  ) {
+    return true;
+  }
+
+  // Otherwise, we look to see if every child in the new route is already
+  // represented in the existing route's children
+  return newRoute.children!.every((aChild, i) =>
+    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild))
+  );
 }
 
 /**
