@@ -17,7 +17,24 @@ This is still something that could be done entirely in userland, but it's be so 
 
 ## Configuration
 
-To enable pre-rendering, add the `prerender` option to your React Router Vite plugin to tell React Router which paths to pre-render:
+To enable pre-rendering, add the `prerender` option to your React Router Vite plugin to enable prerendering.
+
+In the simplest use-case, `prerender: true` will prerender all static routes defined in your application (excluding any paths that contain dynamic or splat params):
+
+```ts filename=vite.config.ts
+import { reactRouter } from "@react-router/dev/vite";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    reactRouter({
+      prerender: true,
+    }),
+  ],
+});
+```
+
+If you need to prerender paths with dynamic/splat parameters, or you only want to prerender a subset of your static paths, you can provide an array of paths:
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";
@@ -32,7 +49,7 @@ export default defineConfig({
 });
 ```
 
-`prerender` can also be a function, which allows you to dynamically generate the paths -- after fetching blog posts from your CMS for example:
+`prerender` can also be a function, which allows you to dynamically generate the paths -- after fetching blog posts from your CMS for example. This function receives a single argument with a `getStaticPaths` function that you can call to retrieve all static paths defined in your application.
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";
@@ -41,9 +58,12 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     reactRouter({
-      async prerender() {
+      async prerender({ getStaticPaths }) {
         let slugs = await getSlugsFromCms();
-        return ["/", ...slugs.map((s) => `/blog/${s}`)];
+        return [
+          ...getStaticPaths(),
+          ...slugs.map((s) => `/blog/${s}`),
+        ];
       },
     }),
   ],
