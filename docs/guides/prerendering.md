@@ -34,7 +34,7 @@ export default defineConfig({
 });
 ```
 
-Alternatively, you can tell React Router specifically which paths to pre-render:
+If you need to prerender paths with dynamic/splat parameters, or you only want to prerender a subset of your static paths, you can provide an array of paths:
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";
