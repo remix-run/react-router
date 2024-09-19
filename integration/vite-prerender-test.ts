@@ -119,7 +119,6 @@ function listAllFiles(_dir: string) {
           return recurse(absolute);
         }
       } else {
-        console.log({ dir, file, absolute });
         return files.push(absolute);
       }
     });
@@ -128,16 +127,7 @@ function listAllFiles(_dir: string) {
   recurse(_dir);
 
   // Normalize *nix/windows paths
-  return files.map((f) => {
-    console.log({
-      dir: _dir,
-      f,
-      relative: path.relative(_dir, f),
-      relative2: f.replace(_dir, "").replace(/^\\/, ""),
-      result: path.relative(_dir, f).replace("\\", "/"),
-    });
-    return f.replace(_dir, "").replace(/^\\/, "");
-  });
+  return files.map((f) => f.replace(_dir, "").replace(/^\//, ""));
 }
 
 test.describe("Prerendering", () => {
