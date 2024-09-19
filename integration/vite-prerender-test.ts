@@ -133,9 +133,10 @@ function listAllFiles(_dir: string) {
       dir: _dir,
       f,
       relative: path.relative(_dir, f),
+      relative2: f.replace(_dir, ""),
       result: path.relative(_dir, f).replace("\\", "/"),
     });
-    return path.relative(_dir, f).replace("\\", "/");
+    return f.replace(_dir, "");
   });
 }
 
