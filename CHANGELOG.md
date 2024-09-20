@@ -355,7 +355,7 @@ Because React 19 will have first-class support for handling promises in the rend
 
 #### `routes.ts`
 
-When the React Router Vite plugin, routes are defined in `app/routes.ts`. Route config is exported via the `routes` export, conforming to the `RouteConfig` type. Route helper functions `route`, `index`, and `layout` are provided to make declarative type-safe route definitions easier.
+When using the React Router Vite plugin, routes are defined in `app/routes.ts`. Route config is exported via the `routes` export, conforming to the `RouteConfig` type. Route helper functions `route`, `index`, and `layout` are provided to make declarative type-safe route definitions easier.
 
 ```ts
 // app/routes.ts
@@ -411,21 +411,7 @@ export const routes: RouteConfig = [
 ];
 ```
 
-If you were using Remix's `routes` option to define config-based routes or use alternative file system routing conventions, you can use `@react-router/remix-config-routes-adapter` to adapt this option to the new `RouteConfig` format.
-
-```ts
-// app/routes.ts
-import { type RouteConfig } from "@react-router/dev/routes";
-import { remixConfigRoutes } from "@react-router/remix-config-routes-adapter";
-
-export const routes: RouteConfig = remixConfigRoutes(async (defineRoutes) => {
-  defineRoutes((route) => {
-    route("/hello", "./routes/hello.tsx");
-  });
-});
-```
-
-If you were using the `routes` option to use alternative file system routing conventions, you can adapt these to the new `RouteConfig` format using `@react-router/remix-config-routes-adapter`.
+If you were using Remix's `routes` option to use alternative file system routing conventions, you can adapt these to the new `RouteConfig` format using `@react-router/remix-config-routes-adapter`.
 
 For example, if you were using [Remix v1 route conventions](https://remix.run/docs/en/1.19.3/file-conventions/routes-files) in Remix v2, you can combine `@react-router/remix-config-routes-adapter` with `@remix-run/v1-route-convention` to adapt this to React Router:
 
@@ -440,6 +426,28 @@ export const routes: RouteConfig = remixConfigRoutes(async (defineRoutes) => {
     ignoredFilePatterns: ["**/.*", "**/*.css"],
   });
 });
+```
+
+Also note that, if you were using Remix's `routes` option to define config-based routes, you can also adapt these to the new `RouteConfig` format using `@react-router/remix-config-routes-adapter` with minimal code changes. While this makes for a fast migration path, we recommend migrating config-based routes to the new `RouteConfig` format since it's a fairly straightforward migration.
+
+```diff
+// app/routes.ts
+-import { type RouteConfig } from "@react-router/dev/routes";
++import { type RouteConfig, route } from "@react-router/dev/routes";
+-import { remixConfigRoutes } from "@react-router/remix-config-routes-adapter";
+
+-export const routes: RouteConfig = remixConfigRoutes(async (defineRoutes) => {
+-  defineRoutes((route) => {
+-    route("/parent", "./routes/parent.tsx", () => [
+-      route("/child", "./routes/child.tsx"),
+-    ]);
+-  });
+-});
++export const routes: RouteConfig = [
++  route("/parent", "./routes/parent.tsx", [
++    route("/child", "./routes/child.tsx"),
++  ]),
++];
 ```
 
 #### Typed Component Props
