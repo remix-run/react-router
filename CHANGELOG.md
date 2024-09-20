@@ -428,7 +428,7 @@ export const routes: RouteConfig = remixConfigRoutes(async (defineRoutes) => {
 });
 ```
 
-Also note that, if you were using Remix's `routes` option to define config-based routes, you can also adapt these to the new `RouteConfig` format using `@react-router/remix-config-routes-adapter` with minimal code changes. While this makes for a fast migration path, we recommend migrating config-based routes to the new `RouteConfig` format since it's a fairly straightforward migration.
+Also note that, if you were using Remix's `routes` option to define config-based routes, you can also adapt these to the new `RouteConfig` format using `@react-router/remix-config-routes-adapter` with minimal code changes. While this makes for a fast migration path, we recommend migrating any config-based routes from Remix to the new `RouteConfig` format since it's a fairly straightforward migration.
 
 ```diff
 // app/routes.ts
