@@ -11,17 +11,16 @@ import {
   type RouteManifestEntry,
 } from "../config/routes";
 import * as ViteNode from "../vite/vite-node";
-
-type Context = {
-  rootDirectory: string;
-  appDirectory: string;
-};
+import type { Context } from "./context";
 
 function getDirectory(ctx: Context) {
-  return Path.join(ctx.rootDirectory, ".react-router/types");
+  return Path.join(ctx.config.rootDirectory, ".react-router/types");
 }
 
-export function getPath(ctx: Context, route: RouteManifestEntry): string {
+export function getPath(
+  ctx: Context,
+  route: Pick<RouteManifestEntry, "file">
+): string {
   return Path.join(
     getDirectory(ctx),
     "app",
@@ -31,64 +30,60 @@ export function getPath(ctx: Context, route: RouteManifestEntry): string {
 }
 
 export async function watch(ctx: Context) {
-  const appDirectory = Path.normalize(ctx.appDirectory);
+  const appDirectory = Path.normalize(ctx.config.appDirectory);
   const routesTsPath = Path.join(appDirectory, "routes.ts");
 
   const routesViteNodeContext = await ViteNode.createContext();
-  async function getRoutes(): Promise<RouteManifest> {
+  async function updateRoutes(): Promise<void> {
     routesViteNodeContext.devServer.moduleGraph.invalidateAll();
     routesViteNodeContext.runner.moduleCache.clear();
 
     const result = await routesViteNodeContext.runner.executeFile(routesTsPath);
-    return configRoutesToRouteManifest(result.routes);
+    ctx.routes = configRoutesToRouteManifest(result.routes);
   }
 
-  const initialRoutes = await getRoutes();
-  await typegenAll(ctx, initialRoutes);
+  await updateRoutes();
+  await typegenAll(ctx);
 
   const watcher = Chokidar.watch(appDirectory, { ignoreInitial: true });
   watcher.on("all", async (event, path) => {
     path = Path.normalize(path);
-
-    const routes = await getRoutes();
+    await updateRoutes();
 
     const routeConfigChanged = Boolean(
       routesViteNodeContext.devServer.moduleGraph.getModuleById(path)
     );
     if (routeConfigChanged) {
-      await typegenAll(ctx, routes);
+      await typegenAll(ctx);
       return;
     }
 
-    const isRoute = Object.values(routes).find(
-      (route) => path === Path.join(ctx.appDirectory, route.file)
+    const isRoute = Object.values(ctx.routes).find(
+      (route) => path === Path.join(ctx.config.appDirectory, route.file)
     );
     if (isRoute && (event === "add" || event === "unlink")) {
-      await typegenAll(ctx, routes);
+      await typegenAll(ctx);
       return;
     }
   });
 }
 
-export async function typegenAll(
-  ctx: Context,
-  routes: RouteManifest
-): Promise<void> {
+export async function typegenAll(ctx: Context): Promise<void> {
   fs.rmSync(getDirectory(ctx), { recursive: true, force: true });
-  Object.values(routes).forEach((route) => {
+  Object.values(ctx.routes).forEach((route) => {
     const typesPath = getPath(ctx, route);
-    const content = getModule(routes, route);
+    const content = getModule(ctx, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });
 }
 
-function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
+function getModule(ctx: Context, route: RouteManifestEntry): string {
   return dedent`
     // typegen: ${route.file}
     import * as T from "react-router/types"
 
-    export type Params = {${formattedParamsProperties(routes, route)}}
+    export type Params = {${formattedParamsProperties(ctx.routes, route)}}
 
     type Route = typeof import("./${Pathe.filename(route.file)}")
 

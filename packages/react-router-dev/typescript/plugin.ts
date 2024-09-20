@@ -7,6 +7,7 @@ import type ts from "typescript/lib/tsserverlibrary";
 import * as Path from "pathe";
 
 import * as Typegen from "./typegen";
+import type { Context } from "./context";
 
 export default function init(modules: { typescript: typeof ts }) {
   function create(info: ts.server.PluginCreateInfo) {
@@ -14,9 +15,17 @@ export default function init(modules: { typescript: typeof ts }) {
     logger.info("[react-router] setup");
 
     const rootDirectory = Path.normalize(info.project.getCurrentDirectory());
-    const ctx = {
+    const config = {
       rootDirectory,
       appDirectory: Path.join(rootDirectory, "app"),
+    };
+    const ctx: Context = {
+      config,
+      routes: {}, // will be updated by `Typegen.watch`
+      languageService: info.languageService,
+      languageServiceHost: info.languageServiceHost,
+      ts: modules.typescript,
+      logger,
     };
     Typegen.watch(ctx);
 

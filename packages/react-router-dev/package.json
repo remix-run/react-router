@@ -90,6 +90,7 @@
     "react-router": "workspace:^",
     "strip-ansi": "^6.0.1",
     "tiny-invariant": "^1.2.0",
+    "typescript": "^5.6.2",
     "vite": "^5.1.0",
     "wrangler": "^3.28.2"
   },
