@@ -167,7 +167,6 @@ function autotypeRoute(ctx: Context, filepath: string, code: string) {
       ...annotateDefaultExportExpression(ctx, stmt, typesSource),
       ...annotateNamedExportFunctionDeclaration(ctx, stmt, typesSource),
       ...annotateNamedExportVariableStatement(ctx, stmt, typesSource),
-      ...annotateExportDeclaration(ctx, stmt, typesSource),
     ]),
   ];
   return new AutotypedRoute(code, splices);
@@ -295,62 +294,23 @@ function annotateFunction(
 
   const annotateReturnType = Route.exports[name]?.annotateReturnType;
 
+  name = name === "default" ? "Default" : name;
   return [
     param && param.type === undefined
       ? {
           index: param.getEnd(),
-          content: `: Parameters<import("${typesSource}").Route["${name}"]>[0]`,
+          content: `: import("${typesSource}").${name}["args"]`,
           remapDiagnostics,
         }
       : null,
     returnTypeIndex && annotateReturnType && fn.type === undefined
       ? {
           index: returnTypeIndex,
-          content: `: ReturnType<import("${typesSource}").Route["${name}"]> `,
+          content: `: import("${typesSource}").${name}["return"]`,
           remapDiagnostics,
         }
       : null,
-  ].filter((x) => x !== null);
-}
-
-function annotateExportDeclaration(
-  ctx: Context,
-  stmt: ts.Statement,
-  typesSource: string
-): Splice[] {
-  if (!ctx.ts.isExportDeclaration(stmt)) return [];
-
-  const source = stmt.moduleSpecifier;
-  if (source && !ctx.ts.isStringLiteral(source)) return [];
-
-  const exports = stmt.exportClause;
-  if (!exports) return [];
-  if (!ctx.ts.isNamedExports(exports)) return [];
-
-  return exports.elements
-    .map((specifier) => {
-      const name = specifier.name.text;
-      const routeExport = Route.exports[name];
-      if (!routeExport) return undefined;
-
-      const localName = specifier.propertyName?.text ?? name;
-      const unique = AST.generateUniqueIdentifier();
-      const satisfiesType = `import("${typesSource}").Route["${name}"]`;
-
-      const splice: Splice = {
-        index: stmt.getStart(),
-        content: source
-          ? `import { ${localName} as ${unique} } from "${source.text}"\n` +
-            `${unique} satisfies ${satisfiesType}\n`
-          : `${localName} satisfies ${satisfiesType}\n`,
-        remapDiagnostics: {
-          start: specifier.name.getStart(),
-          length: specifier.name.getWidth(),
-        },
-      };
-      return splice;
-    })
-    .filter((x) => x !== undefined);
+  ].filter((x) => x !== null) as Splice[];
 }
 
 export class AutotypedRoute {

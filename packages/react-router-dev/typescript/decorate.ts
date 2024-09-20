@@ -77,7 +77,7 @@ export function decorateLanguageService(ctx: Context) {
           replacementSpan: { start: lineStart, length: position - lineStart },
         };
       })
-      .filter((x) => x !== null);
+      .filter((x) => x !== null) as ts.CompletionEntry[];
 
     if (!completions) {
       return routeExportCompletions.length > 0
@@ -176,7 +176,7 @@ export function decorateLanguageService(ctx: Context) {
           return diagnostic;
         }
       })
-      .filter((x) => x !== undefined);
+      .filter((x) => x !== undefined) as ts.Diagnostic[];
 
     const hmrNamedFunctionsDiagnostics: ts.Diagnostic[] = sourceFile.statements
       // eslint-disable-next-line array-callback-return
@@ -212,7 +212,7 @@ export function decorateLanguageService(ctx: Context) {
           };
         }
       })
-      .filter((x) => x !== undefined);
+      .filter((x) => x !== undefined) as ts.Diagnostic[];
 
     return [
       ...hmrNamedFunctionsDiagnostics,

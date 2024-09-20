@@ -1,15 +1,26 @@
 import Path from "pathe";
+import Pathe from "pathe/utils";
 
 import type ts from "typescript/lib/tsserverlibrary";
 
 import type { Context } from "./context";
 import type { RouteManifestEntry } from "../config/routes";
 
+function noext(path: string) {
+  return Path.join(Path.dirname(path), Pathe.filename(path));
+}
+
 export function get(
   ctx: Context,
   fileName: string
 ): RouteManifestEntry | undefined {
-  return ctx.routes[Path.relative(ctx.config.appDirectory, fileName)];
+  const routeId = noext(Path.relative(ctx.config.appDirectory, fileName));
+  ctx.logger?.info(
+    `Route.get filename:${fileName} routeId:${routeId} routes:${JSON.stringify(
+      ctx.routes
+    )}`
+  );
+  return ctx.routes[routeId];
 }
 
 type RouteExportInfo = {
@@ -25,7 +36,7 @@ export const exports: Record<string, RouteExportInfo> = {
       link: `https://remix.run/docs/en/main/route/links`,
     }),
   },
-  serverLoader: {
+  loader: {
     annotateReturnType: false,
     documentation: createDocumentation({
       name: "serverLoader",
@@ -47,7 +58,7 @@ export const exports: Record<string, RouteExportInfo> = {
       link: `https://remix.run/docs/en/main/route/hydrate-fallback`,
     }),
   },
-  serverAction: {
+  action: {
     annotateReturnType: false,
     documentation: createDocumentation({
       name: "serverAction",

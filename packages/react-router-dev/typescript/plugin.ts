@@ -8,6 +8,7 @@ import * as Path from "pathe";
 
 import * as Typegen from "./typegen";
 import type { Context } from "./context";
+import { decorateLanguageService } from "./decorate";
 
 export default function init(modules: { typescript: typeof ts }) {
   function create(info: ts.server.PluginCreateInfo) {
@@ -29,6 +30,7 @@ export default function init(modules: { typescript: typeof ts }) {
     };
     Typegen.watch(ctx);
 
+    decorateLanguageService(ctx);
     return info.languageService;
   }
   return { create };

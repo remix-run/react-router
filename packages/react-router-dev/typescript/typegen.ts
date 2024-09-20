@@ -90,10 +90,10 @@ function getModule(ctx: Context, route: RouteManifestEntry): string {
     export type LoaderData = T.LoaderData<Route>
     export type ActionData = T.ActionData<Route>
 
-    export type ServerLoader = T.ServerLoader<Params>
-    export type ClientLoader = T.ClientLoader<Params, Route>
-    export type ServerAction = T.ServerAction<Params>
-    export type ClientAction = T.ClientAction<Params, Route>
+    export type serverLoader = T.ServerLoader<Params>
+    export type clientLoader = T.ClientLoader<Params, Route>
+    export type serverAction = T.ServerAction<Params>
+    export type clientAction = T.ClientAction<Params, Route>
 
     export type HydrateFallback = T.HydrateFallback<Params>
     export type Default = T.Default<Params, LoaderData, ActionData>
