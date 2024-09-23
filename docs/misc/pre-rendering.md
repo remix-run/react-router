@@ -3,7 +3,7 @@ title: Pre-Rendering
 new: true
 ---
 
-# Prerendering
+# Pre-Rendering
 
 Without a doubt, one of the most common questions we've received since the launch of Remix v1 is _"how can I SSG my app with Remix?"_
 
