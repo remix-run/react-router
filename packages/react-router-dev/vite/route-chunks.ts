@@ -17,7 +17,7 @@ type ExportDependencies = Map<string, Dependencies>;
 
 type Dependencies = {
   topLevelStatements: Set<Statement>;
-  topLevelNonImportStatements: Set<Statement>;
+  topLevelNonModuleStatements: Set<Statement>;
   importedIdentifierNames: Set<string>;
 };
 
@@ -43,47 +43,111 @@ function getExportDependencies(
       let exportDependencies: ExportDependencies = new Map();
       let ast = codeToAst(code, cache, cacheKey);
 
+      function handleExport(
+        exportName: string,
+        exportPath: NodePath<Babel.ExportDeclaration>,
+        identifiersPath: NodePath = exportPath
+      ) {
+        let identifiers = getDependentIdentifiersForPath(identifiersPath);
+
+        let topLevelStatements = new Set([
+          exportPath.node,
+          ...getTopLevelStatementsForPaths(identifiers),
+        ]);
+
+        // We also keep track of non-import statements since import statements
+        // get more fine-grained filtering, meaning that we often need to
+        // exclude import statements in our chunking logic.
+        let topLevelNonModuleStatements = new Set(
+          Array.from(topLevelStatements).filter(
+            (statement) =>
+              !t.isImportDeclaration(statement) &&
+              !t.isExportDeclaration(statement)
+          )
+        );
+
+        // We keep track of imported identifiers for each export since we
+        // perform more fine-grained filtering on import statements.
+        let importedIdentifierNames = new Set<string>();
+        for (let identifier of identifiers) {
+          if (identifier.parentPath.parentPath?.isImportDeclaration()) {
+            importedIdentifierNames.add(identifier.node.name);
+          }
+        }
+
+        let dependencies: Dependencies = {
+          topLevelStatements,
+          topLevelNonModuleStatements,
+          importedIdentifierNames,
+        };
+
+        exportDependencies.set(exportName, dependencies);
+      }
+
       traverse(ast, {
         ExportDeclaration(exportPath) {
-          let identifiers = getDependentIdentifiersForPath(exportPath);
+          let { node } = exportPath;
 
-          let topLevelStatements = new Set([
-            exportPath.node,
-            ...getTopLevelStatementsForPaths(identifiers),
-          ]);
+          // export * from "./module"
+          if (t.isExportAllDeclaration(node)) {
+            return;
+          }
 
-          // We also keep track of non-import statements since import statements
-          // get more fine-grained filtering, meaning that we often need to
-          // exclude import statements in our chunking logic.
-          let topLevelNonImportStatements = new Set(
-            Array.from(topLevelStatements).filter(
-              (statement) => !t.isImportDeclaration(statement)
-            )
-          );
+          // export default ...;
+          if (t.isExportDefaultDeclaration(node)) {
+            handleExport("default", exportPath);
+            return;
+          }
 
-          // We keep track of imported identifiers for each export since we
-          // perform more fine-grained filtering on import statements.
-          let importedIdentifierNames = new Set<string>();
-          for (let identifier of identifiers) {
-            if (identifier.parentPath.parentPath?.isImportDeclaration()) {
-              importedIdentifierNames.add(identifier.node.name);
+          let { declaration } = node;
+
+          // export const foo = ...;
+          if (t.isVariableDeclaration(declaration)) {
+            for (let declarator of declaration.declarations) {
+              if (t.isIdentifier(declarator.id)) {
+                handleExport(declarator.id.name, exportPath);
+              }
             }
+            return;
           }
 
-          let dependencies: Dependencies = {
-            topLevelStatements,
-            topLevelNonImportStatements,
-            importedIdentifierNames,
-          };
-
-          // Since a single statement can have multiple exports, we need to set
-          // the same dependencies for each export name. There's room for
-          // optimization since we could handle each export name separately,
-          // similarly to how we handle imported identifiers, but this case is
-          // much less common for our use case of route module exports.
-          for (let exportName of getExportNames(exportPath)) {
-            exportDependencies.set(exportName, dependencies);
+          // export function foo() {}
+          // export class Foo {}
+          if (
+            t.isFunctionDeclaration(declaration) ||
+            t.isClassDeclaration(declaration)
+          ) {
+            invariant(
+              declaration.id,
+              "Expected exported function or class declaration to have a name when not the default export"
+            );
+            handleExport(declaration.id.name, exportPath);
+            return;
           }
+
+          // export { foo, bar }
+          if (t.isExportNamedDeclaration(node)) {
+            for (let specifier of node.specifiers) {
+              if (t.isIdentifier(specifier.exported)) {
+                let name = specifier.exported.name;
+                let specifierPath = exportPath
+                  .get("specifiers")
+                  .find((path) => path.node === specifier);
+
+                invariant(
+                  specifierPath,
+                  `Expected to find specifier path for ${name}`
+                );
+
+                handleExport(name, exportPath, specifierPath);
+              }
+            }
+            return;
+          }
+
+          // This should never happen:
+          // @ts-expect-error: We've handled all the export types
+          throw new Error(`Unknown export node type: ${node.type}`);
         },
       });
 
@@ -137,45 +201,9 @@ function getTopLevelStatementsForPaths(paths: Set<NodePath>): Set<Statement> {
   return topLevelStatements;
 }
 
-function getExportNames(path: NodePath<Babel.ExportDeclaration>): string[] {
-  // export default ...;
-  if (path.node.type === "ExportDefaultDeclaration") {
-    return ["default"];
-  }
-
-  // export { foo };
-  // export { bar } from "./module";
-  if (path.node.type === "ExportNamedDeclaration") {
-    if (path.node.declaration?.type === "VariableDeclaration") {
-      let declaration = path.node.declaration;
-      return declaration.declarations.map((declaration) => {
-        if (declaration.id.type === "Identifier") {
-          return declaration.id.name;
-        }
-
-        throw new Error(
-          "Exporting of destructured identifiers not yet implemented"
-        );
-      });
-    }
-
-    // export function foo() {}
-    if (path.node.declaration?.type === "FunctionDeclaration") {
-      let id = path.node.declaration.id;
-      invariant(id, "Expected exported function declaration to have a name");
-      return [id.name];
-    }
-
-    // export class Foo() {}
-    if (path.node.declaration?.type === "ClassDeclaration") {
-      let id = path.node.declaration.id;
-      invariant(id, "Expected exported class declaration to have a name");
-      return [id.name];
-    }
-  }
-
-  return [];
-}
+const getExportedName = (exported: t.Identifier | t.StringLiteral): string => {
+  return t.isIdentifier(exported) ? exported.name : exported.value;
+};
 
 function areSetsDisjoint(set1: Set<any>, set2: Set<any>): boolean {
   // To optimize the check, we always iterate over the smaller set.
@@ -235,8 +263,8 @@ export function hasChunkableExport(
         // deeper check on imported identifiers in the step after this.
         if (
           !areSetsDisjoint(
-            currentDependencies.topLevelNonImportStatements,
-            dependencies.topLevelNonImportStatements
+            currentDependencies.topLevelNonModuleStatements,
+            dependencies.topLevelNonModuleStatements
           )
         ) {
           return false;
@@ -314,31 +342,117 @@ export function getChunkedExport(
         )
         // Remove unused imports
         .map((node) => {
-          // If the node isn't an import declaration or if the export doesn't
-          // depend on any imported identifiers, we can return the node as-is.
-          if (
-            !t.isImportDeclaration(node) ||
-            dependencies.importedIdentifierNames.size === 0
-          ) {
+          // Skip non-import nodes for this step, return node as-is
+          if (!t.isImportDeclaration(node)) {
             return node;
+          }
+
+          // If the chunked export doesn't depend on any imported identifiers,
+          // we know it can't contain any imports statements, so we remove it.
+          if (dependencies.importedIdentifierNames.size === 0) {
+            return null;
           }
 
           // Filter out unused import specifiers. Note that this handles
           // default imports, named imports, and namespace imports.
-          let usedSpecifiers = node.specifiers.filter((specifier) =>
+          node.specifiers = node.specifiers.filter((specifier) =>
             dependencies.importedIdentifierNames.has(specifier.local.name)
           );
 
           // Ensure we haven't removed all specifiers. If we have, it means
           // our dependency analysis is incorrect.
           invariant(
-            usedSpecifiers.length > 0,
+            node.specifiers.length > 0,
             "Expected import statement to have used specifiers"
           );
 
-          // Return a new import declaration with only the used specifiers.
-          return { ...node, specifiers: usedSpecifiers };
-        });
+          // Keep the modified AST node
+          return node;
+        })
+        // Filter export statements
+        .map((node) => {
+          // Skip non-export nodes for this step, return node as-is
+          if (!t.isExportDeclaration(node)) {
+            return node;
+          }
+
+          // `export * from "./module";
+          // Not chunkable, always remove within chunks.
+          if (t.isExportAllDeclaration(node)) {
+            return null;
+          }
+
+          // export default ...;
+          // If we're chunking the default export, keep it,
+          // otherwise remove it.
+          if (t.isExportDefaultDeclaration(node)) {
+            return exportName === "default" ? node : null;
+          }
+
+          let { declaration } = node;
+
+          // export const foo = ...;
+          if (t.isVariableDeclaration(declaration)) {
+            // Only keep identifiers that match the chunked export name
+            declaration.declarations = declaration.declarations.filter(
+              ({ id }) => {
+                if (t.isIdentifier(id)) {
+                  return id.name === exportName;
+                }
+
+                throw new Error(
+                  `Unsupported export identifier type: ${id.type}`
+                );
+              }
+            );
+
+            // If the export statement is now empty, remove it
+            if (declaration.declarations.length === 0) {
+              return null;
+            }
+
+            // Keep the modified AST node
+            return node;
+          }
+
+          // export function foo() {}
+          // export class Foo {}
+          if (
+            t.isFunctionDeclaration(node.declaration) ||
+            t.isClassDeclaration(node.declaration)
+          ) {
+            // If the function/class name matches the export name, keep the
+            // node, otherwise remove it.
+            return node.declaration.id?.name === exportName ? node : null;
+          }
+
+          // export { foo, bar }
+          if (t.isExportNamedDeclaration(node)) {
+            // export {}
+            // Remove empty export statements within chunks
+            if (node.specifiers.length === 0) {
+              return null;
+            }
+
+            // Only keep specifiers for the chunked export
+            node.specifiers = node.specifiers.filter(
+              (specifier) => getExportedName(specifier.exported) === exportName
+            );
+
+            // If the export statement is now empty, remove it
+            if (node.specifiers.length === 0) {
+              return null;
+            }
+
+            // Keep the modified AST node
+            return node;
+          }
+
+          // This should never happen:
+          // @ts-expect-error: We've handled all the export types
+          throw new Error(`Unknown export node type: ${node.type}`);
+        })
+        .filter((node): node is NonNullable<typeof node> => node !== null);
 
       return generate(ast, generateOptions);
     }
@@ -375,17 +489,25 @@ export function omitChunkedExports(
         }
 
         // Now that we know the export is chunkable, add all of its top level
-        // non-import statements to the set of statements to be omitted from the
-        // main chunk. Note that we don't include top level import statements in
-        // this step because we perform more fine-grained filtering of import
+        // non-module statements to the set of statements to be omitted from the
+        // main chunk. Note that we don't include top level module statements in
+        // this step because we perform more fine-grained filtering of module
         // statements below.
-        for (let statement of dependencies.topLevelNonImportStatements) {
+        for (let statement of dependencies.topLevelNonModuleStatements) {
           omittedStatements.add(statement);
         }
       }
 
       let ast = codeToAst(code, cache, cacheKey);
       let omittedStatementsArray = Array.from(omittedStatements);
+
+      function isChunkable(exportName: string): boolean {
+        return hasChunkableExport(code, exportName, cache, cacheKey);
+      }
+
+      function isOmitted(exportName: string): boolean {
+        return exportNames.includes(exportName) && isChunkable(exportName);
+      }
 
       ast.program.body = ast.program.body
         // Remove top level statements that belong solely to the chunked
@@ -396,23 +518,27 @@ export function omitChunkedExports(
           )
         )
         // Remove unused imports.
-        .map((node) => {
-          // Skip non import nodes and side effect imports. Side effect imports
-          // implicitly belong to the main chunk, so they're not filtered when
-          // omitting the chunked exports.
-          if (!t.isImportDeclaration(node) || node.specifiers.length === 0) {
+        .map((node): Statement | null => {
+          // Skip non-import nodes for this step, return node as-is
+          if (!t.isImportDeclaration(node)) {
+            return node;
+          }
+
+          // If there are no specifiers, this is a side effect import. Side
+          // effects implicitly belong to the main chunk, so we leave them.
+          if (node.specifiers.length === 0) {
             return node;
           }
 
           // Remove import specifiers that are only used by the omitted chunks.
           // This ensures only the necessary imports remain in the main chunk.
-          let usedSpecifiers = node.specifiers.filter((specifier) => {
+          node.specifiers = node.specifiers.filter((specifier) => {
             // Check the imported identifiers that each export depends on to see
             // if it includes the specifier's local name.
             for (let exportName of exportNames) {
               // If the export is not chunkable then its code will still remain
               // in the main chunk, so we need to keep its imports.
-              if (!hasChunkableExport(code, exportName, cache, cacheKey)) {
+              if (!isChunkable(exportName)) {
                 continue;
               }
 
@@ -431,18 +557,96 @@ export function omitChunkedExports(
             return true;
           });
 
-          // If the import statement has no specifiers, we omit it entirely by
-          // returning null and removing it in the filter step below.
-          if (usedSpecifiers.length === 0) {
+          // If the import statement is now empty, remove it
+          if (node.specifiers.length === 0) {
             return null;
           }
 
-          // Return a new import declaration that only contains the specifiers
-          // used in the main chunk.
-          return { ...node, specifiers: usedSpecifiers };
+          // Keep the modified AST node
+          return node;
         })
-        // Filter out import statements that were entirely omitted above.
-        .filter((node): node is Statement => node !== null);
+        // Filter out omitted exports and remove unused identifiers
+        .map((node): Statement | null => {
+          // Skip non-export nodes for this step, return node as-is
+          if (!t.isExportDeclaration(node)) {
+            return node;
+          }
+
+          // The main chunk should include all "export *" declarations
+          if (t.isExportAllDeclaration(node)) {
+            return node;
+          }
+
+          // export default ...;
+          if (t.isExportDefaultDeclaration(node)) {
+            return isOmitted("default") ? null : node;
+          }
+
+          // export const foo = ...;
+          if (t.isVariableDeclaration(node.declaration)) {
+            // Remove any omitted identifiers
+            node.declaration.declarations =
+              node.declaration.declarations.filter(({ id }) => {
+                if (t.isIdentifier(id)) {
+                  return !isOmitted(id.name);
+                }
+
+                throw new Error(
+                  `Unsupported export identifier type: ${id.type}`
+                );
+              });
+
+            // If the export statement is now empty, remove it
+            if (node.declaration.declarations.length === 0) {
+              return null;
+            }
+
+            // Keep the modified AST node
+            return node;
+          }
+
+          // export function foo() {}
+          // export class foo {}
+          if (
+            t.isFunctionDeclaration(node.declaration) ||
+            t.isClassDeclaration(node.declaration)
+          ) {
+            invariant(
+              node.declaration.id,
+              "Expected exported function or class declaration to have a name when not the default export"
+            );
+            return isOmitted(node.declaration.id.name) ? null : node;
+          }
+
+          // export { foo, bar }
+          if (t.isExportNamedDeclaration(node)) {
+            // export {}
+            // Keep empty export statements in main chunk
+            if (node.specifiers.length === 0) {
+              return node;
+            }
+
+            // Remove omitted export specifiers
+            node.specifiers = node.specifiers.filter((specifier) => {
+              const exportedName = getExportedName(specifier.exported);
+              return !isOmitted(exportedName);
+            });
+
+            // If the export statement is now empty, remove it
+            if (node.specifiers.length === 0) {
+              return null;
+            }
+
+            // Keep the modified AST node
+            return node;
+          }
+
+          // This should never happen:
+          // @ts-expect-error: We've handled all the export types
+          throw new Error(`Unknown node type: ${node.type}`);
+        })
+        // Filter out statements that were entirely omitted above.
+        .filter((node): node is NonNullable<typeof node> => node !== null);
 
       if (ast.program.body.length === 0) {
         return undefined;

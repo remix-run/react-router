@@ -134,6 +134,92 @@ describe("route chunks", () => {
       `);
     });
 
+    test("imports and exports using shared statements", () => {
+      const code = dedent`
+        import { chunk1Import, chunk2Import, mainImport } from "./shared";
+        const chunk1 = () => chunk1Import;
+        const chunk2 = () => chunk2Import;
+        const main = () => mainImport;
+        export { chunk1, chunk2, main };
+      `;
+      expect(hasChunkableExport(code, "chunk1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk1", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunk1Import } from "./shared";
+        const chunk1 = () => chunk1Import;
+        export { chunk1 };"
+      `);
+      expect(getChunkedExport(code, "chunk2", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunk2Import } from "./shared";
+        const chunk2 = () => chunk2Import;
+        export { chunk2 };"
+      `);
+      expect(omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mainImport } from "./shared";
+        const main = () => mainImport;
+        export { main };"
+      `);
+    });
+
+    test("re-exports using shared statement", () => {
+      const code = dedent`
+        export { chunk1, chunk2, main } from "./shared";
+      `;
+      expect(hasChunkableExport(code, "chunk1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "chunk1", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export { chunk1 } from "./shared";"`);
+      expect(
+        getChunkedExport(code, "chunk2", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export { chunk2 } from "./shared";"`);
+      expect(
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export { main } from "./shared";"`);
+    });
+
+    test("aliased re-exports using shared statement", () => {
+      const code = dedent`
+        export {
+          foo as chunk1,
+          bar as chunk2,
+          baz as main,
+        } from "./shared";
+      `;
+      expect(hasChunkableExport(code, "chunk1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "chunk1", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export { foo as chunk1 } from "./shared";"`);
+      expect(
+        getChunkedExport(code, "chunk2", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export { bar as chunk2 } from "./shared";"`);
+      expect(
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export { baz as main } from "./shared";"`);
+    });
+
+    test("empty imports are placed in main chunk", () => {
+      const code = dedent`
+        export const chunk = "chunk";
+        export {};
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "chunk", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export {};"`);
+    });
+
     test("side effect imports are placed in main chunk", () => {
       const code = dedent`
         import "./side-effect";
