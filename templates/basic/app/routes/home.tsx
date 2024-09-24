@@ -13,7 +13,7 @@ export default function Index() {
       <div className="flex flex-col items-center gap-16">
         <header className="flex flex-col items-center gap-9">
           <h1 className="leading text-2xl font-bold text-gray-800 dark:text-gray-100">
-            Welcome to <span className="sr-only">Remix</span>
+            Welcome to <span className="sr-only">React Router</span>
           </h1>
           <div className="w-2xl max-w-[100vw] p-4 aspect-[920/96]">
             <img
