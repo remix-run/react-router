@@ -93,7 +93,7 @@ export function StreamTransfer({
     <script
       nonce={nonce}
       dangerouslySetInnerHTML={{
-        __html: `window.__remixContext.streamController.enqueue(${escapeHtml(
+        __html: `window.__reactRouterContext.streamController.enqueue(${escapeHtml(
           JSON.stringify(value)
         )});`,
       }}
@@ -107,7 +107,7 @@ export function StreamTransfer({
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
-            __html: `window.__remixContext.streamController.close();`,
+            __html: `window.__reactRouterContext.streamController.close();`,
           }}
         />
       </>
@@ -311,7 +311,7 @@ async function singleFetchLoaderNavigationStrategy(
   // know about
   if (
     (!router.state.initialized || routesParams.size === 0) &&
-    !window.__remixHdrActive
+    !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({});
   } else {

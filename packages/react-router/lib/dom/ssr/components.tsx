@@ -661,14 +661,14 @@ export function Scripts(props: ScriptsProps) {
 
   let initialScripts = React.useMemo(() => {
     let streamScript =
-      "window.__remixContext.stream = new ReadableStream({" +
+      "window.__reactRouterContext.stream = new ReadableStream({" +
       "start(controller){" +
-      "window.__remixContext.streamController = controller;" +
+      "window.__reactRouterContext.streamController = controller;" +
       "}" +
       "}).pipeThrough(new TextEncoderStream());";
 
     let contextScript = staticContext
-      ? `window.__remixContext = ${serverHandoffString};${streamScript}`
+      ? `window.__reactRouterContext = ${serverHandoffString};${streamScript}`
       : " ";
 
     let routeModulesScript = !isStatic
@@ -689,14 +689,14 @@ ${matches
   ${
     enableFogOfWar
       ? // Inline a minimal manifest with the SSR matches
-        `window.__remixManifest = ${JSON.stringify(
+        `window.__reactRouterManifest = ${JSON.stringify(
           getPartialManifest(manifest, router),
           null,
           2
         )};`
       : ""
   }
-  window.__remixRouteModules = {${matches
+  window.__reactRouterRouteModules = {${matches
     .map((match, index) => `${JSON.stringify(match.route.id)}:route${index}`)
     .join(",")}};
 
