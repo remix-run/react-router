@@ -19,6 +19,7 @@ type Dependencies = {
   topLevelStatements: Set<Statement>;
   topLevelNonModuleStatements: Set<Statement>;
   importedIdentifierNames: Set<string>;
+  exportedVariableNames: Set<string>;
 };
 
 function codeToAst(code: string, cache: Cache, cacheKey: string): Babel.File {
@@ -75,10 +76,24 @@ function getExportDependencies(
           }
         }
 
+        // We keep track of exported variable names for each export since we
+        // perform more fine-grained filtering on export statements.
+        let exportedVariableNames = new Set<string>();
+        for (let identifier of identifiers) {
+          if (
+            identifier.parentPath.isVariableDeclarator() &&
+            identifier.parentPath.parentPath?.isVariableDeclaration() &&
+            identifier.parentPath.parentPath.parentPath?.isExportNamedDeclaration()
+          ) {
+            exportedVariableNames.add(identifier.node.name);
+          }
+        }
+
         let dependencies: Dependencies = {
           topLevelStatements,
           topLevelNonModuleStatements,
           importedIdentifierNames,
+          exportedVariableNames,
         };
 
         exportDependencies.set(exportName, dependencies);
@@ -101,11 +116,20 @@ function getExportDependencies(
 
           let { declaration } = node;
 
-          // export const foo = ...;
+          // export const foo = ..., bar = ...;
           if (t.isVariableDeclaration(declaration)) {
             for (let declarator of declaration.declarations) {
               if (t.isIdentifier(declarator.id)) {
-                handleExport(declarator.id.name, exportPath);
+                let identifierPath = exportPath
+                  .get("declaration.declarations")
+                  .find((path) => path.node === declarator);
+
+                invariant(
+                  identifierPath,
+                  `Expected to find identifier path for ${declarator.id.name}`
+                );
+
+                handleExport(declarator.id.name, exportPath, identifierPath);
               }
             }
             return;
@@ -205,7 +229,7 @@ const getExportedName = (exported: t.Identifier | t.StringLiteral): string => {
   return t.isIdentifier(exported) ? exported.name : exported.value;
 };
 
-function areSetsDisjoint(set1: Set<any>, set2: Set<any>): boolean {
+function setsIntersect(set1: Set<any>, set2: Set<any>): boolean {
   // To optimize the check, we always iterate over the smaller set.
   let smallerSet = set1;
   let largerSet = set2;
@@ -216,11 +240,11 @@ function areSetsDisjoint(set1: Set<any>, set2: Set<any>): boolean {
 
   for (let element of smallerSet) {
     if (largerSet.has(element)) {
-      return false;
+      return true;
     }
   }
 
-  return true;
+  return false;
 }
 
 export function hasChunkableExport(
@@ -262,7 +286,7 @@ export function hasChunkableExport(
         // okay for multiple exports to share an import statement. We perform a
         // deeper check on imported identifiers in the step after this.
         if (
-          !areSetsDisjoint(
+          setsIntersect(
             currentDependencies.topLevelNonModuleStatements,
             dependencies.topLevelNonModuleStatements
           )
@@ -288,9 +312,36 @@ export function hasChunkableExport(
           // other exports because we filter out all unused imports, so we can
           // treat each imported identifier as a separate entity in this check.
           if (
-            !areSetsDisjoint(
+            setsIntersect(
               currentDependencies.importedIdentifierNames,
               dependencies.importedIdentifierNames
+            )
+          ) {
+            return false;
+          }
+        }
+      }
+
+      // Loop through all other exports to see if they have exported variable names
+      // in common with the export we're trying to chunk.
+      if (dependencies.exportedVariableNames.size > 0) {
+        for (let [
+          currentExportName,
+          currentDependencies,
+        ] of exportDependencies) {
+          if (currentExportName === exportName) {
+            continue;
+          }
+
+          // As soon as we find any exported variable names in common with another
+          // export, we know this export cannot be placed in its own chunk. Note
+          // that the chunk can still share top level export statements with
+          // other exports because we filter out all unused exports, so we can
+          // treat each exported variable name as a separate entity in this check.
+          if (
+            setsIntersect(
+              currentDependencies.exportedVariableNames,
+              dependencies.exportedVariableNames
             )
           ) {
             return false;
@@ -391,17 +442,17 @@ export function getChunkedExport(
 
           let { declaration } = node;
 
-          // export const foo = ...;
+          // export const foo = ..., bar = ...;
           if (t.isVariableDeclaration(declaration)) {
             // Only keep identifiers that match the chunked export name
             declaration.declarations = declaration.declarations.filter(
-              ({ id }) => {
-                if (t.isIdentifier(id)) {
-                  return id.name === exportName;
+              (declarator) => {
+                if (t.isIdentifier(declarator.id)) {
+                  return declarator.id.name === exportName;
                 }
 
                 throw new Error(
-                  `Unsupported export identifier type: ${id.type}`
+                  `Unsupported export identifier type: ${declarator.id.type}`
                 );
               }
             );
@@ -582,17 +633,17 @@ export function omitChunkedExports(
             return isOmitted("default") ? null : node;
           }
 
-          // export const foo = ...;
+          // export const foo = ..., bar = ...;
           if (t.isVariableDeclaration(node.declaration)) {
             // Remove any omitted identifiers
             node.declaration.declarations =
-              node.declaration.declarations.filter(({ id }) => {
-                if (t.isIdentifier(id)) {
-                  return !isOmitted(id.name);
+              node.declaration.declarations.filter((declarator) => {
+                if (t.isIdentifier(declarator.id)) {
+                  return !isOmitted(declarator.id.name);
                 }
 
                 throw new Error(
-                  `Unsupported export identifier type: ${id.type}`
+                  `Unsupported export identifier type: ${declarator.id.type}`
                 );
               });
 
