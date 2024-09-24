@@ -205,6 +205,27 @@ describe("route chunks", () => {
       ).toMatchInlineSnapshot(`"export { baz as main } from "./shared";"`);
     });
 
+    test("isolated exported variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const chunk = chunkMessage,
+          main = mainMessage;
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        export const chunk = chunkMessage;"
+      `);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mainMessage } from "./messages";
+        export const main = mainMessage;"
+      `);
+    });
+
     test("empty imports are placed in main chunk", () => {
       const code = dedent`
         export const chunk = "chunk";
@@ -333,6 +354,35 @@ describe("route chunks", () => {
         }
         export const target2 = () => getTargetMessage2();
         export const other2 = () => getOtherMessage2();"
+      `);
+    });
+
+    test("isolated exported variable declarations sharing an export statement, another one with shared variable declaration", () => {
+      const code = dedent`
+      import { chunkableMessage, unchunkableMessage } from "./messages";
+        export const chunkable = chunkableMessage,
+          unchunkable = unchunkableMessage,
+          main = unchunkable;
+      `;
+
+      expect(hasChunkableExport(code, "chunkable", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "unchunkable", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunkable", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkableMessage } from "./messages";
+        export const chunkable = chunkableMessage;"
+      `);
+      expect(
+        getChunkedExport(code, "unchunkable", {}, ...cache)
+      ).toBeUndefined();
+      expect(
+        omitChunkedExports(code, ["chunkable", "unchunkable"], {}, ...cache)
+          ?.code
+      ).toMatchInlineSnapshot(`
+        "import { unchunkableMessage } from "./messages";
+        export const unchunkable = unchunkableMessage,
+          main = unchunkable;"
       `);
     });
   });
@@ -472,6 +522,24 @@ describe("route chunks", () => {
         export const target2 = () => getTargetMessage2();
         export const other1 = () => getOtherMessage1();
         export const other2 = () => getOtherMessage2();"
+      `);
+    });
+
+    test("exported variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { sharedMessage } from "./messages";
+        export const chunk = sharedMessage,
+          main = chunk;
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { sharedMessage } from "./messages";
+        export const chunk = sharedMessage,
+          main = chunk;"
       `);
     });
   });
