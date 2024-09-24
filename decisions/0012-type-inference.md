@@ -50,7 +50,7 @@ There are three major aspects to typesafety in a framework like React Router:
 
    Unlike the `useParams` generic, this isn't just a type cast.
    The `useLoaderData` generic ensures that types account for serialization across the network.
-   However, it still requires you to type of `typeof loader` every time.
+   However, it still requires you to add `typeof loader` every time.
 
    Not only that, but complex routes get very tricky to type correctly.
 
@@ -165,6 +165,9 @@ That means that sometimes route URLs will only be represented as file paths.
 Unfortunately, TypeScript cannot use the filesystem as part of its type inference nor type checking.
 The only tenable way to infer types based on file paths is through code generation.
 
+We _could_ have typegen just for file-based routing, but then we'd need to maintain a separate code path for type inference in programmatic routing.
+To keep things simple, React Router treats any value returned by `routes.ts` the same; it will not make assumptions about _how_ those routes were constructed and will run typegen in all cases.
+
 To that end, React Router will generate types for each route module into a special, gitignored `.react-router` directory.
 For example:
 
@@ -188,12 +191,12 @@ import * as Types from "./+types.product-details";
 ```
 
 TypeScript will even give you import autocompletion for the typegen file and the `+` prefix helps to distinguish it as a special file.
-Big thanks to Svelte Kit for showing us that `rootDirs` trick!
+Big thanks to Svelte Kit for showing us that [`rootDirs` trick](https://svelte.dev/blog/zero-config-type-safety#virtual-files)!
 
 ### TypeScript plugin
 
-Typegen gets a bad rap because its a hassle when typegen'd files are out-of-date.
-Most typegen solutions require you to then rerun a script to update the typegen'd files.
+Typegen solutions often receive criticism due to typegen'd files becoming out of sync during development.
+This happens because many typegen solutions require you to then rerun a script to update the typegen'd files.
 
 Instead, our typegen will automatically run within a TypeScript plugin.
 That means you should never need to manually run a typegen command during development.
