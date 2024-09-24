@@ -33,8 +33,8 @@ First create a new directory and install dependencies:
 mkdir my-new-app
 cd my-new-app
 npm init -y
-npm install react react-dom react-router @react-router/node @react-router/serve
-npm install -D vite @react-router/dev
+npm install react react-dom react-router@pre @react-router/node@pre @react-router/serve@pre
+npm install -D vite @react-router/dev@pre
 ```
 
 Now create the following files:
