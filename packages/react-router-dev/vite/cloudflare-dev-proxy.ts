@@ -79,7 +79,7 @@ export const cloudflareDevProxyVitePlugin = <Env, Cf extends CfProperties>(
               )) as ServerBuild;
 
               let handler = createRequestHandler(build, "development");
-              let req = fromNodeRequest(nodeReq);
+              let req = fromNodeRequest(nodeReq, nodeRes);
               let loadContext = getLoadContext
                 ? await getLoadContext({ request: req, context })
                 : context;

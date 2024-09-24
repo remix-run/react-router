@@ -249,7 +249,7 @@ test.describe("root route", () => {
                 // which should throw on the initial render _and_ the error render,
                 // resulting in us bubbling to the default error boundary and skipping
                 // our Layout component entirely to avoid a loop
-                lazy: new Promise((r) => setTimeout(() => r(null), 500)),
+                lazy: new Promise((r) => setTimeout(() => r(null), 1000)),
               };
             }
             export default function Root() {
@@ -379,7 +379,7 @@ test.describe("root route", () => {
                 // which should throw on the initial render _and_ the error render,
                 // resulting in us bubbling to the default error boundary and skipping
                 // our Layout component entirely to avoid a loop
-                lazy: new Promise((r) => setTimeout(() => r(null), 100)),
+                lazy: new Promise((r) => setTimeout(() => r(null), 1000)),
               };
             }
             export default function Root() {

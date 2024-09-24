@@ -28,6 +28,7 @@ export interface FixtureInit {
   files?: { [filename: string]: string };
   useReactRouterServe?: boolean;
   spaMode?: boolean;
+  prerender?: boolean;
   port?: number;
 }
 
@@ -56,24 +57,38 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
     );
   };
 
-  let isSpaMode = init.spaMode;
-
-  if (isSpaMode) {
-    let requestDocument = () => {
-      let html = fse.readFileSync(
-        path.join(projectDir, "build/client/index.html")
-      );
-      return new Response(html, {
-        headers: {
-          "Content-Type": "text/html",
-        },
-      });
-    };
+  if (init.spaMode || init.prerender) {
+    let requestDocument = init.spaMode
+      ? () => {
+          let html = fse.readFileSync(
+            path.join(projectDir, "build/client/index.html")
+          );
+          return new Response(html, {
+            headers: {
+              "Content-Type": "text/html",
+            },
+          });
+        }
+      : (href: string) => {
+          let pathname = new URL(href, "test://test").pathname;
+          let file = pathname.endsWith(".data")
+            ? pathname
+            : pathname + "/index.html";
+          let html = fse.readFileSync(
+            path.join(projectDir, "build/client" + file)
+          );
+          return new Response(html, {
+            headers: {
+              "Content-Type": "text/html",
+            },
+          });
+        };
 
     return {
       projectDir,
       build: null,
-      isSpaMode,
+      isSpaMode: init.spaMode,
+      prerender: init.prerender,
       requestDocument,
       requestResource: () => {
         throw new Error("Cannot requestResource in SPA Mode tests");
@@ -141,7 +156,8 @@ export async function createFixture(init: FixtureInit, mode?: ServerMode) {
   return {
     projectDir,
     build: app,
-    isSpaMode,
+    isSpaMode: init.spaMode,
+    prerender: init.prerender,
     requestDocument,
     requestResource,
     requestSingleFetchData,
@@ -224,14 +240,36 @@ export async function createAppFixture(fixture: Fixture, mode?: ServerMode) {
         let app = express();
         app.use(express.static(path.join(fixture.projectDir, "build/client")));
         app.get("*", (_, res, next) =>
-          res.sendFile(
-            path.join(fixture.projectDir, "build/client/index.html"),
-            next
-          )
+          res.sendFile(path.join(fixture.projectDir, "build/client/index.html"))
         );
         let server = app.listen(port);
         accept({ stop: server.close.bind(server), port });
       });
+    }
+
+    if (fixture.prerender) {
+      return new Promise(async (accept) => {
+        let port = await getPort();
+        let app = express();
+        app.use(express.static(path.join(fixture.projectDir, "build/client")));
+        app.get("*", (req, res, next) => {
+          let file = req.path.endsWith(".data")
+            ? req.path
+            : req.path + "/index.html";
+          res.sendFile(
+            path.join(fixture.projectDir, "build/client", file),
+            next
+          );
+        });
+        let server = app.listen(port);
+        accept({ stop: server.close.bind(server), port });
+      });
+    }
+
+    if (!fixture.build) {
+      return Promise.reject(
+        new Error("Cannot start app server without a build")
+      );
     }
 
     return new Promise(async (accept) => {
@@ -291,7 +329,7 @@ export async function createFixtureProject(
   await fse.copy(integrationTemplateDir, projectDir);
   // let reactRouterDev = path.join(
   //   projectDir,
-  //   "node_modules/@react-router/dev/dist/cli.js"
+  //   "node_modules/@react-router/dev/dist/cli/index.js"
   // );
   // await fse.chmod(reactRouterDev, 0o755);
   // await fse.ensureSymlink(
@@ -343,7 +381,7 @@ function build(projectDir: string, buildStdio?: Writable, mode?: ServerMode) {
   // tested.
   mode = mode === ServerMode.Test ? ServerMode.Production : mode;
 
-  let reactRouterBin = "node_modules/@react-router/dev/dist/cli.js";
+  let reactRouterBin = "node_modules/@react-router/dev/dist/cli/index.js";
 
   let buildArgs: string[] = [reactRouterBin, "build"];
 

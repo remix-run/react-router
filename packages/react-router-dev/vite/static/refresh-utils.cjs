@@ -13,11 +13,11 @@ function debounce(fn, delay) {
 const enqueueUpdate = debounce(async () => {
   let manifest;
   if (routeUpdates.size > 0) {
-    manifest = JSON.parse(JSON.stringify(__remixManifest));
+    manifest = JSON.parse(JSON.stringify(__reactRouterManifest));
 
     for (let route of routeUpdates.values()) {
       manifest.routes[route.id] = route;
-      let previousModule = window.__remixRouteModules[route.id];
+      let previousModule = window.__reactRouterRouteModules[route.id];
       let mainModule = window.__reactRouterRouteModuleUpdates.get(route.id);
       let clientActionModule =
         window.__reactRouterClientActionModuleUpdates.get(route.id);
@@ -50,7 +50,7 @@ const enqueueUpdate = debounce(async () => {
           ? previousModule?.HydrateFallback ?? mainModule.HydrateFallback
           : mainModule.HydrateFallback,
       };
-      window.__remixRouteModules[route.id] = routeModule;
+      window.__reactRouterRouteModules[route.id] = routeModule;
     }
 
     let needsRevalidation = new Set(
@@ -59,14 +59,14 @@ const enqueueUpdate = debounce(async () => {
         .map((route) => route.id)
     );
 
-    let routes = __remixRouter.createRoutesForHMR(
+    let routes = __reactRouterInstance.createRoutesForHMR(
       needsRevalidation,
       manifest.routes,
-      window.__remixRouteModules,
-      window.__remixContext.future,
-      window.__remixContext.isSpaMode
+      window.__reactRouterRouteModules,
+      window.__reactRouterContext.future,
+      window.__reactRouterContext.isSpaMode
     );
-    __remixRouter._internalSetRoutes(routes);
+    __reactRouterInstance._internalSetRoutes(routes);
     routeUpdates.clear();
     window.__reactRouterRouteModuleUpdates.clear();
     window.__reactRouterClientActionModuleUpdates.clear();
@@ -74,14 +74,14 @@ const enqueueUpdate = debounce(async () => {
   }
 
   try {
-    window.__remixHdrActive = true;
-    await __remixRouter.revalidate();
+    window.__reactRouterHdrActive = true;
+    await __reactRouterInstance.revalidate();
   } finally {
-    window.__remixHdrActive = false;
+    window.__reactRouterHdrActive = false;
   }
 
   if (manifest) {
-    Object.assign(window.__remixManifest, manifest);
+    Object.assign(window.__reactRouterManifest, manifest);
   }
   exports.performReactRefresh();
 }, 16);
@@ -167,7 +167,7 @@ window.__reactRouterClientActionModuleUpdates = new Map();
 window.__reactRouterClientLoaderModuleUpdates = new Map();
 
 import.meta.hot.on("react-router:hmr", async ({ route }) => {
-  window.__remixClearCriticalCss();
+  window.__reactRouterClearCriticalCss();
 
   if (route) {
     routeUpdates.set(route.id, route);

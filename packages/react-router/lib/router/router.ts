@@ -2149,7 +2149,7 @@ export function createRouter(init: RouterInit): Router {
 
     let match = getTargetMatch(matches, path);
 
-    pendingPreventScrollReset = (opts && opts.preventScrollReset) === true;
+    let preventScrollReset = (opts && opts.preventScrollReset) === true;
 
     if (submission && isMutationMethod(submission.formMethod)) {
       await handleFetcherAction(
@@ -2160,6 +2160,7 @@ export function createRouter(init: RouterInit): Router {
         matches,
         fogOfWar.active,
         flushSync,
+        preventScrollReset,
         submission
       );
       return;
@@ -2176,6 +2177,7 @@ export function createRouter(init: RouterInit): Router {
       matches,
       fogOfWar.active,
       flushSync,
+      preventScrollReset,
       submission
     );
   }
@@ -2190,6 +2192,7 @@ export function createRouter(init: RouterInit): Router {
     requestMatches: AgnosticDataRouteMatch[],
     isFogOfWar: boolean,
     flushSync: boolean,
+    preventScrollReset: boolean,
     submission: Submission
   ) {
     interruptActiveLoads();
@@ -2303,6 +2306,7 @@ export function createRouter(init: RouterInit): Router {
           updateFetcherState(key, getLoadingFetcher(submission));
           return startRedirectNavigation(fetchRequest, actionResult, false, {
             fetcherSubmission: submission,
+            preventScrollReset,
           });
         }
       }
@@ -2411,7 +2415,8 @@ export function createRouter(init: RouterInit): Router {
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
-        false
+        false,
+        { preventScrollReset }
       );
     }
 
@@ -2424,7 +2429,8 @@ export function createRouter(init: RouterInit): Router {
       return startRedirectNavigation(
         revalidationRequest,
         redirect.result,
-        false
+        false,
+        { preventScrollReset }
       );
     }
 
@@ -2491,6 +2497,7 @@ export function createRouter(init: RouterInit): Router {
     matches: AgnosticDataRouteMatch[],
     isFogOfWar: boolean,
     flushSync: boolean,
+    preventScrollReset: boolean,
     submission?: Submission
   ) {
     let existingFetcher = state.fetchers.get(key);
@@ -2577,7 +2584,9 @@ export function createRouter(init: RouterInit): Router {
         return;
       } else {
         fetchRedirectIds.add(key);
-        await startRedirectNavigation(fetchRequest, result, false);
+        await startRedirectNavigation(fetchRequest, result, false, {
+          preventScrollReset,
+        });
         return;
       }
     }
@@ -2618,10 +2627,12 @@ export function createRouter(init: RouterInit): Router {
     {
       submission,
       fetcherSubmission,
+      preventScrollReset,
       replace,
     }: {
       submission?: Submission;
       fetcherSubmission?: Submission;
+      preventScrollReset?: boolean;
       replace?: boolean;
     } = {}
   ) {
@@ -2702,7 +2713,7 @@ export function createRouter(init: RouterInit): Router {
           formAction: location,
         },
         // Preserve these flags across redirects
-        preventScrollReset: pendingPreventScrollReset,
+        preventScrollReset: preventScrollReset || pendingPreventScrollReset,
         enableViewTransition: isNavigation
           ? pendingViewTransitionEnabled
           : undefined,
@@ -2719,7 +2730,7 @@ export function createRouter(init: RouterInit): Router {
         // Send fetcher submissions through for shouldRevalidate
         fetcherSubmission,
         // Preserve these flags across redirects
-        preventScrollReset: pendingPreventScrollReset,
+        preventScrollReset: preventScrollReset || pendingPreventScrollReset,
         enableViewTransition: isNavigation
           ? pendingViewTransitionEnabled
           : undefined,
@@ -4005,16 +4016,23 @@ function normalizeTo(
     path.hash = location.hash;
   }
 
-  // Add an ?index param for matched index routes if we don't already have one
-  if (
-    (to == null || to === "" || to === ".") &&
-    activeRouteMatch &&
-    activeRouteMatch.route.index &&
-    !hasNakedIndexQuery(path.search)
-  ) {
-    path.search = path.search
-      ? path.search.replace(/^\?/, "?index&")
-      : "?index";
+  // Account for `?index` params when routing to the current location
+  if ((to == null || to === "" || to === ".") && activeRouteMatch) {
+    let nakedIndex = hasNakedIndexQuery(path.search);
+    if (activeRouteMatch.route.index && !nakedIndex) {
+      // Add one when we're targeting an index route
+      path.search = path.search
+        ? path.search.replace(/^\?/, "?index&")
+        : "?index";
+    } else if (!activeRouteMatch.route.index && nakedIndex) {
+      // Remove existing ones when we're not
+      let params = new URLSearchParams(path.search);
+      let indexValues = params.getAll("index");
+      params.delete("index");
+      indexValues.filter((v) => v).forEach((v) => params.append("index", v));
+      let qs = params.toString();
+      path.search = qs ? `?${qs}` : "";
+    }
   }
 
   // If we're operating within a basename, prepend it to the pathname.  If
@@ -4496,12 +4514,9 @@ function patchRoutesImpl(
   // to simplify user-land code. This is useful because we re-call the
   // `patchRoutesOnNavigation` function for matched routes with params.
   let uniqueChildren = children.filter(
-    (a) =>
-      !childrenToPatch.some(
-        (b) =>
-          a.index === b.index &&
-          a.path === b.path &&
-          a.caseSensitive === b.caseSensitive
+    (newRoute) =>
+      !childrenToPatch.some((existingRoute) =>
+        isSameRoute(newRoute, existingRoute)
       )
   );
 
@@ -4513,6 +4528,46 @@ function patchRoutesImpl(
   );
 
   childrenToPatch.push(...newRoutes);
+}
+
+function isSameRoute(
+  newRoute: AgnosticRouteObject,
+  existingRoute: AgnosticRouteObject
+): boolean {
+  // Most optimal check is by id
+  if (
+    "id" in newRoute &&
+    "id" in existingRoute &&
+    newRoute.id === existingRoute.id
+  ) {
+    return true;
+  }
+
+  // Second is by pathing differences
+  if (
+    !(
+      newRoute.index === existingRoute.index &&
+      newRoute.path === existingRoute.path &&
+      newRoute.caseSensitive === existingRoute.caseSensitive
+    )
+  ) {
+    return false;
+  }
+
+  // Pathless layout routes are trickier since we need to check children.
+  // If they have no children then they're the same as far as we can tell
+  if (
+    (!newRoute.children || newRoute.children.length === 0) &&
+    (!existingRoute.children || existingRoute.children.length === 0)
+  ) {
+    return true;
+  }
+
+  // Otherwise, we look to see if every child in the new route is already
+  // represented in the existing route's children
+  return newRoute.children!.every((aChild, i) =>
+    existingRoute.children?.some((bChild) => isSameRoute(aChild, bChild))
+  );
 }
 
 /**

@@ -12,7 +12,9 @@
     "@react-router/dev": "workspace:*",
     "@react-router/express": "workspace:*",
     "@react-router/node": "workspace:*",
+    "@types/dedent": "^0.7.0",
     "@types/express": "^4.17.9",
+    "@types/wait-on": "^5.3.2",
     "@vanilla-extract/css": "^1.10.0",
     "@vanilla-extract/vite-plugin": "^3.9.2",
     "cheerio": "^1.0.0-rc.12",
@@ -25,7 +27,6 @@
     "glob": "8.0.3",
     "isbot": "^5.1.11",
     "npm-run-all": "^4.1.5",
-    "pidtree": "^0.6.0",
     "postcss": "^8.4.19",
     "postcss-import": "^15.1.0",
     "prettier": "^2.7.1",
@@ -39,6 +40,9 @@
     "tailwindcss": "^3.3.0",
     "type-fest": "^4.0.0",
     "typescript": "^5.1.0",
-    "vite-tsconfig-paths": "^4.2.2"
+    "vite": "^5.1.0",
+    "vite-env-only": "^3.0.1",
+    "vite-tsconfig-paths": "^4.2.2",
+    "wait-on": "^7.0.1"
   }
 }

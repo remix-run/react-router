@@ -220,8 +220,8 @@ export async function loadRouteModule(
     console.error(error);
 
     if (
-      window.__remixContext &&
-      window.__remixContext.isSpaMode &&
+      window.__reactRouterContext &&
+      window.__reactRouterContext.isSpaMode &&
       // @ts-expect-error
       typeof import.meta.hot !== "undefined"
     ) {

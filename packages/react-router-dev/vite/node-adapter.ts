@@ -32,7 +32,8 @@ function fromNodeHeaders(nodeHeaders: IncomingHttpHeaders): Headers {
 
 // Based on `createRemixRequest` in packages/react-router-express/server.ts
 export function fromNodeRequest(
-  nodeReq: Vite.Connect.IncomingMessage
+  nodeReq: Vite.Connect.IncomingMessage,
+  nodeRes: ServerResponse<Vite.Connect.IncomingMessage>
 ): Request {
   let origin =
     nodeReq.headers.origin && "null" !== nodeReq.headers.origin
@@ -44,9 +45,15 @@ export function fromNodeRequest(
     "Expected `nodeReq.originalUrl` to be defined"
   );
   let url = new URL(nodeReq.originalUrl, origin);
+
+  // Abort action/loaders once we can no longer write a response
+  let controller = new AbortController();
+  nodeRes.on("close", () => controller.abort());
+
   let init: RequestInit = {
     method: nodeReq.method,
     headers: fromNodeHeaders(nodeReq.headers),
+    signal: controller.signal,
   };
 
   if (nodeReq.method !== "GET" && nodeReq.method !== "HEAD") {

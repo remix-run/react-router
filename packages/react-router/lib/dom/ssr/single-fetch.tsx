@@ -93,7 +93,7 @@ export function StreamTransfer({
     <script
       nonce={nonce}
       dangerouslySetInnerHTML={{
-        __html: `window.__remixContext.streamController.enqueue(${escapeHtml(
+        __html: `window.__reactRouterContext.streamController.enqueue(${escapeHtml(
           JSON.stringify(value)
         )});`,
       }}
@@ -107,7 +107,7 @@ export function StreamTransfer({
         <script
           nonce={nonce}
           dangerouslySetInnerHTML={{
-            __html: `window.__remixContext.streamController.close();`,
+            __html: `window.__reactRouterContext.streamController.close();`,
           }}
         />
       </>
@@ -311,7 +311,7 @@ async function singleFetchLoaderNavigationStrategy(
   // know about
   if (
     (!router.state.initialized || routesParams.size === 0) &&
-    !window.__remixHdrActive
+    !window.__reactRouterHdrActive
   ) {
     singleFetchDfd.resolve({});
   } else {
@@ -412,7 +412,15 @@ export function singleFetchUrl(reqUrl: URL | string) {
 
 async function fetchAndDecode(url: URL, init: RequestInit) {
   let res = await fetch(url, init);
+
+  // If this 404'd without hitting the running server (most likely in a
+  // pre-rendered app using a CDN), then bubble a standard 404 ErrorResponse
+  if (res.status === 404 && !res.headers.has("X-Remix-Response")) {
+    throw new ErrorResponseImpl(404, "Not Found", true);
+  }
+
   invariant(res.body, "No response body to decode");
+
   try {
     let decoded = await decodeViaTurboStream(res.body, window);
     return { status: res.status, data: decoded.value };

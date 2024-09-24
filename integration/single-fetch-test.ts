@@ -3425,7 +3425,7 @@ test.describe("single-fetch", () => {
     let remixScriptsCount = 0;
     for (let script of scripts) {
       let content = await script.innerHTML();
-      if (content.includes("window.__remix")) {
+      if (content.includes("window.__reactRouter")) {
         remixScriptsCount++;
         expect(await script.getAttribute("nonce")).toEqual("the-nonce");
       }
