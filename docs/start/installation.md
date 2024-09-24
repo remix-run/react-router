@@ -10,7 +10,7 @@ order: 1
 Most projects start with a template. Let's use a basic template maintained by React Router with `degit`:
 
 ```shellscript nonumber
-npx degit @remix-run/react-router/templates/basic#dev my-app
+npx degit remix-run/react-router/templates/basic#dev my-app
 ```
 
 Now change into the new directory and start the app
