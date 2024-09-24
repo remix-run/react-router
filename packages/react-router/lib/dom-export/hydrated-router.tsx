@@ -28,7 +28,7 @@ import { RouterProvider } from "./dom-router-provider";
 type RemixRouter = ReturnType<typeof createBrowserRouter>;
 
 type SSRInfo = {
-  context: NonNullable<(typeof window)["__remixContext"]>;
+  context: NonNullable<(typeof window)["__reactRouterContext"]>;
   routeModules: RouteModules;
   manifest: AssetsManifest;
   stateDecodingPromise:
@@ -47,14 +47,14 @@ let router: RemixRouter | null = null;
 function initSsrInfo(): void {
   if (
     !ssrInfo &&
-    window.__remixContext &&
-    window.__remixManifest &&
-    window.__remixRouteModules
+    window.__reactRouterContext &&
+    window.__reactRouterManifest &&
+    window.__reactRouterRouteModules
   ) {
     ssrInfo = {
-      context: window.__remixContext,
-      manifest: window.__remixManifest,
-      routeModules: window.__remixRouteModules,
+      context: window.__reactRouterContext,
+      manifest: window.__reactRouterManifest,
+      routeModules: window.__reactRouterRouteModules,
       stateDecodingPromise: undefined,
       router: undefined,
       routerInitialized: false,
@@ -73,7 +73,7 @@ function createHydratedRouter(): RemixRouter {
   }
 
   // We need to suspend until the initial state snapshot is decoded into
-  // window.__remixContext.state
+  // window.__reactRouterContext.state
 
   let localSsrInfo = ssrInfo;
   // Note: `stateDecodingPromise` is not coupled to `router` - we'll reach this
@@ -122,7 +122,7 @@ function createHydratedRouter(): RemixRouter {
     let initialMatches = matchRoutes(
       routes,
       window.location,
-      window.__remixContext?.basename
+      window.__reactRouterContext?.basename
     );
     if (initialMatches) {
       for (let match of initialMatches) {
@@ -194,7 +194,7 @@ function createHydratedRouter(): RemixRouter {
   router.createRoutesForHMR =
     /* spacer so ts-ignore does not affect the right hand of the assignment */
     createClientRoutesWithHMRRevalidationOptOut;
-  window.__remixRouter = router;
+  window.__reactRouterInstance = router;
 
   return router;
 }
@@ -217,7 +217,7 @@ export function HydratedRouter() {
   );
   if (process.env.NODE_ENV === "development") {
     if (ssrInfo) {
-      window.__remixClearCriticalCss = () => setCriticalCss(undefined);
+      window.__reactRouterClearCriticalCss = () => setCriticalCss(undefined);
     }
   }
 

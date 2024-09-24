@@ -8,7 +8,7 @@ type DevServerHooks = {
   processRequestError?: (error: unknown) => void;
 };
 
-const globalDevServerHooksKey = "__remix_devServerHooks";
+const globalDevServerHooksKey = "__reactRouterDevServerHooks";
 
 export function setDevServerHooks(devServerHooks: DevServerHooks) {
   // @ts-expect-error

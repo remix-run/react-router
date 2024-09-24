@@ -676,7 +676,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     // Write the browser manifest to disk as part of the build process
     await writeFileSafe(
       path.join(getClientBuildDirectory(ctx.reactRouterConfig), manifestPath),
-      `window.__remixManifest=${JSON.stringify(reactRouterBrowserManifest)};`
+      `window.__reactRouterManifest=${JSON.stringify(
+        reactRouterBrowserManifest
+      )};`
     );
 
     // The server manifest is the same as the browser manifest, except for
@@ -1324,7 +1326,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               es6: true,
             });
 
-            return `window.__remixManifest=${reactRouterManifestString};`;
+            return `window.__reactRouterManifest=${reactRouterManifestString};`;
           }
         }
       },
@@ -2023,8 +2025,8 @@ function validatePrerenderedResponse(
 
 function validatePrerenderedHtml(html: string, prefix: string) {
   if (
-    !html.includes("window.__remixContext =") ||
-    !html.includes("window.__remixRouteModules =")
+    !html.includes("window.__reactRouterContext =") ||
+    !html.includes("window.__reactRouterRouteModules =")
   ) {
     throw new Error(
       `${prefix}: Did you forget to include <Scripts/> in your root route? ` +
