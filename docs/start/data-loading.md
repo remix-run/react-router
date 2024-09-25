@@ -21,7 +21,7 @@ import type {
   DefaultProps,
   ClientLoaderArgs,
 } from "./+types.product";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "react-router";
 
 export async function clientLoader({
   params,
