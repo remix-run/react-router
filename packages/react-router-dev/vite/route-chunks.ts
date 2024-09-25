@@ -10,8 +10,11 @@ import {
   t,
 } from "./babel";
 
-type Statement = Babel.Statement;
+type ExportDeclaration = Babel.ExportDeclaration;
 type Identifier = Babel.Identifier;
+type Pattern = Babel.Pattern;
+type Statement = Babel.Statement;
+type VariableDeclarator = Babel.VariableDeclarator;
 
 type ExportDependencies = Map<string, Dependencies>;
 
@@ -19,7 +22,7 @@ type Dependencies = {
   topLevelStatements: Set<Statement>;
   topLevelNonModuleStatements: Set<Statement>;
   importedIdentifierNames: Set<string>;
-  exportedVariableNames: Set<string>;
+  exportedVariableDeclarators: Set<VariableDeclarator>;
 };
 
 function codeToAst(code: string, cache: Cache, cacheKey: string): Babel.File {
@@ -28,6 +31,37 @@ function codeToAst(code: string, cache: Cache, cacheKey: string): Babel.File {
     getOrSetFromCache(cache, `${cacheKey}::codeToAst`, code, () =>
       parse(code, { sourceType: "module" })
     )
+  );
+}
+
+function assertNodePath(
+  path: NodePath | NodePath[] | null | undefined
+): asserts path is NodePath {
+  invariant(
+    path && !Array.isArray(path),
+    `Expected a Path, but got ${Array.isArray(path) ? "an array" : path}`
+  );
+}
+
+function assertNodePathIsVariableDeclarator(
+  path: NodePath | NodePath[] | null | undefined
+): asserts path is NodePath<VariableDeclarator> {
+  invariant(
+    path && !Array.isArray(path) && t.isVariableDeclarator(path.node),
+    `Expected an Identifier path, but got ${
+      Array.isArray(path) ? "an array" : path?.node?.type
+    }`
+  );
+}
+
+function assertNodePathIsPattern(
+  path: NodePath | NodePath[] | null | undefined
+): asserts path is NodePath<Pattern> {
+  invariant(
+    path && !Array.isArray(path) && t.isPattern(path.node),
+    `Expected a Pattern path, but got ${
+      Array.isArray(path) ? "an array" : path?.node?.type
+    }`
   );
 }
 
@@ -46,7 +80,7 @@ function getExportDependencies(
 
       function handleExport(
         exportName: string,
-        exportPath: NodePath<Babel.ExportDeclaration>,
+        exportPath: NodePath<ExportDeclaration>,
         identifiersPath: NodePath = exportPath
       ) {
         let identifiers = getDependentIdentifiersForPath(identifiersPath);
@@ -76,16 +110,40 @@ function getExportDependencies(
           }
         }
 
-        // We keep track of exported variable names for each export since we
+        // We keep track of variable declarators for each export since we
         // perform more fine-grained filtering on export statements.
-        let exportedVariableNames = new Set<string>();
+        let exportedVariableDeclarators = new Set<VariableDeclarator>();
         for (let identifier of identifiers) {
+          // export const foo = ...;
           if (
             identifier.parentPath.isVariableDeclarator() &&
-            identifier.parentPath.parentPath?.isVariableDeclaration() &&
             identifier.parentPath.parentPath.parentPath?.isExportNamedDeclaration()
           ) {
-            exportedVariableNames.add(identifier.node.name);
+            exportedVariableDeclarators.add(identifier.parentPath.node);
+            continue;
+          }
+
+          // export const { foo } = ...;
+          let isWithinExportNamedDeclaration = Boolean(
+            identifier.findParent((path) => path.isExportNamedDeclaration())
+          );
+          if (isWithinExportNamedDeclaration) {
+            let currentPath: NodePath | null = identifier;
+            while (currentPath) {
+              if (
+                // Check the identifier is within a variable declaration, and if
+                // so, ensure we're on the left-hand side of the expression
+                // since these identifiers are what make up the export names,
+                // e.g. export const { foo } = { foo: bar }; should pick up
+                // `foo` but not `bar`.
+                currentPath.parentPath?.isVariableDeclarator() &&
+                currentPath.parentKey === "id"
+              ) {
+                exportedVariableDeclarators.add(currentPath.parentPath.node);
+                break;
+              }
+              currentPath = currentPath.parentPath;
+            }
           }
         }
 
@@ -93,7 +151,7 @@ function getExportDependencies(
           topLevelStatements,
           topLevelNonModuleStatements,
           importedIdentifierNames,
-          exportedVariableNames,
+          exportedVariableDeclarators,
         };
 
         exportDependencies.set(exportName, dependencies);
@@ -116,22 +174,41 @@ function getExportDependencies(
 
           let { declaration } = node;
 
-          // export const foo = ..., bar = ...;
+          // export const foo = ..., { bar } = ...;
           if (t.isVariableDeclaration(declaration)) {
-            for (let declarator of declaration.declarations) {
-              if (t.isIdentifier(declarator.id)) {
-                let identifierPath = exportPath
-                  .get("declaration.declarations")
-                  .find((path) => path.node === declarator);
+            let { declarations } = declaration;
+            for (let i = 0; i < declarations.length; i++) {
+              let declarator = declarations[i];
 
-                invariant(
-                  identifierPath,
-                  `Expected to find identifier path for ${declarator.id.name}`
+              // export const foo = ...;
+              if (t.isIdentifier(declarator.id)) {
+                let declaratorPath = exportPath.get(
+                  `declaration.declarations.${i}`
                 );
 
-                handleExport(declarator.id.name, exportPath, identifierPath);
+                assertNodePathIsVariableDeclarator(declaratorPath);
+
+                handleExport(declarator.id.name, exportPath, declaratorPath);
+                continue;
+              }
+
+              // export const { foo } = ...;
+              if (t.isPattern(declarator.id)) {
+                let exportedPatternPath = exportPath.get(
+                  `declaration.declarations.${i}.id`
+                );
+
+                assertNodePathIsPattern(exportedPatternPath);
+
+                let identifiers =
+                  getIdentifiersForPatternPath(exportedPatternPath);
+
+                for (let identifier of identifiers) {
+                  handleExport(identifier.node.name, exportPath, identifier);
+                }
               }
             }
+
             return;
           }
 
@@ -202,6 +279,24 @@ function getDependentIdentifiersForPath(
     },
   });
 
+  // If the identifier is part of a destructuring assignment, we include all
+  // other identifiers in the expression as dependencies.
+  if (
+    path.isIdentifier() &&
+    (t.isPattern(path.parentPath.node) || // [foo]
+      t.isPattern(path.parentPath.parentPath?.node)) // {nested: foo}
+  ) {
+    let destructuringAssignmentPath = path.findParent(
+      (path) => path.isVariableDeclarator() || path.isAssignmentExpression()
+    );
+    if (destructuringAssignmentPath) {
+      getDependentIdentifiersForPath(destructuringAssignmentPath, {
+        visited,
+        identifiers,
+      });
+    }
+  }
+
   return identifiers;
 }
 
@@ -223,6 +318,51 @@ function getTopLevelStatementsForPaths(paths: Set<NodePath>): Set<Statement> {
   }
 
   return topLevelStatements;
+}
+
+function getIdentifiersForPatternPath(
+  patternPath: NodePath<Pattern>,
+  identifiers: Set<NodePath<Identifier>> = new Set()
+): Set<NodePath<Identifier>> {
+  function walk(currentPath: NodePath) {
+    if (currentPath.isIdentifier()) {
+      identifiers.add(currentPath);
+      return;
+    }
+
+    if (currentPath.isObjectPattern()) {
+      let { properties } = currentPath.node;
+      for (let i = 0; i < properties.length; i++) {
+        const property = properties[i];
+        if (t.isObjectProperty(property)) {
+          let valuePath = currentPath.get(`properties.${i}.value`);
+          assertNodePath(valuePath);
+          walk(valuePath);
+        } else if (t.isRestElement(property)) {
+          let argumentPath = currentPath.get(`properties.${i}.argument`);
+          assertNodePath(argumentPath);
+          walk(argumentPath);
+        }
+      }
+    } else if (currentPath.isArrayPattern()) {
+      let { elements } = currentPath.node;
+      for (let i = 0; i < elements.length; i++) {
+        const element = elements[i];
+        if (element) {
+          let elementPath = currentPath.get(`elements.${i}`);
+          assertNodePath(elementPath);
+          walk(elementPath);
+        }
+      }
+    } else if (currentPath.isRestElement()) {
+      let argumentPath = currentPath.get("argument");
+      assertNodePath(argumentPath);
+      walk(argumentPath);
+    }
+  }
+
+  walk(patternPath);
+  return identifiers;
 }
 
 const getExportedName = (exported: t.Identifier | t.StringLiteral): string => {
@@ -322,9 +462,9 @@ export function hasChunkableExport(
         }
       }
 
-      // Loop through all other exports to see if they have exported variable names
-      // in common with the export we're trying to chunk.
-      if (dependencies.exportedVariableNames.size > 0) {
+      // Loop through all other exports to see if they have exported variable
+      // declarators in common with the export we're trying to chunk.
+      if (dependencies.exportedVariableDeclarators.size > 0) {
         for (let [
           currentExportName,
           currentDependencies,
@@ -333,15 +473,16 @@ export function hasChunkableExport(
             continue;
           }
 
-          // As soon as we find any exported variable names in common with another
-          // export, we know this export cannot be placed in its own chunk. Note
-          // that the chunk can still share top level export statements with
-          // other exports because we filter out all unused exports, so we can
-          // treat each exported variable name as a separate entity in this check.
+          // As soon as we find any exported variable declarators in common with
+          // another export, we know this export cannot be placed in its own
+          // chunk. Note that the chunk can still share top level export
+          // statements with other exports because we filter out all unused
+          // exports, so we can treat each exported variable name as a separate
+          // entity in this check.
           if (
             setsIntersect(
-              currentDependencies.exportedVariableNames,
-              dependencies.exportedVariableNames
+              currentDependencies.exportedVariableDeclarators,
+              dependencies.exportedVariableDeclarators
             )
           ) {
             return false;
@@ -378,6 +519,9 @@ export function getChunkedExport(
       invariant(dependencies, "Expected export to have dependencies");
 
       let topLevelStatementsArray = Array.from(dependencies.topLevelStatements);
+      let exportedVariableDeclaratorsArray = Array.from(
+        dependencies.exportedVariableDeclarators
+      );
 
       let ast = codeToAst(code, cache, cacheKey);
 
@@ -442,19 +586,13 @@ export function getChunkedExport(
 
           let { declaration } = node;
 
-          // export const foo = ..., bar = ...;
+          // export const foo = ..., { bar } = ...;
           if (t.isVariableDeclaration(declaration)) {
-            // Only keep identifiers that match the chunked export name
-            declaration.declarations = declaration.declarations.filter(
-              (declarator) => {
-                if (t.isIdentifier(declarator.id)) {
-                  return declarator.id.name === exportName;
-                }
-
-                throw new Error(
-                  `Unsupported export identifier type: ${declarator.id.type}`
-                );
-              }
+            // Only keep variable declarators for the chunked export
+            declaration.declarations = declaration.declarations.filter((node) =>
+              exportedVariableDeclaratorsArray.some((declarator) =>
+                t.isNodesEquivalent(node, declarator)
+              )
             );
 
             // If the export statement is now empty, remove it
@@ -525,7 +663,9 @@ export function omitChunkedExports(
     code,
     () => {
       let exportDependencies = getExportDependencies(code, cache, cacheKey);
+
       let omittedStatements = new Set<Statement>();
+      let omittedExportedVariableDeclarators = new Set<VariableDeclarator>();
 
       for (let exportName of exportNames) {
         let dependencies = exportDependencies.get(exportName);
@@ -547,10 +687,20 @@ export function omitChunkedExports(
         for (let statement of dependencies.topLevelNonModuleStatements) {
           omittedStatements.add(statement);
         }
+
+        // We also want to omit any exported variable declarators that belong to
+        // the chunked export.
+        for (let declarator of dependencies.exportedVariableDeclarators) {
+          omittedExportedVariableDeclarators.add(declarator);
+        }
       }
 
       let ast = codeToAst(code, cache, cacheKey);
+
       let omittedStatementsArray = Array.from(omittedStatements);
+      let omittedExportedVariableDeclaratorsArray = Array.from(
+        omittedExportedVariableDeclarators
+      );
 
       function isChunkable(exportName: string): boolean {
         return hasChunkableExport(code, exportName, cache, cacheKey);
@@ -633,19 +783,15 @@ export function omitChunkedExports(
             return isOmitted("default") ? null : node;
           }
 
-          // export const foo = ..., bar = ...;
+          // export const foo = ..., { bar } = ...;
           if (t.isVariableDeclaration(node.declaration)) {
-            // Remove any omitted identifiers
+            // Remove any omitted exported variable declarators
             node.declaration.declarations =
-              node.declaration.declarations.filter((declarator) => {
-                if (t.isIdentifier(declarator.id)) {
-                  return !isOmitted(declarator.id.name);
-                }
-
-                throw new Error(
-                  `Unsupported export identifier type: ${declarator.id.type}`
-                );
-              });
+              node.declaration.declarations.filter((node) =>
+                omittedExportedVariableDeclaratorsArray.every(
+                  (declarator) => !t.isNodesEquivalent(node, declarator)
+                )
+              );
 
             // If the export statement is now empty, remove it
             if (node.declaration.declarations.length === 0) {
