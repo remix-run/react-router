@@ -140,7 +140,7 @@ Instead, each route export should be provided route-specific args:
 // Imagine that we *somehow* had route-specific types for:
 // - LoaderArgs
 // - ClientLoaderArgs
-// - ComponentArgs
+// - DefaultProps
 
 export function loader({ params }: LoaderArgs) {}
 
@@ -150,7 +150,7 @@ export default function Component({
   params,
   loaderData,
   actionData,
-}: ComponentArgs) {
+}: DefaultProps) {
   // ...
 }
 ```
@@ -187,7 +187,7 @@ By setting things up like this, we can use `tsconfig.json`'s [rootDirs](https://
 
 ```ts
 // app/routes/product-details.tsx
-import * as Types from "./+types.product-details";
+import { LoaderArgs, DefaultProps } from "./+types.product-details";
 ```
 
 TypeScript will even give you import autocompletion for the typegen file and the `+` prefix helps to distinguish it as a special file.

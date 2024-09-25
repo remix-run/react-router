@@ -95,14 +95,14 @@ function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
     export type LoaderData = T.LoaderData<Route>
     export type ActionData = T.ActionData<Route>
 
-    export type ServerLoader = T.ServerLoader<Params>
-    export type ClientLoader = T.ClientLoader<Params, Route>
-    export type ServerAction = T.ServerAction<Params>
-    export type ClientAction = T.ClientAction<Params, Route>
+    export type LoaderArgs = T.ServerLoaderArgs<Params>
+    export type ClientLoaderArgs = T.ClientLoaderArgs<Params, Route>
+    export type ActionArgs = T.ServerActionArgs<Params>
+    export type ClientActionArgs = T.ClientActionArgs<Params, Route>
 
-    export type HydrateFallback = T.HydrateFallback<Params>
-    export type Default = T.Default<Params, LoaderData, ActionData>
-    export type ErrorBoundary = T.ErrorBoundary<Params, LoaderData, ActionData>
+    export type HydrateFallbackProps = T.HydrateFallbackProps<Params>
+    export type DefaultProps = T.DefaultProps<Params, LoaderData, ActionData>
+    export type ErrorBoundaryProps = T.ErrorBoundaryProps<Params, LoaderData, ActionData>
   `;
 }
 

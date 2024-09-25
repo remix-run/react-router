@@ -104,47 +104,39 @@ type Serialize<T> =
 
   undefined
 
-export type ServerLoader<Params> = {
-  args: DataFunctionArgs<Params>;
+export type ServerLoaderArgs<Params> = DataFunctionArgs<Params>;
+
+export type ClientLoaderArgs<
+  Params,
+  T extends RouteModule
+> = DataFunctionArgs<Params> & {
+  serverLoader: () => Promise<ServerDataFrom<T["loader"]>>;
 };
 
-export type ClientLoader<Params, T extends RouteModule> = {
-  args: DataFunctionArgs<Params> & {
-    serverLoader: () => Promise<ServerDataFrom<T["loader"]>>;
-  };
+export type ServerActionArgs<Params> = DataFunctionArgs<Params>;
+
+export type ClientActionArgs<
+  Params,
+  T extends RouteModule
+> = DataFunctionArgs<Params> & {
+  serverAction: () => Promise<ServerDataFrom<T["action"]>>;
 };
 
-export type ServerAction<Params> = {
-  args: DataFunctionArgs<Params>;
+export type HydrateFallbackProps<Params> = {
+  params: Params;
 };
 
-export type ClientAction<Params, T extends RouteModule> = {
-  args: DataFunctionArgs<Params> & {
-    serverAction: () => Promise<ServerDataFrom<T["action"]>>;
-  };
+export type DefaultProps<Params, LoaderData, ActionData> = {
+  params: Params;
+  loaderData: LoaderData;
+  actionData?: ActionData;
 };
 
-export type HydrateFallback<Params> = {
-  args: { params: Params };
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  return: import("react").ReactNode;
-};
-
-export type Default<Params, LoaderData, ActionData> = {
-  args: { params: Params; loaderData: LoaderData; actionData?: ActionData };
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  return: import("react").ReactNode;
-};
-
-export type ErrorBoundary<Params, LoaderData, ActionData> = {
-  args: {
-    params: Params;
-    error: unknown;
-    loaderData?: LoaderData;
-    actionData?: ActionData;
-  };
-  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-  return: import("react").ReactNode;
+export type ErrorBoundaryProps<Params, LoaderData, ActionData> = {
+  params: Params;
+  error: unknown;
+  loaderData?: LoaderData;
+  actionData?: ActionData;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
