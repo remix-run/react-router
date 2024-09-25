@@ -3,11 +3,11 @@ title: Data Loading
 order: 5
 ---
 
+# Data Loading
+
 <docs-warning>
   The types for route modules are still in development, this API may change.
 </docs-warning>
-
-# Data Loading
 
 Data is provided to the route via `loader` and `clientLoader`, and accessed in the `data` prop of the Route Component.
 
@@ -23,7 +23,9 @@ import type {
 } from "./+types.product";
 import { useLoaderData } from "@remix-run/react";
 
-export async function clientLoader({ params }: LoaderArgs) {
+export async function clientLoader({
+  params,
+}: ClientLoaderArgs) {
   const res = await fetch(`/api/products/${params.pid}`);
   const product = await res.json();
   return { product };

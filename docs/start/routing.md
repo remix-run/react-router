@@ -279,6 +279,5 @@ function Wizard() {
 
 Note that these routes do not participate in data loading, actions, code splitting, or any other route module features, so their use cases are more limited than those of the route module.
 
-[file-route-conventions]: ../guides/file-route-conventions
-[outlet]: ../components/outlet
-[code_splitting]: ../discussion/code-splitting
+[file-route-conventions]: ../misc/file-route-conventions
+[outlet]: ../../api/react-router/Outlet

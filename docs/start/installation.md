@@ -128,4 +128,4 @@ React Router's full feature-set is easiest to use with the React Router Vite plu
 
 Refer to [Manual Usage][manual_usage] for more information.
 
-[manual_usage]: ../guides/manual-usage
+[manual_usage]: ../misc/manual-usage

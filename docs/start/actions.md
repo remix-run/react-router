@@ -153,4 +153,4 @@ fetcher.submit(
 );
 ```
 
-See the [Using Fetchers](../guides/fetchers) guide for more information.
+See the [Using Fetchers](../misc/fetchers) guide for more information.
