@@ -44,7 +44,7 @@ export async function watch(ctx: Context) {
   }
 
   const initialRoutes = await getRoutes();
-  await typegenAll(ctx, initialRoutes);
+  await writeAll(ctx, initialRoutes);
 
   const watcher = Chokidar.watch(appDirectory, { ignoreInitial: true });
   watcher.on("all", async (event, path) => {
@@ -56,7 +56,7 @@ export async function watch(ctx: Context) {
       routesViteNodeContext.devServer.moduleGraph.getModuleById(path)
     );
     if (routeConfigChanged) {
-      await typegenAll(ctx, routes);
+      await writeAll(ctx, routes);
       return;
     }
 
@@ -64,13 +64,13 @@ export async function watch(ctx: Context) {
       (route) => path === Path.join(ctx.appDirectory, route.file)
     );
     if (isRoute && (event === "add" || event === "unlink")) {
-      await typegenAll(ctx, routes);
+      await writeAll(ctx, routes);
       return;
     }
   });
 }
 
-export async function typegenAll(
+export async function writeAll(
   ctx: Context,
   routes: RouteManifest
 ): Promise<void> {
