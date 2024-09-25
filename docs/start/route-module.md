@@ -5,6 +5,10 @@ order: 3
 
 # Route Module
 
+<docs-warning>
+  The types for route modules are still in development, this API is stale and needs to be updated.
+</docs-warning>
+
 The files referenced in `routes.ts` are the entry points for all of your routes:
 
 ```tsx filename=app/routes.ts

@@ -106,19 +106,17 @@ export const routes: RouteConfig = [
 ```
 
 ```tsx filename=app/dashboard.tsx
-import { defineRoute$, Outlet } from "react-router";
+import { Outlet } from "react-router";
 
-export default defineRoute$({
-  component: function Dashboard() {
-    return (
-      <div>
-        <h1>Dashboard</h1>
-        {/* will either be home.tsx or settings.tsx */}
-        <Outlet />
-      </div>
-    );
-  },
-});
+export default function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      {/* will either be home.tsx or settings.tsx */}
+      <Outlet />
+    </div>
+  );
+}
 ```
 
 ## Layout Routes
@@ -185,25 +183,25 @@ route("teams/:teamId", "./team.tsx");
 ```
 
 ```tsx filename=app/team.tsx
-import { defineRoute$ } from "react-router";
+import type {
+  LoaderArgs,
+  ActionArgs,
+  DefaultProps,
+} from "./+types.team";
 
-export default defineRoute$({
-  // ensures this route is configured correctly in routes.ts
-  // and provides type hints for the rest of this route
-  params: ["teamId"],
+async function loader({ params }: LoaderArgs) {
+  //                    ^? { teamId: string }
+}
 
-  async loader({ params }) {
-    // params.teamId will be available
-  },
+async function action({ params }: ActionArgs) {
+  //                    ^? { teamId: string }
+}
 
-  async action({ params }) {
-    // params.teamId will be available
-  },
-
-  Component({ params }) {
-    console.log(params.teamId); // "hotspur"
-  },
-});
+export default function Component({
+  params,
+}: DefaultProps) {
+  console.log(params.teamId); // "hotspur"
+}
 ```
 
 You can have multiple dynamic segments in one route path:
@@ -213,13 +211,11 @@ route("c/:categoryId/p/:productId", "./product.tsx");
 ```
 
 ```tsx filename=app/product.tsx
-export default defineRoute$({
-  params: ["categoryId", "productId"],
+import type { LoaderArgs } from "./+types.product";
 
-  async loader({ params }) {
-    // params.categoryId and params.productId will be available
-  },
-});
+async function loader({ params }: LoaderArgs) {
+  //                    ^? { categoryId: string; productId: string }
+}
 ```
 
 ## Optional Segments
@@ -279,6 +275,5 @@ function Wizard() {
 
 Note that these routes do not participate in data loading, actions, code splitting, or any other route module features, so their use cases are more limited than those of the route module.
 
-[file-route-conventions]: ../guides/file-route-conventions
-[outlet]: ../components/outlet
-[code_splitting]: ../discussion/code-splitting
+[file-route-conventions]: ../misc/file-route-conventions
+[outlet]: ../../api/react-router/Outlet

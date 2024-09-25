@@ -51,24 +51,24 @@ Pre-rendering is a build-time operation that generates static HTML and client na
 
 ## React Server Components
 
+<docs-warning>RSC is not supported yet, this is a future API that we plan to support</docs-warning>
+
 You can return elements from loaders and actions to keep them out of browser bundles.
 
 ```tsx
-export default defineRoute$({
-  async loader() {
-    return {
-      products: <Products />,
-      reviews: <Reviews />,
-    };
-  },
+export async function loader() {
+  return {
+    products: <Products />,
+    reviews: <Reviews />,
+  };
+}
 
-  Component({ data }) {
-    return (
-      <div>
-        {data.products}
-        {data.reviews}
-      </div>
-    );
-  },
-});
+export default function App({ data }) {
+  return (
+    <div>
+      {data.products}
+      {data.reviews}
+    </div>
+  );
+}
 ```

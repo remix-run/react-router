@@ -6,6 +6,10 @@ new: true
 
 # Deploying
 
+<docs-warning>
+  This document is a work in progress, and will be moved to to the deployment guides.
+</docs-warning>
+
 React Router can be deployed two ways:
 
 - Fullstack Hosting
@@ -100,7 +104,7 @@ This template includes:
 
 ### Manual Fullstack Deployment
 
-If you want to deploy to your own server or a different hosting provider, see the [Manual Deployment](../guides/manual-deployment.md) guide.
+If you want to deploy to your own server or a different hosting provider, see the [Manual Deployment](../misc/manual-deployment) guide.
 
 ## Static Hosting
 
