@@ -226,6 +226,143 @@ describe("route chunks", () => {
       `);
     });
 
+    test("isolated exported destructured array variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const [chunk] = [chunkMessage],
+          [main] = [mainMessage];
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        export const [chunk] = [chunkMessage];"
+      `);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mainMessage } from "./messages";
+        export const [main] = [mainMessage];"
+      `);
+    });
+
+    test("isolated exported destructured array spread variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const [...chunk] = [...chunkMessage],
+          [...main] = [...mainMessage];
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        export const [...chunk] = [...chunkMessage];"
+      `);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mainMessage } from "./messages";
+        export const [...main] = [...mainMessage];"
+      `);
+    });
+
+    test("isolated exported destructured object variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const { chunkMessage: chunk } = { chunkMessage },
+          { mainMessage: main } = { mainMessage };
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        export const {
+          chunkMessage: chunk
+        } = {
+          chunkMessage
+        };"
+      `);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mainMessage } from "./messages";
+        export const {
+          mainMessage: main
+        } = {
+          mainMessage
+        };"
+      `);
+    });
+
+    test("isolated exported destructured object spread variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const { ...chunk } = { ...chunkMessage },
+          { ...main } = { ...mainMessage };
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        export const {
+          ...chunk
+        } = {
+          ...chunkMessage
+        };"
+      `);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mainMessage } from "./messages";
+        export const {
+          ...main
+        } = {
+          ...mainMessage
+        };"
+      `);
+    });
+
+    test("isolated exported nested destructured variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const [, { nested: { ...chunk } }] = [null, { nested: { ...chunkMessage } }],
+          [, { nested: { ...main } }] = [null, { nested: { ...mainMessage } }];
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        export const [, {
+          nested: {
+            ...chunk
+          }
+        }] = [null, {
+          nested: {
+            ...chunkMessage
+          }
+        }];"
+      `);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mainMessage } from "./messages";
+        export const [, {
+          nested: {
+            ...main
+          }
+        }] = [null, {
+          nested: {
+            ...mainMessage
+          }
+        }];"
+      `);
+    });
+
     test("empty imports are placed in main chunk", () => {
       const code = dedent`
         export const chunk = "chunk";
@@ -385,6 +522,43 @@ describe("route chunks", () => {
           main = unchunkable;"
       `);
     });
+
+    test("isolated exported destructured variable declarations sharing an export statement, another one with shared variable declaration", () => {
+      const code = dedent`
+      import { chunkableMessage, unchunkableMessage } from "./messages";
+        export const { chunkableMessage: chunkable } = { chunkableMessage },
+          [unchunkable] = [unchunkableMessage],
+          { unchunkable: main } = { unchunkable };
+      `;
+
+      expect(hasChunkableExport(code, "chunkable", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "unchunkable", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunkable", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkableMessage } from "./messages";
+        export const {
+          chunkableMessage: chunkable
+        } = {
+          chunkableMessage
+        };"
+      `);
+      expect(
+        getChunkedExport(code, "unchunkable", {}, ...cache)
+      ).toBeUndefined();
+      expect(
+        omitChunkedExports(code, ["chunkable", "unchunkable"], {}, ...cache)
+          ?.code
+      ).toMatchInlineSnapshot(`
+        "import { unchunkableMessage } from "./messages";
+        export const [unchunkable] = [unchunkableMessage],
+          {
+            unchunkable: main
+          } = {
+            unchunkable
+          };"
+      `);
+    });
   });
 
   describe("not chunkable", () => {
@@ -540,6 +714,150 @@ describe("route chunks", () => {
         "import { sharedMessage } from "./messages";
         export const chunk = sharedMessage,
           main = chunk;"
+      `);
+    });
+
+    test("exported destructured array variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { sharedMessage } from "./messages";
+        export const [chunk] = [sharedMessage],
+          [main] = [chunk];
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { sharedMessage } from "./messages";
+        export const [chunk] = [sharedMessage],
+          [main] = [chunk];"
+      `);
+    });
+
+    test("exported destructured array variable declarations sharing an assignment", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const [chunk, main] = [chunkMessage, mainMessage];
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage, mainMessage } from "./messages";
+        export const [chunk, main] = [chunkMessage, mainMessage];"
+      `);
+    });
+
+    test("exported destructured object variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { sharedMessage } from "./messages";
+        export const { sharedMessage: chunk } = { sharedMessage },
+          { chunk: main } = { chunk };
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { sharedMessage } from "./messages";
+        export const {
+            sharedMessage: chunk
+          } = {
+            sharedMessage
+          },
+          {
+            chunk: main
+          } = {
+            chunk
+          };"
+      `);
+    });
+
+    test("exported destructured object variable declarations sharing an assignment", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const { chunkMessage: chunk, mainMessage: main } = { chunkMessage, mainMessage };
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage, mainMessage } from "./messages";
+        export const {
+          chunkMessage: chunk,
+          mainMessage: main
+        } = {
+          chunkMessage,
+          mainMessage
+        };"
+      `);
+    });
+
+    test("exported destructured object spread variable declarations sharing an export statement", () => {
+      const code = dedent`
+        import { sharedMessage } from "./messages";
+        export const { ...chunk } = { ...sharedMessage },
+          { ...main } = { ...chunk };
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { sharedMessage } from "./messages";
+        export const {
+            ...chunk
+          } = {
+            ...sharedMessage
+          },
+          {
+            ...main
+          } = {
+            ...chunk
+          };"
+      `);
+    });
+
+    test("exported destructured object spread variable declarations sharing an assignment", () => {
+      const code = dedent`
+        import { chunkMessage, mainMessage } from "./messages";
+        export const {
+          chunkMessage: { ...chunk },
+          mainMessage: { ...main }
+        } = {
+          chunkMessage: { ...chunkMessage },
+          mainMessage: { ...mainMessage }
+        };
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(false);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage, mainMessage } from "./messages";
+        export const {
+          chunkMessage: {
+            ...chunk
+          },
+          mainMessage: {
+            ...main
+          }
+        } = {
+          chunkMessage: {
+            ...chunkMessage
+          },
+          mainMessage: {
+            ...mainMessage
+          }
+        };"
       `);
     });
   });
