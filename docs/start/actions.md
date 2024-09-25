@@ -15,31 +15,37 @@ Client actions only run in the browser and take priority over a server action wh
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import { defineRoute$, Form } from "react-router";
+import type {
+  DefaultProps,
+  ClientActionArgs,
+} from "./+types.project";
+import { Form } from "react-router";
 
-export default defineRoute$({
-  clientAction({ request }) {
-    let formData = await request.formData();
-    let title = await formData.get("title");
-    let project = await someApi.updateProject({ title });
-    return project;
-  },
+export async function clientAction({
+  request,
+}: ClientActionArgs) {
+  let formData = await request.formData();
+  let title = await formData.get("title");
+  let project = await someApi.updateProject({ title });
+  return project;
+}
 
-  Component({ data, actionData }) {
-    return (
-      <div>
-        <h1>Project</h1>
-        <Form method="post">
-          <input type="text" name="title" />
-          <button type="submit">Submit</button>
-        </Form>
-        {actionData ? (
-          <p>{actionData.title} updated</p>
-        ) : null}
-      </div>
-    );
-  },
-});
+export default function Project({
+  clientActionData,
+}: DefaultProps) {
+  return (
+    <div>
+      <h1>Project</h1>
+      <Form method="post">
+        <input type="text" name="title" />
+        <button type="submit">Submit</button>
+      </Form>
+      {clientActionData ? (
+        <p>{clientActionData.title} updated</p>
+      ) : null}
+    </div>
+  );
+}
 ```
 
 ## Server Actions
@@ -48,31 +54,35 @@ Server actions only run on the server and are removed from client bundles.
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import { defineRoute$, Form } from "react-router";
+import type {
+  DefaultProps,
+  ActionArgs,
+} from "./+types.project";
+import { Form } from "react-router";
 
-export default defineRoute$({
-  action({ request }) {
-    let formData = await request.formData();
-    let title = await formData.get("title");
-    let project = await someApi.updateProject({ title });
-    return project;
-  },
+export async function action({ request }: ActionArgs) {
+  let formData = await request.formData();
+  let title = await formData.get("title");
+  let project = await someApi.updateProject({ title });
+  return project;
+}
 
-  Component({ data, actionData }) {
-    return (
-      <div>
-        <h1>Project</h1>
-        <Form method="post">
-          <input type="text" name="title" />
-          <button type="submit">Submit</button>
-        </Form>
-        {actionData ? (
-          <p>{actionData.title} updated</p>
-        ) : null}
-      </div>
-    );
-  },
-});
+export default function Project({
+  actionData,
+}: DefaultProps) {
+  return (
+    <div>
+      <h1>Project</h1>
+      <Form method="post">
+        <input type="text" name="title" />
+        <button type="submit">Submit</button>
+      </Form>
+      {actionData ? (
+        <p>{actionData.title} updated</p>
+      ) : null}
+    </div>
+  );
+}
 ```
 
 ## Calling Actions

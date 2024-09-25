@@ -189,7 +189,6 @@ export const routes: RouteConfig = [
 And then create the catchall route module and render your existing root App component within it.
 
 ```tsx filename=src/catchall.tsx
-import { defineRoute } from "react-router";
 import App from "./App";
 
 export default function Component() {
