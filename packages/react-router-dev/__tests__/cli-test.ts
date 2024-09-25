@@ -142,7 +142,11 @@ describe("remix CLI", () => {
             $ react-router reveal entry.server
             $ react-router reveal entry.client --no-typescript
             $ react-router reveal entry.server --no-typescript
-            $ react-router reveal entry.server --config vite.react-router.config.ts"
+            $ react-router reveal entry.server --config vite.react-router.config.ts
+
+          Generate types for route modules:
+
+           $ react-router typegen"
       `);
     });
   });
