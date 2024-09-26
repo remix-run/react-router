@@ -31,7 +31,7 @@ type DataFrom<T> =
 type ServerDataFrom<T> = Serialize<DataFrom<T>>;
 type ClientDataFrom<T> = DataFrom<T>;
 
-export type LoaderData<T extends RouteModule> = _LoaderData<
+export type CreateLoaderData<T extends RouteModule> = _CreateLoaderData<
   ServerDataFrom<T["loader"]>,
   ClientDataFrom<T["clientLoader"]>,
   false, // TODO
@@ -39,7 +39,7 @@ export type LoaderData<T extends RouteModule> = _LoaderData<
 >;
 
 // prettier-ignore
-type _LoaderData<
+type _CreateLoaderData<
   ServerLoaderData,
   ClientLoaderData,
   ClientLoaderHydrate extends boolean,
@@ -57,13 +57,13 @@ type _LoaderData<
   IsDefined<ServerLoaderData> extends true ? ServerLoaderData :
   undefined
 
-export type ActionData<T extends RouteModule> = _ActionData<
+export type CreateActionData<T extends RouteModule> = _CreateActionData<
   ServerDataFrom<T["action"]>,
   ClientDataFrom<T["clientAction"]>
 >;
 
 // prettier-ignore
-type _ActionData<ServerActionData, ClientActionData> = Awaited<
+type _CreateActionData<ServerActionData, ClientActionData> = Awaited<
   [IsDefined<ServerActionData>, IsDefined<ClientActionData>] extends [true, true] ? ServerActionData | ClientActionData :
   IsDefined<ClientActionData> extends true ? ClientActionData :
   IsDefined<ServerActionData> extends true ? ServerActionData :
@@ -104,35 +104,35 @@ type Serialize<T> =
 
   undefined
 
-export type ServerLoaderArgs<Params> = DataFunctionArgs<Params>;
+export type CreateServerLoaderArgs<Params> = DataFunctionArgs<Params>;
 
-export type ClientLoaderArgs<
+export type CreateClientLoaderArgs<
   Params,
   T extends RouteModule
 > = DataFunctionArgs<Params> & {
   serverLoader: () => Promise<ServerDataFrom<T["loader"]>>;
 };
 
-export type ServerActionArgs<Params> = DataFunctionArgs<Params>;
+export type CreateServerActionArgs<Params> = DataFunctionArgs<Params>;
 
-export type ClientActionArgs<
+export type CreateClientActionArgs<
   Params,
   T extends RouteModule
 > = DataFunctionArgs<Params> & {
   serverAction: () => Promise<ServerDataFrom<T["action"]>>;
 };
 
-export type HydrateFallbackProps<Params> = {
+export type CreateHydrateFallbackProps<Params> = {
   params: Params;
 };
 
-export type DefaultProps<Params, LoaderData, ActionData> = {
+export type CreateDefaultProps<Params, LoaderData, ActionData> = {
   params: Params;
   loaderData: LoaderData;
   actionData?: ActionData;
 };
 
-export type ErrorBoundaryProps<Params, LoaderData, ActionData> = {
+export type CreateErrorBoundaryProps<Params, LoaderData, ActionData> = {
   params: Params;
   error: unknown;
   loaderData?: LoaderData;
@@ -160,16 +160,18 @@ type __tests = [
   >,
 
   // LoaderData
-  Expect<Equal<LoaderData<{}>, undefined>>,
+  Expect<Equal<CreateLoaderData<{}>, undefined>>,
   Expect<
     Equal<
-      LoaderData<{ loader: () => { a: string; b: Date; c: () => boolean } }>,
+      CreateLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+      }>,
       { a: string; b: Date; c: undefined }
     >
   >,
   Expect<
     Equal<
-      LoaderData<{
+      CreateLoaderData<{
         clientLoader: () => { a: string; b: Date; c: () => boolean };
       }>,
       undefined | { a: string; b: Date; c: () => boolean }
@@ -177,7 +179,7 @@ type __tests = [
   >,
   Expect<
     Equal<
-      LoaderData<{
+      CreateLoaderData<{
         loader: () => { a: string; b: Date; c: () => boolean };
         clientLoader: () => { d: string; e: Date; f: () => boolean };
       }>,
@@ -188,25 +190,26 @@ type __tests = [
   // TODO: tests w/ ClientLoaderHydrate
 
   // ActionData
-  Expect<Equal<ActionData<{}>, undefined>>,
+  Expect<Equal<CreateActionData<{}>, undefined>>,
   Expect<
     Equal<
-      ActionData<{ action: () => { a: string; b: Date; c: () => boolean } }>,
+      CreateActionData<{
+        action: () => { a: string; b: Date; c: () => boolean };
+      }>,
       { a: string; b: Date; c: undefined }
     >
   >,
-  // TODO: ask matt about this test case
-  // Expect<
-  //   Equal<
-  //     ActionData<{
-  //       clientAction: () => { a: string; b: Date; c: () => boolean };
-  //     }>,
-  //     undefined | { a: string; b: Date; c: () => boolean }
-  //   >
-  // >,
   Expect<
     Equal<
-      ActionData<{
+      CreateActionData<{
+        clientAction: () => { a: string; b: Date; c: () => boolean };
+      }>,
+      { a: string; b: Date; c: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      CreateActionData<{
         action: () => { a: string; b: Date; c: () => boolean };
         clientAction: () => { d: string; e: Date; f: () => boolean };
       }>,

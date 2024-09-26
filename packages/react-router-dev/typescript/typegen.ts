@@ -94,17 +94,17 @@ function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
 
     type Route = typeof import("./${Pathe.filename(route.file)}")
 
-    export type LoaderData = T.LoaderData<Route>
-    export type ActionData = T.ActionData<Route>
+    export type LoaderData = T.CreateLoaderData<Route>
+    export type ActionData = T.CreateActionData<Route>
 
-    export type LoaderArgs = T.ServerLoaderArgs<Params>
-    export type ClientLoaderArgs = T.ClientLoaderArgs<Params, Route>
-    export type ActionArgs = T.ServerActionArgs<Params>
-    export type ClientActionArgs = T.ClientActionArgs<Params, Route>
+    export type LoaderArgs = T.CreateServerLoaderArgs<Params>
+    export type ClientLoaderArgs = T.CreateClientLoaderArgs<Params, Route>
+    export type ActionArgs = T.CreateServerActionArgs<Params>
+    export type ClientActionArgs = T.CreateClientActionArgs<Params, Route>
 
-    export type HydrateFallbackProps = T.HydrateFallbackProps<Params>
-    export type DefaultProps = T.DefaultProps<Params, LoaderData, ActionData>
-    export type ErrorBoundaryProps = T.ErrorBoundaryProps<Params, LoaderData, ActionData>
+    export type HydrateFallbackProps = T.CreateHydrateFallbackProps<Params>
+    export type DefaultProps = T.CreateDefaultProps<Params, LoaderData, ActionData>
+    export type ErrorBoundaryProps = T.CreateErrorBoundaryProps<Params, LoaderData, ActionData>
   `;
 }
 
