@@ -142,12 +142,12 @@ export default function Product({
 The URLs to pre-render are specified in the Vite plugin.
 
 ```ts filename=vite.config.ts
-import { plugin as app } from "@react-router/vite";
+import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
-    app({
+    reactRouter({
       async prerender() {
         let products = await readProductsFromCSVFile();
         return products.map(
