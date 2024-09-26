@@ -34,7 +34,9 @@ export async function watch(ctx: Context) {
   const appDirectory = Path.normalize(ctx.appDirectory);
   const routesTsPath = Path.join(appDirectory, "routes.ts");
 
-  const routesViteNodeContext = await ViteNode.createContext();
+  const routesViteNodeContext = await ViteNode.createContext({
+    root: ctx.rootDirectory,
+  });
   async function getRoutes(): Promise<RouteManifest> {
     routesViteNodeContext.devServer.moduleGraph.invalidateAll();
     routesViteNodeContext.runner.moduleCache.clear();
