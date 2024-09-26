@@ -87,7 +87,9 @@ export async function writeAll(
 
 function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
   return dedent`
-    // typegen: ${route.file}
+    // React Router generated types for route:
+    // ${route.file}
+
     import * as T from "react-router/types"
 
     export type Params = {${formattedParamsProperties(routes, route)}}
