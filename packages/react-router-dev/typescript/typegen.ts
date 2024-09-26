@@ -78,6 +78,7 @@ export async function writeAll(
 ): Promise<void> {
   fs.rmSync(getDirectory(ctx), { recursive: true, force: true });
   Object.values(routes).forEach((route) => {
+    if (!fs.existsSync(Path.join(ctx.appDirectory, route.file))) return;
     const typesPath = getPath(ctx, route);
     const content = getModule(routes, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
