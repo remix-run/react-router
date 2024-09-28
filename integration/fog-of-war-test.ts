@@ -129,7 +129,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#a")).toBe(`<h1 id="a">A: A LOADER</h1>`);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toContain("routes/a");
   });
@@ -144,7 +144,7 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
@@ -163,7 +163,7 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
@@ -171,12 +171,12 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("#a");
 
     await page.waitForFunction(
-      () => (window as any).__remixManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
@@ -193,18 +193,18 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
     await app.clickElement("button");
     await page.waitForFunction(
-      () => (window as any).__remixManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
@@ -254,18 +254,18 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index"]);
 
     await app.clickElement("button");
     await page.waitForFunction(
-      () => (window as any).__remixManifest.routes["routes/a"]
+      () => (window as any).__reactRouterManifest.routes["routes/a"]
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
   });
@@ -298,7 +298,7 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
@@ -309,7 +309,7 @@ test.describe("Fog of War", () => {
     // /a/b is not discovered yet even thought it's rendered
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
@@ -319,7 +319,7 @@ test.describe("Fog of War", () => {
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
@@ -367,11 +367,11 @@ test.describe("Fog of War", () => {
 
     await app.goto("/", true);
     await page.waitForFunction(
-      () => (window as any).__remixManifest.routes["routes/a"]
+      () => (window as any).__reactRouterManifest.routes["routes/a"]
     );
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
@@ -402,7 +402,7 @@ test.describe("Fog of War", () => {
     await app.goto("/", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
 
@@ -410,12 +410,12 @@ test.describe("Fog of War", () => {
     await page.waitForSelector("form");
 
     await page.waitForFunction(
-      () => (window as any).__remixManifest.routes["routes/a.b"]
+      () => (window as any).__reactRouterManifest.routes["routes/a.b"]
     );
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a", "routes/a.b"]);
   });
@@ -471,7 +471,7 @@ test.describe("Fog of War", () => {
     await app.goto("/deep", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/deep", "routes/_index"]);
 
@@ -565,7 +565,7 @@ test.describe("Fog of War", () => {
     await app.goto("/parent/child/grandchild", true);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual([
       "root",
@@ -680,7 +680,7 @@ test.describe("Fog of War", () => {
 
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual([
       "root",
@@ -773,7 +773,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/$slug"]);
     expect(manifestRequests).toEqual([
@@ -795,7 +795,7 @@ test.describe("Fog of War", () => {
     ]);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/$slug", "routes/static"]);
   });
@@ -860,7 +860,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/$"]);
     expect(manifestRequests).toEqual([
@@ -882,7 +882,7 @@ test.describe("Fog of War", () => {
     ]);
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/$", "routes/static"]);
   });
@@ -940,7 +940,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
@@ -1028,7 +1028,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
@@ -1122,7 +1122,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#index")).toMatch("Index");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index"]);
     expect(manifestRequests.length).toBe(0);
@@ -1188,7 +1188,7 @@ test.describe("Fog of War", () => {
     expect(await app.getHtml("#a")).toMatch("A LOADER");
     expect(
       await page.evaluate(() =>
-        Object.keys((window as any).__remixManifest.routes)
+        Object.keys((window as any).__reactRouterManifest.routes)
       )
     ).toEqual(["root", "routes/_index", "routes/a"]);
   });

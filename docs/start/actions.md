@@ -5,6 +5,10 @@ order: 6
 
 # Actions
 
+<docs-warning>
+  The types for route modules are still in development, this API may change.
+</docs-warning>
+
 Data mutations are done through Route actions. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it.
 
 Route actions defined with `action` are only called on the server while actions defined with `clientAction` are run in the browser.
@@ -15,31 +19,37 @@ Client actions only run in the browser and take priority over a server action wh
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import { defineRoute$, Form } from "react-router";
+import type {
+  DefaultProps,
+  ClientActionArgs,
+} from "./+types.project";
+import { Form } from "react-router";
 
-export default defineRoute$({
-  clientAction({ request }) {
-    let formData = await request.formData();
-    let title = await formData.get("title");
-    let project = await someApi.updateProject({ title });
-    return project;
-  },
+export async function clientAction({
+  request,
+}: ClientActionArgs) {
+  let formData = await request.formData();
+  let title = await formData.get("title");
+  let project = await someApi.updateProject({ title });
+  return project;
+}
 
-  Component({ data, actionData }) {
-    return (
-      <div>
-        <h1>Project</h1>
-        <Form method="post">
-          <input type="text" name="title" />
-          <button type="submit">Submit</button>
-        </Form>
-        {actionData ? (
-          <p>{actionData.title} updated</p>
-        ) : null}
-      </div>
-    );
-  },
-});
+export default function Project({
+  clientActionData,
+}: DefaultProps) {
+  return (
+    <div>
+      <h1>Project</h1>
+      <Form method="post">
+        <input type="text" name="title" />
+        <button type="submit">Submit</button>
+      </Form>
+      {clientActionData ? (
+        <p>{clientActionData.title} updated</p>
+      ) : null}
+    </div>
+  );
+}
 ```
 
 ## Server Actions
@@ -48,31 +58,35 @@ Server actions only run on the server and are removed from client bundles.
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import { defineRoute$, Form } from "react-router";
+import type {
+  DefaultProps,
+  ActionArgs,
+} from "./+types.project";
+import { Form } from "react-router";
 
-export default defineRoute$({
-  action({ request }) {
-    let formData = await request.formData();
-    let title = await formData.get("title");
-    let project = await someApi.updateProject({ title });
-    return project;
-  },
+export async function action({ request }: ActionArgs) {
+  let formData = await request.formData();
+  let title = await formData.get("title");
+  let project = await someApi.updateProject({ title });
+  return project;
+}
 
-  Component({ data, actionData }) {
-    return (
-      <div>
-        <h1>Project</h1>
-        <Form method="post">
-          <input type="text" name="title" />
-          <button type="submit">Submit</button>
-        </Form>
-        {actionData ? (
-          <p>{actionData.title} updated</p>
-        ) : null}
-      </div>
-    );
-  },
-});
+export default function Project({
+  actionData,
+}: DefaultProps) {
+  return (
+    <div>
+      <h1>Project</h1>
+      <Form method="post">
+        <input type="text" name="title" />
+        <button type="submit">Submit</button>
+      </Form>
+      {actionData ? (
+        <p>{actionData.title} updated</p>
+      ) : null}
+    </div>
+  );
+}
 ```
 
 ## Calling Actions
@@ -153,4 +167,4 @@ fetcher.submit(
 );
 ```
 
-See the [Using Fetchers](../guides/fetchers) guide for more information.
+See the [Using Fetchers](../misc/fetchers) guide for more information.

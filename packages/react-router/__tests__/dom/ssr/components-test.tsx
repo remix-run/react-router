@@ -217,11 +217,11 @@ describe("<ServerRouter>", () => {
 
 describe("<HydratedRouter>", () => {
   it("handles empty default export objects from the compiler", async () => {
-    window.__remixContext = {
+    window.__reactRouterContext = {
       url: "/",
       future: {},
     };
-    window.__remixRouteModules = {
+    window.__reactRouterRouteModules = {
       root: {
         default: () => {
           return (
@@ -234,7 +234,7 @@ describe("<HydratedRouter>", () => {
       },
       empty: { default: {} },
     };
-    window.__remixManifest = {
+    window.__reactRouterManifest = {
       routes: {
         root: {
           hasLoader: false,
@@ -258,16 +258,16 @@ describe("<HydratedRouter>", () => {
       url: "",
       version: "",
     };
-    window.__remixContext!.stream = new ReadableStream({
+    window.__reactRouterContext!.stream = new ReadableStream({
       start(controller) {
-        window.__remixContext!.streamController = controller;
+        window.__reactRouterContext!.streamController = controller;
       },
     }).pipeThrough(new TextEncoderStream());
-    window.__remixContext!.streamController.enqueue(
+    window.__reactRouterContext!.streamController.enqueue(
       // ts-expect-error
       '[{"1":2,"6":4,"7":4},"loaderData",{"3":4,"5":4},"root",null,"empty","actionData","errors"]\n'
     );
-    window.__remixContext!.streamController.close();
+    window.__reactRouterContext!.streamController.close();
 
     jest.spyOn(console, "error");
     jest.spyOn(console, "warn").mockImplementation(() => {});

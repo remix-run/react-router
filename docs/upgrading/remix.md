@@ -21,6 +21,8 @@ export interface FutureConfig {
 
 ### Codemod
 
+<docs-warning>This codemod is still in development, this doc is a hypothetical of what it might look like.</docs-warning>
+
 You can use the following command that will automatically:
 
 - update your Remix dependencies to their corresponding React Router v7 dependencies

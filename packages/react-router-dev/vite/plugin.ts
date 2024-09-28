@@ -673,7 +673,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     // Write the browser manifest to disk as part of the build process
     await writeFileSafe(
       path.join(getClientBuildDirectory(ctx.reactRouterConfig), manifestPath),
-      `window.__remixManifest=${JSON.stringify(reactRouterBrowserManifest)};`
+      `window.__reactRouterManifest=${JSON.stringify(
+        reactRouterBrowserManifest
+      )};`
     );
 
     // The server manifest is the same as the browser manifest, except for
@@ -1002,6 +1004,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                   plugin !== null &&
                   "name" in plugin &&
                   plugin.name !== "react-router" &&
+                  plugin.name !== "react-router-route-exports" &&
                   plugin.name !== "react-router-hmr-updates"
               ),
           ],
@@ -1297,7 +1300,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               es6: true,
             });
 
-            return `window.__remixManifest=${reactRouterManifestString};`;
+            return `window.__reactRouterManifest=${reactRouterManifestString};`;
           }
         }
       },
@@ -1397,12 +1400,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     {
       name: "react-router-route-exports",
       async transform(code, id, options) {
-        if (options?.ssr) return;
-
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
 
-        if (!ctx.reactRouterConfig.ssr) {
+        if (!options?.ssr && !ctx.reactRouterConfig.ssr) {
           let serverOnlyExports = esModuleLexer(code)[1]
             .map((exp) => exp.n)
             .filter((exp) => SERVER_ONLY_ROUTE_EXPORTS.includes(exp));
@@ -1433,7 +1434,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         let [filepath] = id.split("?");
 
         let ast = parse(code, { sourceType: "module" });
-        removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        if (!options?.ssr) {
+          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        }
         WithProps.transform(ast);
         return generate(ast, {
           sourceMaps: true,
@@ -1996,8 +1999,8 @@ function validatePrerenderedResponse(
 
 function validatePrerenderedHtml(html: string, prefix: string) {
   if (
-    !html.includes("window.__remixContext =") ||
-    !html.includes("window.__remixRouteModules =")
+    !html.includes("window.__reactRouterContext =") ||
+    !html.includes("window.__reactRouterRouteModules =")
   ) {
     throw new Error(
       `${prefix}: Did you forget to include <Scripts/> in your root route? ` +

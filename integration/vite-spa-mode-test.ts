@@ -643,7 +643,7 @@ test.describe("SPA Mode", () => {
       let html = await res.text();
       expect(html.match(/<html/g)?.length).toBe(1);
       expect(html.match(/<\/html/g)?.length).toBe(1);
-      expect(html.match(/window.__remixContext =/g)?.length).toBe(1);
+      expect(html.match(/window.__reactRouterContext =/g)?.length).toBe(1);
       expect(html.match(/💿 Hey developer 👋/g)?.length).toBe(1);
     });
   });

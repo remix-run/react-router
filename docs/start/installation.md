@@ -10,7 +10,7 @@ order: 1
 Most projects start with a template. Let's use a basic template maintained by React Router with `degit`:
 
 ```shellscript nonumber
-npx degit @remix-run/templates/basic my-app
+npx degit remix-run/react-router/templates/basic#dev my-app
 ```
 
 Now change into the new directory and start the app
@@ -33,8 +33,8 @@ First create a new directory and install dependencies:
 mkdir my-new-app
 cd my-new-app
 npm init -y
-npm install react react-dom react-router
-npm install -D vite @react-router/dev
+npm install react react-dom react-router@pre @react-router/node@pre @react-router/serve@pre
+npm install -D vite @react-router/dev@pre
 ```
 
 Now create the following files:
@@ -97,12 +97,23 @@ export const routes: RouteConfig = [index("./home.tsx")];
 ```
 
 ```tsx filename=vite.config.ts
-import react from "@react-router/dev/vite";
+import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [reactRouter()],
 });
+```
+
+```json filename=package.json
+{
+  "type": "module",
+  "scripts": {
+    "dev": "react-router dev",
+    "build": "react-router build",
+    "start": "react-router-serve ./build/server/index.js"
+  }
+}
 ```
 
 And finally run the app:
@@ -117,4 +128,4 @@ React Router's full feature-set is easiest to use with the React Router Vite plu
 
 Refer to [Manual Usage][manual_usage] for more information.
 
-[manual_usage]: ../guides/manual-usage
+[manual_usage]: ../misc/manual-usage

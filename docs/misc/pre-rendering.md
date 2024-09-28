@@ -1,9 +1,9 @@
 ---
-title: Prerendering
+title: Pre-Rendering
 new: true
 ---
 
-# Prerendering
+# Pre-Rendering
 
 Without a doubt, one of the most common questions we've received since the launch of Remix v1 is _"how can I SSG my app with Remix?"_
 
@@ -17,9 +17,9 @@ This is still something that could be done entirely in userland, but it's be so 
 
 ## Configuration
 
-To enable pre-rendering, add the `prerender` option to your React Router Vite plugin to enable prerendering.
+To enable pre-rendering, add the `prerender` option to your React Router Vite plugin to enable pre-rendering.
 
-In the simplest use-case, `prerender: true` will prerender all static routes defined in your application (excluding any paths that contain dynamic or splat params):
+In the simplest use-case, `prerender: true` will pre-render all static routes defined in your application (excluding any paths that contain dynamic or splat params):
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";
@@ -34,7 +34,7 @@ export default defineConfig({
 });
 ```
 
-If you need to prerender paths with dynamic/splat parameters, or you only want to prerender a subset of your static paths, you can provide an array of paths:
+If you need to pre-render paths with dynamic/splat parameters, or you only want to pre-render a subset of your static paths, you can provide an array of paths:
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";
