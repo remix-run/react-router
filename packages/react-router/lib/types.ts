@@ -31,11 +31,17 @@ type DataFrom<T> =
 type ServerDataFrom<T> = Serialize<DataFrom<T>>;
 type ClientDataFrom<T> = DataFrom<T>;
 
+// prettier-ignore
+type IsHydrate<ClientLoader> =
+  ClientLoader extends { hydrate: true } ? true :
+  ClientLoader extends { hydrate: false } ? false :
+  false
+
 export type CreateLoaderData<T extends RouteModule> = _CreateLoaderData<
   ServerDataFrom<T["loader"]>,
   ClientDataFrom<T["clientLoader"]>,
-  false, // TODO
-  IsAny<T["HydrateFallback"]> extends true ? false : true
+  IsHydrate<T["clientLoader"]>,
+  T extends { HydrateFallback: () => unknown } ? true : false
 >;
 
 // prettier-ignore
@@ -187,7 +193,41 @@ type __tests = [
       | { d: string; e: Date; f: () => boolean }
     >
   >,
-  // TODO: tests w/ ClientLoaderHydrate
+  Expect<
+    Equal<
+      CreateLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: () => { d: string; e: Date; f: () => boolean };
+        HydrateFallback: () => unknown;
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      CreateLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: (() => { d: string; e: Date; f: () => boolean }) & {
+          hydrate: true;
+        };
+      }>,
+      | { a: string; b: Date; c: undefined }
+      | { d: string; e: Date; f: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      CreateLoaderData<{
+        loader: () => { a: string; b: Date; c: () => boolean };
+        clientLoader: (() => { d: string; e: Date; f: () => boolean }) & {
+          hydrate: true;
+        };
+        HydrateFallback: () => unknown;
+      }>,
+      { d: string; e: Date; f: () => boolean }
+    >
+  >,
 
   // ActionData
   Expect<Equal<CreateActionData<{}>, undefined>>,
