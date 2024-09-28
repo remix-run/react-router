@@ -1033,6 +1033,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
                   plugin !== null &&
                   "name" in plugin &&
                   plugin.name !== "react-router" &&
+                  plugin.name !== "react-router-route-exports" &&
                   plugin.name !== "react-router-hmr-updates"
               ),
           ],
@@ -1426,12 +1427,10 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
     {
       name: "react-router-route-exports",
       async transform(code, id, options) {
-        if (options?.ssr) return;
-
         let route = getRoute(ctx.reactRouterConfig, id);
         if (!route) return;
 
-        if (!ctx.reactRouterConfig.ssr) {
+        if (!options?.ssr && !ctx.reactRouterConfig.ssr) {
           let serverOnlyExports = esModuleLexer(code)[1]
             .map((exp) => exp.n)
             .filter((exp) => SERVER_ONLY_ROUTE_EXPORTS.includes(exp));
@@ -1462,7 +1461,9 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         let [filepath] = id.split("?");
 
         let ast = parse(code, { sourceType: "module" });
-        removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        if (!options?.ssr) {
+          removeExports(ast, SERVER_ONLY_ROUTE_EXPORTS);
+        }
         WithProps.transform(ast);
         return generate(ast, {
           sourceMaps: true,
