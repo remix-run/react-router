@@ -760,6 +760,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         viteCommand = viteConfigEnv.command;
 
         routesViteNodeContext = await ViteNode.createContext({
+          root: viteUserConfig.root,
           mode: viteConfigEnv.mode,
           server: {
             watch: viteCommand === "build" ? null : undefined,

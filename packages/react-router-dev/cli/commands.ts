@@ -192,13 +192,11 @@ async function createClientEntry(
   return contents;
 }
 
-export async function typegen(root?: string) {
+export async function typegen(root: string) {
   let ctx = await loadPluginContext({ root });
-  await Typegen.writeAll(
-    {
-      rootDirectory: ctx.rootDirectory,
-      appDirectory: ctx.reactRouterConfig.appDirectory,
-    },
-    ctx.reactRouterConfig.routes
-  );
+  await Typegen.writeAll({
+    rootDirectory: root,
+    appDirectory: ctx.reactRouterConfig.appDirectory,
+    routes: ctx.reactRouterConfig.routes,
+  });
 }

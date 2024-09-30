@@ -12,10 +12,12 @@ import {
 } from "../config/routes";
 import * as ViteNode from "../vite/vite-node";
 import { findEntry } from "../vite/config";
+import { loadPluginContext } from "../vite/plugin";
 
 type Context = {
   rootDirectory: string;
   appDirectory: string;
+  routes: RouteManifest;
 };
 
 function getDirectory(ctx: Context) {
@@ -31,16 +33,22 @@ export function getPath(ctx: Context, route: RouteManifestEntry): string {
   );
 }
 
-export async function watch(ctx: Context) {
-  const appDirectory = Path.normalize(ctx.appDirectory);
-  const routesTsPath = Path.join(appDirectory, "routes.ts");
+export async function watch(rootDirectory: string) {
+  const vitePluginCtx = await loadPluginContext({ root: rootDirectory });
+  const routesTsPath = Path.join(
+    vitePluginCtx.reactRouterConfig.appDirectory,
+    "routes.ts"
+  );
 
   const routesViteNodeContext = await ViteNode.createContext({
-    root: ctx.rootDirectory,
+    root: rootDirectory,
   });
   async function getRoutes(): Promise<RouteManifest> {
     const routes: RouteManifest = {};
-    const rootRouteFile = findEntry(appDirectory, "root");
+    const rootRouteFile = findEntry(
+      vitePluginCtx.reactRouterConfig.appDirectory,
+      "root"
+    );
     if (rootRouteFile) {
       routes.root = { path: "", id: "root", file: rootRouteFile };
     }
@@ -55,42 +63,42 @@ export async function watch(ctx: Context) {
     };
   }
 
-  const initialRoutes = await getRoutes();
-  await writeAll(ctx, initialRoutes);
+  const ctx: Context = {
+    rootDirectory,
+    appDirectory: vitePluginCtx.reactRouterConfig.appDirectory,
+    routes: await getRoutes(),
+  };
+  await writeAll(ctx);
 
-  const watcher = Chokidar.watch(appDirectory, { ignoreInitial: true });
+  const watcher = Chokidar.watch(ctx.appDirectory, { ignoreInitial: true });
   watcher.on("all", async (event, path) => {
     path = Path.normalize(path);
-
-    const routes = await getRoutes();
+    ctx.routes = await getRoutes();
 
     const routeConfigChanged = Boolean(
       routesViteNodeContext.devServer.moduleGraph.getModuleById(path)
     );
     if (routeConfigChanged) {
-      await writeAll(ctx, routes);
+      await writeAll(ctx);
       return;
     }
 
-    const isRoute = Object.values(routes).find(
+    const isRoute = Object.values(ctx.routes).find(
       (route) => path === Path.join(ctx.appDirectory, route.file)
     );
     if (isRoute && (event === "add" || event === "unlink")) {
-      await writeAll(ctx, routes);
+      await writeAll(ctx);
       return;
     }
   });
 }
 
-export async function writeAll(
-  ctx: Context,
-  routes: RouteManifest
-): Promise<void> {
+export async function writeAll(ctx: Context): Promise<void> {
   fs.rmSync(getDirectory(ctx), { recursive: true, force: true });
-  Object.values(routes).forEach((route) => {
+  Object.values(ctx.routes).forEach((route) => {
     if (!fs.existsSync(Path.join(ctx.appDirectory, route.file))) return;
     const typesPath = getPath(ctx, route);
-    const content = getModule(routes, route);
+    const content = getModule(ctx.routes, route);
     fs.mkdirSync(Path.dirname(typesPath), { recursive: true });
     fs.writeFileSync(typesPath, content);
   });
