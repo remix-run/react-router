@@ -41,7 +41,7 @@ export type CreateLoaderData<T extends RouteModule> = _CreateLoaderData<
   ServerDataFrom<T["loader"]>,
   ClientDataFrom<T["clientLoader"]>,
   IsHydrate<T["clientLoader"]>,
-  T extends { HydrateFallback: () => unknown } ? true : false
+  T extends { HydrateFallback: Fn } ? true : false
 >;
 
 // prettier-ignore
