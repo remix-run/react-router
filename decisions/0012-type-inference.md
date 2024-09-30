@@ -88,37 +88,6 @@ An ideal solution would infer types correctly on your behalf, doing away with te
 - Compatibility with standard tooling for treeshaking, HMR, etc.
 - Minimal impact on runtime API design
 
-## Rejected solution: `defineRoute`
-
-Early on, we considered changing the route module API from many exports to a single `defineRoute` export:
-
-```tsx
-export default defineRoute({
-  loader() {
-    return { planet: "world" };
-  },
-  Component({ loaderData }) {
-    return <h1>Hello, {loaderData.planet}!</h1>;
-  },
-});
-```
-
-That way `defineRoute` could do some TypeScript magic to infer `loaderData` based on `loader` (type inference within a route).
-With some more work, we envisioned that `defineRoute` could return utilities like a typesafe `useRouteLoaderData` (type inference across routes).
-
-However, there were still many drawbacks with this design:
-
-1. Type inference across function arguments depends on the ordering of those arguments.
-   That means that if you put `Component` before `loader` type inference is busted and you'll get gnarly type errors.
-
-2. Any mechanism expressible solely as code in a route module cannot infer types from the route config (`routes.ts`).
-   That means no type inference for things like path params nor for `<Link to="..." />`.
-
-3. Transforms that expect to operate on module exports can no longer access parts of the route.
-   For example, bundlers would only see one big export so they would bail out of treeshaking route modules.
-   Similarly, React-based HMR via React Fast Refresh looks for React components as exports of a module.
-   It would be possible to augment React component detection for HMR to look within a function call like `defineRoute`, but it significantly ups the complexity.
-
 ## Decisions
 
 ### Route exports API
@@ -176,18 +145,18 @@ For example:
   - types/
     - app/
       - routes/
-        - +types.product-details.ts
+        - +types.product.ts
 - app/
   - routes/
-    - product-details.tsx
+    - product.tsx
 ```
 
 The path within `.react-router/types` purposefully mirrors the path to the correspond route module.
 By setting things up like this, we can use `tsconfig.json`'s [rootDirs](https://www.typescriptlang.org/tsconfig/#rootDirs) option to let you conveniently import from the typegen file as if it was a sibling:
 
 ```ts
-// app/routes/product-details.tsx
-import { LoaderArgs, DefaultProps } from "./+types.product-details";
+// app/routes/product.tsx
+import { LoaderArgs, DefaultProps } from "./+types.product";
 ```
 
 TypeScript will even give you import autocompletion for the typegen file and the `+` prefix helps to distinguish it as a special file.
@@ -212,6 +181,84 @@ Even more exciting is that a TS plugin sets the stage for tons of other DX goodi
 - Snippet-like autocomplete for route exports
 - In-editor warnings when you forget to name your React components, which would cause HMR to fail
 - ...and more...
+
+## Rejected solutions
+
+### `defineRoute`
+
+Early on, we considered changing the route module API from many exports to a single `defineRoute` export:
+
+```tsx
+export default defineRoute({
+  loader() {
+    return { planet: "world" };
+  },
+  Component({ loaderData }) {
+    return <h1>Hello, {loaderData.planet}!</h1>;
+  },
+});
+```
+
+That way `defineRoute` could do some TypeScript magic to infer `loaderData` based on `loader` (type inference within a route).
+With some more work, we envisioned that `defineRoute` could return utilities like a typesafe `useRouteLoaderData` (type inference across routes).
+
+However, there were still many drawbacks with this design:
+
+1. Type inference across function arguments depends on the ordering of those arguments.
+   That means that if you put `Component` before `loader` type inference is busted and you'll get gnarly type errors.
+
+2. Any mechanism expressible solely as code in a route module cannot infer types from the route config (`routes.ts`).
+   That means no type inference for things like path params nor for `<Link to="..." />`.
+
+3. Transforms that expect to operate on module exports can no longer access parts of the route.
+   For example, bundlers would only see one big export so they would bail out of treeshaking route modules.
+   Similarly, React-based HMR via React Fast Refresh looks for React components as exports of a module.
+   It would be possible to augment React component detection for HMR to look within a function call like `defineRoute`, but it significantly ups the complexity.
+
+### `defineLoader` and friends
+
+Instead of a single `defineRoute` function as described above, we could have a `define*` function for each route export:
+
+```tsx
+import { defineLoader } from "./+types.product";
+
+export const loader = defineLoader(() => {
+  return { planet: "world" };
+});
+```
+
+That would address the most of the drawbacks of the `defineRoute` approach.
+However, this adds significant noise to the code.
+It also means we're introducing a runtime API that only exists for typesafety.
+
+Additionally, utilities like `defineLoader` are implemented with an `extends` generic that [does not pin point incorrect return statements](https://tsplay.dev/WJP7ZN):
+
+```ts
+const defineLoader = <T extends Loader>(loader: T): T => loader;
+
+export const loader = defineLoader(() => {
+  //                               ^^^^^^^
+  // Argument of type '() => "string" | 1' is not assignable to parameter of type 'Loader'.
+  //   Type 'string | number' is not assignable to type 'number'.
+  //     Type 'string' is not assignable to type 'number'.(2345)
+
+  if (Math.random() > 0.5) return "string"; // 👈 don't you wish the error was here instead?
+  return 1;
+});
+```
+
+### Zero-effort typesafety
+
+Svelte Kit has a ["zero-effort" type safety approach](https://svelte.dev/blog/zero-config-type-safety) that uses a TypeScript language service plugin to automatically inject types for framework-specific exports.
+Initially, this seemed like a good fit for React Router too, but we ran into a couple drawbacks:
+
+1. Tools like `typescript-eslint` that need to statically inspect the types of your TS files without running a language server would not be aware of the injected types.
+   There's an open issue for [`typescript-eslint` interop with Svelte Kit](https://github.com/sveltejs/language-tools/issues/2073)
+
+2. Running `tsc` would perform typechecking without any knowledge of our custom language service.
+   To fix this, we would need to wrap `tsc` in our own CLI that programmatically calls the TS typechecker.
+   For Svelte Kit, this isn't as big of an issue since they already need their own typecheck command for the Svelte language: `svelte-check`.
+   But since React Router is pure TypeScript, it would be more natural to invoke `tsc` directly in your `package.json` scripts.
 
 ## Summary
 
