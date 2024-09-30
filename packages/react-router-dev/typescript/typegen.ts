@@ -11,6 +11,7 @@ import {
   type RouteManifestEntry,
 } from "../config/routes";
 import * as ViteNode from "../vite/vite-node";
+import { findEntry } from "../vite/config";
 
 type Context = {
   rootDirectory: string;
@@ -38,11 +39,20 @@ export async function watch(ctx: Context) {
     root: ctx.rootDirectory,
   });
   async function getRoutes(): Promise<RouteManifest> {
+    const routes: RouteManifest = {};
+    const rootRouteFile = findEntry(appDirectory, "root");
+    if (rootRouteFile) {
+      routes.root = { path: "", id: "root", file: rootRouteFile };
+    }
+
     routesViteNodeContext.devServer.moduleGraph.invalidateAll();
     routesViteNodeContext.runner.moduleCache.clear();
 
     const result = await routesViteNodeContext.runner.executeFile(routesTsPath);
-    return configRoutesToRouteManifest(result.routes);
+    return {
+      ...routes,
+      ...configRoutesToRouteManifest(result.routes),
+    };
   }
 
   const initialRoutes = await getRoutes();
