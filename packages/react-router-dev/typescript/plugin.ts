@@ -14,11 +14,10 @@ export default function init(modules: { typescript: typeof ts }) {
     logger.info("[react-router] setup");
 
     const rootDirectory = Path.normalize(info.project.getCurrentDirectory());
-    const ctx = {
+    Typegen.watch({
       rootDirectory,
       appDirectory: Path.join(rootDirectory, "app"),
-    };
-    Typegen.watch(ctx);
+    });
 
     return info.languageService;
   }
