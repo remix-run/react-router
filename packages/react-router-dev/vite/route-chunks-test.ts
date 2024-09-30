@@ -395,6 +395,24 @@ describe("route chunks", () => {
         export const main = "main";"
       `);
     });
+
+    test("unused imports are placed in main chunk", () => {
+      const code = dedent`
+        import { unused } from "./unused";
+        export const chunk = "chunk";
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "chunk", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { unused } from "./unused";
+        export const main = "main";"
+      `);
+    });
   });
 
   describe("partially chunkable", () => {
@@ -859,6 +877,505 @@ describe("route chunks", () => {
           }
         };"
       `);
+    });
+  });
+
+  describe("export dependency analysis", () => {
+    test("if else", () => {
+      const code = dedent`
+        import { check } from "./check";
+        import { chunkMessage1, chunkMessage2 } from "./messages";
+        let messages = [];
+        if (check()) {
+          messages.push(chunkMessage1);
+        } else {
+          messages.push(chunkMessage2);
+        }
+        export const chunk = messages;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { check } from "./check";
+        import { chunkMessage1, chunkMessage2 } from "./messages";
+        let messages = [];
+        if (check()) {
+          messages.push(chunkMessage1);
+        } else {
+          messages.push(chunkMessage2);
+        }
+        export const chunk = messages;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("try catch", () => {
+      const code = dedent`
+        import { chunkMessage1, errorMessage } from "./messages";
+        let messages = [];
+        try {
+          messages.push(chunkMessage1);
+        } catch (error) {
+          messages.push(errorMessage(error));
+        }
+        export const chunk = messages;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage1, errorMessage } from "./messages";
+        let messages = [];
+        try {
+          messages.push(chunkMessage1);
+        } catch (error) {
+          messages.push(errorMessage(error));
+        }
+        export const chunk = messages;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("for...of", () => {
+      const code = dedent`
+        import { messages } from "./messages";
+        let chunkMessages = [];
+        for (let message of messages) {
+          chunkMessages.push(message);
+        }
+        export const chunk = chunkMessages;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { messages } from "./messages";
+        let chunkMessages = [];
+        for (let message of messages) {
+          chunkMessages.push(message);
+        }
+        export const chunk = chunkMessages;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("for...of with destructuring and default value", () => {
+      const code = dedent`
+        import { messages, defaultMessage } from "./messages";
+        let chunkMessages = [];
+        for (let { key, value = defaultMessage } of messages) {
+          chunkMessages.push([key, value]);
+        }
+        export const chunk = chunkMessages;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { messages, defaultMessage } from "./messages";
+        let chunkMessages = [];
+        for (let {
+          key,
+          value = defaultMessage
+        } of messages) {
+          chunkMessages.push([key, value]);
+        }
+        export const chunk = chunkMessages;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("block", () => {
+      const code = dedent`
+        import { chunkMessage } from "./messages";
+        let messages = [];
+        {
+          messages.push(chunkMessage);
+        }
+        export const chunk = messages;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        let messages = [];
+        {
+          messages.push(chunkMessage);
+        }
+        export const chunk = messages;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("default argument", () => {
+      const code = dedent`
+        import { defaultMessage } from "./defaultMessage";
+        const getChunkMessage = (message = defaultMessage) => message.toUpperCase();
+        export const chunk = getChunkMessage();
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { defaultMessage } from "./defaultMessage";
+        const getChunkMessage = (message = defaultMessage) => message.toUpperCase();
+        export const chunk = getChunkMessage();"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("destructured argument with default value", () => {
+      const code = dedent`
+        import { defaultMessage } from "./defaultMessage";
+        const getChunkMessage = ([{ defaultMessage: message }] = [{ defaultMessage }]) => message.toUpperCase();
+        export const chunk = getChunkMessage();
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { defaultMessage } from "./defaultMessage";
+        const getChunkMessage = ([{
+          defaultMessage: message
+        }] = [{
+          defaultMessage
+        }]) => message.toUpperCase();
+        export const chunk = getChunkMessage();"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("reassignment", () => {
+      const code = dedent`
+        import { reassignedMessage } from "./messages";  
+        let chunkMessage = "chunk";
+        chunkMessage = reassignedMessage;
+        export const chunk = chunkMessage;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { reassignedMessage } from "./messages";
+        let chunkMessage = "chunk";
+        chunkMessage = reassignedMessage;
+        export const chunk = chunkMessage;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("constant reassignment", () => {
+      const code = dedent`
+        const chunkMessage = "chunk";
+        chunkMessage = reassignedMessage;
+        export const chunk = chunkMessage;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "const chunkMessage = "chunk";
+        chunkMessage = reassignedMessage;
+        export const chunk = chunkMessage;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("reassignment with nullish coalescing", () => {
+      const code = dedent`
+        import { reassignedMessage } from "./messages";  
+        let chunkMessage = "chunk";
+        chunkMessage ??= reassignedMessage;
+        export const chunk = chunkMessage;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { reassignedMessage } from "./messages";
+        let chunkMessage = "chunk";
+        chunkMessage ??= reassignedMessage;
+        export const chunk = chunkMessage;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("destructured reassignment", () => {
+      const code = dedent`
+        let chunkMessage = "chunk";
+        [chunkMessage] = [reassignedMessage];
+        export const chunk = chunkMessage;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "let chunkMessage = "chunk";
+        [chunkMessage] = [reassignedMessage];
+        export const chunk = chunkMessage;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("function argument reassignment", () => {
+      const code = dedent`
+        const reassignedMessage = "reassigned";
+        const getChunkMessage = (message) => {
+          message = reassignedMessage;
+          return message;
+        };
+        export const chunk = getChunkMessage("chunk");
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "const reassignedMessage = "reassigned";
+        const getChunkMessage = message => {
+          message = reassignedMessage;
+          return message;
+        };
+        export const chunk = getChunkMessage("chunk");"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("destructuring assignment", () => {
+      const code = dedent`
+        import { getChunkMessage } from "./messages";
+        let [chunkMessage] = [getChunkMessage()];
+        export const chunk = chunkMessage;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { getChunkMessage } from "./messages";
+        let [chunkMessage] = [getChunkMessage()];
+        export const chunk = chunkMessage;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("object property usage", () => {
+      const code = dedent`
+        let messages = { chunkMessage: "chunk" };
+        export const chunk = messages.chunkMessage;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "let messages = {
+          chunkMessage: "chunk"
+        };
+        export const chunk = messages.chunkMessage;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("object property mutation", () => {
+      const code = dedent`
+        import { mutatedMessage } from "./messages";
+        let messages = { chunkMessage: "chunk" };
+        messages.chunkMessage = mutatedMessage;
+        export const chunk = messages.chunkMessage;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mutatedMessage } from "./messages";
+        let messages = {
+          chunkMessage: "chunk"
+        };
+        messages.chunkMessage = mutatedMessage;
+        export const chunk = messages.chunkMessage;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("computed object property", () => {
+      const code = dedent`
+        import { keyName } from "./messages";
+        let getKey = () => keyName;
+        let messages = { [getKey()]: "chunk" };
+        export const chunk = messages;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { keyName } from "./messages";
+        let getKey = () => keyName;
+        let messages = {
+          [getKey()]: "chunk"
+        };
+        export const chunk = messages;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("class static property usage", () => {
+      const code = dedent`
+        import { chunkMessage } from "./messages";
+        class Chunk {
+          static message = chunkMessage;
+        }
+        export const chunk = new Chunk();
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        class Chunk {
+          static message = chunkMessage;
+        }
+        export const chunk = new Chunk();"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("class static property mutation", () => {
+      const code = dedent`
+        import { mutatedMessage } from "./messages";
+        class Chunk {
+          static message = "chunk";
+        }
+        let chunkInstance = new Chunk();
+        chunkInstance.message = mutatedMessage;
+        export const chunk = chunkInstance;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { mutatedMessage } from "./messages";
+        class Chunk {
+          static message = "chunk";
+        }
+        let chunkInstance = new Chunk();
+        chunkInstance.message = mutatedMessage;
+        export const chunk = chunkInstance;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("class method usage", () => {
+      const code = dedent`
+        import { chunkMessage } from "./messages";
+        class Chunk {
+          message() {
+            return chunkMessage;
+          }
+        }
+        export const chunk = new Chunk();
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage } from "./messages";
+        class Chunk {
+          message() {
+            return chunkMessage;
+          }
+        }
+        export const chunk = new Chunk();"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("class method mutation", () => {
+      const code = dedent`
+        import { chunkMessage, mutatedMessage } from "./messages";
+        class Chunk {
+          message() {
+            return chunkMessage;
+          }
+        }
+        let chunkInstance = new Chunk();
+        chunkInstance.message = () => mutatedMessage;
+        export const chunk = chunkInstance;
+        export const main = "main";
+      `;
+
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { chunkMessage, mutatedMessage } from "./messages";
+        class Chunk {
+          message() {
+            return chunkMessage;
+          }
+        }
+        let chunkInstance = new Chunk();
+        chunkInstance.message = () => mutatedMessage;
+        export const chunk = chunkInstance;"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
     });
   });
 });
