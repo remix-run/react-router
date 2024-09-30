@@ -43,6 +43,16 @@ function assertNodePath(
   );
 }
 
+function assertNodePathIsStatement(
+  path: NodePath | NodePath[] | null | undefined
+): asserts path is NodePath<Statement> {
+  invariant(
+    path && !Array.isArray(path) && t.isStatement(path.node),
+    `Expected a Statement path, but got ${
+      Array.isArray(path) ? "an array" : path?.node?.type
+    }`
+  );
+}
 function assertNodePathIsVariableDeclarator(
   path: NodePath | NodePath[] | null | undefined
 ): asserts path is NodePath<VariableDeclarator> {
@@ -266,55 +276,108 @@ function getDependentIdentifiersForPath(
     identifiers: new Set(),
   };
 
+  // Ensure we don't recurse indefinitely
+  if (visited.has(path)) {
+    return identifiers;
+  }
+
   visited.add(path);
 
   // Recursively traverse the AST to find all identifiers the path depends on.
   path.traverse({
     Identifier(path) {
+      // We can skip all of this work if we've already processed this identifier.
+      if (identifiers.has(path)) {
+        return;
+      }
+
       identifiers.add(path);
+
       let binding = path.scope.getBinding(path.node.name);
-      if (binding?.path && !visited.has(binding.path)) {
-        getDependentIdentifiersForPath(binding.path, { visited, identifiers });
+
+      if (!binding) {
+        return;
+      }
+
+      getDependentIdentifiersForPath(binding.path, { visited, identifiers });
+
+      // Trace all references to the identifier
+      for (let reference of binding.referencePaths) {
+        // Each export declaration is handled separately in our chunking logic
+        // so we don't want to trace the entire export statement, otherwise all
+        // identifiers in the export statement will be marked as dependencies
+        // and we won't be able to split chunks sharing this export statement.
+        if (reference.isExportNamedDeclaration()) {
+          continue;
+        }
+
+        getDependentIdentifiersForPath(reference, {
+          visited,
+          identifiers,
+        });
+      }
+
+      // For completeness we also want to trace constant violations since, even
+      // though the code results in a runtime error, it still compiles.
+      for (let constantViolation of binding.constantViolations) {
+        getDependentIdentifiersForPath(constantViolation, {
+          visited,
+          identifiers,
+        });
       }
     },
   });
 
-  // If the identifier is part of a destructuring assignment, we include all
-  // other identifiers in the expression as dependencies.
+  let topLevelStatement = getTopLevelStatementPathForPath(path);
+  let withinImportStatement = topLevelStatement.isImportDeclaration();
+  let withinExportStatement = topLevelStatement.isExportDeclaration();
+
+  // Include all identifiers in the top-level statement as dependencies, except
+  // for import/export statements since they have more fine-grained filtering.
+  if (!withinImportStatement && !withinExportStatement) {
+    getDependentIdentifiersForPath(topLevelStatement, {
+      visited,
+      identifiers,
+    });
+  }
+
+  // Destructuring assignments in export statements have more fine-grained
+  // filtering, so we include all identifiers in the expression as dependencies.
   if (
+    withinExportStatement &&
     path.isIdentifier() &&
     (t.isPattern(path.parentPath.node) || // [foo]
       t.isPattern(path.parentPath.parentPath?.node)) // {nested: foo}
   ) {
-    let destructuringAssignmentPath = path.findParent(
-      (path) => path.isVariableDeclarator() || path.isAssignmentExpression()
-    );
-    if (destructuringAssignmentPath) {
-      getDependentIdentifiersForPath(destructuringAssignmentPath, {
-        visited,
-        identifiers,
-      });
-    }
+    // Find the root `const foo = ...` within `export const foo = ...`.
+    let variableDeclarator = path.findParent((p) => p.isVariableDeclarator());
+    assertNodePath(variableDeclarator);
+
+    getDependentIdentifiersForPath(variableDeclarator, {
+      visited,
+      identifiers,
+    });
   }
 
   return identifiers;
+}
+
+function getTopLevelStatementPathForPath(path: NodePath): NodePath<Statement> {
+  let ancestry = path.getAncestry();
+
+  // The last node is the Program node so we want the ancestor before that.
+  let topLevelStatement = ancestry[ancestry.length - 2];
+  assertNodePathIsStatement(topLevelStatement);
+
+  return topLevelStatement;
 }
 
 function getTopLevelStatementsForPaths(paths: Set<NodePath>): Set<Statement> {
   let topLevelStatements = new Set<Statement>();
 
   for (let path of paths) {
-    let ancestry = path.getAncestry();
-
-    // The last node is the Program node so we want the ancestor before that.
-    let topLevelStatement = ancestry[ancestry.length - 2].node;
-
-    invariant(
-      t.isStatement(topLevelStatement),
-      `Expected statement, found type "${topLevelStatement.type}"`
-    );
-
-    topLevelStatements.add(topLevelStatement);
+    let topLevelStatement = getTopLevelStatementPathForPath(path);
+    topLevelStatements.add(topLevelStatement.node);
   }
 
   return topLevelStatements;
