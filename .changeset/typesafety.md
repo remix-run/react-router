@@ -132,7 +132,7 @@ Your project should have a `.vscode/settings.json` with the following settings:
 That way [VSCode will ask you](https://code.visualstudio.com/updates/v1_45#_prompt-users-to-switch-to-the-workspace-version-of-typescript) if you want to use the workspace version of TypeScript the first time you open a TS file in that project.
 
 > [!IMPORTANT]  
-> You'll need to install dependencies first so that the workspace version of TypeScript is installed.
+> You'll need to install dependencies first so that the workspace version of TypeScript is available.
 
 👉 **Select "Allow" when VSCode asks if you want to use the workspace version of TypeScript**
 
