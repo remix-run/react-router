@@ -124,7 +124,7 @@ function getModule(routes: RouteManifest, route: RouteManifestEntry): string {
     export type ClientActionArgs = T.CreateClientActionArgs<Params, Route>
 
     export type HydrateFallbackProps = T.CreateHydrateFallbackProps<Params>
-    export type DefaultProps = T.CreateDefaultProps<Params, LoaderData, ActionData>
+    export type ComponentProps = T.CreateComponentProps<Params, LoaderData, ActionData>
     export type ErrorBoundaryProps = T.CreateErrorBoundaryProps<Params, LoaderData, ActionData>
   `;
 }

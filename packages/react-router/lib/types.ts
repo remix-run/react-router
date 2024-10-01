@@ -132,7 +132,7 @@ export type CreateHydrateFallbackProps<Params> = {
   params: Params;
 };
 
-export type CreateDefaultProps<Params, LoaderData, ActionData> = {
+export type CreateComponentProps<Params, LoaderData, ActionData> = {
   params: Params;
   loaderData: LoaderData;
   actionData?: ActionData;
