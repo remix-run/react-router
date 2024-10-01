@@ -1417,6 +1417,74 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
       },
     },
     {
+      name: "react-router-route-index",
+      // This plugin provides the route module "index" since route modules can
+      // be chunked and may be made up of multiple smaller modules. This plugin
+      // primarily ensures code is never duplicated across a route module and
+      // its chunks. If we didn't have this plugin, any app that explicitly
+      // imports a route module would result in duplicate code since the app
+      // would contain code for both the unprocessed route module as well as its
+      // individual chunks. This is because, since they have different module
+      // IDs, they are treated as completely separate modules even though they
+      // all reference the same underlying file. This plugin addresses this by
+      // ensuring that any explicit imports of a route module resolve to a
+      // module that simply re-exports from its underlying chunks, if present.
+      async transform(code, id, options) {
+        // Routes aren't chunked on the server
+        if (options?.ssr) {
+          return;
+        }
+
+        // Ensure we're only operating on routes
+        if (!isRoute(ctx.reactRouterConfig, id)) {
+          return;
+        }
+
+        // Ensure we're only operating on raw route module imports
+        if (isRouteVirtualModule(id)) {
+          return;
+        }
+
+        let {
+          hasRouteChunks,
+          hasClientActionChunk,
+          hasClientLoaderChunk,
+          chunkedExports,
+        } = await detectRouteChunksIfEnabled(cache, ctx, id, code);
+
+        // If there are no chunks, we can let this resolve to the raw route
+        // module since there's no risk of duplication
+        if (!hasRouteChunks) {
+          return;
+        }
+
+        let sourceExports = await getRouteModuleExports(
+          viteChildCompiler,
+          ctx,
+          id
+        );
+
+        let isMainChunkExport = (name: string) =>
+          !chunkedExports.includes(name as string & RouteChunkName);
+
+        let mainChunkReexports = sourceExports
+          .filter(isMainChunkExport)
+          .join(", ");
+
+        let chunkBasePath = `./${path.basename(id)}`;
+
+        return [
+          `export { ${mainChunkReexports} } from "${chunkBasePath}${MAIN_ROUTE_CHUNK_QUERY_STRING}";`,
+          hasClientActionChunk &&
+            `export { clientAction } from "${chunkBasePath}${CLIENT_ACTION_CHUNK_QUERY_STRING}";`,
+          hasClientLoaderChunk &&
+            `export { clientLoader } from "${chunkBasePath}${CLIENT_LOADER_CHUNK_QUERY_STRING}";`,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      },
+    },
+    {
       name: "react-router-route-entry",
       async transform(code, id, options) {
         if (!isRouteEntry(id)) return;
@@ -1430,32 +1498,26 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           routeModuleId
         );
 
-        let {
-          hasRouteChunks = false,
-          hasClientActionChunk = false,
-          hasClientLoaderChunk = false,
-        } = options?.ssr
+        let { chunkedExports = [] } = options?.ssr
           ? {}
           : await detectRouteChunksIfEnabled(cache, ctx, id, code);
 
         let reexports = sourceExports
-          .filter(
-            (exportName) =>
+          .filter((exportName) => {
+            let isRouteEntryExport =
               (options?.ssr &&
                 SERVER_ONLY_ROUTE_EXPORTS.includes(exportName)) ||
-              CLIENT_ROUTE_EXPORTS.includes(exportName)
-          )
-          .filter((exportName) =>
-            hasClientActionChunk ? exportName !== "clientAction" : true
-          )
-          .filter((exportName) =>
-            hasClientLoaderChunk ? exportName !== "clientLoader" : true
-          )
+              CLIENT_ROUTE_EXPORTS.includes(exportName);
+
+            let isChunkedExport = chunkedExports.includes(
+              exportName as string & RouteChunkName
+            );
+
+            return isRouteEntryExport && !isChunkedExport;
+          })
           .join(", ");
 
-        return `export { ${reexports} } from "./${routeFileName}${
-          hasRouteChunks ? MAIN_ROUTE_CHUNK_QUERY_STRING : ""
-        }";`;
+        return `export { ${reexports} } from "./${routeFileName}";`;
       },
     },
     {
@@ -1558,9 +1620,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
         let importerShort = vite.normalizePath(
           path.relative(ctx.rootDirectory, importer)
         );
-        let isRoute = getRoute(ctx.reactRouterConfig, importer);
-
-        if (isRoute) {
+        if (isRoute(ctx.reactRouterConfig, importer)) {
           let serverOnlyExports = SERVER_ONLY_ROUTE_EXPORTS.map(
             (xport) => `\`${xport}\``
           ).join(", ");
@@ -1971,6 +2031,13 @@ function getRoute(
   return route;
 }
 
+function isRoute(
+  pluginConfig: ResolvedReactRouterConfig,
+  file: string
+): boolean {
+  return Boolean(getRoute(pluginConfig, file));
+}
+
 async function getRouteMetadata(
   cache: Cache,
   ctx: ReactRouterPluginContext,
@@ -2368,6 +2435,7 @@ async function detectRouteChunksIfEnabled(
 ): Promise<ReturnType<typeof detectRouteChunks>> {
   if (!ctx.reactRouterConfig.future.unstable_routeChunks) {
     return {
+      chunkedExports: [],
       hasClientActionChunk: false,
       hasClientLoaderChunk: false,
       hasRouteChunks: false,
@@ -2377,6 +2445,7 @@ async function detectRouteChunksIfEnabled(
   let code = await resolveRouteFileCode(ctx, input);
   if (!code.includes("clientLoader") && !code.includes("clientAction")) {
     return {
+      chunkedExports: [],
       hasClientActionChunk: false,
       hasClientLoaderChunk: false,
       hasRouteChunks: false,
