@@ -3295,21 +3295,30 @@ export function createRouter(init: RouterInit): Router {
     pathname: string,
     signal: AbortSignal
   ): Promise<DiscoverRoutesResult> {
+    if (!patchRoutesOnNavigationImpl) {
+      return { type: "success", matches };
+    }
+
     let partialMatches: AgnosticDataRouteMatch[] | null = matches;
     while (true) {
       let isNonHMR = inFlightDataRoutes == null;
       let routesToUse = inFlightDataRoutes || dataRoutes;
+      let localManifest = manifest;
       try {
-        await loadLazyRouteChildren(
-          patchRoutesOnNavigationImpl!,
-          pathname,
-          partialMatches,
-          routesToUse,
-          manifest,
-          mapRouteProperties,
-          pendingPatchRoutes,
-          signal
-        );
+        await patchRoutesOnNavigationImpl({
+          path: pathname,
+          matches: partialMatches,
+          patch: (routeId, children) => {
+            if (signal.aborted) return;
+            patchRoutesImpl(
+              routeId,
+              children,
+              routesToUse,
+              localManifest,
+              mapRouteProperties
+            );
+          },
+        });
       } catch (e) {
         return { type: "error", error: e, partialMatches };
       } finally {
@@ -3319,7 +3328,7 @@ export function createRouter(init: RouterInit): Router {
         // trigger a re-run of memoized `router.routes` dependencies.
         // HMR will already update the identity and reflow when it lands
         // `inFlightDataRoutes` in `completeNavigation`
-        if (isNonHMR) {
+        if (isNonHMR && !signal.aborted) {
           dataRoutes = [...dataRoutes];
         }
       }
@@ -4599,53 +4608,6 @@ function shouldRevalidateLoader(
   }
 
   return arg.defaultShouldRevalidate;
-}
-
-/**
- * Idempotent utility to execute patchRoutesOnNavigation() to lazily load route
- * definitions and update the routes/routeManifest
- */
-async function loadLazyRouteChildren(
-  patchRoutesOnNavigationImpl: AgnosticPatchRoutesOnNavigationFunction,
-  path: string,
-  matches: AgnosticDataRouteMatch[],
-  routes: AgnosticDataRouteObject[],
-  manifest: RouteManifest,
-  mapRouteProperties: MapRoutePropertiesFunction,
-  pendingRouteChildren: Map<
-    string,
-    ReturnType<typeof patchRoutesOnNavigationImpl>
-  >,
-  signal: AbortSignal
-) {
-  let key = [path, ...matches.map((m) => m.route.id)].join("-");
-  try {
-    let pending = pendingRouteChildren.get(key);
-    if (!pending) {
-      pending = patchRoutesOnNavigationImpl({
-        path,
-        matches,
-        patch: (routeId, children) => {
-          if (!signal.aborted) {
-            patchRoutesImpl(
-              routeId,
-              children,
-              routes,
-              manifest,
-              mapRouteProperties
-            );
-          }
-        },
-      });
-      pendingRouteChildren.set(key, pending);
-    }
-
-    if (pending && isPromise<AgnosticRouteObject[]>(pending)) {
-      await pending;
-    }
-  } finally {
-    pendingRouteChildren.delete(key);
-  }
 }
 
 function patchRoutesImpl(
