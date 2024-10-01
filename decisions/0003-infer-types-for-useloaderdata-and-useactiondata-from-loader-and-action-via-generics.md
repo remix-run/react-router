@@ -2,7 +2,7 @@
 
 Date: 2022-07-11
 
-Status: Superceded by [#0012](./0012-type-inference.md)
+Status: Superseded by [#0012](./0012-type-inference.md)
 
 ## Context
 

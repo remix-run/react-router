@@ -4,7 +4,7 @@ Date: 2024-09-20
 
 Status: accepted
 
-Supercedes [#0003](./0003-infer-types-for-useloaderdata-and-useactiondata-from-loader-and-action-via-generics.md)
+Supersedes [#0003](./0003-infer-types-for-useloaderdata-and-useactiondata-from-loader-and-action-via-generics.md)
 
 ## Context
 
@@ -53,11 +53,16 @@ There are three major aspects to typesafety in a framework like React Router:
    However, it still requires you to add `typeof loader` every time.
 
    Not only that, but complex routes get very tricky to type correctly.
+   For example, `clientLoader`s don't run during the initial SSR render, but you can force the `clientLoader` data to always be present in your route component if you set `clientLoader.hydrate = true` _and_ provide a `HydrateFallback`.
+   Here are a couple cases that trip up most users:
 
-   > What if the route also has a `clientLoader`?
-   > Did you remember to change the generic to `typeof clientLoader`?
-   > But in the initial SSR render, the `clientLoader` doesn't run, so really you'd need `typeof loader | typeof clientLoader`.
-   > Unless you also set `clientLoader.hydrate = true` _AND_ provided a `HydrateFallback`. Then `clientLoader` always runs so you'd want just `typeof clientLoader`
+   | `loader` | `clientLoader` | `clientLoader.hydrate` | `HydrateFallback` | Generic for `useLoaderData`            |
+   | -------- | -------------- | ---------------------- | ----------------- | -------------------------------------- |
+   | ✅       | ❌             | `false`                | ❌                | `typeof loader`                        |
+   | ❌       | ✅             | `false`                | ❌                | `typeof clientLoader \| undefined`     |
+   | ✅       | ✅             | `false`                | ❌                | `typeof loader \| typeof clientLoader` |
+   | ✅       | ✅             | `true`                 | ❌                | `typeof loader \| typeof clientLoader` |
+   | ✅       | ✅             | `true`                 | ✅                | `typeof clientLoader`                  |
 
    The generic for `useLoaderData` starts to feel a lot like doing your taxes: there's only one right answer, Remix knows what it is, but you're going to get quizzed on it anyway.
 
@@ -151,7 +156,7 @@ For example:
     - product.tsx
 ```
 
-The path within `.react-router/types` purposefully mirrors the path to the correspond route module.
+The path within `.react-router/types` purposefully mirrors the path to the corresponding route module.
 By setting things up like this, we can use `tsconfig.json`'s [rootDirs](https://www.typescriptlang.org/tsconfig/#rootDirs) option to let you conveniently import from the typegen file as if it was a sibling:
 
 ```ts
