@@ -22,7 +22,16 @@ import type {
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
-export interface IndexRouteObject {
+export interface ReactSpecificAdded {
+  element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
+  errorElement?: React.ReactNode | null;
+  Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
+  ErrorBoundary?: React.ComponentType | null;
+}
+
+export interface IndexRouteObject extends ReactSpecificAdded {
   caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
   path?: AgnosticIndexRouteObject["path"];
   id?: AgnosticIndexRouteObject["id"];
@@ -31,18 +40,13 @@ export interface IndexRouteObject {
   hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
   handle?: AgnosticIndexRouteObject["handle"];
+  lazy?: LazyRouteFunction<RouteObject>;
+
   index: true;
   children?: undefined;
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
 }
 
-export interface NonIndexRouteObject {
+export interface NonIndexRouteObject extends ReactSpecificAdded{
   caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
   path?: AgnosticNonIndexRouteObject["path"];
   id?: AgnosticNonIndexRouteObject["id"];
@@ -51,15 +55,10 @@ export interface NonIndexRouteObject {
   hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
   shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
   handle?: AgnosticNonIndexRouteObject["handle"];
+  lazy?: LazyRouteFunction<RouteObject>;
+  
   index?: false;
   children?: RouteObject[];
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
-  lazy?: LazyRouteFunction<RouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
