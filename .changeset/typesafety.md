@@ -118,19 +118,25 @@ We plan to add some other goodies to our TypeScript plugin soon, including:
 TypeScript looks for plugins registered in `tsconfig.json` in the local `node_modules/`,
 but VSCode ships with its own copy of TypeScript that is installed outside of your project.
 For TypeScript plugins to work, you'll need to tell VSCode to use the local workspace version of TypeScript.
-
 For security reasons, [VSCode won't use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript) until you manually opt-in.
-So even if you already have a `.vscode/settings.json` with `typescript.tsdk` set to the workspace version like so:
+
+Your project should have a `.vscode/settings.json` with the following settings:
 
 ```json
 {
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }
 ```
 
-...you will **still need to manually select the workspace version** of TypeScript the first time you open that project with VSCode.
+That way [VSCode will ask you](https://code.visualstudio.com/updates/v1_45#_prompt-users-to-switch-to-the-workspace-version-of-typescript) if you want to use the workspace version of TypeScript the first time you open a TS file in that project.
 
-👉 **Ensure that VSCode is using the workspace version of TypeScript**
+> [!IMPORTANT]  
+> You'll need to install dependencies first so that the workspace version of TypeScript is installed.
+
+👉 **Select "Allow" when VSCode asks if you want to use the workspace version of TypeScript**
+
+Otherwise, you can also manually opt-in to the workspace version:
 
 1. Open up any TypeScript file in your project
 2. Open up the VSCode Command Palette (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>)
