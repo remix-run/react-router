@@ -48,7 +48,7 @@ We also plan to generate types for typesafe `Link`s:
 React Router will generate types into a `.react-router/` directory at the root of your app.
 This directory is fully managed by React Router and is derived based on your route config (`routes.ts`).
 
-👉 ** Add `.react-router/` to `.gitignore` **
+👉 **Add `.react-router/` to `.gitignore`**
 
 ```txt
 .react-router
@@ -57,7 +57,7 @@ This directory is fully managed by React Router and is derived based on your rou
 You should also ensure that generated types for routes are always present before running typechecking,
 especially for running typechecking in CI.
 
-👉 ** Add `react-router typegen` to your `typecheck` command in `package.json` **
+👉 **Add `react-router typegen` to your `typecheck` command in `package.json`**
 
 ```json
 {
@@ -70,7 +70,7 @@ especially for running typechecking in CI.
 To get TypeScript to use those generated types, you'll need to add them to `include` in `tsconfig.json`.
 And to be able to import them as if they files next to your route modules, you'll also need to configure `rootDirs`.
 
-👉 ** Configure `tsconfig.json` for generated types **
+👉 **Configure `tsconfig.json` for generated types**
 
 ```json
 {
@@ -97,7 +97,7 @@ That way, you'll always have up-to-date types.
 
 To get automatic type generation, you can use our new TypeScript plugin.
 
-👉 ** Add the TypeScript plugin to `tsconfig.json` **
+👉 **Add the TypeScript plugin to `tsconfig.json`**
 
 ```json
 {
@@ -119,9 +119,8 @@ TypeScript looks for plugins registered in `tsconfig.json` in the local `node_mo
 but VSCode ships with its own copy of TypeScript that is installed outside of your project.
 For TypeScript plugins to work, you'll need to tell VSCode to use the local workspace version of TypeScript.
 
-👉 ** Ensure that VSCode is using the workspace version of TypeScript **
-
-This should already be set up for you by a `.vscode/settings.json`:
+For security reasons, [VSCode won't use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript) until you manually opt-in.
+So even if you already have a `.vscode/settings.json` with `typescript.tsdk` set to the workspace version like so:
 
 ```json
 {
@@ -129,7 +128,15 @@ This should already be set up for you by a `.vscode/settings.json`:
 }
 ```
 
-Alternatively, you can open up any TypeScript file and use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to find `Select TypeScript Version` and then select `Use Workspace Version`. You may need to quit VSCode and reopen it for this setting to take effect.
+...you will **still need to manually select the workspace version** of TypeScript the first time you open that project with VSCode.
+
+👉 **Ensure that VSCode is using the workspace version of TypeScript**
+
+1. Open up any TypeScript file in your project
+2. Open up the VSCode Command Palette (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>)
+3. Search for `Select TypeScript Version`
+4. Choose `Use Workspace Version`
+5. Quit and reopen VSCode
 
 ##### Troubleshooting
 
