@@ -35,6 +35,7 @@ import type {
   Navigator,
   NonIndexRouteObject,
   PatchRoutesOnNavigationFunction,
+  ReactSpecificAdded,
   RouteMatch,
   RouteObject,
   ViewTransitionContextObject,
@@ -619,24 +620,11 @@ export function Outlet(props: OutletProps): React.ReactElement | null {
 /**
  * @category Types
  */
-export interface PathRouteProps {
-  caseSensitive?: NonIndexRouteObject["caseSensitive"];
-  path?: NonIndexRouteObject["path"];
-  id?: NonIndexRouteObject["id"];
+export interface PathRouteProps
+  extends Omit<NonIndexRouteObject, "lazy" | "children">,
+    ReactSpecificAdded {
   lazy?: LazyRouteFunction<NonIndexRouteObject>;
-  loader?: NonIndexRouteObject["loader"];
-  action?: NonIndexRouteObject["action"];
-  hasErrorBoundary?: NonIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: NonIndexRouteObject["shouldRevalidate"];
-  handle?: NonIndexRouteObject["handle"];
-  index?: false;
   children?: React.ReactNode;
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
 }
 
 /**
@@ -647,24 +635,10 @@ export interface LayoutRouteProps extends PathRouteProps {}
 /**
  * @category Types
  */
-export interface IndexRouteProps {
-  caseSensitive?: IndexRouteObject["caseSensitive"];
-  path?: IndexRouteObject["path"];
-  id?: IndexRouteObject["id"];
+export interface IndexRouteProps
+  extends Omit<IndexRouteObject, "lazy">,
+    ReactSpecificAdded {
   lazy?: LazyRouteFunction<IndexRouteObject>;
-  loader?: IndexRouteObject["loader"];
-  action?: IndexRouteObject["action"];
-  hasErrorBoundary?: IndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: IndexRouteObject["shouldRevalidate"];
-  handle?: IndexRouteObject["handle"];
-  index: true;
-  children?: undefined;
-  element?: React.ReactNode | null;
-  hydrateFallbackElement?: React.ReactNode | null;
-  errorElement?: React.ReactNode | null;
-  Component?: React.ComponentType | null;
-  HydrateFallback?: React.ComponentType | null;
-  ErrorBoundary?: React.ComponentType | null;
 }
 
 export type RouteProps = PathRouteProps | LayoutRouteProps | IndexRouteProps;

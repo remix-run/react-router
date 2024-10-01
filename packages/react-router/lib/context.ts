@@ -31,34 +31,17 @@ export interface ReactSpecificAdded {
   ErrorBoundary?: React.ComponentType | null;
 }
 
-export interface IndexRouteObject extends ReactSpecificAdded {
-  caseSensitive?: AgnosticIndexRouteObject["caseSensitive"];
-  path?: AgnosticIndexRouteObject["path"];
-  id?: AgnosticIndexRouteObject["id"];
-  loader?: AgnosticIndexRouteObject["loader"];
-  action?: AgnosticIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticIndexRouteObject["handle"];
+export interface IndexRouteObject
+  extends Omit<AgnosticIndexRouteObject, "lazy">,
+    ReactSpecificAdded {
   lazy?: LazyRouteFunction<RouteObject>;
-
-  index: true;
-  children?: undefined;
 }
 
-export interface NonIndexRouteObject extends ReactSpecificAdded{
-  caseSensitive?: AgnosticNonIndexRouteObject["caseSensitive"];
-  path?: AgnosticNonIndexRouteObject["path"];
-  id?: AgnosticNonIndexRouteObject["id"];
-  loader?: AgnosticNonIndexRouteObject["loader"];
-  action?: AgnosticNonIndexRouteObject["action"];
-  hasErrorBoundary?: AgnosticNonIndexRouteObject["hasErrorBoundary"];
-  shouldRevalidate?: AgnosticNonIndexRouteObject["shouldRevalidate"];
-  handle?: AgnosticNonIndexRouteObject["handle"];
-  lazy?: LazyRouteFunction<RouteObject>;
-  
-  index?: false;
+export interface NonIndexRouteObject
+  extends Omit<AgnosticNonIndexRouteObject, "lazy" | "children">,
+    ReactSpecificAdded {
   children?: RouteObject[];
+  lazy?: LazyRouteFunction<RouteObject>;
 }
 
 export type RouteObject = IndexRouteObject | NonIndexRouteObject;
