@@ -925,25 +925,26 @@ export function detectRouteChunks(
   hasClientActionChunk: boolean;
   hasClientLoaderChunk: boolean;
   hasRouteChunks: boolean;
+  chunkedExports: RouteChunkName[];
 } {
-  let hasClientActionChunk = hasChunkableExport(
-    code,
-    "clientAction",
-    cache,
-    cacheKey
-  );
-  let hasClientLoaderChunk = hasChunkableExport(
-    code,
-    "clientLoader",
-    cache,
-    cacheKey
-  );
-  let hasRouteChunks = hasClientActionChunk || hasClientLoaderChunk;
+  const chunkStatus = Object.fromEntries(
+    chunkedExportNames.map((exportName) => [
+      exportName,
+      hasChunkableExport(code, exportName, cache, cacheKey),
+    ])
+  ) as Record<RouteChunkName, boolean>;
+
+  const chunkedExports = Object.entries(chunkStatus)
+    .filter(([, isChunked]) => isChunked)
+    .map(([exportName]) => exportName as RouteChunkName);
+
+  const hasRouteChunks = chunkedExports.length > 0;
 
   return {
-    hasClientActionChunk,
-    hasClientLoaderChunk,
+    hasClientActionChunk: chunkStatus.clientAction,
+    hasClientLoaderChunk: chunkStatus.clientLoader,
     hasRouteChunks,
+    chunkedExports,
   };
 }
 
