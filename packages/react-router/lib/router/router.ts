@@ -4268,7 +4268,7 @@ function getMatchesToLoad(
         return true;
       }
       return (
-        !(route.id in state.loaderData) &&
+        !state.loaderData.hasOwnProperty(route.id) &&
         // Don't re-run if the loader ran and threw an error
         (!state.errors || state.errors[route.id] === undefined)
       );
@@ -4407,7 +4407,7 @@ function isNewLoader(
 
   // Handle the case that we don't have data for a re-used route, potentially
   // from a prior error
-  let isMissingData = !(match.route.id in currentLoaderData);
+  let isMissingData = !currentLoaderData.hasOwnProperty(match.route.id);
 
   // Always load if this is a net-new route or we don't yet have data
   return isNew || isMissingData;

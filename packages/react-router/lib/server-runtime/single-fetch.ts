@@ -230,9 +230,9 @@ export async function singleFetchLoaders(
 
     loadedMatches.forEach((m) => {
       let { id } = m.route;
-      if (context.errors && id in context.errors) {
+      if (context.errors && context.errors.hasOwnProperty(id)) {
         results[id] = { error: context.errors[id] };
-      } else if (id in context.loaderData) {
+      } else if (context.loaderData.hasOwnProperty(id)) {
         results[id] = { data: context.loaderData[id] };
       }
     });

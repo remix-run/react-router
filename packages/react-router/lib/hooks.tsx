@@ -832,7 +832,7 @@ export function _renderMatches(
         let { loaderData, errors } = dataRouterState;
         let needsToRunLoader =
           match.route.loader &&
-          !(match.route.id in loaderData) &&
+          !loaderData.hasOwnProperty(match.route.id) &&
           (!errors || errors[match.route.id] === undefined);
         if (match.route.lazy || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on
