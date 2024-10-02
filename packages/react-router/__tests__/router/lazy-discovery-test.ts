@@ -1,7 +1,7 @@
 import type { Router } from "../../lib/router/router";
 import type { AgnosticDataRouteObject } from "../../lib/router/utils";
 import { createMemoryHistory } from "../../lib/router/history";
-import { createRouter } from "../../lib/router/router";
+import { IDLE_NAVIGATION, createRouter } from "../../lib/router/router";
 import { ErrorResponseImpl } from "../../lib/router/utils";
 import { getFetcherData } from "./utils/data-router-setup";
 import { createDeferred, createFormData, tick } from "./utils/utils";
@@ -272,7 +272,7 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     ]);
   });
 
-  it("reuses promises", async () => {
+  it("does not reuse former calls to patchRoutes on interruptions", async () => {
     let aDfd = createDeferred<AgnosticDataRouteObject[]>();
     let calls: string[][] = [];
     router = createRouter({
@@ -308,8 +308,10 @@ describe("Lazy Route Discovery (Fog of War)", () => {
     expect(router.state).toMatchObject({
       navigation: { state: "submitting", location: { pathname: "/a/b" } },
     });
-    // Didn't call again for the same path
-    expect(calls).toEqual([["/a/b", "a"]]);
+    expect(calls).toEqual([
+      ["/a/b", "a"],
+      ["/a/b", "a"],
+    ]);
 
     aDfd.resolve([
       {
@@ -324,10 +326,71 @@ describe("Lazy Route Discovery (Fog of War)", () => {
       navigation: { state: "idle" },
       location: { pathname: "/a/b" },
     });
-    expect(calls).toEqual([["/a/b", "a"]]);
+    expect(calls).toEqual([
+      ["/a/b", "a"],
+      ["/a/b", "a"],
+    ]);
   });
 
-  it("handles interruptions", async () => {
+  it("handles interruptions when navigating to the same route", async () => {
+    let dfd1 = createDeferred<AgnosticDataRouteObject[]>();
+    let dfd2 = createDeferred<AgnosticDataRouteObject[]>();
+    let called = false;
+    router = createRouter({
+      history: createMemoryHistory(),
+      routes: [
+        {
+          path: "/",
+        },
+      ],
+      async patchRoutesOnNavigation({ patch }) {
+        if (!called) {
+          called = true;
+          patch(null, await dfd1.promise);
+        } else {
+          patch(null, await dfd2.promise);
+        }
+      },
+    });
+
+    router.navigate("/a");
+    await tick();
+    expect(router.state).toMatchObject({
+      navigation: { state: "loading", location: { pathname: "/a" } },
+    });
+
+    router.navigate("/a");
+    await tick();
+    expect(router.state).toMatchObject({
+      navigation: { state: "loading", location: { pathname: "/a" } },
+    });
+
+    dfd1.resolve([
+      {
+        id: "a1",
+        path: "/a",
+      },
+    ]);
+    await tick();
+    expect(router.state).toMatchObject({
+      navigation: { state: "loading", location: { pathname: "/a" } },
+    });
+
+    dfd2.resolve([
+      {
+        id: "a2",
+        path: "/a",
+      },
+    ]);
+    await tick();
+    expect(router.state).toMatchObject({
+      location: { pathname: "/a" },
+      navigation: IDLE_NAVIGATION,
+      matches: [{ route: { id: "a2" } }],
+    });
+  });
+
+  it("handles interruptions when navigating to a new route", async () => {
     let aDfd = createDeferred<AgnosticDataRouteObject[]>();
     let bDfd = createDeferred<AgnosticDataRouteObject[]>();
     router = createRouter({
