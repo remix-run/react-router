@@ -5,10 +5,11 @@ order: 1
 
 # Installation
 
-## Prereqs
+React Router can be used minimally with your own bundling and data loading (like previous versions) or maximally with the built-in Vite plugin (that adds framework features that came from Remix).
 
-- Local Node.js installation
-- Some experience with the command line
+The full feature-set is easiest to use with Vite plugin so the getting started guides will focus there.
+
+To use React Router minimally with your own bundling, server rendering, etc. refer to [Manual Usage][manual_usage] guide.
 
 ## Starter Templates
 
@@ -29,6 +30,8 @@ npm run dev
 You can now open your browser to `http://localhost:5173`
 
 TODO: Show how to find and use community templates
+
+## Without the Vite Plugin
 
 ## Manual Installation with Vite
 
@@ -126,12 +129,6 @@ And finally run the app:
 ```shellscript nonumber
 npm run dev
 ```
-
-## Without the Vite Plugin
-
-React Router's full feature-set is easiest to use with the React Router Vite plugin, but you can also use React Router manually with your own bundling, server rendering, etc.
-
-Refer to [Manual Usage][manual_usage] for more information.
 
 ## Next Steps
 

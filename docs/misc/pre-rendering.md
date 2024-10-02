@@ -1,6 +1,5 @@
 ---
 title: Pre-Rendering
-new: true
 ---
 
 # Pre-Rendering

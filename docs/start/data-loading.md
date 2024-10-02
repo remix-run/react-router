@@ -9,7 +9,7 @@ Data is provided to the route component from `loader` and `clientLoader`.
 
 ## Client Data Loading
 
-`clientLoader` is used to fetch data on the client. This is useful for projects that aren't server rendering and for pages you'd prefer fetch their data in the browser.
+`clientLoader` is used to fetch data on the client. This is useful for pages or full projects that you'd prefer to fetch data from the browser only.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
@@ -64,51 +64,6 @@ export default function Product({
 ```
 
 Note that the `loader` function is removed from client bundles so you can use server only APIs without worrying about them being included in the browser.
-
-## Async Components with React Server Components
-
-<docs-warning>RSC is not supported yet</docs-warning>
-
-In the future, rendered async components in loaders are available on `loaderData` like any other value:
-
-```tsx filename=app/product-page.tsx
-// route("products/:pid", "./product-page.tsx");
-import type * as Route from "./+types.product";
-import Product from "./product";
-import Reviews from "./reviews";
-
-export async function loader({ params }: Route.LoaderArgs) {
-  return {
-    product: <Product id={params.pid} />,
-    reviews: <Reviews productId={params.pid} />,
-  };
-}
-
-export default function ProductPage({
-  loaderData,
-}: Route.ComponentProps) {
-  return (
-    <div>
-      {loaderData.product}
-      <Suspense fallback={<div>loading...</div>}>
-        {loaderData.reviews}
-      </Suspense>
-    </div>
-  );
-}
-```
-
-```tsx filename=app/product.tsx
-export async function Product({ id }: { id: string }) {
-  const product = await fakeDb.getProduct(id);
-  return (
-    <div>
-      <h1>{product.title}</h1>
-      <p>{product.description}</p>
-    </div>
-  );
-}
-```
 
 ## Static Data Loading
 
@@ -198,5 +153,50 @@ export default function Product({
 ```
 
 For more advanced use cases with `clientLoader` like caching, refer to [Advanced Data Fetching][advanced_data_fetching].
+
+## Async Components with React Server Components
+
+<docs-warning>RSC is not supported yet</docs-warning>
+
+In the future, rendered async components in loaders are available on `loaderData` like any other value:
+
+```tsx filename=app/product-page.tsx
+// route("products/:pid", "./product-page.tsx");
+import type * as Route from "./+types.product";
+import Product from "./product";
+import Reviews from "./reviews";
+
+export async function loader({ params }: Route.LoaderArgs) {
+  return {
+    product: <Product id={params.pid} />,
+    reviews: <Reviews productId={params.pid} />,
+  };
+}
+
+export default function ProductPage({
+  loaderData,
+}: Route.ComponentProps) {
+  return (
+    <div>
+      {loaderData.product}
+      <Suspense fallback={<div>loading...</div>}>
+        {loaderData.reviews}
+      </Suspense>
+    </div>
+  );
+}
+```
+
+```tsx filename=app/product.tsx
+export async function Product({ id }: { id: string }) {
+  const product = await fakeDb.getProduct(id);
+  return (
+    <div>
+      <h1>{product.title}</h1>
+      <p>{product.description}</p>
+    </div>
+  );
+}
+```
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching

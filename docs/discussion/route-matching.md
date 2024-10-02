@@ -1,6 +1,5 @@
 ---
 title: Route Matching
-new: true
 ---
 
 # Route Matching
