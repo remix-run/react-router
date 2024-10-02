@@ -20,45 +20,16 @@ export interface AppLoadContext {
  */
 export type AppData = unknown;
 
-export async function callRouteAction({
-  loadContext,
-  action,
-  params,
-  request,
-  routeId,
-}: {
-  request: Request;
-  action: ActionFunction;
-  params: ActionFunctionArgs["params"];
-  loadContext: AppLoadContext;
-  routeId: string;
-}) {
-  let result = await action({
-    request: stripRoutesParam(stripIndexParam(request)),
-    context: loadContext,
-    params,
-  });
-
-  return result;
-}
-
-export async function callRouteLoader({
-  loadContext,
-  loader,
-  params,
-  request,
-  routeId,
-}: {
-  request: Request;
-  loader: LoaderFunction;
-  params: LoaderFunctionArgs["params"];
-  loadContext: AppLoadContext;
-  routeId: string;
-}) {
-  let result = await loader({
-    request: stripRoutesParam(stripIndexParam(request)),
-    context: loadContext,
-    params,
+// Need to use RR's version here to permit the optional context even
+// though we know it'll always be provided in remix
+export async function callRouteHandler(
+  handler: LoaderFunction | ActionFunction,
+  args: LoaderFunctionArgs | ActionFunctionArgs
+) {
+  let result = await handler({
+    request: stripRoutesParam(stripIndexParam(args.request)),
+    params: args.params,
+    context: args.context,
   });
 
   return result;
