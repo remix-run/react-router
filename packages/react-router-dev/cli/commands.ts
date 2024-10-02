@@ -11,6 +11,7 @@ import type { RoutesFormat } from "../config/format";
 import { loadPluginContext } from "../vite/plugin";
 import { transpile as convertFileToJS } from "./useJavascript";
 import * as profiler from "../vite/profiler";
+import * as Typegen from "../typescript/typegen";
 
 export async function routes(
   reactRouterRoot?: string,
@@ -189,4 +190,13 @@ async function createClientEntry(
   await checkForEntry(rootDirectory, appDirectory, clientEntries);
   let contents = await fse.readFile(inputFile, "utf-8");
   return contents;
+}
+
+export async function typegen(root: string) {
+  let ctx = await loadPluginContext({ root });
+  await Typegen.writeAll({
+    rootDirectory: root,
+    appDirectory: ctx.reactRouterConfig.appDirectory,
+    routes: ctx.reactRouterConfig.routes,
+  });
 }

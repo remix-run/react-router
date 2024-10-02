@@ -1,5 +1,4 @@
 import type * as Vite from "vite";
-import type { ViteNodeRunner } from "vite-node/client";
 import { execSync } from "node:child_process";
 import path from "node:path";
 import fse from "fs-extra";
@@ -7,6 +6,7 @@ import colors from "picocolors";
 import pick from "lodash/pick";
 import omit from "lodash/omit";
 import PackageJson from "@npmcli/package-json";
+import type * as ViteNode from "./vite-node";
 
 import {
   type RouteManifest,
@@ -293,14 +293,14 @@ export async function resolveReactRouterConfig({
   routeConfigChanged,
   viteUserConfig,
   viteCommand,
-  viteNodeRunner,
+  routesViteNodeContext,
 }: {
   rootDirectory: string;
   reactRouterUserConfig: ReactRouterConfig;
   routeConfigChanged: boolean;
   viteUserConfig: Vite.UserConfig;
   viteCommand: Vite.ConfigEnv["command"];
-  viteNodeRunner: ViteNodeRunner;
+  routesViteNodeContext: ViteNode.Context;
 }) {
   let vite = importViteEsmSync();
 
@@ -439,7 +439,9 @@ export async function resolveReactRouterConfig({
 
     setAppDirectory(appDirectory);
     let routeConfigExport: RouteConfig = (
-      await viteNodeRunner.executeFile(path.join(appDirectory, routeConfigFile))
+      await routesViteNodeContext.runner.executeFile(
+        path.join(appDirectory, routeConfigFile)
+      )
     ).routes;
 
     let routeConfig = await routeConfigExport;
@@ -593,7 +595,7 @@ export async function resolveEntryFiles({
 
 const entryExts = [".js", ".jsx", ".ts", ".tsx"];
 
-function findEntry(dir: string, basename: string): string | undefined {
+export function findEntry(dir: string, basename: string): string | undefined {
   for (let ext of entryExts) {
     let file = path.resolve(dir, basename + ext);
     if (fse.existsSync(file)) return path.relative(dir, file);

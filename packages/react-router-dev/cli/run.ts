@@ -68,6 +68,10 @@ ${colors.logoBlue("react-router")}
     $ react-router reveal entry.client --no-typescript
     $ react-router reveal entry.server --no-typescript
     $ react-router reveal entry.server --config vite.react-router.config.ts
+
+  ${colors.heading("Generate types for route modules")}:
+
+   $ react-router typegen
 `;
 
 /**
@@ -169,6 +173,9 @@ export async function run(argv: string[] = process.argv.slice(2)) {
     }
     case "dev":
       await commands.dev(input[1], flags);
+      break;
+    case "typegen":
+      await commands.typegen(input[1]);
       break;
     default:
       // `react-router ./my-project` is shorthand for `react-router dev ./my-project`

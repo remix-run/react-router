@@ -33,18 +33,18 @@ First install the React Router vite plugin:
 npm install -D @react-router/dev
 ```
 
-Then swap out the React plugin for React Router. The `react` key accepts the same options as the React plugin.
+Then swap out the React plugin for React Router.
 
 ```diff filename=vite.config.ts
 -import react from '@vitejs/plugin-react'
-+import { plugin as app } from "@react-router/vite";
++import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 
 export default defineConfig({
   plugins: [
--    react(reactOptions)
-+    app({ react: reactOptions })
+-    react()
++    reactRouter()
   ],
 });
 ```
@@ -189,7 +189,6 @@ export const routes: RouteConfig = [
 And then create the catchall route module and render your existing root App component within it.
 
 ```tsx filename=src/catchall.tsx
-import { defineRoute } from "react-router";
 import App from "./App";
 
 export default function Component() {
@@ -260,12 +259,12 @@ The first few routes you migrate are the hardest because you often have to acces
 If you want to enable server rendering and static pre-rendering, you can do so with the `ssr` and `prerender` options in the bundler plugin.
 
 ```ts filename=vite.config.ts
-import { plugin as app } from "@react-router/vite";
+import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
-    app({
+    reactRouter({
       ssr: true,
       async prerender() {
         return ["/", "/about", "/contact"];
