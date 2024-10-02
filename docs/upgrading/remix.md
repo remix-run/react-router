@@ -5,7 +5,7 @@ hidden: true
 
 # Upgrading from Remix
 
-<docs-warning>This guide is still in development as is not accurate</docs-warning>
+<docs-warning>This guide is still in development</docs-warning>
 
 After the final React Router v7 release, we will go back to Remix to add future flags to any changed APIs.
 
