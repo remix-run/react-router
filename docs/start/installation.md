@@ -5,6 +5,11 @@ order: 1
 
 # Installation
 
+## Prereqs
+
+- Local Node.js installation
+- Some experience with the command line
+
 ## Starter Templates
 
 Most projects start with a template. Let's use a basic template maintained by React Router with `degit`:
@@ -27,6 +32,8 @@ TODO: Show how to find and use community templates
 
 ## Manual Installation with Vite
 
+Instead of a starter template, you can set up a project from scratch.
+
 First create a new directory and install dependencies:
 
 ```shellscript nonumber
@@ -41,15 +48,15 @@ Now create the following files:
 
 ```shellscript nonumber
 mkdir app
-touch app/root.tsx
-touch app/home.tsx
-touch app/routes.ts
-touch vite.config.ts
+touch app/root.jsx
+touch app/home.jsx
+touch app/routes.js
+touch vite.config.js
 ```
 
 And then fill them in:
 
-```tsx filename=app/root.tsx
+```tsx filename=app/root.jsx
 import {
   Outlet,
   Scripts,
@@ -81,22 +88,19 @@ export function ErrorBoundary() {
 }
 ```
 
-```tsx filename=app/home.tsx
+```tsx filename=app/home.jsx
 export default function Home() {
   return <h2>Home</h2>;
 }
 ```
 
-```ts filename=app/routes.ts
-import {
-  type RouteConfig,
-  index,
-} from "@react-router/dev/routes";
+```ts filename=app/routes.js
+import { index } from "@react-router/dev/routes";
 
-export const routes: RouteConfig = [index("./home.tsx")];
+export const routes = [index("./home.tsx")];
 ```
 
-```tsx filename=vite.config.ts
+```tsx filename=vite.config.js
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
@@ -107,6 +111,7 @@ export default defineConfig({
 
 ```json filename=package.json
 {
+  // add these two keys to your package.json
   "type": "module",
   "scripts": {
     "dev": "react-router dev",
@@ -127,5 +132,9 @@ npm run dev
 React Router's full feature-set is easiest to use with the React Router Vite plugin, but you can also use React Router manually with your own bundling, server rendering, etc.
 
 Refer to [Manual Usage][manual_usage] for more information.
+
+## Next Steps
+
+[Routing](./routing)
 
 [manual_usage]: ../misc/manual-usage

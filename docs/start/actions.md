@@ -5,10 +5,6 @@ order: 6
 
 # Actions
 
-<docs-warning>
-  The types for route modules are still in development, this API may change.
-</docs-warning>
-
 Data mutations are done through Route actions. When the action completes, all loader data on the page is revalidated to keep your UI in sync with the data without writing any code to do it.
 
 Route actions defined with `action` are only called on the server while actions defined with `clientAction` are run in the browser.
@@ -19,15 +15,12 @@ Client actions only run in the browser and take priority over a server action wh
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import type {
-  DefaultProps,
-  ClientActionArgs,
-} from "./+types.project";
+import type * as Route from "./+types.project";
 import { Form } from "react-router";
 
 export async function clientAction({
   request,
-}: ClientActionArgs) {
+}: Route.ClientActionArgs) {
   let formData = await request.formData();
   let title = await formData.get("title");
   let project = await someApi.updateProject({ title });
@@ -36,7 +29,7 @@ export async function clientAction({
 
 export default function Project({
   clientActionData,
-}: DefaultProps) {
+}: Route.ComponentProps) {
   return (
     <div>
       <h1>Project</h1>
@@ -58,13 +51,12 @@ Server actions only run on the server and are removed from client bundles.
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import type {
-  DefaultProps,
-  ActionArgs,
-} from "./+types.project";
+import type * as Route from "./+types.project";
 import { Form } from "react-router";
 
-export async function action({ request }: ActionArgs) {
+export async function action({
+  request,
+}: Route.ActionArgs) {
   let formData = await request.formData();
   let title = await formData.get("title");
   let project = await someApi.updateProject({ title });
@@ -73,7 +65,7 @@ export async function action({ request }: ActionArgs) {
 
 export default function Project({
   actionData,
-}: DefaultProps) {
+}: Route.ComponentProps) {
   return (
     <div>
       <h1>Project</h1>
@@ -100,7 +92,7 @@ import { Form } from "react-router";
 
 function SomeComponent() {
   return (
-    <Form action="/projects/:projectId" method="post">
+    <Form action="/projects/123" method="post">
       <input type="text" name="title" />
       <button type="submit">Submit</button>
     </Form>
@@ -148,7 +140,7 @@ function Task() {
   let busy = fetcher.state !== "idle";
 
   return (
-    <fetcher.Form method="post">
+    <fetcher.Form method="post" action="/update-task/123">
       <input type="text" name="title" />
       <button type="submit">
         {busy ? "Saving..." : "Save"}
@@ -163,7 +155,7 @@ They also have the imperative `submit` method.
 ```tsx
 fetcher.submit(
   { title: "New Title" },
-  { action: "/update-task", method: "post" }
+  { action: "/update-task/123", method: "post" }
 );
 ```
 

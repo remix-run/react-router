@@ -49,13 +49,13 @@ export default defineConfig({
 });
 ```
 
-Pre-rendering is a build-time operation that generates static HTML and client navigation data payloads for a list of URLs. This is useful for SEO and performance, especially for deployments without server rendering. When pre-rendering, the `loader` method is used to fetch data at build time.
+Pre-rendering is a build-time operation that generates static HTML and client navigation data payloads for a list of URLs. This is useful for SEO and performance, especially for deployments without server rendering. When pre-rendering, route module loaders are used to fetch data at build time.
 
 ## React Server Components
 
-<docs-warning>RSC is not supported yet, this is a future API that we plan to support</docs-warning>
+<docs-warning>RSC is still in development</docs-warning>
 
-You can return elements from loaders and actions to keep them out of browser bundles.
+In the future you will be able to return elements from loaders and actions to keep them out of browser bundles.
 
 ```tsx
 export async function loader() {

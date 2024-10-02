@@ -1,7 +1,6 @@
 ---
 title: Deploying
-order: 8
-new: true
+hidden: true
 ---
 
 # Deploying

@@ -1,6 +1,6 @@
 ---
 title: Upgrading from Remix
-new: true
+hidden: true
 ---
 
 # Upgrading from Remix
