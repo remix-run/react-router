@@ -185,8 +185,7 @@ If you need to apply specific styles for this view transition, you will also nee
 
 ```jsx
 function ImageLink(to) {
-  const isTransitioning =
-    useViewTransitionState(to);
+  const isTransitioning = useViewTransitionState(to);
   return (
     <Link to={to} viewTransition>
       <p
@@ -213,8 +212,6 @@ function ImageLink(to) {
 ```
 
 <docs-warning>`viewTransition` only works when using a data router, see [Picking a Router][picking-a-router]</docs-warning>
-
-<docs-warning>Please note that this API is marked unstable and may be subject to breaking changes without a major release</docs-warning>
 
 [link-native]: ./link-native
 [scrollrestoration]: ./scroll-restoration

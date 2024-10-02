@@ -188,8 +188,6 @@ const router = createBrowserRouter(
 
 <docs-warning>This is a low-level API intended for advanced use-cases. This overrides React Router's internal handling of `loader`/`action` execution, and if done incorrectly will break your app code. Please use with caution and perform the appropriate testing.</docs-warning>
 
-<docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
-
 By default, React Router is opinionated about how your data is loaded/submitted - and most notably, executes all of your loaders in parallel for optimal data fetching. While we think this is the right behavior for most use-cases, we realize that there is no "one size fits all" solution when it comes to data fetching for the wide landscape of application requirements.
 
 The `dataStrategy` option gives you full control over how your loaders and actions are executed and lays the foundation to build in more advanced APIs such as middleware, context, and caching layers. Over time, we expect that we'll leverage this API internally to bring more first class APIs to React Router, but until then (and beyond), this is your way to add more advanced functionality for your applications data needs.
@@ -436,11 +434,9 @@ let router = createBrowserRouter(routes, {
 
 ## `opts.patchRoutesOnNavigation`
 
-<docs-warning>This API is marked "unstable" so it is subject to breaking API changes in minor releases</docs-warning>
-
 By default, React Router wants you to provide a full route tree up front via `createBrowserRouter(routes)`. This allows React Router to perform synchronous route matching, execute loaders, and then render route components in the most optimistic manner without introducing waterfalls. The tradeoff is that your initial JS bundle is larger by definition - which may slow down application start-up times as your application grows.
 
-To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route _definition_ aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your routes up front and can perform synchronous route matching, but then delay loading any of the route implementation aspects until the route is actually navigated to.
+To combat this, we introduced [`route.lazy`][route-lazy] in [v6.9.0][6-9-0] which let's you lazily load the route _implementation_ (`loader`, `Component`, etc.) while still providing the route _definition_ aspects up front (`path`, `index`, etc.). This is a good middle ground because React Router still knows about your route definitions (the lightweight part) up front and can perform synchronous route matching, but then delay loading any of the route implementation aspects (the heavier part) until the route is actually navigated to.
 
 In some cases, even this doesn't go far enough. For very large applications, providing all route definitions up front can be prohibitively expensive. Additionally, it might not even be possible to provide all route definitions up front in certain Micro-Frontend or Module-Federation architectures.
 
@@ -489,7 +485,7 @@ const router = createBrowserRouter(
 );
 ```
 
-In the above example, if the user clicks a link to `/a`, React Router won't be able to match it initially and will call `patchRoutesOnNavigation` with `/a` and a `matches` array containing the root route match. By calling `patch`, the `a` route will be added to the route tree and React Router will perform matching again. This time it will successfully match the `/a` path and the navigation will complete successfully.
+In the above example, if the user clicks a link to `/a`, React Router won't match any routes initially and will call `patchRoutesOnNavigation` with a `path = "/a"` and a `matches` array containing the root route match. By calling `patch('root', [route])`, the new route will be added to the route tree as a child of the `root` route and React Router will perform matching on the updated routes. This time it will successfully match the `/a` path and the navigation will complete successfully.
 
 **Patching new root-level routes**
 
@@ -543,6 +539,8 @@ let router = createBrowserRouter(
   }
 );
 ```
+
+<docs-info>If in-progress execution of `patchRoutesOnNavigation` is interrupted by a subsequent navigation, then any remaining `patch` calls in the interrupted execution will not update the route tree because the operation was cancelled.</docs-info>
 
 **Co-locating route discovery with route definition**
 
