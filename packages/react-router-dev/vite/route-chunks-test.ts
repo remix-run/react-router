@@ -165,6 +165,26 @@ describe("route chunks", () => {
       `);
     });
 
+    test("shared imports", () => {
+      const code = dedent`
+        import { shared } from "./shared";
+        export const chunk = shared("chunk");
+        export const main = shared("main");
+      `;
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { shared } from "./shared";
+        export const chunk = shared("chunk");"
+      `);
+      expect(getChunkedExport(code, "main", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { shared } from "./shared";
+        export const main = shared("main");"
+      `);
+    });
+
     test("re-exports using shared statement", () => {
       const code = dedent`
         export { chunk1, chunk2, main } from "./shared";

@@ -53,6 +53,7 @@ function assertNodePathIsStatement(
     }`
   );
 }
+
 function assertNodePathIsVariableDeclarator(
   path: NodePath | NodePath[] | null | undefined
 ): asserts path is NodePath<VariableDeclarator> {
@@ -469,11 +470,6 @@ export function hasChunkableExport(
         return false;
       }
 
-      invariant(
-        dependencies.topLevelStatements.size > 0,
-        `Expected export "${exportName}" to have top level statements if the set exists`
-      );
-
       // Loop through all other exports to see if they have top level non-import
       // statements in common with the export we're trying to chunk.
       for (let [currentExportName, currentDependencies] of exportDependencies) {
@@ -498,35 +494,16 @@ export function hasChunkableExport(
         }
       }
 
-      // Loop through all other exports to see if they have imported identifiers
-      // in common with the export we're trying to chunk.
-      if (dependencies.importedIdentifierNames.size > 0) {
-        for (let [
-          currentExportName,
-          currentDependencies,
-        ] of exportDependencies) {
-          if (currentExportName === exportName) {
-            continue;
-          }
-
-          // As soon as we find any imported identifiers in common with another
-          // export, we know this export cannot be placed in its own chunk. Note
-          // that the chunk can still share top level import statements with
-          // other exports because we filter out all unused imports, so we can
-          // treat each imported identifier as a separate entity in this check.
-          if (
-            setsIntersect(
-              currentDependencies.importedIdentifierNames,
-              dependencies.importedIdentifierNames
-            )
-          ) {
-            return false;
-          }
-        }
+      // If the export we're trying to chunk depends on more than one exported
+      // variable declarator (where one of them might be the chunked export
+      // itself), it means it must depend on other exports and can't be chunked,
+      // so we can bail out early before comparing against other exports.
+      if (dependencies.exportedVariableDeclarators.size > 1) {
+        return false;
       }
 
-      // Loop through all other exports to see if they have exported variable
-      // declarators in common with the export we're trying to chunk.
+      // Loop through all other exports to see if they depend on the export
+      // we're trying to chunk.
       if (dependencies.exportedVariableDeclarators.size > 0) {
         for (let [
           currentExportName,
