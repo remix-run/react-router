@@ -39,13 +39,6 @@ export async function callRouteAction({
     params,
   });
 
-  if (result === undefined) {
-    throw new Error(
-      `You defined an action for route "${routeId}" but didn't return ` +
-        `anything from your \`action\` function. Please return a value or \`null\`.`
-    );
-  }
-
   return result;
 }
 
@@ -67,13 +60,6 @@ export async function callRouteLoader({
     context: loadContext,
     params,
   });
-
-  if (result === undefined) {
-    throw new Error(
-      `You defined a loader for route "${routeId}" but didn't return ` +
-        `anything from your \`loader\` function. Please return a value or \`null\`.`
-    );
-  }
 
   return result;
 }

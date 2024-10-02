@@ -23,9 +23,9 @@ export function getDocumentHeaders(
     let { actionHeaders, actionData, loaderHeaders, loaderData } = context;
     context.matches.slice(boundaryIdx).some((match) => {
       let id = match.route.id;
-      if (actionHeaders[id] && (!actionData || actionData[id] === undefined)) {
+      if (actionHeaders[id] && (!actionData || !(id in actionData))) {
         errorHeaders = actionHeaders[id];
-      } else if (loaderHeaders[id] && loaderData[id] === undefined) {
+      } else if (loaderHeaders[id] && !(id in loaderData)) {
         errorHeaders = loaderHeaders[id];
       }
       return errorHeaders != null;

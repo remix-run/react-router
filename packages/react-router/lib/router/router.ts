@@ -4263,7 +4263,7 @@ function getMatchesToLoad(
         return true;
       }
       return (
-        state.loaderData[route.id] === undefined &&
+        !(route.id in state.loaderData) &&
         // Don't re-run if the loader ran and threw an error
         (!state.errors || state.errors[route.id] === undefined)
       );
@@ -4402,7 +4402,7 @@ function isNewLoader(
 
   // Handle the case that we don't have data for a re-used route, potentially
   // from a prior error
-  let isMissingData = currentLoaderData[match.route.id] === undefined;
+  let isMissingData = !(match.route.id in currentLoaderData);
 
   // Always load if this is a net-new route or we don't yet have data
   return isNew || isMissingData;
@@ -5106,7 +5106,9 @@ function processRouteLoaderData(
       }
 
       // Clear our any prior loaderData for the throwing route
-      loaderData[id] = undefined;
+      if (id in loaderData) {
+        delete loaderData[id];
+      }
 
       // Once we find our first (highest) error, we set the status code and
       // prevent deeper status codes from overriding
