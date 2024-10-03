@@ -1,5 +1,311 @@
 # `react-router`
 
+## 7.0.0-pre.0
+
+### Major Changes
+
+- Remove the original `defer` implementation in favor of using raw promises via single fetch and `turbo-stream`. This removes these exports from React Router: ([#11744](https://github.com/remix-run/react-router/pull/11744))
+
+  - `defer`
+  - `AbortedDeferredError`
+  - `type TypedDeferredData`
+  - `UNSAFE_DeferredData`
+  - `UNSAFE_DEFERRED_SYMBOL`,
+
+- - Collapse `@remix-run/router` into `react-router` ([#11505](https://github.com/remix-run/react-router/pull/11505))
+  - Collapse `react-router-dom` into `react-router`
+  - Collapse `@remix-run/server-runtime` into `react-router`
+  - Collapse `@remix-run/testing` into `react-router`
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- Drop support for Node 16, React Router SSR now requires Node 18 or higher ([#11391](https://github.com/remix-run/react-router/pull/11391))
+- Remove `future.v7_startTransition` flag ([#11696](https://github.com/remix-run/react-router/pull/11696))
+- - Expose the underlying router promises from the following APIs for compsition in React 19 APIs: ([#11521](https://github.com/remix-run/react-router/pull/11521))
+    - `useNavigate()`
+    - `useSubmit`
+    - `useFetcher().load`
+    - `useFetcher().submit`
+    - `useRevalidator.revalidate`
+- Remove `future.v7_normalizeFormMethod` future flag ([#11697](https://github.com/remix-run/react-router/pull/11697))
+- For Remix consumers migrating to React Router, the `crypto` global from the [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) is now required when using cookie and session APIs. This means that the following APIs are provided from `react-router` rather than platform-specific packages: ([#11837](https://github.com/remix-run/react-router/pull/11837))
+
+  - `createCookie`
+  - `createCookieSessionStorage`
+  - `createMemorySessionStorage`
+  - `createSessionStorage`
+
+  For consumers running older versions of Node, the `installGlobals` function from `@remix-run/node` has been updated to define `globalThis.crypto`, using [Node's `require('node:crypto').webcrypto` implementation.](https://nodejs.org/api/webcrypto.html)
+
+  Since platform-specific packages no longer need to implement this API, the following low-level APIs have been removed:
+
+  - `createCookieFactory`
+  - `createSessionStorageFactory`
+  - `createCookieSessionStorageFactory`
+  - `createMemorySessionStorageFactory`
+
+- Imports/Exports cleanup ([#11840](https://github.com/remix-run/react-router/pull/11840))
+
+  - Removed the following exports that were previously public API from `@remix-run/router`
+    - types
+      - `AgnosticDataIndexRouteObject`
+      - `AgnosticDataNonIndexRouteObject`
+      - `AgnosticDataRouteMatch`
+      - `AgnosticDataRouteObject`
+      - `AgnosticIndexRouteObject`
+      - `AgnosticNonIndexRouteObject`
+      - `AgnosticRouteMatch`
+      - `AgnosticRouteObject`
+      - `TrackedPromise`
+      - `unstable_AgnosticPatchRoutesOnMissFunction`
+      - `Action` -> exported as `NavigationType` via `react-router`
+      - `Router` exported as `RemixRouter` to differentiate from RR's `<Router>`
+    - API
+      - `getToPathname` (`@private`)
+      - `joinPaths` (`@private`)
+      - `normalizePathname` (`@private`)
+      - `resolveTo` (`@private`)
+      - `stripBasename` (`@private`)
+      - `createBrowserHistory` -> in favor of `createBrowserRouter`
+      - `createHashHistory` -> in favor of `createHashRouter`
+      - `createMemoryHistory` -> in favor of `createMemoryRouter`
+      - `createRouter`
+      - `createStaticHandler` -> in favor of wrapper `createStaticHandler` in RR Dom
+      - `getStaticContextFromError`
+  - Removed the following exports that were previously public API from `react-router`
+    - `Hash`
+    - `Pathname`
+    - `Search`
+
+- update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+- Remove `future.v7_prependBasename` from the ionternalized `@remix-run/router` package ([#11726](https://github.com/remix-run/react-router/pull/11726))
+- Remove `future.v7_throwAbortReason` from internalized `@remix-run/router` package ([#11728](https://github.com/remix-run/react-router/pull/11728))
+- Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+- node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
+- renamed RemixContext to FrameworkContext ([#11705](https://github.com/remix-run/react-router/pull/11705))
+- updates the minimum React version to 18 ([#11689](https://github.com/remix-run/react-router/pull/11689))
+- PrefetchPageDescriptor replaced by PageLinkDescriptor ([#11960](https://github.com/remix-run/react-router/pull/11960))
+- - Remove the `future.v7_partialHydration` flag ([#11725](https://github.com/remix-run/react-router/pull/11725))
+    - This also removes the `<RouterProvider fallbackElement>` prop
+      - To migrate, move the `fallbackElement` to a `hydrateFallbackElement`/`HydrateFallback` on your root route
+    - Also worth nothing there is a related breaking changer with this future flag:
+      - Without `future.v7_partialHydration` (when using `fallbackElement`), `state.navigation` was populated during the initial load
+      - With `future.v7_partialHydration`, `state.navigation` remains in an `"idle"` state during the initial load
+- Remove `v7_relativeSplatPath` future flag ([#11695](https://github.com/remix-run/react-router/pull/11695))
+- Remove remaining future flags ([#11820](https://github.com/remix-run/react-router/pull/11820))
+
+  - React Router `v7_skipActionErrorRevalidation`
+  - Remix `v3_fetcherPersist`, `v3_relativeSplatPath`, `v3_throwAbortReason`
+
+- rename createRemixStub to createRoutesStub ([#11692](https://github.com/remix-run/react-router/pull/11692))
+- Remove `@remix-run/router` deprecated `detectErrorBoundary` option in favor of `mapRouteProperties` ([#11751](https://github.com/remix-run/react-router/pull/11751))
+- Add `react-router/dom` subpath export to properly enable `react-dom` as an optional `peerDependency` ([#11851](https://github.com/remix-run/react-router/pull/11851))
+
+  - This ensures that we don't blindly `import ReactDOM from "react-dom"` in `<RouterProvider>` in order to access `ReactDOM.flushSync()`, since that would break `createMemoryRouter` use cases in non-DOM environments
+  - DOM environments should import from `react-router/dom` to get the proper component that makes `ReactDOM.flushSync()` available:
+    - If you are using the Vite plugin, use this in your `entry.client.tsx`:
+      - `import { HydratedRouter } from 'react-router/dom'`
+    - If you are not using the Vite plugin and are manually calling `createBrowserRouter`/`createHashRouter`:
+      - `import { RouterProvider } from "react-router/dom"`
+
+- Remove `future.v7_fetcherPersist` flag ([#11731](https://github.com/remix-run/react-router/pull/11731))
+
+### Minor Changes
+
+- - Add support for `prerender` config in the React Router vite plugin, to support existing SSG use-cases ([#11539](https://github.com/remix-run/react-router/pull/11539))
+    - You can use the `prerender` config to pre-render your `.html` and `.data` files at build time and then serve them statically at runtime (either from a running server or a CDN)
+    - `prerender` can either be an array of string paths, or a function (sync or async) that returns an array of strings so that you can dynamically generate the paths by talking to your CMS, etc.
+
+  ```ts
+  export default defineConfig({
+    plugins: [
+      reactRouter({
+        async prerender() {
+          let slugs = await fakeGetSlugsFromCms();
+          // Prerender these paths into `.html` files at build time, and `.data`
+          // files if they have loaders
+          return ["/", "/about", ...slugs.map((slug) => `/product/${slug}`)];
+        },
+      }),
+      tsconfigPaths(),
+    ],
+  });
+
+  async function fakeGetSlugsFromCms() {
+    await new Promise((r) => setTimeout(r, 1000));
+    return ["shirt", "hat"];
+  }
+  ```
+
+- [REMOVE] Allow returning undefined from loaders/actions part 2 ([#12057](https://github.com/remix-run/react-router/pull/12057))
+
+  - This is a follow up to #11680 which missed some of the Remix codepaths
+
+- Params, loader data, and action data as props for route component exports ([#11961](https://github.com/remix-run/react-router/pull/11961))
+
+  ```tsx
+  export default function Component({ params, loaderData, actionData }) {}
+
+  export function HydrateFallback({ params }) {}
+  export function ErrorBoundary({ params, loaderData, actionData }) {}
+  ```
+
+- Remove duplicate `RouterProvider` impliementations ([#11679](https://github.com/remix-run/react-router/pull/11679))
+- ### Typesafety improvements ([#12019](https://github.com/remix-run/react-router/pull/12019))
+
+  React Router now generates types for each of your route modules.
+  You can access those types by importing them from `./+types/<route filename without extension>`.
+  For example:
+
+  ```ts
+  // app/routes/product.tsx
+  import type * as Route from "./+types/product";
+
+  export function loader({ params }: Route.LoaderArgs) {}
+
+  export default function Component({ loaderData }: Route.ComponentProps) {}
+  ```
+
+  This initial implementation targets type inference for:
+
+  - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
+  - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
+  - `ActionData` : Action data from `action` and/or `clientAction` within your route module
+
+  These types are then used to create types for route export args and props:
+
+  - `LoaderArgs`
+  - `ClientLoaderArgs`
+  - `ActionArgs`
+  - `ClientActionArgs`
+  - `HydrateFallbackProps`
+  - `ComponentProps` (for the `default` export)
+  - `ErrorBoundaryProps`
+
+  In the future, we plan to add types for the rest of the route module exports: `meta`, `links`, `headers`, `shouldRevalidate`, etc.
+  We also plan to generate types for typesafe `Link`s:
+
+  ```tsx
+  <Link to="/products/:id" params={{ id: 1 }} />
+  //        ^^^^^^^^^^^^^          ^^^^^^^^^
+  // typesafe `to` and `params` based on the available routes in your app
+  ```
+
+  #### Setup
+
+  React Router will generate types into a `.react-router/` directory at the root of your app.
+  This directory is fully managed by React Router and is derived based on your route config (`routes.ts`).
+
+  👉 **Add `.react-router/` to `.gitignore`**
+
+  ```txt
+  .react-router
+  ```
+
+  You should also ensure that generated types for routes are always present before running typechecking,
+  especially for running typechecking in CI.
+
+  👉 **Add `react-router typegen` to your `typecheck` command in `package.json`**
+
+  ```json
+  {
+    "scripts": {
+      "typecheck": "react-router typegen && tsc"
+    }
+  }
+  ```
+
+  To get TypeScript to use those generated types, you'll need to add them to `include` in `tsconfig.json`.
+  And to be able to import them as if they files next to your route modules, you'll also need to configure `rootDirs`.
+
+  👉 **Configure `tsconfig.json` for generated types**
+
+  ```json
+  {
+    "include": [".react-router/types/**/*"],
+    "compilerOptions": {
+      "rootDirs": [".", "./.react-router/types"]
+    }
+  }
+  ```
+
+  #### `typegen` command
+
+  You can manually generate types with the new `typegen` command:
+
+  ```sh
+  react-router typegen
+  ```
+
+  However, manual type generation is tedious and types can get out of sync quickly if you ever forget to run `typegen`.
+  Instead, we recommend that you setup our new TypeScript plugin which will automatically generate fresh types whenever routes change.
+  That way, you'll always have up-to-date types.
+
+  #### TypeScript plugin
+
+  To get automatic type generation, you can use our new TypeScript plugin.
+
+  👉 **Add the TypeScript plugin to `tsconfig.json`**
+
+  ```json
+  {
+    "compilerOptions": {
+      "plugins": [{ "name": "@react-router/dev" }]
+    }
+  }
+  ```
+
+  We plan to add some other goodies to our TypeScript plugin soon, including:
+
+  - Automatic `jsdoc` for route exports that include links to official docs
+  - Autocomplete for route exports
+  - Warnings for non-HMR compliant exports
+
+  ##### VSCode
+
+  TypeScript looks for plugins registered in `tsconfig.json` in the local `node_modules/`,
+  but VSCode ships with its own copy of TypeScript that is installed outside of your project.
+  For TypeScript plugins to work, you'll need to tell VSCode to use the local workspace version of TypeScript.
+  For security reasons, [VSCode won't use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript) until you manually opt-in.
+
+  Your project should have a `.vscode/settings.json` with the following settings:
+
+  ```json
+  {
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
+  }
+  ```
+
+  That way [VSCode will ask you](https://code.visualstudio.com/updates/v1_45#_prompt-users-to-switch-to-the-workspace-version-of-typescript) if you want to use the workspace version of TypeScript the first time you open a TS file in that project.
+
+  > [!IMPORTANT]
+  > You'll need to install dependencies first so that the workspace version of TypeScript is available.
+
+  👉 **Select "Allow" when VSCode asks if you want to use the workspace version of TypeScript**
+
+  Otherwise, you can also manually opt-in to the workspace version:
+
+  1. Open up any TypeScript file in your project
+  2. Open up the VSCode Command Palette (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>)
+  3. Search for `Select TypeScript Version`
+  4. Choose `Use Workspace Version`
+  5. Quit and reopen VSCode
+
+  ##### Troubleshooting
+
+  In VSCode, open up any TypeScript file in your project and then use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to select `Open TS Server log`.
+  There should be a log for `[react-router] setup` that indicates that the plugin was resolved correctly.
+  Then look for any errors in the log.
+
+- Stabilize `unstable_dataStrategy` ([#11969](https://github.com/remix-run/react-router/pull/11969))
+- Stabilize `unstable_patchRoutesOnNavigation` ([#11970](https://github.com/remix-run/react-router/pull/11970))
+
+### Patch Changes
+
+- Remove unstable upload handler. ([#12015](https://github.com/remix-run/react-router/pull/12015))
+- Fix redirects returned from loaders/actions using `data()` ([#12021](https://github.com/remix-run/react-router/pull/12021))
+- Updated dependencies:
+  - `react-router@7.0.0-pre.0`
+
 ## 6.26.2
 
 ### Patch Changes
