@@ -825,6 +825,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
               "react",
               "react/jsx-runtime",
               "react/jsx-dev-runtime",
+              "react-dom",
               "react-dom/client",
 
               // Pre-bundle router dependencies to avoid router duplicates.
