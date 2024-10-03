@@ -4,8 +4,5 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  optimizeDeps: {
-    include: ["react", "react-dom"],
-  },
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
 });
