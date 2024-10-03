@@ -1,15 +1,12 @@
 import type { HydrationState, Router as RemixRouter } from "../router/router";
-import type {
-  AssetsManifest,
-  FutureConfig as RemixFutureConfig,
-} from "./ssr/entry";
+import type { AssetsManifest, FutureConfig } from "./ssr/entry";
 import type { RouteModules } from "./ssr/routeModules";
 
-export type WindowRemixContext = {
+export type WindowReactRouterContext = {
   basename?: string;
   state: HydrationState;
   criticalCss?: string;
-  future: RemixFutureConfig;
+  future: FutureConfig;
   isSpaMode: boolean;
   stream: ReadableStream<Uint8Array> | undefined;
   streamController: ReadableStreamDefaultController<Uint8Array>;
@@ -36,13 +33,12 @@ declare global {
   interface Document {
     startViewTransition(cb: () => Promise<void> | void): ViewTransition;
   }
-  // TODO: v7 - Once this is all working, rename these global variables to __reactRouter*
-  var __remixContext: WindowRemixContext | undefined;
-  var __remixManifest: AssetsManifest | undefined;
-  var __remixRouteModules: RouteModules | undefined;
-  var __remixRouter: RemixRouter | undefined;
-  var __remixHdrActive: boolean;
-  var __remixClearCriticalCss: (() => void) | undefined;
+  var __reactRouterContext: WindowReactRouterContext | undefined;
+  var __reactRouterManifest: AssetsManifest | undefined;
+  var __reactRouterRouteModules: RouteModules | undefined;
+  var __reactRouterInstance: RemixRouter | undefined;
+  var __reactRouterHdrActive: boolean;
+  var __reactRouterClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
     | {
         performReactRefresh: () => void;

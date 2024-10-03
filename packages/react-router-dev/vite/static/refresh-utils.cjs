@@ -13,7 +13,7 @@ function debounce(fn, delay) {
 const enqueueUpdate = debounce(async () => {
   let manifest;
   if (routeUpdates.size > 0) {
-    manifest = JSON.parse(JSON.stringify(__remixManifest));
+    manifest = JSON.parse(JSON.stringify(__reactRouterManifest));
 
     for (let route of routeUpdates.values()) {
       manifest.routes[route.id] = route;
@@ -28,18 +28,19 @@ const enqueueUpdate = debounce(async () => {
         // react-refresh takes care of updating these in-place,
         // if we don't preserve existing values we'll loose state.
         default: imported.default
-          ? window.__remixRouteModules[route.id]?.default ?? imported.default
+          ? window.__reactRouterRouteModules[route.id]?.default ??
+            imported.default
           : imported.default,
         ErrorBoundary: imported.ErrorBoundary
-          ? window.__remixRouteModules[route.id]?.ErrorBoundary ??
+          ? window.__reactRouterRouteModules[route.id]?.ErrorBoundary ??
             imported.ErrorBoundary
           : imported.ErrorBoundary,
         HydrateFallback: imported.HydrateFallback
-          ? window.__remixRouteModules[route.id]?.HydrateFallback ??
+          ? window.__reactRouterRouteModules[route.id]?.HydrateFallback ??
             imported.HydrateFallback
           : imported.HydrateFallback,
       };
-      window.__remixRouteModules[route.id] = routeModule;
+      window.__reactRouterRouteModules[route.id] = routeModule;
     }
 
     let needsRevalidation = new Set(
@@ -48,27 +49,27 @@ const enqueueUpdate = debounce(async () => {
         .map((route) => route.id)
     );
 
-    let routes = __remixRouter.createRoutesForHMR(
+    let routes = __reactRouterInstance.createRoutesForHMR(
       needsRevalidation,
       manifest.routes,
-      window.__remixRouteModules,
-      window.__remixContext.future,
-      window.__remixContext.isSpaMode
+      window.__reactRouterRouteModules,
+      window.__reactRouterContext.future,
+      window.__reactRouterContext.isSpaMode
     );
-    __remixRouter._internalSetRoutes(routes);
+    __reactRouterInstance._internalSetRoutes(routes);
     routeUpdates.clear();
     window.__reactRouterRouteModuleUpdates.clear();
   }
 
   try {
-    window.__remixHdrActive = true;
-    await __remixRouter.revalidate();
+    window.__reactRouterHdrActive = true;
+    await __reactRouterInstance.revalidate();
   } finally {
-    window.__remixHdrActive = false;
+    window.__reactRouterHdrActive = false;
   }
 
   if (manifest) {
-    Object.assign(window.__remixManifest, manifest);
+    Object.assign(window.__reactRouterManifest, manifest);
   }
   exports.performReactRefresh();
 }, 16);
@@ -152,7 +153,7 @@ const routeUpdates = new Map();
 window.__reactRouterRouteModuleUpdates = new Map();
 
 import.meta.hot.on("react-router:hmr", async ({ route }) => {
-  window.__remixClearCriticalCss();
+  window.__reactRouterClearCriticalCss();
 
   if (route) {
     routeUpdates.set(route.id, route);

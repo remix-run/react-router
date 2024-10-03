@@ -93,6 +93,37 @@ module.exports = function rollup() {
         }),
       ].concat(PRETTY ? prettier({ parser: "babel" }) : []),
     },
+    {
+      input: `${SOURCE_DIR}/lib/types.ts`,
+      output: {
+        file: `${OUTPUT_DIR}/lib/types.mjs`,
+        format: "esm",
+        banner: createBanner("React Router", version),
+      },
+      external: isBareModuleId,
+      plugins: [
+        nodeResolve({ extensions: [".tsx", ".ts"] }),
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          presets: [
+            ["@babel/preset-env", { loose: true }],
+            "@babel/preset-react",
+            "@babel/preset-typescript",
+          ],
+          plugins: [
+            "babel-plugin-dev-expression",
+            babelPluginReplaceVersionPlaceholder(),
+          ],
+          extensions: [".ts", ".tsx"],
+        }),
+        typescript({
+          // eslint-disable-next-line no-restricted-globals
+          tsconfig: path.join(__dirname, "tsconfig.dom.json"),
+          noEmitOnError: !WATCH,
+        }),
+      ],
+    },
   ];
 
   // JS modules for <script type=module>

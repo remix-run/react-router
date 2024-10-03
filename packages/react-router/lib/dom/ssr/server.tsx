@@ -61,7 +61,7 @@ export function ServerRouter({
       shouldHydrateRouteLoader(manifestRoute, route, context.isSpaMode) &&
       (route.HydrateFallback || !manifestRoute.hasLoader)
     ) {
-      context.staticHandlerContext.loaderData[routeId] = undefined;
+      delete context.staticHandlerContext.loaderData[routeId];
     }
   }
 

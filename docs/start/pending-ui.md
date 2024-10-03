@@ -5,7 +5,7 @@ order: 7
 
 # Pending UI
 
-When the user navigates to a new route, or submits data to an action, the UI should immediately respond to the user's actions with a pending or optimistic state.
+When the user navigates to a new route, or submits data to an action, the UI should immediately respond to the user's actions with a pending or optimistic state. Application code is responsible for this.
 
 ## Global Pending Navigation
 
@@ -61,7 +61,7 @@ function Navbar() {
 
 When a form is submitted, the UI should immediately respond to the user's actions with a pending state. This is easiest to do with a [fetcher][use_fetcher] form because it has it's own independent state (whereas normal forms cause a global navigation).
 
-```tsx filename=app/project.tsx
+```tsx filename=app/project.tsx lines=[10-12]
 import { useFetcher } from "react-router";
 
 function NewProjectForm() {
@@ -103,7 +103,7 @@ function NewProjectForm() {
 
 ## Optimistic UI
 
-When the future state of the UI is known by the form submission data, an optimistic UI can be implemented for instant UI.
+When the future state of the UI is known by the form submission data, an optimistic UI can be implemented for instant UX.
 
 ```tsx filename=app/project.tsx lines=[4-7]
 function Task({ task }) {

@@ -601,6 +601,7 @@ test.describe("single-fetch", () => {
     await page.waitForSelector("#error");
     expect(urls).toEqual([]);
   });
+
   test("returns headers correctly for singular loader and action calls", async () => {
     let fixture = await createFixture({
       files: {
@@ -3425,11 +3426,98 @@ test.describe("single-fetch", () => {
     let remixScriptsCount = 0;
     for (let script of scripts) {
       let content = await script.innerHTML();
-      if (content.includes("window.__remix")) {
+      if (content.includes("window.__reactRouter")) {
         remixScriptsCount++;
         expect(await script.getAttribute("nonce")).toEqual("the-nonce");
       }
     }
     expect(remixScriptsCount).toBe(4);
+  });
+
+  test("supports loaders that return undefined", async ({ page }) => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Link } from "react-router";
+
+            export default function () {
+              return <Link to="/loader">Go to /loader</Link>;
+            }
+          `,
+          "app/routes/loader.tsx": js`
+            import { useLoaderData } from "react-router";
+
+            export async function loader() {}
+
+            export default function () {
+              let data = useLoaderData();
+              return <h1>{data === undefined? 'It worked!' : 'Error'}</h1>;
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+
+    // Document requests
+    let res = await fixture.requestDocument("/loader");
+    expect(res.status).toBe(200);
+    expect(await res.text()).toMatch("It worked!");
+
+    // SPA navigations
+    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickLink("/loader");
+    await page.waitForSelector("h1");
+    expect(await app.getHtml("h1")).toMatch("It worked!");
+  });
+
+  test("supports actions that return undefined", async ({ page }) => {
+    let fixture = await createFixture(
+      {
+        files: {
+          ...files,
+          "app/routes/_index.tsx": js`
+            import { Form } from "react-router";
+
+            export default function () {
+              return (
+                <Form method="post" action="/action">
+                  <input name="test" />
+                  <button type="submit">Submit</button>
+                </Form>
+              );
+            }
+          `,
+          "app/routes/action.tsx": js`
+            import { useActionData } from "react-router";
+
+            export async function action() {}
+
+            export default function () {
+              let data = useActionData();
+              return <h1>{data === undefined? 'It worked!' : 'Error'}</h1>;
+            }
+          `,
+        },
+      },
+      ServerMode.Development
+    );
+
+    // Document requests
+    let res = await fixture.requestDocument("/action");
+    expect(res.status).toBe(200);
+    expect(await res.text()).toMatch("It worked!");
+
+    // SPA navigations
+    let appFixture = await createAppFixture(fixture, ServerMode.Development);
+    let app = new PlaywrightFixture(appFixture, page);
+    await app.goto("/");
+    await app.clickSubmitButton("/action");
+    await page.waitForSelector("h1");
+    expect(await app.getHtml("h1")).toMatch("It worked!");
   });
 });

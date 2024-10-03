@@ -796,7 +796,6 @@ describe("router.revalidate", () => {
       navigation: IDLE_NAVIGATION,
       revalidation: "idle",
       loaderData: {
-        root: undefined,
         index: "INDEX_DATA*",
       },
       errors: {

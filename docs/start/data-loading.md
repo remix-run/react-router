@@ -5,133 +5,104 @@ order: 5
 
 # Data Loading
 
-Data is provided to the route via `loader` and `clientLoader`, and accessed in the `data` prop of the Route Component.
+Data is provided to the route component from `loader` and `clientLoader`.
 
 ## Client Data Loading
 
-`clientLoader` is used to fetch data on the client. This is useful for projects that aren't server rendering, and for pages you'd prefer fetch their data in the browser.
+`clientLoader` is used to fetch data on the client. This is useful for pages or full projects that you'd prefer to fetch data from the browser only.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import { defineRoute$ } from "react-router";
+import type * as Route from "./+types.product";
 
-export default defineRoute$({
-  params: ["pid"],
+export async function clientLoader({
+  params,
+}: Route.ClientLoaderArgs) {
+  const res = await fetch(`/api/products/${params.pid}`);
+  const product = await res.json();
+  return product;
+}
 
-  async clientLoader({ params }) {
-    const res = await fetch(`/api/products/${params.pid}`);
-    const product = await res.json();
-    return { product };
-  },
-
-  component: function Product({ data }) {
-    return (
-      <div>
-        <h1>{data.product.name}</h1>
-        <p>{data.product.description}</p>
-      </div>
-    );
-  },
-});
+export default function Product({
+  clientLoaderData,
+}: Route.ComponentProps) {
+  const { name, description } = clientLoaderData;
+  return (
+    <div>
+      <h1>{name}</h1>
+      <p>{description}</p>
+    </div>
+  );
+}
 ```
 
 ## Server Data Loading
 
-When server rendering, the `loader` method is used to fetch data on the server for both initial page loads and client navigations through an automatic `fetch` by React Router in the browser.
+When server rendering, `loader` is used for both initial page loads and client navigations. Client navigations call the loader through an automatic `fetch` by React Router from the browser to your server.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import { defineRoute$ } from "react-router";
+import type * as Route from "./+types.product";
 import { fakeDb } from "../db";
 
-export default defineRoute$({
-  params: ["pid"],
+export async function loader({ params }: Route.LoaderArgs) {
+  const product = await fakeDb.getProduct(params.pid);
+  return product;
+}
 
-  async loader({ params }) {
-    const product = await fakeDb.getProduct(params.pid);
-    return { product };
-  },
-
-  Component({ data }) {
-    return (
-      <div>
-        <h1>{data.product.name}</h1>
-        <p>{data.product.description}</p>
-      </div>
-    );
-  },
-});
+export default function Product({
+  loaderData,
+}: Route.DefaultProps) {
+  const { name, description } = loaderData;
+  return (
+    <div>
+      <h1>{name}</h1>
+      <p>{description}</p>
+    </div>
+  );
+}
 ```
 
 Note that the `loader` function is removed from client bundles so you can use server only APIs without worrying about them being included in the browser.
 
-## React Server Components
-
-RSC is supported by returning components from loaders and actions.
-
-```tsx filename=app/product.tsx
-// route("products/:pid", "./product.tsx");
-import { defineRoute$ } from "react-router";
-import Product from "./product";
-import Reviews from "./reviews";
-
-export default defineRoute$({
-  params: ["pid"],
-
-  async loader({ params }) {
-    return {
-      product: <Product id={params.pid} />,
-      reviews: <Reviews productId={params.pid} />,
-    };
-  },
-
-  Component({ data }) {
-    return (
-      <div>
-        {data.product}
-        {data.reviews}
-      </div>
-    );
-  },
-});
-```
-
 ## Static Data Loading
 
-When pre-rendering, the `loader` method is used to fetch data at build time.
+When pre-rendering, loaders are used to fetch data during the production build.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import { defineRoute$ } from "react-router";
+import type {
+  DefaultProps,
+  LoaderArgs,
+} from "./+types.product";
 
-export default defineRoute$({
-  params: ["pid"],
+export async function loader({ params }: LoaderArgs) {
+  let product = await getProductFromCSVFile(params.pid);
+  return product;
+}
 
-  async loader({ params }) {
-    let product = await getProductFromCSVFile(params.pid);
-    return { product };
-  },
-
-  Component({ data }) {
-    return (
-      <div>
-        <h1>{data.product.name}</h1>
-        <p>{data.product.description}</p>
-      </div>
-    );
-  },
-});
+export default function Product({
+  loaderData,
+}: DefaultProps) {
+  const { name, description } = loaderData;
+  return (
+    <div>
+      <h1>{name}</h1>
+      <p>{description}</p>
+    </div>
+  );
+}
 ```
 
 The URLs to pre-render are specified in the Vite plugin.
 
 ```ts filename=vite.config.ts
-import { plugin as app } from "@react-router/vite";
+import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
-    app({
+    reactRouter({
       async prerender() {
         let products = await readProductsFromCSVFile();
         return products.map(
@@ -151,33 +122,81 @@ Note that when server rendering, any URLs that aren't pre-rendered will be serve
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import { defineRoute$ } from "react-router";
+import type * as Route from "./+types.product";
 import { fakeDb } from "../db";
 
-export default defineRoute$({
-  // SSR loads directly from the database
-  async loader({ params }) {
-    return fakeDb.getProduct(params.pid);
-  },
+export async function loader({ params }: Route.LoaderArgs) {
+  return fakeDb.getProduct(params.pid);
+}
 
-  // client navigations fetch directly from the browser,
-  // skipping the react router server
-  async clientLoader({ params }) {
-    const res = await fetch(`/api/products/${params.pid}`);
-    return res.json();
-  },
+export async function clientLoader({
+  params,
+}: Route.ClientLoader) {
+  const res = await fetch(`/api/products/${params.pid}`);
+  return res.json();
+}
 
-  Component({ data }) {
-    return (
-      <div>
-        <h1>{data.name}</h1>
-        <p>{data.description}</p>
-      </div>
-    );
-  },
-});
+export default function Product({
+  loaderData,
+  clientLoaderData,
+}: Route.ComponentProps) {
+  const { name, description } =
+    clientLoaderData || loaderData;
+
+  return (
+    <div>
+      <h1>{name}</h1>
+      <p>{description}</p>
+    </div>
+  );
+}
 ```
 
 For more advanced use cases with `clientLoader` like caching, refer to [Advanced Data Fetching][advanced_data_fetching].
+
+## Async Components with React Server Components
+
+<docs-warning>RSC is not supported yet</docs-warning>
+
+In the future, rendered async components in loaders are available on `loaderData` like any other value:
+
+```tsx filename=app/product-page.tsx
+// route("products/:pid", "./product-page.tsx");
+import type * as Route from "./+types.product";
+import Product from "./product";
+import Reviews from "./reviews";
+
+export async function loader({ params }: Route.LoaderArgs) {
+  return {
+    product: <Product id={params.pid} />,
+    reviews: <Reviews productId={params.pid} />,
+  };
+}
+
+export default function ProductPage({
+  loaderData,
+}: Route.ComponentProps) {
+  return (
+    <div>
+      {loaderData.product}
+      <Suspense fallback={<div>loading...</div>}>
+        {loaderData.reviews}
+      </Suspense>
+    </div>
+  );
+}
+```
+
+```tsx filename=app/product.tsx
+export async function Product({ id }: { id: string }) {
+  const product = await fakeDb.getProduct(id);
+  return (
+    <div>
+      <h1>{product.title}</h1>
+      <p>{product.description}</p>
+    </div>
+  );
+}
+```
 
 [advanced_data_fetching]: ../tutorials/advanced-data-fetching

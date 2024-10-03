@@ -29,13 +29,14 @@ module.exports = function rollup() {
         `${SOURCE_DIR}/routes.ts`,
         `${SOURCE_DIR}/vite.ts`,
         `${SOURCE_DIR}/vite/cloudflare.ts`,
+        `${SOURCE_DIR}/typescript/plugin.ts`,
       ],
       output: {
         banner: createBanner("@react-router/dev", version),
         dir: OUTPUT_DIR,
         format: "cjs",
         preserveModules: true,
-        exports: "named",
+        exports: "auto",
       },
       plugins: [
         babel({

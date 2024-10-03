@@ -15,31 +15,34 @@ Client actions only run in the browser and take priority over a server action wh
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import { defineRoute$, Form } from "react-router";
+import type * as Route from "./+types.project";
+import { Form } from "react-router";
 
-export default defineRoute$({
-  clientAction({ request }) {
-    let formData = await request.formData();
-    let title = await formData.get("title");
-    let project = await someApi.updateProject({ title });
-    return project;
-  },
+export async function clientAction({
+  request,
+}: Route.ClientActionArgs) {
+  let formData = await request.formData();
+  let title = await formData.get("title");
+  let project = await someApi.updateProject({ title });
+  return project;
+}
 
-  Component({ data, actionData }) {
-    return (
-      <div>
-        <h1>Project</h1>
-        <Form method="post">
-          <input type="text" name="title" />
-          <button type="submit">Submit</button>
-        </Form>
-        {actionData ? (
-          <p>{actionData.title} updated</p>
-        ) : null}
-      </div>
-    );
-  },
-});
+export default function Project({
+  clientActionData,
+}: Route.ComponentProps) {
+  return (
+    <div>
+      <h1>Project</h1>
+      <Form method="post">
+        <input type="text" name="title" />
+        <button type="submit">Submit</button>
+      </Form>
+      {clientActionData ? (
+        <p>{clientActionData.title} updated</p>
+      ) : null}
+    </div>
+  );
+}
 ```
 
 ## Server Actions
@@ -48,31 +51,34 @@ Server actions only run on the server and are removed from client bundles.
 
 ```tsx filename=app/project.tsx
 // route('/projects/:projectId', './project.tsx')
-import { defineRoute$, Form } from "react-router";
+import type * as Route from "./+types.project";
+import { Form } from "react-router";
 
-export default defineRoute$({
-  action({ request }) {
-    let formData = await request.formData();
-    let title = await formData.get("title");
-    let project = await someApi.updateProject({ title });
-    return project;
-  },
+export async function action({
+  request,
+}: Route.ActionArgs) {
+  let formData = await request.formData();
+  let title = await formData.get("title");
+  let project = await someApi.updateProject({ title });
+  return project;
+}
 
-  Component({ data, actionData }) {
-    return (
-      <div>
-        <h1>Project</h1>
-        <Form method="post">
-          <input type="text" name="title" />
-          <button type="submit">Submit</button>
-        </Form>
-        {actionData ? (
-          <p>{actionData.title} updated</p>
-        ) : null}
-      </div>
-    );
-  },
-});
+export default function Project({
+  actionData,
+}: Route.ComponentProps) {
+  return (
+    <div>
+      <h1>Project</h1>
+      <Form method="post">
+        <input type="text" name="title" />
+        <button type="submit">Submit</button>
+      </Form>
+      {actionData ? (
+        <p>{actionData.title} updated</p>
+      ) : null}
+    </div>
+  );
+}
 ```
 
 ## Calling Actions
@@ -86,7 +92,7 @@ import { Form } from "react-router";
 
 function SomeComponent() {
   return (
-    <Form action="/projects/:projectId" method="post">
+    <Form action="/projects/123" method="post">
       <input type="text" name="title" />
       <button type="submit">Submit</button>
     </Form>
@@ -134,7 +140,7 @@ function Task() {
   let busy = fetcher.state !== "idle";
 
   return (
-    <fetcher.Form method="post">
+    <fetcher.Form method="post" action="/update-task/123">
       <input type="text" name="title" />
       <button type="submit">
         {busy ? "Saving..." : "Save"}
@@ -149,8 +155,8 @@ They also have the imperative `submit` method.
 ```tsx
 fetcher.submit(
   { title: "New Title" },
-  { action: "/update-task", method: "post" }
+  { action: "/update-task/123", method: "post" }
 );
 ```
 
-See the [Using Fetchers](../guides/fetchers) guide for more information.
+See the [Using Fetchers](../misc/fetchers) guide for more information.

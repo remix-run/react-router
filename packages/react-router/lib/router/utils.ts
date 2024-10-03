@@ -120,10 +120,6 @@ interface DataFunctionArgs<Context> {
   context?: Context;
 }
 
-// TODO: (v7) Change the defaults from any to unknown in and remove Remix wrappers:
-//   ActionFunction, ActionFunctionArgs, LoaderFunction, LoaderFunctionArgs
-//   Also, make them a type alias instead of an interface
-
 /**
  * Arguments passed to loader functions
  */
