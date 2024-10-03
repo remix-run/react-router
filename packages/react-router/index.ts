@@ -12,7 +12,7 @@ export type {
   RelativeRoutingType,
   Blocker,
   BlockerFunction,
-  Router as RemixRouter,
+  Router as DataRouter,
   RouterState,
   RouterInit,
   RouterSubscriber,

@@ -17,7 +17,7 @@ import type {
   FutureConfig,
   HydrationState,
   RelativeRoutingType,
-  Router as RemixRouter,
+  Router as DataRouter,
   RouterState,
   RouterSubscriber,
 } from "./router/router";
@@ -144,7 +144,7 @@ export function createMemoryRouter(
     dataStrategy?: DataStrategyFunction;
     patchRoutesOnNavigation?: PatchRoutesOnNavigationFunction;
   }
-): RemixRouter {
+): DataRouter {
   return createRouter({
     basename: opts?.basename,
     future: opts?.future,
@@ -187,7 +187,7 @@ class Deferred<T> {
 
 // Copied from react-dom types
 export interface RouterProviderProps {
-  router: RemixRouter;
+  router: DataRouter;
   flushSync?: (fn: () => unknown) => undefined;
 }
 
@@ -455,7 +455,7 @@ function DataRoutes({
   state,
 }: {
   routes: DataRouteObject[];
-  future: RemixRouter["future"];
+  future: DataRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
   return useRoutesImpl(routes, undefined, state, future);

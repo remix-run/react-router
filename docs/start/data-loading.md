@@ -52,7 +52,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 export default function Product({
   loaderData,
-}: Route.DefaultProps) {
+}: Route.ComponentProps) {
   const { name, description } = loaderData;
   return (
     <div>
@@ -71,19 +71,16 @@ When pre-rendering, loaders are used to fetch data during the production build.
 
 ```tsx filename=app/product.tsx
 // route("products/:pid", "./product.tsx");
-import type {
-  DefaultProps,
-  LoaderArgs,
-} from "./+types.product";
+import type * as Route from "./+types.product";
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({ params }: Route.LoaderArgs) {
   let product = await getProductFromCSVFile(params.pid);
   return product;
 }
 
 export default function Product({
   loaderData,
-}: DefaultProps) {
+}: Route.ComponentProps) {
   const { name, description } = loaderData;
   return (
     <div>
