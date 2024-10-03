@@ -1,5 +1,232 @@
 # `@remix-run/dev`
 
+## 7.0.0-pre.0
+
+### Major Changes
+
+- For Remix consumers migrating to React Router, the `vitePlugin` and `cloudflareDevProxyVitePlugin` exports have been renamed and moved. ([#11904](https://github.com/remix-run/react-router/pull/11904))
+
+  ```diff
+  -import {
+  -  vitePlugin as remix,
+  -  cloudflareDevProxyVitePlugin,
+  -} from "@remix/dev";
+
+  +import { reactRouter } from "@react-router/dev/vite";
+  +import { cloudflareDevProxy } from "@react-router/dev/vite/cloudflare";
+  ```
+
+- Remove single_fetch future flag. ([#11522](https://github.com/remix-run/react-router/pull/11522))
+- update minimum node version to 18 ([#11690](https://github.com/remix-run/react-router/pull/11690))
+- Add `exports` field to all packages ([#11675](https://github.com/remix-run/react-router/pull/11675))
+- node package no longer re-exports from react-router ([#11702](https://github.com/remix-run/react-router/pull/11702))
+- For Remix consumers migrating to React Router who used the Vite plugin's `buildEnd` hook, the resolved `reactRouterConfig` object no longer contains a `publicPath` property since this belongs to Vite, not React Router. ([#11575](https://github.com/remix-run/react-router/pull/11575))
+- For Remix consumers migrating to React Router, the Vite plugin's `manifest` option has been removed. ([#11573](https://github.com/remix-run/react-router/pull/11573))
+
+  The `manifest` option been superseded by the more powerful `buildEnd` hook since it's passed the `buildManifest` argument. You can still write the build manifest to disk if needed, but you'll most likely find it more convenient to write any logic depending on the build manifest within the `buildEnd` hook itself.
+
+  If you were using the `manifest` option, you can replace it with a `buildEnd` hook that writes the manifest to disk like this:
+
+  ```js
+  import { reactRouter } from "@react-router/dev/vite";
+  import { writeFile } from "node:fs/promises";
+
+  export default {
+    plugins: [
+      reactRouter({
+        async buildEnd({ buildManifest }) {
+          await writeFile(
+            "build/manifest.json",
+            JSON.stringify(buildManifest, null, 2),
+            "utf-8"
+          );
+        },
+      }),
+    ],
+  };
+  ```
+
+- Update default `isbot` version to v5 and drop support for `isbot@3` ([#11770](https://github.com/remix-run/react-router/pull/11770))
+
+  - If you have `isbot@4` or `isbot@5` in your `package.json`:
+    - You do not need to make any changes
+  - If you have `isbot@3` in your `package.json` and you have your own `entry.server.tsx` file in your repo
+    - You do not need to make any changes
+    - You can upgrade to `isbot@5` independent of the React Router v7 upgrade
+  - If you have `isbot@3` in your `package.json` and you do not have your own `entry.server.tsx` file in your repo
+    - You are using the internal default entry provided by React Router v7 and you will need to upgrade to `isbot@5` in your `package.json`
+
+- For Remix consumers migrating to React Router, Vite manifests (i.e. `.vite/manifest.json`) are now written within each build subdirectory, e.g. `build/client/.vite/manifest.json` and `build/server/.vite/manifest.json` instead of `build/.vite/client-manifest.json` and `build/.vite/server-manifest.json`. This means that the build output is now much closer to what you'd expect from a typical Vite project. ([#11573](https://github.com/remix-run/react-router/pull/11573))
+
+  Originally the Remix Vite plugin moved all Vite manifests to a root-level `build/.vite` directory to avoid accidentally serving them in production, particularly from the client build. This was later improved with additional logic that deleted these Vite manifest files at the end of the build process unless Vite's `build.manifest` had been enabled within the app's Vite config. This greatly reduced the risk of accidentally serving the Vite manifests in production since they're only present when explicitly asked for. As a result, we can now assume that consumers will know that they need to manage these additional files themselves, and React Router can safely generate a more standard Vite build output.
+
+### Minor Changes
+
+- Params, loader data, and action data as props for route component exports ([#11961](https://github.com/remix-run/react-router/pull/11961))
+
+  ```tsx
+  export default function Component({ params, loaderData, actionData }) {}
+
+  export function HydrateFallback({ params }) {}
+  export function ErrorBoundary({ params, loaderData, actionData }) {}
+  ```
+
+- Remove internal entry.server.spa.tsx implementation ([#11681](https://github.com/remix-run/react-router/pull/11681))
+- ### Typesafety improvements ([#12019](https://github.com/remix-run/react-router/pull/12019))
+
+  React Router now generates types for each of your route modules.
+  You can access those types by importing them from `./+types/<route filename without extension>`.
+  For example:
+
+  ```ts
+  // app/routes/product.tsx
+  import type * as Route from "./+types/product";
+
+  export function loader({ params }: Route.LoaderArgs) {}
+
+  export default function Component({ loaderData }: Route.ComponentProps) {}
+  ```
+
+  This initial implementation targets type inference for:
+
+  - `Params` : Path parameters from your routing config in `routes.ts` including file-based routing
+  - `LoaderData` : Loader data from `loader` and/or `clientLoader` within your route module
+  - `ActionData` : Action data from `action` and/or `clientAction` within your route module
+
+  These types are then used to create types for route export args and props:
+
+  - `LoaderArgs`
+  - `ClientLoaderArgs`
+  - `ActionArgs`
+  - `ClientActionArgs`
+  - `HydrateFallbackProps`
+  - `ComponentProps` (for the `default` export)
+  - `ErrorBoundaryProps`
+
+  In the future, we plan to add types for the rest of the route module exports: `meta`, `links`, `headers`, `shouldRevalidate`, etc.
+  We also plan to generate types for typesafe `Link`s:
+
+  ```tsx
+  <Link to="/products/:id" params={{ id: 1 }} />
+  //        ^^^^^^^^^^^^^          ^^^^^^^^^
+  // typesafe `to` and `params` based on the available routes in your app
+  ```
+
+  #### Setup
+
+  React Router will generate types into a `.react-router/` directory at the root of your app.
+  This directory is fully managed by React Router and is derived based on your route config (`routes.ts`).
+
+  👉 **Add `.react-router/` to `.gitignore`**
+
+  ```txt
+  .react-router
+  ```
+
+  You should also ensure that generated types for routes are always present before running typechecking,
+  especially for running typechecking in CI.
+
+  👉 **Add `react-router typegen` to your `typecheck` command in `package.json`**
+
+  ```json
+  {
+    "scripts": {
+      "typecheck": "react-router typegen && tsc"
+    }
+  }
+  ```
+
+  To get TypeScript to use those generated types, you'll need to add them to `include` in `tsconfig.json`.
+  And to be able to import them as if they files next to your route modules, you'll also need to configure `rootDirs`.
+
+  👉 **Configure `tsconfig.json` for generated types**
+
+  ```json
+  {
+    "include": [".react-router/types/**/*"],
+    "compilerOptions": {
+      "rootDirs": [".", "./.react-router/types"]
+    }
+  }
+  ```
+
+  #### `typegen` command
+
+  You can manually generate types with the new `typegen` command:
+
+  ```sh
+  react-router typegen
+  ```
+
+  However, manual type generation is tedious and types can get out of sync quickly if you ever forget to run `typegen`.
+  Instead, we recommend that you setup our new TypeScript plugin which will automatically generate fresh types whenever routes change.
+  That way, you'll always have up-to-date types.
+
+  #### TypeScript plugin
+
+  To get automatic type generation, you can use our new TypeScript plugin.
+
+  👉 **Add the TypeScript plugin to `tsconfig.json`**
+
+  ```json
+  {
+    "compilerOptions": {
+      "plugins": [{ "name": "@react-router/dev" }]
+    }
+  }
+  ```
+
+  We plan to add some other goodies to our TypeScript plugin soon, including:
+
+  - Automatic `jsdoc` for route exports that include links to official docs
+  - Autocomplete for route exports
+  - Warnings for non-HMR compliant exports
+
+  ##### VSCode
+
+  TypeScript looks for plugins registered in `tsconfig.json` in the local `node_modules/`,
+  but VSCode ships with its own copy of TypeScript that is installed outside of your project.
+  For TypeScript plugins to work, you'll need to tell VSCode to use the local workspace version of TypeScript.
+  For security reasons, [VSCode won't use the workspace version of TypeScript](https://code.visualstudio.com/docs/typescript/typescript-compiling#_using-the-workspace-version-of-typescript) until you manually opt-in.
+
+  Your project should have a `.vscode/settings.json` with the following settings:
+
+  ```json
+  {
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
+  }
+  ```
+
+  That way [VSCode will ask you](https://code.visualstudio.com/updates/v1_45#_prompt-users-to-switch-to-the-workspace-version-of-typescript) if you want to use the workspace version of TypeScript the first time you open a TS file in that project.
+
+  > [!IMPORTANT]
+  > You'll need to install dependencies first so that the workspace version of TypeScript is available.
+
+  👉 **Select "Allow" when VSCode asks if you want to use the workspace version of TypeScript**
+
+  Otherwise, you can also manually opt-in to the workspace version:
+
+  1. Open up any TypeScript file in your project
+  2. Open up the VSCode Command Palette (<kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>)
+  3. Search for `Select TypeScript Version`
+  4. Choose `Use Workspace Version`
+  5. Quit and reopen VSCode
+
+  ##### Troubleshooting
+
+  In VSCode, open up any TypeScript file in your project and then use <kbd>CMD</kbd>+<kbd>SHIFT</kbd>+<kbd>P</kbd> to select `Open TS Server log`.
+  There should be a log for `[react-router] setup` that indicates that the plugin was resolved correctly.
+  Then look for any errors in the log.
+
+### Patch Changes
+
+- include root "react-dom" module for optimization ([#12060](https://github.com/remix-run/react-router/pull/12060))
+- Updated dependencies:
+  - `react-router@7.0.0-pre.0`
+  - `@react-router/serve@7.0.0-pre.0`
+  - `@react-router/node@7.0.0-pre.0`
+
 ## 2.9.0
 
 ### Minor Changes
