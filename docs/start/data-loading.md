@@ -20,13 +20,13 @@ export async function clientLoader({
 }: Route.ClientLoaderArgs) {
   const res = await fetch(`/api/products/${params.pid}`);
   const product = await res.json();
-  return { product };
+  return product;
 }
 
 export default function Product({
   clientLoaderData,
 }: Route.ComponentProps) {
-  const { name, description } = clientLoaderData.product;
+  const { name, description } = clientLoaderData;
   return (
     <div>
       <h1>{name}</h1>
@@ -78,13 +78,13 @@ import type {
 
 export async function loader({ params }: LoaderArgs) {
   let product = await getProductFromCSVFile(params.pid);
-  return { product };
+  return product;
 }
 
 export default function Product({
   loaderData,
 }: DefaultProps) {
-  const { name, description } = loaderData.product;
+  const { name, description } = loaderData;
   return (
     <div>
       <h1>{name}</h1>
@@ -141,7 +141,7 @@ export default function Product({
   clientLoaderData,
 }: Route.ComponentProps) {
   const { name, description } =
-    clientLoaderData.product || loaderData.product;
+    clientLoaderData || loaderData;
 
   return (
     <div>
