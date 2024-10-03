@@ -1,6 +1,6 @@
 import * as React from "react";
 import type { PatchRoutesOnNavigationFunction } from "../../context";
-import type { Router as RemixRouter } from "../../router/router";
+import type { Router as DataRouter } from "../../router/router";
 import { matchRoutes } from "../../router/utils";
 import type { AssetsManifest } from "./entry";
 import type { RouteModules } from "./routeModules";
@@ -30,7 +30,7 @@ export function isFogOfWarEnabled(isSpaMode: boolean) {
 
 export function getPartialManifest(
   manifest: AssetsManifest,
-  router: RemixRouter
+  router: DataRouter
 ) {
   // Start with our matches for this pathname
   let routeIds = new Set(router.state.matches.map((m) => m.route.id));
@@ -91,7 +91,7 @@ export function getPatchRoutesOnNavigationFunction(
 }
 
 export function useFogOFWarDiscovery(
-  router: RemixRouter,
+  router: DataRouter,
   manifest: AssetsManifest,
   routeModules: RouteModules,
   isSpaMode: boolean
@@ -203,7 +203,7 @@ export async function fetchAndApplyManifestPatches(
   routeModules: RouteModules,
   isSpaMode: boolean,
   basename: string | undefined,
-  patchRoutes: RemixRouter["patchRoutes"]
+  patchRoutes: DataRouter["patchRoutes"]
 ): Promise<void> {
   let manifestPath = `${basename != null ? basename : "/"}/__manifest`.replace(
     /\/+/g,

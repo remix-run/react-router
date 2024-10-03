@@ -17,7 +17,7 @@ Imports/Exports cleanup
     - `TrackedPromise`
     - `unstable_AgnosticPatchRoutesOnMissFunction`
     - `Action` -> exported as `NavigationType` via `react-router`
-    - `Router` exported as `RemixRouter` to differentiate from RR's `<Router>`
+    - `Router` exported as `DataRouter` to differentiate from RR's `<Router>`
   - API
     - `getToPathname` (`@private`)
     - `joinPaths` (`@private`)

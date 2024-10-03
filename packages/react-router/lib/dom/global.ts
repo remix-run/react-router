@@ -1,4 +1,4 @@
-import type { HydrationState, Router as RemixRouter } from "../router/router";
+import type { HydrationState, Router as DataRouter } from "../router/router";
 import type { AssetsManifest, FutureConfig } from "./ssr/entry";
 import type { RouteModules } from "./ssr/routeModules";
 
@@ -36,7 +36,7 @@ declare global {
   var __reactRouterContext: WindowReactRouterContext | undefined;
   var __reactRouterManifest: AssetsManifest | undefined;
   var __reactRouterRouteModules: RouteModules | undefined;
-  var __reactRouterInstance: RemixRouter | undefined;
+  var __reactRouterInstance: DataRouter | undefined;
   var __reactRouterHdrActive: boolean;
   var __reactRouterClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:

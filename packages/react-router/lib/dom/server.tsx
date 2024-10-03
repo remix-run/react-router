@@ -9,7 +9,7 @@ import {
 } from "../router/history";
 import type {
   FutureConfig,
-  Router as RemixRouter,
+  Router as DataRouter,
   RevalidationState,
   CreateStaticHandlerOptions as RouterCreateStaticHandlerOptions,
   RouterState,
@@ -81,7 +81,7 @@ export function StaticRouter({
 
 export interface StaticRouterProviderProps {
   context: StaticHandlerContext;
-  router: RemixRouter;
+  router: DataRouter;
   hydrate?: boolean;
   nonce?: string;
 }
@@ -171,7 +171,7 @@ function DataRoutes({
   state,
 }: {
   routes: DataRouteObject[];
-  future: RemixRouter["future"];
+  future: DataRouter["future"];
   state: RouterState;
 }): React.ReactElement | null {
   return useRoutesImpl(routes, undefined, state, future);
@@ -276,7 +276,7 @@ export function createStaticRouter(
   opts: {
     future?: Partial<FutureConfig>;
   } = {}
-): RemixRouter {
+): DataRouter {
   let manifest: RouteManifest = {};
   let dataRoutes = convertRoutesToDataRoutes(
     routes,
