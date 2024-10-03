@@ -9,16 +9,16 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@react-router/node": "0.0.0-nightly-8fc8239ff-20241003",
-    "@react-router/serve": "0.0.0-nightly-8fc8239ff-20241003",
+    "@react-router/node": "7.0.0-pre.0",
+    "@react-router/serve": "7.0.0-pre.0",
     "@tailwindcss/vite": "^4.0.0-alpha.25",
     "isbot": "^5.1.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router": "0.0.0-nightly-8fc8239ff-20241003"
+    "react-router": "7.0.0-pre.0"
   },
   "devDependencies": {
-    "@react-router/dev": "0.0.0-nightly-8fc8239ff-20241003",
+    "@react-router/dev": "7.0.0-pre.0",
     "@types/react": "^18.3.9",
     "@types/react-dom": "^18.3.0",
     "tailwindcss": "^4.0.0-alpha.25",
