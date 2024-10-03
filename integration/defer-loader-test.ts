@@ -40,7 +40,9 @@ test.describe("deferred loaders", () => {
               }
             );
           }
-          export default function Redirect() {return null;}
+          export default function Redirect() {
+            return null;
+          }
         `,
 
         "app/routes/direct-promise-access.tsx": js`
@@ -82,7 +84,7 @@ test.describe("deferred loaders", () => {
 
   test.afterAll(async () => appFixture.close());
 
-  test.skip("deferred response can redirect on document request", async ({
+  test("deferred response can redirect on document request", async ({
     page,
   }) => {
     let app = new PlaywrightFixture(appFixture, page);
@@ -90,9 +92,7 @@ test.describe("deferred loaders", () => {
     await page.waitForURL(/\?redirected/);
   });
 
-  test.skip("deferred response can redirect on transition", async ({
-    page,
-  }) => {
+  test("deferred response can redirect on transition", async ({ page }) => {
     let app = new PlaywrightFixture(appFixture, page);
     await app.goto("/");
     await app.clickLink("/redirect");
