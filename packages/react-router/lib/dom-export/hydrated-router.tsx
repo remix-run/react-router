@@ -142,7 +142,7 @@ function createHydratedRouter(): RemixRouter {
           ) &&
           (route.HydrateFallback || !manifestRoute.hasLoader)
         ) {
-          hydrationData.loaderData![routeId] = undefined;
+          delete hydrationData.loaderData![routeId];
         } else if (manifestRoute && !manifestRoute.hasLoader) {
           // Since every Remix route gets a `loader` on the client side to load
           // the route JS module, we need to add a `null` value to `loaderData`

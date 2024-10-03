@@ -770,6 +770,10 @@ const defaultMapRouteProperties: MapRoutePropertiesFunction = (route) => ({
 
 const TRANSITIONS_STORAGE_KEY = "remix-router-transitions";
 
+// Flag used on new `loaderData` to indicate that we do not want to preserve
+// any prior loader data from the throwing route in `mergeLoaderData`
+const ResetLoaderDataSymbol = Symbol("ResetLoaderData");
+
 //#endregion
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3839,6 +3843,7 @@ export function createStaticHandler(
       matches,
       results,
       pendingActionResult,
+      true,
       skipLoaderErrorBubbling
     );
 
@@ -4263,7 +4268,7 @@ function getMatchesToLoad(
         return true;
       }
       return (
-        state.loaderData[route.id] === undefined &&
+        !state.loaderData.hasOwnProperty(route.id) &&
         // Don't re-run if the loader ran and threw an error
         (!state.errors || state.errors[route.id] === undefined)
       );
@@ -4402,7 +4407,7 @@ function isNewLoader(
 
   // Handle the case that we don't have data for a re-used route, potentially
   // from a prior error
-  let isMissingData = currentLoaderData[match.route.id] === undefined;
+  let isMissingData = !currentLoaderData.hasOwnProperty(match.route.id);
 
   // Always load if this is a net-new route or we don't yet have data
   return isNew || isMissingData;
@@ -5052,7 +5057,8 @@ function processRouteLoaderData(
   matches: AgnosticDataRouteMatch[],
   results: Record<string, DataResult>,
   pendingActionResult: PendingActionResult | undefined,
-  skipLoaderErrorBubbling: boolean
+  isStaticHandler = false,
+  skipLoaderErrorBubbling = false
 ): {
   loaderData: RouterState["loaderData"];
   errors: RouterState["errors"] | null;
@@ -5106,7 +5112,9 @@ function processRouteLoaderData(
       }
 
       // Clear our any prior loaderData for the throwing route
-      loaderData[id] = undefined;
+      if (!isStaticHandler) {
+        loaderData[id] = ResetLoaderDataSymbol;
+      }
 
       // Once we find our first (highest) error, we set the status code and
       // prevent deeper status codes from overriding
@@ -5162,8 +5170,7 @@ function processLoaderData(
   let { loaderData, errors } = processRouteLoaderData(
     matches,
     results,
-    pendingActionResult,
-    false // This method is only called client side so we always want to bubble
+    pendingActionResult
   );
 
   // Process results from our revalidating fetchers
@@ -5204,20 +5211,23 @@ function mergeLoaderData(
   matches: AgnosticDataRouteMatch[],
   errors: RouteData | null | undefined
 ): RouteData {
-  let mergedLoaderData = { ...newLoaderData };
+  // Start with all new entries that are not being reset
+  let mergedLoaderData = Object.entries(newLoaderData)
+    .filter(([, v]) => v !== ResetLoaderDataSymbol)
+    .reduce((merged, [k, v]) => {
+      merged[k] = v;
+      return merged;
+    }, {} as RouteData);
+
+  // Preserve existing `loaderData` for routes not included in `newLoaderData` and
+  // where a loader wasn't removed by HMR
   for (let match of matches) {
     let id = match.route.id;
-    if (newLoaderData.hasOwnProperty(id)) {
-      if (newLoaderData[id] !== undefined) {
-        mergedLoaderData[id] = newLoaderData[id];
-      } else {
-        // No-op - this is so we ignore existing data if we have a key in the
-        // incoming object with an undefined value, which is how we unset a prior
-        // loaderData if we encounter a loader error
-      }
-    } else if (loaderData[id] !== undefined && match.route.loader) {
-      // Preserve existing keys not included in newLoaderData and where a loader
-      // wasn't removed by HMR
+    if (
+      !newLoaderData.hasOwnProperty(id) &&
+      loaderData.hasOwnProperty(id) &&
+      match.route.loader
+    ) {
       mergedLoaderData[id] = loaderData[id];
     }
 
