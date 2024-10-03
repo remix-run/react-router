@@ -1,6 +1,6 @@
 import * as React from "react";
 import { decode } from "turbo-stream";
-import type { Router as RemixRouter } from "../../router/router";
+import type { Router as DataRouter } from "../../router/router";
 import type {
   DataStrategyFunction,
   DataStrategyFunctionArgs,
@@ -133,7 +133,7 @@ export function StreamTransfer({
 export function getSingleFetchDataStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  getRouter: () => RemixRouter
+  getRouter: () => DataRouter
 ): DataStrategyFunction {
   return async ({ request, matches, fetcherKey }) => {
     // Actions are simple and behave the same for navigations and fetchers
@@ -199,7 +199,7 @@ async function singleFetchActionStrategy(
 async function singleFetchLoaderNavigationStrategy(
   manifest: AssetsManifest,
   routeModules: RouteModules,
-  router: RemixRouter,
+  router: DataRouter,
   request: Request,
   matches: DataStrategyFunctionArgs["matches"]
 ) {
