@@ -15,14 +15,14 @@ export default function Index() {
           <h1 className="leading text-2xl font-bold text-gray-800 dark:text-gray-100">
             Welcome to <span className="sr-only">React Router</span>
           </h1>
-          <div className="w-2xl max-w-[100vw] p-4 aspect-[920/96]">
+          <div className="w-md max-w-[100vw] p-4 aspect-[605/347]">
             <img
-              src="/logo-light.png"
+              src="/logo-light.svg"
               alt="Remix"
               className="block w-full dark:hidden"
             />
             <img
-              src="/logo-dark.png"
+              src="/logo-dark.svg"
               alt="Remix"
               className="hidden w-full dark:block"
             />
