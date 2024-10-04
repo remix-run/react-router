@@ -192,7 +192,7 @@ function createHydratedRouter(): DataRouter {
   router.createRoutesForHMR =
     /* spacer so ts-ignore does not affect the right hand of the assignment */
     createClientRoutesWithHMRRevalidationOptOut;
-  window.__reactRouterInstance = router;
+  window.__reactRouterDataRouter = router;
 
   return router;
 }

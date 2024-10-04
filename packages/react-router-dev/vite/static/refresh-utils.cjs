@@ -49,21 +49,21 @@ const enqueueUpdate = debounce(async () => {
         .map((route) => route.id)
     );
 
-    let routes = __reactRouterInstance.createRoutesForHMR(
+    let routes = __reactRouterDataRouter.createRoutesForHMR(
       needsRevalidation,
       manifest.routes,
       window.__reactRouterRouteModules,
       window.__reactRouterContext.future,
       window.__reactRouterContext.isSpaMode
     );
-    __reactRouterInstance._internalSetRoutes(routes);
+    __reactRouterDataRouter._internalSetRoutes(routes);
     routeUpdates.clear();
     window.__reactRouterRouteModuleUpdates.clear();
   }
 
   try {
     window.__reactRouterHdrActive = true;
-    await __reactRouterInstance.revalidate();
+    await __reactRouterDataRouter.revalidate();
   } finally {
     window.__reactRouterHdrActive = false;
   }
