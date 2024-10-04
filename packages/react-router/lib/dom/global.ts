@@ -36,7 +36,7 @@ declare global {
   var __reactRouterContext: WindowReactRouterContext | undefined;
   var __reactRouterManifest: AssetsManifest | undefined;
   var __reactRouterRouteModules: RouteModules | undefined;
-  var __reactRouterInstance: DataRouter | undefined;
+  var __reactRouterDataRouter: DataRouter | undefined;
   var __reactRouterHdrActive: boolean;
   var __reactRouterClearCriticalCss: (() => void) | undefined;
   var $RefreshRuntime$:
