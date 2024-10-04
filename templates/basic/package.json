@@ -11,7 +11,6 @@
   "dependencies": {
     "@react-router/node": "7.0.0-pre.0",
     "@react-router/serve": "7.0.0-pre.0",
-    "@tailwindcss/vite": "^4.0.0-alpha.25",
     "isbot": "^5.1.17",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -21,7 +20,9 @@
     "@react-router/dev": "7.0.0-pre.0",
     "@types/react": "^18.3.9",
     "@types/react-dom": "^18.3.0",
-    "tailwindcss": "^4.0.0-alpha.25",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
     "vite-tsconfig-paths": "^5.0.1"
