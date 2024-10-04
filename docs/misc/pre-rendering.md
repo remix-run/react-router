@@ -116,12 +116,6 @@ app.use(
   express.static("build/client", {
     // Don't redirect directory index.html requests to include a trailing slash
     redirect: false,
-    setHeaders: function (res, path) {
-      // Add the proper Content-Type for turbo-stream data responses
-      if (path.endsWith(".data")) {
-        res.set("Content-Type", "text/x-turbo");
-      }
-    },
   })
 );
 
