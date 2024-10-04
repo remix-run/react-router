@@ -2,6 +2,7 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
+  RouteData,
 } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
@@ -10,6 +11,11 @@ import type {
   LoaderFunctionArgs,
   ServerRouteModule,
 } from "./routeModules";
+import {
+  SingleFetchResults,
+  decodeViaTurboStream,
+} from "../dom/ssr/single-fetch";
+import invariant from "./invariant";
 
 export interface RouteManifest<Route> {
   [routeId: string]: Route;
@@ -95,8 +101,30 @@ export function createStaticHandlerDataRoutes(
       // Need to use RR's version in the param typed here to permit the optional
       // context even though we know it'll always be provided in remix
       loader: route.module.loader
-        ? (args: RRLoaderFunctionArgs) =>
-            callRouteHandler(route.module.loader!, args as LoaderFunctionArgs)
+        ? async (args: RRLoaderFunctionArgs) => {
+            if (args.request.headers.has("X-React-Router-Prerender-Data")) {
+              let encoded = args.request.headers.get(
+                "X-React-Router-Prerender-Data"
+              );
+              invariant(encoded, "Missing prerendered data for route");
+              let uint8array = new TextEncoder().encode(encoded);
+              let stream = new ReadableStream({
+                start(controller) {
+                  controller.enqueue(uint8array);
+                  controller.close();
+                },
+              });
+              let decoded = await decodeViaTurboStream(stream, global);
+              let data = decoded.value as SingleFetchResults;
+              invariant(route.id in data, "Unable to decode prerendered data");
+              return data[route.id];
+            }
+            let val = await callRouteHandler(
+              route.module.loader!,
+              args as LoaderFunctionArgs
+            );
+            return val;
+          }
         : undefined,
       action: route.module.action
         ? (args: RRActionFunctionArgs) =>

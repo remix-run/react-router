@@ -1831,23 +1831,22 @@ async function handlePrerender(
   } else {
     routesToPrerender = reactRouterConfig.prerender || ["/"];
   }
-  let requestInit = {
-    headers: {
-      // Header that can be used in the loader to know if you're running at
-      // build time or runtime
-      "X-React-Router-Prerender": "yes",
-    },
+  let headers = {
+    // Header that can be used in the loader to know if you're running at
+    // build time or runtime
+    "X-React-Router-Prerender": "yes",
   };
   for (let path of routesToPrerender) {
     let hasLoaders = matchRoutes(routes, path)?.some((m) => m.route.loader);
+    let data: string | undefined;
     if (hasLoaders) {
-      await prerenderData(
+      data = await prerenderData(
         handler,
         path,
         clientBuildDirectory,
         reactRouterConfig,
         viteConfig,
-        requestInit
+        { headers }
       );
     }
     await prerenderRoute(
@@ -1856,7 +1855,9 @@ async function handlePrerender(
       clientBuildDirectory,
       reactRouterConfig,
       viteConfig,
-      requestInit
+      data
+        ? { headers: { ...headers, "X-React-Router-Prerender-Data": data } }
+        : { headers }
     );
   }
 
@@ -1934,6 +1935,7 @@ async function prerenderData(
   await fse.ensureDir(path.dirname(outfile));
   await fse.outputFile(outfile, data);
   viteConfig.logger.info(`Prerender: Generated ${colors.bold(outfile)}`);
+  return data;
 }
 
 async function prerenderRoute(
