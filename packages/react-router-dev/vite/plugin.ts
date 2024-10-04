@@ -714,7 +714,7 @@ export const reactRouterVitePlugin: ReactRouterVitePlugin = (_config) => {
           `${resolveFileUrl(
             ctx,
             resolveRelativeRouteFilePath(route, ctx.reactRouterConfig)
-          )}${ROUTE_ENTRY_QUERY_STRING}`
+          )}`
         ),
         hasAction: sourceExports.includes("action"),
         hasLoader: sourceExports.includes("loader"),
