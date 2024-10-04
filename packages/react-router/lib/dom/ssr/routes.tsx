@@ -455,15 +455,14 @@ export function createClientRoutes(
           lazyRoute.loader = (
             args: LoaderFunctionArgs,
             singleFetch?: unknown
-          ) => {
-            return clientLoader({
+          ) =>
+            clientLoader({
               ...args,
               async serverLoader() {
                 preventInvalidServerHandlerCall("loader", route, isSpaMode);
                 return fetchServerLoader(singleFetch);
               },
             });
-          };
         }
 
         if (mod.clientAction && !route.clientActionModule) {
