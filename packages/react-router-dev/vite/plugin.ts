@@ -1914,6 +1914,10 @@ function addRefreshWrapper(
       REACT_REFRESH_FOOTER.replaceAll("__SOURCE__", JSON.stringify(id))
         .replaceAll("__ACCEPT_EXPORTS__", JSON.stringify(acceptExports))
         .replaceAll("__ROUTE_ID__", JSON.stringify(route?.id))
+        .replaceAll(
+          "__ROUTE_CHUNKS_ENABLED__",
+          JSON.stringify(reactRouterConfig.future.unstable_routeChunks)
+        )
     ) +
     "\n"
   );
@@ -1963,7 +1967,7 @@ if (import.meta.hot && !inWebWorker) {
     // handle cases where route chunks don't exist on initial load but are
     // subsequently created while editing the route module.
     ""
-  }if (__ROUTE_ID__) {
+  }if (__ROUTE_ID__ && __ROUTE_CHUNKS_ENABLED__) {
     const routeBase = import.meta.url.split("?")[0];
     RefreshRuntime.__hmr_import(routeBase + "${IMPORT_CLIENT_ACTION_CHUNK_QUERY_STRING}");
     RefreshRuntime.__hmr_import(routeBase + "${IMPORT_CLIENT_LOADER_CHUNK_QUERY_STRING}");
