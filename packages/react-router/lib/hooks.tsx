@@ -128,7 +128,7 @@ export function useInRouterContext(): boolean {
 
   @category Hooks
  */
-export function useLocation(): Location {
+export function useLocation<State = any>(): Location<State> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the

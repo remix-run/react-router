@@ -588,7 +588,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
           {
             path: "b",
             Component() {
-              let { state } = useLocation() as { state: { count: number } };
+              let { state } = useLocation<{ count: number }>();
               renders.push(state.count);
               return (
                 <>
@@ -655,7 +655,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
           {
             path: "b",
             Component() {
-              let { state } = useLocation() as { state: { count: number } };
+              let { state } = useLocation<{ count: number }>();
               renders.push(state.count);
               return (
                 <>
@@ -728,7 +728,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
               return null;
             },
             Component() {
-              let { state } = useLocation() as { state: { count: number } };
+              let { state } = useLocation<{ count: number }>();
               renders.push(state.count);
               return (
                 <>
@@ -803,7 +803,7 @@ describe("concurrent mode (using React.startTransition for updates)", () => {
               return null;
             },
             Component() {
-              let { state } = useLocation() as { state: { count: number } };
+              let { state } = useLocation<{ count: number }>();
               renders.push(state.count);
               return (
                 <>
