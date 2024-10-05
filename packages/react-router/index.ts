@@ -32,7 +32,6 @@ export type {
   FormEncType,
   FormMethod,
   HTMLFormMethod,
-  JsonFunction,
   LazyRouteFunction,
   LoaderFunction,
   LoaderFunctionArgs,
@@ -169,7 +168,7 @@ export {
   useFetchers,
   useBeforeUnload,
   usePrompt as unstable_usePrompt,
-  useViewTransitionState as useViewTransitionState,
+  useViewTransitionState,
 } from "./lib/dom/lib";
 export type {
   FetcherSubmitOptions,
@@ -264,7 +263,10 @@ export type {
   LinkDescriptor,
 } from "./lib/router/links";
 
-export type { TypedResponse } from "./lib/server-runtime/responses";
+export type {
+  TypedResponse,
+  JsonFunction,
+} from "./lib/server-runtime/responses";
 
 export type {
   // TODO: (v7) Clean up code paths for these exports

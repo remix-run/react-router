@@ -1,3 +1,4 @@
+import type { JsonFunction } from "../server-runtime/responses";
 import type { Location, Path, To } from "./history";
 import { invariant, parsePath, warning } from "./history";
 
@@ -1304,11 +1305,6 @@ export const normalizeSearch = (search: string): string =>
  */
 export const normalizeHash = (hash: string): string =>
   !hash || hash === "#" ? "" : hash.startsWith("#") ? hash : "#" + hash;
-
-export type JsonFunction = <Data>(
-  data: Data,
-  init?: number | ResponseInit
-) => Response;
 
 /**
  * This is a shortcut for creating `application/json` responses. Converts `data`
