@@ -1,10 +1,6 @@
 let path = require("path");
 let fsp = require("fs/promises");
 let express = require("express");
-let { installGlobals } = require("@remix-run/node");
-
-// Polyfill Web Fetch API
-installGlobals();
 
 let root = process.cwd();
 let isProduction = process.env.NODE_ENV === "production";
@@ -54,7 +50,7 @@ async function createServer() {
       }
 
       try {
-        let appHtml = await render(req);
+        let appHtml = await render(req, res);
         let html = template.replace("<!--app-html-->", appHtml);
         res.setHeader("Content-Type", "text/html");
         return res.status(200).end(html);

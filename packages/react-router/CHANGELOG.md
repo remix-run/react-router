@@ -1,5 +1,318 @@
 # `react-router`
 
+## 6.26.1
+
+### Patch Changes
+
+- Rename `unstable_patchRoutesOnMiss` to `unstable_patchRoutesOnNavigation` to match new behavior ([#11888](https://github.com/remix-run/react-router/pull/11888))
+- Updated dependencies:
+  - `@remix-run/router@1.19.1`
+
+## 6.26.0
+
+### Minor Changes
+
+- Add a new `replace(url, init?)` alternative to `redirect(url, init?)` that performs a `history.replaceState` instead of a `history.pushState` on client-side navigation redirects ([#11811](https://github.com/remix-run/react-router/pull/11811))
+
+### Patch Changes
+
+- Fix initial hydration behavior when using `future.v7_partialHydration` along with `unstable_patchRoutesOnMiss` ([#11838](https://github.com/remix-run/react-router/pull/11838))
+  - During initial hydration, `router.state.matches` will now include any partial matches so that we can render ancestor `HydrateFallback` components
+- Updated dependencies:
+  - `@remix-run/router@1.19.0`
+
+## 6.25.1
+
+No significant changes to this package were made in this release. [See the repo `CHANGELOG.md`](https://github.com/remix-run/react-router/blob/main/CHANGELOG.md) for an overview of all changes in v6.25.1.
+
+## 6.25.0
+
+### Minor Changes
+
+- Stabilize `future.unstable_skipActionErrorRevalidation` as `future.v7_skipActionErrorRevalidation` ([#11769](https://github.com/remix-run/react-router/pull/11769))
+  - When this flag is enabled, actions will not automatically trigger a revalidation if they return/throw a `Response` with a `4xx`/`5xx` status code
+  - You may still opt-into revalidation via `shouldRevalidate`
+  - This also changes `shouldRevalidate`'s `unstable_actionStatus` parameter to `actionStatus`
+
+### Patch Changes
+
+- Fix regression and properly decode paths inside `useMatch` so matches/params reflect decoded params ([#11789](https://github.com/remix-run/react-router/pull/11789))
+- Updated dependencies:
+  - `@remix-run/router@1.18.0`
+
+## 6.24.1
+
+### Patch Changes
+
+- When using `future.v7_relativeSplatPath`, properly resolve relative paths in splat routes that are children of pathless routes ([#11633](https://github.com/remix-run/react-router/pull/11633))
+- Updated dependencies:
+  - `@remix-run/router@1.17.1`
+
+## 6.24.0
+
+### Minor Changes
+
+- Add support for Lazy Route Discovery (a.k.a. Fog of War) ([#11626](https://github.com/remix-run/react-router/pull/11626))
+  - RFC: <https://github.com/remix-run/react-router/discussions/11113>
+  - `unstable_patchRoutesOnMiss` docs: <https://reactrouter.com/en/main/routers/create-browser-router>
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.17.0`
+
+## 6.23.1
+
+### Patch Changes
+
+- allow undefined to be resolved with `<Await>` ([#11513](https://github.com/remix-run/react-router/pull/11513))
+- Updated dependencies:
+  - `@remix-run/router@1.16.1`
+
+## 6.23.0
+
+### Minor Changes
+
+- Add a new `unstable_dataStrategy` configuration option ([#11098](https://github.com/remix-run/react-router/pull/11098))
+  - This option allows Data Router applications to take control over the approach for executing route loaders and actions
+  - The default implementation is today's behavior, to fetch all loaders in parallel, but this option allows users to implement more advanced data flows including Remix single-fetch, middleware/context APIs, automatic loader caching, and more
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.16.0`
+
+## 6.22.3
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.15.3`
+
+## 6.22.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.15.2`
+
+## 6.22.1
+
+### Patch Changes
+
+- Fix encoding/decoding issues with pre-encoded dynamic parameter values ([#11199](https://github.com/remix-run/react-router/pull/11199))
+- Updated dependencies:
+  - `@remix-run/router@1.15.1`
+
+## 6.22.0
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.15.0`
+
+## 6.21.3
+
+### Patch Changes
+
+- Remove leftover `unstable_` prefix from `Blocker`/`BlockerFunction` types ([#11187](https://github.com/remix-run/react-router/pull/11187))
+
+## 6.21.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - `@remix-run/router@1.14.2`
+
+## 6.21.1
+
+### Patch Changes
+
+- Fix bug with `route.lazy` not working correctly on initial SPA load when `v7_partialHydration` is specified ([#11121](https://github.com/remix-run/react-router/pull/11121))
+- Updated dependencies:
+  - `@remix-run/router@1.14.1`
+
+## 6.21.0
+
+### Minor Changes
+
+- Add a new `future.v7_relativeSplatPath` flag to implement a breaking bug fix to relative routing when inside a splat route. ([#11087](https://github.com/remix-run/react-router/pull/11087))
+
+  This fix was originally added in [#10983](https://github.com/remix-run/react-router/issues/10983) and was later reverted in [#11078](https://github.com/remix-run/react-router/pull/11078) because it was determined that a large number of existing applications were relying on the buggy behavior (see [#11052](https://github.com/remix-run/react-router/issues/11052))
+
+  **The Bug**
+  The buggy behavior is that without this flag, the default behavior when resolving relative paths is to _ignore_ any splat (`*`) portion of the current route path.
+
+  **The Background**
+  This decision was originally made thinking that it would make the concept of nested different sections of your apps in `<Routes>` easier if relative routing would _replace_ the current splat:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="dashboard/*" element={<Dashboard />} />
+    </Routes>
+  </BrowserRouter>
+  ```
+
+  Any paths like `/dashboard`, `/dashboard/team`, `/dashboard/projects` will match the `Dashboard` route. The dashboard component itself can then render nested `<Routes>`:
+
+  ```jsx
+  function Dashboard() {
+    return (
+      <div>
+        <h2>Dashboard</h2>
+        <nav>
+          <Link to="/">Dashboard Home</Link>
+          <Link to="team">Team</Link>
+          <Link to="projects">Projects</Link>
+        </nav>
+
+        <Routes>
+          <Route path="/" element={<DashboardHome />} />
+          <Route path="team" element={<DashboardTeam />} />
+          <Route path="projects" element={<DashboardProjects />} />
+        </Routes>
+      </div>
+    );
+  }
+  ```
+
+  Now, all links and route paths are relative to the router above them. This makes code splitting and compartmentalizing your app really easy. You could render the `Dashboard` as its own independent app, or embed it into your large app without making any changes to it.
+
+  **The Problem**
+
+  The problem is that this concept of ignoring part of a path breaks a lot of other assumptions in React Router - namely that `"."` always means the current location pathname for that route. When we ignore the splat portion, we start getting invalid paths when using `"."`:
+
+  ```jsx
+  // If we are on URL /dashboard/team, and we want to link to /dashboard/team:
+  function DashboardTeam() {
+    // ❌ This is broken and results in <a href="/dashboard">
+    return <Link to=".">A broken link to the Current URL</Link>;
+
+    // ✅ This is fixed but super unintuitive since we're already at /dashboard/team!
+    return <Link to="./team">A broken link to the Current URL</Link>;
+  }
+  ```
+
+  We've also introduced an issue that we can no longer move our `DashboardTeam` component around our route hierarchy easily - since it behaves differently if we're underneath a non-splat route, such as `/dashboard/:widget`. Now, our `"."` links will, properly point to ourself _inclusive of the dynamic param value_ so behavior will break from it's corresponding usage in a `/dashboard/*` route.
+
+  Even worse, consider a nested splat route configuration:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>
+      <Route path="dashboard">
+        <Route path="*" element={<Dashboard />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+  ```
+
+  Now, a `<Link to=".">` and a `<Link to="..">` inside the `Dashboard` component go to the same place! That is definitely not correct!
+
+  Another common issue arose in Data Routers (and Remix) where any `<Form>` should post to it's own route `action` if you the user doesn't specify a form action:
+
+  ```jsx
+  let router = createBrowserRouter({
+    path: "/dashboard",
+    children: [
+      {
+        path: "*",
+        action: dashboardAction,
+        Component() {
+          // ❌ This form is broken!  It throws a 405 error when it submits because
+          // it tries to submit to /dashboard (without the splat value) and the parent
+          // `/dashboard` route doesn't have an action
+          return <Form method="post">...</Form>;
+        },
+      },
+    ],
+  });
+  ```
+
+  This is just a compounded issue from the above because the default location for a `Form` to submit to is itself (`"."`) - and if we ignore the splat portion, that now resolves to the parent route.
+
+  **The Solution**
+  If you are leveraging this behavior, it's recommended to enable the future flag, move your splat to it's own route, and leverage `../` for any links to "sibling" pages:
+
+  ```jsx
+  <BrowserRouter>
+    <Routes>
+      <Route path="dashboard">
+        <Route index path="*" element={<Dashboard />} />
+      </Route>
+    </Routes>
+  </BrowserRouter>
+
+  function Dashboard() {
+    return (
+      <div>
+        <h2>Dashboard</h2>
+        <nav>
+          <Link to="..">Dashboard Home</Link>
+          <Link to="../team">Team</Link>
+          <Link to="../projects">Projects</Link>
+        </nav>
+
+        <Routes>
+          <Route path="/" element={<DashboardHome />} />
+          <Route path="team" element={<DashboardTeam />} />
+          <Route path="projects" element={<DashboardProjects />} />
+        </Router>
+      </div>
+    );
+  }
+  ```
+
+  This way, `.` means "the full current pathname for my route" in all cases (including static, dynamic, and splat routes) and `..` always means "my parents pathname".
+
+### Patch Changes
+
+- Properly handle falsy error values in ErrorBoundary's ([#11071](https://github.com/remix-run/react-router/pull/11071))
+- Updated dependencies:
+  - `@remix-run/router@1.14.0`
+
+## 6.20.1
+
+### Patch Changes
+
+- Revert the `useResolvedPath` fix for splat routes due to a large number of applications that were relying on the buggy behavior (see <https://github.com/remix-run/react-router/issues/11052#issuecomment-1836589329>). We plan to re-introduce this fix behind a future flag in the next minor version. ([#11078](https://github.com/remix-run/react-router/pull/11078))
+- Updated dependencies:
+  - `@remix-run/router@1.13.1`
+
+## 6.20.0
+
+### Minor Changes
+
+- Export the `PathParam` type from the public API ([#10719](https://github.com/remix-run/react-router/pull/10719))
+
+### Patch Changes
+
+- Fix bug with `resolveTo` in splat routes ([#11045](https://github.com/remix-run/react-router/pull/11045))
+  - This is a follow up to [#10983](https://github.com/remix-run/react-router/pull/10983) to handle the few other code paths using `getPathContributingMatches`
+  - This removes the `UNSAFE_getPathContributingMatches` export from `@remix-run/router` since we no longer need this in the `react-router`/`react-router-dom` layers
+- Updated dependencies:
+  - `@remix-run/router@1.13.0`
+
+## 6.19.0
+
+### Minor Changes
+
+- Add `unstable_flushSync` option to `useNavigate`/`useSumbit`/`fetcher.load`/`fetcher.submit` to opt-out of `React.startTransition` and into `ReactDOM.flushSync` for state updates ([#11005](https://github.com/remix-run/react-router/pull/11005))
+- Remove the `unstable_` prefix from the [`useBlocker`](https://reactrouter.com/en/main/hooks/use-blocker) hook as it's been in use for enough time that we are confident in the API. We do not plan to remove the prefix from `unstable_usePrompt` due to differences in how browsers handle `window.confirm` that prevent React Router from guaranteeing consistent/correct behavior. ([#10991](https://github.com/remix-run/react-router/pull/10991))
+
+### Patch Changes
+
+- Fix `useActionData` so it returns proper contextual action data and not _any_ action data in the tree ([#11023](https://github.com/remix-run/react-router/pull/11023))
+
+- Fix bug in `useResolvedPath` that would cause `useResolvedPath(".")` in a splat route to lose the splat portion of the URL path. ([#10983](https://github.com/remix-run/react-router/pull/10983))
+
+  - ⚠️ This fixes a quite long-standing bug specifically for `"."` paths inside a splat route which incorrectly dropped the splat portion of the URL. If you are relative routing via `"."` inside a splat route in your application you should double check that your logic is not relying on this buggy behavior and update accordingly.
+
+- Updated dependencies:
+  - `@remix-run/router@1.12.0`
+
 ## 6.18.0
 
 ### Patch Changes
@@ -105,7 +418,7 @@
 
 ## 6.12.1
 
-> **Warning**
+> \[!WARNING]
 > Please use version `6.13.0` or later instead of `6.12.1`. This version suffers from a `webpack`/`terser` minification issue resulting in invalid minified code in your resulting production bundles which can cause issues in your application. See [#10579](https://github.com/remix-run/react-router/issues/10579) for more details.
 
 ### Patch Changes
@@ -437,7 +750,7 @@ function Comp() {
 
 ## 6.4.0
 
-Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs][rr-docs], especially the [feature overview][rr-feature-overview] and the [tutorial][rr-tutorial].
+Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs over from Remix. Here's a quick high level overview, but it's recommended you go check out the [docs](https://reactrouter.com), especially the [feature overview](https://reactrouter.com/start/overview) and the [tutorial](https://reactrouter.com/start/tutorial).
 
 **New APIs**
 
@@ -455,7 +768,3 @@ Whoa this is a big one! `6.4.0` brings all the data loading and mutation APIs ov
 **Updated Dependencies**
 
 - `@remix-run/router@1.0.0`
-
-[rr-docs]: https://reactrouter.com
-[rr-feature-overview]: https://reactrouter.com/start/overview
-[rr-tutorial]: https://reactrouter.com/start/tutorial

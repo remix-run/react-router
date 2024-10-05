@@ -1,18 +1,24 @@
 import * as React from "react";
 import type {
-  AgnosticIndexRouteObject,
-  AgnosticNonIndexRouteObject,
-  AgnosticRouteMatch,
   History,
-  LazyRouteFunction,
-  Location,
   Action as NavigationType,
+  Location,
+  To,
+} from "./router/history";
+import type {
   RelativeRoutingType,
   Router,
   StaticHandlerContext,
-  To,
+} from "./router/router";
+import type {
+  AgnosticIndexRouteObject,
+  AgnosticNonIndexRouteObject,
+  AgnosticPatchRoutesOnNavigationFunction,
+  AgnosticPatchRoutesOnNavigationFunctionArgs,
+  AgnosticRouteMatch,
+  LazyRouteFunction,
   TrackedPromise,
-} from "@remix-run/router";
+} from "./router/utils";
 
 // Create react-specific types from the agnostic types in @remix-run/router to
 // export from react-router
@@ -28,8 +34,10 @@ export interface IndexRouteObject {
   index: true;
   children?: undefined;
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<RouteObject>;
 }
@@ -46,8 +54,10 @@ export interface NonIndexRouteObject {
   index?: false;
   children?: RouteObject[];
   element?: React.ReactNode | null;
+  hydrateFallbackElement?: React.ReactNode | null;
   errorElement?: React.ReactNode | null;
   Component?: React.ComponentType | null;
+  HydrateFallback?: React.ComponentType | null;
   ErrorBoundary?: React.ComponentType | null;
   lazy?: LazyRouteFunction<RouteObject>;
 }
@@ -66,35 +76,64 @@ export interface RouteMatch<
 
 export interface DataRouteMatch extends RouteMatch<string, DataRouteObject> {}
 
-export interface DataRouterContextObject extends NavigationContextObject {
+export type PatchRoutesOnNavigationFunctionArgs =
+  AgnosticPatchRoutesOnNavigationFunctionArgs<RouteObject, RouteMatch>;
+
+export type PatchRoutesOnNavigationFunction =
+  AgnosticPatchRoutesOnNavigationFunction<RouteObject, RouteMatch>;
+
+export interface DataRouterContextObject
+  // Omit `future` since those can be pulled from the `router`
+  // `NavigationContext` needs future since it doesn't have a `router` in all cases
+  extends Omit<NavigationContextObject, "future"> {
   router: Router;
   staticContext?: StaticHandlerContext;
 }
 
 export const DataRouterContext =
   React.createContext<DataRouterContextObject | null>(null);
-if (__DEV__) {
-  DataRouterContext.displayName = "DataRouter";
-}
+DataRouterContext.displayName = "DataRouter";
 
 export const DataRouterStateContext = React.createContext<
   Router["state"] | null
 >(null);
-if (__DEV__) {
-  DataRouterStateContext.displayName = "DataRouterState";
-}
+DataRouterStateContext.displayName = "DataRouterState";
+
+export type ViewTransitionContextObject =
+  | {
+      isTransitioning: false;
+    }
+  | {
+      isTransitioning: true;
+      flushSync: boolean;
+      currentLocation: Location;
+      nextLocation: Location;
+    };
+
+export const ViewTransitionContext =
+  React.createContext<ViewTransitionContextObject>({
+    isTransitioning: false,
+  });
+ViewTransitionContext.displayName = "ViewTransition";
+
+// TODO: (v7) Change the useFetcher data from `any` to `unknown`
+export type FetchersContextObject = Map<string, any>;
+
+export const FetchersContext = React.createContext<FetchersContextObject>(
+  new Map()
+);
+FetchersContext.displayName = "Fetchers";
 
 export const AwaitContext = React.createContext<TrackedPromise | null>(null);
-if (__DEV__) {
-  AwaitContext.displayName = "Await";
-}
+AwaitContext.displayName = "Await";
 
 export interface NavigateOptions {
   replace?: boolean;
   state?: any;
   preventScrollReset?: boolean;
   relative?: RelativeRoutingType;
-  unstable_viewTransition?: boolean;
+  flushSync?: boolean;
+  viewTransition?: boolean;
 }
 
 /**
@@ -119,15 +158,15 @@ interface NavigationContextObject {
   basename: string;
   navigator: Navigator;
   static: boolean;
+  // TODO: Re-introduce a singular `FutureConfig` once we land our first
+  // future.unstable_ or future.v8_ flag
+  future: {};
 }
 
 export const NavigationContext = React.createContext<NavigationContextObject>(
   null!
 );
-
-if (__DEV__) {
-  NavigationContext.displayName = "Navigation";
-}
+NavigationContext.displayName = "Navigation";
 
 interface LocationContextObject {
   location: Location;
@@ -137,10 +176,7 @@ interface LocationContextObject {
 export const LocationContext = React.createContext<LocationContextObject>(
   null!
 );
-
-if (__DEV__) {
-  LocationContext.displayName = "Location";
-}
+LocationContext.displayName = "Location";
 
 export interface RouteContextObject {
   outlet: React.ReactElement | null;
@@ -153,13 +189,7 @@ export const RouteContext = React.createContext<RouteContextObject>({
   matches: [],
   isDataRoute: false,
 });
-
-if (__DEV__) {
-  RouteContext.displayName = "Route";
-}
+RouteContext.displayName = "Route";
 
 export const RouteErrorContext = React.createContext<any>(null);
-
-if (__DEV__) {
-  RouteErrorContext.displayName = "RouteError";
-}
+RouteErrorContext.displayName = "RouteError";

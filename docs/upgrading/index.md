@@ -1,4 +1,5 @@
 ---
 title: Upgrading
-order: 1
+order: 2
+hidden: true
 ---
