@@ -3,6 +3,8 @@
     "jest": true
   },
   "rules": {
-    "no-console": 0
+    "no-console": 0,
+    "no-restricted-globals": "off",
+    "import/no-nodejs-modules": "off"
   }
 }

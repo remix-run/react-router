@@ -9,13 +9,21 @@
     [
       "react-router",
       "react-router-dom",
-      "react-router-dom-v5-compat",
-      "react-router-native"
+      "@react-router/architect",
+      "@react-router/cloudflare",
+      "@react-router/dev",
+      "@react-router/express",
+      "@react-router/node",
+      "@react-router/serve"
     ]
   ],
   "linked": [],
   "access": "public",
   "baseBranch": "dev",
   "updateInternalDependencies": "patch",
-  "ignore": []
+  "bumpVersionsWithWorkspaceProtocolOnly": true,
+  "ignore": ["integration", "integration-*", "@playground/*"],
+  "___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH": {
+    "onlyUpdatePeerDependentsWhenOutOfRange": true
+  }
 }

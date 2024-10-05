@@ -6,7 +6,7 @@ order: 1
 
 # Navigation Blocking
 
-This example demonstrates using `unstable_useBlocker` to prevent navigating away from a page where you might lose user-entered form data. A potentially better UX for this is storing user-entered information in `sessionStorage` and pre-populating the form on return.
+This example demonstrates using `useBlocker` to prevent navigating away from a page where you might lose user-entered form data. A potentially better UX for this is storing user-entered information in `sessionStorage` and pre-populating the form on return.
 
 ## Preview
 

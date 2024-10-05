@@ -1,5 +1,3 @@
 # React Router DOM
 
-The `react-router-dom` package contains bindings for using [React
-Router](https://github.com/remix-run/react-router) in web applications.
-Please see [the Getting Started guide](https://reactrouter.com/en/main/start/tutorial) for more information on how to get started with React Router.
+The `react-router-dom` package is deprecated and only kept around for backwards-compatibility. It re-exports everything from the `react-router` package - you should convert your applications to import everything from `react-router` in v7 and beyond.

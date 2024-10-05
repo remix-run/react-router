@@ -1,3 +1,4 @@
+.DS_Store
 npm-debug.log
 
 /docs/api/
@@ -5,8 +6,11 @@ npm-debug.log
 node_modules/
 
 /examples/*/yarn.lock
+/examples/*/pnpm-lock.yaml
 /examples/*/dist
 /tutorial/dist
+/playground-local/
+/integration/playwright-report
 
 # v5 build files
 /packages/*/cjs/
@@ -18,9 +22,10 @@ node_modules/
 /packages/*/dist/
 /packages/*/LICENSE.md
 
-# compat module copies
-/packages/react-router-dom-v5-compat/react-router-dom
-
 .eslintcache
+.tmp
 /.env
 /NOTES.md
+
+# v7 reference docs
+/public

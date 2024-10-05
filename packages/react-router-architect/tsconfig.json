@@ -1,0 +1,20 @@
+{
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "node_modules"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "target": "ES2022",
+
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": ".",
+    "outDir": "./dist",
+
+    // Avoid naming conflicts between history and react-router-dom relying on
+    // lib.dom.d.ts Window and this being a WebWorker env.
+    "skipLibCheck": true
+  }
+}

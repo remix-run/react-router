@@ -1,7 +1,10 @@
 /fixtures/
 node_modules/
+pnpm-lock.yaml
 /docs/api
 examples/**/dist/
+/playground/
+/playground-local/
 packages/**/dist/
 packages/react-router-dom/server.d.ts
 packages/react-router-dom/server.js

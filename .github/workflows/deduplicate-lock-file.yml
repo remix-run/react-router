@@ -1,0 +1,46 @@
+name: ⚙️ Deduplicate lock file
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - ./pnpm-lock.yaml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: github.repository == 'remix-run/react-router'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3.0.0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+
+      - name: ⚙️ Dedupe lock file
+        run: pnpm dedupe && rm -rf ./node_modules && pnpm install
+
+      - name: 💪 Commit
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "💿 no deduplication needed"
+            exit 0
+          fi
+          git commit -m "chore: deduplicate `pnpm-lock.yaml`"
+          git push
+          echo "💿 https://github.com/$GITHUB_REPOSITORY/commit/$(git rev-parse HEAD)"

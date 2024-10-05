@@ -2,7 +2,6 @@ const fsp = require("fs").promises;
 const path = require("path");
 const { execSync } = require("child_process");
 const jsonfile = require("jsonfile");
-const Confirm = require("prompt-confirm");
 
 const { ROOT_DIR, EXAMPLES_DIR } = require("./constants");
 
@@ -35,16 +34,6 @@ function ensureCleanWorkingDirectory() {
     lines.every((line) => line === "" || line.startsWith("?")),
     "Working directory is not clean. Please commit or stash your changes."
   );
-}
-
-/**
- * @param {string} question
- * @returns {Promise<string | boolean>}
- */
-async function prompt(question) {
-  let confirm = new Confirm(question);
-  let answer = await confirm.run();
-  return answer;
 }
 
 /**
@@ -99,7 +88,6 @@ module.exports = {
   getPackageVersion,
   ensureCleanWorkingDirectory,
   invariant,
-  prompt,
   updatePackageConfig,
   updateExamplesPackageConfig,
 };

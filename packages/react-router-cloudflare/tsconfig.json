@@ -1,0 +1,21 @@
+{
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "__tests__", "node_modules"],
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "target": "ES2022",
+    "types": ["@cloudflare/workers-types"],
+
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": ".",
+    "outDir": "./dist",
+
+    // Avoid naming conflicts between history and react-router-dom relying on
+    // lib.dom.d.ts Window and this being a WebWorker env.
+    "skipLibCheck": true
+  }
+}

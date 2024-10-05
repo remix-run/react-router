@@ -130,6 +130,44 @@ describe("path matching", () => {
 
     expect(pickPaths(routes, "/page")).toEqual(["page"]);
   });
+
+  test("dynamic segments can contain dashes", () => {
+    let routes = [
+      {
+        path: ":foo-bar",
+      },
+      {
+        path: "foo-bar",
+      },
+    ];
+
+    expect(matchRoutes(routes, "/foo-bar")).toMatchInlineSnapshot(`
+      [
+        {
+          "params": {},
+          "pathname": "/foo-bar",
+          "pathnameBase": "/foo-bar",
+          "route": {
+            "path": "foo-bar",
+          },
+        },
+      ]
+    `);
+    expect(matchRoutes(routes, "/whatever")).toMatchInlineSnapshot(`
+      [
+        {
+          "params": {
+            "foo-bar": "whatever",
+          },
+          "pathname": "/whatever",
+          "pathnameBase": "/whatever",
+          "route": {
+            "path": ":foo-bar",
+          },
+        },
+      ]
+    `);
+  });
 });
 
 describe("path matching with a basename", () => {
