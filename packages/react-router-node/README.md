@@ -1,13 +1,7 @@
-# Welcome to Remix!
+# @react-router/node
 
-[Remix](https://remix.run) is a web framework that helps you build better websites with React.
-
-To get started, open a new shell and run:
+Node.js platform abstractions for [React Router.](https://github.com/remix-run/react-router)
 
 ```sh
-npx create-remix@latest
+npm install @react-router/node
 ```
-
-Then follow the prompts you see in your terminal.
-
-For more information about Remix, [visit remix.run](https://remix.run)!
