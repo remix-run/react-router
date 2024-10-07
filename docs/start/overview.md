@@ -697,7 +697,7 @@ When you get better at React Router, you get better at the web platform.
 
 ## Search Params
 
-React Router can read and modify the [query string][querystring]. This process is handeled with [`URLSearchParams`][urlsearchparams]. We often get and set the Search Params using `useSearchParams`.
+React Router can read and modify the [query string][querystring]. You can set the search params using `useSearchParams`, which returns [`URLSearchParams`][urlsearchparams] and a setter function.
 
 ```jsx lines=[2,5,8]
 function App() {
@@ -719,7 +719,7 @@ function App() {
 }
 ```
 
-You can also use `Link` or `useNavigate` to change the Search Params.
+You can also use `Link` or `useNavigate` to change the search params.
 
 ```jsx lines=[3,9,16]
 function App() {
