@@ -2,7 +2,6 @@ import type {
   AgnosticDataRouteObject,
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
-  RouteData,
 } from "../router/utils";
 import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
@@ -11,10 +10,8 @@ import type {
   LoaderFunctionArgs,
   ServerRouteModule,
 } from "./routeModules";
-import {
-  SingleFetchResults,
-  decodeViaTurboStream,
-} from "../dom/ssr/single-fetch";
+import type { SingleFetchResults } from "../dom/ssr/single-fetch";
+import { decodeViaTurboStream } from "../dom/ssr/single-fetch";
 import invariant from "./invariant";
 
 export interface RouteManifest<Route> {
