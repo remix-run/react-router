@@ -712,8 +712,12 @@ function App() {
 
   return (
     <>
-      <p>The value of the search param with key q is: {query}</p>
-      <button onClick={handleClick}>Change search params</button>
+      <p>
+        The value of the search param with key q is: {query}
+      </p>
+      <button onClick={handleClick}>
+        Change search params
+      </button>
     </>
   );
 }
@@ -735,9 +739,15 @@ function App() {
 
   return (
     <>
-      <p>The value of the search param with key q is: {query}</p>
-      <button onClick={handleClick}>Change search params</button>
-      <Link to={{ search: "q=example" }}>Change search params</Link>
+      <p>
+        The value of the search param with key q is: {query}
+      </p>
+      <button onClick={handleClick}>
+        Change search params
+      </button>
+      <Link to={{ search: "q=example" }}>
+        Change search params
+      </Link>
     </>
   );
 }
