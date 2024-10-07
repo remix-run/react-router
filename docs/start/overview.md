@@ -697,7 +697,7 @@ When you get better at React Router, you get better at the web platform.
 
 ## Search Params
 
-React Router can read and modify the [query string][querystring]. This process is handeled with [`URLSearchParams`][urlsearchparams].
+React Router can read and modify the [query string][querystring]. This process is handeled with [`URLSearchParams`][urlsearchparams]. We often get and set the Search Params using `useSearchParams`.
 
 ```jsx lines=[2,5,8]
 function App() {
@@ -719,9 +719,35 @@ function App() {
 }
 ```
 
+You can also use `Link` or `useNavigate` to change the Search Params.
+
+```jsx lines=[3,9,16]
+function App() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // access a specific param
+  const query = searchParams.get("q") || "";
+
+  function handleClick() {
+    navigate({ search: "q=example" });
+  }
+
+  return (
+    <>
+      <p>The value of the search param with key q is: {query}</p>
+      <button onClick={handleClick}>Change search params</button>
+      <Link to={{ search: "q=example" }}>Change search params</Link>
+    </>
+  );
+}
+```
+
 See:
 
 - [`useSearchParams`][usesearchparams]
+- [`useNavigate`][usenavigate]
+- [`Link`][link]
 
 ## Location State
 
@@ -759,3 +785,4 @@ See:
 [htmlform]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
 [querystring]: https://developer.mozilla.org/en-US/docs/Web/API/Location/search
 [usesearchparams]: ../hooks/use-search-params
+[link]: ../components/link
