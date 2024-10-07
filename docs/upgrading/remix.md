@@ -1,52 +1,24 @@
 ---
 title: Upgrading from Remix
-new: true
+hidden: true
 ---
 
 # Upgrading from Remix
 
-React Router v7 is Remix "v3". So if you're up to date with all future flags in Remix v2, the upgrade to v7 is non-breaking aside from changing imports.
+<docs-warning>This guide is still in development</docs-warning>
 
-## Future Flags
+After the final React Router v7 release, we will go back to Remix to add future flags to any changed APIs.
 
-First update to the latest minor version of Remix v2 and then the console will warn you for any flags that you have not enabled.
+If you want to attempt the rocky migration now, the following table will be helpful:
 
-```tsx
-export interface FutureConfig {
-  // TODO: document the future flags
-}
-```
+| Remix v2 Package        |     | React Router v7 Package    |
+| ----------------------- | --- | -------------------------- |
+| `@remix-run/react`      | ➡️  | `react-router`             |
+| `@remix-run/dev`        | ➡️  | `@react-router/dev`        |
+| `@remix-run/node`       | ➡️  | `@react-router/node`       |
+| `@remix-run/cloudflare` | ➡️  | `@react-router/cloudflare` |
 
-## Install React Router v7
-
-### Codemod
-
-<docs-warning>This codemod is still in development, this doc is a hypothetical of what it might look like.</docs-warning>
-
-You can use the following command that will automatically:
-
-- update your Remix dependencies to their corresponding React Router v7 dependencies
-- update all imports of those packages in your app to use the new packages
-
-From the root of your project run:
-
-```shellscript nonumber
-npx upgrade-remix v7
-```
-
-### Manual
-
-If you prefer to do it manually, here's a list of the equivalent packages:
-
-| Remix v2 Package         |     | React Router v7 Package    |
-| ------------------------ | --- | -------------------------- |
-| `@remix-run/react`       | ➡️  | `react-router-dom`         |
-| `@remix-run/dev`         | ➡️  | `@react-router/dev`        |
-| `@remix-run/node`        | ➡️  | `@react-router/node`       |
-| `@remix-run/cloudflare`  | ➡️  | `@react-router/cloudflare` |
-| TODO: get the whole list |
-
-Also note that nearly all modules your app needs can come from `react-router-dom` instead of `@remix-run/node` and `@remix-run/cloudflare`, so try to import from there first.
+Also note that nearly all modules your app needs come from `react-router` now instead of `@remix-run/node` and `@remix-run/cloudflare`, so try to import from there first.
 
 ```diff
 -import { redirect } from "@react-router/node";

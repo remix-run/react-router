@@ -22,7 +22,7 @@ import type {
   GetScrollRestorationKeyFunction,
   HydrationState,
   RelativeRoutingType,
-  Router as RemixRouter,
+  Router as DataRouter,
 } from "../router/router";
 import { IDLE_FETCHER, createRouter } from "../router/router";
 import type {
@@ -136,7 +136,7 @@ interface DOMRouterOpts {
 export function createBrowserRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
-): RemixRouter {
+): DataRouter {
   return createRouter({
     basename: opts?.basename,
     future: opts?.future,
@@ -156,7 +156,7 @@ export function createBrowserRouter(
 export function createHashRouter(
   routes: RouteObject[],
   opts?: DOMRouterOpts
-): RemixRouter {
+): DataRouter {
   return createRouter({
     basename: opts?.basename,
     future: opts?.future,
@@ -182,11 +182,11 @@ function parseHydrationData(): HydrationState | undefined {
 }
 
 function deserializeErrors(
-  errors: RemixRouter["state"]["errors"]
-): RemixRouter["state"]["errors"] {
+  errors: DataRouter["state"]["errors"]
+): DataRouter["state"]["errors"] {
   if (!errors) return null;
   let entries = Object.entries(errors);
-  let serialized: RemixRouter["state"]["errors"] = {};
+  let serialized: DataRouter["state"]["errors"] = {};
   for (let [key, val] of entries) {
     // Hey you!  If you change this, please change the corresponding logic in
     // serializeErrors in react-router-dom/server.tsx :)

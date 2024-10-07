@@ -1,6 +1,5 @@
 ---
 title: Race Conditions
-new: true
 ---
 
 # Race Conditions

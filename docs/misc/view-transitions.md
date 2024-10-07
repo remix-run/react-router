@@ -1,6 +1,5 @@
 ---
 title: View Transitions
-new: true
 ---
 
 # View Transitions

@@ -1,13 +1,7 @@
-# Welcome to Remix!
+# @react-router/express
 
-[Remix](https://remix.run) is a web framework that helps you build better websites with React.
-
-To get started, open a new shell and run:
+[Express](https://expressjs.com) server request handler for [React Router.](https://github.com/remix-run/react-router)
 
 ```sh
-npx create-remix@latest
+npm install @react-router/express
 ```
-
-Then follow the prompts you see in your terminal.
-
-For more information about Remix, [visit remix.run](https://remix.run)!

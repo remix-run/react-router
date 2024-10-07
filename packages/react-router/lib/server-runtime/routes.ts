@@ -3,9 +3,13 @@ import type {
   LoaderFunctionArgs as RRLoaderFunctionArgs,
   ActionFunctionArgs as RRActionFunctionArgs,
 } from "../router/utils";
-import { callRouteAction, callRouteLoader } from "./data";
+import { callRouteHandler } from "./data";
 import type { FutureConfig } from "../dom/ssr/entry";
-import type { ServerRouteModule } from "./routeModules";
+import type {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  ServerRouteModule,
+} from "./routeModules";
 
 export interface RouteManifest<Route> {
   [routeId: string]: Route;
@@ -90,27 +94,15 @@ export function createStaticHandlerDataRoutes(
         route.id === "root" || route.module.ErrorBoundary != null,
       id: route.id,
       path: route.path,
+      // Need to use RR's version in the param typed here to permit the optional
+      // context even though we know it'll always be provided in remix
       loader: route.module.loader
-        ? // Need to use RR's version here to permit the optional context even
-          // though we know it'll always be provided in remix
-          (args: RRLoaderFunctionArgs, dataStrategyCtx?: unknown) =>
-            callRouteLoader({
-              request: args.request,
-              params: args.params,
-              loadContext: args.context,
-              loader: route.module.loader!,
-              routeId: route.id,
-            })
+        ? (args: RRLoaderFunctionArgs) =>
+            callRouteHandler(route.module.loader!, args as LoaderFunctionArgs)
         : undefined,
       action: route.module.action
-        ? (args: RRActionFunctionArgs, dataStrategyCtx?: unknown) =>
-            callRouteAction({
-              request: args.request,
-              params: args.params,
-              loadContext: args.context,
-              action: route.module.action!,
-              routeId: route.id,
-            })
+        ? (args: RRActionFunctionArgs) =>
+            callRouteHandler(route.module.action!, args as ActionFunctionArgs)
         : undefined,
       handle: route.module.handle,
     };

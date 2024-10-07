@@ -1,13 +1,10 @@
 ---
 title: File Route Conventions
-new: true
 ---
 
 # File Route Conventions
 
-In addition to defining [config-based routes in `routes.ts`][route-config-file], React Router also provides a file-based route convention that allows you to define your routes in the file system using a series of file naming conventions.
-
-Please note that you can use either `.js`, `.jsx`, `.ts` or `.tsx` file extensions. We'll stick with `.tsx` in the examples to avoid duplication.
+The `@react-router/fs-routes` package enables file-convention based route config.
 
 ## Setting up
 
@@ -41,7 +38,7 @@ The rest of this guide will assume you're using the default `app/routes` directo
 
 ## Basic Routes
 
-Any JavaScript or TypeScript files in the `app/routes` directory will become routes in your application. The filename maps to the route's URL pathname, except for `_index.tsx` which is the [index route][index_route] for the [root route][root_route].
+Any modules in the `app/routes` directory will become routes in your application. The filename maps to the route's URL pathname, except for `_index.tsx` which is the [index route][index_route] for the [root route][root_route]. You can use `.js`, `.jsx`, `.ts` or `.tsx` file extensions.
 
 ```text lines=[3-4]
 app/
@@ -363,13 +360,6 @@ app/routes/app/route.tsx
 app/routes/app._index.tsx
 app/routes/app._index/route.tsx
 ```
-
-## Scaling
-
-Our general recommendation for scale is to make every route a folder and put the modules used exclusively by that route in the folder, then put the shared modules outside of routes folder elsewhere. This has a couple benefits:
-
-- Easy to identify shared modules, so tread lightly when changing them
-- Easy to organize and refactor the modules for a specific route without creating "file organization fatigue" and cluttering up other parts of the app
 
 [route-config-file]: ../start/routing#route-config-file
 [loaders]: ../start/data-loading

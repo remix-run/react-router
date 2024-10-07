@@ -5,9 +5,31 @@ order: 2
 
 # Routing
 
-## Route Config File
+Your routes are the foundation of React Router's features, they define:
 
-Routes are configured in `app/routes.ts`. The Vite plugin uses this file to create bundles for each route.
+- automatic code-splitting
+- data loading
+- actions
+- revalidation
+- error boundaries
+- and more
+
+The rest of the getting started guides will cover these features in more detail while this guide will give you a basic understanding of routing.
+
+## Configuring Routes
+
+Routes are configured in `app/routes.ts`. Routes have a url pattern to match the URL and a file path to the route module to define its behavior.
+
+```tsx
+import { route } from "@react-router/dev/routes";
+
+export const routes = [
+  route("some/path", "./some/file.tsx");
+  // pattern ^           ^ module file
+]
+```
+
+Here is a larger sample route config:
 
 ```ts filename=app/routes.ts
 import {
@@ -34,61 +56,42 @@ export const routes: RouteConfig = [
 ];
 ```
 
-## File System Routes
-
 If you prefer to define your routes via file naming conventions rather than configuration, the `@react-router/fs-routes` package provides a [file system routing convention.][file-route-conventions]
 
-```tsx filename=app/routes.ts
-import { type RouteConfig } from "@react-router/dev/routes";
-import { flatRoutes } from "@react-router/fs-routes";
+## Route Modules
 
-export const routes: RouteConfig = flatRoutes();
-```
-
-You can also mix routing conventions into a single array of routes.
+The files referenced in `routes.ts` define each route's behavior:
 
 ```tsx filename=app/routes.ts
-import {
-  type RouteConfig,
-  route,
-} from "@react-router/dev/routes";
-import { flatRoutes } from "@react-router/fs-routes";
-
-export const routes: RouteConfig = [
-  // Provide file system routes
-  ...(await flatRoutes()),
-
-  // Then provide additional config routes
-  route("/can/still/add/more", "./more.tsx"),
-];
+route("teams/:teamId", "./team.tsx");
+//           route module ^^^^^^^^
 ```
 
-## Linking
+Here's a sample route module:
 
-Link to routes from your UI with `Link`
+```tsx filename=app/team.tsx
+// provides type safety/inference
+import type * as Route from "./+types.team";
 
-```tsx
-import { Link } from "react-router";
+// provides `loaderData` to the component
+export async function loader({ params }: Route.LoaderArgs) {
+  let team = await fetchTeam(params.teamId);
+  return { name: team.name };
+}
 
-function Header() {
-  return (
-    <nav>
-      <Link to="/">Home</Link>
-      <Link to="/about">About</Link>
-      <Link
-        to="/concerts/:id"
-        params={{ id: "salt-lake-city" }}
-      >
-        Concerts
-      </Link>
-    </nav>
-  );
+// renders after the loader is done
+export default function Component({
+  loaderData,
+}: Route.ComponentProps) {
+  return <h1>{data.name}</h1>;
 }
 ```
 
+Route modules have more features like actions, headers, and error boundaries, but they will be covered in later guides.
+
 ## Nested Routes
 
-Routes can be nested inside parent routes. Nested routes are rendered into their parent's [Outlet][outlet]
+Routes can be nested inside parent routes.
 
 ```ts filename=app/routes.ts
 import {
@@ -98,12 +101,18 @@ import {
 } from "@react-router/dev/routes";
 
 export const routes: RouteConfig = [
+  // parent route
   route("dashboard", "./dashboard.tsx", [
+    // child routes
     index("./home.tsx"),
     route("settings", "./settings.tsx"),
   ]),
 ];
 ```
+
+The path of the parent is automatically included in the child, so this config creates both `"/dashboard"` and `"/dashboard/settings"` URLs.
+
+Child routes are rendered through the `<Outlet/>` in the parent route.
 
 ```tsx filename=app/dashboard.tsx
 import { Outlet } from "react-router";
@@ -119,9 +128,13 @@ export default function Dashboard() {
 }
 ```
 
+## Root Route
+
+Every route in `routes.ts` is nested inside the special `app/root.tsx` module.
+
 ## Layout Routes
 
-Using `layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. They can be added at any level.
+Using `layout`, layout routes create new nesting for their children, but they don't add any segments to the URL. It's like the root route but they can be added at any level.
 
 ```tsx filename=app/routes.ts lines=[9,15]
 import {
@@ -183,24 +196,17 @@ route("teams/:teamId", "./team.tsx");
 ```
 
 ```tsx filename=app/team.tsx
-import type {
-  LoaderArgs,
-  ActionArgs,
-  DefaultProps,
-} from "./+types.team";
+import type * as Route from "./+types.team";
 
-async function loader({ params }: LoaderArgs) {
-  //                    ^? { teamId: string }
-}
-
-async function action({ params }: ActionArgs) {
+async function loader({ params }: Route.LoaderArgs) {
   //                    ^? { teamId: string }
 }
 
 export default function Component({
   params,
-}: DefaultProps) {
-  console.log(params.teamId); // "hotspur"
+}: Route.ComponentProps) {
+  params.teamId;
+  //        ^ string
 }
 ```
 
@@ -211,7 +217,7 @@ route("c/:categoryId/p/:productId", "./product.tsx");
 ```
 
 ```tsx filename=app/product.tsx
-import type { LoaderArgs } from "./+types.product";
+import type * as Route from "./+types.product";
 
 async function loader({ params }: LoaderArgs) {
   //                    ^? { categoryId: string; productId: string }
@@ -241,7 +247,7 @@ route("files/*", "./files.tsx");
 ```
 
 ```tsx filename=app/files.tsx
-export async function loader({ params }) {
+export async function loader({ params }: Route.LoaderArgs) {
   // params["*"] will contain the remaining URL after files/
 }
 ```
@@ -250,6 +256,32 @@ You can destructure the `*`, you just have to assign it a new name. A common nam
 
 ```tsx
 const { "*": splat } = params;
+```
+
+## Linking
+
+Link to routes from your UI with `Link` and `NavLink`
+
+```tsx
+import { NavLink, Link } from "react-router";
+
+function Header() {
+  return (
+    <nav>
+      {/* NavLink makes it easy to show active states */}
+      <NavLink
+        to="/"
+        className={({ isActive }) =>
+          isActive ? "active" : ""
+        }
+      >
+        Home
+      </NavLink>
+
+      <Link to="/concerts/salt-lake-city">Concerts</Link>
+    </nav>
+  );
+}
 ```
 
 ## Component Routes

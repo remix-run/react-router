@@ -1,25 +1,14 @@
 ---
 title: Pre-Rendering
-new: true
 ---
 
 # Pre-Rendering
 
-Without a doubt, one of the most common questions we've received since the launch of Remix v1 is _"how can I SSG my app with Remix?"_
-
-We've long thought (and still believe) that having a runtime server provides the best UX/Performance/SEO/etc. for _most_ apps. We also strongly believe that you own your server architecture, and that it is undeniable that there exist plenty of valid use cases for a statically generated site in the real world (henceforth referred to as a pre-rendered site 😉).
-
-We've taken the easy way out for a while and recommended that you don't _need_ pre-rendering to be a first-class feature of Remix/React Router and you can [do it in userland][michael-tweet]. With the addition of [Client Data][client-data] the things you can do with a userland setup got even more powerful, allowing you to choose a [variety of architectures][remix-ssg].
-
-However, it wasn't until we introduced [Single Fetch][single-fetch] that we unlocked the full power of pre-rendering. Previously, you could hydrate into a SPA but you were limited to using `clientLoader`'s on navigations. With single fetch, you can pre-render your HTML files _and also_ run your `loader` functions at build time and save them to `.data` files that the app can fetch during client side transitions.
-
-This is still something that could be done entirely in userland, but it's be so frequently requested that we decided to provide a built-in API for it.
+Pre-rendering allows you to render a pages at build time instead of on a server to speed up pages loads for static content.
 
 ## Configuration
 
-To enable pre-rendering, add the `prerender` option to your React Router Vite plugin to enable pre-rendering.
-
-In the simplest use-case, `prerender: true` will pre-render all static routes defined in your application (excluding any paths that contain dynamic or splat params):
+Add the `prerender` option to your Vite plugin, there are three signatures:
 
 ```ts filename=vite.config.ts
 import { reactRouter } from "@react-router/dev/vite";
@@ -28,55 +17,52 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     reactRouter({
+      // all static route paths
+      // (no dynamic segments like "/post/:slug")
       prerender: true,
-    }),
-  ],
-});
-```
 
-If you need to pre-render paths with dynamic/splat parameters, or you only want to pre-render a subset of your static paths, you can provide an array of paths:
+      // any url
+      prerender: ["/", "/blog", "/blog/popular-post"],
 
-```ts filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
+      // with async url dependencies like a CMS
+      async prerender() {
+        let posts = await getPosts();
+        return posts.map((post) => post.href);
+      },
 
-export default defineConfig({
-  plugins: [
-    reactRouter({
-      prerender: ["/", "/blog"],
-    }),
-  ],
-});
-```
-
-`prerender` can also be a function, which allows you to dynamically generate the paths -- after fetching blog posts from your CMS for example. This function receives a single argument with a `getStaticPaths` function that you can call to retrieve all static paths defined in your application.
-
-```ts filename=vite.config.ts
-import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  plugins: [
-    reactRouter({
+      // with async and static paths
       async prerender({ getStaticPaths }) {
-        let slugs = await getSlugsFromCms();
-        return [
-          ...getStaticPaths(),
-          ...slugs.map((s) => `/blog/${s}`),
-        ];
+        let posts = await getPosts();
+        let static = getStaticPaths();
+        return static.concat(
+          posts.map((post) => post.href)
+        );
       },
     }),
   ],
 });
 ```
 
-## Development
+## Data Loading and Pre-rendering
 
-During development with `react-router dev`, nothing changes when pre-rendering is enabled. You are still running off of a vite dev server to get the DX benefits of HMR/HDR. Pre-rendering is a build-time only step.
+There is no extra application API for pre-rendering. Pre-rendering uses the same route loaders as server rendering to provide data to components:
 
-## Building
+```tsx
+export async function loader({ request, params }) {
+  let post = await getPost(params.slug);
+  return post;
+}
 
-When you enable pre-rendering and run `react-router build`, we will build your server handler and then call it for all of the routes you specified in `prerender`. The resulting HTML will be written out to your `build/client` directory, and if any of those routes have loaders, they'll be called and a Single Fetch `.data` file will be saved to your `build/client` directory.
+export function Post({ loaderData }) {
+  return <div>{loaderData.title}</div>;
+}
+```
+
+Instead of a request coming to your route on a deployed server, the build creates a `new Request()` and runs it through your app just like a server would.
+
+## Static Results
+
+The rendered result will be written out to your `build/client` directory, you'll notice two files for each path: an HTML file for initial document requests from users and `[name].data` files for the data React Router fetches for client side routing.
 
 The output of your build will indicate what files were pre-rendered:
 
@@ -94,6 +80,8 @@ Prerender: Generated build/client/blog/my-first-post/index.html
 ...
 ```
 
+During development with `react-router dev`, pre-rendering doesn't save the rendering results to the public directory, this only happens for `react-router build`.
+
 ## Deploying/Serving
 
 You have multiple options for deploying a site with pre-rendering enabled.
@@ -104,7 +92,7 @@ If you pre-render all of the paths in your application, you can deploy your `bui
 
 ### Serving via react-router-serve
 
-By default, `react-router-serve` will serve these files via [`express.static`][express-static] and any paths that do not match a static file will fall through to the Remix handler.
+By default, `react-router-serve` will serve these files via [`express.static`][express-static] and any paths that do not match a static file will fall through to the React Router handler.
 
 This even allows you to run a hybrid setup where _some_ of your routes are pre-rendered and others are dynamically rendered at runtime. For example, you could prerender anything inside `/blog/*` and server-render anything inside `/auth/*`.
 
@@ -146,8 +134,4 @@ app.all(
 );
 ```
 
-[michael-tweet]: https://twitter.com/mjackson/status/1585795441907494912
-[client-data]: https://remix.run/docs/guides/client-data
-[remix-ssg]: https://github.com/brophdawg11/remix-ssg
-[single-fetch]: https://remix.run/docs/guides/single-fetch
 [express-static]: https://expressjs.com/en/4x/api.html#express.static

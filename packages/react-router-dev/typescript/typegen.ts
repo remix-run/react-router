@@ -5,6 +5,7 @@ import dedent from "dedent";
 import * as Path from "pathe";
 import * as Pathe from "pathe/utils";
 
+import type { RouteConfig } from "../config/routes";
 import {
   configRoutesToRouteManifest,
   type RouteManifest,
@@ -56,10 +57,13 @@ export async function watch(rootDirectory: string) {
     routesViteNodeContext.devServer.moduleGraph.invalidateAll();
     routesViteNodeContext.runner.moduleCache.clear();
 
-    const result = await routesViteNodeContext.runner.executeFile(routesTsPath);
+    const routeConfig: RouteConfig = (
+      await routesViteNodeContext.runner.executeFile(routesTsPath)
+    ).routes;
+
     return {
       ...routes,
-      ...configRoutesToRouteManifest(result.routes),
+      ...configRoutesToRouteManifest(await routeConfig),
     };
   }
 

@@ -1,5 +1,6 @@
 ---
 title: Adopting Vite (RouterProvider)
+hidden: true
 ---
 
 # Adopting Vite (RouterProvider)

@@ -1,6 +1,5 @@
 ---
 title: Streaming
-new: true
 ---
 
 # Streaming

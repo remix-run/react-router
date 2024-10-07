@@ -3,7 +3,7 @@ import * as React from "react";
 import type {
   UNSAFE_AssetsManifest as AssetsManifest,
   UNSAFE_RouteModules as RouteModules,
-  createBrowserRouter,
+  DataRouter,
   HydrationState,
 } from "react-router";
 import {
@@ -25,8 +25,6 @@ import {
 } from "react-router";
 import { RouterProvider } from "./dom-router-provider";
 
-type RemixRouter = ReturnType<typeof createBrowserRouter>;
-
 type SSRInfo = {
   context: NonNullable<(typeof window)["__reactRouterContext"]>;
   routeModules: RouteModules;
@@ -37,12 +35,12 @@ type SSRInfo = {
         error?: unknown;
       })
     | undefined;
-  router: RemixRouter | undefined;
+  router: DataRouter | undefined;
   routerInitialized: boolean;
 };
 
 let ssrInfo: SSRInfo | null = null;
-let router: RemixRouter | null = null;
+let router: DataRouter | null = null;
 
 function initSsrInfo(): void {
   if (
@@ -62,7 +60,7 @@ function initSsrInfo(): void {
   }
 }
 
-function createHydratedRouter(): RemixRouter {
+function createHydratedRouter(): DataRouter {
   initSsrInfo();
 
   if (!ssrInfo) {
@@ -142,7 +140,7 @@ function createHydratedRouter(): RemixRouter {
           ) &&
           (route.HydrateFallback || !manifestRoute.hasLoader)
         ) {
-          hydrationData.loaderData![routeId] = undefined;
+          delete hydrationData.loaderData![routeId];
         } else if (manifestRoute && !manifestRoute.hasLoader) {
           // Since every Remix route gets a `loader` on the client side to load
           // the route JS module, we need to add a `null` value to `loaderData`
@@ -194,7 +192,7 @@ function createHydratedRouter(): RemixRouter {
   router.createRoutesForHMR =
     /* spacer so ts-ignore does not affect the right hand of the assignment */
     createClientRoutesWithHMRRevalidationOptOut;
-  window.__reactRouterInstance = router;
+  window.__reactRouterDataRouter = router;
 
   return router;
 }

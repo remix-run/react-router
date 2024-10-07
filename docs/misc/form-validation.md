@@ -1,6 +1,5 @@
 ---
 title: Form Validation
-new: true
 ---
 
 # Form Validation

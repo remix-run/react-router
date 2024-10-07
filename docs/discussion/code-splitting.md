@@ -1,6 +1,5 @@
 ---
 title: Automatic Code Splitting
-new: true
 ---
 
 # Automatic Code Splitting

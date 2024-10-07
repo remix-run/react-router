@@ -26,7 +26,7 @@ import type {
   Blocker,
   BlockerFunction,
   RelativeRoutingType,
-  Router as RemixRouter,
+  Router as DataRouter,
   RevalidationState,
 } from "./router/router";
 import { IDLE_BLOCKER } from "./router/router";
@@ -436,8 +436,8 @@ export function useRoutes(
 export function useRoutesImpl(
   routes: RouteObject[],
   locationArg?: Partial<Location> | string,
-  dataRouterState?: RemixRouter["state"],
-  future?: RemixRouter["future"]
+  dataRouterState?: DataRouter["state"],
+  future?: DataRouter["future"]
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -767,8 +767,8 @@ function RenderedRoute({ routeContext, match, children }: RenderedRouteProps) {
 export function _renderMatches(
   matches: RouteMatch[] | null,
   parentMatches: RouteMatch[] = [],
-  dataRouterState: RemixRouter["state"] | null = null,
-  future: RemixRouter["future"] | null = null
+  dataRouterState: DataRouter["state"] | null = null,
+  future: DataRouter["future"] | null = null
 ): React.ReactElement | null {
   if (matches == null) {
     if (!dataRouterState) {
@@ -832,7 +832,7 @@ export function _renderMatches(
         let { loaderData, errors } = dataRouterState;
         let needsToRunLoader =
           match.route.loader &&
-          loaderData[match.route.id] === undefined &&
+          !loaderData.hasOwnProperty(match.route.id) &&
           (!errors || errors[match.route.id] === undefined);
         if (match.route.lazy || needsToRunLoader) {
           // We found the first route that's not ready to render (waiting on

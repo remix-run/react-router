@@ -1,4 +1,4 @@
-# React Router Cloudflare
+# @react-router/cloudflare
 
 Cloudflare platform abstractions for [React Router.](https://reactrouter.com)
 

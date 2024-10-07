@@ -2,8 +2,8 @@ import type { MetaFunction } from "react-router";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "New Remix App" },
-    { name: "description", content: "Welcome to Remix!" },
+    { title: "New React Router App" },
+    { name: "description", content: "Welcome to React Router!" },
   ];
 };
 
@@ -15,15 +15,15 @@ export default function Index() {
           <h1 className="leading text-2xl font-bold text-gray-800 dark:text-gray-100">
             Welcome to <span className="sr-only">React Router</span>
           </h1>
-          <div className="w-2xl max-w-[100vw] p-4 aspect-[920/96]">
+          <div className="w-[450px] max-w-[100vw] p-4 aspect-[605/347]">
             <img
-              src="/logo-light.png"
-              alt="Remix"
+              src="/logo-light.svg"
+              alt="React Router"
               className="block w-full dark:hidden"
             />
             <img
-              src="/logo-dark.png"
-              alt="Remix"
+              src="/logo-dark.svg"
+              alt="React Router"
               className="hidden w-full dark:block"
             />
           </div>

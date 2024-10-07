@@ -1,5 +1,6 @@
 ---
 title: Adopting Vite (Routes)
+hidden: true
 ---
 
 # Adopting Vite (Routes)

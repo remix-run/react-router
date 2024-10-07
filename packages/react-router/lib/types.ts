@@ -1,4 +1,7 @@
+import type { DataWithResponseInit } from "./router/utils";
 import type { AppLoadContext } from "./server-runtime/data";
+import type { Jsonify } from "./server-runtime/jsonify";
+import type { TypedResponse } from "./server-runtime/responses";
 import type { Serializable } from "./server-runtime/single-fetch";
 
 export type Expect<T extends true> = T;
@@ -28,8 +31,20 @@ type DataFrom<T> =
   T extends Fn ? VoidToUndefined<Awaited<ReturnType<T>>> :
   undefined
 
-type ServerDataFrom<T> = Serialize<DataFrom<T>>;
-type ClientDataFrom<T> = DataFrom<T>;
+// prettier-ignore
+type ClientData<T> =
+  T extends TypedResponse<infer U> ? Jsonify<U> :
+  T extends DataWithResponseInit<infer U> ? U :
+  T
+
+// prettier-ignore
+type ServerData<T> =
+  T extends TypedResponse<infer U> ? Jsonify<U> :
+  T extends DataWithResponseInit<infer U> ? Serialize<U> :
+  Serialize<T>
+
+type ServerDataFrom<T> = ServerData<DataFrom<T>>;
+type ClientDataFrom<T> = ClientData<DataFrom<T>>;
 
 // prettier-ignore
 type IsHydrate<ClientLoader> =
@@ -145,6 +160,8 @@ export type CreateErrorBoundaryProps<Params, LoaderData, ActionData> = {
   actionData?: ActionData;
 };
 
+type Pretty<T> = { [K in keyof T]: T[K] } & {};
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type __tests = [
   // ServerDataFrom
@@ -155,6 +172,18 @@ type __tests = [
       { a: string; b: Date; c: undefined }
     >
   >,
+  Expect<
+    Equal<
+      Pretty<
+        ServerDataFrom<
+          () =>
+            | TypedResponse<{ json: string; b: Date; c: () => boolean }>
+            | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
+        >
+      >,
+      { json: string; b: string } | { data: string; b: Date; c: undefined }
+    >
+  >,
 
   // ClientDataFrom
   Expect<Equal<ClientDataFrom<any>, undefined>>,
@@ -162,6 +191,18 @@ type __tests = [
     Equal<
       ClientDataFrom<() => { a: string; b: Date; c: () => boolean }>,
       { a: string; b: Date; c: () => boolean }
+    >
+  >,
+  Expect<
+    Equal<
+      Pretty<
+        ClientDataFrom<
+          () =>
+            | TypedResponse<{ json: string; b: Date; c: () => boolean }>
+            | DataWithResponseInit<{ data: string; b: Date; c: () => boolean }>
+        >
+      >,
+      { json: string; b: string } | { data: string; b: Date; c: () => boolean }
     >
   >,
 
