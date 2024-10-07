@@ -111,13 +111,7 @@ app.use(
 );
 
 // Serve static HTML and .data requests without Cache-Control
-app.use(
-  "/",
-  express.static("build/client", {
-    // Don't redirect directory index.html requests to include a trailing slash
-    redirect: false,
-  })
-);
+app.use("/", express.static("build/client"));
 
 // Serve remaining unhandled requests via your React Router handler
 app.all(
