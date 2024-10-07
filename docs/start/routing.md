@@ -26,7 +26,7 @@ import { route } from "@react-router/dev/routes";
 export const routes = [
   route("some/path", "./some/file.tsx"),
   // pattern ^           ^ module file
-]
+];
 ```
 
 Here is a larger sample route config:
