@@ -697,7 +697,57 @@ When you get better at React Router, you get better at the web platform.
 
 ## Search Params
 
-<docs-info>TODO:</docs-info>
+React Router can read and modify the [query string][querystring]. You can set the search params using `useSearchParams`, which returns [`URLSearchParams`][urlsearchparams] and a setter function.
+
+```jsx lines=[2,5,8]
+function App() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // access a specific param
+  const query = searchParams.get("q") || "";
+
+  function handleClick() {
+    setSearchParams({ q: "example" });
+  }
+
+  return (
+    <>
+      <p>The value of the search param with key q is: {query}</p>
+      <button onClick={handleClick}>Change search params</button>
+    </>
+  );
+}
+```
+
+You can also use `Link` or `useNavigate` to change the search params.
+
+```jsx lines=[3,9,16]
+function App() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // access a specific param
+  const query = searchParams.get("q") || "";
+
+  function handleClick() {
+    navigate({ search: "q=example" });
+  }
+
+  return (
+    <>
+      <p>The value of the search param with key q is: {query}</p>
+      <button onClick={handleClick}>Change search params</button>
+      <Link to={{ search: "q=example" }}>Change search params</Link>
+    </>
+  );
+}
+```
+
+See:
+
+- [`useSearchParams`][usesearchparams]
+- [`useNavigate`][usenavigate]
+- [`Link`][link]
 
 ## Location State
 
@@ -733,3 +783,6 @@ When you get better at React Router, you get better at the web platform.
 [signal]: https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal
 [urlsearchparams]: https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams
 [htmlform]: https://developer.mozilla.org/en-US/docs/Web/HTML/Element/form
+[querystring]: https://developer.mozilla.org/en-US/docs/Web/API/Location/search
+[usesearchparams]: ../hooks/use-search-params
+[link]: ../components/link
