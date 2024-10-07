@@ -92,7 +92,7 @@ If you pre-render all of the paths in your application, you can deploy your `bui
 
 ### Serving via react-router-serve
 
-By default, `react-router-serve` will serve these files via [`express.static`][express-static] and any paths that do not match a static file will fall through to the Remix handler.
+By default, `react-router-serve` will serve these files via [`express.static`][express-static] and any paths that do not match a static file will fall through to the React Router handler.
 
 This even allows you to run a hybrid setup where _some_ of your routes are pre-rendered and others are dynamically rendered at runtime. For example, you could prerender anything inside `/blog/*` and server-render anything inside `/auth/*`.
 
