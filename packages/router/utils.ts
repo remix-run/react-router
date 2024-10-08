@@ -516,9 +516,6 @@ export function matchRoutes<
   return matchRoutesImpl(routes, locationArg, basename, false);
 }
 
-let cachedRoutes: AgnosticRouteObject[] | undefined;
-let cachedFlatRoutes: RouteBranch<RouteObjectType>[] | undefined;
-
 const FLAT = Symbol();
 
 export function matchRoutesImpl<
