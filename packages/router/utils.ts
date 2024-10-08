@@ -516,6 +516,9 @@ export function matchRoutes<
   return matchRoutesImpl(routes, locationArg, basename, false);
 }
 
+let cachedRoutes: AgnosticRouteObject[] | undefined;
+let cachedFlatRoutes: RouteBranch<RouteObjectType>[] | undefined;
+
 export function matchRoutesImpl<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
@@ -533,8 +536,14 @@ export function matchRoutesImpl<
     return null;
   }
 
-  let branches = flattenRoutes(routes);
-  rankRouteBranches(branches);
+  // repeated calls with the same array of routes reuse the flattened+ranked list
+  let branches = cachedFlatRoutes;
+  if (!branches || cachedRoutes !== routes) {
+    branches = flattenRoutes(routes);
+    rankRouteBranches(branches);
+    cachedFlatRoutes = branches;
+    cachedRoutes = routes;
+  }
 
   let matches = null;
   for (let i = 0; matches == null && i < branches.length; ++i) {
