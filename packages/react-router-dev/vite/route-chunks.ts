@@ -702,22 +702,31 @@ export function omitChunkedExports(
     )}::${JSON.stringify(generateOptions)}`,
     code,
     () => {
+      const isChunkable = (exportName: string): boolean =>
+        hasChunkableExport(code, exportName, cache, cacheKey);
+
+      const isOmitted = (exportName: string): boolean =>
+        exportNames.includes(exportName) && isChunkable(exportName);
+
+      const isRetained = (exportName: string): boolean =>
+        !isOmitted(exportName);
+
       let exportDependencies = getExportDependencies(code, cache, cacheKey);
+
+      let allExportNames = Array.from(exportDependencies.keys());
+      let omittedExportNames = allExportNames.filter(isOmitted);
+      let retainedExportNames = allExportNames.filter(isRetained);
 
       let omittedStatements = new Set<Statement>();
       let omittedExportedVariableDeclarators = new Set<VariableDeclarator>();
 
-      for (let exportName of exportNames) {
-        let dependencies = exportDependencies.get(exportName);
+      for (let omittedExportName of omittedExportNames) {
+        let dependencies = exportDependencies.get(omittedExportName);
 
-        // If the export is not chunkable then its code will still remain in the
-        // main chunk, so we need to keep its top level statements.
-        if (
-          !dependencies ||
-          !hasChunkableExport(code, exportName, cache, cacheKey)
-        ) {
-          continue;
-        }
+        invariant(
+          dependencies,
+          `Expected dependencies for ${omittedExportName}`
+        );
 
         // Now that we know the export is chunkable, add all of its top level
         // non-module statements to the set of statements to be omitted from the
@@ -741,14 +750,6 @@ export function omitChunkedExports(
       let omittedExportedVariableDeclaratorsArray = Array.from(
         omittedExportedVariableDeclarators
       );
-
-      function isChunkable(exportName: string): boolean {
-        return hasChunkableExport(code, exportName, cache, cacheKey);
-      }
-
-      function isOmitted(exportName: string): boolean {
-        return exportNames.includes(exportName) && isChunkable(exportName);
-      }
 
       ast.program.body = ast.program.body
         // Remove top level statements that belong solely to the chunked
@@ -774,27 +775,28 @@ export function omitChunkedExports(
           // Remove import specifiers that are only used by the omitted chunks.
           // This ensures only the necessary imports remain in the main chunk.
           node.specifiers = node.specifiers.filter((specifier) => {
-            // Check the imported identifiers that each export depends on to see
-            // if it includes the specifier's local name.
-            for (let exportName of exportNames) {
-              // If the export is not chunkable then its code will still remain
-              // in the main chunk, so we need to keep its imports.
-              if (!isChunkable(exportName)) {
-                continue;
+            let importedName = specifier.local.name;
+
+            // Keep the import specifier if it's depended on by any of the
+            // retained exports.
+            for (let retainedExportName of retainedExportNames) {
+              let dependencies = exportDependencies.get(retainedExportName);
+              if (dependencies?.importedIdentifierNames?.has(importedName)) {
+                return true;
               }
+            }
 
-              let importedIdentifierNames =
-                exportDependencies.get(exportName)?.importedIdentifierNames;
-
-              // If the import specifier's local name is in the set of imported
-              // identifiers for the chunked export, we filter it out.
-              if (importedIdentifierNames?.has(specifier.local.name)) {
+            // Now that we've bailed out early and kept the import specifier if
+            // any retained exports depend on it, remove the import specifier if
+            // it's depended on by any of the omitted exports.
+            for (let omittedExportName of omittedExportNames) {
+              let dependencies = exportDependencies.get(omittedExportName);
+              if (dependencies?.importedIdentifierNames?.has(importedName)) {
                 return false;
               }
             }
 
-            // If we didn't return false, the specifier is not in the set of
-            // imported identifiers for any chunked export, so we keep it.
+            // Keep the import specifier if it isn't depended on by any export.
             return true;
           });
 
