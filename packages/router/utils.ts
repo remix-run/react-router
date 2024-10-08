@@ -519,6 +519,8 @@ export function matchRoutes<
 let cachedRoutes: AgnosticRouteObject[] | undefined;
 let cachedFlatRoutes: RouteBranch<RouteObjectType>[] | undefined;
 
+const FLAT = Symbol();
+
 export function matchRoutesImpl<
   RouteObjectType extends AgnosticRouteObject = AgnosticRouteObject
 >(
@@ -537,12 +539,11 @@ export function matchRoutesImpl<
   }
 
   // repeated calls with the same array of routes reuse the flattened+ranked list
-  let branches = cachedFlatRoutes;
-  if (!branches || cachedRoutes !== routes) {
+  let branches = routes[FLAT];
+  if (!branches) {
     branches = flattenRoutes(routes);
     rankRouteBranches(branches);
-    cachedFlatRoutes = branches;
-    cachedRoutes = routes;
+    routes[FLAT] = branches;
   }
 
   let matches = null;
