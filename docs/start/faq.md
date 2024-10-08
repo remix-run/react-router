@@ -124,6 +124,36 @@ In v4 we would have just left the path prop off a route. In v5 we would have wra
 <Route path="*" element={<NoMatch />} />
 ```
 
+**Remix Users**
+
+If you're using [Remix][remix], you can send proper 40x responses to the browser by moving this work into your loader. This also decreases the size of the browser bundles sent to the user because loaders only run on the server.
+
+```tsx filename=remix-useLoaderData.js
+import { useLoaderData } from "remix";
+
+export async function loader({ params }) {
+  if (!params.id.match(/\d+/)) {
+    throw new Response("", { status: 400 });
+  }
+
+  let user = await fakeDb.user.find({
+    where: { id: params.id },
+  });
+  if (!user) {
+    throw new Response("", { status: 404 });
+  }
+
+  return user;
+}
+
+function User() {
+  let user = useLoaderData();
+  // ...
+}
+```
+
+Instead of rendering your component, remix will render the nearest [catch boundary][remix-catchboundary] instead.
+
 ## `<Route>` doesn't render? How do I compose?
 
 In v5 the `<Route>` component was just a normal component that was like an `if` statement that rendered when the URL matched its path. In v6, a `<Route>` element doesn't actually ever render, it's simply there for configuration.
@@ -390,36 +420,6 @@ function App() {
 ```
 
 In fact, the v5 version has all sorts of problems if your routes aren't ordered _just right_. V6 completely eliminates this problem.
-
-**Remix Users**
-
-If you're using [Remix][remix], you can send proper 40x responses to the browser by moving this work into your loader. This also decreases the size of the browser bundles sent to the user because loaders only run on the server.
-
-```tsx filename=remix-useLoaderData.js
-import { useLoaderData } from "remix";
-
-export async function loader({ params }) {
-  if (!params.id.match(/\d+/)) {
-    throw new Response("", { status: 400 });
-  }
-
-  let user = await fakeDb.user.find({
-    where: { id: params.id },
-  });
-  if (!user) {
-    throw new Response("", { status: 404 });
-  }
-
-  return user;
-}
-
-function User() {
-  let user = useLoaderData();
-  // ...
-}
-```
-
-Instead of rendering your component, remix will render the nearest [catch boundary][remix-catchboundary] instead.
 
 [remix]: https://remix.run
 [remix-catchboundary]: https://remix.run/docs/en/v1/api/conventions#catchboundary
