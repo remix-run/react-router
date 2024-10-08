@@ -4,6 +4,7 @@ export {
   route,
   index,
   layout,
+  prefix,
   relative,
   getAppDirectory,
 } from "./config/routes";

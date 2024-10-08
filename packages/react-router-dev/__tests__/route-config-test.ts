@@ -3,6 +3,7 @@ import {
   route,
   layout,
   index,
+  prefix,
   relative,
 } from "../config/routes";
 
@@ -12,9 +13,9 @@ describe("route config", () => {
       expect(
         validateRouteConfig({
           routeConfigFile: "routes.ts",
-          routeConfig: [
+          routeConfig: prefix("prefix", [
             route("parent", "parent.tsx", [route("child", "child.tsx")]),
-          ],
+          ]),
         }).valid
       ).toBe(true);
     });
@@ -306,6 +307,157 @@ describe("route config", () => {
       });
     });
 
+    describe("prefix", () => {
+      it("adds a prefix to routes", () => {
+        expect(prefix("prefix", [route("route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to routes with a blank path", () => {
+        expect(prefix("prefix", [route("", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix with a trailing slash to routes", () => {
+        expect(prefix("prefix/", [route("route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to routes with leading slash", () => {
+        expect(prefix("prefix", [route("/route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix with a trailing slash to routes with leading slash", () => {
+        expect(prefix("prefix/", [route("/route", "routes/route.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/route.tsx",
+              "path": "prefix/route",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to index routes", () => {
+        expect(prefix("prefix", [index("routes/index.tsx")]))
+          .toMatchInlineSnapshot(`
+          [
+            {
+              "children": undefined,
+              "file": "routes/index.tsx",
+              "index": true,
+              "path": "prefix",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to children of layout routes", () => {
+        expect(
+          prefix("prefix", [
+            layout("routes/layout.tsx", [route("route", "routes/route.tsx")]),
+          ])
+        ).toMatchInlineSnapshot(`
+          [
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "file": "routes/route.tsx",
+                  "path": "prefix/route",
+                },
+              ],
+              "file": "routes/layout.tsx",
+            },
+          ]
+        `);
+      });
+
+      it("adds a prefix to children of nested layout routes", () => {
+        expect(
+          prefix("prefix", [
+            layout("routes/layout-1.tsx", [
+              route("layout-1-child", "routes/layout-1-child.tsx"),
+              layout("routes/layout-2.tsx", [
+                route("layout-2-child", "routes/layout-2-child.tsx"),
+                layout("routes/layout-3.tsx", [
+                  route("layout-3-child", "routes/layout-3-child.tsx"),
+                ]),
+              ]),
+            ]),
+          ])
+        ).toMatchInlineSnapshot(`
+          [
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "file": "routes/layout-1-child.tsx",
+                  "path": "prefix/layout-1-child",
+                },
+                {
+                  "children": [
+                    {
+                      "children": undefined,
+                      "file": "routes/layout-2-child.tsx",
+                      "path": "prefix/layout-2-child",
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": undefined,
+                          "file": "routes/layout-3-child.tsx",
+                          "path": "prefix/layout-3-child",
+                        },
+                      ],
+                      "file": "routes/layout-3.tsx",
+                    },
+                  ],
+                  "file": "routes/layout-2.tsx",
+                },
+              ],
+              "file": "routes/layout-1.tsx",
+            },
+          ]
+        `);
+      });
+    });
+
     describe("relative", () => {
       it("supports relative routes", () => {
         let { route } = relative("/path/to/dirname");
@@ -367,6 +519,11 @@ describe("route config", () => {
             "file": "/path/to/dirname/nested/parent.tsx",
           }
         `);
+      });
+
+      it("provides passthrough for non-relative APIs", () => {
+        let { prefix: relativePrefix } = relative("/path/to/dirname");
+        expect(relativePrefix).toBe(prefix);
       });
     });
   });
