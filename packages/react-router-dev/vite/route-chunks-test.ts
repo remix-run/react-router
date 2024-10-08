@@ -178,10 +178,55 @@ describe("route chunks", () => {
         "import { shared } from "./shared";
         export const chunk = shared("chunk");"
       `);
-      expect(getChunkedExport(code, "main", {}, ...cache)?.code)
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
         .toMatchInlineSnapshot(`
         "import { shared } from "./shared";
         export const main = shared("main");"
+      `);
+    });
+
+    test("shared imports across chunks but not main chunk", () => {
+      const code = dedent`
+        import { shared } from "./shared";
+        export const chunk1 = shared("chunk1");
+        export const chunk2 = shared("chunk2");
+        export const main = "main";
+      `;
+      expect(hasChunkableExport(code, "chunk1", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk1", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { shared } from "./shared";
+        export const chunk1 = shared("chunk1");"
+      `);
+      expect(getChunkedExport(code, "chunk2", {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { shared } from "./shared";
+        export const chunk2 = shared("chunk2");"
+      `);
+      expect(
+        omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const main = "main";"`);
+    });
+
+    test("import with side effect usage", () => {
+      const code = dedent`
+        import { sideEffect } from "./side-effect";
+        sideEffect();
+        export const chunk = "chunk";
+        export const main = "main";
+      `;
+      expect(hasChunkableExport(code, "chunk", ...cache)).toBe(true);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(
+        getChunkedExport(code, "chunk", {}, ...cache)?.code
+      ).toMatchInlineSnapshot(`"export const chunk = "chunk";"`);
+      expect(omitChunkedExports(code, ["chunk"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { sideEffect } from "./side-effect";
+        sideEffect();
+        export const main = "main";"
       `);
     });
 
@@ -925,6 +970,29 @@ describe("route chunks", () => {
         };
         export const chunk = getChunkMessage();
         export const main = getMainMessage();"
+      `);
+    });
+
+    test("shared imports across chunks but not main chunk with shared side effect usage", () => {
+      const code = dedent`
+        import { shared } from "./shared";
+        shared("side-effect");
+        export const chunk1 = shared("chunk1");
+        export const chunk2 = shared("chunk2");
+        export const main = "main";
+      `;
+      expect(hasChunkableExport(code, "chunk1", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "chunk2", ...cache)).toBe(false);
+      expect(hasChunkableExport(code, "main", ...cache)).toBe(true);
+      expect(getChunkedExport(code, "chunk1", {}, ...cache)).toBeUndefined();
+      expect(getChunkedExport(code, "chunk2", {}, ...cache)).toBeUndefined();
+      expect(omitChunkedExports(code, ["chunk1", "chunk2"], {}, ...cache)?.code)
+        .toMatchInlineSnapshot(`
+        "import { shared } from "./shared";
+        shared("side-effect");
+        export const chunk1 = shared("chunk1");
+        export const chunk2 = shared("chunk2");
+        export const main = "main";"
       `);
     });
   });
