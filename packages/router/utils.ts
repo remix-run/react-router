@@ -536,11 +536,11 @@ export function matchRoutesImpl<
   }
 
   // repeated calls with the same array of routes reuse the flattened+ranked list
-  let branches = (routes as unknown as RouteObjectType[] & {[FLAT]?: AgnosticRouteMatch[]})[FLAT];
+  let branches = (routes as unknown as RouteObjectType[] & {[FLAT]?: RouteBranch<RouteObjectType>[]})[FLAT];
   if (!branches) {
     branches = flattenRoutes(routes);
     rankRouteBranches(branches);
-    (routes as unknown as RouteObjectType[] & {[FLAT]?: AgnosticRouteMatch[]})[FLAT] = branches;
+    (routes as unknown as RouteObjectType[] & {[FLAT]?: RouteBranch<RouteObjectType>[]})[FLAT] = branches;
   }
 
   let matches = null;
