@@ -444,6 +444,16 @@ export function createClientRoutes(
 
       // Load all other modules via route.lazy()
       dataRoute.lazy = async () => {
+        if (route.clientLoaderModule || route.clientActionModule) {
+          // If a client loader/action chunk is present, we push the loading of
+          // the main route chunk to the next tick to ensure the downloading of
+          // loader/action chunks takes precedence. This can be seen via their
+          // order in the network tab. Also note that since this is happening
+          // within `route.lazy`, this imperceptible delay only happens on the
+          // first load of this route.
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+
         let mod = await loadRouteModuleWithBlockingLinks(
           route,
           routeModulesCache
