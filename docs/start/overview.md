@@ -725,7 +725,7 @@ function App() {
 
 You can also use `Link` or `useNavigate` to change the search params.
 
-```jsx lines=[3,9,16]
+```jsx lines=[3,9,20]
 function App() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
